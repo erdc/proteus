@@ -2,14 +2,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.LatexReport module &#8212; Proteus 1.6.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>proteus.LatexReport module &#8212; Proteus 1.7.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -18,7 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.6.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -128,53 +127,48 @@
   <div class="section" id="module-proteus.LatexReport">
 <span id="proteus-latexreport-module"></span><h1>proteus.LatexReport module<a class="headerlink" href="#module-proteus.LatexReport" title="Permalink to this headline">¶</a></h1>
 <p>Class and script for generating a report from simulation data.</p>
-digraph inheritance3a94314196 {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;LatexResultsSummary&quot; [URL=&quot;../api/proteus.LatexReport.html#proteus.LatexReport.LatexResultsSummary&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;simple steps for taking simulation results and generating Latex&quot;];
-  &quot;newobject&quot; -&gt; &quot;LatexResultsSummary&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
-}
+<div class="graphviz"><object data="../_images/inheritance-4da20814bb18434b525ef4eb6be7658a9fca52bc.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.LatexReport</p></object></div>
 <dl class="function">
 <dt id="proteus.LatexReport.openLatexReport">
-<code class="descclassname">proteus.LatexReport.</code><code class="descname">openLatexReport</code><span class="sig-paren">(</span><em>filename</em>, <em>reportname</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.openLatexReport" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LatexReport.</code><code class="sig-name descname">openLatexReport</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">reportname</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.openLatexReport" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.LatexReport.closeLatexReport">
-<code class="descclassname">proteus.LatexReport.</code><code class="descname">closeLatexReport</code><span class="sig-paren">(</span><em>file</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.closeLatexReport" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LatexReport.</code><code class="sig-name descname">closeLatexReport</code><span class="sig-paren">(</span><em class="sig-param">file</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.closeLatexReport" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
 <dt id="proteus.LatexReport.LatexResultsSummary">
-<em class="property">class </em><code class="descclassname">proteus.LatexReport.</code><code class="descname">LatexResultsSummary</code><span class="sig-paren">(</span><em>resFileName</em>, <em>repFileName</em>, <em>repName=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LatexReport.</code><code class="sig-name descname">LatexResultsSummary</code><span class="sig-paren">(</span><em class="sig-param">resFileName</em>, <em class="sig-param">repFileName</em>, <em class="sig-param">repName=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>simple steps for taking simulation results and generating Latex
 Table of results</p>
+<dl class="attribute">
+<dt id="proteus.LatexReport.LatexResultsSummary.pickle">
+<code class="sig-name descname">pickle</code><em class="property"> = &lt;module 'pickle' from '/home/cekees/proteus/linux/lib/python3.7/pickle.py'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.pickle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="proteus.LatexReport.LatexResultsSummary.open">
-<code class="descname">open</code><span class="sig-paren">(</span><em>append=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.open" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">append=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.open" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.LatexReport.LatexResultsSummary.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.close" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.LatexReport.LatexResultsSummary.generateSpatialConvTable">
-<code class="descname">generateSpatialConvTable</code><span class="sig-paren">(</span><em>time='Last'</em>, <em>useRelativeError=False</em>, <em>relativeErrorEps=1e-10</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.generateSpatialConvTable" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">generateSpatialConvTable</code><span class="sig-paren">(</span><em class="sig-param">time='Last'</em>, <em class="sig-param">useRelativeError=False</em>, <em class="sig-param">relativeErrorEps=1e-10</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.generateSpatialConvTable" title="Permalink to this definition">¶</a></dt>
 <dd><p>produce table that has spatial error for different levels
 at a given time. If useRelativeError is true, the error values are normalized
 by the “exact” solution norm on the finest spatial mesh with a fudge factor
 given by relativeErrorEps</p>
 <p>component &amp; level &amp; h &amp; error &amp; rate </p>
 </dd></dl>
-
-<dl class="attribute">
-<dt id="proteus.LatexReport.LatexResultsSummary.pickle">
-<code class="descname">pickle</code><em class="property"> = &lt;module 'pickle' from '/home/tridelat/PROTEUS/proteus/linux2/lib/python2.7/pickle.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LatexReport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LatexReport.LatexResultsSummary.pickle" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -193,7 +187,7 @@ given by relativeErrorEps</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

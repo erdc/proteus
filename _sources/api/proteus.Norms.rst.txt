@@ -2,6 +2,6 @@ proteus.Norms module
 ====================
 
 .. automodule:: proteus.Norms
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

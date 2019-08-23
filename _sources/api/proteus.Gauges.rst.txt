@@ -2,6 +2,6 @@ proteus.Gauges module
 =====================
 
 .. automodule:: proteus.Gauges
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

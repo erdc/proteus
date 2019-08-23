@@ -2,14 +2,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.Transport module &#8212; Proteus 1.6.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>proteus.Transport module &#8212; Proteus 1.7.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -18,7 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.6.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -132,32 +131,22 @@
 \[m_t^i + \nabla \cdot (f^i - \sum_k a^{ik} \nabla \phi^k) + H^i(\nabla  u) + r^i = 0 \quad i=0,\ldots,nc-1\]</div>
 <p>The solution is the vector of components <span class="math notranslate nohighlight">\(u=u_0,\ldots,u_{nc-1}\)</span>, and
 the nonlinear coefficients are <span class="math notranslate nohighlight">\(m^i,f^i,a^{ik},\phi^k, H^i\)</span> and <span class="math notranslate nohighlight">\(r^i\)</span>.</p>
-digraph inheritancefc727d2e48 {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;MultilevelTransport&quot; [URL=&quot;../api/proteus.Transport.html#proteus.Transport.MultilevelTransport&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Nonlinear ADR on a multilevel mesh&quot;];
-  &quot;newobject&quot; -&gt; &quot;MultilevelTransport&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;NonlinearEquation&quot; [URL=&quot;../proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NonlinearEquation&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for nonlinear equations.&quot;];
-  &quot;newobject&quot; -&gt; &quot;NonlinearEquation&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;OneLevelTransport&quot; [URL=&quot;../api/proteus.Transport.html#proteus.Transport.OneLevelTransport&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A class for finite element discretizations of multicomponent&quot;];
-  &quot;NonlinearEquation&quot; -&gt; &quot;OneLevelTransport&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;StorageSet&quot; [URL=&quot;../api/proteus.Transport.html#proteus.Transport.StorageSet&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
-}
+<div class="graphviz"><object data="../_images/inheritance-377c21b04fa21b68e397e34406916a6011359fe7.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.Transport</p></object></div>
 <dl class="class">
 <dt id="proteus.Transport.StorageSet">
-<em class="property">class </em><code class="descclassname">proteus.Transport.</code><code class="descname">StorageSet</code><span class="sig-paren">(</span><em>initializer=[]</em>, <em>shape=(0</em>, <em>)</em>, <em>storageType='d'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.StorageSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Transport.</code><code class="sig-name descname">StorageSet</code><span class="sig-paren">(</span><em class="sig-param">initializer=[]</em>, <em class="sig-param">shape=(0</em>, <em class="sig-param">)</em>, <em class="sig-param">storageType='d'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.StorageSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#set" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a></p>
 <dl class="method">
 <dt id="proteus.Transport.StorageSet.allocate">
-<code class="descname">allocate</code><span class="sig-paren">(</span><em>storageDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.StorageSet.allocate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">allocate</code><span class="sig-paren">(</span><em class="sig-param">storageDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.StorageSet.allocate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Transport.OneLevelTransport">
-<em class="property">class </em><code class="descclassname">proteus.Transport.</code><code class="descname">OneLevelTransport</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressFluxBoundaryConditionsSetterDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='defaultName'</em>, <em>reuse_trial_and_test_quadrature=False</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Transport.</code><code class="sig-name descname">OneLevelTransport</code><span class="sig-paren">(</span><em class="sig-param">uDict</em>, <em class="sig-param">phiDict</em>, <em class="sig-param">testSpaceDict</em>, <em class="sig-param">matType</em>, <em class="sig-param">dofBoundaryConditionsDict</em>, <em class="sig-param">dofBoundaryConditionsSetterDict</em>, <em class="sig-param">coefficients</em>, <em class="sig-param">elementQuadrature</em>, <em class="sig-param">elementBoundaryQuadrature</em>, <em class="sig-param">fluxBoundaryConditionsDict=None</em>, <em class="sig-param">advectiveFluxBoundaryConditionsSetterDict=None</em>, <em class="sig-param">diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em class="sig-param">stressFluxBoundaryConditionsSetterDict=None</em>, <em class="sig-param">stabilization=None</em>, <em class="sig-param">shockCapturing=None</em>, <em class="sig-param">conservativeFluxDict=None</em>, <em class="sig-param">numericalFluxType=None</em>, <em class="sig-param">TimeIntegrationClass=None</em>, <em class="sig-param">massLumping=False</em>, <em class="sig-param">reactionLumping=False</em>, <em class="sig-param">options=None</em>, <em class="sig-param">name='defaultName'</em>, <em class="sig-param">reuse_trial_and_test_quadrature=False</em>, <em class="sig-param">sd=True</em>, <em class="sig-param">movingDomain=False</em>, <em class="sig-param">bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.NonlinearEquation" title="proteus.NonlinearSolvers.NonlinearEquation"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.NonlinearSolvers.NonlinearEquation</span></code></a></p>
 <p>A class for finite element discretizations of multicomponent
 advective-diffusive-reactive transport on a single spatial mesh.</p>
@@ -174,57 +163,50 @@ problem</p>
 approximation for it may also be  provided.</p>
 <p>The NonlinearEquation interface is</p>
 <ul class="simple">
-<li>self.dim</li>
-<li>getResidual(u,r)</li>
-<li>getJacobian(jacobian).</li>
+<li><p>self.dim</p></li>
+<li><p>getResidual(u,r)</p></li>
+<li><p>getJacobian(jacobian).</p></li>
 </ul>
 <p>The rest of the functions in this class are either private functions
 or return various other pieces of information.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><strong>ebq_global</strong><strong>[</strong><strong>(</strong><strong>'velocityAverage'</strong><strong>,</strong><strong>0</strong><strong>)</strong><strong>]</strong> (<em>array</em>) – This attribute stores the average velocity along an edge given
-a discontinous velocity field.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>ebq_global</strong><strong>[</strong><strong>(</strong><strong>'velocityAverage'</strong><strong>,</strong><strong>0</strong><strong>)</strong><strong>]</strong> (<em>array</em>) – This attribute stores the average velocity along an edge given
+a discontinous velocity field.</p>
+</dd>
+</dl>
 <p>Allocate storage and initialize some variables.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>uDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of
-<a class="reference internal" href="proteus.FemTools.html#proteus.FemTools.FiniteElementFunction" title="proteus.FemTools.FiniteElementFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.FiniteElementFunction</span></code></a> objects.</li>
-<li><strong>phiDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of
-<a class="reference internal" href="proteus.FemTools.html#proteus.FemTools.FiniteElementFunction" title="proteus.FemTools.FiniteElementFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.FiniteElementFunction</span></code></a> objects.</li>
-<li><strong>testSpaceDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of FiniteElementSpace objects</li>
-<li><strong>dofBoundaryConditionsDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of DOFBoundaryConditions objects for the
-Dirichlet conditions.</li>
-<li><strong>coefficients</strong> (<a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a>) – Problem’s Transport Coefficients class.</li>
-<li><strong>elementQuadratureDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of dictionaries of quadrature rules for each
-element integral in each component equation.</li>
-<li><strong>elementBoundaryQuadratureDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of dictionaries of quadrature rules for each
-element boundary integral in each component equation</li>
-<li><strong>stabilization</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </li>
-<li><strong>shockCapturing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </li>
-<li><strong>numericalFlux</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </li>
-<li><strong>bdyNullSpace</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates whether the boundary conditions create a global
-null space.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of
+<a class="reference internal" href="proteus.FemTools.html#proteus.FemTools.FiniteElementFunction" title="proteus.FemTools.FiniteElementFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.FiniteElementFunction</span></code></a> objects.</p></li>
+<li><p><strong>phiDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of
+<a class="reference internal" href="proteus.FemTools.html#proteus.FemTools.FiniteElementFunction" title="proteus.FemTools.FiniteElementFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.FiniteElementFunction</span></code></a> objects.</p></li>
+<li><p><strong>testSpaceDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of FiniteElementSpace objects</p></li>
+<li><p><strong>dofBoundaryConditionsDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of DOFBoundaryConditions objects for the
+Dirichlet conditions.</p></li>
+<li><p><strong>coefficients</strong> (<a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a>) – Problem’s Transport Coefficients class.</p></li>
+<li><p><strong>elementQuadratureDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of dictionaries of quadrature rules for each
+element integral in each component equation.</p></li>
+<li><p><strong>elementBoundaryQuadratureDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of dictionaries of quadrature rules for each
+element boundary integral in each component equation</p></li>
+<li><p><strong>stabilization</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </p></li>
+<li><p><strong>shockCapturing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </p></li>
+<li><p><strong>numericalFlux</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </p></li>
+<li><p><strong>bdyNullSpace</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates whether the boundary conditions create a global
+null space.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <p class="rubric">Notes</p>
 <p>The constructor sets the input arguments, calculates
 dimensions, and allocates storage. The meanings of variable
 suffixes are</p>
 <ul class="simple">
-<li>global          – per physical domain</li>
-<li>element         – per element</li>
-<li>elementBoundary – per element boundary</li>
+<li><p>global          – per physical domain</p></li>
+<li><p>element         – per element</p></li>
+<li><p>elementBoundary – per element boundary</p></li>
 </ul>
 <p>The prefix n means ‘number of’.</p>
 <p>Storage is divided into quantities required at different sets
@@ -232,160 +214,160 @@ of points or geometric entities. Each type of storage has a
 dictionary for all the quantities of that type. The names
 and dimensions of the storage dictionaries are</p>
 <ul class="simple">
-<li>e – at element</li>
-<li>q – at element quadrature, unique to elements</li>
-<li>ebq – at element boundary quadrature, unique to elements</li>
-<li>ebq_global – at element boundary quadrature, unique to element
-boundary</li>
-<li>ebqe – at element boundary quadrature, unique to global,
-exterior element boundary</li>
-<li>phi_ip – at the generalized interpolation points required to
-build a nonlinear phi</li>
+<li><p>e – at element</p></li>
+<li><p>q – at element quadrature, unique to elements</p></li>
+<li><p>ebq – at element boundary quadrature, unique to elements</p></li>
+<li><p>ebq_global – at element boundary quadrature, unique to element
+boundary</p></li>
+<li><p>ebqe – at element boundary quadrature, unique to global,
+exterior element boundary</p></li>
+<li><p>phi_ip – at the generalized interpolation points required to
+build a nonlinear phi</p></li>
 </ul>
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.setupFieldStrides">
-<code class="descname">setupFieldStrides</code><span class="sig-paren">(</span><em>interleaved=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setupFieldStrides" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setupFieldStrides</code><span class="sig-paren">(</span><em class="sig-param">interleaved=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setupFieldStrides" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set up the stride/offset layout for this object.  The default layout is interleaved.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.setInitialConditions">
-<code class="descname">setInitialConditions</code><span class="sig-paren">(</span><em>getInitialConditionsDict</em>, <em>T=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setInitialConditions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setInitialConditions</code><span class="sig-paren">(</span><em class="sig-param">getInitialConditionsDict</em>, <em class="sig-param">T=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setInitialConditions" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.archiveAnalyticalSolutions">
-<code class="descname">archiveAnalyticalSolutions</code><span class="sig-paren">(</span><em>archive</em>, <em>analyticalSolutionsDict</em>, <em>T=0.0</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveAnalyticalSolutions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">archiveAnalyticalSolutions</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">analyticalSolutionsDict</em>, <em class="sig-param">T=0.0</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveAnalyticalSolutions" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.setInitialConditionsFromDofs">
-<code class="descname">setInitialConditionsFromDofs</code><span class="sig-paren">(</span><em>getInitialConditionDofs</em>, <em>T=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setInitialConditionsFromDofs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setInitialConditionsFromDofs</code><span class="sig-paren">(</span><em class="sig-param">getInitialConditionDofs</em>, <em class="sig-param">T=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setInitialConditionsFromDofs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.initializeTimeIntegration">
-<code class="descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>u0</em>, <em>r0</em>, <em>DTSET=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">t0</em>, <em class="sig-param">tOut</em>, <em class="sig-param">u0</em>, <em class="sig-param">r0</em>, <em class="sig-param">DTSET=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.initializeTimeHistory">
-<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeTimeHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.updateTimeHistory">
-<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>T</em>, <em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateTimeHistory</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
 <dd><p>put a version on each level rather than just multilevel?</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep">
-<code class="descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getResidual">
-<code class="descname">getResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getResidual" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getResidual</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getResidual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the element residuals and add in to the global residual</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getJacobian">
-<code class="descname">getJacobian</code><span class="sig-paren">(</span><em>jacobian</em>, <em>skipMassTerms=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getJacobian</code><span class="sig-paren">(</span><em class="sig-param">jacobian</em>, <em class="sig-param">skipMassTerms=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getJacobian" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getJacobian_dense">
-<code class="descname">getJacobian_dense</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getJacobian_dense" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getJacobian_dense</code><span class="sig-paren">(</span><em class="sig-param">jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getJacobian_dense" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getJacobian_CSR">
-<code class="descname">getJacobian_CSR</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getJacobian_CSR" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getJacobian_CSR</code><span class="sig-paren">(</span><em class="sig-param">jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getJacobian_CSR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add in the element jacobians to the global jacobian</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementResidual">
-<code class="descname">calculateElementResidual</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementResidual" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementResidual</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementResidual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate all the element residuals</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.estimate_mt">
-<code class="descname">estimate_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.estimate_mt" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">estimate_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.estimate_mt" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementJacobian">
-<code class="descname">calculateElementJacobian</code><span class="sig-paren">(</span><em>skipMassTerms=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementJacobian</code><span class="sig-paren">(</span><em class="sig-param">skipMassTerms=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementJacobian" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementMassJacobian">
-<code class="descname">calculateElementMassJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementMassJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementMassJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementMassJacobian" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculate just the mass matrix terms for element jacobian (i.e., those that multiply the accumulation term)
 does not include dt</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementBoundaryJacobian">
-<code class="descname">calculateElementBoundaryJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementBoundaryJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryJacobian">
-<code class="descname">calculateExteriorElementBoundaryJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateExteriorElementBoundaryJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateCoefficients">
-<code class="descname">calculateCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateCoefficients" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateCoefficients" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateSolutionAtQuadrature">
-<code class="descname">calculateSolutionAtQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateSolutionAtQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSolutionAtQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateSolutionAtQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateStrongResidualAndAdjoint">
-<code class="descname">calculateStrongResidualAndAdjoint</code><span class="sig-paren">(</span><em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateStrongResidualAndAdjoint" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateStrongResidualAndAdjoint</code><span class="sig-paren">(</span><em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateStrongResidualAndAdjoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>break off computation of strong residual and adjoint so that we can do this at different quadrature locations?</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementCoefficients">
-<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculate the nonlinear coefficients at the quadrature points and nodes</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementBoundaryCoefficients">
-<code class="descname">calculateElementBoundaryCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementBoundaryCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the nonlinear coefficients at the element boundary quadrature points</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryCoefficients">
-<code class="descname">calculateExteriorElementBoundaryCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateExteriorElementBoundaryCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the nonlinear coefficients at global exterior element boundary quadrature points</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateQuadrature">
-<code class="descname">calculateQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.updateAfterMeshMotion">
-<code class="descname">updateAfterMeshMotion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.updateAfterMeshMotion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateAfterMeshMotion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.updateAfterMeshMotion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementQuadrature">
-<code class="descname">calculateElementQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the physical location and weights of the quadrature rules
 and the shape information at the quadrature points.</p>
 <p>This function should be called only when the mesh changes.</p>
@@ -393,7 +375,7 @@ and the shape information at the quadrature points.</p>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementBoundaryQuadrature">
-<code class="descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the physical location and weights of the quadrature rules
 and the shape information at the quadrature points on element boundaries.</p>
 <p>This function should be called only when the mesh changes.</p>
@@ -401,7 +383,7 @@ and the shape information at the quadrature points on element boundaries.</p>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryQuadrature">
-<code class="descname">calculateExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the physical location and weights of the quadrature rules
 and the shape information at the quadrature points on global element boundaries.</p>
 <p>This function should be called only when the mesh changes.</p>
@@ -409,13 +391,13 @@ and the shape information at the quadrature points on global element boundaries.
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.setFreeDOF">
-<code class="descname">setFreeDOF</code><span class="sig-paren">(</span><em>free_u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setFreeDOF" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setFreeDOF</code><span class="sig-paren">(</span><em class="sig-param">free_u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setFreeDOF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the free(non-Dirichlet) DOF from the global DOF</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.updateLocal2Global">
-<code class="descname">updateLocal2Global</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.updateLocal2Global" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateLocal2Global</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.updateLocal2Global" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a mapping between local DOF numbers and global free DOF
 numbers, that is, EXCLUDING Dirichlet DOF.  We have to use a
 list of local dof because of the exclusion of Dirichlet nodes
@@ -424,94 +406,94 @@ list of local dof because of the exclusion of Dirichlet nodes
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.setInflowFlux">
-<code class="descname">setInflowFlux</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setInflowFlux" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setInflowFlux</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setInflowFlux" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.setUnknowns">
-<code class="descname">setUnknowns</code><span class="sig-paren">(</span><em>free_u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setUnknowns" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setUnknowns</code><span class="sig-paren">(</span><em class="sig-param">free_u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setUnknowns" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.initializeJacobian">
-<code class="descname">initializeJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeJacobian" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.viewSolution">
-<code class="descname">viewSolution</code><span class="sig-paren">(</span><em>plotOffSet=None</em>, <em>titleModifier=''</em>, <em>dgridnx=50</em>, <em>dgridny=50</em>, <em>dgridp=16.0</em>, <em>pause=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.viewSolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">viewSolution</code><span class="sig-paren">(</span><em class="sig-param">plotOffSet=None</em>, <em class="sig-param">titleModifier=''</em>, <em class="sig-param">dgridnx=50</em>, <em class="sig-param">dgridny=50</em>, <em class="sig-param">dgridp=16.0</em>, <em class="sig-param">pause=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.viewSolution" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.viewSolutionVTK">
-<code class="descname">viewSolutionVTK</code><span class="sig-paren">(</span><em>plotOffSet=None</em>, <em>titleModifier=''</em>, <em>dgridnx=50</em>, <em>dgridny=50</em>, <em>dgridp=16.0</em>, <em>pause=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.viewSolutionVTK" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">viewSolutionVTK</code><span class="sig-paren">(</span><em class="sig-param">plotOffSet=None</em>, <em class="sig-param">titleModifier=''</em>, <em class="sig-param">dgridnx=50</em>, <em class="sig-param">dgridny=50</em>, <em class="sig-param">dgridp=16.0</em>, <em class="sig-param">pause=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.viewSolutionVTK" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.saveSolution">
-<code class="descname">saveSolution</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.saveSolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">saveSolution</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.saveSolution" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.write_ebq_geo_Ensight">
-<code class="descname">write_ebq_geo_Ensight</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.write_ebq_geo_Ensight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write_ebq_geo_Ensight</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.write_ebq_geo_Ensight" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.write_ebq_velocity_Ensight">
-<code class="descname">write_ebq_velocity_Ensight</code><span class="sig-paren">(</span><em>filename</em>, <em>nOutput</em>, <em>append=False</em>, <em>firstVariable=True</em>, <em>case_filename=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.write_ebq_velocity_Ensight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write_ebq_velocity_Ensight</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">nOutput</em>, <em class="sig-param">append=False</em>, <em class="sig-param">firstVariable=True</em>, <em class="sig-param">case_filename=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.write_ebq_velocity_Ensight" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.archiveFiniteElementSolutions">
-<code class="descname">archiveFiniteElementSolutions</code><span class="sig-paren">(</span><em>archive</em>, <em>t</em>, <em>tCount</em>, <em>initialPhase=False</em>, <em>writeVectors=True</em>, <em>meshChanged=False</em>, <em>femSpaceWritten={}</em>, <em>writeVelocityPostProcessor=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveFiniteElementSolutions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">archiveFiniteElementSolutions</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">t</em>, <em class="sig-param">tCount</em>, <em class="sig-param">initialPhase=False</em>, <em class="sig-param">writeVectors=True</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">femSpaceWritten={}</em>, <em class="sig-param">writeVelocityPostProcessor=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveFiniteElementSolutions" title="Permalink to this definition">¶</a></dt>
 <dd><p>write finite element solutions to archive at time t, tries to group finite element
 functions by their space</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.archiveElementQuadratureValues">
-<code class="descname">archiveElementQuadratureValues</code><span class="sig-paren">(</span><em>archive</em>, <em>t</em>, <em>tCount</em>, <em>scalarKeys=None</em>, <em>vectorKeys=None</em>, <em>tensorKeys=None</em>, <em>initialPhase=False</em>, <em>meshChanged=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveElementQuadratureValues" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">archiveElementQuadratureValues</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">t</em>, <em class="sig-param">tCount</em>, <em class="sig-param">scalarKeys=None</em>, <em class="sig-param">vectorKeys=None</em>, <em class="sig-param">tensorKeys=None</em>, <em class="sig-param">initialPhase=False</em>, <em class="sig-param">meshChanged=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveElementQuadratureValues" title="Permalink to this definition">¶</a></dt>
 <dd><p>write element quadrature dictionary values to archive at time t, groups all entries
 under same mesh at a given time level</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.archiveElementBoundaryQuadratureValues">
-<code class="descname">archiveElementBoundaryQuadratureValues</code><span class="sig-paren">(</span><em>archive</em>, <em>t</em>, <em>tCount</em>, <em>scalarKeys=None</em>, <em>vectorKeys=None</em>, <em>tensorKeys=None</em>, <em>initialPhase=False</em>, <em>meshChanged=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveElementBoundaryQuadratureValues" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">archiveElementBoundaryQuadratureValues</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">t</em>, <em class="sig-param">tCount</em>, <em class="sig-param">scalarKeys=None</em>, <em class="sig-param">vectorKeys=None</em>, <em class="sig-param">tensorKeys=None</em>, <em class="sig-param">initialPhase=False</em>, <em class="sig-param">meshChanged=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveElementBoundaryQuadratureValues" title="Permalink to this definition">¶</a></dt>
 <dd><p>write elementBoundary quadrature dictionary values to archive at time t, groups all entries
 under same mesh at a given time level</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.archiveExteriorElementBoundaryQuadratureValues">
-<code class="descname">archiveExteriorElementBoundaryQuadratureValues</code><span class="sig-paren">(</span><em>archive</em>, <em>t</em>, <em>tCount</em>, <em>scalarKeys=None</em>, <em>vectorKeys=None</em>, <em>tensorKeys=None</em>, <em>initialPhase=False</em>, <em>meshChanged=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveExteriorElementBoundaryQuadratureValues" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">archiveExteriorElementBoundaryQuadratureValues</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">t</em>, <em class="sig-param">tCount</em>, <em class="sig-param">scalarKeys=None</em>, <em class="sig-param">vectorKeys=None</em>, <em class="sig-param">tensorKeys=None</em>, <em class="sig-param">initialPhase=False</em>, <em class="sig-param">meshChanged=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveExteriorElementBoundaryQuadratureValues" title="Permalink to this definition">¶</a></dt>
 <dd><p>write exteriorElementBoundary quadrature dictionary values to archive at time t, groups all entries
 under same mesh at a given time level</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.archiveFiniteElementResiduals">
-<code class="descname">archiveFiniteElementResiduals</code><span class="sig-paren">(</span><em>archive</em>, <em>t</em>, <em>tCount</em>, <em>res_dict</em>, <em>res_name_base='spatial_residual'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveFiniteElementResiduals" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">archiveFiniteElementResiduals</code><span class="sig-paren">(</span><em class="sig-param">archive</em>, <em class="sig-param">t</em>, <em class="sig-param">tCount</em>, <em class="sig-param">res_dict</em>, <em class="sig-param">res_name_base='spatial_residual'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.archiveFiniteElementResiduals" title="Permalink to this definition">¶</a></dt>
 <dd><p>write assembled spatial residual stored in r at time t</p>
 <p>ASSUMES archiveFiniteElementSolutions has already been called for t and tCount!!!</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.initializeMassJacobian">
-<code class="descname">initializeMassJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeMassJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeMassJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeMassJacobian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup the storage for the mass jacobian and return as a <code class="docutils literal notranslate"><span class="pre">`SparseMat`</span></code> or <code class="docutils literal notranslate"><span class="pre">`Mat`</span></code> based on self.matType</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.initializeSpatialJacobian">
-<code class="descname">initializeSpatialJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeSpatialJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeSpatialJacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.initializeSpatialJacobian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup the storage for the spatial jacobian and return as a <code class="docutils literal notranslate"><span class="pre">`SparseMat`</span></code> or <code class="docutils literal notranslate"><span class="pre">`Mat`</span></code> based on self.matType</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementLoadCoefficients_inhomogeneous">
-<code class="descname">calculateElementLoadCoefficients_inhomogeneous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementLoadCoefficients_inhomogeneous" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementLoadCoefficients_inhomogeneous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementLoadCoefficients_inhomogeneous" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the non-solution dependent portion of the Reaction term, ‘r’
 Temporary fix for model reduction for linear problems
 Just Zero’s the solution and calls the usual update</p>
@@ -519,7 +501,7 @@ Just Zero’s the solution and calls the usual update</p>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateElementLoad_inhomogeneous">
-<code class="descname">calculateElementLoad_inhomogeneous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementLoad_inhomogeneous" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementLoad_inhomogeneous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateElementLoad_inhomogeneous" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate all the portion of the weak element residual corresponding to terms that
 the ‘inhomogeneous’ or constant portion of the traditional load vector. This includes purely spatio-temporal
 portions of the reaction term, ‘r’, and boundary condition terms
@@ -528,7 +510,7 @@ This is a temporary fix for linear model reduction.</p>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryCoefficients_inhomogeneous">
-<code class="descname">calculateExteriorElementBoundaryCoefficients_inhomogeneous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryCoefficients_inhomogeneous" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateExteriorElementBoundaryCoefficients_inhomogeneous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.calculateExteriorElementBoundaryCoefficients_inhomogeneous" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the coefficients at global exterior element boundary quadrature points for
 terms that are independent of the solution, i.e., space and time dependent portions of boundary integrals
 Just sets the solution to zero and evaluates the boundary integrals
@@ -537,47 +519,44 @@ This is a temporary fix for linear model reduction</p>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getLoadVector">
-<code class="descname">getLoadVector</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getLoadVector" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getLoadVector</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getLoadVector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the non-solution dependent portion of the Reaction term, ‘r’ and flux boundary conditions</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getMassJacobian">
-<code class="descname">getMassJacobian</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getMassJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getMassJacobian</code><span class="sig-paren">(</span><em class="sig-param">jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getMassJacobian" title="Permalink to this definition">¶</a></dt>
 <dd><p>assemble the portion of the jacobian coming from the time derivative terms</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getSpatialJacobian">
-<code class="descname">getSpatialJacobian</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getSpatialJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSpatialJacobian</code><span class="sig-paren">(</span><em class="sig-param">jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getSpatialJacobian" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getSpatialResidual">
-<code class="descname">getSpatialResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getSpatialResidual" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSpatialResidual</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getSpatialResidual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the element spatial residuals and add in to the global residual
 This is being used right now to test nonlinear pod and deim</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.getMassResidual">
-<code class="descname">getMassResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getMassResidual" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getMassResidual</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.getMassResidual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the portion of the element residuals associated with the temporal term and assemble into a global residual
 This is being used right now to test nonlinear pod and deim and is inefficient</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.attachLaplaceOperator">
-<code class="descname">attachLaplaceOperator</code><span class="sig-paren">(</span><em>nu=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.attachLaplaceOperator" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attachLaplaceOperator</code><span class="sig-paren">(</span><em class="sig-param">nu=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.attachLaplaceOperator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attach a Discrete Laplace Operator to the Transport Class.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nu</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Viscosity parameter for the Laplace operator.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nu</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Viscosity parameter for the Laplace operator.</p>
+</dd>
+</dl>
 <p class="rubric">Notes</p>
 <p>This function creates a Laplace matrix and stores the result in the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.OneLevelTransport</span></code> class to assist in the construction
@@ -588,37 +567,37 @@ of physics based preconditione</p>
 
 <dl class="class">
 <dt id="proteus.Transport.MultilevelTransport">
-<em class="property">class </em><code class="descclassname">proteus.Transport.</code><code class="descname">MultilevelTransport</code><span class="sig-paren">(</span><em>problem</em>, <em>numerics</em>, <em>mlMesh</em>, <em>OneLevelTransportType=&lt;class 'proteus.Transport.OneLevelTransport'&gt;</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Transport.</code><code class="sig-name descname">MultilevelTransport</code><span class="sig-paren">(</span><em class="sig-param">problem</em>, <em class="sig-param">numerics</em>, <em class="sig-param">mlMesh</em>, <em class="sig-param">OneLevelTransportType=&lt;class 'proteus.Transport.OneLevelTransport'&gt;</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Nonlinear ADR on a multilevel mesh</p>
 <dl class="method">
 <dt id="proteus.Transport.MultilevelTransport.initialize">
-<code class="descname">initialize</code><span class="sig-paren">(</span><em>nd</em>, <em>mlMesh</em>, <em>TrialSpaceTypeDict</em>, <em>TestSpaceTypeDict</em>, <em>matType</em>, <em>dirichletConditionsSetterDict</em>, <em>coefficients</em>, <em>quadratureDict</em>, <em>elementBoundaryQuadratureDict</em>, <em>fluxBoundaryConditionsDict='noFlow'</em>, <em>advectiveFluxBoundaryConditionsSetterDict={}</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict={}</em>, <em>stressFluxBoundaryConditionsSetterDict={}</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFlux=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=&lt;class 'proteus.TimeIntegration.BackwardEuler'&gt;</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>weakDirichletConditions=None</em>, <em>options=None</em>, <em>useSparseDiffusion=True</em>, <em>movingDomain=False</em>, <em>PhiSpaceTypeDict=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">nd</em>, <em class="sig-param">mlMesh</em>, <em class="sig-param">TrialSpaceTypeDict</em>, <em class="sig-param">TestSpaceTypeDict</em>, <em class="sig-param">matType</em>, <em class="sig-param">dirichletConditionsSetterDict</em>, <em class="sig-param">coefficients</em>, <em class="sig-param">quadratureDict</em>, <em class="sig-param">elementBoundaryQuadratureDict</em>, <em class="sig-param">fluxBoundaryConditionsDict='noFlow'</em>, <em class="sig-param">advectiveFluxBoundaryConditionsSetterDict={}</em>, <em class="sig-param">diffusiveFluxBoundaryConditionsSetterDictDict={}</em>, <em class="sig-param">stressFluxBoundaryConditionsSetterDict={}</em>, <em class="sig-param">stabilization=None</em>, <em class="sig-param">shockCapturing=None</em>, <em class="sig-param">conservativeFlux=None</em>, <em class="sig-param">numericalFluxType=None</em>, <em class="sig-param">TimeIntegrationClass=&lt;class 'proteus.TimeIntegration.BackwardEuler'&gt;</em>, <em class="sig-param">massLumping=False</em>, <em class="sig-param">reactionLumping=False</em>, <em class="sig-param">weakDirichletConditions=None</em>, <em class="sig-param">options=None</em>, <em class="sig-param">useSparseDiffusion=True</em>, <em class="sig-param">movingDomain=False</em>, <em class="sig-param">PhiSpaceTypeDict=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.MultilevelTransport.setInitialConditions">
-<code class="descname">setInitialConditions</code><span class="sig-paren">(</span><em>getInitialConditionsDict</em>, <em>T=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.setInitialConditions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setInitialConditions</code><span class="sig-paren">(</span><em class="sig-param">getInitialConditionsDict</em>, <em class="sig-param">T=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.setInitialConditions" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.MultilevelTransport.setInitialConditionsFromDofs">
-<code class="descname">setInitialConditionsFromDofs</code><span class="sig-paren">(</span><em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.setInitialConditionsFromDofs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setInitialConditionsFromDofs</code><span class="sig-paren">(</span><em class="sig-param">T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.setInitialConditionsFromDofs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.MultilevelTransport.calculateAuxiliaryQuantitiesAfterStep">
-<code class="descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.MultilevelTransport.attachModels">
-<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.attachModels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attachModels</code><span class="sig-paren">(</span><em class="sig-param">modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.attachModels" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Transport.MultilevelTransport.viewJacobian">
-<code class="descname">viewJacobian</code><span class="sig-paren">(</span><em>file_prefix='./dump_'</em>, <em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.viewJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">viewJacobian</code><span class="sig-paren">(</span><em class="sig-param">file_prefix='./dump_'</em>, <em class="sig-param">b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.MultilevelTransport.viewJacobian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save parallel Jacobian list and (optionally) right-hand side b to disk if they
 possess save methods, otherwise, do nothing.</p>
 </dd></dl>
@@ -640,7 +619,7 @@ possess save methods, otherwise, do nothing.</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

@@ -2,6 +2,6 @@ proteus.canalyticalSolutions module
 ===================================
 
 .. automodule:: proteus.canalyticalSolutions
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

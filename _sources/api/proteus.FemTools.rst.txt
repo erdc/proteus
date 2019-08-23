@@ -2,6 +2,6 @@ proteus.FemTools module
 =======================
 
 .. automodule:: proteus.FemTools
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

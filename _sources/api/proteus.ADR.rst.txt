@@ -2,6 +2,6 @@ proteus.ADR module
 ==================
 
 .. automodule:: proteus.ADR
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

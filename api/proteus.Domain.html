@@ -2,14 +2,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.Domain module &#8212; Proteus 1.6.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>proteus.Domain module &#8212; Proteus 1.7.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -18,7 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.6.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -128,131 +127,97 @@
   <div class="section" id="module-proteus.Domain">
 <span id="proteus-domain-module"></span><h1>proteus.Domain module<a class="headerlink" href="#module-proteus.Domain" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy and tools for building domains of PDE’s.</p>
-digraph inheritancecb50c7d34c {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;D_base&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.D_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for domains&quot;];
-  &quot;newobject&quot; -&gt; &quot;D_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;GMSH_3D_Domain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.GMSH_3D_Domain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;A domain described by a gmsh .geo file&quot;];
-  &quot;D_base&quot; -&gt; &quot;GMSH_3D_Domain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;InterpolatedBathymetryDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.InterpolatedBathymetryDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;2D domains with an attached bathymetry data set.&quot;];
-  &quot;PlanarStraightLineGraphDomain&quot; -&gt; &quot;InterpolatedBathymetryDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Mesh2DMDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.Mesh2DMDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;2D domains from ADH mesh files&quot;];
-  &quot;D_base&quot; -&gt; &quot;Mesh2DMDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;Mesh3DMDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.Mesh3DMDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains from ADH mesh files&quot;];
-  &quot;D_base&quot; -&gt; &quot;Mesh3DMDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;MeshHexDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.MeshHexDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains from Hex mesh files&quot;];
-  &quot;D_base&quot; -&gt; &quot;MeshHexDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;MeshTetgenDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.MeshTetgenDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains from tetgen mesh files&quot;];
-  &quot;D_base&quot; -&gt; &quot;MeshTetgenDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;PUMIDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.PUMIDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3d domains from PUMI mesh files&quot;];
-  &quot;D_base&quot; -&gt; &quot;PUMIDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;PiecewiseLinearComplexDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.PiecewiseLinearComplexDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains desribed by closed surfaces made up of general polygonal facets.&quot;];
-  &quot;D_base&quot; -&gt; &quot;PiecewiseLinearComplexDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;PlanarStraightLineGraphDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.PlanarStraightLineGraphDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;2D domains described by planar straight line graphs.&quot;];
-  &quot;D_base&quot; -&gt; &quot;PlanarStraightLineGraphDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;RectangularDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.RectangularDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Rectangular domains in 1,2, or 3D specified by the lower left hand corner and dimensions.&quot;];
-  &quot;D_base&quot; -&gt; &quot;RectangularDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;TriangulatedSurfaceDomain&quot; [URL=&quot;../api/proteus.Domain.html#proteus.Domain.TriangulatedSurfaceDomain&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;3D domains described by closed surfaces made up of triangular facets.&quot;];
-  &quot;D_base&quot; -&gt; &quot;TriangulatedSurfaceDomain&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
-}
+<div class="graphviz"><object data="../_images/inheritance-653cc3b70e5b7c84142c51fac19a6966e1c283e9.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.Domain</p></object></div>
 <dl class="class">
 <dt id="proteus.Domain.D_base">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">D_base</code><span class="sig-paren">(</span><em>nd</em>, <em>name='defaultDomain'</em>, <em>units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">D_base</code><span class="sig-paren">(</span><em class="sig-param">nd</em>, <em class="sig-param">name='defaultDomain'</em>, <em class="sig-param">units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The base class for domains</p>
 <p>Set dimensions (nd), name string, and units string</p>
 <dl class="method">
 <dt id="proteus.Domain.D_base.isOnLine">
-<code class="descname">isOnLine</code><span class="sig-paren">(</span><em>pointA</em>, <em>pointB</em>, <em>testPoint</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.isOnLine" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">isOnLine</code><span class="sig-paren">(</span><em class="sig-param">pointA</em>, <em class="sig-param">pointB</em>, <em class="sig-param">testPoint</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.isOnLine" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.D_base.getMesh2ModelClassification">
-<code class="descname">getMesh2ModelClassification</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.getMesh2ModelClassification" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getMesh2ModelClassification</code><span class="sig-paren">(</span><em class="sig-param">mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.getMesh2ModelClassification" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.D_base.writeAsymptote">
-<code class="descname">writeAsymptote</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.writeAsymptote" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeAsymptote</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.writeAsymptote" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a representation of the domain to file using the Asymptote vector graphics language.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.D_base.writeXdmf">
-<code class="descname">writeXdmf</code><span class="sig-paren">(</span><em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.writeXdmf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeXdmf</code><span class="sig-paren">(</span><em class="sig-param">ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.writeXdmf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store the domain in an Xdmf file.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.D_base.getBoundingBox">
-<code class="descname">getBoundingBox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.getBoundingBox" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getBoundingBox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.getBoundingBox" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the bounding box of a set of vertices.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.D_base.writeGeo">
-<code class="descname">writeGeo</code><span class="sig-paren">(</span><em>fileprefix</em>, <em>group_names=False</em>, <em>he_max=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.writeGeo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeGeo</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em>, <em class="sig-param">group_names=False</em>, <em class="sig-param">he_max=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.writeGeo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a Gmsh .geo file based on the geometrical information of the
 Domain.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>fileprefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Name of the file to save (prefix without .geo)</li>
-<li><strong>group_names</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – True to write name of physical groups in .geo (default: False)</li>
-<li><strong>he_max</strong> (<em>Optional</em><em>[</em><em>double</em><em>]</em>) – Size of the maximum characteristic element size. Should be set
-for meshes using a uniform refinement.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fileprefix</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Name of the file to save (prefix without .geo)</p></li>
+<li><p><strong>group_names</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>]</em>) – True to write name of physical groups in .geo (default: False)</p></li>
+<li><p><strong>he_max</strong> (<em>Optional</em><em>[</em><em>double</em><em>]</em>) – Size of the maximum characteristic element size. Should be set
+for meshes using a uniform refinement.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.D_base.gmsh2proteus">
-<code class="descname">gmsh2proteus</code><span class="sig-paren">(</span><em>geofile</em>, <em>BC_class</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.gmsh2proteus" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">gmsh2proteus</code><span class="sig-paren">(</span><em class="sig-param">geofile</em>, <em class="sig-param">BC_class</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.D_base.gmsh2proteus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Populates the boundaryTags and BC dictionaries of the domain by importing tag and
 flags from .geo file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>geofile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Name of the geofile</li>
-<li><strong>BC_class</strong> (<a class="reference internal" href="proteus.BoundaryConditions.html#proteus.BoundaryConditions.BC_Base" title="proteus.BoundaryConditions.BC_Base"><em>proteus.BoundaryConditions.BC_Base</em></a>) – Bounday Conditions class to populate BC dictionaries</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geofile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Name of the geofile</p></li>
+<li><p><strong>BC_class</strong> (<a class="reference internal" href="proteus.BoundaryConditions.html#proteus.BoundaryConditions.BC_Base" title="proteus.BoundaryConditions.BC_Base"><em>proteus.BoundaryConditions.BC_Base</em></a>) – Bounday Conditions class to populate BC dictionaries</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.RectangularDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">RectangularDomain</code><span class="sig-paren">(</span><em>L=[1.0, 1.0, 1.0], x=[0.0, 0.0, 0.0], name='DefaultRectangularDomain', units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">RectangularDomain</code><span class="sig-paren">(</span><em class="sig-param">L=[1.0, 1.0, 1.0], x=[0.0, 0.0, 0.0], name='DefaultRectangularDomain', units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>Rectangular domains in 1,2, or 3D specified by the lower left hand corner and dimensions.</p>
+<p>Set dimensions (nd), name string, and units string</p>
 <dl class="method">
 <dt id="proteus.Domain.RectangularDomain.writePoly">
-<code class="descname">writePoly</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain.writePoly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writePoly</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain.writePoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the RectangularDomain using the poly format.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.RectangularDomain.writeAsymptote">
-<code class="descname">writeAsymptote</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain.writeAsymptote" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeAsymptote</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain.writeAsymptote" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the rectangular domain as a box displaying the dimesions and coloring the boundaries according to the boundary flags.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.RectangularDomain.writeXdmf">
-<code class="descname">writeXdmf</code><span class="sig-paren">(</span><em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain.writeXdmf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeXdmf</code><span class="sig-paren">(</span><em class="sig-param">ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.RectangularDomain.writeXdmf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store the domain in an Xdmf file.</p>
 </dd></dl>
 
@@ -260,86 +225,82 @@ flags from .geo file.</p>
 
 <dl class="function">
 <dt id="proteus.Domain.unitSimplex">
-<code class="descclassname">proteus.Domain.</code><code class="descname">unitSimplex</code><span class="sig-paren">(</span><em>nd=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.unitSimplex" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">unitSimplex</code><span class="sig-paren">(</span><em class="sig-param">nd=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.unitSimplex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a 2 or 3 dimension reference element.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The elements dimension (must be 2 or 3)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">reference_element</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The elements dimension (must be 2 or 3)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>reference_element</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.GMSH_3D_Domain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">GMSH_3D_Domain</code><span class="sig-paren">(</span><em>geofile, he, name='GMSH_Domain', units='m', length_scale=1.0, permute_dims=[0, 1, 2]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.GMSH_3D_Domain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">GMSH_3D_Domain</code><span class="sig-paren">(</span><em class="sig-param">geofile, he, name='GMSH_Domain', units='m', length_scale=1.0, permute_dims=[0, 1, 2]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.GMSH_3D_Domain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>A domain described by a gmsh .geo file</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>geofile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The base filename of the main .geo file</li>
-<li><strong>he</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The maximum element diameter (this should go way)</li>
-<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A name for the domain</li>
-<li><strong>units</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The units of length</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geofile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The base filename of the main .geo file</p></li>
+<li><p><strong>he</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The maximum element diameter (this should go way)</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A name for the domain</p></li>
+<li><p><strong>units</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The units of length</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
+<p>Set dimensions (nd), name string, and units string</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.PlanarStraightLineGraphDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">PlanarStraightLineGraphDomain</code><span class="sig-paren">(</span><em>fileprefix=None</em>, <em>vertices=None</em>, <em>segments=None</em>, <em>facets=None</em>, <em>holes=None</em>, <em>regions=None</em>, <em>vertexFlags=None</em>, <em>segmentFlags=None</em>, <em>regionFlags=None</em>, <em>regionConstraints=None</em>, <em>bc=None</em>, <em>name='DefaultPSLGDomain'</em>, <em>units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">PlanarStraightLineGraphDomain</code><span class="sig-paren">(</span><em class="sig-param">fileprefix=None</em>, <em class="sig-param">vertices=None</em>, <em class="sig-param">segments=None</em>, <em class="sig-param">facets=None</em>, <em class="sig-param">holes=None</em>, <em class="sig-param">regions=None</em>, <em class="sig-param">vertexFlags=None</em>, <em class="sig-param">segmentFlags=None</em>, <em class="sig-param">regionFlags=None</em>, <em class="sig-param">regionConstraints=None</em>, <em class="sig-param">bc=None</em>, <em class="sig-param">name='DefaultPSLGDomain'</em>, <em class="sig-param">units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>2D domains described by planar straight line graphs.</p>
 <p>Construct the PSLG from lists of vertices, segments, etc. If no vertex or segment flags are given, then they are assigned as zero.</p>
 <dl class="method">
 <dt id="proteus.Domain.PlanarStraightLineGraphDomain.update">
-<code class="descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.update" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.update" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PlanarStraightLineGraphDomain.getSegmentPartition">
-<code class="descname">getSegmentPartition</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.getSegmentPartition" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSegmentPartition</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.getSegmentPartition" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PlanarStraightLineGraphDomain.readPoly">
-<code class="descname">readPoly</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.readPoly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">readPoly</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.readPoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read in the PSLG using the poly format.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PlanarStraightLineGraphDomain.writePoly">
-<code class="descname">writePoly</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.writePoly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writePoly</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.writePoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the PSLG using the poly format.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PlanarStraightLineGraphDomain.writeAsymptote">
-<code class="descname">writeAsymptote</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.writeAsymptote" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeAsymptote</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.writeAsymptote" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a representation of the PSLG in the Asymptote vector graphics language</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PlanarStraightLineGraphDomain.writePLY">
-<code class="descname">writePLY</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.writePLY" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writePLY</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.writePLY" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the PLC domain in the Stanford PLY format.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PlanarStraightLineGraphDomain.writeXdmf">
-<code class="descname">writeXdmf</code><span class="sig-paren">(</span><em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.writeXdmf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeXdmf</code><span class="sig-paren">(</span><em class="sig-param">ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PlanarStraightLineGraphDomain.writeXdmf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store the PSLG domain in an XDMF file. For now we store the information on holes in and Information element.</p>
 </dd></dl>
 
@@ -347,33 +308,35 @@ flags from .geo file.</p>
 
 <dl class="class">
 <dt id="proteus.Domain.InterpolatedBathymetryDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">InterpolatedBathymetryDomain</code><span class="sig-paren">(</span><em>fileprefix=None</em>, <em>vertices=None</em>, <em>segments=None</em>, <em>holes=None</em>, <em>regions=None</em>, <em>vertexFlags=None</em>, <em>segmentFlags=None</em>, <em>regionFlags=None</em>, <em>name='DefaultInterpolatedBathymetry'</em>, <em>units='m'</em>, <em>bathy=None</em>, <em>bathyGridDim=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.InterpolatedBathymetryDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">InterpolatedBathymetryDomain</code><span class="sig-paren">(</span><em class="sig-param">fileprefix=None</em>, <em class="sig-param">vertices=None</em>, <em class="sig-param">segments=None</em>, <em class="sig-param">holes=None</em>, <em class="sig-param">regions=None</em>, <em class="sig-param">vertexFlags=None</em>, <em class="sig-param">segmentFlags=None</em>, <em class="sig-param">regionFlags=None</em>, <em class="sig-param">name='DefaultInterpolatedBathymetry'</em>, <em class="sig-param">units='m'</em>, <em class="sig-param">bathy=None</em>, <em class="sig-param">bathyGridDim=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.InterpolatedBathymetryDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.PlanarStraightLineGraphDomain" title="proteus.Domain.PlanarStraightLineGraphDomain"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.PlanarStraightLineGraphDomain</span></code></a></p>
 <p>2D domains with an attached bathymetry data set.
 Meshes are generated by locally refining the PSLG until the interpolation error for a bathymetry point cloud meets a prescribed tolerance.</p>
 <p>Intial support measures interpolation error in the <span class="math notranslate nohighlight">\(L_{\infty}\)</span> norm.</p>
+<p>Construct the PSLG from lists of vertices, segments, etc. If no vertex or segment flags are given, then they are assigned as zero.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.TriangulatedSurfaceDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">TriangulatedSurfaceDomain</code><span class="sig-paren">(</span><em>vertices</em>, <em>triangles</em>, <em>name='DefaultTriangulatedSurfaceDomain'</em>, <em>units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.TriangulatedSurfaceDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">TriangulatedSurfaceDomain</code><span class="sig-paren">(</span><em class="sig-param">vertices</em>, <em class="sig-param">triangles</em>, <em class="sig-param">name='DefaultTriangulatedSurfaceDomain'</em>, <em class="sig-param">units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.TriangulatedSurfaceDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>3D domains described by closed surfaces made up of triangular facets.</p>
+<p>Set dimensions (nd), name string, and units string</p>
 <dl class="method">
 <dt id="proteus.Domain.TriangulatedSurfaceDomain.readSTL">
-<code class="descname">readSTL</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.TriangulatedSurfaceDomain.readSTL" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">readSTL</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.TriangulatedSurfaceDomain.readSTL" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the triangulated surface from a file in stereo lithography format.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.TriangulatedSurfaceDomain.writePoly">
-<code class="descname">writePoly</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.TriangulatedSurfaceDomain.writePoly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writePoly</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.TriangulatedSurfaceDomain.writePoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the triangulated surface in the poly format</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.TriangulatedSurfaceDomain.writeAsymptote">
-<code class="descname">writeAsymptote</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.TriangulatedSurfaceDomain.writeAsymptote" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeAsymptote</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.TriangulatedSurfaceDomain.writeAsymptote" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the triangulated surface in the Asymptote language.</p>
 </dd></dl>
 
@@ -381,85 +344,90 @@ Meshes are generated by locally refining the PSLG until the interpolation error 
 
 <dl class="class">
 <dt id="proteus.Domain.Mesh2DMDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">Mesh2DMDomain</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.Mesh2DMDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">Mesh2DMDomain</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.Mesh2DMDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>2D domains from ADH mesh files</p>
+<p>Set dimensions (nd), name string, and units string</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.Mesh3DMDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">Mesh3DMDomain</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.Mesh3DMDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">Mesh3DMDomain</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.Mesh3DMDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>3D domains from ADH mesh files</p>
+<p>Set dimensions (nd), name string, and units string</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.MeshHexDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">MeshHexDomain</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.MeshHexDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">MeshHexDomain</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.MeshHexDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>3D domains from Hex mesh files</p>
+<p>Set dimensions (nd), name string, and units string</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.MeshTetgenDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">MeshTetgenDomain</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.MeshTetgenDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">MeshTetgenDomain</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.MeshTetgenDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>3D domains from tetgen mesh files</p>
+<p>Set dimensions (nd), name string, and units string</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.PUMIDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">PUMIDomain</code><span class="sig-paren">(</span><em>name='PUMIDomain'</em>, <em>dim=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PUMIDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">PUMIDomain</code><span class="sig-paren">(</span><em class="sig-param">name='PUMIDomain'</em>, <em class="sig-param">dim=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PUMIDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>3d domains from PUMI mesh files</p>
 <p>faceList – defines face classification in simmetrix  mesh
 PUMIMesh – the MeshAdapt object</p>
+<p>Set dimensions (nd), name string, and units string</p>
 <dl class="method">
 <dt id="proteus.Domain.PUMIDomain.writePoly">
-<code class="descname">writePoly</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PUMIDomain.writePoly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writePoly</code><span class="sig-paren">(</span><em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PUMIDomain.writePoly" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Domain.PiecewiseLinearComplexDomain">
-<em class="property">class </em><code class="descclassname">proteus.Domain.</code><code class="descname">PiecewiseLinearComplexDomain</code><span class="sig-paren">(</span><em>fileprefix=None</em>, <em>vertices=None</em>, <em>facets=None</em>, <em>facetHoles=None</em>, <em>holes=None</em>, <em>regions=None</em>, <em>vertexFlags=None</em>, <em>facetFlags=None</em>, <em>regionFlags=None</em>, <em>regionConstraints=None</em>, <em>bc=None</em>, <em>name='PLCDomain'</em>, <em>units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">PiecewiseLinearComplexDomain</code><span class="sig-paren">(</span><em class="sig-param">fileprefix=None</em>, <em class="sig-param">vertices=None</em>, <em class="sig-param">facets=None</em>, <em class="sig-param">facetHoles=None</em>, <em class="sig-param">holes=None</em>, <em class="sig-param">regions=None</em>, <em class="sig-param">vertexFlags=None</em>, <em class="sig-param">facetFlags=None</em>, <em class="sig-param">regionFlags=None</em>, <em class="sig-param">regionConstraints=None</em>, <em class="sig-param">bc=None</em>, <em class="sig-param">name='PLCDomain'</em>, <em class="sig-param">units='m'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Domain.D_base" title="proteus.Domain.D_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Domain.D_base</span></code></a></p>
 <p>3D domains desribed by closed surfaces made up of general polygonal facets.</p>
 <p>Read  the PLC domain from lists. If no flags are given, then default flags of 0 are assigned.</p>
 <dl class="method">
 <dt id="proteus.Domain.PiecewiseLinearComplexDomain.update">
-<code class="descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.update" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to call when new vertices are added to the domain</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PiecewiseLinearComplexDomain.readPoly">
-<code class="descname">readPoly</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.readPoly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">readPoly</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.readPoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read in the PLC domain from a file in poly format.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PiecewiseLinearComplexDomain.writePoly">
-<code class="descname">writePoly</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writePoly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writePoly</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writePoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the PLC domain in the poly format.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PiecewiseLinearComplexDomain.writePLY">
-<code class="descname">writePLY</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writePLY" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writePLY</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writePLY" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the PLC domain in the Stanford PLY format.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PiecewiseLinearComplexDomain.writeAsymptote">
-<code class="descname">writeAsymptote</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writeAsymptote" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeAsymptote</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writeAsymptote" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a representation of the domain in the Asymptote vector graphics language.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Domain.PiecewiseLinearComplexDomain.writeXdmf">
-<code class="descname">writeXdmf</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writeXdmf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeXdmf</code><span class="sig-paren">(</span><em class="sig-param">fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.PiecewiseLinearComplexDomain.writeXdmf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store the domain in an Xdmf file.</p>
 </dd></dl>
 
@@ -467,7 +435,7 @@ PUMIMesh – the MeshAdapt object</p>
 
 <dl class="function">
 <dt id="proteus.Domain.getGmshPhysicalGroups">
-<code class="descclassname">proteus.Domain.</code><code class="descname">getGmshPhysicalGroups</code><span class="sig-paren">(</span><em>geofile</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.getGmshPhysicalGroups" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Domain.</code><code class="sig-name descname">getGmshPhysicalGroups</code><span class="sig-paren">(</span><em class="sig-param">geofile</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Domain.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Domain.getGmshPhysicalGroups" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -485,7 +453,7 @@ PUMIMesh – the MeshAdapt object</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

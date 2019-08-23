@@ -2,6 +2,6 @@ proteus.mprans.cKappa module
 ============================
 
 .. automodule:: proteus.mprans.cKappa
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -2,6 +2,6 @@ proteus.cnumericalFlux module
 =============================
 
 .. automodule:: proteus.cnumericalFlux
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

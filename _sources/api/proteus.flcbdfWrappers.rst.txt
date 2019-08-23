@@ -2,6 +2,6 @@ proteus.flcbdfWrappers module
 =============================
 
 .. automodule:: proteus.flcbdfWrappers
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

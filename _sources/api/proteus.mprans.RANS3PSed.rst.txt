@@ -2,6 +2,6 @@ proteus.mprans.RANS3PSed module
 ===============================
 
 .. automodule:: proteus.mprans.RANS3PSed
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

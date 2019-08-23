@@ -2,6 +2,6 @@ proteus.PostProcessingTools module
 ==================================
 
 .. automodule:: proteus.PostProcessingTools
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

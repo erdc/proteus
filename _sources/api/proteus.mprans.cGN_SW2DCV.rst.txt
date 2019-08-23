@@ -1,0 +1,7 @@
+proteus.mprans.cGN\_SW2DCV module
+=================================
+
+.. automodule:: proteus.mprans.cGN_SW2DCV
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -2,6 +2,6 @@ proteus.mprans.SedClosure module
 ================================
 
 .. automodule:: proteus.mprans.SedClosure
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

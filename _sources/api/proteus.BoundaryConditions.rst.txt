@@ -2,6 +2,6 @@ proteus.BoundaryConditions module
 =================================
 
 .. automodule:: proteus.BoundaryConditions
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

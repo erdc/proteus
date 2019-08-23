@@ -2,6 +2,6 @@ proteus.subsurfaceTransportFunctions module
 ===========================================
 
 .. automodule:: proteus.subsurfaceTransportFunctions
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

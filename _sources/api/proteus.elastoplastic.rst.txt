@@ -2,9 +2,9 @@ proteus.elastoplastic package
 =============================
 
 .. automodule:: proteus.elastoplastic
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    proteus.elastoplastic.ElastoPlastic
    proteus.elastoplastic.cElastoPlastic
-

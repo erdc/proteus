@@ -2,6 +2,6 @@ proteus.cpostprocessing module
 ==============================
 
 .. automodule:: proteus.cpostprocessing
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

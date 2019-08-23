@@ -1,0 +1,7 @@
+proteus.equivalent\_polynomials module
+======================================
+
+.. automodule:: proteus.equivalent_polynomials
+   :members:
+   :undoc-members:
+   :show-inheritance:

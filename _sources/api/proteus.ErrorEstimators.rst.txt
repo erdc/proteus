@@ -2,6 +2,6 @@ proteus.ErrorEstimators module
 ==============================
 
 .. automodule:: proteus.ErrorEstimators
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

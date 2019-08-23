@@ -1,0 +1,14 @@
+proteus.SWFlow.utils package
+============================
+
+.. automodule:: proteus.SWFlow.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   proteus.SWFlow.utils.SWEs_so

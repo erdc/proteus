@@ -2,6 +2,6 @@ proteus.mprans.cNCLS3P module
 =============================
 
 .. automodule:: proteus.mprans.cNCLS3P
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -2,6 +2,6 @@ proteus.mprans.NCLS module
 ==========================
 
 .. automodule:: proteus.mprans.NCLS
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

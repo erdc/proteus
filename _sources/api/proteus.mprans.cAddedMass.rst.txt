@@ -2,6 +2,6 @@ proteus.mprans.cAddedMass module
 ================================
 
 .. automodule:: proteus.mprans.cAddedMass
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

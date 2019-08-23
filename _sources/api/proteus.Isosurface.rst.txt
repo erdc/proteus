@@ -2,6 +2,6 @@ proteus.Isosurface module
 =========================
 
 .. automodule:: proteus.Isosurface
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

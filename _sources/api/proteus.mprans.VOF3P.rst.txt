@@ -2,6 +2,6 @@ proteus.mprans.VOF3P module
 ===========================
 
 .. automodule:: proteus.mprans.VOF3P
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

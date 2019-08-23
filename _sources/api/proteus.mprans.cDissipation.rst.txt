@@ -2,6 +2,6 @@ proteus.mprans.cDissipation module
 ==================================
 
 .. automodule:: proteus.mprans.cDissipation
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

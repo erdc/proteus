@@ -2,6 +2,6 @@ proteus.StupidHeap module
 =========================
 
 .. automodule:: proteus.StupidHeap
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

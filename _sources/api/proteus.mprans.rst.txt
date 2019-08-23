@@ -2,9 +2,9 @@ proteus.mprans package
 ======================
 
 .. automodule:: proteus.mprans
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -17,6 +17,7 @@ Submodules
    proteus.mprans.BoundaryConditions
    proteus.mprans.CLSVOF
    proteus.mprans.Dissipation
+   proteus.mprans.GN_SW2DCV
    proteus.mprans.Kappa
    proteus.mprans.MCorr
    proteus.mprans.MCorr3P
@@ -33,7 +34,6 @@ Submodules
    proteus.mprans.RANS3PF
    proteus.mprans.RANS3PSed
    proteus.mprans.RDLS
-   proteus.mprans.RDLS3P
    proteus.mprans.SW2D
    proteus.mprans.SW2DCV
    proteus.mprans.SedClosure
@@ -46,6 +46,7 @@ Submodules
    proteus.mprans.cCLSVOF
    proteus.mprans.cDissipation
    proteus.mprans.cDissipation2D
+   proteus.mprans.cGN_SW2DCV
    proteus.mprans.cKappa
    proteus.mprans.cKappa2D
    proteus.mprans.cMCorr
@@ -64,10 +65,8 @@ Submodules
    proteus.mprans.cRANS3PF
    proteus.mprans.cRANS3PSed
    proteus.mprans.cRDLS
-   proteus.mprans.cRDLS3P
    proteus.mprans.cSW2D
    proteus.mprans.cSW2DCV
    proteus.mprans.cVOF
    proteus.mprans.cVOF3P
    proteus.mprans.cVOS3P
-

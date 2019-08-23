@@ -2,6 +2,6 @@ proteus.SplitOperator module
 ============================
 
 .. automodule:: proteus.SplitOperator
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

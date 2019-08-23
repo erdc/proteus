@@ -2,6 +2,6 @@ proteus.LinearAlgebraTools module
 =================================
 
 .. automodule:: proteus.LinearAlgebraTools
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -2,6 +2,6 @@ proteus.mprans.RANS2P\_IB module
 ================================
 
 .. automodule:: proteus.mprans.RANS2P_IB
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

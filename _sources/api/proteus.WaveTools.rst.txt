@@ -2,6 +2,6 @@ proteus.WaveTools module
 ========================
 
 .. automodule:: proteus.WaveTools
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

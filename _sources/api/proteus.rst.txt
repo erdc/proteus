@@ -2,23 +2,23 @@ proteus package
 ===============
 
 .. automodule:: proteus
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Subpackages
 -----------
 
 .. toctree::
 
-    proteus.MeshAdaptPUMI
-    proteus.SWFlows
-    proteus.TwoPhaseFlow
-    proteus.elastoplastic
-    proteus.fenton
-    proteus.mbd
-    proteus.mprans
-    proteus.richards
+   proteus.MeshAdaptPUMI
+   proteus.SWFlow
+   proteus.TwoPhaseFlow
+   proteus.elastoplastic
+   proteus.fenton
+   proteus.mbd
+   proteus.mprans
+   proteus.richards
 
 Submodules
 ----------
@@ -92,9 +92,9 @@ Submodules
    proteus.default_so
    proteus.defaults
    proteus.deim_utils
+   proteus.equivalent_polynomials
    proteus.flcbdfWrappers
    proteus.iproteus
    proteus.subsurfaceTransportFunctions
    proteus.superluWrappers
    proteus.version
-

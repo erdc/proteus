@@ -2,6 +2,6 @@ proteus.default\_so module
 ==========================
 
 .. automodule:: proteus.default_so
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

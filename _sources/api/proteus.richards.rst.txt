@@ -2,9 +2,9 @@ proteus.richards package
 ========================
 
 .. automodule:: proteus.richards
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    proteus.richards.Richards
    proteus.richards.cRichards
-

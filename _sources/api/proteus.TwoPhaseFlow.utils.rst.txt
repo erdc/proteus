@@ -2,15 +2,13 @@ proteus.TwoPhaseFlow.utils package
 ==================================
 
 .. automodule:: proteus.TwoPhaseFlow.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
 
 .. toctree::
 
-   proteus.TwoPhaseFlow.utils.Parameters.backup
    proteus.TwoPhaseFlow.utils.Parameters
-

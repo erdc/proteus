@@ -2,6 +2,6 @@ proteus.mprans.ArchiveBeams module
 ==================================
 
 .. automodule:: proteus.mprans.ArchiveBeams
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

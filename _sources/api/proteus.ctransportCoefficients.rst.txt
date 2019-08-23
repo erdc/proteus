@@ -2,6 +2,6 @@ proteus.ctransportCoefficients module
 =====================================
 
 .. automodule:: proteus.ctransportCoefficients
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

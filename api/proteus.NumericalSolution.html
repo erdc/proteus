@@ -2,14 +2,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.NumericalSolution module &#8212; Proteus 1.6.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>proteus.NumericalSolution module &#8212; Proteus 1.7.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -18,7 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.6.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -128,22 +127,17 @@
   <div class="section" id="module-proteus.NumericalSolution">
 <span id="proteus-numericalsolution-module"></span><h1>proteus.NumericalSolution module<a class="headerlink" href="#module-proteus.NumericalSolution" title="Permalink to this headline">¶</a></h1>
 <p>A hierarchy of classes for managing complete numerical solution implementations</p>
-digraph inheritance7776a5fd2b {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;NS_base&quot; [URL=&quot;../api/proteus.NumericalSolution.html#proteus.NumericalSolution.NS_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;The base class for managing the numerical solution of  PDE's.&quot;];
-  &quot;newobject&quot; -&gt; &quot;NS_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
-}
+<div class="graphviz"><object data="../_images/inheritance-4fb6419612d5324b880db82d73c11d5584b0aef2.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.NumericalSolution</p></object></div>
 <dl class="class">
 <dt id="proteus.NumericalSolution.NS_base">
-<em class="property">class </em><code class="descclassname">proteus.NumericalSolution.</code><code class="descname">NS_base</code><span class="sig-paren">(</span><em>so</em>, <em>pList</em>, <em>nList</em>, <em>sList</em>, <em>opts</em>, <em>simFlagsList=None</em>, <em>TwoPhaseFlow=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.NumericalSolution.</code><code class="sig-name descname">NS_base</code><span class="sig-paren">(</span><em class="sig-param">so</em>, <em class="sig-param">pList</em>, <em class="sig-param">nList</em>, <em class="sig-param">sList</em>, <em class="sig-param">opts</em>, <em class="sig-param">simFlagsList=None</em>, <em class="sig-param">TwoPhaseFlow=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The base class for managing the numerical solution of  PDE’s.</p>
 <p>The constructor must build all the objects required by a numerical
 method to approximate the solution over a sequence of time intervals.</p>
 <p>calculateSolution(runName) carries out the numerical solution.</p>
-<div class="graphviz"><object data="../_images/graphviz-210f3b6b0af52deabaf5556d0db0b5dee0b0413a.svg" type="image/svg+xml" class="graphviz">
+<div class="graphviz"><object data="../_images/graphviz-9002751c976041bbff4c341d11b0488847b33b02.svg" type="image/svg+xml" class="graphviz">
 <p class="warning">digraph NumericalSolutionHasA {
 node [shape=record, fontname=Helvetica, fontsize=12];
 NS   [label=&quot;NumericalSolution&quot; URL=&quot;\ref NumericalSolution&quot;, style=&quot;filled&quot;, fillcolor=&quot;gray&quot;];
@@ -166,134 +160,131 @@ NS -&gt; ar [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot
 }</p></object></div>
 <dl class="attribute">
 <dt id="proteus.NumericalSolution.NS_base.so">
-<code class="descname">so</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.so" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">so</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.so" title="Permalink to this definition">¶</a></dt>
 <dd><p>SplitOperator initialize file</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.NumericalSolution.NS_base.pList">
-<code class="descname">pList</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.pList" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">pList</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.pList" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of physics initialize files</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.NumericalSolution.NS_base.nList">
-<code class="descname">nList</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.nList" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">nList</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.nList" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of numerics initialize files</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.NumericalSolution.NS_base.opts">
-<code class="descname">opts</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.opts" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">opts</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.opts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary of command line arguments</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.allocateModels">
-<code class="descname">allocateModels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.allocateModels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">allocateModels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.allocateModels" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.PUMI_recomputeStructures">
-<code class="descname">PUMI_recomputeStructures</code><span class="sig-paren">(</span><em>modelListOld</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_recomputeStructures" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PUMI_recomputeStructures</code><span class="sig-paren">(</span><em class="sig-param">modelListOld</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_recomputeStructures" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.PUMI_reallocate">
-<code class="descname">PUMI_reallocate</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_reallocate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PUMI_reallocate</code><span class="sig-paren">(</span><em class="sig-param">mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_reallocate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.PUMI2Proteus">
-<code class="descname">PUMI2Proteus</code><span class="sig-paren">(</span><em>domain</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI2Proteus" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PUMI2Proteus</code><span class="sig-paren">(</span><em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI2Proteus" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.PUMI_transferFields">
-<code class="descname">PUMI_transferFields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_transferFields" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PUMI_transferFields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_transferFields" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.PUMI_estimateError">
-<code class="descname">PUMI_estimateError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_estimateError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PUMI_estimateError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_estimateError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate the error using the classical element residual method by
 Ainsworth and Oden and generates a corresponding error field.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.PUMI_adaptMesh">
-<code class="descname">PUMI_adaptMesh</code><span class="sig-paren">(</span><em>inputString=''</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_adaptMesh" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PUMI_adaptMesh</code><span class="sig-paren">(</span><em class="sig-param">inputString=''</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_adaptMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses a computed error field to construct a size field and adapts
 the mesh using SCOREC tools (a.k.a. MeshAdapt)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.hotstartWithPUMI">
-<code class="descname">hotstartWithPUMI</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.hotstartWithPUMI" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">hotstartWithPUMI</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.hotstartWithPUMI" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.calculateSolution">
-<code class="descname">calculateSolution</code><span class="sig-paren">(</span><em>runName</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.calculateSolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSolution</code><span class="sig-paren">(</span><em class="sig-param">runName</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.calculateSolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cacluate the PDEs numerical solution.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>runName</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A name for the calculated solution.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>runName</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A name for the calculated solution.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.preStep">
-<code class="descname">preStep</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.preStep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">preStep</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.preStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.postStep">
-<code class="descname">postStep</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.postStep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">postStep</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.postStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.setWeakDirichletConditions">
-<code class="descname">setWeakDirichletConditions</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.setWeakDirichletConditions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setWeakDirichletConditions</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.setWeakDirichletConditions" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.restrictFromFineMesh">
-<code class="descname">restrictFromFineMesh</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.restrictFromFineMesh" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">restrictFromFineMesh</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.restrictFromFineMesh" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.archiveInitialSolution">
-<code class="descname">archiveInitialSolution</code><span class="sig-paren">(</span><em>model</em>, <em>index</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.archiveInitialSolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">archiveInitialSolution</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">index</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.archiveInitialSolution" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.archiveSolution">
-<code class="descname">archiveSolution</code><span class="sig-paren">(</span><em>model</em>, <em>index</em>, <em>t=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.archiveSolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">archiveSolution</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">index</em>, <em class="sig-param">t=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.archiveSolution" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.closeArchive">
-<code class="descname">closeArchive</code><span class="sig-paren">(</span><em>model</em>, <em>index</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.closeArchive" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">closeArchive</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">index</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.closeArchive" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.initializeViewSolution">
-<code class="descname">initializeViewSolution</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.initializeViewSolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeViewSolution</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.initializeViewSolution" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.viewSolution">
-<code class="descname">viewSolution</code><span class="sig-paren">(</span><em>model</em>, <em>initialCondition=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.viewSolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">viewSolution</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">initialCondition=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.viewSolution" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.finalizeViewSolution">
-<code class="descname">finalizeViewSolution</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.finalizeViewSolution" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">finalizeViewSolution</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.finalizeViewSolution" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -313,7 +304,7 @@ the mesh using SCOREC tools (a.k.a. MeshAdapt)</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

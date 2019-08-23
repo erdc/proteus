@@ -2,14 +2,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.Archiver module &#8212; Proteus 1.6.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>proteus.Archiver module &#8212; Proteus 1.7.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -18,7 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.6.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -128,105 +127,96 @@
   <div class="section" id="module-proteus.Archiver">
 <span id="proteus-archiver-module"></span><h1>proteus.Archiver module<a class="headerlink" href="#module-proteus.Archiver" title="Permalink to this headline">¶</a></h1>
 <p>Classes for archiving numerical solution data</p>
-digraph inheritance611a085bc2 {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;AR_base&quot; [URL=&quot;../api/proteus.Archiver.html#proteus.Archiver.AR_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;newobject&quot; -&gt; &quot;AR_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ArchiveFlags&quot; [URL=&quot;../api/proteus.Archiver.html#proteus.Archiver.ArchiveFlags&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;newobject&quot; -&gt; &quot;ArchiveFlags&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;XdmfWriter&quot; [URL=&quot;../api/proteus.Archiver.html#proteus.Archiver.XdmfWriter&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;collect functionality for writing data to Xdmf format&quot;];
-  &quot;newobject&quot; -&gt; &quot;XdmfWriter&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
-}
+<div class="graphviz"><object data="../_images/inheritance-3815d266e0a073fb267f1a6dee22cc2de544c30b.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.Archiver</p></object></div>
 <dl class="function">
 <dt id="proteus.Archiver.indentXML">
-<code class="descclassname">proteus.Archiver.</code><code class="descname">indentXML</code><span class="sig-paren">(</span><em>elem</em>, <em>level=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.indentXML" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Archiver.</code><code class="sig-name descname">indentXML</code><span class="sig-paren">(</span><em class="sig-param">elem</em>, <em class="sig-param">level=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.indentXML" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
 <dt id="proteus.Archiver.ArchiveFlags">
-<em class="property">class </em><code class="descclassname">proteus.Archiver.</code><code class="descname">ArchiveFlags</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Archiver.</code><code class="sig-name descname">ArchiveFlags</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="attribute">
 <dt id="proteus.Archiver.ArchiveFlags.EVERY_MODEL_STEP">
-<code class="descname">EVERY_MODEL_STEP</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.EVERY_MODEL_STEP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">EVERY_MODEL_STEP</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.EVERY_MODEL_STEP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.Archiver.ArchiveFlags.EVERY_USER_STEP">
-<code class="descname">EVERY_USER_STEP</code><em class="property"> = 1</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.EVERY_USER_STEP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">EVERY_USER_STEP</code><em class="property"> = 1</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.EVERY_USER_STEP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.Archiver.ArchiveFlags.EVERY_SEQUENCE_STEP">
-<code class="descname">EVERY_SEQUENCE_STEP</code><em class="property"> = 2</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.EVERY_SEQUENCE_STEP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">EVERY_SEQUENCE_STEP</code><em class="property"> = 2</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.EVERY_SEQUENCE_STEP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.Archiver.ArchiveFlags.UNDEFINED">
-<code class="descname">UNDEFINED</code><em class="property"> = -1</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.UNDEFINED" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">UNDEFINED</code><em class="property"> = -1</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.ArchiveFlags.UNDEFINED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Archiver.AR_base">
-<em class="property">class </em><code class="descclassname">proteus.Archiver.</code><code class="descname">AR_base</code><span class="sig-paren">(</span><em>dataDir</em>, <em>filename</em>, <em>useTextArchive=False</em>, <em>gatherAtClose=True</em>, <em>useGlobalXMF=True</em>, <em>hotStart=False</em>, <em>readOnly=False</em>, <em>global_sync=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Archiver.</code><code class="sig-name descname">AR_base</code><span class="sig-paren">(</span><em class="sig-param">dataDir</em>, <em class="sig-param">filename</em>, <em class="sig-param">useTextArchive=False</em>, <em class="sig-param">gatherAtClose=True</em>, <em class="sig-param">useGlobalXMF=True</em>, <em class="sig-param">hotStart=False</em>, <em class="sig-param">readOnly=False</em>, <em class="sig-param">global_sync=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
 <dt id="proteus.Archiver.AR_base.gatherAndWriteTimes">
-<code class="descname">gatherAndWriteTimes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.gatherAndWriteTimes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">gatherAndWriteTimes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.gatherAndWriteTimes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pull all the time steps into the global tree and write</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.AR_base.clear_xml">
-<code class="descname">clear_xml</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.clear_xml" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">clear_xml</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.clear_xml" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.AR_base.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.close" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.AR_base.allGather">
-<code class="descname">allGather</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.allGather" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">allGather</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.allGather" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.AR_base.allGatherIncremental">
-<code class="descname">allGatherIncremental</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.allGatherIncremental" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">allGatherIncremental</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.allGatherIncremental" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.AR_base.sync">
-<code class="descname">sync</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.sync" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sync</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.sync" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.AR_base.create_dataset_async">
-<code class="descname">create_dataset_async</code><span class="sig-paren">(</span><em>name</em>, <em>data</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.create_dataset_async" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">create_dataset_async</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.create_dataset_async" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.AR_base.create_dataset_sync">
-<code class="descname">create_dataset_sync</code><span class="sig-paren">(</span><em>name</em>, <em>offsets</em>, <em>data</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.create_dataset_sync" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">create_dataset_sync</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">offsets</em>, <em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.AR_base.create_dataset_sync" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.Archiver.XdmfArchive">
-<code class="descclassname">proteus.Archiver.</code><code class="descname">XdmfArchive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfArchive" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Archiver.</code><code class="sig-name descname">XdmfArchive</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfArchive" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="#proteus.Archiver.AR_base" title="proteus.Archiver.AR_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Archiver.AR_base</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.Archiver.XdmfWriter">
-<em class="property">class </em><code class="descclassname">proteus.Archiver.</code><code class="descname">XdmfWriter</code><span class="sig-paren">(</span><em>shareSingleGrid=True</em>, <em>arGridCollection=None</em>, <em>arGrid=None</em>, <em>arTime=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Archiver.</code><code class="sig-name descname">XdmfWriter</code><span class="sig-paren">(</span><em class="sig-param">shareSingleGrid=True</em>, <em class="sig-param">arGridCollection=None</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">arTime=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>collect functionality for writing data to Xdmf format</p>
 <p>Writer is supposed to keep track of grid collection (temporal collection)</p>
 <p>as well as current grid under grid collection where data belong,
@@ -234,7 +224,7 @@ since data are associated with a grid of specific type
 (e.g., P1 Lagrange, P2 Lagrange, elementQuadrature dictionary, …)</p>
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.setGridCollectionAndGridElements">
-<code class="descname">setGridCollectionAndGridElements</code><span class="sig-paren">(</span><em>init</em>, <em>ar</em>, <em>arGrid</em>, <em>t</em>, <em>spaceSuffix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.setGridCollectionAndGridElements" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setGridCollectionAndGridElements</code><span class="sig-paren">(</span><em class="sig-param">init</em>, <em class="sig-param">ar</em>, <em class="sig-param">arGrid</em>, <em class="sig-param">t</em>, <em class="sig-param">spaceSuffix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.setGridCollectionAndGridElements" title="Permalink to this definition">¶</a></dt>
 <dd><p>attempt at boiler plate code to grab current arGridCollection and grid for
 a given type and time level t
 returns gridName to use in writing mesh</p>
@@ -242,119 +232,119 @@ returns gridName to use in writing mesh</p>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_elementQuadrature">
-<code class="descname">writeMeshXdmf_elementQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>x</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_elementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_elementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">x</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_elementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_elementBoundaryQuadrature">
-<code class="descname">writeMeshXdmf_elementBoundaryQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>x</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_elementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_elementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">x</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_elementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_exteriorElementBoundaryQuadrature">
-<code class="descname">writeMeshXdmf_exteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>x</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_exteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_exteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">x</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_exteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeScalarXdmf_elementQuadrature">
-<code class="descname">writeScalarXdmf_elementQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_elementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeScalarXdmf_elementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_elementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorXdmf_elementQuadrature">
-<code class="descname">writeVectorXdmf_elementQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_elementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorXdmf_elementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_elementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeTensorXdmf_elementQuadrature">
-<code class="descname">writeTensorXdmf_elementQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeTensorXdmf_elementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeTensorXdmf_elementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeTensorXdmf_elementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeScalarXdmf_elementBoundaryQuadrature">
-<code class="descname">writeScalarXdmf_elementBoundaryQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_elementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeScalarXdmf_elementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_elementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorXdmf_elementBoundaryQuadrature">
-<code class="descname">writeVectorXdmf_elementBoundaryQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_elementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorXdmf_elementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_elementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeTensorXdmf_elementBoundaryQuadrature">
-<code class="descname">writeTensorXdmf_elementBoundaryQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeTensorXdmf_elementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeTensorXdmf_elementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeTensorXdmf_elementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeScalarXdmf_exteriorElementBoundaryQuadrature">
-<code class="descname">writeScalarXdmf_exteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_exteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeScalarXdmf_exteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_exteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorXdmf_exteriorElementBoundaryQuadrature">
-<code class="descname">writeVectorXdmf_exteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_exteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorXdmf_exteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_exteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeTensorXdmf_exteriorElementBoundaryQuadrature">
-<code class="descname">writeTensorXdmf_exteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeTensorXdmf_exteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeTensorXdmf_exteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeTensorXdmf_exteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_quadraturePoints">
-<code class="descname">writeMeshXdmf_quadraturePoints</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>x</em>, <em>t=0.0</em>, <em>quadratureType='q'</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_quadraturePoints" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_quadraturePoints</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">x</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">quadratureType='q'</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_quadraturePoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>write out quadrature point mesh for quadrature points that are unique to
 either elements or elementBoundaries</p>
-<dl class="docutils">
-<dt>quadrature type</dt>
-<dd>q  –&gt; element
+<dl class="simple">
+<dt>quadrature type</dt><dd><p>q  –&gt; element
 ebq_global –&gt; element boundary
-ebqe       –&gt; exterior element boundary</dd>
+ebqe       –&gt; exterior element boundary</p>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeScalarXdmf_quadrature">
-<code class="descname">writeScalarXdmf_quadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeScalarXdmf_quadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorXdmf_quadrature">
-<code class="descname">writeVectorXdmf_quadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorXdmf_quadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeTensorXdmf_quadrature">
-<code class="descname">writeTensorXdmf_quadrature</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeTensorXdmf_quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeTensorXdmf_quadrature</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeTensorXdmf_quadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO make faster tmp creation</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP1Lagrange">
-<code class="descname">writeMeshXdmf_DGP1Lagrange</code><span class="sig-paren">(</span><em>ar</em>, <em>name</em>, <em>mesh</em>, <em>spaceDim</em>, <em>dofMap</em>, <em>CGDOFMap</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP1Lagrange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_DGP1Lagrange</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">name</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">dofMap</em>, <em class="sig-param">CGDOFMap</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP1Lagrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO Not tested yet</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP2Lagrange">
-<code class="descname">writeMeshXdmf_DGP2Lagrange</code><span class="sig-paren">(</span><em>ar</em>, <em>name</em>, <em>mesh</em>, <em>spaceDim</em>, <em>dofMap</em>, <em>CGDOFMap</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP2Lagrange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_DGP2Lagrange</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">name</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">dofMap</em>, <em class="sig-param">CGDOFMap</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP2Lagrange" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_C0P2Lagrange">
-<code class="descname">writeMeshXdmf_C0P2Lagrange</code><span class="sig-paren">(</span><em>ar</em>, <em>name</em>, <em>mesh</em>, <em>spaceDim</em>, <em>dofMap</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_C0P2Lagrange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_C0P2Lagrange</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">name</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">dofMap</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_C0P2Lagrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO: test new lagrangeNodes convention for 2d,3d, and concatNow=False</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_C0Q2Lagrange">
-<code class="descname">writeMeshXdmf_C0Q2Lagrange</code><span class="sig-paren">(</span><em>ar</em>, <em>name</em>, <em>mesh</em>, <em>spaceDim</em>, <em>dofMap</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_C0Q2Lagrange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_C0Q2Lagrange</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">name</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">dofMap</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_C0Q2Lagrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO: test new lagrangeNodes convention for 2d,3d, and concatNow=False</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_CrouzeixRaviartP1">
-<code class="descname">writeMeshXdmf_CrouzeixRaviartP1</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>dofMap</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_CrouzeixRaviartP1" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_CrouzeixRaviartP1</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">dofMap</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_CrouzeixRaviartP1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write out nonconforming P1 approximation
 Write out as a (discontinuous) Lagrange P1 function to make visualization easier
 and dof’s as face centered data on original grid</p>
@@ -362,111 +352,111 @@ and dof’s as face centered data on original grid</p>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP1Lagrange">
-<code class="descname">writeFunctionXdmf_DGP1Lagrange</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em>, <em>dofMap=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP1Lagrange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeFunctionXdmf_DGP1Lagrange</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em>, <em class="sig-param">dofMap=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP1Lagrange" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP2Lagrange">
-<code class="descname">writeFunctionXdmf_DGP2Lagrange</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em>, <em>dofMap=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP2Lagrange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeFunctionXdmf_DGP2Lagrange</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em>, <em class="sig-param">dofMap=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP2Lagrange" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeFunctionXdmf_CrouzeixRaviartP1">
-<code class="descname">writeFunctionXdmf_CrouzeixRaviartP1</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em>, <em>dofMap=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_CrouzeixRaviartP1" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeFunctionXdmf_CrouzeixRaviartP1</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em>, <em class="sig-param">dofMap=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_CrouzeixRaviartP1" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_nodal">
-<code class="descname">writeVectorFunctionXdmf_nodal</code><span class="sig-paren">(</span><em>ar</em>, <em>uList</em>, <em>components</em>, <em>vectorName</em>, <em>spaceSuffix</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_nodal" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorFunctionXdmf_nodal</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">uList</em>, <em class="sig-param">components</em>, <em class="sig-param">vectorName</em>, <em class="sig-param">spaceSuffix</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_nodal" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_CrouzeixRaviartP1">
-<code class="descname">writeVectorFunctionXdmf_CrouzeixRaviartP1</code><span class="sig-paren">(</span><em>ar</em>, <em>uList</em>, <em>components</em>, <em>spaceSuffix</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_CrouzeixRaviartP1" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorFunctionXdmf_CrouzeixRaviartP1</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">uList</em>, <em class="sig-param">components</em>, <em class="sig-param">spaceSuffix</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_CrouzeixRaviartP1" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_MonomialDGPK">
-<code class="descname">writeMeshXdmf_MonomialDGPK</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>interpolationPoints</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_MonomialDGPK" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_MonomialDGPK</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">interpolationPoints</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_MonomialDGPK" title="Permalink to this definition">¶</a></dt>
 <dd><p>as a first cut, archive DG monomial spaces using same approach as for element quadrature
 arrays using x = interpolation points (which are just Gaussian quadrature points) as values</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeFunctionXdmf_MonomialDGPK">
-<code class="descname">writeFunctionXdmf_MonomialDGPK</code><span class="sig-paren">(</span><em>ar</em>, <em>interpolationValues</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em>, <em>mesh=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_MonomialDGPK" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeFunctionXdmf_MonomialDGPK</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">interpolationValues</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em>, <em class="sig-param">mesh=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_MonomialDGPK" title="Permalink to this definition">¶</a></dt>
 <dd><p>Different than usual FemFunction Write routines since saves values at interpolation points
 need to check on way to save dofs as well</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_MonomialDGPK">
-<code class="descname">writeVectorFunctionXdmf_MonomialDGPK</code><span class="sig-paren">(</span><em>ar</em>, <em>interpolationValues</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_MonomialDGPK" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorFunctionXdmf_MonomialDGPK</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">interpolationValues</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_MonomialDGPK" title="Permalink to this definition">¶</a></dt>
 <dd><p>Different than usual FemFunction Write routines since saves values at interpolation points
 need to check on way to save dofs as well</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP0">
-<code class="descname">writeMeshXdmf_DGP0</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP0" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_DGP0</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_DGP0" title="Permalink to this definition">¶</a></dt>
 <dd><p>as a first cut, archive piecewise constant space</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP0">
-<code class="descname">writeFunctionXdmf_DGP0</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP0" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeFunctionXdmf_DGP0</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_DGP0" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_DGP0">
-<code class="descname">writeVectorFunctionXdmf_DGP0</code><span class="sig-paren">(</span><em>ar</em>, <em>uList</em>, <em>components</em>, <em>vectorName</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_DGP0" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorFunctionXdmf_DGP0</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">uList</em>, <em class="sig-param">components</em>, <em class="sig-param">vectorName</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_DGP0" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_P1Bubble">
-<code class="descname">writeMeshXdmf_P1Bubble</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>dofMap</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_P1Bubble" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_P1Bubble</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">dofMap</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_P1Bubble" title="Permalink to this definition">¶</a></dt>
 <dd><p>represent P1 bubble space using just vertices for now</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeFunctionXdmf_P1Bubble">
-<code class="descname">writeFunctionXdmf_P1Bubble</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_P1Bubble" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeFunctionXdmf_P1Bubble</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_P1Bubble" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeFunctionXdmf_C0P2Lagrange">
-<code class="descname">writeFunctionXdmf_C0P2Lagrange</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_C0P2Lagrange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeFunctionXdmf_C0P2Lagrange</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeFunctionXdmf_C0P2Lagrange" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_P1Bubble">
-<code class="descname">writeVectorFunctionXdmf_P1Bubble</code><span class="sig-paren">(</span><em>ar</em>, <em>uList</em>, <em>components</em>, <em>vectorName</em>, <em>spaceSuffix</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_P1Bubble" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorFunctionXdmf_P1Bubble</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">uList</em>, <em class="sig-param">components</em>, <em class="sig-param">vectorName</em>, <em class="sig-param">spaceSuffix</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_P1Bubble" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_particles">
-<code class="descname">writeMeshXdmf_particles</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>x</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em>, <em>spaceSuffix='_particles'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_particles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_particles</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">x</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">spaceSuffix='_particles'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_particles" title="Permalink to this definition">¶</a></dt>
 <dd><p>write out arbitrary set of points on a mesh</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeScalarXdmf_particles">
-<code class="descname">writeScalarXdmf_particles</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_particles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeScalarXdmf_particles</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeScalarXdmf_particles" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorXdmf_particles">
-<code class="descname">writeVectorXdmf_particles</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>name</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_particles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorXdmf_particles</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">name</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorXdmf_particles" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeMeshXdmf_LowestOrderMixed">
-<code class="descname">writeMeshXdmf_LowestOrderMixed</code><span class="sig-paren">(</span><em>ar</em>, <em>mesh</em>, <em>spaceDim</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>arGrid=None</em>, <em>tCount=0</em>, <em>spaceSuffix='_RT0'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_LowestOrderMixed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeMeshXdmf_LowestOrderMixed</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">mesh</em>, <em class="sig-param">spaceDim</em>, <em class="sig-param">t=0.0</em>, <em class="sig-param">init=False</em>, <em class="sig-param">meshChanged=False</em>, <em class="sig-param">arGrid=None</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">spaceSuffix='_RT0'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeMeshXdmf_LowestOrderMixed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_LowestOrderMixed">
-<code class="descname">writeVectorFunctionXdmf_LowestOrderMixed</code><span class="sig-paren">(</span><em>ar</em>, <em>u</em>, <em>tCount=0</em>, <em>init=True</em>, <em>spaceSuffix='_RT0'</em>, <em>name='velocity'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_LowestOrderMixed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorFunctionXdmf_LowestOrderMixed</code><span class="sig-paren">(</span><em class="sig-param">ar</em>, <em class="sig-param">u</em>, <em class="sig-param">tCount=0</em>, <em class="sig-param">init=True</em>, <em class="sig-param">spaceSuffix='_RT0'</em>, <em class="sig-param">name='velocity'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Archiver.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Archiver.XdmfWriter.writeVectorFunctionXdmf_LowestOrderMixed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -486,7 +476,7 @@ need to check on way to save dofs as well</p>
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

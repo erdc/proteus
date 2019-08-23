@@ -2,9 +2,9 @@ proteus.MeshAdaptPUMI package
 =============================
 
 .. automodule:: proteus.MeshAdaptPUMI
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Submodules
 ----------
@@ -13,4 +13,3 @@ Submodules
 
    proteus.MeshAdaptPUMI.Checkpoint
    proteus.MeshAdaptPUMI.MeshAdaptPUMI
-

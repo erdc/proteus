@@ -2,6 +2,6 @@ proteus.mprans.cRANS2P2D module
 ===============================
 
 .. automodule:: proteus.mprans.cRANS2P2D
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -2,14 +2,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.Profiling module &#8212; Proteus 1.6.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>proteus.Profiling module &#8212; Proteus 1.7.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -18,7 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.6.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -128,67 +127,62 @@
   <div class="section" id="module-proteus.Profiling">
 <span id="proteus-profiling-module"></span><h1>proteus.Profiling module<a class="headerlink" href="#module-proteus.Profiling" title="Permalink to this headline">¶</a></h1>
 <p>Tools for high level profiling and event logging</p>
-digraph inheritance7cada70e05 {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;Dispatcher&quot; [URL=&quot;../api/proteus.Profiling.html#proteus.Profiling.Dispatcher&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;,tooltip=&quot;Profiles function calls.  Must be enabled like so:&quot;];
-  &quot;newobject&quot; -&gt; &quot;Dispatcher&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
-}
+<div class="graphviz"><object data="../_images/inheritance-e100a36c7388851a2c76a1a46d4e36467af3b123.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.Profiling</p></object></div>
 <dl class="function">
 <dt id="proteus.Profiling.memProfOn">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">memProfOn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memProfOn" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">memProfOn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memProfOn" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.memHardLimitOn">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">memHardLimitOn</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memHardLimitOn" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">memHardLimitOn</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memHardLimitOn" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.memProfOn_callback">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">memProfOn_callback</code><span class="sig-paren">(</span><em>option</em>, <em>opt</em>, <em>value</em>, <em>parser</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memProfOn_callback" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">memProfOn_callback</code><span class="sig-paren">(</span><em class="sig-param">option</em>, <em class="sig-param">opt</em>, <em class="sig-param">value</em>, <em class="sig-param">parser</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memProfOn_callback" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.memHardLimitOn_callback">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">memHardLimitOn_callback</code><span class="sig-paren">(</span><em>option</em>, <em>opt</em>, <em>value</em>, <em>parser</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memHardLimitOn_callback" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">memHardLimitOn_callback</code><span class="sig-paren">(</span><em class="sig-param">option</em>, <em class="sig-param">opt</em>, <em class="sig-param">value</em>, <em class="sig-param">parser</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memHardLimitOn_callback" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.verboseOn_callback">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">verboseOn_callback</code><span class="sig-paren">(</span><em>option</em>, <em>opt</em>, <em>value</em>, <em>parser</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.verboseOn_callback" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">verboseOn_callback</code><span class="sig-paren">(</span><em class="sig-param">option</em>, <em class="sig-param">opt</em>, <em class="sig-param">value</em>, <em class="sig-param">parser</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.verboseOn_callback" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.openLog">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">openLog</code><span class="sig-paren">(</span><em>filename</em>, <em>level</em>, <em>logLocation=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.openLog" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">openLog</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">level</em>, <em class="sig-param">logLocation=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.openLog" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.closeLog">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">closeLog</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.closeLog" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">closeLog</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.closeLog" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.logEvent">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">logEvent</code><span class="sig-paren">(</span><em>stringIn</em>, <em>level=1</em>, <em>data=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.logEvent" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">logEvent</code><span class="sig-paren">(</span><em class="sig-param">stringIn</em>, <em class="sig-param">level=1</em>, <em class="sig-param">data=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.logEvent" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.memory">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">memory</code><span class="sig-paren">(</span><em>message=None</em>, <em>className=''</em>, <em>memSaved=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">memory</code><span class="sig-paren">(</span><em class="sig-param">message=None</em>, <em class="sig-param">className=''</em>, <em class="sig-param">memSaved=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.memorySummary">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">memorySummary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memorySummary" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">memorySummary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.memorySummary" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
 <dt id="proteus.Profiling.Dispatcher">
-<em class="property">class </em><code class="descclassname">proteus.Profiling.</code><code class="descname">Dispatcher</code><span class="sig-paren">(</span><em>comm=None</em>, <em>on=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.Dispatcher" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">Dispatcher</code><span class="sig-paren">(</span><em class="sig-param">comm=None</em>, <em class="sig-param">on=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.Dispatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Profiles function calls.  Must be enabled like so:</p>
 <p>dispatch = Dispatcher(comm, True)</p>
 <p>A non-profiling dispatcher can be created like:</p>
@@ -197,7 +191,7 @@ size=&quot;8.0, 12.0&quot;;
 <p>ret = dispatch(func, args, kwargs)</p>
 <dl class="method">
 <dt id="proteus.Profiling.Dispatcher.profile_function">
-<code class="descname">profile_function</code><span class="sig-paren">(</span><em>func</em>, <em>args</em>, <em>kwargs</em>, <em>profile_name</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.Dispatcher.profile_function" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">profile_function</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">args</em>, <em class="sig-param">kwargs</em>, <em class="sig-param">profile_name</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.Dispatcher.profile_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Profile a Proteus function using the call: func(<a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</p>
 <p>Returns the output of the function call.</p>
 </dd></dl>
@@ -206,16 +200,16 @@ size=&quot;8.0, 12.0&quot;;
 
 <dl class="function">
 <dt id="proteus.Profiling.ProfilingDtor">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">ProfilingDtor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.ProfilingDtor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">ProfilingDtor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.ProfilingDtor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.Profiling.print_petsc_commandline_options">
-<code class="descclassname">proteus.Profiling.</code><code class="descname">print_petsc_commandline_options</code><span class="sig-paren">(</span><em>petsc_options</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.print_petsc_commandline_options" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.Profiling.</code><code class="sig-name descname">print_petsc_commandline_options</code><span class="sig-paren">(</span><em class="sig-param">petsc_options</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Profiling.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Profiling.print_petsc_commandline_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a formated string with PETSc command-line options</p>
-<dl class="docutils">
-<dt>petsc_options <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
-<dd>A list of the Petsc command line options and values.</dd>
+<dl class="simple">
+<dt>petsc_options<span class="classifier">list</span></dt><dd><p>A list of the Petsc command line options and values.</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -234,7 +228,7 @@ size=&quot;8.0, 12.0&quot;;
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

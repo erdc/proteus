@@ -2,6 +2,6 @@ proteus.cpartitioning module
 ============================
 
 .. automodule:: proteus.cpartitioning
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -2,6 +2,6 @@ proteus.richards.Richards module
 ================================
 
 .. automodule:: proteus.richards.Richards
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

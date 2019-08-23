@@ -2,6 +2,6 @@ proteus.csmoothers module
 =========================
 
 .. automodule:: proteus.csmoothers
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -2,6 +2,6 @@ proteus.mprans.cSW2D module
 ===========================
 
 .. automodule:: proteus.mprans.cSW2D
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

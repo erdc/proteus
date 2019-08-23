@@ -2,14 +2,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.ShockCapturing module &#8212; Proteus 1.6.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>proteus.ShockCapturing module &#8212; Proteus 1.7.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -18,7 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.6.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -128,253 +127,220 @@
   <div class="section" id="module-proteus.ShockCapturing">
 <span id="proteus-shockcapturing-module"></span><h1>proteus.ShockCapturing module<a class="headerlink" href="#module-proteus.ShockCapturing" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for shock capturing diffusion methods</p>
-digraph inheritance544eebe99b {
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;Eikonal_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.Eikonal_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;Eikonal_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;HamiltonJacobiJaffre_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.HamiltonJacobiJaffre_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;HamiltonJacobiJaffre_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;HamiltonJacobi_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.HamiltonJacobi_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;HamiltonJacobi_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;JaffreGradU_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.JaffreGradU_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;JaffreGradU_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;NavierStokes_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.NavierStokes_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ResGradQuad_SC&quot; -&gt; &quot;NavierStokes_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;NavierStokes_SC_opt&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.NavierStokes_SC_opt&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ResGradQuad_SC&quot; -&gt; &quot;NavierStokes_SC_opt&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ResGradDelayLag_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ResGradDelayLag_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ResGrad_SC&quot; -&gt; &quot;ResGradDelayLag_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ResGradFFDarcyDelayLag_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ResGradFFDarcy_SC&quot; -&gt; &quot;ResGradFFDarcyDelayLag_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ResGradFFDarcy_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ResGradFFDarcy_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;ResGradFFDarcy_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ResGradJuanes_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ResGradJuanes_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;ResGradJuanes_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ResGradQuadDelayLag_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ResGradQuadDelayLag_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ResGradQuad_SC&quot; -&gt; &quot;ResGradQuadDelayLag_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ResGradQuad_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ResGradQuad_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;ResGradQuad_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ResGrad_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ResGrad_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;ResGrad_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ScalarAdvection_SC&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ScalarAdvection_SC&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;ShockCapturing_base&quot; -&gt; &quot;ScalarAdvection_SC&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;ShockCapturing_base&quot; [URL=&quot;../api/proteus.ShockCapturing.html#proteus.ShockCapturing.ShockCapturing_base&quot;,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,target=&quot;_top&quot;];
-  &quot;newobject&quot; -&gt; &quot;ShockCapturing_base&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
-  &quot;newobject&quot; [fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5)&quot;,tooltip=&quot;A magical object class that provides Python 2 compatibility methods::&quot;];
-}
+<div class="graphviz"><object data="../_images/inheritance-30753a2f7049589c53fe489cb4529c46dcf8d3c6.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of proteus.ShockCapturing</p></object></div>
 <dl class="class">
 <dt id="proteus.ShockCapturing.ShockCapturing_base">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ShockCapturing_base</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ShockCapturing_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">future.types.newobject.newobject</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ShockCapturing_base</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ShockCapturing_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ShockCapturing_base.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ShockCapturing_base.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ShockCapturing_base.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.ShockCapturing_base.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ShockCapturing_base.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ShockCapturing_base.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.ShockCapturing_base.updateShockCapturingHistory">
-<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ShockCapturing_base.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ShockCapturing_base.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.ShockCapturing.ConstantDiffusion_SC">
-<code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ConstantDiffusion_SC</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ConstantDiffusion_SC" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ConstantDiffusion_SC</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ConstantDiffusion_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.ResGrad_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ResGrad_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGrad_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ResGrad_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGrad_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGrad_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGrad_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGrad_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.ResGradFFDarcy_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ResGradFFDarcy_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcy_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ResGradFFDarcy_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcy_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradFFDarcy_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcy_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcy_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.ResGradQuad_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ResGradQuad_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>gradLag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuad_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ResGradQuad_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">gradLag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuad_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradQuad_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuad_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuad_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.Eikonal_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">Eikonal_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.Eikonal_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">Eikonal_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.Eikonal_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.Eikonal_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.Eikonal_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.Eikonal_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.ScalarAdvection_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ScalarAdvection_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.5</em>, <em>lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ScalarAdvection_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ScalarAdvection_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.5</em>, <em class="sig-param">lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ScalarAdvection_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ScalarAdvection_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ScalarAdvection_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ScalarAdvection_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.HamiltonJacobi_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">HamiltonJacobi_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFlag='1'</em>, <em>shockCapturingFactor=0.5</em>, <em>lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.HamiltonJacobi_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">HamiltonJacobi_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFlag='1'</em>, <em class="sig-param">shockCapturingFactor=0.5</em>, <em class="sig-param">lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.HamiltonJacobi_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.HamiltonJacobi_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.HamiltonJacobi_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.HamiltonJacobi_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.HamiltonJacobiJaffre_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">HamiltonJacobiJaffre_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFlag='1'</em>, <em>shockCapturingFactor=0.5</em>, <em>lag=True</em>, <em>betaPower=0.1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.HamiltonJacobiJaffre_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">HamiltonJacobiJaffre_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFlag='1'</em>, <em class="sig-param">shockCapturingFactor=0.5</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">betaPower=0.1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.HamiltonJacobiJaffre_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.HamiltonJacobiJaffre_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.HamiltonJacobiJaffre_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.HamiltonJacobiJaffre_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.JaffreGradU_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">JaffreGradU_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFlag='1'</em>, <em>shockCapturingFactor=0.5</em>, <em>lag=True</em>, <em>betaPower=0.1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.JaffreGradU_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">JaffreGradU_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFlag='1'</em>, <em class="sig-param">shockCapturingFactor=0.5</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">betaPower=0.1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.JaffreGradU_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.JaffreGradU_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.JaffreGradU_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.JaffreGradU_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.ResGradJuanes_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ResGradJuanes_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>uSC=1.0</em>, <em>lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradJuanes_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ResGradJuanes_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">uSC=1.0</em>, <em class="sig-param">lag=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradJuanes_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradJuanes_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradJuanes_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradJuanes_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.ResGradDelayLag_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ResGradDelayLag_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradDelayLag_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ResGradDelayLag_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradDelayLag_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ResGrad_SC" title="proteus.ShockCapturing.ResGrad_SC"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ResGrad_SC</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradDelayLag_SC.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradDelayLag_SC.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradDelayLag_SC.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradDelayLag_SC.updateShockCapturingHistory">
-<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradDelayLag_SC.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradDelayLag_SC.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.ResGradQuadDelayLag_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ResGradQuadDelayLag_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>nStepsToDelay=None</em>, <em>isotropic=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuadDelayLag_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ResGradQuadDelayLag_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">nStepsToDelay=None</em>, <em class="sig-param">isotropic=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuadDelayLag_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ResGradQuad_SC" title="proteus.ShockCapturing.ResGradQuad_SC"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ResGradQuad_SC</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradQuadDelayLag_SC.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuadDelayLag_SC.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuadDelayLag_SC.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradQuadDelayLag_SC.updateShockCapturingHistory">
-<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuadDelayLag_SC.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradQuadDelayLag_SC.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.NavierStokes_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">NavierStokes_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">NavierStokes_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ResGradQuad_SC" title="proteus.ShockCapturing.ResGradQuad_SC"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ResGradQuad_SC</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.NavierStokes_SC.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.NavierStokes_SC.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.NavierStokes_SC.updateShockCapturingHistory">
-<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.NavierStokes_SC_opt">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">NavierStokes_SC_opt</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC_opt" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">NavierStokes_SC_opt</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC_opt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ResGradQuad_SC" title="proteus.ShockCapturing.ResGradQuad_SC"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ResGradQuad_SC</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.NavierStokes_SC_opt.calculateNumericalDiffusion">
-<code class="descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC_opt.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateNumericalDiffusion</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC_opt.calculateNumericalDiffusion" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.NavierStokes_SC_opt.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC_opt.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC_opt.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.NavierStokes_SC_opt.updateShockCapturingHistory">
-<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC_opt.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.NavierStokes_SC_opt.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC">
-<em class="property">class </em><code class="descclassname">proteus.ShockCapturing.</code><code class="descname">ResGradFFDarcyDelayLag_SC</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.ShockCapturing.</code><code class="sig-name descname">ResGradFFDarcyDelayLag_SC</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.ShockCapturing.ResGradFFDarcy_SC" title="proteus.ShockCapturing.ResGradFFDarcy_SC"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ResGradFFDarcy_SC</span></code></a></p>
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC.updateShockCapturingHistory">
-<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/ShockCapturing.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.ShockCapturing.ResGradFFDarcyDelayLag_SC.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -394,7 +360,7 @@ size=&quot;8.0, 12.0&quot;;
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

@@ -2,14 +2,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>proteus.mprans.Kappa module &#8212; Proteus 1.6.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>proteus.mprans.Kappa module &#8212; Proteus 1.7.0 documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -18,13 +17,13 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.mprans.MCorr module" href="proteus.mprans.MCorr.html" />
-    <link rel="prev" title="proteus.mprans.Dissipation module" href="proteus.mprans.Dissipation.html" />
+    <link rel="prev" title="proteus.mprans.GN_SW2DCV module" href="proteus.mprans.GN_SW2DCV.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -45,7 +44,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.6.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -91,7 +90,7 @@
               
                 
   <li>
-    <a href="proteus.mprans.Dissipation.html" title="Previous Chapter: proteus.mprans.Dissipation module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.mpran...</span>
+    <a href="proteus.mprans.GN_SW2DCV.html" title="Previous Chapter: proteus.mprans.GN_SW2DCV module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.mpran...</span>
     </a>
   </li>
   <li>
@@ -129,153 +128,207 @@
 <span id="proteus-mprans-kappa-module"></span><h1>proteus.mprans.Kappa module<a class="headerlink" href="#module-proteus.mprans.Kappa" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="proteus.mprans.Kappa.SubgridError">
-<em class="property">class </em><code class="descclassname">proteus.mprans.Kappa.</code><code class="descname">SubgridError</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.SubgridError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.Kappa.</code><code class="sig-name descname">SubgridError</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.SubgridError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.SubgridError.html#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.mprans.Kappa.SubgridError.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.SubgridError.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.SubgridError.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.SubgridError.updateSubgridErrorHistory">
-<code class="descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em>initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.SubgridError.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.SubgridError.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.SubgridError.calculateSubgridError">
-<code class="descname">calculateSubgridError</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.SubgridError.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.SubgridError.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.mprans.Kappa.ShockCapturing">
-<em class="property">class </em><code class="descclassname">proteus.mprans.Kappa.</code><code class="descname">ShockCapturing</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.ShockCapturing" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.Kappa.</code><code class="sig-name descname">ShockCapturing</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">shockCapturingFactor=0.25</em>, <em class="sig-param">lag=True</em>, <em class="sig-param">nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.ShockCapturing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.ShockCapturing.html#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.mprans.Kappa.ShockCapturing.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.ShockCapturing.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.ShockCapturing.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.ShockCapturing.updateShockCapturingHistory">
-<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.ShockCapturing.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.ShockCapturing.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.mprans.Kappa.NumericalFlux">
-<em class="property">class </em><code class="descclassname">proteus.mprans.Kappa.</code><code class="descname">NumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.NumericalFlux" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.Kappa.</code><code class="sig-name descname">NumericalFlux</code><span class="sig-paren">(</span><em class="sig-param">vt</em>, <em class="sig-param">getPointwiseBoundaryConditions</em>, <em class="sig-param">getAdvectiveFluxBoundaryConditions</em>, <em class="sig-param">getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.NumericalFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.NumericalFlux.html#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.mprans.Kappa.Coefficients">
-<em class="property">class </em><code class="descclassname">proteus.mprans.Kappa.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>VOS_model=None, V_model=None, LS_model=None, RD_model=None, dissipation_model=None, ME_model=6, SED_model=None, dissipation_model_flag=1, c_mu=0.09, sigma_k=1.0, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, -9.8], nd=3, epsFact=0.01, useMetrics=0.0, sc_uref=1.0, sc_beta=1.0, default_dissipation=0.001, closure=None, nullSpace='NoNullSpace'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.Kappa.</code><code class="sig-name descname">Coefficients</code><span class="sig-paren">(</span><em class="sig-param">VOS_model=None, V_model=None, LS_model=None, RD_model=None, dissipation_model=None, ME_model=6, SED_model=None, dissipation_model_flag=1, c_mu=0.09, sigma_k=1.0, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, -9.8], nd=3, epsFact=0.01, useMetrics=0.0, sc_uref=1.0, sc_beta=1.0, default_dissipation=0.001, closure=None, nullSpace='NoNullSpace'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <p>Basic k-epsilon model for incompressible flow from Hutter etal
 Chaper 11 but solves for just k assuming epsilon computed
 independently and lagged in time</p>
+<p>Set the number of components (equations) of the
+PDE and initialize the dicitionaries describing the form of the
+coefficients. Strings naming each component (used for viewing
+and archiving) and a structure defining the sparsity pattern
+of diffusion tensors may also be provided.</p>
+<dl class="method">
+<dt id="proteus.mprans.Kappa.Coefficients.kEpsilon_k_3D_Evaluate_sd">
+<code class="sig-name descname">kEpsilon_k_3D_Evaluate_sd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.kEpsilon_k_3D_Evaluate_sd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.Kappa.Coefficients.kEpsilon_k_2D_Evaluate_sd">
+<code class="sig-name descname">kEpsilon_k_2D_Evaluate_sd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.kEpsilon_k_2D_Evaluate_sd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.initializeMesh">
-<code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeMesh</code><span class="sig-paren">(</span><em class="sig-param">mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Give the TC object access to the mesh for any mesh-dependent information.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.attachModels">
-<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attachModels</code><span class="sig-paren">(</span><em class="sig-param">modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Give the TC object access to other models in a loosely coupled split operator formulation (e.g. a transport equation for concentration might get velocity from a flow equation)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.initializeElementQuadrature">
-<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Give the TC object access to the element quadrature storage</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.initializeElementBoundaryQuadrature">
-<code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">cebq</em>, <em class="sig-param">cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Give the TC object access to the element boundary quadrature storage</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
-<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Give the TC object access to the exterior element boundary quadrature storage</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.preStep">
-<code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">preStep</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Give the TC object an opportunity to modify itself before the time step.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.postStep">
-<code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">postStep</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Give the TC object an opportunity to modify itself after the time step.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.updateToMovingDomain">
-<code class="descname">updateToMovingDomain</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.updateToMovingDomain" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateToMovingDomain</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.updateToMovingDomain" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.Coefficients.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.</p>
 </dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.Kappa.Coefficients.kEpsilon_k_2D_Evaluate_sd">
-<code class="descname">kEpsilon_k_2D_Evaluate_sd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.kEpsilon_k_2D_Evaluate_sd" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.Kappa.Coefficients.kEpsilon_k_3D_Evaluate_sd">
-<code class="descname">kEpsilon_k_3D_Evaluate_sd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.Coefficients.kEpsilon_k_3D_Evaluate_sd" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.mprans.Kappa.LevelModel">
-<em class="property">class </em><code class="descclassname">proteus.mprans.Kappa.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='defaultName'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em>, <em>bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.Kappa.</code><code class="sig-name descname">LevelModel</code><span class="sig-paren">(</span><em class="sig-param">uDict</em>, <em class="sig-param">phiDict</em>, <em class="sig-param">testSpaceDict</em>, <em class="sig-param">matType</em>, <em class="sig-param">dofBoundaryConditionsDict</em>, <em class="sig-param">dofBoundaryConditionsSetterDict</em>, <em class="sig-param">coefficients</em>, <em class="sig-param">elementQuadrature</em>, <em class="sig-param">elementBoundaryQuadrature</em>, <em class="sig-param">fluxBoundaryConditionsDict=None</em>, <em class="sig-param">advectiveFluxBoundaryConditionsSetterDict=None</em>, <em class="sig-param">diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em class="sig-param">stressTraceBoundaryConditionsSetterDict=None</em>, <em class="sig-param">stabilization=None</em>, <em class="sig-param">shockCapturing=None</em>, <em class="sig-param">conservativeFluxDict=None</em>, <em class="sig-param">numericalFluxType=None</em>, <em class="sig-param">TimeIntegrationClass=None</em>, <em class="sig-param">massLumping=False</em>, <em class="sig-param">reactionLumping=False</em>, <em class="sig-param">options=None</em>, <em class="sig-param">name='defaultName'</em>, <em class="sig-param">reuse_trial_and_test_quadrature=True</em>, <em class="sig-param">sd=True</em>, <em class="sig-param">movingDomain=False</em>, <em class="sig-param">bdyNullSpace=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
+<p>Allocate storage and initialize some variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of
+<a class="reference internal" href="proteus.FemTools.html#proteus.FemTools.FiniteElementFunction" title="proteus.FemTools.FiniteElementFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.FiniteElementFunction</span></code></a> objects.</p></li>
+<li><p><strong>phiDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of
+<a class="reference internal" href="proteus.FemTools.html#proteus.FemTools.FiniteElementFunction" title="proteus.FemTools.FiniteElementFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.FemTools.FiniteElementFunction</span></code></a> objects.</p></li>
+<li><p><strong>testSpaceDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of FiniteElementSpace objects</p></li>
+<li><p><strong>dofBoundaryConditionsDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of DOFBoundaryConditions objects for the
+Dirichlet conditions.</p></li>
+<li><p><strong>coefficients</strong> (<a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a>) – Problem’s Transport Coefficients class.</p></li>
+<li><p><strong>elementQuadratureDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of dictionaries of quadrature rules for each
+element integral in each component equation.</p></li>
+<li><p><strong>elementBoundaryQuadratureDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of dictionaries of quadrature rules for each
+element boundary integral in each component equation</p></li>
+<li><p><strong>stabilization</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </p></li>
+<li><p><strong>shockCapturing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </p></li>
+<li><p><strong>numericalFlux</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – </p></li>
+<li><p><strong>bdyNullSpace</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Indicates whether the boundary conditions create a global
+null space.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The constructor sets the input arguments, calculates
+dimensions, and allocates storage. The meanings of variable
+suffixes are</p>
+<ul class="simple">
+<li><p>global          – per physical domain</p></li>
+<li><p>element         – per element</p></li>
+<li><p>elementBoundary – per element boundary</p></li>
+</ul>
+<p>The prefix n means ‘number of’.</p>
+<p>Storage is divided into quantities required at different sets
+of points or geometric entities. Each type of storage has a
+dictionary for all the quantities of that type. The names
+and dimensions of the storage dictionaries are</p>
+<ul class="simple">
+<li><p>e – at element</p></li>
+<li><p>q – at element quadrature, unique to elements</p></li>
+<li><p>ebq – at element boundary quadrature, unique to elements</p></li>
+<li><p>ebq_global – at element boundary quadrature, unique to element
+boundary</p></li>
+<li><p>ebqe – at element boundary quadrature, unique to global,
+exterior element boundary</p></li>
+<li><p>phi_ip – at the generalized interpolation points required to
+build a nonlinear phi</p></li>
+</ul>
 <dl class="attribute">
 <dt id="proteus.mprans.Kappa.LevelModel.nCalls">
-<code class="descname">nCalls</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.nCalls" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">nCalls</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.nCalls" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.calculateCoefficients">
-<code class="descname">calculateCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateCoefficients" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateCoefficients" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.calculateElementResidual">
-<code class="descname">calculateElementResidual</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateElementResidual" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementResidual</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateElementResidual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate all the element residuals</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.getResidual">
-<code class="descname">getResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.getResidual" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getResidual</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.getResidual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the element residuals and add in to the global residual</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.getJacobian">
-<code class="descname">getJacobian</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.getJacobian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getJacobian</code><span class="sig-paren">(</span><em class="sig-param">jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.getJacobian" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.calculateElementQuadrature">
-<code class="descname">calculateElementQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the physical location and weights of the quadrature rules
 and the shape information at the quadrature points.</p>
 <p>This function should be called only when the mesh changes.</p>
@@ -283,7 +336,7 @@ and the shape information at the quadrature points.</p>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.calculateElementBoundaryQuadrature">
-<code class="descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the physical location and weights of the quadrature rules
 and the shape information at the quadrature points on element boundaries.</p>
 <p>This function should be called only when the mesh changes.</p>
@@ -291,7 +344,7 @@ and the shape information at the quadrature points on element boundaries.</p>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.calculateExteriorElementBoundaryQuadrature">
-<code class="descname">calculateExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the physical location and weights of the quadrature rules
 and the shape information at the quadrature points on global element boundaries.</p>
 <p>This function should be called only when the mesh changes.</p>
@@ -299,17 +352,17 @@ and the shape information at the quadrature points on global element boundaries.
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.estimate_mt">
-<code class="descname">estimate_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.estimate_mt" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">estimate_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.estimate_mt" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.calculateSolutionAtQuadrature">
-<code class="descname">calculateSolutionAtQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateSolutionAtQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSolutionAtQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateSolutionAtQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.Kappa.LevelModel.calculateAuxiliaryQuantitiesAfterStep">
-<code class="descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Kappa.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Kappa.LevelModel.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -329,7 +382,7 @@ and the shape information at the quadrature points on global element boundaries.
     </p>
     <p>
         &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

@@ -2,6 +2,6 @@ proteus.LinearSolvers module
 ============================
 
 .. automodule:: proteus.LinearSolvers
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -2,6 +2,6 @@ proteus.mprans.cPresInc module
 ==============================
 
 .. automodule:: proteus.mprans.cPresInc
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

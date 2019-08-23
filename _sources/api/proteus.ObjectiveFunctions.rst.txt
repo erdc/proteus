@@ -2,6 +2,6 @@ proteus.ObjectiveFunctions module
 =================================
 
 .. automodule:: proteus.ObjectiveFunctions
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

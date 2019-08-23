@@ -2,6 +2,6 @@ proteus.Archiver module
 =======================
 
 .. automodule:: proteus.Archiver
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
