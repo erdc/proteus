@@ -19,6 +19,7 @@ from .Profiling import logEvent
 from . import config
 mpi_preload_libs=[]
 for lib in config.PROTEUS_PRELOAD_LIBS:
+    print(lib)
     mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL))
 
 comm = None

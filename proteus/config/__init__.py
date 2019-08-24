@@ -5,6 +5,8 @@ if 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('garne
     from .garnet import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('topaz'):
     from .topaz import *
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('centennial'):
+    from .centennial import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('thunder'):
     from .thunder import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('onyx'):
