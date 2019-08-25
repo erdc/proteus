@@ -52,6 +52,10 @@ class RKEV(proteus.TimeIntegration.SSP):
         
         self.dt = old_div(self.runCFL, maxCFL)
 
+
+        if self.transport.coefficients.fixed_dt is not None:
+	    self.dt = self.transport.coefficients.fixed_dt
+     
         if self.dtLast is None:
             self.dtLast = self.dt
         if old_div(self.dt, self.dtLast) > self.dtRatioMax:
@@ -201,8 +205,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ONE_DIM_PROBLEM=0,
                  PROJECT_INIT_CONDITION=0,
                  METHOD=4,
+                 fixed_dt=None,
                  updateVelocityInTime=False):
 
+        self.fixed_dt=fixed_dt
         self.PROJECT_INIT_CONDITION=PROJECT_INIT_CONDITION
         self.METHOD=METHOD
         self.ONE_DIM_PROBLEM=ONE_DIM_PROBLEM

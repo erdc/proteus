@@ -1126,6 +1126,10 @@ class highOrderLimSolver(Newton):
             self.F.timeIntegration.u_dof_last[0][:] = u
             self.F.u_dof_old[:] = u
             self.F.u[0].dof[:] = u
+
+            # update uminG and umaxG (since due to the projection they have increased)
+            self.F.uminG = -1E100 #self.F.u_dof_old.min()
+            self.F.umaxG = 1E100  #self.F.u_dof_old.max()
             
             # make sure we don't do this process again
             self.F.INIT_CONDITION_PROJECTED = True

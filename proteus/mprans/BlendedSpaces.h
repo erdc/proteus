@@ -1629,6 +1629,14 @@ namespace proteus
                 for (int I=0;I<nSpace; I++)
                   norm_grad_un += grad_un[I]*grad_un[I];
                 norm_grad_un = std::sqrt(norm_grad_un+1E-5);
+
+		// To compute smoothness indicator based on 2nd derivative //
+		if (ONE_DIM_PROBLEM==1)
+		  det_hess_un = hess_un[0];
+		else
+		  det_hess_un = hess_un[0]*hess_un[3] - hess_un[2]*hess_un[1];
+		det_hess_Ke += det_hess_un*dV;
+		area_Ke += dV;
 		
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
@@ -1646,14 +1654,6 @@ namespace proteus
 		    else // KPP
 		      elementFluxTerm[i] += (std::cos(un)-std::sin(un))*u_test_dV[i];
 		  }//i
-		// To compute smoothness indicator based on 2nd derivative //
-		
-		if (ONE_DIM_PROBLEM==1)
-		  det_hess_un = hess_un[0];
-		else
-		  det_hess_un = hess_un[0]*hess_un[3] - hess_un[2]*hess_un[1];
-		det_hess_Ke += det_hess_un*dV;
-		area_Ke += dV;
 	      }//kb
 	    //
 	    //load element into global residual and save element residual
