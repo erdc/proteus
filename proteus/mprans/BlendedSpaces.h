@@ -9,7 +9,8 @@
 #define USE_Q1_STENCIL 1
 #define USE_MACRO_CELL 1 // for computation of gamma indicator
 #define ELEMENT_BASED_ENTROPY_RESIDUAL 0 // for entropy residual 
-#define C_GAMMA 5.0
+#define C_GAMMA 3.0
+#define ENT_POWER 1.0
 // METHOD 4
 // 0: low-order
 // 1: high-order non-limited
@@ -93,10 +94,10 @@ namespace proteus
 			    const double& CTx, const double& CTy, const int& PROBLEM_TYPE)
   {
     if (PROBLEM_TYPE==0)
-    return fmax(fmax(fabs(Cx*u_veli + Cy*v_veli),
-    		     fabs(Cx*u_velj + Cy*v_velj)),
-    		fmax(fabs(CTx*u_veli + CTy*v_veli),
-    		     fabs(CTx*u_velj + CTy*v_velj)));
+      return fmax(fmax(fabs(Cx*u_veli + Cy*v_veli),
+		       fabs(Cx*u_velj + Cy*v_velj)),
+		  fmax(fabs(CTx*u_veli + CTy*v_veli),
+		       fabs(CTx*u_velj + CTy*v_velj)));
     else if (PROBLEM_TYPE==1)
       {
 	double lambda = fmax(fabs(solni),fabs(solnj));
@@ -133,8 +134,6 @@ namespace proteus
     std::valarray<double> element_He;
     std::valarray<double> global_hi;
     std::valarray<double> min_hiHe;
-    // for Zalesak's FCT //
-    std::valarray<double> Rpos, Rneg;
 
     std::valarray<double> weighted_lumped_mass_matrix;
     virtual ~BlendedSpaces_base(){}
@@ -257,6 +256,8 @@ namespace proteus
 				   double* dLowElem,
 				   double* Q1_sparsity,
 				   double* qNorm,
+				   double* xqNorm,
+				   double* yqNorm,
 				   double* xGradRHS,
 				   double* yGradRHS)=0;
     virtual void calculateResidualEntropyVisc(//element
@@ -378,6 +379,8 @@ namespace proteus
 				   double* dLowElem,
 				   double* Q1_sparsity,
 				   double* qNorm,
+				   double* xqNorm,
+				   double* yqNorm,
 				   double* xGradRHS,
 				   double* yGradRHS)=0;
     virtual void calculateResidualProjection(//element
@@ -499,6 +502,8 @@ namespace proteus
 				   double* dLowElem,
 				   double* Q1_sparsity,
 				   double* qNorm,
+				   double* xqNorm,
+				   double* yqNorm,
 				   double* xGradRHS,
 				   double* yGradRHS)=0;    
     virtual void calculateMassMatrix(//element
@@ -790,6 +795,8 @@ namespace proteus
 			     double* dLowElem,
 			     double* Q1_sparsity,
 			     double* qNorm,
+			     double* xqNorm,
+			     double* yqNorm,
 			     double* xGradRHS,
 			     double* yGradRHS)
       {
@@ -822,9 +829,6 @@ namespace proteus
 	wBarij.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
 	wBarji.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
 	
-	// for std Zalesak's FCT //
-	Rpos.resize(numDOFs,0.0);
-	Rneg.resize(numDOFs,0.0);
 	
 	int ij=0;	
 	/////////////////////////////////////////
@@ -1067,7 +1071,7 @@ namespace proteus
 
 			// save anti-dissipative flux into element_flux_qij
 			element_flux_qij[eN_i_j] =
-			  (fmax(EntVisc[gi],EntVisc[gj])-1.0)*dLowElemij*(solnj-solni);
+			  (0.5*fmax(EntVisc[gi],EntVisc[gj])-1.0)*dLowElemij*(solnj-solni);
 			
 			// compute low order dissipative term
 			lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
@@ -1235,6 +1239,8 @@ namespace proteus
 		    
 		    if (i!=j)
 		      {
+			uminG=-1E100;
+			umaxG= 1E100;			
 			double gammaij = fmax(gamma_dof[i], gamma_dof[j]);
 			if (METHOD==4)
 			  gammaij = fmax(qNorm[i], qNorm[j]);
@@ -1424,6 +1430,8 @@ namespace proteus
 					double* dLowElem,
 					double* Q1_sparsity,
 					double* qNorm,
+					double* xqNorm,
+					double* yqNorm,
 					double* xGradRHS,
 					double* yGradRHS)
       {
@@ -1441,8 +1449,8 @@ namespace proteus
 
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    xGradRHS[i]=0.0;
-	    yGradRHS[i]=0.0;
+	    xqNorm[i]=0.0;
+	    yqNorm[i]=0.0;
 	    qNorm[i] = 0.0;
 	  }
 	///////////////////
@@ -1665,8 +1673,8 @@ namespace proteus
 		int gi = offset_u+stride_u*r_l2g[eN_i];
 
 		weighted_lumped_mass_matrix[gi] += element_weighted_lumped_mass_matrix[i];
-		xGradRHS[gi] += element_rhs_qx[i];
-		yGradRHS[gi] += element_rhs_qy[i];
+		xqNorm[gi] += element_rhs_qx[i];
+		yqNorm[gi] += element_rhs_qy[i];
 		
 		// residual of uDot
 		globalResidual[gi] += elementTimeDerivative[i] + elementFluxTerm[i];
@@ -1678,9 +1686,9 @@ namespace proteus
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    global_hi[i] /= den_hi[i];
-	    xGradRHS[i] /= weighted_lumped_mass_matrix[i];
-	    yGradRHS[i] /= weighted_lumped_mass_matrix[i];	    
-	    qNorm[i] = std::sqrt(xGradRHS[i]*xGradRHS[i] + yGradRHS[i]*yGradRHS[i]);
+	    xqNorm[i] /= weighted_lumped_mass_matrix[i];
+	    yqNorm[i] /= weighted_lumped_mass_matrix[i];	    
+	    qNorm[i] = std::sqrt(xqNorm[i]*xqNorm[i] + yqNorm[i]*yqNorm[i]);
 	    qNorm[i] = 1.0 - (qNorm[i] < 0.99 ? 0.0 : 1.0);
 
 	    /*
@@ -1727,7 +1735,8 @@ namespace proteus
 	int ij=0;
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    double solni = u_dof_old[i];
+	    double uShift = 2*uminG;
+	    double solni = u_dof_old[i] - uShift;
 	    double u_veli = u_vel_dofs[i];
 	    double v_veli = v_vel_dofs[i];
 	    double DEnti = DENTROPY(solni);
@@ -1740,7 +1749,7 @@ namespace proteus
 	      {
 		int j = colind[offset];			
 		// solution, velocity and fluxes at node j
-		double solnj = u_dof_old[j];
+		double solnj = u_dof_old[j] - uShift;
 		double u_velj = u_vel_dofs[j];
 		double v_velj = v_vel_dofs[j];
 		
@@ -1759,7 +1768,7 @@ namespace proteus
 		ij+=1;
 	      } //j
 	    ith_DenEntVisc = (fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
-	    EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0);
+	    EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc, ENT_POWER);
 	    // ***** End of entropy viscosity ***** //
 	  }
 	
@@ -1874,7 +1883,7 @@ namespace proteus
 		      }//j
 		    // compute DenEntVisc //
 		    ith_DenEntVisc=(fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
-		    EntVisc[gi] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,1.0);
+		    EntVisc[gi] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc,ENT_POWER);
 		  }//i
 	      }//elements
 	  }
@@ -1999,6 +2008,8 @@ namespace proteus
 					double* dLowElem,
 					double* Q1_sparsity,
 					double* qNorm,
+					double* xqNorm,
+					double* yqNorm,
 					double* xGradRHS,
 					double* yGradRHS)
       {

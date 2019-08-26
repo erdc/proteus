@@ -93,6 +93,14 @@ class RKEV(proteus.TimeIntegration.SSP):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                 # update u_dof_old
                 self.transport.u_dof_old[:] = self.u_dof_lstage[0]
+                # update velocity at t=tn+dt for the second stage
+                if self.transport.hasVelocityFieldAsFunction:
+                    time = self.tLast + self.dt
+                    if self.transport.coefficients.updateVelocityInTime == True:
+                        self.transport.updateVelocityFieldAsFunction(time)
+                        self.transport.updateVelocityAtDOFs(time)
+                    #
+                #
             elif self.lstage == 2:
                 logEvent("Second stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
@@ -101,6 +109,14 @@ class RKEV(proteus.TimeIntegration.SSP):
                     self.u_dof_lstage[ci] += 3. / 4. * self.u_dof_last[ci]
                 # update u_dof_old
                 self.transport.u_dof_old[:] = self.u_dof_lstage[0]
+                # update velocity at t=tn+dt/2.0 for the third (and last) stage
+                if self.transport.hasVelocityFieldAsFunction:
+                    time = self.tLast + self.dt/2.0
+                    if self.transport.coefficients.updateVelocityInTime == True:
+                        self.transport.updateVelocityFieldAsFunction(time)
+                        self.transport.updateVelocityAtDOFs(time)
+                    #
+                #
             else:
                 logEvent("Third stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
@@ -118,6 +134,14 @@ class RKEV(proteus.TimeIntegration.SSP):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                 # Update u_dof_old
                 self.transport.u_dof_old[:] = self.u_dof_lstage[0]
+                # update velocity at t=tn+dt for the second (and last) stage
+                if self.transport.hasVelocityFieldAsFunction:
+                    time = self.tLast + self.dt
+                    if self.transport.coefficients.updateVelocityInTime == True:
+                        self.transport.updateVelocityFieldAsFunction(time)
+                        self.transport.updateVelocityAtDOFs(time)
+                    #
+                #
             else:
                 logEvent("Second stage of SSP22 method finished", level=4)
                 for ci in range(self.nc):
@@ -716,6 +740,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.xGradRHS = None
         self.yGradRHS = None
+        self.xqNorm = None
+        self.yqNorm = None
         self.qNorm = None
 
         self.umaxG = None
@@ -1136,6 +1162,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             RightPreconditioner_eN=np.dot(np.matrix.transpose(np.linalg.inv(QH_elementMassMatrix[eN])),np.diag(QH_ML_eN))
             self.prCxElem[eN] = np.dot(LeftPreconditioner_eN,self.cterm[0][eN])
             self.prCyElem[eN] = np.dot(LeftPreconditioner_eN,self.cterm[1][eN])
+            #self.prCTxElem[eN]= self.prCxElem[eN].transpose()
+            #self.prCTyElem[eN]= self.prCyElem[eN].transpose()
             self.prCTxElem[eN]= np.dot(self.cterm_transpose[0][eN],RightPreconditioner_eN)
             self.prCTyElem[eN]= np.dot(self.cterm_transpose[1][eN],RightPreconditioner_eN)
         #
@@ -1468,6 +1496,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.nDOF_trial_element[0]), 'd')
             self.xGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
             self.yGradRHS = numpy.zeros(self.u[0].dof.shape, 'd')
+            self.xqNorm = numpy.zeros(self.u[0].dof.shape, 'd')
+            self.yqNorm = numpy.zeros(self.u[0].dof.shape, 'd')
             self.qNorm = numpy.zeros(self.u[0].dof.shape, 'd')
 
             self.EntVisc = numpy.zeros(self.u[0].dof.shape, 'd')
@@ -1686,11 +1716,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dLowElem,
             self.Q1_sparsity,
             self.qNorm,
+            self.xqNorm,
+            self.yqNorm,
             self.xGradRHS,
             self.yGradRHS)
 
         #self.gamma_dof[:]=1.0
         self.quantDOFs2[:] = self.EntVisc
+        #self.quantDOFs3[:] = self.xGradRHS
+        #self.quantDOFs4[:] = self.yGradRHS
         self.quantDOFs3[:] = self.gamma_dof
         #self.quantDOFs4[:] = self.xGradRHS
         #self.quantDOFs5[:] = self.yGradRHS

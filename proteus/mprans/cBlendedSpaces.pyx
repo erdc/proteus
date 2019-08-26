@@ -112,6 +112,8 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
                                double* dLowElem,
                                double* QL_sparsity,
                                double* qNorm,
+                               double* xqNorm,
+			       double* yqNorm,
                                double* xGradRHS,
                                double* yGradRHS)
         void calculateResidualEntropyVisc(double dt,
@@ -219,6 +221,8 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
                                           double* dLowElem,
                                           double* QL_sparsity,
                                           double* qNorm,
+                                          double* xqNorm,
+				          double* yqNorm,
                                           double* xGradRHS,
                                           double* yGradRHS)
         void calculateResidualProjection(double dt,
@@ -326,6 +330,8 @@ cdef extern from "BlendedSpaces.h" namespace "proteus":
                                           double* dLowElem,
                                           double* QL_sparsity,
                                           double* qNorm,
+                                         double* xqNorm,
+				         double* yqNorm,
                                           double* xGradRHS,
                                           double* yGradRHS)
         void calculateMassMatrix(double dt,
@@ -528,6 +534,8 @@ cdef class cBlendedSpaces_base:
                           numpy.ndarray dLowElem,
                           numpy.ndarray QL_sparsity,
                           numpy.ndarray qNorm,
+                          numpy.ndarray xqNorm,
+                          numpy.ndarray yqNorm,
                           numpy.ndarray xGradRHS,
                           numpy.ndarray yGradRHS):
         self.thisptr.calculateResidual(dt,
@@ -636,6 +644,8 @@ cdef class cBlendedSpaces_base:
                                        <double* > dLowElem.data,
                                        <double*> QL_sparsity.data,
                                        <double*> qNorm.data,
+                                       <double*> xqNorm.data,
+                                       <double*> yqNorm.data,
                                        <double* > xGradRHS.data,
                                        <double* > yGradRHS.data)
     def calculateResidualEntropyVisc(self,
@@ -744,6 +754,8 @@ cdef class cBlendedSpaces_base:
                                      numpy.ndarray dLowElem,
                                      numpy.ndarray QL_sparsity,
                                      numpy.ndarray qNorm,
+                                     numpy.ndarray xqNorm,
+                                     numpy.ndarray yqNorm,
                                      numpy.ndarray xGradRHS,
                                      numpy.ndarray yGradRHS):
         self.thisptr.calculateResidualEntropyVisc(dt,
@@ -852,6 +864,8 @@ cdef class cBlendedSpaces_base:
                                                   <double*> dLowElem.data,
                                                   <double*> QL_sparsity.data,
                                                   <double*> qNorm.data,
+                                                  <double*> xqNorm.data,
+                                                  <double*> yqNorm.data,
                                                   <double*> xGradRHS.data,
                                                   <double*> yGradRHS.data)
     def calculateResidualProjection(self,
@@ -960,6 +974,8 @@ cdef class cBlendedSpaces_base:
                                      numpy.ndarray dLowElem,
                                      numpy.ndarray QL_sparsity,
                                      numpy.ndarray qNorm,
+                                    numpy.ndarray xqNorm,
+                                    numpy.ndarray yqNorm,
                                      numpy.ndarray xGradRHS,
                                      numpy.ndarray yGradRHS):
         self.thisptr.calculateResidualProjection(dt,
@@ -1068,6 +1084,8 @@ cdef class cBlendedSpaces_base:
                                                   <double*> dLowElem.data,
                                                   <double*> QL_sparsity.data,
                                                   <double*> qNorm.data,
+                                                 <double*> xqNorm.data,
+                                                 <double*> yqNorm.data,
                                                   <double*> xGradRHS.data,
                                                   <double*> yGradRHS.data)        
     def calculateMassMatrix(self,
