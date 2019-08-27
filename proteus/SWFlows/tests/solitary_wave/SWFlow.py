@@ -7,8 +7,7 @@ from proteus.mprans import SW2DCV
 from proteus.mprans import GN_SW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
-from proteus import (Domain, Context,
-                     MeshTools as mt)
+from proteus import (Domain, Context, MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 
@@ -27,7 +26,7 @@ Favrie and Gavrilyuk. It assumes the reference height is h1.
 
 opts = Context.Options([
     ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 4.0, "Final time for simulation"),
+    ("final_time", 2.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.33, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level")
@@ -70,7 +69,7 @@ def u(x, t):
 
 def bathymetry_function(X):
     x = X[0]
-    return x * 0.0  # just 0
+    return x * 0.0
 
 
 ###################################
@@ -124,7 +123,7 @@ class heta_at_t0(object):
 class hw_at_t0(object):
     def uOfXT(self, X, t):
         # since there is no bathymatry
-        # hw = -h^2 * div(vel) = h^2 * (-c * h1 * h'/h^2) = -c * h1 * h'
+        # hw = -h^2 * div(vel) = -h^2 * (c * h1 * h'/h^2) = -c * h1 * h'
         x = X[0]
         phase = x - c * t - x0
         sechSqd = old_div(1.0, np.cosh(r * phase)**2)
@@ -187,6 +186,12 @@ boundaryConditions = {'water_height': water_height_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
+#analyticalSolution
+analyticalSolution={'h_exact': water_height_at_tfinal(),
+                    'hu_exact': Zero(),
+                    'hv_exact': Zero(),
+                    'heta_exact':Zero(),
+                    'hw_exact':Zero()}
 
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=0.25,
@@ -198,6 +203,7 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              bathymetry=bathymetry_function)
+                                              bathymetry=bathymetry_function,
+                                              analyticalSolution=analyticalSolution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
