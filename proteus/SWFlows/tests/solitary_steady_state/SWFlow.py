@@ -47,7 +47,6 @@ X_coords = (-10.0, 10.0)  # this is domain, used in BCs
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 10) + 1
-
 he = old_div(L[0], float(nnx - 1))
 triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 
@@ -57,17 +56,17 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 q = 1  # this is flow rate
 a = 0.2  # this is amplitude
 r = 1  # this is solitary wave width
-h0 = np.sqrt(3 * a / (4 * r**2 * (1+a)))  # we define the reference height in terms of r
+# we define the reference height in terms of r
+h0 = np.sqrt(old_div(3 * a, (4 * r**2*(1+a))))
 cBer = h0 + q**2 / (2 * g * h0**2)  # this is Bernoulli constant
 x0 = 0  # wave is centered at x = 0
+
 ###############################
 #   Functions defined here    #
 ###############################
-
-
 def solitary_wave(x, t):
-    sechSqd = (1.00 / np.cosh(r * (x - x0 )))**2.00
-    soliton = a * h0 * sechSqd
+    sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2.0)
+    soliton = h0 + a * h0 * sechSqd
     return soliton
 
 
@@ -75,18 +74,17 @@ def bathymetry_function(X):
     x = X[0]
     num = -3 * 3**(1/3) * a**(3/2) * g + 8 * q**2 * r**2 * np.sqrt((1+a)*r**2)
     denom = 6 * g * np.sqrt((1+a)*r**2)
-    return num/denom * (1.00 / np.cosh(r * (x - x0 )))**2.00
+    sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2.0)
+    z = old_div(num, denom) * sechSqd
+    return z
 
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
-
-
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
         h = h0 + solitary_wave(X[0], 0)
         return h
-
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
@@ -95,7 +93,6 @@ class x_mom_at_t0(object):
 class x_mom_exact(object):
     def uOfXT(self, X, t):
         return q
-
 
 class y_mom_at_t0(object):
     def uOfXT(self, X, t):
@@ -157,8 +154,7 @@ def hw_DBC(X, flag):
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
-outputStepping = SWFlowProblem.OutputStepping(
-    opts.final_time, dt_output=opts.dt_output)
+outputStepping = SWFlowProblem.OutputStepping(opts.final_time, dt_output=opts.dt_output)
 initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
