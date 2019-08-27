@@ -20,15 +20,13 @@
 #define LAMBDA_MGN 1 // DO NOT CHANGE THIS. -EJT
 
 namespace proteus {
-/* FOR mGN, maybe we don't need a lot of these inline functions after first two
- * that I defined */
+/* FOR mGN, maybe we don't need a lot of these inline functions for now after
+ * first two that I defined */
 
-// for mGN stuff -EJT
+// for mGN stuff "max" wave speeds. See section 4.4 of first mGN paper by
+// Guermond, Popov, Tovar, Kees for formulas
 inline double GN_nu1(const double &g, const double &hL, const double &uL,
                      const double &etaL, const double &meshSizeL) {
-
-  // See section 4.4 of first mGN paper by Guermond, Popov, Tovar, Kees for
-  // formulas
   double augL = LAMBDA_MGN / (3. * meshSizeL) * (6. * hL + 12. * (hL - etaL));
 
   if (etaL >= hL) {
@@ -37,7 +35,7 @@ inline double GN_nu1(const double &g, const double &hL, const double &uL,
   augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2.0);
 
   return uL - sqrt(g * hL) * sqrt(1 + augL);
-} // EJT
+}
 inline double GN_nu3(const double &g, const double &hR, const double &uR,
                      const double &etaR, const double &meshSizeR) {
   // See section 4.4 of first mGN paper by Guermond, Popov, Tovar, Kees for
@@ -463,9 +461,6 @@ public:
                                               bool debugging) {
     double lambda1, lambda3;
 
-    // 1-eigenvalue: uL-sqrt(g*hL)*sqrt(1 + augL)
-    // 3-eigenvalue: uR+sqrt(g*hR)*sqrt(1 + augR)
-
     double hVelL = nx * huL + ny * hvL;
     double hVelR = nx * huR + ny * hvR;
     double velL = 2 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hVelL;
@@ -475,6 +470,7 @@ public:
     double meshSizeL = sqrt(lumpedL);
     double meshSizeR = sqrt(lumpedR);
 
+// Don't need this right now but keeping it just in case we need it later
 #if 0
     if (debugging)
       std::cout << "hL, hR, hVelL, hVelR, velL, velR: " << hL << "\t" << hR
@@ -550,12 +546,16 @@ public:
     }
 #endif
 
-    /* See equation 4.12 from mGN paper -EJT */
+    /* See equation 4.12 from mGN paper:
+      1-eigenvalue: uL-sqrt(g*hL)*sqrt(1 + augL)
+      3-eigenvalue: uR+sqrt(g*hR)*sqrt(1 + augR)
+    */
     lambda1 = GN_nu1(g, hL, velL, etaL, meshSizeL);
     lambda3 = GN_nu3(g, hR, velR, etaR, meshSizeR);
     return fmax(fabs(lambda1), fabs(lambda3));
   }
 
+// Don't need this right now but keeping it just in case we need it later
 #if 0
   inline double maxWaveSpeedIterativeProcess(double g, double nx, double ny,
                                              double hL, double huL, double
@@ -776,6 +776,7 @@ public:
     hvLow.resize(numDOFs, 0.0);
     hetaLow.resize(numDOFs, 0.0);
     hwLow.resize(numDOFs, 0.0);
+    std::cout << "FCT TEST?" << std::endl;
 
     /* For reference, see section 6.3 of friction shallow water paper
     by Guermond, Quezada De Luna, Popov, Kees, Farthing */
@@ -1118,6 +1119,7 @@ public:
     hetaLow.resize(numDOFs, 0.0);
     hwLow.resize(numDOFs, 0.0);
     Kmax.resize(numDOFs, 0.0);
+    std::cout << "CONVEX TEST?" << std::endl;
 
     ////////////////////////
     // FIRST LOOP in DOFs //
@@ -1504,13 +1506,16 @@ public:
       double hEps, double *hReg, double *Cx, double *Cy, double *CTx,
       double *CTy, double *dLow, double run_cfl, double *edge_based_cfl,
       int debug) {
+
     /* note that for the CFL condition, we use only the values of dij and
      * don't do the dij = Max(dij,muij) thing */
+
     std::valarray<double> psi(numDOFsPerEqn);
     double max_edge_based_cfl = 0.;
     int ij = 0;
     for (int i = 0; i < numDOFsPerEqn; i++) {
-      double hi = h_dof_old[i]; // solution at time tn for the ith DOF
+      // solution at time tn for the ith DOF
+      double hi = h_dof_old[i];
       double hui = hu_dof_old[i];
       double hvi = hv_dof_old[i];
       double hetai = heta_dof_old[i];
@@ -1520,11 +1525,13 @@ public:
       double alphai;
       double alpha_numerator = 0.;
       double alpha_denominator = 0.;
+
       for (int offset = csrRowIndeces_DofLoops[i];
-           offset < csrRowIndeces_DofLoops[i + 1];
-           offset++) { // loop in j (sparsity pattern)
+           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+        // loop in j (sparsity pattern)
+        // solution at time tn for the jth DOF
         int j = csrColumnOffsets_DofLoops[offset];
-        double hj = h_dof_old[j]; // solution at time tn for the jth DOF
+        double hj = h_dof_old[j];
         double huj = hu_dof_old[j];
         double hvj = hv_dof_old[j];
         double hetaj = heta_dof_old[j];
@@ -1539,9 +1546,6 @@ public:
           double nxij = Cx[ij] / cij_norm, nyij = Cy[ij] / cij_norm;
           double nxji = CTx[ij] / cji_norm, nyji = CTy[ij] / cji_norm;
 
-          // double muLow = fmax(fmax(0., -(ui * nxij + vi * nyij)),
-          //                     fmax(0, (uj * nxij + vj * nyij)));
-
           dLow[ij] =
               fmax(maxWaveSpeedSharpInitialGuess(g, nxij, nyij, hi, hui, hvi,
                                                  hetai, mi, hj, huj, hvj, hetaj,
@@ -1552,7 +1556,6 @@ public:
                                                  mi, hEps, hEps, debug) *
                        cji_norm); // hEps
           dLowii -= dLow[ij];
-          // muLowii -= muLow[ij];
 
           // FOR SMOOTHNESS INDICATOR //
           alpha_numerator += hj - hi;
@@ -1567,12 +1570,16 @@ public:
       // CALCULATE EDGE BASED CFL //
       //////////////////////////////
       mi = lumped_mass_matrix[i];
-      edge_based_cfl[i] = 2 * fabs(dLowii) / mi;
+      // Should we change 2 to 1? JLG has 1 in TAMU Code. -EJT
+      edge_based_cfl[i] = 2.0 * fabs(dLowii) / mi;
       max_edge_based_cfl = fmax(max_edge_based_cfl, edge_based_cfl[i]);
 
-      //////////////////////////////////
-      // COMPUTE SMOOTHNESS INDICATOR //
-      //////////////////////////////////
+// At the moment, we don't need to compute the smoothness indicator for
+// edge CFL
+//////////////////////////////////
+// COMPUTE SMOOTHNESS INDICATOR //
+//////////////////////////////////
+#if 0
       if (hi <= hReg[i]) // hEps, hReg makes the method more robust
         alphai = 1.;
       else {
@@ -1591,8 +1598,10 @@ public:
       else
         psi[i] = std::pow(alphai,
                           POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^4 for mGN
+#endif
     }
-
+// Don't need any of this for now
+#if 0
     if (REESTIMATE_MAX_EDGE_BASED_CFL == 1) {
       // CALCULATE FIRST GUESS dt //
       double dt = run_cfl / max_edge_based_cfl;
@@ -1634,8 +1643,8 @@ public:
           // compute flux term
           ith_flux_term1 += huj * Cx[ij] + hvj * Cy[ij]; // f1*C
           if (i != j) {
-            dLij = dLow[ij]; // * fmax(psi[i], psi[j]); // enhance the order to
-                             // 2nd order. No EV
+            dLij = dLow[ij]; // * fmax(psi[i], psi[j]); // enhance the order
+                             // to 2nd order. No EV
 
             muLowij = fmax(fmax(0., -(ui * Cx[ij] + vi * Cy[ij])),
                            fmax(0, (uj * Cx[ij] + vj * Cy[ij])));
@@ -1670,8 +1679,9 @@ public:
       // new max_edge_based_cfl
       max_edge_based_cfl = run_cfl / dt;
     }
+#endif
     return max_edge_based_cfl;
-  }
+  } // End calculateEdgeBasedCFL
 
   void calculateResidual( // last EDGE BASED version
       double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof,
@@ -1741,6 +1751,7 @@ public:
       // LOCAL LIMITING
       double *hBT, double *huBT, double *hvBT, double *hetaBT, double *hwBT,
       int lstage) {
+
     // FOR FRICTION//
     double n2 = std::pow(mannings, 2.);
     double gamma = 4. / 3;
@@ -1862,6 +1873,7 @@ public:
       //////////////////////////////////////////////
       // ********** FIRST LOOP ON DOFs ********** //
       //////////////////////////////////////////////
+
       // To compute:
       //     * Entropy at i-th node
       std::valarray<double> eta(numDOFsPerEqn);
@@ -1873,6 +1885,7 @@ public:
         eta[i] =
             ENTROPY(g, hi, hu_dof_old[i], hv_dof_old[i], 0., one_over_hiReg);
       }
+
       // ********** END OF FIRST LOOP ON DOFs ********** //
 
       ///////////////////////////////////////////////
@@ -1883,18 +1896,23 @@ public:
       //     * Extended source term (eqn 6.19)
       //     * Smoothness indicator
       //     * global entropy residual
+
       int ij = 0;
       std::valarray<double> hyp_flux_h(numDOFsPerEqn),
           hyp_flux_hu(numDOFsPerEqn), hyp_flux_hv(numDOFsPerEqn),
           hyp_flux_heta(numDOFsPerEqn), hyp_flux_hw(numDOFsPerEqn),
           global_entropy_residual(numDOFsPerEqn), psi(numDOFsPerEqn),
           etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
+
       for (int i = 0; i < numDOFsPerEqn; i++) {
-        double hi = h_dof_old[i]; // solution at time tn for the ith DOF
+
+        // solution at time tn for the ith DOF
+        double hi = h_dof_old[i];
         double hui = hu_dof_old[i];
         double hvi = hv_dof_old[i];
         double hetai = heta_dof_old[i];
         double hwi = hw_dof_old[i];
+        // Define some things using above
         double one_over_hiReg =
             2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
         double ui = hui * one_over_hiReg;
@@ -1907,7 +1925,12 @@ public:
         etaMax[i] = fabs(eta[i]);
         etaMin[i] = fabs(eta[i]);
 
-        /* COMPUTE EXTENDED SOURCE TERMS */
+        /* COMPUTE EXTENDED SOURCE TERMS:
+         * Friction terms
+         * Source for heta equation
+         * Source for hw equation
+         * NOTE: This is assuming source terms are on LHS of equations.
+         */
 
         // Friction
         if (LINEAR_FRICTION == 1) {
@@ -1926,32 +1949,23 @@ public:
           extendedSourceTerm_hv[i] = friction_aux * hvi;
         }
 
-        /////////////////////////
-        // For mGN Force Terms //
-        /////////////////////////
-
-        /* Note for implementation purposes, we are using the more robust Gamma
-         * function for the modified Green naghdi equations. That is, the
-         * function that might lose hyperbolicity but we still use if statements
-         * in the defition for lambda max so we don't lose hyperbolicity. -EJT
-         */
-
+        // Define some things for heta and hw sources
         double ratioi =
             (2.0 * hetai) / (std::pow(etai, 2.0) + std::pow(hi, 2.0) + hEps);
-
         double diff_over_h_i = (hetai - std::pow(hi, 2.0)) * one_over_hiReg;
-
-        // This is h^2*Gamma'(eta/h) at ith node
         double hSqd_GammaPi = 6.0 * (hetai - std::pow(hi, 2.0));
-        // if (hetai > std::pow(hi, 2.0)) {
-        //   hSqd_GammaPi = 6.0 * etai * diff_over_h_i;
-        // }
+        if (hetai > std::pow(hi, 2.0)) {
+          hSqd_GammaPi = 6.0 * etai * diff_over_h_i;
+        }
 
+        // heta source
         extendedSourceTerm_heta[i] = -hwi * mi * ratioi;
+
+        // hw source
         extendedSourceTerm_hw[i] =
             (LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratioi;
 
-        // HYPERBOLIC FLUXES //
+        /* HYPERBOLIC FLUXES */
         hyp_flux_h[i] = 0;
         hyp_flux_hu[i] = 0;
         hyp_flux_hv[i] = 0;
@@ -1967,51 +1981,52 @@ public:
         double alphai; // smoothness indicator of solution
         double alpha_numerator = 0;
         double alpha_denominator = 0;
+        double alpha_zero = 3. / 4.;
 
+        // loop in j (sparsity pattern)
         for (int offset = csrRowIndeces_DofLoops[i];
-             offset < csrRowIndeces_DofLoops[i + 1];
-             offset++) { // loop in j (sparsity pattern)
+             offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+
           int j = csrColumnOffsets_DofLoops[offset];
-          double hj = h_dof_old[j]; // solution at time tn for the jth DOF
+
+          // solution at time tn for the jth DOF
+          double hj = h_dof_old[j];
           double huj = hu_dof_old[j];
           double hvj = hv_dof_old[j];
           double hetaj = heta_dof_old[j];
           double hwj = hw_dof_old[j];
+          double Zj = b_dof[j];
+
+          // Then define some things here using above
           double one_over_hjReg =
               2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
           double uj = huj * one_over_hjReg;
           double vj = hvj * one_over_hjReg;
           double etaj = hetaj * one_over_hjReg;
           double wj = hwj * one_over_hjReg;
-          double Zj = b_dof[j];
           double meshSizej =
               std::sqrt(lumped_mass_matrix[j]); // local mesh size in 2d
 
-          // for "bad" branch of gamma function
+          // pTilde at jth node gets defined here
           double diff_over_h_j = (hetaj - std::pow(hj, 2.0)) * one_over_hjReg;
-          // This is modified pressure term, pTilde at jth node
           double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
                            (hetaj - std::pow(hj, 2.0));
-          // if (hetaj > std::pow(hj, 2.0)) {
-          //   pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
-          //             diff_over_h_j *
-          //             (std::pow(etaj, 2.0) + etaj * hj + std::pow(hj, 2.0));
-          // }
-
-          // define pressure here, p = 1/2 g h^2 + pTilde
-          double pressure_j = 0.5 * g * std::pow(hj, 2.) + pTildej;
+          if (hetaj > std::pow(hj, 2.0)) {
+            pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
+                      diff_over_h_j *
+                      (std::pow(etaj, 2.0) + etaj * hj + std::pow(hj, 2.0));
+          }
 
           // auxiliary functions to compute fluxes
-          double aux_h =
-              huj * Cx[ij] + hvj * Cy[ij]; // f1*C = hj*(uj*Cx[ij] + vj*Cy[ij]);
+          double aux_h = huj * Cx[ij] + hvj * Cy[ij];
           double aux_hu =
-              uj * huj * Cx[ij] + uj * hvj * Cy[ij] + pressure_j * Cx[ij];
+              uj * huj * Cx[ij] + uj * hvj * Cy[ij] + pTildej * Cx[ij];
           double aux_hv =
-              vj * huj * Cx[ij] + vj * hvj * Cy[ij] + pressure_j * Cy[ij];
-          double aux_heta = etaj * huj * Cx[ij] + etaj * hvj * Cy[ij];
-          double aux_hw = wj * huj * Cx[ij] + wj * hvj * Cy[ij];
+              vj * huj * Cx[ij] + vj * hvj * Cy[ij] + pTildej * Cy[ij];
+          double aux_heta = hetaj * uj * Cx[ij] + hetaj * vj * Cy[ij];
+          double aux_hw = hwj * uj * Cx[ij] + hwj * vj * Cy[ij];
 
-          // HYPERBOLIC FLUX //
+          /* HYPERBOLIC FLUX */
           hyp_flux_h[i] += aux_h;
           hyp_flux_hu[i] += aux_hu;
           hyp_flux_hv[i] += aux_hv;
@@ -2019,12 +2034,8 @@ public:
           hyp_flux_hw[i] += aux_hw;
 
           // EXTENDED SOURCE, USING 6.13 //
-          // extendedSourceTerm_hu[i] += g * hi * (hj + Zj) * Cx[ij];
-          // extendedSourceTerm_hv[i] += g * hi * (hj + Zj) * Cy[ij];
-          extendedSourceTerm_hu[i] +=
-              g * (hi * Zj - 0.5 * std::pow(hj - hi, 2.)) * Cx[ij];
-          extendedSourceTerm_hv[i] +=
-              g * (hi * Zj - 0.5 * std::pow(hj - hi, 2.)) * Cy[ij];
+          extendedSourceTerm_hu[i] += g * hi * (hj + Zj) * Cx[ij];
+          extendedSourceTerm_hv[i] += g * hi * (hj + Zj) * Cy[ij];
 
           // flux for entropy
           ith_flux_term1 += aux_h;
@@ -2047,6 +2058,7 @@ public:
           // update ij
           ij += 1;
         }
+
         // COMPUTE ENTROPY RESIDUAL //
         double one_over_entNormFactori = 2. / (etaMax[i] - etaMin[i] + 1E-15);
         double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0.,
@@ -2060,37 +2072,37 @@ public:
                   ith_flux_term3 * eta_prime3));
 
         // COMPUTE SMOOTHNESS INDICATOR //
-        if (hi <= hReg[i]) // hEps, hReg makes the method more robust
-        {
+        // hReg makes the method more robust - manuel's comment
+        if (hi <= hReg[i]) {
           alphai = 1.;
           global_entropy_residual[i] = 1E10;
         } else {
-          if (fabs(alpha_numerator) <=
-              hEps) // hEps. Force alphai=0 in constant states
-          {
+          // Force alphai=0 in constant states
+          if (fabs(alpha_numerator) <= hEps) {
             alphai = 0.;
           } else {
-            // From equation 5.4 in SW friction PAPER, -EJT
-            double alpha_zero = 3. / 4.;
             alphai = fabs(alpha_numerator) / (alpha_denominator + 1E-15);
-            alphai = fmax(alphai - alpha_zero, 0.0) * 1.0 / (1.0 - alpha_zero);
           }
+          alphai = fmax(alphai - alpha_zero, 0.0) * (1.0 / (1.0 - alpha_zero));
         }
         if (POWER_SMOOTHNESS_INDICATOR == 0)
           psi[i] = 1.0;
         else
-          psi[i] =
-              std::pow(alphai,
-                       POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^4 for mGN
+          psi[i] = std::pow(
+              alphai, POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^4 for mGN
       }
       // ********** END OF 2nd LOOP ON DOFS ********** //
 
       /////////////////////////////////////////////
-      // ********** MAIN LOOP ON DOFs ********** // to compute flux and
-      // dissipative terms
+      // ********** MAIN LOOP ON DOFs **********
+      // To compute:
+      //      * flux terms
+      //      * dissipative terms
       /////////////////////////////////////////////
+
       ij = 0;
       for (int i = 0; i < numDOFsPerEqn; i++) {
+
         double hi = h_dof_old[i];
         double hui = hu_dof_old[i];
         double hvi = hv_dof_old[i];
@@ -2098,26 +2110,26 @@ public:
         double hwi = hw_dof_old[i];
         double Zi = b_dof[i];
         double mi = lumped_mass_matrix[i];
+
         double one_over_hiReg =
-            2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+            2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2));
         double ui = hui * one_over_hiReg;
         double vi = hvi * one_over_hiReg;
         double etai = hetai * one_over_hiReg;
         double wi = hwi * one_over_hiReg;
-
-        // for "bad" branch of gamma function
-        double diff_over_h_i = (hetai - std::pow(hi, 2.0)) * one_over_hiReg;
-
-        // for mGN stuff
         double meshSizei = std::sqrt(mi); // local mesh size in 2d
-        double pTildei = -(LAMBDA_MGN * g / meshSizei) / 3.0 * 6.0 * hi *
-                         (hetai - std::pow(hi, 2.0));
 
-        // if (hetai > std::pow(hi, 2.0)) {
-        //   pTildei = -(LAMBDA_MGN * g / (3.0 * meshSizei)) * 2.0 *
-        //             diff_over_h_i *
-        //             (std::pow(etai, 2.0) + etai * hi + std::pow(hi, 2.0));
-        // }
+        // We define pTilde at ith node here
+        double diff_over_h_i = (hetai - std::pow(hi, 2.0)) * one_over_hiReg;
+        double pTildei = -(LAMBDA_MGN * g / (3.0 * meshSizei)) * 6.0 * hi *
+                         (hetai - std::pow(hi, 2.0));
+        if (hetai > std::pow(hi, 2.0)) {
+          pTildei = -(LAMBDA_MGN * g / (3.0 * meshSizei)) * 2.0 *
+                    diff_over_h_i *
+                    (std::pow(etai, 2.0) + hetai + std::pow(hi, 2.0));
+        }
+
+        // Define full pressure at ith node for definition of bar states below
         double pressure_i = 0.5 * g * std::pow(hi, 2.0) + pTildei;
 
         // HIGH ORDER DISSIPATIVE TERMS
@@ -2133,39 +2145,39 @@ public:
         // loop over the sparsity pattern of the i-th DOF
         for (int offset = csrRowIndeces_DofLoops[i];
              offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+
           int j = csrColumnOffsets_DofLoops[offset];
+
           double hj = h_dof_old[j];
           double huj = hu_dof_old[j];
           double hvj = hv_dof_old[j];
           double hetaj = heta_dof_old[j];
           double hwj = hw_dof_old[j];
           double Zj = b_dof[j];
+
           double one_over_hjReg =
-              2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
+              2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
           double uj = huj * one_over_hjReg;
           double vj = hvj * one_over_hjReg;
           double etaj = hetaj * one_over_hjReg;
           double wj = hwj * one_over_hjReg;
           double mj = lumped_mass_matrix[j];
-
-          // for mGN stuff, need it for bar states definition -EJT
           double meshSizej = std::sqrt(mj); // local mesh size in 2d
 
-          // for "bad" branch of gamma function
+          // Here we define pTilde at jth node
           double diff_over_h_j = (hetaj - std::pow(hj, 2.0)) * one_over_hjReg;
-          // This is modified pressure term, pTilde at jth node
           double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
                            (hetaj - std::pow(hj, 2.0));
-          // if (hetaj > std::pow(hj, 2.0)) {
-          //   pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
-          //             diff_over_h_j *
-          //             (std::pow(etaj, 2.0) + etaj * hj + std::pow(hj, 2.0));
-          // }
+          if (hetaj > std::pow(hj, 2.0)) {
+            pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
+                      diff_over_h_j *
+                      (std::pow(etaj, 2.0) + hetaj + std::pow(hj, 2.0));
+          }
+
           // define pressure at jth node
           double pressure_j = 0.5 * g * std::pow(hj, 2.0) + pTildej;
 
-          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
-          // hwStar
+          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, hwStar
           double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
           double huStarij = hui * hStarij * one_over_hiReg;
           double hvStarij = hvi * hStarij * one_over_hiReg;
@@ -2203,8 +2215,7 @@ public:
                                 hvi, hetai, mi, hEps, hEps, false) *
                                 cji_norm);
             }
-            dLij = dLowij; // * fmax(psi[i], psi[j]); // enhance the order
-                           // to 2nd order. No EV
+            dLij = dLowij; // not sure if we need to do this
 
             ///////////////////////////////////////
             // WELL BALANCING DISSIPATIVE MATRIX //
@@ -2212,22 +2223,22 @@ public:
             muLowij = fmax(fmax(0., -(ui * Cx[ij] + vi * Cy[ij])),
                            fmax(0, (uj * Cx[ij] + vj * Cy[ij])));
 
-            // JLG put this hack in the code, so I'm doing it too -EJT
-            muLij = (1. + hEps) * muLowij; // No EV
+            // Define low order muij and "massage" a bit by very slightly
+            // increasing the viscosity
+            muLij = (1. + 1E-7) * muLowij;
 
-            // Need this dLij for low order update and bar states
+            // Define dLij as low order dijs
             dLij = fmax(dLowij, muLij);
-
             // Then save dLow for limiting step
             dLow[ij] = fmax(dLowij, muLij);
 
             ////////////////////////
             // COMPUTE BAR STATES //
             ////////////////////////
-            // CHECK THIS CHECK THIS CHECK THIS
             double hBar_ij = 0, hTilde_ij = 0, huBar_ij = 0, huTilde_ij = 0,
                    hvBar_ij = 0, hvTilde_ij = 0, hetaBar_ij = 0,
                    hetaTilde_ij = 0, hwBar_ij = 0, hwTilde_ij = 0;
+
             if (dLij != 0) {
               // h component
               hBar_ij = -1. / (2 * dLij) *
@@ -2266,6 +2277,7 @@ public:
               hwTilde_ij = (dLij - muLij) / (2 * dLij) *
                            ((hwStarji - hwj) - (hwStarij - hwi));
             }
+            // Here we define uBar + uTilde
             hBT[ij] = hBar_ij + hTilde_ij;
             huBT[ij] = huBar_ij + huTilde_ij;
             hvBT[ij] = hvBar_ij + hvTilde_ij;
@@ -2286,6 +2298,7 @@ public:
             muHij = fmax(psi[i], psi[j]) * muLij;
 
             // compute dij_minus_muij times star solution terms
+            // see: eqn (6.13)
             ith_dHij_minus_muHij_times_hStarStates +=
                 (dHij - muHij) * (hStarji - hStarij);
             ith_dHij_minus_muHij_times_huStarStates +=
@@ -2314,9 +2327,13 @@ public:
             muH_minus_muL[ij] = 0.; // Not true but the prod of this times
                                     // Uj-Ui will be zero
           }
+
           // update ij
           ij += 1;
-        }
+
+        } /*j loop ends here*/
+
+        /* Define global residual */
         if (LUMPED_MASS_MATRIX == 1) {
           globalResidual[offset_h + stride_h * i] =
               hi - dt / mi *
@@ -2342,11 +2359,13 @@ public:
                         (hyp_flux_hw[i] + extendedSourceTerm_hw[i] -
                          ith_dHij_minus_muHij_times_hwStarStates -
                          ith_muHij_times_hwStates);
+
           // clean up potential negative water height due to machine
           // precision
           if (globalResidual[offset_h + stride_h * i] >= -hEps &&
               globalResidual[offset_h + stride_h * i] < hEps)
             globalResidual[offset_h + stride_h * i] = 0;
+
         } else {
           // Distribute residual
           // NOTE: MASS MATRIX IS CONSISTENT
