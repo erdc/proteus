@@ -28,17 +28,17 @@ we are doing simulation in 2d but only consider x direction velocity
 # *************************** #
 g = 9.81  # define gravity
 opts = Context.Options([
-    ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 40, "Final time for simulation"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
+    ("final_time", 100, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.33, "Desired CFL restriction"),
+    ("cfl", 0.20, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (20.0, 0.5)
+L = (20.0, 1.0)
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[-10.0, 0, 0])
 X_coords = (-10.0, 10.0)  # this is domain, used in BCs
@@ -58,7 +58,7 @@ a = 0.2  # this is amplitude
 r = 1  # this is solitary wave width
 # we define the reference height in terms of r
 h0 = np.sqrt(old_div(3 * a, (4 * r**2*(1+a))))
-cBer = h0 + q**2 / (2 * g * h0**2)  # this is Bernoulli constant
+cBer = h0 + old_div(q**2 , (2 * g * h0**2))  # this is Bernoulli constant
 x0 = 0  # wave is centered at x = 0
 
 ###############################
@@ -83,7 +83,7 @@ def bathymetry_function(X):
 ##############################
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        h = h0 + solitary_wave(X[0], 0)
+        h = h0 + a * h0 * solitary_wave(X[0], 0)
         return h
 
 class x_mom_at_t0(object):
@@ -98,6 +98,11 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
+# For analytical solution
+class Zero(object):
+    def uOfXT(self, x, t):
+        return 0.0
+
 """
 heta and hw are needed for the dispersive modified green naghdi equations
 source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
@@ -111,13 +116,12 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        return 0
+        return 0.0
+
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
-
-
 def water_height_DBC(X, flag):
     if (opts.sw_model==1):
         if X[0] == X_coords[0]:
@@ -148,23 +152,31 @@ def hw_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
     elif X[0]==X_coords[1]:
-        return lambda x,t: hw_height_at_t0().uOfXT(X, 0.0)
+        return lambda x,t: hw_at_t0().uOfXT(X, 0.0)
 
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
 outputStepping = SWFlowProblem.OutputStepping(opts.final_time, dt_output=opts.dt_output)
+
 initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0()}
+
 boundaryConditions = {'water_height': water_height_DBC,
                       'x_mom': x_mom_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
+#analyticalSolution
+analyticalSolution={'h_exact': water_height_at_t0(),
+                    'hu_exact': Zero(),
+                    'hv_exact': Zero(),
+                    'heta_exact':Zero(),
+                    'hw_exact':Zero()}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -175,6 +187,7 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              bathymetry=bathymetry_function)
+                                              bathymetry=bathymetry_function,
+                                              analyticalSolution=analyticalSolution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0
