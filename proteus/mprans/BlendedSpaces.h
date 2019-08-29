@@ -11,6 +11,7 @@
 #define ELEMENT_BASED_ENTROPY_RESIDUAL 0 // for entropy residual 
 #define C_GAMMA 3.0
 #define ENT_POWER 1.0
+#define USE_DISCRETE_UPWINDING 1 // Only for linear problems
 // METHOD 4
 // 0: low-order
 // 1: high-order non-limited
@@ -94,10 +95,18 @@ namespace proteus
 			    const double& CTx, const double& CTy, const int& PROBLEM_TYPE)
   {
     if (PROBLEM_TYPE==0)
-      return fmax(fmax(fabs(Cx*u_veli + Cy*v_veli),
-		       fabs(Cx*u_velj + Cy*v_velj)),
-		  fmax(fabs(CTx*u_veli + CTy*v_veli),
-		       fabs(CTx*u_velj + CTy*v_velj)));
+      if (USE_DISCRETE_UPWINDING==1)
+	{
+	  return fmax(0.0,fmax((Cx*u_velj + Cy*v_velj),
+			       (CTx*u_veli+ CTy*v_veli)));
+	}
+      else
+	{
+	  return fmax(fmax(fabs(Cx*u_veli + Cy*v_veli),
+			   fabs(Cx*u_velj + Cy*v_velj)),
+		      fmax(fabs(CTx*u_veli + CTy*v_veli),
+			   fabs(CTx*u_velj + CTy*v_velj)));
+	}
     else if (PROBLEM_TYPE==1)
       {
 	double lambda = fmax(fabs(solni),fabs(solnj));
@@ -829,7 +838,6 @@ namespace proteus
 	wBarij.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
 	wBarji.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
 	
-	
 	int ij=0;	
 	/////////////////////////////////////////
 	// ********** BOUNDARY TERM ********** //
@@ -1086,10 +1094,14 @@ namespace proteus
 
 			// save low order matrix
 			dLowElem[eN_i_j] = dLowElemij;
+
+			// compute global low order matrix
+			dLow[jacIndex] += dLowElemij;
 		      }
 		    else
 		      {
 			dLowElem[eN_i_j] = 0; // not true but irrelevant since we know that fii=0
+			dLow[jacIndex] += 0;
 		      }
 		  }//j
 		element_flux_i[eN_i] += qi;
@@ -1117,17 +1129,37 @@ namespace proteus
 
 	    // solution at node i
 	    double solni = u_dof_old[i];
+	    //double u_veli = u_vel_dofs[i];
+	    //double v_veli = v_vel_dofs[i];
 	    
 	    // for the computation of the local bounds
 	    double umaxi = solni;
 	    double umini = solni;
 
+	    //double ith_lowOrderFluxTerm = 0.0;
+	    //double ith_lowOrderDissipativeTerm = 0.0;
+	    
 	    // loop over the sparsity pattern of the i-th DOF
 	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
 	      {
 		int j = colind[offset];
 		// solution at node j 
 		double solnj = u_dof_old[j];
+		// For Global dij
+		//double u_velj = u_vel_dofs[j];
+		//double v_velj = v_vel_dofs[j];
+		    
+		//double fxj = xFlux(u_velj,solnj,PROBLEM_TYPE);
+		//double fyj = yFlux(v_velj,solnj,PROBLEM_TYPE);
+		//double dij = compute_dij(solni,solnj,
+		//			 u_veli,v_veli,
+		//			 u_velj,v_velj,
+		//			 PrCx[ij], PrCy[ij],
+		//			 PrCTx[ij], PrCTy[ij],
+		//			 PROBLEM_TYPE);
+		
+		//ith_lowOrderFluxTerm += PrCx[ij]*fxj + PrCy[ij]*fyj;
+		//ith_lowOrderDissipativeTerm += dij*(solnj-solni);		
 
 		if (USE_Q1_STENCIL==1)
 		  {
@@ -1151,8 +1183,12 @@ namespace proteus
 	    
 	    // compute and save low order solution 
 	    lowOrderSolution[i] = solni - dt/mi * (lowOrderFluxTerm[i] 
-						   - lowOrderDissipativeTerm[i]
-						   - lowOrderBoundaryIntegral[i]);
+	    					   - lowOrderDissipativeTerm[i]
+	    					   - lowOrderBoundaryIntegral[i]);
+	    // For Global dij
+	    //lowOrderSolution[i] = solni - dt/mi * (ith_lowOrderFluxTerm
+	    //					   - ith_lowOrderDissipativeTerm
+	    //					   - lowOrderBoundaryIntegral[i]);
 	  }
 	///////////////////////////////
 	// END OF FIRST LOOP IN DOFs //

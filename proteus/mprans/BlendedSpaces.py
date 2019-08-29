@@ -225,6 +225,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  forceStrongConditions=0,
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
+                 periodicBCs=0, #Only works in 1D
+                 rightBoundary=None, #for the periodicBCs
                  PROBLEM_TYPE=0,
                  ONE_DIM_PROBLEM=0,
                  PROJECT_INIT_CONDITION=0,
@@ -232,6 +234,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  fixed_dt=None,
                  updateVelocityInTime=False):
 
+        self.periodicBCs=periodicBCs
+        self.rightBoundary=rightBoundary
+        if self.periodicBCs==1:
+            assert rightBoundary is not None, "provide a rightBoundary to use periodicBCs"
         self.fixed_dt=fixed_dt
         self.PROJECT_INIT_CONDITION=PROJECT_INIT_CONDITION
         self.METHOD=METHOD
@@ -727,6 +733,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.QH_MC_global = None  # consistent mass matrix with high order space
 
         # for flux Jacobian at DOFs
+        self.periodicBoundaryMap = None
         self.x = None
         self.y = None
         self.z = None
@@ -760,16 +767,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate some metrics at EOS (End Of Simulation)
         """
         time = self.timeIntegration.tLast
+        nElements = self.q[('x')][:,:,0].shape[0]
+        nQuad = self.q[('x')][:,:,0].shape[1]
+        
         u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
         gradx_u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
         grady_u_exact = numpy.zeros(self.q[('u',0)].shape,'d')
-        X = {0:self.q[('x')][:,:,0],
-             1:self.q[('x')][:,:,1],
-             2:self.q[('x')][:,:,2]}
-        u_exact[:] = self.exactSolution[0](X,time)
-        gradx_u_exact[:] = self.exactGrad[0](X,time)
-        grady_u_exact[:] = self.exactGrad[1](X,time)
         
+        X = {0:self.q[('x')][:,:,0].ravel(),
+             1:self.q[('x')][:,:,1].ravel(),
+             2:self.q[('x')][:,:,2].ravel()}
+
+        u_exact[:] = np.reshape(self.exactSolution[0](X,time),(nElements,nQuad))        
+        gradx_u_exact[:] = np.reshape(self.exactGrad[0](X,time),(nElements,nQuad))
+        grady_u_exact[:] = np.reshape(self.exactGrad[1](X,time),(nElements,nQuad))
+
         (global_L1,
          global_L2,
          global_LInf,
@@ -817,6 +829,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateCoefficients(self):
         pass
 
+    def getPeriodicBCs(self,rightBoundary):
+	# NOTE: it only works in 1D
+        arrayRightBoundary=[]
+        self.periodicBoundaryMap=[]
+
+        # find the indeces corresponding to the right boundary
+        for i in range(len(self.x)):
+            if self.x[i] == rightBoundary:
+                arrayRightBoundary.append(i)
+            #
+        #
+        for i in range(len(self.x)):        
+            if self.x[i] == 0:
+                yLeft = self.y[i]
+                #print (i, self.x[i], self.y[i])
+                for j in range(len(arrayRightBoundary)):
+                    yRightIndex = arrayRightBoundary[j]
+                    yRight = self.y[yRightIndex]
+                    if yRight == yLeft:
+                        self.periodicBoundaryMap.append([i,yRightIndex])
+                        break
+                    #
+                #
+            #
+        #
+    #
+    
     def updateVelocityAtDOFs(self,time):
         if self.x is None:
             self.x = numpy.zeros(self.u[0].dof.shape,'d')
@@ -1466,8 +1505,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.cterm_global is None:
             self.dLow = np.zeros(self.nnz,'d')
             self.compute_c_matrices()
-            self.compute_QH_lumped_mass_matrix()
             self.compute_QL_lumped_mass_matrix()
+            self.compute_QH_lumped_mass_matrix()
             if self.coefficients.GET_POINT_VALUES==1:
                 self.getIntBernMat()
             #
@@ -1573,7 +1612,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         
         ## COMPUTE C MATRICES ##
         self.compute_matrices()
-       
+
+        if self.coefficients.periodicBCs and self.periodicBoundaryMap is None:
+            self.getPeriodicBCs(rightBoundary=self.coefficients.rightBoundary)
+        
         """
         Calculate the element residuals and add in to the global residual
         """

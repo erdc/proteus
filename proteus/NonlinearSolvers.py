@@ -1128,8 +1128,8 @@ class highOrderLimSolver(Newton):
             self.F.u[0].dof[:] = u
 
             # update uminG and umaxG (since due to the projection they have increased)
-            self.F.uminG = -1E100 #self.F.u_dof_old.min()
-            self.F.umaxG = 1E100  #self.F.u_dof_old.max()
+            self.F.uminG = self.F.u_dof_old.min()
+            self.F.umaxG = self.F.u_dof_old.max()
             
             # make sure we don't do this process again
             self.F.INIT_CONDITION_PROJECTED = True
@@ -1150,6 +1150,14 @@ class highOrderLimSolver(Newton):
         self.computeResidual(u,r,b)
         u[:] = r
         self.F.u[0].dof[:]=u
+
+	if self.F.coefficients.periodicBCs:
+            for PBMap in self.F.periodicBoundaryMap:
+                leftIndex = PBMap[0]
+                rightIndex = PBMap[1]
+                self.F.u[0].dof[leftIndex] = self.F.u[0].dof[rightIndex]
+            #
+        #
 #
     
 class myLinearSolver(Newton):
