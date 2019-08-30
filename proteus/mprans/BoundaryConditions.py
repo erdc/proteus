@@ -402,9 +402,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.hz_dirichlet.uOfXT = get_DBC_h(2)
 
     def setChMoveMesh(self, body):
-        self.hx_dirichlet.uOfXT = lambda x, t: body.hx(x, t)
-        self.hy_dirichlet.uOfXT = lambda x, t: body.hy(x, t)
-        self.hz_dirichlet.uOfXT = lambda x, t: body.hz(x, t)
+        self.hx_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): body.hx(x, t)
+        self.hy_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): body.hy(x, t)
+        self.hz_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): body.hz(x, t)
 
     def setTurbulentDirichlet(self, kVal, dissipationVal):
         """
@@ -467,8 +467,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.setNoSlip()
         self.BC_type = "Wall function"
         self.dissipation_diffusive.resetBC()
-        self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
-        self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
+        self.k_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): wf.get_k_dirichlet(x, t)
+        self.dissipation_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): wf.get_dissipation_dirichlet(x, t)
         """
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
         self.vof_advective.setConstantBC(0.)
@@ -510,9 +510,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.body_python_rot_matrix = rot_matrix
         self.body_python_last_pos = last_pos
         self.body_python_h = h
-        self.hx_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hx(x, t)
-        self.hy_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hy(x, t)
-        self.hz_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hz(x, t)
+        self.hx_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_MoveMesh_hx(x, t)
+        self.hy_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_MoveMesh_hy(x, t)
+        self.hz_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_MoveMesh_hz(x, t)
 
     def __cpp_MoveMesh_h(self, x, t):
         cython.declare(x_0=cython.double[3])
@@ -569,14 +569,14 @@ class BC_RANS(BoundaryConditions.BC_Base):
             wind_speed = np.zeros(3)
         self.waves = __cppClass_WavesCharacteristics(waves=wave, vert_axis=vert_axis, b_or=self._b_or,
                                                      wind_speed=wind_speed, smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
-        self.u_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
-        self.v_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
-        self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
-        self.vof_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
-        self.p_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
-        self.pInc_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+        self.u_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
+        self.v_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
+        self.w_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
+        self.vof_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
+        self.p_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+        self.pInc_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
         self.pInc_diffusive.setConstantBC(0.0)
-        self.pInit_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)#setConstantBC(0.0)
+        self.pInit_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)#setConstantBC(0.0)
         self.vos_dirichlet.setConstantBC(0.0)
         self.us_dirichlet.setConstantBC(0.0)
         self.vs_dirichlet.setConstantBC(0.0)
