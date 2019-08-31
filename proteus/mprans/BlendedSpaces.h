@@ -7,7 +7,7 @@
 #include "ModelFactory.h"
 
 #define USE_Q1_STENCIL 1
-#define USE_MACRO_CELL 1 // for computation of gamma indicator
+#define USE_MACRO_CELL 0 // for computation of gamma indicator
 #define ELEMENT_BASED_ENTROPY_RESIDUAL 0 // for entropy residual 
 #define C_GAMMA 3.0
 #define ENT_POWER 1.0
@@ -143,6 +143,8 @@ namespace proteus
     std::valarray<double> element_He;
     std::valarray<double> global_hi;
     std::valarray<double> min_hiHe;
+
+    std::valarray<double> qNormAux;
 
     std::valarray<double> weighted_lumped_mass_matrix;
     virtual ~BlendedSpaces_base(){}
@@ -828,6 +830,8 @@ namespace proteus
 	lowOrderFluxTerm.resize(numDOFs,0.0);	
 	lowOrderBoundaryIntegral.resize(numDOFs,0.0);
 	lowOrderSolution.resize(numDOFs,0.0);
+
+	highOrderBoundaryIntegral.resize(numDOFs,0.0);
 	
 	// limited flux correction //
 	umax.resize(numDOFs,0.0);
@@ -917,13 +921,12 @@ namespace proteus
 		    int eN_i = eN*nDOF_test_element+i;
 		    int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 		    double uni = u_dof_old[gi];
-		    //double uInlet = ebqe_uInlet[gi];
 		    
 		    // low order part
 		    double auxLowOrder = (flow >= 0 ? 0. : 1.)*(uni-uInlet)*flow*u_test_dS[i];
 		    elementBoundaryFluxLowOrder[i] += auxLowOrder;
 		    // high order part
-		    double auxHighOrder = (flow >= 0 ? 0. : 1.)*(uExt-uni)*flow*u_test_dS[i];
+		    double auxHighOrder = (flow >= 0 ? 0. : 1.)*(uExt-uInlet)*flow*u_test_dS[i];
 		    elementBoundaryFluxHighOrder[i] += auxHighOrder;
 		  }
 	      }//kb
@@ -933,7 +936,7 @@ namespace proteus
 		int eN_i = eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 		lowOrderBoundaryIntegral[gi] += elementBoundaryFluxLowOrder[i];
-		element_flux_i[eN_i] = elementBoundaryFluxHighOrder[i]; 
+		highOrderBoundaryIntegral[gi] += elementBoundaryFluxHighOrder[i];
 	      }
 	  }//ebNE
 	/////////////////////////////////////////////////
@@ -1079,7 +1082,7 @@ namespace proteus
 
 			// save anti-dissipative flux into element_flux_qij
 			element_flux_qij[eN_i_j] =
-			  (0.5*fmax(EntVisc[gi],EntVisc[gj])-1.0)*dLowElemij*(solnj-solni);
+			  (fmax(EntVisc[gi],EntVisc[gj])-1.0)*dLowElemij*(solnj-solni);
 			
 			// compute low order dissipative term
 			lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
@@ -1276,10 +1279,11 @@ namespace proteus
 		    if (i!=j)
 		      {
 			uminG=-1E100;
-			umaxG= 1E100;			
-			double gammaij = fmax(gamma_dof[i], gamma_dof[j]);
+			umaxG= 1E100;
+			double gammaij = fmax(gamma_dof[gi], gamma_dof[gj]);
 			if (METHOD==4)
-			  gammaij = fmax(qNorm[i], qNorm[j]);
+			  gammaij = fmax(qNorm[gi], qNorm[gj]);
+
 			if (fij > 0)
 			  {
 			    if (METHOD==0)
@@ -1287,13 +1291,29 @@ namespace proteus
 			    else if (METHOD==1)
 			      fluxStar[gi] += fij; // high-order entropy viscosity
 			    else if (METHOD==2)
-				fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+			      {
+				if (USE_DISCRETE_UPWINDING==1)
+				  fluxStar[gi] += fmin(fij,fmin(fmax(0,2*dij*umaxi-wij),
+								fmax(0,wji-2*dij*uminj)));
+				else
+				  fluxStar[gi] += fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+			      }
 			    else // METHOD==3 or 4
 			      {
-				double fijStarLoc=fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+				double fijStarLoc=0;
 				double fijStarGlob=fmin(fij,fmin(2*dij*umaxG-wij,wji-2*dij*uminG));
-				fluxStar[gi] += fmin(fijStarGlob, fmax(fijStarLoc,gammaij*fij));
-				//fluxStar[gi] += fmax(fijStarLoc,gammaij*fij);
+				//fluxStar[gi] += fmin(fijStarGlob, fmax(fijStarLoc,gammaij*fij));
+
+				if (USE_DISCRETE_UPWINDING==1)
+				  {
+				    fijStarLoc=fmin(fij,fmin(fmax(0,2*dij*umaxi-wij),
+							     fmax(0,wji-2*dij*uminj)));
+				  }
+				else
+				  {
+				    fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
+				  }
+				fluxStar[gi] += fmax(fijStarLoc,gammaij*fij);
 			      }
 			  }
 			else
@@ -1303,13 +1323,29 @@ namespace proteus
 			    else if (METHOD==1)
 			      fluxStar[gi] += fij;
 			    else if (METHOD==2)
-			      fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+			      {
+				if (USE_DISCRETE_UPWINDING==1)
+				  fluxStar[gi] += fmax(fij,fmax(fmin(0,2*dij*umini-wij),
+								fmin(0,wji-2*dij*umaxj)));
+				else
+				  fluxStar[gi] += fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+			      }
 			    else // METHOD==3 or 4
 			      {
-				double fijStarLoc =fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+				double fijStarLoc = 0;
+				if (USE_DISCRETE_UPWINDING==1)
+				  {
+				    fijStarLoc =fmax(fij,fmax(fmin(0,2*dij*umini-wij),
+							      fmin(0,wji-2*dij*umaxj)));
+				  }
+				else
+				  {
+				    fijStarLoc = fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
+				  }
 				double fijStarGlob=fmax(fij,fmax(2*dij*uminG-wij,wji-2*dij*umaxG));
-				fluxStar[gi] += fmax(fijStarGlob, fmin(fijStarLoc,gammaij*fij));
-				//fluxStar[gi] += fmin(fijStarLoc,gammaij*fij);
+				//fluxStar[gi] += fmax(fijStarGlob, fmin(fijStarLoc,gammaij*fij));
+
+				fluxStar[gi] += fmin(fijStarLoc,gammaij*fij);
 			      }
 			  }
 		      }
@@ -1323,6 +1359,8 @@ namespace proteus
 	    // COMPUTE SOLUTION //
 	    //globalResidual[i] = lowOrderSolution[i];
 	    globalResidual[i] = lowOrderSolution[i] + dt/mi*fluxStar[i];
+	    //+ highOrderBoundaryIntegral[i]
+	    //- lowOrderBoundaryIntegral[i]);
 	  }
 	//////////////////////////////
 	// END OF LAST LOOP IN DOFs //
@@ -1481,6 +1519,8 @@ namespace proteus
 	global_hi.resize(numDOFs,0.0);
 	min_hiHe.resize(numDOFs,1E100);
 
+	qNormAux.resize(numDOFs,0);
+	
 	weighted_lumped_mass_matrix.resize(numDOFs,0.0);
 
 	for (int i=0; i<numDOFs; i++)
@@ -1672,7 +1712,7 @@ namespace proteus
 		norm_grad_un=0.0;
                 for (int I=0;I<nSpace; I++)
                   norm_grad_un += grad_un[I]*grad_un[I];
-                norm_grad_un = std::sqrt(norm_grad_un+1E-5);
+                norm_grad_un = std::sqrt(norm_grad_un)+1E-5;
 
 		// To compute smoothness indicator based on 2nd derivative //
 		if (ONE_DIM_PROBLEM==1)
@@ -1721,11 +1761,27 @@ namespace proteus
 
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    global_hi[i] /= den_hi[i];
 	    xqNorm[i] /= weighted_lumped_mass_matrix[i];
 	    yqNorm[i] /= weighted_lumped_mass_matrix[i];	    
-	    qNorm[i] = std::sqrt(xqNorm[i]*xqNorm[i] + yqNorm[i]*yqNorm[i]);
+	    qNormAux[i] = std::sqrt(xqNorm[i]*xqNorm[i] + yqNorm[i]*yqNorm[i]);
+	  }
+
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double qNormMini = qNormAux[i];
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+		qNormMini = fmin(qNormMini,qNormAux[j]);
+	      }
+	    qNorm[i] = qNormMini;
+	  }
+	
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    global_hi[i] /= den_hi[i];
 	    qNorm[i] = 1.0 - (qNorm[i] < 0.99 ? 0.0 : 1.0);
+	    //qNorm[i] = 1.0 - qNorm[i];
 
 	    /*
 	    double solni = u_dof_old[i];
@@ -1820,8 +1876,8 @@ namespace proteus
 		  {
 		    double eps = 1E-10;
 		    double hi2 = global_hi[i] * global_hi[i];
-		    //gamma_dof[i] = fmax(0, fmin(hi2,C_GAMMA*min_hiHe[i]))/(hi2+eps);
-		    gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
+		    gamma_dof[i] = fmax(0, fmin(hi2,C_GAMMA*min_hiHe[i]))/(hi2+eps);
+		    //gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
 		    //gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/hi2;
 		  }// i
 		else
@@ -1830,29 +1886,32 @@ namespace proteus
 		  }
 	      } //i
 	    // make average to "interpolate" gamma from big Q1 mesh to finer mesh
-	    for (int i=0; i<numDOFs; i++)
+	    if (true)
 	      {
-		if (is_dof_internal[i] == 1) // dof is internal
+		for (int i=0; i<numDOFs; i++)
 		  {
-		    double num_external_dofs = 0; // this should be 4
-		    // loop on its support
-		    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		    if (is_dof_internal[i] == 1) // dof is internal
 		      {
-			int j = colind[offset];
-			if (is_dof_external[j] == 1) // external j-dof
+			double num_external_dofs = 0; // this should be 4
+			// loop on its support
+			for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
 			  {
-			    num_external_dofs += 1;
-			    gamma_dof[i] += gamma_dof[j];
+			    int j = colind[offset];
+			    if (is_dof_external[j] == 1) // external j-dof
+			      {
+				num_external_dofs += 1;
+				gamma_dof[i] += gamma_dof[j];
+			      }
 			  }
+			// normalize
+			gamma_dof[i] /= num_external_dofs;
 		      }
-		    // normalize
-		    gamma_dof[i] /= num_external_dofs;
-		  }
-		else if (is_dof_external[i] == 0) // this is a middle dof
-		  {
-		    int gj1 = first_adjacent_dof_to_middle_dof[i];
-		    int gj2 = second_adjacent_dof_to_middle_dof[i];
-		    gamma_dof[i] = 0.5*(gamma_dof[gj1] + gamma_dof[gj2]);
+		    else if (is_dof_external[i] == 0) // this is a middle dof
+		      {
+			int gj1 = first_adjacent_dof_to_middle_dof[i];
+			int gj2 = second_adjacent_dof_to_middle_dof[i];
+			gamma_dof[i] = 0.5*(gamma_dof[gj1] + gamma_dof[gj2]);
+		      }
 		  }
 	      }
 	  }
@@ -1863,8 +1922,8 @@ namespace proteus
 	      {
 		double eps = 1E-10;
 		double hi2 = global_hi[i] * global_hi[i];
-		//gamma_dof[i] = fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/(hi2+eps);
-		gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
+		gamma_dof[i] = fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/(hi2+eps);
+		//gamma_dof[i] = (fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i])) + eps)/(hi2+eps);
 		//gamma_dof[i] = hi2 == 0 ? 1. : fmax(0, fmin(hi2, C_GAMMA*min_hiHe[i]))/hi2;
 	      }
 	  }

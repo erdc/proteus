@@ -299,6 +299,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         time = self.model.timeIntegration.tLast
         if self.model.hasInletFunction:
             self.model.update_uInlet_at_quad_points(time)
+            self.model.update_uInlet_at_DoFs(time)
         #
         
         # COMPUTE NEW VELOCITY (if given by user) #        
@@ -758,6 +759,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.QL_NNZ = 0
         self.Q1_sparsity=None
         self.uInlet_at_quad_points=None
+        self.uInlet_at_DoFs=None
         self.q_uInitial=None
         self.INIT_CONDITION_PROJECTED=False
     #
@@ -869,13 +871,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
                 #
             #
-            self.u_vel_dofs = np.zeros(len(self.x),'d')
-            self.v_vel_dofs = np.zeros(len(self.x),'d')
         #
         X = {0:self.x,
              1:self.y,
              2:self.z}
-        
+
+        self.u_vel_dofs = np.zeros(len(self.x),'d')
+        self.v_vel_dofs = np.zeros(len(self.x),'d')
         self.u_vel_dofs[:] = self.velocityFieldAsFunction[0](X,time)
         self.v_vel_dofs[:] = self.velocityFieldAsFunction[1](X,time)
     #
@@ -991,6 +993,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                   2: self.ebqe['x'][:, :, 2].ravel()}
         
         self.uInlet_at_quad_points[:] = np.reshape(self.uInletFunction[0](ebqe_X,time),(nElements,nQuad))
+    #
+
+    def update_uInlet_at_DoFs(self,time):
+        if self.x is None:
+            self.x = numpy.zeros(self.u[0].dof.shape,'d')
+            self.y = numpy.zeros(self.u[0].dof.shape,'d')
+            self.z = numpy.zeros(self.u[0].dof.shape,'d')
+            for eN in range(self.mesh.nElements_global):
+                for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                    gi = self.offset[0]+self.stride[0]*self.u[0].femSpace.dofMap.l2g[eN,i]
+                    self.x[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
+                    self.y[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
+                    self.z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
+                #
+            #
+        #
+        X = {0:self.x,
+             1:self.y,
+             2:self.z}
+        
+        self.uInlet_at_DoFs = np.zeros(len(self.x),'d')
+        self.uInlet_at_DoFs[:] = self.uInletFunction[0](X,time)        
     #
     
     def updateBlendingFunction(self):
@@ -1512,8 +1536,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #
             self.uInlet_at_quad_points=numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                     self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+            self.uInlet_at_DoFs = numpy.zeros(self.u[0].dof.shape,'d')
             if self.hasInletFunction:
                 self.update_uInlet_at_quad_points(time=0)
+                self.update_uInlet_at_DoFs(time=0)
             #
             if self.hasVelocityFieldAsFunction:
                 self.updateVelocityFieldAsFunction(time=0)
@@ -1588,17 +1614,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 		    gj1 = 0
                     gj2 = 0
 		    if i==4:
-			gj1 = offset_u+stride_u*l2g[eN,0]
-			gj2 = offset_u+stride_u*l2g[eN,1]
+			gj1 = offset_u+stride_u*l2g[eN,0] 
+			gj2 = offset_u+stride_u*l2g[eN,1] 
 		    elif i==5:
-			gj1 = offset_u+stride_u*l2g[eN,1]
-			gj2 = offset_u+stride_u*l2g[eN,3]
+			gj1 = offset_u+stride_u*l2g[eN,1] 
+			gj2 = offset_u+stride_u*l2g[eN,2] 
 		    elif i==6:
-			gj1 = offset_u+stride_u*l2g[eN,3]
-			gj2 = offset_u+stride_u*l2g[eN,2]
+			gj1 = offset_u+stride_u*l2g[eN,2] 
+			gj2 = offset_u+stride_u*l2g[eN,3] 
 		    else:
-			gj1 = offset_u+stride_u*l2g[eN,2]
-			gj2 = offset_u+stride_u*l2g[eN,0]
+			gj1 = offset_u+stride_u*l2g[eN,3] 
+			gj2 = offset_u+stride_u*l2g[eN,0] 
                     #
 		    self.first_adjacent_dof_to_middle_dof[gi]  = gj1;
 		    self.second_adjacent_dof_to_middle_dof[gi] = gj2;
@@ -1771,6 +1797,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.quantDOFs4[:] = self.xGradRHS
         #self.quantDOFs5[:] = self.yGradRHS
         self.quantDOFs5[:] = self.qNorm
+        
         #import pdb; pdb.set_trace()
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
