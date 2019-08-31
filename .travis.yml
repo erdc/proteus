@@ -18,7 +18,6 @@ addons:
     - gfortran
     - libffi-dev
     - libssl-dev
-    - libsqlite0-dev
     - python-lzma
     - python3
 
