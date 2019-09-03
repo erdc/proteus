@@ -1337,7 +1337,7 @@ namespace proteus
 			      fluxStar[gi] += fij; // high-order entropy viscosity
 			    else if (METHOD==2)
 			      {
-				if (USE_DISCRETE_UPWINDING==1)
+				if (USE_DISCRETE_UPWINDING==1 && PROBLEM_TYPE==0)
 				  fluxStar[gi] += fmin(fij,fmax(0.,fmin(2*dij*umaxi-wij,
 									wji-2*dij*uminj)));
 				else
@@ -1347,7 +1347,7 @@ namespace proteus
 			      {
 				double fijStarGlob=fmin(fij,fmin(2*dij*umaxG-wij,wji-2*dij*uminG));
 				double fijStarLoc=fmin(fij,fmin(2*dij*umaxi-wij,wji-2*dij*uminj));
-				if (USE_DISCRETE_UPWINDING==1)
+				if (USE_DISCRETE_UPWINDING==1 && PROBLEM_TYPE==0)
 				  {
 				    fijStarGlob=fmin(fij,fmax(0.,fmin(2*dij*umaxG-wij,
 								      wji-2*dij*uminG)));
@@ -1373,7 +1373,7 @@ namespace proteus
 			      fluxStar[gi] += fij;
 			    else if (METHOD==2)
 			      {
-				if (USE_DISCRETE_UPWINDING==1)
+				if (USE_DISCRETE_UPWINDING==1 && PROBLEM_TYPE==0)
 				  fluxStar[gi] += fmax(fij,fmin(0.,fmax(2*dij*umini-wij,
 									wji-2*dij*umaxj)));
 				else
@@ -1383,7 +1383,7 @@ namespace proteus
 			      {
 				double fijStarGlob=fmax(fij,fmax(2*dij*uminG-wij,wji-2*dij*umaxG));
 				double fijStarLoc=fmax(fij,fmax(2*dij*umini-wij,wji-2*dij*umaxj));
-				if (USE_DISCRETE_UPWINDING==1)
+				if (USE_DISCRETE_UPWINDING==1 && PROBLEM_TYPE==0)
 				  {
 				    fijStarGlob =fmax(fij,fmin(0.,fmax(2*dij*uminG-wij,
 								       wji-2*dij*umaxG)));
