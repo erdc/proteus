@@ -96,10 +96,13 @@ class RKEV(proteus.TimeIntegration.SSP):
                 # update velocity at t=tn+dt for the second stage
                 if self.transport.hasVelocityFieldAsFunction:
                     time = self.tLast + self.dt
-                    if self.transport.coefficients.updateVelocityInTime == True:
-                        self.transport.updateVelocityFieldAsFunction(time)
-                        self.transport.updateVelocityAtDOFs(time)
-                    #
+                    self.transport.updateVelocityFieldAsFunction(time)
+                    self.transport.updateVelocityAtDOFs(time)
+                #
+                # update uInlet at t=tn+dt for the second stage
+                if self.transport.hasInletFunction:
+                    time = self.tLast + self.dt
+                    self.transport.update_uInlet_at_quad_points(time)
                 #
             elif self.lstage == 2:
                 logEvent("Second stage of SSP33 method finished", level=4)
@@ -112,10 +115,13 @@ class RKEV(proteus.TimeIntegration.SSP):
                 # update velocity at t=tn+dt/2.0 for the third (and last) stage
                 if self.transport.hasVelocityFieldAsFunction:
                     time = self.tLast + self.dt/2.0
-                    if self.transport.coefficients.updateVelocityInTime == True:
-                        self.transport.updateVelocityFieldAsFunction(time)
-                        self.transport.updateVelocityAtDOFs(time)
-                    #
+                    self.transport.updateVelocityFieldAsFunction(time)
+                    self.transport.updateVelocityAtDOFs(time)
+                #
+                # update uInlet at t=tn+dt/2.0 for the third (and last) stage
+                if self.transport.hasInletFunction:
+                    time = self.tLast + self.dt/2.0
+                    self.transport.update_uInlet_at_quad_points(time)
                 #
             else:
                 logEvent("Third stage of SSP33 method finished", level=4)
@@ -137,10 +143,13 @@ class RKEV(proteus.TimeIntegration.SSP):
                 # update velocity at t=tn+dt for the second (and last) stage
                 if self.transport.hasVelocityFieldAsFunction:
                     time = self.tLast + self.dt
-                    if self.transport.coefficients.updateVelocityInTime == True:
-                        self.transport.updateVelocityFieldAsFunction(time)
-                        self.transport.updateVelocityAtDOFs(time)
-                    #
+                    self.transport.updateVelocityFieldAsFunction(time)
+                    self.transport.updateVelocityAtDOFs(time)
+                #
+                # update uInlet at t=tn+dt for the second (and last) stage
+                if self.transport.hasInletFunction:
+                    time = self.tLast + self.dt
+                    self.transport.update_uInlet_at_quad_points(time)
                 #
             else:
                 logEvent("Second stage of SSP22 method finished", level=4)
@@ -231,8 +240,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ONE_DIM_PROBLEM=0,
                  PROJECT_INIT_CONDITION=0,
                  METHOD=4,
-                 fixed_dt=None,
-                 updateVelocityInTime=False):
+                 fixed_dt=None):
 
         self.periodicBCs=periodicBCs
         self.rightBoundary=rightBoundary
@@ -249,7 +257,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #   3: limiting with gamma indicator based on DK and CL
         #   4: limiting with gamma indicator based on MQL, DK and CK
         #
-        self.updateVelocityInTime=updateVelocityInTime
         self.GET_POINT_VALUES=GET_POINT_VALUES
         self.PROBLEM_TYPE=PROBLEM_TYPE
         self.variableNames = ['u']
@@ -299,14 +306,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         time = self.model.timeIntegration.tLast
         if self.model.hasInletFunction:
             self.model.update_uInlet_at_quad_points(time)
-            self.model.update_uInlet_at_DoFs(time)
         #
         
         # COMPUTE NEW VELOCITY (if given by user) #        
         if self.model.hasVelocityFieldAsFunction:
-            if firstStep == True or self.updateVelocityInTime == True:
-                self.model.updateVelocityFieldAsFunction(time)
-                self.model.updateVelocityAtDOFs(time)
+            self.model.updateVelocityFieldAsFunction(time)
+            self.model.updateVelocityAtDOFs(time)
         #
         
         copyInstructions = {}
@@ -643,7 +648,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if ('uInletFunction') in dir (options):
             self.uInletFunction = options.uInletFunction
             self.hasInletFunction = True
-            
+        #
+
         #Blending function
         self.hasBlendingFunction = False
         if ('blendingFunction') in dir (options):
@@ -673,6 +679,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.den_hi = numpy.zeros(self.u[0].dof.shape, 'd')
         self.hi = numpy.zeros(self.u[0].dof.shape, 'd')
         self.gamma_dof = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.gamma_elem = numpy.zeros(self.mesh.nElements_global,'d')
         self.first_adjacent_dof_to_middle_dof = numpy.zeros(self.u[0].dof.shape, 'i')
         self.second_adjacent_dof_to_middle_dof = numpy.zeros(self.u[0].dof.shape, 'i')
         
@@ -755,13 +762,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.umaxG = None
         self.uminG = None
         self.EntVisc = None
+        self.xFlux_dof_old = None
+        self.yFlux_dof_old = None
         self.uHDot = None
         self.QL_NNZ = 0
         self.Q1_sparsity=None
         self.uInlet_at_quad_points=None
-        self.uInlet_at_DoFs=None
         self.q_uInitial=None
         self.INIT_CONDITION_PROJECTED=False
+
+        self.elem_patch_array = None
     #
 
     def getMetricsAtEOS(self):
@@ -813,7 +823,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_L1 = globalSum(global_L1)
         self.global_L2 = globalSum(global_L2)
         self.global_LInf = globalMax(global_LInf)
-        self.global_H1 = globalSum(global_H1)        
+        self.global_H1 = globalSum(global_H1)
+
+        #####
+        file_array=np.zeros((self.mesh.nElements_global,3),'d')
+        file_array[:,0] = self.xElemCoord
+        file_array[:,1] = self.yElemCoord
+        file_array[:,2] = self.gamma_elem
+        np.savetxt('si.txt',file_array)
+        ####
     #
     
     def runAtEOS(self):
@@ -992,31 +1010,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                   1: self.ebqe['x'][:, :, 1].ravel(),
                   2: self.ebqe['x'][:, :, 2].ravel()}
         
-        self.uInlet_at_quad_points[:] = np.reshape(self.uInletFunction[0](ebqe_X,time),(nElements,nQuad))
+        self.uInlet_at_quad_points[:] = np.reshape(self.uInletFunction[0](ebqe_X,time),
+                                                   (nElements,nQuad))
     #
 
-    def update_uInlet_at_DoFs(self,time):
-        if self.x is None:
-            self.x = numpy.zeros(self.u[0].dof.shape,'d')
-            self.y = numpy.zeros(self.u[0].dof.shape,'d')
-            self.z = numpy.zeros(self.u[0].dof.shape,'d')
-            for eN in range(self.mesh.nElements_global):
-                for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
-                    gi = self.offset[0]+self.stride[0]*self.u[0].femSpace.dofMap.l2g[eN,i]
-                    self.x[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
-                    self.y[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
-                    self.z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
-                #
-            #
-        #
-        X = {0:self.x,
-             1:self.y,
-             2:self.z}
-        
-        self.uInlet_at_DoFs = np.zeros(len(self.x),'d')
-        self.uInlet_at_DoFs[:] = self.uInletFunction[0](X,time)        
-    #
-    
     def updateBlendingFunction(self):
         # DO LUMPED L2 PROJECTION #
         self.blendingFunctionViaLumpedL2Projection=False
@@ -1525,6 +1522,60 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, self.CTy = self.cterm_global_transpose[1].getCSRrepresentation()
     #
 
+    def compute_element_patch(self):
+        DoFs_in_elem = np.empty((self.mesh.nElements_global,),dtype=object)
+        elem_patch = np.empty((self.mesh.nElements_global,),dtype=object)
+        for index in range(len(DoFs_in_elem)):
+            DoFs_in_elem[index]=[]
+            elem_patch[index]=[]
+        #
+        elem_in_DoFs = np.empty((len(self.u[0].dof),),dtype=object)
+        for index in range(len(elem_in_DoFs)):
+            elem_in_DoFs[index]=[]
+        #
+
+        # loop on elements
+        for eN in range(self.mesh.nElements_global):
+            for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                offset_u = self.offset[0]; stride_u = self.stride[0]
+                l2g = self.l2g[0]['freeGlobal']
+                gi = offset_u + stride_u*l2g[eN,i]
+                DoFs_in_elem[eN].append(gi)
+                elem_in_DoFs[gi].append(eN)
+            #
+        #
+        
+        for eN in range(self.mesh.nElements_global):
+            elem_patch[eN].append(eN)
+            for DoF in DoFs_in_elem[eN]:
+                for elem in elem_in_DoFs[DoF]:
+                    if (elem in elem_patch[eN]) == False:
+                        elem_patch[eN].append(elem)
+                #
+            #
+        #
+
+        self.elem_patch_array = -np.ones((self.mesh.nElements_global,9),'i')
+        for eN,elem_list in enumerate(elem_patch):
+            for j,elem in enumerate(elem_list):
+                self.elem_patch_array[eN,j] = elem
+            #
+        #
+
+        # get coordinates of the center point of the elements
+        self.xElemCoord = np.zeros(self.mesh.nElements_global,'d')
+        self.yElemCoord = np.zeros(self.mesh.nElements_global,'d')
+        for eN in range(self.mesh.nElements_global):
+            for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                if i==8:
+                    offset_u = self.offset[0]; stride_u = self.stride[0]
+                    l2g = self.l2g[0]['freeGlobal']
+                    gi = offset_u + stride_u*l2g[eN,i]
+                    self.xElemCoord[eN] = self.x[gi]
+                    self.yElemCoord[eN] = self.y[gi]
+        
+    #
+        
     def compute_matrices(self):
         if self.cterm_global is None:
             self.dLow = np.zeros(self.nnz,'d')
@@ -1536,10 +1587,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #
             self.uInlet_at_quad_points=numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                     self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-            self.uInlet_at_DoFs = numpy.zeros(self.u[0].dof.shape,'d')
             if self.hasInletFunction:
                 self.update_uInlet_at_quad_points(time=0)
-                self.update_uInlet_at_DoFs(time=0)
             #
             if self.hasVelocityFieldAsFunction:
                 self.updateVelocityFieldAsFunction(time=0)
@@ -1567,6 +1616,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
             self.EntVisc = numpy.zeros(self.u[0].dof.shape, 'd')
             self.uHDot = numpy.zeros(self.u[0].dof.shape, 'd')
+
+            self.xFlux_dof_old = numpy.zeros(self.u[0].dof.shape, 'd')
+            self.yFlux_dof_old = numpy.zeros(self.u[0].dof.shape, 'd')
             
             self.calculateResidual = self.blendedSpaces.calculateResidual
             #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
@@ -1639,9 +1691,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         ## COMPUTE C MATRICES ##
         self.compute_matrices()
 
+        if self.elem_patch_array is None:
+            self.compute_element_patch()
+        
         if self.coefficients.periodicBCs and self.periodicBoundaryMap is None:
             self.getPeriodicBCs(rightBoundary=self.coefficients.rightBoundary)
-        
         """
         Calculate the element residuals and add in to the global residual
         """
@@ -1753,11 +1807,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.QH_ML,
             # inverse of dissipative mass matrix
             self.inv_element_ML_minus_MC,
+            self.xFlux_dof_old,
+            self.yFlux_dof_old,
             self.umaxG,
             self.uminG,
             self.uHDot,
             self.EntVisc,
             # for smoothness indicator
+            self.elem_patch_array,
+            self.gamma_elem,
             self.gamma_dof,
             self.first_adjacent_dof_to_middle_dof,
             self.second_adjacent_dof_to_middle_dof,

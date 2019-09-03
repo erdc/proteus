@@ -1156,7 +1156,6 @@ class highOrderLimSolver(Newton):
                 leftIndex = PBMap[0]
                 rightIndex = PBMap[1]
                 self.F.u[0].dof[leftIndex] = self.F.u[0].dof[rightIndex]
-                #self.F.u[0].dof[leftIndex] = self.F.uInlet_at_DoFs[leftIndex]
             #
         #
 #
