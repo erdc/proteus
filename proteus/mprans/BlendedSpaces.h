@@ -6,6 +6,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#define USE_MACRO_CELL_FOR_EV 1
 #define USE_Q1_STENCIL 1
 #define USE_MACRO_CELL 0 // for computation of gamma indicator
 #define ELEMENT_BASED_ENTROPY_RESIDUAL 0 // for entropy residual 
@@ -1888,43 +1889,119 @@ namespace proteus
 	// ***** Entropy viscosity ***** //
 	// ***************************** //
 	int ij=0;
-	for (int i=0; i<numDOFs; i++)
+	if (USE_MACRO_CELL_FOR_EV==1)
 	  {
-	    double uShift = -fabs(2*uminG);
-	    double solni = u_dof_old[i] - uShift;
-	    double u_veli = u_vel_dofs[i];
-	    double v_veli = v_vel_dofs[i];
-	    double DEnti = DENTROPY(solni);
-	    double DenEntViscPart1 = 0.;
-	    double DenEntViscPart2 = 0.;
-	    double ith_NumEntVisc = 0.;
-	    double ith_DenEntVisc = 0.;	      
-	    // loop on the support of ith shape function
-	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	    for (int i=0; i<numDOFs; i++)
 	      {
-		int j = colind[offset];			
-		// solution, velocity and fluxes at node j
-		double solnj = u_dof_old[j] - uShift;
-		double u_velj = u_vel_dofs[j];
-		double v_velj = v_vel_dofs[j];
-		
-		double fxj = xFlux(u_velj,solnj,PROBLEM_TYPE);
-		double fyj = yFlux(v_velj,solnj,PROBLEM_TYPE);
-		
-		// For entropy viscosity //
-		double x_EntFluxj=xEntFlux(u_velj,solnj,PROBLEM_TYPE);// - xEntFlux(u_veli,solni,PROBLEM_TYPE);
-		double y_EntFluxj=yEntFlux(v_velj,solnj,PROBLEM_TYPE);// - yEntFlux(v_veli,solni,PROBLEM_TYPE);
-		ith_NumEntVisc += (Cx[ij]*(x_EntFluxj-DEnti*fxj) +
-				   Cy[ij]*(y_EntFluxj-DEnti*fyj));
-		// aux parts to compute DenEntVisc
-		DenEntViscPart1 += Cx[ij]*x_EntFluxj + Cy[ij]*y_EntFluxj;
-		DenEntViscPart2 += Cx[ij]*fxj + Cy[ij]*fyj;
-		
-		ij+=1;
-	      } //j
-	    ith_DenEntVisc = (fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
-	    EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc, ENT_POWER);
-	    // ***** End of entropy viscosity ***** //
+		if (is_dof_external[i] == 1) // if dof is in corner of macro cell
+		  {
+		    double uShift = -fabs(2*uminG);
+		    double solni = u_dof_old[i] - uShift;
+		    double u_veli = u_vel_dofs[i];
+		    double v_veli = v_vel_dofs[i];
+		    double DEnti = DENTROPY(solni);
+		    double DenEntViscPart1 = 0.;
+		    double DenEntViscPart2 = 0.;
+		    double ith_NumEntVisc = 0.;
+		    double ith_DenEntVisc = 0.;	      
+		    // loop on the support of ith shape function
+		    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		      {
+			int j = colind[offset];			
+			// solution, velocity and fluxes at node j
+			double solnj = u_dof_old[j] - uShift;
+			double u_velj = u_vel_dofs[j];
+			double v_velj = v_vel_dofs[j];
+			
+			double fxj = xFlux(u_velj,solnj,PROBLEM_TYPE);
+			double fyj = yFlux(v_velj,solnj,PROBLEM_TYPE);
+			
+			// For entropy viscosity //
+			double x_EntFluxj=xEntFlux(u_velj,solnj,PROBLEM_TYPE);// - xEntFlux(u_veli,solni,PROBLEM_TYPE);
+			double y_EntFluxj=yEntFlux(v_velj,solnj,PROBLEM_TYPE);// - yEntFlux(v_veli,solni,PROBLEM_TYPE);
+			ith_NumEntVisc += (Cx[ij]*(x_EntFluxj-DEnti*fxj) +
+					   Cy[ij]*(y_EntFluxj-DEnti*fyj));
+			// aux parts to compute DenEntVisc
+			DenEntViscPart1 += Cx[ij]*x_EntFluxj + Cy[ij]*y_EntFluxj;
+			DenEntViscPart2 += Cx[ij]*fxj + Cy[ij]*fyj;
+			
+			ij+=1;
+		      } //j
+		    ith_DenEntVisc = (fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
+		    EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc, ENT_POWER);
+		    // ***** End of entropy viscosity ***** //
+		  }
+		else
+		  {
+		    EntVisc[i] = 0;
+		  }
+	      }
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		if (is_dof_internal[i] == 1) // dof is internal
+		  {
+		    double num_external_dofs = 0; // this should be 4
+		    // loop on its support
+		    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		      {
+			int j = colind[offset];
+			if (is_dof_external[j] == 1) // external j-dof
+			  {
+			    num_external_dofs += 1;
+			    EntVisc[i] += EntVisc[j];
+			  }
+		      }
+		    // normalize
+		    EntVisc[i] /= num_external_dofs;
+		  }
+		else if (is_dof_external[i] == 0) // this is a middle dof
+		  {
+		    int gj1 = first_adjacent_dof_to_middle_dof[i];
+		    int gj2 = second_adjacent_dof_to_middle_dof[i];
+		    EntVisc[i] = 0.5*(EntVisc[gj1] + EntVisc[gj2]);
+		  }
+	      }
+	  }
+	else
+	  {
+	    for (int i=0; i<numDOFs; i++)
+	      {
+		double uShift = -fabs(2*uminG);
+		double solni = u_dof_old[i] - uShift;
+		double u_veli = u_vel_dofs[i];
+		double v_veli = v_vel_dofs[i];
+		double DEnti = DENTROPY(solni);
+		double DenEntViscPart1 = 0.;
+		double DenEntViscPart2 = 0.;
+		double ith_NumEntVisc = 0.;
+		double ith_DenEntVisc = 0.;	      
+		// loop on the support of ith shape function
+		for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+		  {
+		    int j = colind[offset];			
+		    // solution, velocity and fluxes at node j
+		    double solnj = u_dof_old[j] - uShift;
+		    double u_velj = u_vel_dofs[j];
+		    double v_velj = v_vel_dofs[j];
+		    
+		    double fxj = xFlux(u_velj,solnj,PROBLEM_TYPE);
+		    double fyj = yFlux(v_velj,solnj,PROBLEM_TYPE);
+		    
+		    // For entropy viscosity //
+		    double x_EntFluxj=xEntFlux(u_velj,solnj,PROBLEM_TYPE);// - xEntFlux(u_veli,solni,PROBLEM_TYPE);
+		    double y_EntFluxj=yEntFlux(v_velj,solnj,PROBLEM_TYPE);// - yEntFlux(v_veli,solni,PROBLEM_TYPE);
+		    ith_NumEntVisc += (Cx[ij]*(x_EntFluxj-DEnti*fxj) +
+				       Cy[ij]*(y_EntFluxj-DEnti*fyj));
+		    // aux parts to compute DenEntVisc
+		    DenEntViscPart1 += Cx[ij]*x_EntFluxj + Cy[ij]*y_EntFluxj;
+		    DenEntViscPart2 += Cx[ij]*fxj + Cy[ij]*fyj;
+			
+		    ij+=1;
+		  } //j
+		ith_DenEntVisc = (fabs(DenEntViscPart1) + fabs(DEnti)*fabs(DenEntViscPart2)+1E-15);
+		EntVisc[i] = std::pow(fabs(ith_NumEntVisc)/ith_DenEntVisc, ENT_POWER);
+		// ***** End of entropy viscosity ***** //
+	      }
 	  }
 	
 	// *************************** //
