@@ -240,8 +240,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ONE_DIM_PROBLEM=0,
                  PROJECT_INIT_CONDITION=0,
                  METHOD=4,
+                 cE=1.0,
                  fixed_dt=None):
 
+        self.cE=cE
         self.periodicBCs=periodicBCs
         self.rightBoundary=rightBoundary
         if self.periodicBCs==1:
@@ -1812,6 +1814,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.umaxG,
             self.uminG,
             self.uHDot,
+            self.coefficients.cE,
             self.EntVisc,
             # for smoothness indicator
             self.elem_patch_array,

@@ -243,6 +243,7 @@ namespace proteus
 				   double umaxG,
 				   double uminG,
 				   double* uHDot,
+				   double cE,
 				   double* EntVisc,
 				   // for smoothness indicator
 				   int* elem_patch,
@@ -371,6 +372,7 @@ namespace proteus
 				   double umaxG,
 				   double uminG,
 				   double* uHDot,
+				   double cE,
 				   double* EntVisc,
 				   // for smoothness indicator
 				   int* elem_patch,
@@ -499,6 +501,7 @@ namespace proteus
 				   double umaxG,
 				   double uminG,
 				   double* uHDot,
+				   double cE,
 				   double* EntVisc,
 				   // for smoothness indicator
 				   int* elem_patch,
@@ -797,6 +800,7 @@ namespace proteus
 			     double umaxG,
 			     double uminG,
 			     double* uHDot,
+			     double cE,
 			     double* EntVisc,
 			     // for smoothness indicator
 			     int* elem_patch,
@@ -1129,7 +1133,7 @@ namespace proteus
 
 			// save anti-dissipative flux into element_flux_qij
 			element_flux_qij[eN_i_j] =
-			  (fmax(EntVisc[gi],EntVisc[gj])-1.0)*dLowElemij*(solnj-solni);
+			  (cE*fmax(EntVisc[gi],EntVisc[gj])-1.0)*dLowElemij*(solnj-solni);
 			
 			// compute low order dissipative term
 			lowOrderDissipativeTerm[gi] += dLowElemij*(solnj-solni);
@@ -1532,6 +1536,7 @@ namespace proteus
 					double umaxG,
 					double uminG,
 					double* uHDot,
+					double cE,
 					double* EntVisc,
 					// for smoothness indicator
 					int* elem_patch,
@@ -2218,6 +2223,7 @@ namespace proteus
 					double umaxG,
 					double uminG,
 					double* uHDot,
+					double cE,
 					double* EntVisc,
 					// for smoothness indicator
 					int* elem_patch,
