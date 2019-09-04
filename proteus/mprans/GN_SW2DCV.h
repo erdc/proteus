@@ -966,13 +966,13 @@ public:
         double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
         double huStarij = huni * hStarij * one_over_hiReg;
         double hvStarij = hvni * hStarij * one_over_hiReg;
-        double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg,2);
+        double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg, 2);
         double hwStarij = hwni * hStarij * one_over_hiReg;
 
         double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
         double huStarji = hunj * hStarji * one_over_hjReg;
         double hvStarji = hvnj * hStarji * one_over_hjReg;
-        double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg,2);
+        double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
         double hwStarji = hwnj * hStarji * one_over_hjReg;
 
         // COMPUTE FLUX CORRECTION MATRICES
@@ -1149,13 +1149,17 @@ public:
       double hetai_Max = hetai;
       double Pnegi_heta = 0., Pposi_heta = 0.;
 
-      // LOW ORDER SOLUTION without extended source term. Eqn 6.23
+      /* LOW ORDER SOLUTION without extended source term.
+      That is, we want to put separate the source terms
+      and recall we do not put hTilde in source */
       hLow[i] = hi;
       huLow[i] = hui;
       hvLow[i] = hvi;
       hetaLow[i] = hetai;
       hwLow[i] = hwi;
       Kmax[i] = 0;
+
+      // ACTUALLY, NEED TO CHECK THAT THE SOURCES ARE CORRECT IN THIS FUNCTION
 
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       for (int offset = csrRowIndeces_DofLoops[i];
@@ -1177,8 +1181,8 @@ public:
         // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
         double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
         double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
-        double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg,2);
-        double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg,2);
+        double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg, 2);
+        double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg, 2);
 
         // i-th row of flux correction matrix
         double ML_minus_MC = (LUMPED_MASS_MATRIX == 1
@@ -1321,13 +1325,13 @@ public:
         double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
         double huStarij = huni * hStarij * one_over_hiReg;
         double hvStarij = hvni * hStarij * one_over_hiReg;
-        double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg,2);
+        double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg, 2);
         double hwStarij = hwni * hStarij * one_over_hiReg;
 
         double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
         double huStarji = hunj * hStarji * one_over_hjReg;
         double hvStarji = hvnj * hStarji * one_over_hjReg;
-        double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg,2);
+        double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
         double hwStarji = hwnj * hStarji * one_over_hjReg;
 
         // COMPUTE FLUX CORRECTION MATRICES
@@ -2181,13 +2185,13 @@ public:
           double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
           double huStarij = hui * hStarij * one_over_hiReg;
           double hvStarij = hvi * hStarij * one_over_hiReg;
-          double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg,2);
+          double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg, 2);
           double hwStarij = hwi * hStarij * one_over_hiReg;
 
           double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
           double huStarji = huj * hStarji * one_over_hjReg;
           double hvStarji = hvj * hStarji * one_over_hjReg;
-          double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg,2);
+          double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg, 2);
           double hwStarji = hwj * hStarji * one_over_hjReg;
 
           // Dissipative well balancing term
