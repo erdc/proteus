@@ -1151,6 +1151,11 @@ class highOrderLimSolver(Newton):
         u[:] = r
         self.F.u[0].dof[:]=u
 
+        if self.F.coefficients.write_steady_residual:
+            steady_residual = np.linalg.norm(self.F.steady_residual)
+            print ("Steady residual: ", steady_residual)
+            self.F.file.write(str(steady_residual)+',')
+        #
 	if self.F.coefficients.periodicBCs:
             for PBMap in self.F.periodicBoundaryMap:
                 leftIndex = PBMap[0]

@@ -241,8 +241,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  PROJECT_INIT_CONDITION=0,
                  METHOD=4,
                  cE=1.0,
+                 write_steady_residual=False,
                  fixed_dt=None):
-
+        
+        self.write_steady_residual=write_steady_residual
         self.cE=cE
         self.periodicBCs=periodicBCs
         self.rightBoundary=rightBoundary
@@ -774,6 +776,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.INIT_CONDITION_PROJECTED=False
 
         self.elem_patch_array = None
+        self.steady_residual = None
     #
 
     def getMetricsAtEOS(self):
@@ -1580,6 +1583,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         
     def compute_matrices(self):
         if self.cterm_global is None:
+            if self.coefficients.write_steady_residual:
+                self.file=open("steadyResidual.txt","w")
+            
             self.dLow = np.zeros(self.nnz,'d')
             self.compute_c_matrices()
             self.compute_QL_lumped_mass_matrix()
@@ -1621,6 +1627,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
             self.xFlux_dof_old = numpy.zeros(self.u[0].dof.shape, 'd')
             self.yFlux_dof_old = numpy.zeros(self.u[0].dof.shape, 'd')
+
+            self.steady_residual = numpy.zeros(self.u[0].dof.shape, 'd')
             
             self.calculateResidual = self.blendedSpaces.calculateResidual
             #self.calculateResidual = self.blendedSpaces.calculateResidualEntropyVisc
@@ -1825,6 +1833,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.is_dof_external,
 	    self.is_dof_internal,
 	    self.den_hi,
+            self.steady_residual,
             # C-matrices
             self.Cx,
             self.Cy,

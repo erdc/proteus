@@ -254,6 +254,7 @@ namespace proteus
 				   double* is_dof_external,
 				   double* is_dof_internal,
 				   double* den_hi,
+				   double* steadyResidual,
 				   // C-matrices
 				   double* Cx,
 				   double* Cy,
@@ -383,6 +384,7 @@ namespace proteus
 				   double* is_dof_external,
 				   double* is_dof_internal,
 				   double* den_hi,
+				   double* steadyResidual,
 				   // C-matrices
 				   double* Cx,
 				   double* Cy,
@@ -512,6 +514,7 @@ namespace proteus
 				   double* is_dof_external,
 				   double* is_dof_internal,
 				   double* den_hi,
+				   double* steadyResidual,
 				   // C-matrices
 				   double* Cx,
 				   double* Cy,
@@ -811,6 +814,7 @@ namespace proteus
 			     double* is_dof_external,
 			     double* is_dof_internal,
 			     double* den_hi,
+			     double* steadyResidual,
 			     // C-matrices
 			     double* Cx,
 			     double* Cy,
@@ -1417,7 +1421,8 @@ namespace proteus
 	    // COMPUTE SOLUTION //
 	    //globalResidual[i] = lowOrderSolution[i];
 	    globalResidual[i]=lowOrderSolution[i]+dt/mi*(fluxStar[i]
-							 +gBoundaryTerm[i]);
+							 +0*gBoundaryTerm[i]);
+	    steadyResidual[i] = mi*(globalResidual[i]-u_dof_old[i])/dt;
 	  }
 	//////////////////////////////
 	// END OF LAST LOOP IN DOFs //
@@ -1547,6 +1552,7 @@ namespace proteus
 					double* is_dof_external,
 					double* is_dof_internal,
 					double* den_hi,
+					double* steadyResidual,
 					// C-matrices
 					double* Cx,
 					double* Cy,
@@ -2234,6 +2240,7 @@ namespace proteus
 					double* is_dof_external,
 					double* is_dof_internal,
 					double* den_hi,
+					double* steadyResidual,
 					// C-matrices
 					double* Cx,
 					double* Cy,
