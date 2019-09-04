@@ -1567,6 +1567,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # get coordinates of the center point of the elements
         self.xElemCoord = np.zeros(self.mesh.nElements_global,'d')
         self.yElemCoord = np.zeros(self.mesh.nElements_global,'d')
+        if self.x is None:
+            self.x = numpy.zeros(self.u[0].dof.shape,'d')
+            self.y = numpy.zeros(self.u[0].dof.shape,'d')
+            self.z = numpy.zeros(self.u[0].dof.shape,'d')
+            for eN in range(self.mesh.nElements_global):
+                for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
+                    gi = self.offset[0]+self.stride[0]*self.u[0].femSpace.dofMap.l2g[eN,i]
+                    self.x[gi] = self.u[0].femSpace.interpolationPoints[eN,i,0]
+                    self.y[gi] = self.u[0].femSpace.interpolationPoints[eN,i,1]
+                    self.z[gi] = self.u[0].femSpace.interpolationPoints[eN,i,2]
+                #
+            #
+        #
         for eN in range(self.mesh.nElements_global):
             for i in self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.range_dim:
                 if i==8:
