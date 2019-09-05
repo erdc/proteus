@@ -135,11 +135,14 @@ namespace proteus
     std::valarray<double> lowOrderBoundaryIntegral;
     // high order vectors //
     std::valarray<double> gBoundaryTerm;
+    std::valarray<double> gBoundaryTermStar;
     // For limiting //
     std::valarray<double> umax;
     std::valarray<double> umin;
     std::valarray<double> wBarij, wBarji;
     std::valarray<double> fluxStar;
+    std::valarray<double> gBoundaryStar;
+    
     // for smoothness indicator //
     std::valarray<double> element_He;
     std::valarray<double> global_hi;
@@ -859,8 +862,6 @@ namespace proteus
 	lowOrderFluxTerm.resize(numDOFs,0.0);	
 	lowOrderBoundaryIntegral.resize(numDOFs,0.0);
 	lowOrderSolution.resize(numDOFs,0.0);
-
-	gBoundaryTerm.resize(numDOFs,0.0);
 	
 	// limited flux correction //
 	umax.resize(numDOFs,0.0);
@@ -868,6 +869,11 @@ namespace proteus
 	
 	fluxStar.resize(numDOFs,0.0);
 
+	// gBoundary
+	gBoundaryStar.resize(numDOFs,0.0);
+	gBoundaryTerm.resize(nElements_global*nDOF_trial_element,0.0);
+	gBoundaryTermStar.resize(nElements_global*nDOF_trial_element,0.0);
+	
 	wBarij.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
 	wBarji.resize(nElements_global*nDOF_test_element*nDOF_trial_element,0.0);
 	
@@ -877,6 +883,39 @@ namespace proteus
 	    xFlux_dof_old[i] = xFlux(u_vel_dofs[i],u_dof_old[i],PROBLEM_TYPE);
 	    yFlux_dof_old[i] = yFlux(v_vel_dofs[i],u_dof_old[i],PROBLEM_TYPE);
 	  }
+
+	/////////////////////////
+	// compute min and max //
+	/////////////////////////
+	for (int i=0; i<numDOFs; i++)
+	  {
+	    double solni = u_dof_old[i];
+	    double umaxi = solni;
+	    double umini = solni;
+	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
+	      {
+		int j = colind[offset];
+		double solnj = u_dof_old[j];
+		if (USE_Q1_STENCIL==1)
+		  {
+		    if (Q1_sparsity[ij]==1)
+		      {
+			umaxi = fmax(solnj,umaxi);
+			umini = fmin(solnj,umini);
+		      }
+		  }
+		else
+		  {
+		    umaxi = fmax(solnj,umaxi);
+		    umini = fmin(solnj,umini);
+		  }
+	      }
+	    // Save local bounds 
+	    umax[i] = umaxi;
+	    umin[i] = umini;
+	  }
+	// end of computation of max and min //
+	
 	/////////////////////////////////////////
 	// ********** BOUNDARY TERM ********** //
 	/////////////////////////////////////////
@@ -887,12 +926,19 @@ namespace proteus
 	    register int eN  = elementBoundaryElementsArray[ebN*2+0],
 	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
 	      eN_nDOF_trial_element = eN*nDOF_trial_element;
-	    register double elementBoundaryFluxLowOrder[nDOF_test_element],
-	      element_gBoundaryTerm[nDOF_test_element];
+	    register double
+	      element_gBoundaryTerm[nDOF_test_element],
+	      element_gBoundaryTerm_max[nDOF_test_element],
+	      element_gBoundaryTerm_min[nDOF_test_element],
+	      element_HOmLOBoundary[nDOF_test_element],
+	      elementBoundaryFluxLowOrder[nDOF_test_element];
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
-		elementBoundaryFluxLowOrder[i]=0.0;
 		element_gBoundaryTerm[i]=0.0;
+		element_gBoundaryTerm_max[i]=0.0;
+		element_gBoundaryTerm_min[i]=0.0;
+		element_HOmLOBoundary[i]=0.0;
+		elementBoundaryFluxLowOrder[i]=0.0;
 	      }
 	    // loop on quad points
 	    for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
@@ -972,17 +1018,23 @@ namespace proteus
 		    int eN_i = eN*nDOF_test_element+i;
 		    int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 		    double uni = u_dof_old[gi];
+		    double umaxi = umax[gi];
+		    double umini = umin[gi];
 		    
 		    // low order part
 		    double auxLowOrder  = (flow >= 0 ? 0. : 1.)*(uni-uInlet)*flow*u_test_dS[i];
-		    elementBoundaryFluxLowOrder[i] += auxLowOrder;
+		    elementBoundaryFluxLowOrder[i] += auxLowOrder;		    
 		    // high order part
 		    double auxHighOrder = (flow >= 0 ? 0. : 1.)*(uExt-uInlet)*flow*u_test_dS[i];
+		    
 		    // for gBoundaryTerm
-		    double aux_gBoundary = diff_flux_dot_n*u_test_dS[i];
-		    element_gBoundaryTerm[i] += aux_gBoundary;
+		    double gBoundary = diff_flux_dot_n*u_test_dS[i];
+		    element_gBoundaryTerm[i] += gBoundary;
+		    element_gBoundaryTerm_max[i] += (umaxi-uni)*fabs(flow)*u_test_dS[i];
+		    element_gBoundaryTerm_min[i] += (umini-uni)*fabs(flow)*u_test_dS[i];
+		    
 		    // add difference of high-order and low-order boundary to f_i^e
-		    element_flux_i[eN_i] = auxHighOrder - auxLowOrder;
+		    element_HOmLOBoundary[i] += auxHighOrder - auxLowOrder;
 		  }
 	      }//kb
 	    // save to the corresponding vectors
@@ -991,7 +1043,15 @@ namespace proteus
 		int eN_i = eN*nDOF_test_element+i;
 		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
 		lowOrderBoundaryIntegral[gi] += elementBoundaryFluxLowOrder[i];
-		gBoundaryTerm[gi] += element_gBoundaryTerm[i];
+
+		// gBoundaryTerm
+		gBoundaryTerm[eN_i] = element_gBoundaryTerm[i];
+		gBoundaryTermStar[eN_i] = fmin(element_gBoundaryTerm_max[i],
+					       fmax(element_gBoundaryTerm[i],
+						    element_gBoundaryTerm_min[i]));
+		
+		// about difference of HO and LO boundary
+		element_flux_i[eN_i] = element_HOmLOBoundary[i];
 	      }
 	  }//ebNE
 	/////////////////////////////////////////////////
@@ -1187,66 +1247,10 @@ namespace proteus
 
 	    // solution at node i
 	    double solni = u_dof_old[i];
-	    //double u_veli = u_vel_dofs[i];
-	    //double v_veli = v_vel_dofs[i];
-	    
-	    // for the computation of the local bounds
-	    double umaxi = solni;
-	    double umini = solni;
-
-	    //double ith_lowOrderFluxTerm = 0.0;
-	    //double ith_lowOrderDissipativeTerm = 0.0;
-	    
-	    // loop over the sparsity pattern of the i-th DOF
-	    for (int offset=rowptr[i]; offset<rowptr[i+1]; offset++)
-	      {
-		int j = colind[offset];
-		// solution at node j 
-		double solnj = u_dof_old[j];
-		// For Global dij
-		//double u_velj = u_vel_dofs[j];
-		//double v_velj = v_vel_dofs[j];
-		    
-		//double fxj = xFlux(u_velj,solnj,PROBLEM_TYPE);
-		//double fyj = yFlux(v_velj,solnj,PROBLEM_TYPE);
-		//double dij = compute_dij(solni,solnj,
-		//			 u_veli,v_veli,
-		//			 u_velj,v_velj,
-		//			 PrCx[ij], PrCy[ij],
-		//			 PrCTx[ij], PrCTy[ij],
-		//			 PROBLEM_TYPE);
-		
-		//ith_lowOrderFluxTerm += PrCx[ij]*fxj + PrCy[ij]*fyj;
-		//ith_lowOrderDissipativeTerm += dij*(solnj-solni);		
-
-		if (USE_Q1_STENCIL==1)
-		  {
-		    if (Q1_sparsity[ij]==1)
-		      {
-			// computation of local bounds
-			umaxi = fmax(solnj,umaxi);
-			umini = fmin(solnj,umini);
-		      }
-		  }
-		else
-		  {
-		    umaxi = fmax(solnj,umaxi);
-		    umini = fmin(solnj,umini);
-		  }
-		ij+=1;
-	      }
-	    // Save local bounds 
-	    umax[i] = umaxi;
-	    umin[i] = umini;
-	    
 	    // compute and save low order solution 
 	    lowOrderSolution[i] = solni - dt/mi * (lowOrderFluxTerm[i] 
 	    					   - lowOrderDissipativeTerm[i]
 	    					   - lowOrderBoundaryIntegral[i]);
-	    // For Global dij
-	    //lowOrderSolution[i] = solni - dt/mi * (ith_lowOrderFluxTerm
-	    //					   - ith_lowOrderDissipativeTerm
-	    //					   - lowOrderBoundaryIntegral[i]);
 	  }
 	///////////////////////////////
 	// END OF FIRST LOOP IN DOFs //
@@ -1315,6 +1319,16 @@ namespace proteus
 		// get bounds at node i
 		double umini = umin[gi];
 		double umaxi = umax[gi];
+
+		if (METHOD==0)
+		  gBoundaryStar[gi] = 0.;
+		else if (METHOD==1)
+		  gBoundaryStar[gi] += gBoundaryTerm[eN_i];
+		else if (METHOD==2)
+		  gBoundaryStar[gi] += gBoundaryTermStar[eN_i];
+		else
+		  gBoundaryStar[gi] += (gamma_element_eN*gBoundaryTerm[eN_i] +
+					+ (1-gamma_element_eN)*gBoundaryTermStar[eN_i]);
 		
 		for(int j=0;j<nDOF_trial_element;j++)
 		  {
@@ -1421,7 +1435,7 @@ namespace proteus
 	    // COMPUTE SOLUTION //
 	    //globalResidual[i] = lowOrderSolution[i];
 	    globalResidual[i]=lowOrderSolution[i]+dt/mi*(fluxStar[i]
-							 +0*gBoundaryTerm[i]);
+							 + gBoundaryStar[i]);
 	    steadyResidual[i] = mi*(globalResidual[i]-u_dof_old[i])/dt;
 	  }
 	//////////////////////////////
