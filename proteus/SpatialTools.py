@@ -1080,7 +1080,7 @@ class ShapeSTL(Shape):
         self.BC={}
         self.BC_list=[]
         for key,value in self.boundaryTags.items():
-            self.BC[key] = self.BC_class(shape=self, name=key)}
+            self.BC[key] = self.BC_class(shape=self, name=key)
             self.BC_list += [self.BC[key]]
         # self.BC = BCContainer(self.BC_dict)
     
@@ -1146,11 +1146,15 @@ def getInfoFromSTL(filename):
     # vertices_u, inverse = np.unique(vertices, return_inverse=True)
     vertices = np.array(vertices).astype(float)
     facets = np.array(facets).astype(int)
-    vertices, inverse,indices = unique_rows(vertices)
+    vertexFlags = np.array(vertexFlags).astype(int)
+    facetFlags =np.array(facetFlags).astype(int)
+
+    vertices, inverse, indices = unique_rows(vertices)
     facets = inverse[facets]
     facetnormals = np.array(facetnormals).astype(float)
-    vertexFlags = np.array(vertexFlags[indices]).astype(int)
-    facetFlags =np.array(facetFlags).astype(int)
+
+    indices = np.array(indices).astype(int)
+    vertexFlags = vertexFlags[indices]
     return vertices, facets, facetnormals,vertexFlags,facetFlags,bTags
 
 def unique_rows(arr):
