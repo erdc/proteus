@@ -3,9 +3,13 @@ from __future__ import division
 from builtins import range
 from past.utils import old_div
 from proteus.default_so import *
-from . import vortex2D
-from .vortex2D import *
-
+try:
+    from . import vortex2D
+    from .vortex2D import *
+except:
+    import vortex2D
+    from vortex2D import *
+    
 if applyRedistancing:
     if applyCorrection:
         pnList = [("ls_vortex_2d_p","ls_vortex_2d_n"),

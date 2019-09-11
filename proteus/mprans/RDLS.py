@@ -167,7 +167,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
                  # NULLSpace info
-                 nullSpace='NoNullSpace'): #penalization param for elliptic re-distancing
+                 nullSpace='NoNullSpace', #penalization param for elliptic re-distancing
+                 useExact=False,
+                 copyList=True):
+        self.copyList=copyList
+        self.useExact=useExact
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         variableNames = ['phid']
@@ -282,9 +286,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.rdModel.timeIntegration.updateTimeHistory(resetFromDOF=True)
             self.rdModel.timeIntegration.resetTimeHistory(resetFromDOF=True)
             self.rdModel.updateTimeHistory(t, resetFromDOF=True)
-            copyInstructions = {'copy_uList': True,
+            #copyInstructions = {'copy_uList': False,
+            #                     'uList_model': self.nModelId}
+            #copyInstructions = {'reset_uList': False}
+            copyInstructions = {'copy_uList': self.copyList,
                                 'uList_model': self.nModelId}
-            copyInstructions = {'reset_uList': True}
+            copyInstructions = {'reset_uList': self.copyList}
             return copyInstructions
         else:
             return {}
@@ -1012,6 +1019,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.elementNodesArray,
+            self.elementQuadraturePoints,
             self.elementQuadratureWeights[('u', 0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
@@ -1075,7 +1083,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_qx,
             self.lumped_qy,
             self.lumped_qz,
-            old_div(self.coefficients.alpha,self.elementDiameter.min()))
+            self.coefficients.alpha/self.elementDiameter.min(),
+            self.coefficients.useExact)
 
 
 
@@ -1124,6 +1133,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.elementNodesArray,
+            self.elementQuadraturePoints,
             self.elementQuadratureWeights[('u', 0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
@@ -1154,6 +1164,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter,  # self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
+            self.coefficients.dof_u0,
             self.u_dof_last,
             self.coefficients.q_u0,
             beta_bdf[0],
@@ -1175,7 +1186,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # elliptic re-distancing
             self.coefficients.ELLIPTIC_REDISTANCING,
             self.coefficients.backgroundDissipationEllipticRedist,
-            self.coefficients.alpha/self.elementDiameter.min())
+            self.coefficients.alpha/self.elementDiameter.min(),
+            self.coefficients.useExact)
 
         # FREEZING INTERFACE #
         if self.coefficients.freeze_interface_within_elliptic_redist==True:

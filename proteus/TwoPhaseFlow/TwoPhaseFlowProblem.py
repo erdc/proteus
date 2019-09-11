@@ -26,7 +26,7 @@ class TwoPhaseFlowProblem:
                  nny=None,
                  nnz=None,
                  domain=None,
-                 triangleFlag=1,
+                 triangleFlag=0,
                  # INITIAL CONDITIONS #
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
@@ -34,7 +34,7 @@ class TwoPhaseFlowProblem:
                  # AUXILIARY VARIABLES #
                  auxVariables=None,
                  # OTHERS #
-                 useSuperlu=False,
+                 useSuperlu=True,
                  fastArchive=False):
         # ***** SET OF ASSERTS ***** #
         if ns_model is not None:

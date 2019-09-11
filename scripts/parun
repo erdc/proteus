@@ -21,7 +21,7 @@ import os
 import proteus
 
 #remove blanket import statements until after Comm initialized for petsc4py
-from proteus import Profiling, Comm, version, Context
+from proteus import Profiling, Comm, Context
 from warnings import *
 import optparse
 import sys
@@ -239,8 +239,6 @@ if opts.debug:
 log = Profiling.logEvent
 
 log("Initializing Proteus")
-log("Stack Commit: {0}".format(version.stack),0)
-log("Proteus Commit: {0}".format(version.proteus),0)
 
 log("Initializing MPI")
 if opts.petscOptions != None:
@@ -337,8 +335,8 @@ if len(args) < 1 and not opts.TwoPhaseFlow:
 log("Importing input modules")
 
 if opts.SWEs:
-    path_models = proteus.__path__[0]+"/SWFlows/models/"
-    path_utils = proteus.__path__[0]+"/SWFlows/utils/"
+    path_models = proteus.__path__[0]+"/SWFlow/models/"
+    path_utils = proteus.__path__[0]+"/SWFlow/utils/"
     log(path_models)
     log(path_utils)
     assert args[0][-3:] == '.py', "Please profile a Python main script ending in .py"
