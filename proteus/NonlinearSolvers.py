@@ -689,6 +689,7 @@ class AddedMassNewton(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         if self.F.timeIntegration.t >= self.F.coefficients.next_solve:
             self.F.coefficients.next_solve += self.F.coefficients.solve_rate
+            self.F.coefficients.updated_global = True
             if self.F.coefficients.nd == 3:
                 accelerations = list(range(6))
             elif self.F.coefficients.nd == 2:
@@ -699,6 +700,7 @@ class AddedMassNewton(Newton):
                 self.F.added_mass_i=i
                 Newton.solve(self,u,r,b,par_u,par_r)
         else:
+            self.F.coefficients.updated_global = False
             logEvent("Skipping model AddedMass; next solve at t={t}".format(t=self.F.coefficients.solve_rate))
 
 class MoveMeshMonitorNewton(Newton):

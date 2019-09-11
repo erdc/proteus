@@ -904,7 +904,7 @@ class  MonochromaticWaves(object):
     waveDir : numpy.ndarray
              Wave direction in vector form
     wavelength : float
-             Regular wave lenght, calculated from linear dispersion if set to None
+             Regular wave length, calculated from linear dispersion if set to None
     waveType : string
              Defines regular wave theory ("Linear", "Fenton")
              Fenton: uses BCoeffs/YCoeffs provided by user
