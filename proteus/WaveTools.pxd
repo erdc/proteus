@@ -34,6 +34,11 @@ ctypedef double (*cfeta) (MonochromaticWaves, double* , double )
 ctypedef void (*cfvel) (MonochromaticWaves, double*, double* , double )
 
 
+cdef class  SteadyCurrent:
+    cdef public:
+        double mwl
+    cdef np.ndarray U
+    cdef double ramp    
 cdef class  SolitaryWave:
     cdef double H,gAbs,K,depth,d2,d3
     cdef public:
@@ -90,7 +95,7 @@ cdef class NewWave:
     cdef double[10000] tanh_c
     cdef double[10000] phi_c
     cdef public:
-        double mwl,depth,gAbs,Tlag,Hs,Tp,fp,bandFactor,df
+        double mwl,depth,gAbs,Tlag,Hs,Tp,fp,bandFactor,df,focus,tfocus
         int N
         np.ndarray fi,fim,Si_Jm,ki,omega,tanhF,g,waveDir,vDir,kDir,ai
         cdef object phi

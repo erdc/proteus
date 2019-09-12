@@ -28,6 +28,7 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition u_dirichlet
         cdef BoundaryCondition v_dirichlet
         cdef BoundaryCondition w_dirichlet
+        cdef BoundaryCondition phi_dirichlet
         cdef BoundaryCondition vof_dirichlet
         cdef BoundaryCondition k_dirichlet
         cdef BoundaryCondition dissipation_dirichlet
@@ -98,6 +99,7 @@ cdef class BC_RANS(BC_Base):
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, double[:] x, double t)
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(self, double[:] x, double t)
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(self, double[:] x, double t)
+        cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_phi_dirichlet(self, double[:] x, double t)
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(self, double[:] x, double t)
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(self, double[:] x, double t)
 

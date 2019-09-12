@@ -3,7 +3,11 @@ from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
-from .vortex2D import *
+try:
+    from .vortex2D import *
+except:
+    from vortex2D import *
+    
 from proteus.mprans import NCLS
 #import Profiling
 
