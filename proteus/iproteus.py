@@ -22,7 +22,7 @@ import os
 import proteus
 
 #remove blanket import statements until after Comm initialized for petsc4py
-from proteus import Profiling, Comm, version
+from proteus import Profiling, Comm
 from warnings import *
 import optparse
 import sys
@@ -224,8 +224,6 @@ if opts.dataDir != '':
     logDir = opts.dataDir
 
 log("Initializing Proteus")
-log("Stack Version: {0}".format(version.stack))
-log("Proteus Version: {0}".format(version.proteus))
 
 log("Initializing MPI")
 if opts.petscOptions is not None:

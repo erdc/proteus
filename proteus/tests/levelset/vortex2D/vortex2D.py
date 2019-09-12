@@ -5,7 +5,8 @@ from past.utils import old_div
 parallel = False
 linearSmoother = None
 #compute mass balance statistics or not
-checkMass=False#True
+checkMass=True
+useExact=True#False
 #number of space dimensions
 nd=2
 #time integration, not relevant if using BDF with cfl timestepping
@@ -14,9 +15,9 @@ atol_u = {0:1.0e-4}
 rtol_res = {0:1.0e-4}
 atol_res = {0:1.0e-4}
 #
-timeIntegration_vof = "vbdf"#vbdf,be,flcbdf,rk
-timeIntegration_ls = "vbdf"#vbdf,be,flcbdf,rk
-timeOrder = 2
+timeIntegration_vof = "be"#vbdf,be,flcbdf,rk
+timeIntegration_ls = "be"#vbdf,be,flcbdf,rk
+timeOrder = 1
 
 runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #
@@ -34,7 +35,8 @@ if pDegree_ls == 2:
     vortex_quad_order =4
 else:
     vortex_quad_order = 3
-
+vortex_quad_order = 5
+compQuad=False
 #sub-element edge size, used to create composite quadrature rule
 hk = 0.2
 
@@ -47,7 +49,7 @@ lRefinement=1
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 nn=nnx=nny=(2**lRefinement)*10+1
 nnz=1
-he=old_div(1.0,(nnx-1.0))
+he=1.0/(nnx-1.0)
 L=[1.0,1.0]
 
 unstructured=False#True for tetgen, false for tet or hex from rectangular grid
@@ -73,7 +75,7 @@ onlyVOF=False#True
 #eps
 epsFactHeaviside=epsFactDirac=epsFact_vof=1.5*hk
 epsFactRedistance=0.33
-epsFactDiffusion=10.0
+epsFactDiffusion=100.0
 #
 if useMetrics:
     shockCapturingFactor_vof=0.5
@@ -91,7 +93,7 @@ else:
     lag_shockCapturing_rd=False
 
 #use absolute tolerances on al models
-atolRedistance = max(1.0e-12,0.1*he)
+atolRedistance = max(1.0e-12,0.01*he)
 atolConservation = max(1.0e-12,0.001*he**2)
 atolVolumeOfFluid= max(1.0e-12,0.001*he**2)
 atolLevelSet     = max(1.0e-12,0.001*he**2)
