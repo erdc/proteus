@@ -55,6 +55,8 @@ cdef extern from "ProtChMoorings.h":
         vector[shared_ptr[ch.ChVector]] forces_drag
         vector[shared_ptr[ch.ChVector]] forces_addedmass
         shared_ptr[ch.ChMaterialSurfaceSMC] contact_material
+        vector[ch.ChVector] fluid_velocity
+        vector[ch.ChVector] fluid_acceleration
         void buildNodes()
         void buildElements()
         void buildCable()

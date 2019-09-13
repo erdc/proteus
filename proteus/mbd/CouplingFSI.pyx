@@ -1,6 +1,5 @@
 #!python
 # distutils: language = c++
-# cython: profile=True, binding=True, embedsignature=True
 
 """
 Coupling between Chrono and Proteus is done in this file.
@@ -2113,7 +2112,7 @@ cdef class ProtChMoorings:
         dset = f.create_dataset('az_t'+str(tCount), (datav.shape[0],))
         dset[...] = datav[:,2]
         # fluid velocity
-        datav = self.fluid_velocity_array
+        datav = self.getFluidVelocity()
         dset = f.create_dataset('fluid_velocity_t'+str(tCount), datav.shape)
         dset[...] = datav
         dset = f.create_dataset('fluid_ux_t'+str(tCount), (datav.shape[0],))
@@ -2123,7 +2122,7 @@ cdef class ProtChMoorings:
         dset = f.create_dataset('fluid_uz_t'+str(tCount), (datav.shape[0],))
         dset[...] = datav[:,2]
         # fluid acceleration
-        datav = self.fluid_acceleration_array
+        datav = self.getFluidAcceleration()
         dset = f.create_dataset('fluid_acceleration_t'+str(tCount), datav.shape)
         dset[...] = datav
         dset = f.create_dataset('fluid_ax_t'+str(tCount), (datav.shape[0],))
@@ -2378,7 +2377,7 @@ cdef class ProtChMoorings:
             nb_nodes = self.thisptr.nodes.size()
         if self.fluid_velocity_array is None:
             self.fluid_velocity_array = np.zeros((nb_nodes, 3))
-            self.fluid_velocity_array_previous = np.zeros((nb_nodes, 3))
+        self.fluid_velocity_array_previous = np.zeros((nb_nodes, 3))
         if self.fluid_acceleration_array is None:
             self.fluid_acceleration_array = np.zeros((nb_nodes, 3))
         if self.fluid_density_array is None:
@@ -2406,6 +2405,7 @@ cdef class ProtChMoorings:
             self._recordH5()
             self._recordXML()
             self.tCount += 1
+        self.fluid_velocity_array_previous[:] = self.fluid_velocity_array
 
     def setApplyDrag(self, bool boolval):
         for i in range(self.thisptr.cables.size()):
@@ -2646,7 +2646,7 @@ cdef class ProtChMoorings:
             elem.this.disown()
             swig_obj = <SwigPyObject*> elem.this
             if self.beam_type == "BeamEuler":
-                swig_obj.ptr = <shared_ptr[ch.ChElementBeamEuler]*> &self.thisptr.elemsCableANCF.at(elemN)
+                swig_obj.ptr = <shared_ptr[ch.ChElementBeamEuler]*> &self.thisptr.elemsBeamEuler.at(elemN)
             elif self.beam_type == "CableANCF":
                 swig_obj.ptr = <shared_ptr[ch.ChElementCableANCF]*> &self.thisptr.elemsCableANCF.at(elemN)
             self.elements += [elem]
@@ -2721,21 +2721,37 @@ cdef class ProtChMoorings:
                 pos[i] = [vec.x(), vec.y(), vec.z()]
             return pos
 
+    def getFluidVelocity(self):
+        cdef ch.ChVector vec
+        vec_array = np.zeros((self.nodes_nb, 3))
+        for i in range(self.thisptr.fluid_velocity.size()):
+            vec = self.thisptr.fluid_velocity[i]
+            vec_array[i] = [vec.x(), vec.y(), vec.z()]
+        return vec_array
+
+    def getFluidAcceleration(self):
+        cdef ch.ChVector vel
+        vec_array = np.zeros((self.nodes_nb, 3))
+        for i in range(self.thisptr.fluid_acceleration.size()):
+            vec = self.thisptr.fluid_acceleration[i]
+            vec_array[i] = [vec.x(), vec.y(), vec.z()]
+        return vec_array
+
     def getDragForces(self):
-        cdef ch.ChVector Fd
-        drag = np.zeros((self.nodes_nb,3 ))
+        cdef ch.ChVector vec
+        vec_array = np.zeros((self.nodes_nb, 3))
         for i in range(self.thisptr.forces_drag.size()):
-            Fd = deref(self.thisptr.forces_drag[i])
-            drag[i] = [Fd.x(), Fd.y(), Fd.z()]
-        return drag
+            vec = deref(self.thisptr.forces_drag[i])
+            vec_array[i] = [vec.x(), vec.y(), vec.z()]
+        return vec_array
 
     def getAddedMassForces(self):
-        cdef ch.ChVector Fd
-        drag = np.zeros((self.nodes_nb,3 ))
+        cdef ch.ChVector vec
+        vec_array = np.zeros((self.nodes_nb, 3))
         for i in range(self.thisptr.forces_addedmass.size()):
-            Fd = deref(self.thisptr.forces_addedmass[i])
-            drag[i] = [Fd.x(), Fd.y(), Fd.z()]
-        return drag
+            vec = deref(self.thisptr.forces_addedmass[i])
+            vec_array[i] = [vec.x(), vec.y(), vec.z()]
+        return vec_array
 
     def setIyy(self, double Iyy, int cable_nb):
         deref(self.thisptr.cables[cable_nb]).setIyy(Iyy)
@@ -2768,7 +2784,9 @@ cdef class ProtChMoorings:
         cdef shared_ptr[ch.ChMaterialSurfaceSMC] matp = pt_to_shp[0]
         self.thisptr.setContactMaterial(matp)
 
-    def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None,
+    def setExternalForces(self,
+                          fluid_velocity_array=None,
+                          fluid_density_array=None,
                           fluid_acceleration_array=None):
         """
         Sets external forces acting on cables
@@ -2776,7 +2794,6 @@ cdef class ProtChMoorings:
         """
         # get velocity at nodes
         # cdef np.ndarray fluid_velocity = np.zeros((len(self.thisptr.nodes.size()), 3))
-        self.fluid_velocity_array_previous[:] = self.fluid_velocity_array
         if fluid_velocity_array is not None:
             self.fluid_velocity_array = fluid_velocity_array
         if fluid_density_array is not None:
@@ -2798,6 +2815,7 @@ cdef class ProtChMoorings:
         cdef bool dist_search = False
         if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
             mesh_search = True
+            self.fluid_velocity_array_previous[:] = self.fluid_velocity_array
             if self.ProtChSystem.dist_search is True:
                 dist_search = True
                 if self.ProtChSystem.first_step is True:
@@ -2848,7 +2866,7 @@ cdef class ProtChMoorings:
                 if self.fluid_velocity_function is not None:
                     vel_arr[:] = self.fluid_velocity_function(coords, self.ProtChSystem.t)
                 else:
-                    vel_arr[:] = 0
+                    vel_arr[:] = self.fluid_velocity_array[i]
             self.fluid_velocity_array[i] = vel_arr
             vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
             if self.fluid_velocity_function is not None and fluid_velocity_array is None:
@@ -2884,7 +2902,9 @@ cdef class ProtChMoorings:
 
     def setFluidDensityAtNodes(self, np.ndarray density_array):
         cdef vector[double] fluid_density
-        self.fluid_density_array = density_array
+        if self.fluid_density_array is None:
+            self.fluid_density_array = np.zeros(len(density_array))
+        self.fluid_density_array[:] = density_array
         cdef double dens
         for d in density_array:
             fluid_density.push_back(d)
@@ -2893,7 +2913,9 @@ cdef class ProtChMoorings:
     def setFluidVelocityAtNodes(self, np.ndarray velocity_array):
         cdef vector[ch.ChVector[double]] fluid_velocity
         cdef ch.ChVector[double] vel
-        self.fluid_velocity_array = velocity_array
+        if self.fluid_velocity_array is None:
+            self.fluid_velocity_array = np.zeros((len(velocity_array), 3))
+        self.fluid_velocity_array[:] = velocity_array
         for v in velocity_array:
             vel = ch.ChVector[double](v[0], v[1], v[2])
             fluid_velocity.push_back(vel)
@@ -2902,7 +2924,9 @@ cdef class ProtChMoorings:
     def setFluidAccelerationAtNodes(self, np.ndarray acceleration_array):
         cdef vector[ch.ChVector[double]] fluid_acceleration
         cdef ch.ChVector[double] acc
-        self.fluid_acceleration_array = acceleration_array
+        if self.fluid_acceleration_array is None:
+            self.fluid_acceleration_array = np.zeros((len(acceleration_array), 3))
+        self.fluid_acceleration_array[:] = acceleration_array
         for a in acceleration_array:
             acc = ch.ChVector[double](a[0], a[1], a[2])
             fluid_acceleration.push_back(acc)
