@@ -65,8 +65,8 @@ def test_denseCalculateEigenvalues(simple_dense_matrix):
     rightEigenvectors = np.zeros((3,3),'d')
     leftEigenvectors = np.zeros((3,3),'d')
     
-    clapack.denseCalculateEigenvalues('V',
-                                      'V',
+    clapack.denseCalculateEigenvalues(b'V',
+                                      b'V',
                                       3,
                                       mat,
                                       3,

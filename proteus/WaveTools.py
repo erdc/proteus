@@ -903,7 +903,7 @@ class  MonochromaticWaves(object):
     waveDir : numpy.ndarray
              Wave direction in vector form
     wavelength : float
-             Regular wave lenght, calculated from linear dispersion if set to None
+             Regular wave length, calculated from linear dispersion if set to None
     waveType : string
              Defines regular wave theory ("Linear", "Fenton")
              Fenton: uses BCoeffs/YCoeffs provided by user
@@ -1186,9 +1186,11 @@ class NewWave(object):
             Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
             TMA=True activates the TMA modification, which in turn needs the depth as a parameter            
     crestFocus: bool
-             Switch to determine if crest focused or trough focused. By 
-    x0 : numpy array
+             Switch to determine if crest focused or trough focused. By default true
+    xfocus : numpy array
              Position of focused crest / trough
+    tfocus : numpy array
+             Time of focused crest / trough
     Nmax: int
              Normalisation factor to get the 1/N wave event at the NewWave series
     fast : bool
@@ -1206,7 +1208,8 @@ class NewWave(object):
                   spectName ,# random words will result in error and return the available spectra
                   spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                   crestFocus=True,
-                  x0=np.array([0.,0.,0]),
+                  xfocus=np.array([0.,0.,0]),
+                  tfocus=0.,
                   fast = True,
                   Nmax = 1000
                  ):
@@ -1232,10 +1235,9 @@ class NewWave(object):
         self.fi = np.linspace(fmin,fmax,self.N)
         self.omega = 2.*M_PI*self.fi
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
-        self.x0 = x0
         fim = reduceToIntervals(self.fi,self.df)
         self.fim = fim
-        wim = 2*np.pi*fim
+        wim = 2*np.pi*self.fim
         if (spectral_params is None):
             self.Si_Jm = spec_fun(fim,self.fp,self.Hs)
         else:
@@ -1249,17 +1251,17 @@ class NewWave(object):
         for ii in range(self.N):
             self.tanhF[ii] = float(np.tanh(self.ki[ii]*self.depth) )
 
-        m0 = np.sum(returnRectangles(self.Si_Jm,wim))
-        An = np.sqrt(2*m0*np.log(Nmax))
-        self.ai = An*returnRectangles(self.Si_Jm,fim)/m0
+        mm = np.sum(returnRectangles(self.Si_Jm,wim))
+        m0 = Hs*Hs/16.
+        An = np.sqrt(2.*m0*np.log(Nmax))
+        self.ai = An*returnRectangles(self.Si_Jm,wim)/mm
         self.kDir = np.zeros((len(self.ki),3),)
         for ii in range(3):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii]
         if(self.N > 10000):
             logEvent("ERROR! Wavetools.py: Maximum number of frequencies for Random Waves is 10000 ",level=0)
-        self.phi=np.pi
-        if (crestFocus):
-            self.phi = 0.
+        self.phi= -sum(self.kDir[:,j]*xfocus[j] for j in range(3))+tfocus*self.omega
+
         
     #C++ declarations
         for ij in range(3):
@@ -1276,7 +1278,7 @@ class NewWave(object):
             self.ki_c[ij]  =self.ki[ij]
             self.tanh_c[ij] = self.tanhF[ij]
             self.ai_c[ij] = self.ai[ij]
-            self.phi_c[ij] = self.phi
+            self.phi_c[ij] = self.phi[ij]
 
         self.kDir_ = self.kDir_c
         self.omega_ = self.omega_c

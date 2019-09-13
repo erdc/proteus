@@ -2,6 +2,11 @@
 The default values for problem definition modules
 """
 from __future__ import absolute_import
+try:
+    from importlib import reload
+except:
+    pass
+
 from .MeshTools import *
 from .FemTools import *
 from .TransportCoefficients import *

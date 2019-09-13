@@ -317,6 +317,8 @@ m = myTpFlowProblem.Parameters.Models
 m.clsvof.p.CoefficientsOptions['disc_ICs']=True
 m.rans3p.p.CoefficientsOptions['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
 m.rans3p.p.CoefficientsOptions.forceTerms = forceTerms
+m.rans3p.p.CoefficientsOptions.useVF = 1.0
+m.rans3p.p.CoefficientsOptions.weak_bc_penalty_constant = 1e6
 m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
 
 myTpFlowProblem.Parameters.mesh.setParallelPartitioningType('node')

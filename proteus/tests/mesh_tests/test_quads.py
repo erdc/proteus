@@ -30,7 +30,7 @@ def simple_mesh():
     skipInit = False
     mlMesh = MeshTools.MultilevelQuadrilateralMesh(nnx,nny,1,
                                                    x[0],x[1],0.0,
-                                                   L[0],L[1],1,
+                                                   L[0],L[1],1.0,
                                                    refinementLevels,
                                                    skipInit,
                                                    nLayersOfOverlap,
@@ -117,6 +117,7 @@ class Test2DStokesOnQuads(object):
         pass
 
     def setup_method(self,method):
+        from importlib import reload
         reload(stokes_2d_p)
         reload(stokes_2d_n)
         pList = [stokes_2d_p]

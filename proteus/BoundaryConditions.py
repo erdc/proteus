@@ -1,3 +1,10 @@
+#!python
+# distutils: language = c++
+# cython: profile=True, binding=True, embedsignature=True
+# cython: wraparound=False
+# cython: boundscheck=False
+# cython: initializedcheck=False
+
 import cython
 """
 Module for creating boundary conditions. Imported in SpatialTools.py
@@ -102,7 +109,7 @@ class BoundaryCondition:
             ax,ay,az
 
         """
-        
+
         self.uOfXT = lambda x, t: a0+sum(a[:]*x[:])
 
     def setLinearRamp(self,t1,value):

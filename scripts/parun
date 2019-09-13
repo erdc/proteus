@@ -21,12 +21,12 @@ import os
 import proteus
 
 #remove blanket import statements until after Comm initialized for petsc4py
-from proteus import Profiling, Comm, version, Context
+from proteus import Profiling, Comm, Context
 from warnings import *
 import optparse
 import sys
 
-usage = "usage: %prog [options] soModule.py [[soFile.sso] [pModule.py nModule.py]]"
+usage = "usage: %prog [options] main.py [soModule.py] [pModule.py nModule.py]"
 parser = optparse.OptionParser(usage=usage)
 parser.add_option("-I", "--inspect",
                   help="Inspect namespace at 't0','user_step'",
@@ -206,11 +206,6 @@ parser.add_option("--TwoPhaseFlow",
                   dest="TwoPhaseFlow",
                   action="store_true",
                   help="To consider TwoPhaseFlow applications")
-parser.add_option("--TpFlowParallel",
-                  default=False,
-                  dest="TpFlowParallel",
-                  action="store_true",
-                  help="To run TwoPhaseFlow problems in parallel")
 parser.add_option("--pumi",
                   default=False,
                   dest="pumi",
@@ -229,10 +224,10 @@ parser.add_option("-f","--fileName",
                   dest="fileName",
                   default="")
 parser.add_option("--path",
-                  help="Path where TwoPhaseFlow problem is stored",
+                  help="Path where main script is stored",
                   action="store",
                   type="string",
-                  dest="pathMyTpFlowProblem",
+                  dest="pathToMyProblem",
                   default="")
 
 (opts,args) = parser.parse_args()
@@ -244,9 +239,6 @@ if opts.debug:
 log = Profiling.logEvent
 
 log("Initializing Proteus")
-log("HashDist Version: " + version.hashdist)
-log("HashStack Version: " + version.hashstack)
-log("Proteus Version: " + version.proteus)
 
 log("Initializing MPI")
 if opts.petscOptions != None:
@@ -303,6 +295,8 @@ if opts.dataDir != '':
     Profiling.logDir = opts.dataDir
 # Initialise datafile
 Profiling.procID=comm.rank()
+if opts.logAllProcesses:
+    Profiling.logAllProcesses = True
 if opts.logLevel > 0:
     if len(args)==0:
         assert opts.TwoPhaseFlow, "Pass arguments to parun or run with --TwoPhaseFlow -f fileName.py"
@@ -341,57 +335,48 @@ if len(args) < 1 and not opts.TwoPhaseFlow:
 log("Importing input modules")
 
 if opts.SWEs:
-    path_models = proteus.__path__[0]+"/SWFlows/models/"
-    path_utils = proteus.__path__[0]+"/SWFlows/utils/"
+    path_models = proteus.__path__[0]+"/SWFlow/models/"
+    path_utils = proteus.__path__[0]+"/SWFlow/utils/"
     log(path_models)
     log(path_utils)
-    if args[0][-3:] == '.py':
-        so_name = "SWEs_so.py"
-        log("Loading module = {so_name}; with case file = {case_name}".format(so_name=so_name,
-                                                                              case_name=args[0]))
-        log(so_name[:-3])
-        log(path_utils)
-        so = proteus.defaults.load_system(so_name[:-3],path=path_utils)
-        for (pModule,nModule) in so.pnList:
-            log("Loading p module = "+pModule)
-            #pList.append(__import__(pModule))
-            pList.append(proteus.defaults.load_physics(pModule,path=path_models))
-            if pList[-1].name == None:
-                pList[-1].name = pModule
+    assert args[0][-3:] == '.py', "Please profile a Python main script ending in .py"
+    so_name = "SWEs_so.py"
+    log("Loading module = {so_name}; with case file = {case_name}".format(so_name=so_name,
+                                                                          case_name=args[0]))
+    log(so_name[:-3])
+    log(path_utils)
+    so = proteus.defaults.load_system(so_name[:-3],path=path_utils)
+    for (pModule,nModule) in so.pnList:
+        log("Loading p module = "+pModule)
+        pList.append(proteus.defaults.load_physics(pModule,path=path_models))
+        if pList[-1].name == None:
+            pList[-1].name = pModule
             log("Loading n module = "+nModule)
-            #nList.append(__import__(nModule))
             nList.append(proteus.defaults.load_numerics(nModule,path=path_models))
-        #
-        if so.sList == []:
-            for i in range(len(so.pnList)):
-                s = default_s
-                sList.append(s)
-        else:
-            sList = so.sList
+    if so.sList == []:
+        for i in range(len(so.pnList)):
+            s = default_s
+            sList.append(s)
+    else:
+        sList = so.sList
 elif opts.TwoPhaseFlow:
-
     path_utils = proteus.__path__[0]+"/TwoPhaseFlow/utils/"
     so_name = "TwoPhaseFlow_so.py"
+    log(path_utils)
     if opts.fileName != "":
         log("Loading module = {so_name}; with case file = {case_name}".format(so_name=so_name,
-                                                                              case_name=opts.fileName))
+                                                                              case_name=args[0]))
     else:
         log("Loading so module = "+so_name)
-    #
     from proteus import Context
-    if opts.pathMyTpFlowProblem is not None:
-        sys.path.append(opts.pathMyTpFlowProblem)
-    name = opts.fileName[:-3]
+    if opts.pathToMyProblem is not None:
+        sys.path.append(opts.pathToMyProblem)
+    assert args[0][-3:] == '.py', "Please profile a Python main script ending in .py"
+    name = args[0][:-3]
     case = __import__(name)
     Context.setFromModule(case)
     ct = Context.get()
     prob = ct.myTpFlowProblem
-    # useSuperlu ? #
-    if prob.useSuperlu is None: #if useSuperlu is None, then I decide
-        if opts.TpFlowParallel:
-            prob.useSuperlu=False
-        else:
-            prob.useSuperlu=True
     if len(petsc_argv) > 1:  # then petsc.options external file was used
         prob.usePETScOptionsFileExternal = True
     prob.initializeAll()
@@ -497,8 +482,6 @@ elif len(args) == 2: #p and n modules provided
         pass
 else:
     raise RuntimeError("Too many input files specified")
-if sList[0].logAllProcesses or opts.logAllProcesses:
-    Profiling.logAllProcesses = True
 Profiling.flushBuffer=sList[0].flushBuffer
 if opts.batchFileName != "":
     log("Attaching input stream to batch file = "+opts.batchFileName)
@@ -536,7 +519,7 @@ for p,simFlags in zip(pList,simFlagsList):
         #control convention on case file for multiple models, doesn't effect parun right now
         simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ repr(comm.rank())
 if opts.batchFileName != "":
-    log("Reading batch file = ",opts.batchFileName)
+    log("Reading batch file = {0}".format(opts.batchFileName))
     #try to split batch file into executable blocks delimited by
     #s or start on line by itself
     #terminate batch file with a q or quit on a line by itself

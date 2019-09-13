@@ -687,28 +687,33 @@ class Newton(NonlinearSolver):
 
 class AddedMassNewton(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        if self.F.coefficients.nd == 3:
-            accelerations = list(range(6))
-        elif self.F.coefficients.nd == 2:
-            accelerations = [0,1,5]
+        if self.F.timeIntegration.t >= self.F.coefficients.next_solve:
+            self.F.coefficients.next_solve += self.F.coefficients.solve_rate
+            self.F.coefficients.updated_global = True
+            if self.F.coefficients.nd == 3:
+                accelerations = list(range(6))
+            elif self.F.coefficients.nd == 2:
+                accelerations = [0,1,5]
+            else:
+                exit(1)
+            for i in accelerations:
+                self.F.added_mass_i=i
+                Newton.solve(self,u,r,b,par_u,par_r)
         else:
-            exit(1)
-        for i in accelerations:
-            self.F.added_mass_i=i
-            Newton.solve(self,u,r,b,par_u,par_r)
+            self.F.coefficients.updated_global = False
+            logEvent("Skipping model AddedMass; next solve at t={t}".format(t=self.F.coefficients.solve_rate))
 
 class MoveMeshMonitorNewton(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        if self.F.coefficients.t > 0:
-            for i in range(self.F.coefficients.ntimes_solved):
-                self.F.coefficients.ntimes_i = i
-                if i > 0:
-                    self.F.coefficients.model.tLast_mesh = self.F.coefficients.t_last
-                    self.F.coefficients.model.calculateQuadrature()
-                    self.F.coefficients.preStep(t=None)
-                Newton.solve(self,u,r,b,par_u,par_r)
-                if i < self.F.coefficients.ntimes_solved-1:
-                    self.F.coefficients.postStep(t=None)
+        for i in range(self.F.coefficients.ntimes_solved):
+            self.F.coefficients.ntimes_i = i
+            if i > 0:
+                self.F.coefficients.model.tLast_mesh = self.F.coefficients.t_last
+                self.F.coefficients.model.calculateQuadrature()
+                self.F.coefficients.preStep(t=None)
+            Newton.solve(self,u,r,b,par_u,par_r)
+            if i < self.F.coefficients.ntimes_solved-1:
+                self.F.coefficients.postStep(t=None)
 
 class TwoStageNewton(Newton):
     """Solves a 2 Stage problem via Newton's solve"""

@@ -11,8 +11,10 @@ ct=Context.Options([
     ("nDTout",1,"Number of time steps to archive"),
     ("refinement",1,"Level of refinement"),
     ("unstructured",False,"Use unstructured mesh. Set to false for periodic BCs"),
-    # parameters for elliptic re-distancing    
+    # parameters for elliptic re-distancing
+    ("useExact",False,"Use exact integration of Heaviside and Diract functions"),
     ("ELLIPTIC_REDISTANCING",0, "Type of elliptic re-distancing"),
+    ("wd",10.0,"Weak Dirichlet Weight"),
 ],mutable=True)
 
 # ELLIPTIC_REDISTANCING #
@@ -21,12 +23,13 @@ ct=Context.Options([
 #2: linear via C0 normal reconstruction
 #3: nolninear via C0 normal reconstruction
 runCFL=0.33
-
+useExact = ct.useExact
+weakDirichletFactor=ct.wd
 #number of space dimensions
 nd=2
 
 # General parameters 
-parallel = True
+parallel = False
 linearSmoother = None
 checkMass=False
 
@@ -36,8 +39,9 @@ useBernstein=True
 useHex=False#True
 
 # quadrature order
+#vortex_quad_order = 2*pDegree_ls+1
+#vortex_quad_order = 2*(2*pDegree_ls)
 vortex_quad_order = 2*pDegree_ls+1
-
 #parallel partitioning info
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
@@ -76,6 +80,8 @@ else:
     lag_shockCapturing_rd=False
 
 #use absolute tolerances on al models
+#atolRedistance = 1.0e-10#max(1.0e-12,0.1*he)
+#atolLevelSet     = 1.0e-10#max(1.0e-12,0.001*he**2)
 atolRedistance = max(1.0e-12,0.1*he)
 atolLevelSet     = max(1.0e-12,0.001*he**2)
 
