@@ -180,7 +180,7 @@ html_context = {
     "github_user": "erdc", # Username
     "github_repo": "proteus", # Repo name
     "github_version": "master", # Version
-    "conf_py_path": "/doc", # Path in the checkout to the docs root
+    "conf_py_path": "/doc/source/", # Path in the checkout to the docs root
 }
 
 #html_theme_options = {'bootswatch_theme':'spacelab'}
@@ -261,7 +261,7 @@ html_short_title = u"Proteus"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "corps_logo_cross2.svg"
+html_logo = "_static/corps_logo_cross2.svg"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

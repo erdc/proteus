@@ -10,7 +10,7 @@ The module described in this page can be imported as follows:
 
 .. code-block:: python
 
-   from proteus.mbd import ChRigidBody as crb
+   from proteus.mbd import CouplingFSI as fsi
 
 Proteus uses wrappers and modified/derived classes from the Chrono engine, an open-source multibody dynamics library available at https://github.com/projectchrono/chrono.
 
@@ -40,11 +40,13 @@ instance.
 
 .. code-block:: python
 
-   import numpy as np
-   from proteus.mbd import ChRigidBody as crb
+   import pychono
+   from proteus.mbd import CouplingFSI as fsi
 
-   my_system = crb.ProtChSystem(gravity=np.array([0.,0.,-9.81]))
-   mysystem.setTimeStep(0.001)  # the time step for Chrono calculations
+   my_system = fsi.ProtChSystem()
+   g = pychrono.ChVectorD(0., 0., -9.81)
+   my_system.ChSystem.Set_G_acc(g)
+   my_system.setTimeStep(0.001)  # the time step for Chrono calculations
 
 .. important::
 
@@ -67,7 +69,7 @@ simulation. This can be done with the passing of the `system` argument as the
 
 .. code-block:: python
 
-   my_body = crb.ProtChBody(system=my_system)
+   my_body = fsi.ProtChBody(system=my_system)
    my_body.attachShape(my_shape)  # sets everything automatically
    my_body.setRecordValues(all_values=True) # record everything
 
@@ -75,7 +77,7 @@ simulation. This can be done with the passing of the `system` argument as the
 When set up properly and running with a Proteus Navier-Stokes simulation, the
 fluid pressure will be applied on the boundaries of the rigid body. The ChBody
 will be moved accordingly, as well as its boundaries (supposing that a moving
-mesh of immersed boundaries are used).
+mesh or immersed boundaries are used).
 
 .. attention::
 
@@ -90,7 +92,7 @@ This class creates a `ChMesh` that is needed to create moorings.
 
 .. code-block:: python
 
-   my_mesh = crb.ProtChMesh(system=my_system)
+   my_mesh = fsi.ProtChMesh(system=my_system)
 
 
 .. todo::
@@ -111,7 +113,7 @@ modulus of the cable/segment.
 
 .. code-block:: python
 
-   my_mooring = crb.ProtChMoorings(system=my_system,
+   my_mooring = fsi.ProtChMoorings(system=my_system,
                                    mesh=my_mesh,
                                    length=np.array([10.]),
                                    nb_elems=np.array([10], dtype=np.int_32),
@@ -140,15 +142,11 @@ cable is desired, such as a catenary shape.
    and `E` parameters is that a cable can be multi-segmented (different
    sections of the same cable having different material properties).
 
-.. todo::
-
-   Add catenary as a module of mbd, or function of mbd.ChRigidBody.pyx
-
 
 ProtChAddedMass
 ---------------
 
-A class to deal with the added-mass model from proteus.mprans.AddedMass. This
+A class to deal with the added mass model from proteus.mprans.AddedMass. This
 class should not be instantiated manually and will be automatically
 instantiating as a variable of `ProtChSystem` (accessible as
 `my_system.ProtChAddedMass`). It is used to build the added mass matrix for the
@@ -156,7 +154,9 @@ rigid bodies.
 
 .. important::
 
-   This class instance must be passed to the `AddedMass` model `auxiliaryVariables` to have any effect (`auxiliaryVariables.append(my_system.ProtChAddedMass`)
+   This class instance must be passed to the `AddedMass` model
+   `auxiliaryVariables` to have any effect
+   (`auxiliaryVariables.append(my_system.ProtChAddedMass`)
 
 
 Postprocessing Tools
@@ -165,6 +165,9 @@ Postprocessing Tools
 ProtChBody
 ----------
 
+The data related to mooring cables is saved in an csv file, usually
+``[my_body.name].csv``. Additionally, if the added mass model was used, the
+values of the added mass matrix are available in ``[my_body.name]_Aij_.csv``
 
 ProtChMoorings
 --------------
@@ -172,7 +175,8 @@ ProtChMoorings
 The data related to mooring cables is saved in an hdf5 file, usually
 ``[my_mooring.name].h5``, which can be read directly with h5py. Another way to
 read and visualise the data is to use the associated ``[my_mooring.name].xmf``.
-The following script must be first ran (note that there is no extension for the file name):
+The following script must be first ran (note that there is no extension for the
+file name):
 .. code-block::
 
    {PROTEUS_DIR}/scripts/gatherTimes.py -f [my_mooring.name]

@@ -11,7 +11,7 @@ There are currently 3 implementations of Navier-Stokes equations in proteus:
 
 * Two-phase flow (e.g. air/water)
 * Three-phase flow (e.g. air/water/sediment)
-* Two-phase flow (e.g. air/water) with immersed boundaries (solid)
+* Two-phase flow with immersed boundaries (solid)
 
 Two-Phase
 =========
@@ -22,6 +22,7 @@ available here: :py:mod:`proteus.mprans.RANS2P`.
 
 Three-Phase
 ===========
+
 The three-phase implementation of Navier-Stokes, with source documentation
 available here: :py:mod:`proteus.mprans.RANS3P`.
 
@@ -38,9 +39,8 @@ Moving (ALE) Mesh
 -----------------
 
 In the current implementation, if a model for moving the mesh is used such as
-:ref:`ale_mesh_elastic` or :ref:`ale_mesh_monitor`, it should be the first
-model to be solved, as the mesh velocity is calculated from the previous time
-step.
+:py:mod:`proteus.mprans.MoveMesh`, it should be the first model to be solved,
+as the mesh velocity is calculated from the previous time step.
 
 
 Immersed Boundaries

@@ -295,15 +295,16 @@ Source Code Documentation
 
    tools/boundary_conditions
    tools/spatial_tools
+   tools/two_phase_flow
+   tools/wave_tools
    
 .. toctree::
    :maxdepth: 1
    :caption: Models
    :name: sec-tools
 
-   models/index
-   models/navier_stokes
-   models/free_surface
    models/body_dynamics
-   models/ale_mesh_elastic
-   models/ale_mesh_monitor
+   models/free_surface
+   models/mesh_adaptivity
+   models/mesh_motion
+   models/navier_stokes
