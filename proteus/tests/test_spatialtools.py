@@ -118,7 +118,7 @@ class TestShapeDomainBuilding(unittest.TestCase):
         custom3D = create_custom3D(domain3D)
         custom3DRANS = create_custom3D(domain3D, folder='mprans')
         path1 = getpath()
-        stl = create_stl3D(domain3D,os.path.join(path1,"STLBlocks.stl")
+        stl = create_stl3D(domain3D,os.path.join(path1,"STLBlocks.stl"))
         
 
     def test_assemble_domain(self):
@@ -194,7 +194,7 @@ class TestShapeDomainBuilding(unittest.TestCase):
 
         #stl domain checks
         path1 = getpath()
-        stl = create_stl3D(domain3D,os.path.join(path1,"STLBlocks.stl")
+        stl = create_stl3D(domain3D,os.path.join(path1,"STLBlocks.stl"))
         assembleDomainRANS(domainSTL)
         STLnames = ["Bed0","Concrete0","Inlet0","Outlet0","Top0","Wall0"]
         nSTLs = len(STLnames)
@@ -263,7 +263,7 @@ class TestShapeDomainBuilding(unittest.TestCase):
         npt.assert_equal(domain3DRANS.facetFlags, flags_f3DRANS)
         #stl flags
         path1 = getpath()
-        stl = create_stl3D(domain3D,os.path.join(path1,"STLBlocks.stl")
+        stl = create_stl3D(domain3D,os.path.join(path1,"STLBlocks.stl"))
         assembleDomainRANS(domainSTL)
         STLnames = ["Bed0","Concrete0","Inlet0","Outlet0","Top0","Wall0"]
         nSTLs = len(STLnames)
