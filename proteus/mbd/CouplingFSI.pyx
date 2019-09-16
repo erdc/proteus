@@ -657,13 +657,12 @@ cdef class ProtChBody:
                 M += self.ProtChSystem.model.levelModelList[-1].coefficients.particle_netMoments[flag]
             else:
                 M += self.ProtChSystem.model.levelModelList[-1].coefficients.netMoments[flag]
-        M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
         rx, ry, rz = self.barycenter0-pyvec2array(self.ChBody.GetPos())
         Mp = np.array([ry*Fz-rz*Fy, -(rx*Fz-rz*Fx), (rx*Fy-ry*Fx)])
-        M_t += Mp
-        return M_t
+        M += Mp
+        return M
 
     def getRotationMatrix(self):
         """Gives current rotation (matrix) of body
