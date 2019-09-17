@@ -282,7 +282,29 @@ Source Code Documentation
 
 .. toctree::
    :maxdepth: 1
+   :caption: General
+   :name: sec-general
 
    api/modules
-   
+   capi/cmodules
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Tools
+   :name: sec-tools
+
+   tools/boundary_conditions
+   tools/spatial_tools
+   tools/two_phase_flow
+   tools/wave_tools
+   
+.. toctree::
+   :maxdepth: 1
+   :caption: Models
+   :name: sec-tools
+
+   models/body_dynamics
+   models/free_surface
+   models/mesh_adaptivity
+   models/mesh_motion
+   models/navier_stokes
