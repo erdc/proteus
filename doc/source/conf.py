@@ -178,9 +178,9 @@ html_theme_options = {
 html_context = {
     "display_github": True, # Integrate GitHub
     "github_user": "erdc", # Username
-    "github_repo": "proteus", # Repo name
+    "github_repo": "proteus-doc", # Repo name
     "github_version": "master", # Version
-    "conf_py_path": "/doc/source/", # Path in the checkout to the docs root
+    "conf_py_path": "/source/", # Path in the checkout to the docs root
 }
 
 #html_theme_options = {'bootswatch_theme':'spacelab'}
