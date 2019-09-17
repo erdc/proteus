@@ -11,6 +11,7 @@ from past.utils import old_div
 import unittest
 import numpy.testing as npt
 import numpy as np
+import os
 from nose.tools import eq_
 from proteus import Comm, Profiling, Gauges
 from proteus.Profiling import logEvent as log
@@ -116,7 +117,8 @@ class TestShapeDomainBuilding(unittest.TestCase):
         custom2DRANS = create_custom2D(domain2D, folder='mprans')
         custom3D = create_custom3D(domain3D)
         custom3DRANS = create_custom3D(domain3D, folder='mprans')
-        stl = create_stl3D(domain3D,"STLBlocks.stl")
+        path1 = getpath()
+        stl = create_stl3D(domain3D,os.path.join(path1,"STLBlocks.stl"))
         
 
     def test_assemble_domain(self):
@@ -191,7 +193,8 @@ class TestShapeDomainBuilding(unittest.TestCase):
         npt.assert_equal(x3DRANS, [0., 0., 0.])
 
         #stl domain checks
-        stl = create_stl3D(domainSTL,"STLBlocks.stl")
+        path1 = getpath()
+        stl = create_stl3D(domainSTL,os.path.join(path1,"STLBlocks.stl"))
         assembleDomainRANS(domainSTL)
         STLnames = ["Bed0","Concrete0","Inlet0","Outlet0","Top0","Wall0"]
         nSTLs = len(STLnames)
@@ -259,7 +262,8 @@ class TestShapeDomainBuilding(unittest.TestCase):
         npt.assert_equal(domain3DRANS.vertexFlags, flags_v3DRANS)
         npt.assert_equal(domain3DRANS.facetFlags, flags_f3DRANS)
         #stl flags
-        stl = create_stl3D(domainSTL,"STLBlocks.stl")
+        path1 = getpath()
+        stl = create_stl3D(domainSTL,os.path.join(path1,"STLBlocks.stl"))
         assembleDomainRANS(domainSTL)
         STLnames = ["Bed0","Concrete0","Inlet0","Outlet0","Top0","Wall0"]
         nSTLs = len(STLnames)
@@ -599,7 +603,9 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(zone.dragBeta, dragBeta)
         npt.assert_equal(zone.porosity, porosity)
         npt.assert_equal(zone.Shape, custom)
-    
+def getpath():
+    path = os.path.dirname(os.path.abspath(__file__))
+    return path    
 if __name__ == '__main__':
 
     unittest.main(verbosity=2)
