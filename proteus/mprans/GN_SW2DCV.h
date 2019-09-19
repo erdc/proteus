@@ -1109,6 +1109,7 @@ public:
       double *dH_minus_dL, double *muH_minus_muL, double hEps, double *hReg,
       int LUMPED_MASS_MATRIX, double *dLow, double *hBT, double *huBT,
       double *hvBT, double *hetaBT, double *hwBT) {
+
     Rneg.resize(numDOFs, 0.0);
     Rpos.resize(numDOFs, 0.0);
     Rneg_heta.resize(numDOFs, 0.0);
@@ -1119,7 +1120,6 @@ public:
     hetaLow.resize(numDOFs, 0.0);
     hwLow.resize(numDOFs, 0.0);
     Kmax.resize(numDOFs, 0.0);
-    std::cout << "CONVEX TEST?" << std::endl;
 
     ////////////////////////
     // FIRST LOOP in DOFs //
@@ -1149,15 +1149,23 @@ public:
       double hetai_Max = hetai;
       double Pnegi_heta = 0., Pposi_heta = 0.;
 
-      /* LOW ORDER SOLUTION without extended source term.
-      That is, we want to put separate the source terms
-      and recall we do not put hTilde in source */
+      /* LOW ORDER SOLUTION */
       hLow[i] = hi;
       huLow[i] = hui;
       hvLow[i] = hvi;
       hetaLow[i] = hetai;
       hwLow[i] = hwi;
       Kmax[i] = 0;
+
+      // Here we add the sources to the low order solution
+      // because the limiting must be done with W = ULow - S_i*tau/mi
+      // See equation 6.32 in Friction paper
+      // Note that source terms already have "-" sign
+      // The issue is somewhere here I think and in the bar states
+      huLow[i] -= extendedSourceTerm_hu[i] * dt / mi;
+      hvLow[i] -= extendedSourceTerm_hv[i] * dt / mi;
+      hetaLow[i] -= extendedSourceTerm_heta[i] * dt / mi;
+      hwLow[i] -= extendedSourceTerm_hw[i] * dt / mi;
 
       // ACTUALLY, NEED TO CHECK THAT THE SOURCES ARE CORRECT IN THIS FUNCTION
 
@@ -1218,8 +1226,9 @@ public:
         hetai_Min = std::min(hetai_Min, hetaBT[ij]);
         hetai_Max = std::max(hetai_Max, hetaBT[ij]);
 
-        /* COMPUTE LOW ORDER SOLUTION (WITHOUT EXTENDED SOURCE). See EQN 6.23 in
+        /* COMPUTE LOW ORDER SOLUTION. See EQN 6.23 in
          * SW friction paper */
+
         if (i != j) {
           hLow[i] += hi * (-dt / mi * 2 * dLow[ij]) +
                      dt / mi * (2 * dLow[ij] * hBT[ij]);
@@ -1238,18 +1247,15 @@ public:
       // clean up hLow from round off error
       if (hLow[i] < hEps)
         hLow[i] = 0;
+
       ///////////////////////
       // COMPUTE Q VECTORS //
       ///////////////////////
       double Qnegi = mi * (hiMin - hLow[i]);
       double Qposi = mi * (hiMax - hLow[i]);
       // for heta
-      double Qnegi_heta =
-          mi * (hetai_Min -
-                (hetaLow[i] + extendedSourceTerm_heta[i] * dt / mi * 0.0));
-      double Qposi_heta =
-          mi * (hetai_Max -
-                (hetaLow[i] + extendedSourceTerm_heta[i] * dt / mi * 0.0));
+      double Qnegi_heta = mi * (hetai_Min - hetaLow[i]);
+      double Qposi_heta = mi * (hetai_Max - hetaLow[i]);
 
       ///////////////////////
       // COMPUTE R VECTORS //
@@ -1297,15 +1303,9 @@ public:
       double ith_Limiter_times_FluxCorrectionMatrix4 = 0.;
       double ith_Limiter_times_FluxCorrectionMatrix5 = 0.;
 
-      // double ci =
-      //     Kmax[i] * hLow[i] -
-      //     0.5 * (huLow[i] * huLow[i] + hvLow[i] * hvLow[i]); // for KE lim.
       double ci =
           Kmax[i] * hLow[i] -
-          0.5 * (std::pow(huLow[i] - extendedSourceTerm_hu[i] * dt / mi * 0.0,
-                          2.0) +
-                 std::pow(hvLow[i] - extendedSourceTerm_hv[i] * dt / mi * 0.0,
-                          2.0)); // for KE lim.
+          0.5 * (huLow[i] * huLow[i] + hvLow[i] * hvLow[i]); // for KE lim.
 
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       for (int offset = csrRowIndeces_DofLoops[i];
@@ -1326,13 +1326,13 @@ public:
         double huStarij = huni * hStarij * one_over_hiReg;
         double hvStarij = hvni * hStarij * one_over_hiReg;
         double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg, 2);
-        double hwStarij = hwni * hStarij * one_over_hiReg;
+        double hwStarij = hwni * std::pow(hStarij * one_over_hiReg, 2);
 
         double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
         double huStarji = hunj * hStarji * one_over_hjReg;
         double hvStarji = hvnj * hStarji * one_over_hjReg;
         double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
-        double hwStarji = hwnj * hStarji * one_over_hjReg;
+        double hwStarji = hwnj * std::pow(hStarij * one_over_hiReg, 2);
 
         // COMPUTE FLUX CORRECTION MATRICES
         double ML_minus_MC = (LUMPED_MASS_MATRIX == 1
@@ -1390,10 +1390,7 @@ public:
         double Phv_ij = FluxCorrectionMatrix3 / mi / lambdaj;
 
         double ai = -0.5 * (Phu_ij * Phu_ij + Phv_ij * Phv_ij);
-        double bi =
-            Kmax[i] * Ph_ij -
-            ((huLow[i] - extendedSourceTerm_hu[i] * dt / mi * 0.0) * Phu_ij +
-             (hvLow[i] - extendedSourceTerm_hv[i] * dt / mi * 0.0) * Phv_ij);
+        double bi = Kmax[i] * Ph_ij - (huLow[i] * Phu_ij + hvLow[i] * Phv_ij);
 
         double r1 = ai == 0
                         ? (bi == 0 ? 1. : -ci / bi)
@@ -1411,20 +1408,13 @@ public:
         double lambdai =
             csrRowIndeces_DofLoops[j + 1] - csrRowIndeces_DofLoops[j] - 1;
         double mj = lumped_mass_matrix[j];
-        double cj =
-            Kmax[j] * hLow[j] -
-            0.5 * (std::pow(huLow[j] - extendedSourceTerm_hu[j] * dt / mj * 0.0,
-                            2.0) +
-                   std::pow(hvLow[j] - extendedSourceTerm_hv[j] * dt / mj * 0.0,
-                            2.0));
+        double cj = Kmax[j] * hLow[j] -
+                    0.5 * (huLow[j] * huLow[j] + hvLow[j] * hvLow[j]);
         double Ph_ji = -FluxCorrectionMatrix1 / mj / lambdai; // Aij=-Aji
         double Phu_ji = -FluxCorrectionMatrix2 / mj / lambdai;
         double Phv_ji = -FluxCorrectionMatrix3 / mj / lambdai;
         double aj = -0.5 * (Phu_ji * Phu_ji + Phv_ji * Phv_ji);
-        double bj =
-            Kmax[j] * Ph_ji -
-            ((huLow[j] - extendedSourceTerm_hu[j] * dt / mj * 0.0) * Phu_ji +
-             (hvLow[j] - extendedSourceTerm_hv[j] * dt / mj * 0.0) * Phv_ji);
+        double bj = Kmax[j] * Ph_ji - (huLow[j] * Phu_ji + hvLow[j] * Phv_ji);
 
         r1 = aj == 0 ? (bj == 0 ? 1. : -cj / bj)
                      : (-bj + std::sqrt(bj * bj - 4 * aj * cj)) / 2. / aj;
@@ -1453,20 +1443,20 @@ public:
       limited_hnp1[i] =
           hLow[i] + one_over_mi * ith_Limiter_times_FluxCorrectionMatrix1;
       limited_hunp1[i] =
-          ((huLow[i] -
-            dt / mi * extendedSourceTerm_hu[i]) // low_order_hunp1+...
+          ((huLow[i] +
+            dt / mi * extendedSourceTerm_hu[i] * 0.0) // low_order_hunp1+...
            + one_over_mi * ith_Limiter_times_FluxCorrectionMatrix2);
       limited_hvnp1[i] =
-          ((hvLow[i] -
-            dt / mi * extendedSourceTerm_hv[i]) // low_order_hvnp1+...
+          ((hvLow[i] +
+            dt / mi * extendedSourceTerm_hv[i] * 0.0) // low_order_hvnp1+...
            + one_over_mi * ith_Limiter_times_FluxCorrectionMatrix3);
       limited_hetanp1[i] =
-          ((hetaLow[i] -
-            dt / mi * extendedSourceTerm_heta[i]) // low_order_hetanp1+...
+          ((hetaLow[i] +
+            dt / mi * extendedSourceTerm_heta[i] * 0.0) // low_order_hetanp1+...
            + one_over_mi * ith_Limiter_times_FluxCorrectionMatrix4);
       limited_hwnp1[i] =
-          ((hwLow[i] -
-            dt / mi * extendedSourceTerm_hw[i]) // low_order_hwnp1+...
+          ((hwLow[i] +
+            dt / mi * extendedSourceTerm_hw[i] * 0.0) // low_order_hwnp1+...
            + one_over_mi * ith_Limiter_times_FluxCorrectionMatrix5);
 
       if (limited_hnp1[i] < -hEps && dt < 1.0) {
@@ -1488,12 +1478,12 @@ public:
         limited_hvnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
                             (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
                              std::pow(aux, VEL_FIX_POWER));
-        limited_hetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                               std::pow(aux, VEL_FIX_POWER));
-        limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                             std::pow(aux, VEL_FIX_POWER));
+        // limited_hetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+        //                       (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+        //                        std::pow(aux, VEL_FIX_POWER));
+        // limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+        //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+        //                      std::pow(aux, VEL_FIX_POWER));
       }
     }
   }
@@ -2186,13 +2176,13 @@ public:
           double huStarij = hui * hStarij * one_over_hiReg;
           double hvStarij = hvi * hStarij * one_over_hiReg;
           double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg, 2);
-          double hwStarij = hwi * hStarij * one_over_hiReg;
+          double hwStarij = hwi * std::pow(hStarij * one_over_hiReg, 2);
 
           double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
           double huStarji = huj * hStarji * one_over_hjReg;
           double hvStarji = hvj * hStarji * one_over_hjReg;
           double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg, 2);
-          double hwStarji = hwj * hStarji * one_over_hjReg;
+          double hwStarji = hwj * std::pow(hStarij * one_over_hiReg, 2);
 
           // Dissipative well balancing term
           double muLowij = 0., muLij = 0., muHij = 0.;
@@ -2251,19 +2241,19 @@ public:
               hTilde_ij = (dLij - muLij) / (2 * dLij) *
                           ((hStarji - hj) - (hStarij - hi));
               // hu component
-              huBar_ij = -1. / (2 * dLij) *
-                             ((uj * huj - ui * hui + pressure_j - pressure_i) *
-                                  Cx[ij] +
-                              (uj * hvj - ui * hvi) * Cy[ij]) +
-                         0.5 * (huj + hui);
+              huBar_ij =
+                  -1. / (2 * dLij) *
+                      ((uj * huj - ui * hui + pTildej - pTildei) * Cx[ij] +
+                       (uj * hvj - ui * hvi) * Cy[ij]) +
+                  0.5 * (huj + hui);
               huTilde_ij = (dLij - muLij) / (2 * dLij) *
                            ((huStarji - huj) - (huStarij - hui));
               // hv component
-              hvBar_ij = -1. / (2 * dLij) *
-                             ((vj * huj - vi * hui) * Cx[ij] +
-                              (vj * hvj - vi * hvi + pressure_j - pressure_i) *
-                                  Cy[ij]) +
-                         0.5 * (hvj + hvi);
+              hvBar_ij =
+                  -1. / (2 * dLij) *
+                      ((vj * huj - vi * hui) * Cx[ij] +
+                       (vj * hvj - vi * hvi + pTildej - pTildei) * Cy[ij]) +
+                  0.5 * (hvj + hvi);
               hvTilde_ij = (dLij - muLij) / (2 * dLij) *
                            ((hvStarji - hvj) - (hvStarij - hvi));
               // heta component

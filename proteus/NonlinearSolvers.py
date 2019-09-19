@@ -754,9 +754,9 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         self.computeResidual(u,r,b)
         u[:] = r
 
-        ############################
-        # FCT STEP ON WATER HEIGHT #
-        ############################
+        #############################
+        # FCT STEP, CONVEX LIMITING #
+        #############################
         logEvent("   FCT Step", level=1)
         self.F.FCTStep()
 
@@ -787,11 +787,11 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.secondCallCalculateResidual = 0
         logEvent(" Entropy viscosity solution with consistent mass matrix", level=1)
         Newton.solve(self,u,r,b,par_u,par_r,linear=True)
-        ############################
-        # FCT STEP ON WATER HEIGHT #
-        ############################
+        #############################
+        # FCT STEP, CONVEX LIMITING #
+        #############################
         #logEvent(" FCT Step", level=1)
-        #self.F.FCTStep()
+        self.F.FCTStep()
         if par_u is not None:
             par_u.scatter_forward_insert()
 

@@ -25,10 +25,10 @@ Favrie and Gavrilyuk. It assumes the reference height is h1.
 # *************************** #
 
 opts = Context.Options([
-    ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 2.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.33, "Desired CFL restriction"),
+    ("cfl", 0.2, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level")
 ])
 
