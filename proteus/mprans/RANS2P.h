@@ -178,6 +178,10 @@ namespace proteus
                                    double *ebqe_bc_w_ext,
                                    double *ebqe_bc_flux_w_diff_ext,
                                    double *q_x,
+                                   double *q_u_0,
+                                   double *q_u_1,
+                                   double *q_u_2,
+                                   double *q_u_3,
                                    double *q_velocity,
                                    double *ebqe_velocity,
                                    double *flux,
@@ -222,7 +226,8 @@ namespace proteus
                                    double* phi_solid_nodes,
                                    double* distance_to_solids,
                                    const int use_pseudo_penalty,
-                                   bool useExact) = 0;
+                                   bool useExact,
+                                   double* isActiveDOF) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -2555,6 +2560,10 @@ namespace proteus
                              double* ebqe_bc_w_ext,
                              double* ebqe_bc_flux_w_diff_ext,
                              double* q_x,
+                             double* q_u_0,
+                             double* q_u_1,
+                             double* q_u_2,
+                             double* q_u_3,
                              double* q_velocity,
                              double* ebqe_velocity,
                              double* flux,
@@ -2599,7 +2608,8 @@ namespace proteus
                              double* phi_solid_nodes,
                              double* distance_to_solids,
                              const int use_pseudo_penalty,
-                             bool useExact)
+                             bool useExact,
+                             double* isActiveDOF)
       {
         logEvent("Entered mprans calculateResidual",6);
         gf.useExact = useExact;
@@ -2867,6 +2877,10 @@ namespace proteus
                 //meanGrainSize = q_meanGrain[eN_k];
                 //
                 //save velocity at quadrature points for other models to use
+                q_u_0[eN_k]=p;
+                q_u_1[eN_k]=u;
+                q_u_2[eN_k]=v;
+                q_u_3[eN_k]=2;
                 q_velocity[eN_k_nSpace+0]=u;
                 q_velocity[eN_k_nSpace+1]=v;
                 q_velocity[eN_k_nSpace+2]=w;

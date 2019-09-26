@@ -177,6 +177,10 @@ namespace proteus
                                    double *ebqe_bc_w_ext,
                                    double *ebqe_bc_flux_w_diff_ext,
                                    double *q_x,
+                                   double *q_u_0,
+                                   double *q_u_1,
+                                   double *q_u_2,
+                                   double *q_u_3,
                                    double *q_velocity,
                                    double *ebqe_velocity,
                                    double *flux,
@@ -221,7 +225,8 @@ namespace proteus
                                    double* phi_solid_nodes,
                                    double* distance_to_solids,
                                    const int use_pseudo_penalty,
-                                   bool useExact) = 0;
+                                   bool useExact,
+                                   double* isActiveDOF) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -587,7 +592,9 @@ namespace proteus
           }
 
       inline
-        void evaluateCoefficients(const double NONCONSERVATIVE_FORM,
+        void evaluateCoefficients(double& fluid_fac,
+                                  const double H_s,
+                                  const double NONCONSERVATIVE_FORM,
                                   const double eps_rho,
                                   const double eps_mu,
                                   const double sigma,
@@ -729,24 +736,37 @@ namespace proteus
           {
             //u momentum accumulation
             mom_u_acc=u;//trick for non-conservative form
-            dmom_u_acc_u=rho*porosity;
-
+            dmom_u_acc_u=H_s*rho*porosity;
+            fluid_fac = rho*porosity;
             //v momentum accumulation
             mom_v_acc=v;
-            dmom_v_acc_v=rho*porosity;
+            dmom_v_acc_v=H_s*rho*porosity;
 
             //mass advective flux
-            mass_adv[0]=porosity*u;
-            mass_adv[1]=porosity*v;
+            mass_adv[0]=H_s*porosity*u;
+            mass_adv[1]=H_s*porosity*v;
 
-            dmass_adv_u[0]=porosity;
+            dmass_adv_u[0]=H_s*porosity;
             dmass_adv_u[1]=0.0;
 
             dmass_adv_v[0]=0.0;
-            dmass_adv_v[1]=porosity;
+            dmass_adv_v[1]=H_s*porosity;
 
             dmass_adv_w[0]=0.0;
             dmass_adv_w[1]=0.0;
+
+            /* //mass advective flux */
+            /* mass_adv[0]=porosity*u; */
+            /* mass_adv[1]=porosity*v; */
+
+            /* dmass_adv_u[0]=porosity; */
+            /* dmass_adv_u[1]=0.0; */
+
+            /* dmass_adv_v[0]=0.0; */
+            /* dmass_adv_v[1]=porosity; */
+
+            /* dmass_adv_w[0]=0.0; */
+            /* dmass_adv_w[1]=0.0; */
 
             //u momentum advective flux
             mom_u_adv[0]=0.0;
@@ -769,109 +789,121 @@ namespace proteus
             dmom_v_adv_v[1]=0.0;
 
             //u momentum diffusion tensor
-            mom_uu_diff_ten[0] = 2.0*porosity*mu;
-            mom_uu_diff_ten[1] = porosity*mu;
+            mom_uu_diff_ten[0] = H_s*2.0*porosity*mu;
+            mom_uu_diff_ten[1] = H_s*porosity*mu;
 
-            mom_uv_diff_ten[0]=porosity*mu;
+            mom_uv_diff_ten[0]=H_s*porosity*mu;
 
             //v momentum diffusion tensor
-            mom_vv_diff_ten[0] = porosity*mu;
-            mom_vv_diff_ten[1] = 2.0*porosity*mu;
+            mom_vv_diff_ten[0] = H_s*porosity*mu;
+            mom_vv_diff_ten[1] = H_s*2.0*porosity*mu;
 
-            mom_vu_diff_ten[0]=porosity*mu;
+            mom_vu_diff_ten[0]=H_s*porosity*mu;
 
             //momentum sources
             norm_n = sqrt(n[0]*n[0]+n[1]*n[1]);
-            mom_u_source = -porosity*rho*g[0];// - porosity*d_mu*sigma*kappa*n[0];
-            mom_v_source = -porosity*rho*g[1];// - porosity*d_mu*sigma*kappa*n[1];
-            if(use_pseudo_penalty>0)
-            {
-              mom_u_source = -in_fluid*porosity*rho*g[0];
-              mom_v_source = -in_fluid*porosity*rho*g[1];
-            }
+            mom_u_source = -H_s*porosity*rho*g[0];// - porosity*d_mu*sigma*kappa*n[0];
+            mom_v_source = -H_s*porosity*rho*g[1];// - porosity*d_mu*sigma*kappa*n[1];
+            /* if(use_pseudo_penalty>0) */
+            /* { */
+            /*   mom_u_source = -in_fluid*porosity*rho*g[0]; */
+            /*   mom_v_source = -in_fluid*porosity*rho*g[1]; */
+            /* } */
 
             //u momentum Hamiltonian (pressure)
-            mom_u_ham = porosity*grad_p[0];
-            dmom_u_ham_grad_p[0]=porosity;
+            mom_u_ham = H_s*porosity*grad_p[0];
+            dmom_u_ham_grad_p[0]=H_s*porosity;
             dmom_u_ham_grad_p[1]=0.0;
 
             //v momentum Hamiltonian (pressure)
-            mom_v_ham = porosity*grad_p[1];
+            mom_v_ham = H_s*porosity*grad_p[1];
             dmom_v_ham_grad_p[0]=0.0;
-            dmom_v_ham_grad_p[1] = porosity;
-            if (use_pseudo_penalty <= 0)
-            {
+            dmom_v_ham_grad_p[1] = H_s*porosity;
+            
+            /* //u momentum Hamiltonian (pressure) */
+            /* mom_u_ham = porosity*grad_p[0]; */
+            /* dmom_u_ham_grad_p[0]=porosity; */
+            /* dmom_u_ham_grad_p[1]=0.0; */
+
+            /* //v momentum Hamiltonian (pressure) */
+            /* mom_v_ham = porosity*grad_p[1]; */
+            /* dmom_v_ham_grad_p[0]=0.0; */
+            /* dmom_v_ham_grad_p[1] = porosity; */
+            
+            /* if (use_pseudo_penalty <= 0) */
+            /* { */
               //u momentum Hamiltonian (advection)
-              mom_u_ham += rho * porosity * (u * grad_u[0] + v * grad_u[1]);
-              dmom_u_ham_grad_u[0] = rho * porosity * u;
-              dmom_u_ham_grad_u[1] = rho * porosity * v;
-              dmom_u_ham_u = rho * porosity * grad_u[0];
-              dmom_u_ham_v = rho * porosity * grad_u[1];
+              mom_u_ham += H_s*rho * porosity * (u * grad_u[0] + v * grad_u[1]);
+              dmom_u_ham_grad_u[0] = H_s*rho * porosity * u;
+              dmom_u_ham_grad_u[1] = H_s*rho * porosity * v;
+              dmom_u_ham_u = H_s*rho * porosity * grad_u[0];
+              dmom_u_ham_v = H_s*rho * porosity * grad_u[1];
 
               //v momentum Hamiltonian (advection)
-              mom_v_ham += rho * porosity * (u * grad_v[0] + v * grad_v[1]);
-              dmom_v_ham_grad_v[0] = rho * porosity * u;
-              dmom_v_ham_grad_v[1] = rho * porosity * v;
-              dmom_v_ham_u = rho * porosity * grad_v[0];
-              dmom_v_ham_v = rho * porosity * grad_v[1];
-            }
-            else if (use_pseudo_penalty == 1)
-            {
+              mom_v_ham += H_s*rho * porosity * (u * grad_v[0] + v * grad_v[1]);
+              dmom_v_ham_grad_v[0] = H_s*rho * porosity * u;
+              dmom_v_ham_grad_v[1] = H_s*rho * porosity * v;
+              dmom_v_ham_u = H_s*rho * porosity * grad_v[0];
+              dmom_v_ham_v = H_s*rho * porosity * grad_v[1];
+            /* } */
+            /* else if (use_pseudo_penalty == 1) */
+            /* { */
 
-              //u momentum Hamiltonian (advection)
-              mom_u_ham += in_fluid * rho * porosity * (u * grad_u[0] + v * grad_u[1]);
-              dmom_u_ham_grad_u[0] = in_fluid * rho * porosity * u;
-              dmom_u_ham_grad_u[1] = in_fluid * rho * porosity * v;
-              dmom_u_ham_u = in_fluid * rho * porosity * grad_u[0];
-              dmom_u_ham_v = in_fluid * rho * porosity * grad_u[1];
+            /*   //u momentum Hamiltonian (advection) */
+            /*   mom_u_ham += in_fluid * rho * porosity * (u * grad_u[0] + v * grad_u[1]); */
+            /*   dmom_u_ham_grad_u[0] = in_fluid * rho * porosity * u; */
+            /*   dmom_u_ham_grad_u[1] = in_fluid * rho * porosity * v; */
+            /*   dmom_u_ham_u = in_fluid * rho * porosity * grad_u[0]; */
+            /*   dmom_u_ham_v = in_fluid * rho * porosity * grad_u[1]; */
 
-              //v momentum Hamiltonian (advection)
-              mom_v_ham += in_fluid * rho * porosity * (u * grad_v[0] + v * grad_v[1]);
-              dmom_v_ham_grad_v[0] = in_fluid * rho * porosity * u;
-              dmom_v_ham_grad_v[1] = in_fluid * rho * porosity * v;
-              dmom_v_ham_u = in_fluid * rho * porosity * grad_v[0];
-              dmom_v_ham_v = in_fluid * rho * porosity * grad_v[1];
-            }
-            else if (use_pseudo_penalty == 2)
-            {
+            /*   //v momentum Hamiltonian (advection) */
+            /*   mom_v_ham += in_fluid * rho * porosity * (u * grad_v[0] + v * grad_v[1]); */
+            /*   dmom_v_ham_grad_v[0] = in_fluid * rho * porosity * u; */
+            /*   dmom_v_ham_grad_v[1] = in_fluid * rho * porosity * v; */
+            /*   dmom_v_ham_u = in_fluid * rho * porosity * grad_v[0]; */
+            /*   dmom_v_ham_v = in_fluid * rho * porosity * grad_v[1]; */
+            /* } */
+            /* else if (use_pseudo_penalty == 2) */
+            /* { */
 
-              //u momentum Hamiltonian (advection)
-              mom_u_ham += in_fluid * rho * porosity * (u_old * grad_u_old[0] + v * grad_u_old[1]);
-              dmom_u_ham_grad_u[0] = 0.0;
-              dmom_u_ham_grad_u[1] = 0.0;
-              dmom_u_ham_u = 0.0;
-              dmom_u_ham_v = 0.0;
+            /*   //u momentum Hamiltonian (advection) */
+            /*   mom_u_ham += in_fluid * rho * porosity * (u_old * grad_u_old[0] + v * grad_u_old[1]); */
+            /*   dmom_u_ham_grad_u[0] = 0.0; */
+            /*   dmom_u_ham_grad_u[1] = 0.0; */
+            /*   dmom_u_ham_u = 0.0; */
+            /*   dmom_u_ham_v = 0.0; */
 
-              //v momentum Hamiltonian (advection)
-              mom_v_ham += in_fluid * rho * porosity * (u_old * grad_v_old[0] + v_old * grad_v_old[1]);
-              dmom_v_ham_grad_v[0] = 0.0;
-              dmom_v_ham_grad_v[1] = 0.0;
-              dmom_v_ham_u = 0.0;
-              dmom_v_ham_v = 0.0;
-            }
-            else if (use_pseudo_penalty == 3)
-            {
+            /*   //v momentum Hamiltonian (advection) */
+            /*   mom_v_ham += in_fluid * rho * porosity * (u_old * grad_v_old[0] + v_old * grad_v_old[1]); */
+            /*   dmom_v_ham_grad_v[0] = 0.0; */
+            /*   dmom_v_ham_grad_v[1] = 0.0; */
+            /*   dmom_v_ham_u = 0.0; */
+            /*   dmom_v_ham_v = 0.0; */
+            /* } */
+            /* else if (use_pseudo_penalty == 3) */
+            /* { */
 
-              //u momentum Hamiltonian (advection)
-              mom_u_ham += 0.0;
-              dmom_u_ham_grad_u[0] = 0.0;
-              dmom_u_ham_grad_u[1] = 0.0;
-              dmom_u_ham_u = 0.0;
-              dmom_u_ham_v = 0.0;
+            /*   //u momentum Hamiltonian (advection) */
+            /*   mom_u_ham += 0.0; */
+            /*   dmom_u_ham_grad_u[0] = 0.0; */
+            /*   dmom_u_ham_grad_u[1] = 0.0; */
+            /*   dmom_u_ham_u = 0.0; */
+            /*   dmom_u_ham_v = 0.0; */
 
-              //v momentum Hamiltonian (advection)
-              mom_v_ham += 0.0;
-              dmom_v_ham_grad_v[0] = 0.0;
-              dmom_v_ham_grad_v[1] = 0.0;
-              dmom_v_ham_u = 0.0;
-              dmom_v_ham_v = 0.0;
-            }
+            /*   //v momentum Hamiltonian (advection) */
+            /*   mom_v_ham += 0.0; */
+            /*   dmom_v_ham_grad_v[0] = 0.0; */
+            /*   dmom_v_ham_grad_v[1] = 0.0; */
+            /*   dmom_v_ham_u = 0.0; */
+            /*   dmom_v_ham_v = 0.0; */
+            /* } */
           }
           else
           {
             //u momentum accumulation
             mom_u_acc=porosity*u;
             dmom_u_acc_u=porosity;
+            fluid_fac = porosity;
 
             //v momentum accumulation
             mom_v_acc=porosity*v;
@@ -1210,9 +1242,11 @@ namespace proteus
             double rel_vel_norm = sqrt((uStar - u_s) * (uStar - u_s) +
                                        (vStar - v_s) * (vStar - v_s) +
                                        (wStar - w_s) * (wStar - w_s));
-
-            double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
-            double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
+            /* double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty; */
+            /* double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm); */
+            double C_surf = mu * penalty;
+            //double C_vol = (alpha + beta * rel_vel_norm);
+            double C_vol = 0.0;
 
             C = (D_s * C_surf + ImH_s * C_vol);
             force_x = dV * D_s * (p * fluid_outward_normal[0]
@@ -1254,18 +1288,38 @@ namespace proteus
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
-            if(use_pseudo_penalty==-2)// not pseudo-penalty method == IBM
-              if (NONCONSERVATIVE_FORM > 0.0)
-                {
-                  mom_u_source += ImH_s*(ball_density[i]-rho)*acceleration[0];
-                  mom_v_source += ImH_s*(ball_density[i]-rho)*acceleration[1];
-                }
-              else
-                {
-                  mom_u_source += ImH_s*(ball_density[i]-rho)*acceleration[0]/rho;
-                  mom_v_source += ImH_s*(ball_density[i]-rho)*acceleration[1]/rho;
-                }
+            /* if(use_pseudo_penalty==-2)// not pseudo-penalty method == IBM */
+            /*   if (NONCONSERVATIVE_FORM > 0.0) */
+            /*     { */
+            /*       mom_u_source += ImH_s*(ball_density[i]-rho)*acceleration[0]; */
+            /*       mom_v_source += ImH_s*(ball_density[i]-rho)*acceleration[1]; */
+            /*     } */
+            /*   else */
+            /*     { */
+            /*       mom_u_source += ImH_s*(ball_density[i]-rho)*acceleration[0]/rho; */
+            /*       mom_v_source += ImH_s*(ball_density[i]-rho)*acceleration[1]/rho; */
+            /*     } */
             if (NONCONSERVATIVE_FORM > 0.0)
+            {
+              mom_u_ham -= D_s * porosity * mu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
+              dmom_u_ham_grad_u[0] -= D_s * porosity * mu * fluid_outward_normal[0];
+              dmom_u_ham_grad_u[1] -= D_s * porosity * mu * fluid_outward_normal[1];
+              
+              mom_v_ham -= D_s * porosity * mu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
+              dmom_v_ham_grad_v[0] -= D_s * porosity * mu * fluid_outward_normal[0];
+              dmom_v_ham_grad_v[1] -= D_s * porosity * mu * fluid_outward_normal[1];
+
+              mom_u_adv[0] += D_s * porosity * mu * fluid_outward_normal[0] * (u - u_s);
+              mom_u_adv[1] += D_s * porosity * mu * fluid_outward_normal[1] * (u - u_s);
+              dmom_u_adv_u[0] += D_s * porosity * mu * fluid_outward_normal[0];
+              dmom_u_adv_u[1] += D_s * porosity * mu * fluid_outward_normal[1];
+              
+              mom_v_adv[0] += D_s * porosity * mu * fluid_outward_normal[0] * (v - v_s);
+              mom_v_adv[1] += D_s * porosity * mu * fluid_outward_normal[1] * (v - v_s);
+              dmom_v_adv_v[0] += D_s * porosity * mu * fluid_outward_normal[0];
+              dmom_v_adv_v[1] += D_s * porosity * mu * fluid_outward_normal[1];
+            }
+            else
             {
               mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
               dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
@@ -1284,26 +1338,6 @@ namespace proteus
               mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
               dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
               dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
-            }
-            else
-            {
-              mom_u_ham -= D_s * porosity * nu/rho * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
-              dmom_u_ham_grad_u[0] -= D_s * porosity * nu/rho * fluid_outward_normal[0];
-              dmom_u_ham_grad_u[1] -= D_s * porosity * nu/rho * fluid_outward_normal[1];
-              
-              mom_v_ham -= D_s * porosity * nu/rho * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
-              dmom_v_ham_grad_v[0] -= D_s * porosity * nu/rho * fluid_outward_normal[0];
-              dmom_v_ham_grad_v[1] -= D_s * porosity * nu/rho * fluid_outward_normal[1];
-
-              mom_u_adv[0] += D_s * porosity * nu/rho * fluid_outward_normal[0] * (u - u_s);
-              mom_u_adv[1] += D_s * porosity * nu/rho * fluid_outward_normal[1] * (u - u_s);
-              dmom_u_adv_u[0] += D_s * porosity * nu/rho * fluid_outward_normal[0];
-              dmom_u_adv_u[1] += D_s * porosity * nu/rho * fluid_outward_normal[1];
-              
-              mom_v_adv[0] += D_s * porosity * nu/rho * fluid_outward_normal[0] * (v - v_s);
-              mom_v_adv[1] += D_s * porosity * nu/rho * fluid_outward_normal[1] * (v - v_s);
-              dmom_v_adv_v[0] += D_s * porosity * nu/rho * fluid_outward_normal[0];
-              dmom_v_adv_v[1] += D_s * porosity * nu/rho * fluid_outward_normal[1];
             }
         }
     }
@@ -1500,7 +1534,6 @@ namespace proteus
         oneByAbsdt =  fabs(dmt);
         tau_v = 1.0/(4.0*viscosity/(h*h) + 2.0*nrm_df/h + oneByAbsdt);
         tau_p = (4.0*viscosity + 2.0*nrm_df*h + oneByAbsdt*h*h)/pfac;
-        /* std::cout<<"tau_v "<<tau_v<<" tau_p "<<tau_p<<std::endl; */
       }
 
       inline
@@ -2206,6 +2239,10 @@ namespace proteus
                              double* ebqe_bc_w_ext,
                              double* ebqe_bc_flux_w_diff_ext,
                              double* q_x,
+                             double* q_u_0,
+                             double* q_u_1,
+                             double* q_u_2,
+                             double* q_u_3,
                              double* q_velocity,
                              double* ebqe_velocity,
                              double* flux,
@@ -2250,13 +2287,13 @@ namespace proteus
                              double* phi_solid_nodes,
                              double* distance_to_solids,
                              const int use_pseudo_penalty,
-                             bool useExact)
+                             bool useExact,
+                             double* isActiveDOF)
       {
         logEvent("Entered mprans calculateResidual",6);
         gf.useExact = useExact;
         gf_s.useExact = useExact;
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-        
         //
         //loop over elements to compute volume integrals and load them into element and global residual
         //
@@ -2273,6 +2310,7 @@ namespace proteus
               elementResidual_v[nDOF_v_test_element],
               velocityErrorElement[nDOF_v_test_element],
               eps_rho,eps_mu;
+            bool element_active=false;
             const double* elementResidual_w(NULL);
             double mesh_volume_conservation_element=0.0,
               mesh_volume_conservation_element_weak=0.0;
@@ -2522,6 +2560,9 @@ namespace proteus
                 //meanGrainSize = q_meanGrain[eN_k];
                 //
                 //save velocity at quadrature points for other models to use
+                q_u_0[eN_k]=p;
+                q_u_1[eN_k]=u;
+                q_u_2[eN_k]=v;
                 q_velocity[eN_k_nSpace+0]=u;
                 q_velocity[eN_k_nSpace+1]=v;
                 q_x[eN_k_3d + 0] = x;
@@ -2538,10 +2579,17 @@ namespace proteus
                   }
                 if (nParticles > 0)
                   phi_solid[eN_k] = distance_to_solids[eN_k];
+                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 //
                 //calculate pde coefficients at quadrature points
                 //
-                evaluateCoefficients(NONCONSERVATIVE_FORM,
+                double fluid_fac;
+                const double H_s = gf_s.H(particle_eps,phi_solid[eN_k]);
+                if ( H_s != 0.0)
+                  element_active=true;
+                evaluateCoefficients(fluid_fac,
+                                     H_s,
+                                     NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
                                      sigma,
@@ -2675,7 +2723,6 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
 
-                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 if(nParticles > 0)
                   updateSolidParticleTerms(NONCONSERVATIVE_FORM,
                                            eN < nElements_owned,
@@ -2913,10 +2960,11 @@ namespace proteus
                 //calculate tau and tau*Res
                 //add contributions from mass and source terms
                 double tmpR=dmom_u_acc_u_t + dmom_u_source[0];
+
                 calculateSubgridError_tau(hFactor,
                                           elementDiameter[eN],
                                           tmpR,//dmom_u_acc_u_t,
-                                          dmom_u_acc_u,
+                                          fluid_fac,//dmom_u_acc_u,
                                           mv_tau,//dmom_adv_sge,
                                           mom_uu_diff_ten[1],
                                           dmom_u_ham_grad_p[0],
@@ -2936,7 +2984,16 @@ namespace proteus
 
                 tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
                 tau_p = useMetrics*tau_p1+(1.0-useMetrics)*tau_p0;
-
+                if (H_s > 1.0e-8)
+                  {
+                    tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
+                    tau_p = useMetrics*tau_p1+(1.0-useMetrics)*tau_p0;
+                  }
+                else
+                  {
+                    tau_v = 0.0;
+                    tau_p = 0.0;
+                  }
                 calculateSubgridError_tauRes(tau_p,
                                              tau_v,
                                              pdeResidual_p,
@@ -3055,6 +3112,8 @@ namespace proteus
                 elementResidual_p_save[eN_i] +=  elementResidual_p[i];
                 mesh_volume_conservation_element_weak += elementResidual_mesh[i];
                 globalResidual[offset_p+stride_p*rp_l2g[eN_i]]+=elementResidual_p[i];
+                if (element_active)
+                  isActiveDOF[offset_p+stride_p*rp_l2g[eN_i]] = 1.0;
               }
             for(int i=0;i<nDOF_v_test_element;i++)
               {
@@ -3062,6 +3121,12 @@ namespace proteus
 
                 globalResidual[offset_u+stride_u*rvel_l2g[eN_i]]+=elementResidual_u[i];
                 globalResidual[offset_v+stride_v*rvel_l2g[eN_i]]+=elementResidual_v[i];
+
+                if (element_active)
+                  {
+                    isActiveDOF[offset_u+stride_u*rvel_l2g[eN_i]] = 1.0;
+                    isActiveDOF[offset_v+stride_v*rvel_l2g[eN_i]] = 1.0;
+                  }
               }//i
             mesh_volume_conservation += mesh_volume_conservation_element;
             mesh_volume_conservation_weak += mesh_volume_conservation_element_weak;
@@ -3344,7 +3409,11 @@ namespace proteus
                     get_distance_to_ball(nParticles, ball_center, ball_radius,x_ext,y_ext,z_ext,ebq_global_phi_s[ebNE_kb]);
                   }
                 //else ebq_global_phi_s[ebNE_kb] is computed in Prestep
-                evaluateCoefficients(NONCONSERVATIVE_FORM,
+                double fluid_fac;
+                const double H_s=1.0;
+                evaluateCoefficients(fluid_fac,
+                                     H_s,
+                                     NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
                                      sigma,
@@ -3441,7 +3510,9 @@ namespace proteus
                                      0.0,
                                      0.0,
                                      0.0);
-                evaluateCoefficients(NONCONSERVATIVE_FORM,
+                evaluateCoefficients(fluid_fac,
+                                     H_s,
+                                     NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
                                      sigma,
@@ -4369,7 +4440,12 @@ namespace proteus
                 //
                 double eddy_viscosity(0.);//not really interested in saving eddy_viscosity in jacobian
                 double rho;
-                evaluateCoefficients(NONCONSERVATIVE_FORM,
+                double fluid_fac;
+                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                const double H_s = gf_s.H(particle_eps, phi_solid[eN_k]);
+                evaluateCoefficients(fluid_fac,
+                                     H_s,
+                                     NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
                                      sigma,
@@ -4503,7 +4579,6 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
 
-                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 if(nParticles > 0)
                   updateSolidParticleTerms(NONCONSERVATIVE_FORM,
                                            eN < nElements_owned,
@@ -4752,7 +4827,7 @@ namespace proteus
                 calculateSubgridError_tau(hFactor,
                                           elementDiameter[eN],
                                           tmpR,//dmom_u_acc_u_t,
-                                          dmom_u_acc_u,
+                                          fluid_fac,//dmom_u_acc_u,
                                           mv_tau,//dmom_adv_sge,
                                           mom_uu_diff_ten[1],
                                           dmom_u_ham_grad_p[0],
@@ -4770,10 +4845,20 @@ namespace proteus
                                           tau_p1,
                                           q_cfl[eN_k]);
 
-
                 tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
                 tau_p = useMetrics*tau_p1+(1.0-useMetrics)*tau_p0;
-
+                
+                if (H_s > 1.0e-8)
+                  {
+                    tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
+                    tau_p = useMetrics*tau_p1+(1.0-useMetrics)*tau_p0;
+                  }
+                else
+                  {
+                    tau_v = 0.0;
+                    tau_p = 0.0;
+                  }
+                
                 calculateSubgridError_tauRes(tau_p,
                                              tau_v,
                                              pdeResidual_p,
@@ -5246,7 +5331,11 @@ namespace proteus
                   get_distance_to_ball(nParticles, ball_center, ball_radius,x_ext,y_ext,z_ext,ebq_global_phi_s[ebNE_kb]);
                 }
                 //else distance_to_solids is updated in PreStep
-                evaluateCoefficients(NONCONSERVATIVE_FORM,
+                double fluid_fac;
+                const double H_s = 1.0;
+                evaluateCoefficients(fluid_fac,
+                                     H_s,
+                                     NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
                                      sigma,
@@ -5343,7 +5432,9 @@ namespace proteus
                                      0.0,
                                      0.0,
                                      0.0);
-                evaluateCoefficients(NONCONSERVATIVE_FORM,
+                evaluateCoefficients(fluid_fac,
+                                     H_s,
+                                     NONCONSERVATIVE_FORM,
                                      eps_rho,
                                      eps_mu,
                                      sigma,
