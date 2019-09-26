@@ -223,7 +223,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_nitsche=1.0,
                  nullSpace='NoNullSpace',
                  useExact=False):
-        self.useExact=False
+        self.useExact=useExact
         self.use_pseudo_penalty = 0
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
@@ -746,15 +746,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             for i in range(self.nParticles):
                 vel = lambda x: self.particle_velocityList[i](t, x)
                 sdf = lambda x: self.particle_sdfList[i](t, x)
-
                 for j in range(self.mesh.nodeArray.shape[0]):
                     sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
-                    if (sdf_at_node < self.phi_s[j]):
+                    if (abs(sdf_at_node) < abs(self.phi_s[j])):
                         self.phi_s[j] = sdf_at_node
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
-                        self.particle_velocities[i, eN, k] = vel(self.model.q['x'][eN, k])
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k,:] = sdf(self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k,:] = vel(self.model.q['x'][eN, k])
                         if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
                             self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
                 for ebN in range(self.model.ebq_global['x'].shape[0]):
@@ -1027,6 +1026,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global[('totalFlux', 0)] = numpy.zeros((self.mesh.nElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebq_global[('velocityAverage', 0)] = numpy.zeros((self.mesh.nElementBoundaries_global,
                                                                self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
+        self.q[('u', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 2)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 3)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -1481,6 +1481,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                         self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
         r.fill(0.0)
+        try:
+            self.isActiveDOF[:] = 0.0
+        except AttributeError:
+            self.isActiveDOF = np.zeros_like(r)
         self.Ct_sge = 4.0
         self.Cd_sge = 36.0
         self.coefficients.wettedAreas[:] = 0.0
@@ -1665,6 +1669,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.numericalFlux.ebqe[('u', 3)],
                                       self.ebqe[('diffusiveFlux_bc', 3, 3)],
                                       self.q['x'],
+                                      self.q[('u', 0)],
+                                      self.q[('u', 1)],
+                                      self.q[('u', 2)],
+                                      self.q[('u', 3)],
                                       self.q[('velocity', 0)],
                                       self.ebqe[('velocity', 0)],
                                       self.ebq_global[('totalFlux', 0)],
@@ -1709,7 +1717,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.phi_s,
                                       self.coefficients.phisField,
                                       self.coefficients.use_pseudo_penalty,
-                                      self.coefficients.useExact)
+                                      self.coefficients.useExact,
+                                      self.isActiveDOF)
+        r*=self.isActiveDOF
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         
@@ -1998,6 +2008,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         else:
                             self.nzval[i] = 0.0
                             # print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+        for global_dofN in np.where(self.isActiveDOF==0.0)[0]:
+            for i in range(
+                    self.rowptr[global_dofN],
+                    self.rowptr[global_dofN + 1]):
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                else:
+                    self.nzval[i] = 0.0
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1

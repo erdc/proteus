@@ -35,30 +35,33 @@ opts = Context.Options([
 #Physics#
 #########
 p = Physics_base(nd = opts.nd,
-                 name="duct_physics")
+                 name="ductib_physics")
 
-p.L=(4.0, 1.0, 1.0)
+extra=0.25
+p.L=(4.0, 1.0, 1.0+2*extra)
+p.x0=(0.0, 0.0, -extra)
 if p.nd == 2:
-    p.L=(4.0, 1.0)
-p.domain = Domain.RectangularDomain(p.L)
+    p.L=(4.0, 1.0+2*extra)
+    p.x0=(0.0, -extra)
+p.domain = Domain.RectangularDomain(p.L,p.x0)
 boundaryTags = p.domain.boundaryTags
 if not opts.grid:
-    p.domain.writePoly("duct")
+    p.domain.writePoly("ductib")
     if p.nd == 3:
         p.domain = Domain.PiecewiseLinearComplexDomain()
     elif p.nd == 2:
         p.domain = Domain.PlanarStraightLineGraphDomain()
-    p.domain.readPoly("duct")
+    p.domain.readPoly("ductib")
 
 nu = 1.004e-6
 rho = 998.2
 
 if p.nd == 3:
-    h = p.L[2]
-    umax = opts.Re*nu/p.L[2]
+    h = p.L[2] - 2*extra
+    umax = opts.Re*nu/h
 else:
-    h = p.L[1]
-    umax = opts.Re*nu/p.L[1]
+    h = p.L[1] - 2*extra
+    umax = opts.Re*nu/h
 p.T = 5.0*(p.L[0]/umax)
 mu = nu*rho
 G = (umax*8.0*mu)/(h**2)
@@ -75,8 +78,25 @@ if opts.periodic:
 else:
     nullSpace="NoNullSpace"
 
+bTop = h
+bBottom = 0.0
+def sdf(t,x):
+    phiTop = bTop - x[1]
+    phiBottom = x[1] - bBottom
+    if phiTop < phiBottom:
+        return phiTop, (0.,-1.,0.)
+    else:
+        return phiBottom, (0.,1.,0.)
+def vel(t,x):
+    return (0.,0.,0.)
+sdfList=[sdf]
+velList=[vel]
+#sdfList = [lambda t,x: (bTop-x[1], (0.,-1.,0.)),
+#           lambda t,x: (x[1] - bBottom, (0.,1.,0.))] 
+#velList = [lambda t,x: (0.0,0.0,0.0),
+#           lambda t,x: (0.0,0.0,0.0)]
 
-p.coefficients = RANS2P.Coefficients(epsFact=0.0,
+p.coefficients = RANS2P.Coefficients(epsFact=1.5,
                                      sigma=0.0,
                                      rho_0=rho,nu_0=nu,
                                      rho_1=rho,nu_1=nu,
@@ -87,7 +107,7 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      LS_model=None,
                                      Closure_0_model=None,
                                      Closure_1_model=None,
-                                     epsFact_density=0.0,
+                                     epsFact_density=1.5,
                                      stokes=False,
                                      useVF=0.0,
                                      useRBLES=0.0,
@@ -100,7 +120,16 @@ p.coefficients = RANS2P.Coefficients(epsFact=0.0,
                                      MOMENTUM_SGE=0.0 if opts.useTaylorHood else 1.0,
                                      PRESSURE_SGE=0.0 if opts.useTaylorHood else 1.0,
                                      VELOCITY_SGE=0.0 if opts.useTaylorHood else 1.0,
-                                     nullSpace=nullSpace)
+                                     nullSpace=nullSpace,
+                                     particle_sdfList=sdfList,
+                                     particle_velocityList=velList,
+                                     nParticles=1,
+                                     particle_epsFact=1.5,
+                                     particle_alpha=0.0,
+                                     particle_beta=0.0,
+                                     particle_penalty_constant=10.0,
+                                     use_ball_as_particle=0,
+                                     useExact=True)
 
 eps=1.0e-8
 if opts.periodic:
@@ -150,17 +179,27 @@ class uRot(AnalyticalSolutions.SteadyState):
         pass
     def uOfX(self, x):
         if p.nd==3:
-            return uSol2.uOfX([x[0],x[2],x[1]])
+            if x[2] < 0.0 or x[2] > h:
+                return 0.0
+            else:
+                return uSol2.uOfX([x[0],x[2],x[1]])
         else:
-            return uSol2.uOfX(x)
+            if x[1] < 0.0 or x[1] > h:
+                return 0.0
+            else:
+                return uSol2.uOfX(x)
 
 class vRot(AnalyticalSolutions.SteadyState):
     def __init__(self):
         pass
     def uOfX(self, x):
         if p.nd==3:
+            if x[2] < 0.0 or x[2] > h:
+                return 0.0
             return vSol2.uOfX([x[0],x[2],x[1]])
         else:
+            if x[1] < 0.0 or x[1] > h:
+                return 0.0
             return vSol2.uOfX(x)
 
 pSol = pRot()
@@ -473,8 +512,8 @@ if opts.spaceOrder == 1:
                            2:FemTools.C0_AffineLinearOnSimplexWithNodalBasis}
             if p.nd == 3:
                 n.femSpaces[3] = FemTools.C0_AffineLinearOnSimplexWithNodalBasis
-            n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,3)
-            n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
+            n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,5)
+            n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,5)
     else:
         if opts.useTaylorHood:
             n.femSpaces = {0:FemTools.C0_AffineLinearOnCubeWithNodalBasis,
@@ -496,8 +535,8 @@ if opts.spaceOrder == 1:
                 n.femSpaces[3] = FemTools.C0_AffineLinearOnCubeWithNodalBasis
             else:
                 n.quad = True
-            n.elementQuadrature = Quadrature.CubeGaussQuadrature(p.nd,2)
-            n.elementBoundaryQuadrature = Quadrature.CubeGaussQuadrature(p.nd-1,2)
+            n.elementQuadrature = Quadrature.CubeGaussQuadrature(p.nd,5)
+            n.elementBoundaryQuadrature = Quadrature.CubeGaussQuadrature(p.nd-1,5)
 
 elif opts.spaceOrder == 2:    
     if opts.triangles:
@@ -618,7 +657,7 @@ else:
 if opts.useTaylorHood:
     space_name+="TH"
     
-name = "duct{0}t{1}{2}d{3}he{4}".format(space_name,
+name = "ductib{0}t{1}{2}d{3}he{4}".format(space_name,
                                         opts.timeOrder,
                                         opts.nd,
                                         mesh_name,

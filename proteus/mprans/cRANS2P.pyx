@@ -164,6 +164,10 @@ cdef extern from "RANS2P.h" namespace "proteus":
                                double * ebqe_bc_w_ext,
                                double * ebqe_bc_flux_w_diff_ext,
                                double * q_x,
+                               double * q_u_0,
+                               double * q_u_1,
+                               double * q_u_2,
+                               double * q_u_3,
                                double * q_velocity,
                                double * ebqe_velocity,
                                double * flux,
@@ -208,7 +212,8 @@ cdef extern from "RANS2P.h" namespace "proteus":
                                double* phi_solid_nodes,
                                double* distance_to_solids,
                                int use_pseudo_penalty,
-                               bool useExact)
+                               bool useExact,
+                               double* isActiveDOF)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
                                double MOMENTUM_SGE,
                                double PRESSURE_SGE,
@@ -720,6 +725,10 @@ cdef class cRANS2P_base:
                           numpy.ndarray ebqe_bc_w_ext,
                           numpy.ndarray ebqe_bc_flux_w_diff_ext,
                           numpy.ndarray q_x,
+                          numpy.ndarray q_u_0,
+                          numpy.ndarray q_u_1,
+                          numpy.ndarray q_u_2,
+                          numpy.ndarray q_u_3,
                           numpy.ndarray q_velocity,
                           numpy.ndarray ebqe_velocity,
                           numpy.ndarray flux,
@@ -764,7 +773,8 @@ cdef class cRANS2P_base:
                           numpy.ndarray phi_solid_nodes,
                           numpy.ndarray distance_to_solids,
                           int use_pseudo_penalty,
-                          bool useExact):
+                          bool useExact,
+                          numpy.ndarray isActiveDOF):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
                                        MOMENTUM_SGE,
                                        PRESSURE_SGE,
@@ -921,6 +931,10 @@ cdef class cRANS2P_base:
                                        < double * > ebqe_bc_w_ext.data,
                                        < double * > ebqe_bc_flux_w_diff_ext.data,
                                        < double * > q_x.data,
+                                       < double * > q_u_0.data,
+                                       < double * > q_u_1.data,
+                                       < double * > q_u_2.data,
+                                       < double * > q_u_3.data,
                                        < double * > q_velocity.data,
                                        < double * > ebqe_velocity.data,
                                        < double * > flux.data,
@@ -965,7 +979,8 @@ cdef class cRANS2P_base:
                                        < double * > phi_solid_nodes.data,
                                        < double * > distance_to_solids.data,
                                        use_pseudo_penalty,
-                                       useExact)
+                                       useExact,
+                                       < double * > isActiveDOF.data)
 
     def calculateJacobian(self,
                           double NONCONSERVATIVE_FORM,
