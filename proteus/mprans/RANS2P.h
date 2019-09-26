@@ -182,6 +182,10 @@ namespace proteus
                                    xt::pyarray<double> &ebqe_bc_w_ext,
                                    xt::pyarray<double> &ebqe_bc_flux_w_diff_ext,
                                    xt::pyarray<double> &q_x,
+                                   xt::pyarray<double> &q_u_0,
+                                   xt::pyarray<double> &q_u_1,
+                                   xt::pyarray<double> &q_u_2,
+                                   xt::pyarray<double> &q_u_3,
                                    xt::pyarray<double> &q_velocity,
                                    xt::pyarray<double> &ebqe_velocity,
                                    xt::pyarray<double> &flux,
@@ -226,7 +230,8 @@ namespace proteus
                                    xt::pyarray<double>& phi_solid_nodes,
                                    xt::pyarray<double>& distance_to_solids,
                                    const int use_pseudo_penalty,
-                                   bool useExact) = 0;
+                                   bool useExact,
+                                   double* isActiveDOF) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -2559,6 +2564,10 @@ namespace proteus
                              xt::pyarray<double>& ebqe_bc_w_ext,
                              xt::pyarray<double>& ebqe_bc_flux_w_diff_ext,
                              xt::pyarray<double>& q_x,
+                             xt::pyarray<double> &q_u_0,
+                             xt::pyarray<double> &q_u_1,
+                             xt::pyarray<double> &q_u_2,
+                             xt::pyarray<double> &q_u_3,
                              xt::pyarray<double>& q_velocity,
                              xt::pyarray<double>& ebqe_velocity,
                              xt::pyarray<double>& flux,
@@ -2603,7 +2612,8 @@ namespace proteus
                              xt::pyarray<double>& phi_solid_nodes,
                              xt::pyarray<double>& distance_to_solids,
                              const int use_pseudo_penalty,
-                             bool useExact)
+                             bool useExact,
+                             double* isActiveDOF)
       {
         logEvent("Entered mprans calculateResidual",6);
         gf.useExact = useExact;
@@ -2871,6 +2881,10 @@ namespace proteus
                 //meanGrainSize = q_meanGrain[eN_k];
                 //
                 //save velocity at quadrature points for other models to use
+                q_u_0.data()[eN_k]=p;
+                q_u_1.data()[eN_k]=u;
+                q_u_2.data()[eN_k]=v;
+                q_u_3.data()[eN_k]=2;
                 q_velocity.data()[eN_k_nSpace+0]=u;
                 q_velocity.data()[eN_k_nSpace+1]=v;
                 q_velocity.data()[eN_k_nSpace+2]=w;

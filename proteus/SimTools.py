@@ -13,6 +13,7 @@ from past.utils import old_div
 from builtins import object
 from . import Norms
 import numpy
+import numpy as np
 from . import FemTools
 from .Profiling import logEvent
 
@@ -722,7 +723,7 @@ class SimulationProcessor(object):
                         velproj[ci] = projectVelocityToFinestLevelNC(mlvt,il,ci)
 
                 # CALCULATE THE L2 ERROR IN PRESSURE 
-                if 'p' in self.flags['errorQuantities']:                            
+                if 'p' in self.flags['errorQuantities'] and hasattr(m,'analyticalPressureSolution'):
                     assert hasattr(m,'analyticalPressureSolution'), "analyticalPressureSolution must be provided"
                     # COMPUTE MEAN VALUE OF PRESSURE
                     pressureAnalyticalSolution = m.analyticalPressureSolution[0]
@@ -767,15 +768,14 @@ class SimulationProcessor(object):
                             if hasAnalyticalSolution[ci]:
                                 err = Norms.L2errorSFEMvsAF2(self.analyticalSolution[ci],
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             list(m.elementQuadratureWeights.values())[0],
+                                                             m.q['dV'][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             np.ones_like(list(m.elementQuadratureWeights.values())[0]),
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              T=tsim)
-
                                 exa = Norms.L2errorSFEMvsAF2(zeroFunction(),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             list(m.elementQuadratureWeights.values())[0],
+                                                             m.q['dV'][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             np.ones_like(list(m.elementQuadratureWeights.values())[0]),
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              T=tsim)
                             else:
