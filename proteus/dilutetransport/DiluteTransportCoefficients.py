@@ -4,7 +4,7 @@ import numpy as np
 
 class Transport_Dilute_Dispersion(LinearVADR_ConstantCoefficients):
 	from proteus.dilutetransport.cdilutetransportCoefficients import DiluteDispersionEvaluate
-	def __init__(self, nc=1, poro = 0, diff=0, alpha_L=0, diff_ModelId = None, adv_ModelId = None, mom_ModelId = None):
+	def __init__(self, nc=1, poro = 0, diff=0, alpha_L=0, diff_ModelId = None, adv_ModelId = None, mom_ModelId = None, adv_ModelId2 = None, Alt_Split = False):
 		mass={}
 		advection={}
 		diffusion={}
@@ -25,6 +25,9 @@ class Transport_Dilute_Dispersion(LinearVADR_ConstantCoefficients):
 		self.adv_ModelId  = adv_ModelId
 		self.diff_ModelId = diff_ModelId
 		self.mom_ModelId  = mom_ModelId
+		self.Alt_Split = Alt_Split
+		if self.Alt_Split:
+			self.adv_ModelId2 = adv_ModelId2
 		self.variableNames=['u_diff']
 		self.nd = 1
 
@@ -32,6 +35,8 @@ class Transport_Dilute_Dispersion(LinearVADR_ConstantCoefficients):
 		self.mom_Model = modelList[self.mom_ModelId]
 		self.adv_Model = modelList[self.adv_ModelId]
 		self.diff_Model = modelList[self.diff_ModelId]
+		if self.Alt_Split:
+			self.adv_Model2 = modelList[self.adv_ModelId2]
 		self.q_vel  = self.mom_Model.q[('velocity',0)]/self.poro
 		self.ebqe_vel = self.mom_Model.ebqe[('velocity',0)]/self.poro
 		if self.mom_Model.ebq.has_key(('velocity',0)):
@@ -55,16 +60,14 @@ class Transport_Dilute_Dispersion(LinearVADR_ConstantCoefficients):
 		self.ebqe_vel = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
 
  	def preStep(self,t,firstStep=True):
-# 		#import pdb; pdb.set_trace()
- 		self.diff_Model.timeIntegration.m_tmp = self.adv_Model.timeIntegration.m_tmp
- 		self.diff_Model.timeIntegration.m_last = self.adv_Model.timeIntegration.m_tmp
-		self.diff_Model.u[0].dof = self.adv_Model.u[0].dof
+ 		#import pdb; pdb.set_trace()
+		self.diff_Model.u[0].dof[:] = self.adv_Model.u[0].dof[:]
  		self.diff_Model.calculateCoefficients()
  		self.diff_Model.calculateElementResidual()
  		self.diff_Model.timeIntegration.updateTimeHistory(resetFromDOF=True)
  		self.diff_Model.timeIntegration.resetTimeHistory(resetFromDOF=True)
  		self.diff_Model.updateTimeHistory(t,resetFromDOF=True)
- 		copyInstructions = {'copy_uList':True,'uList_model':self.adv_ModelId}
+ 		copyInstructions = {'copy_uList':True,'uList_model':self.diff_ModelId}
  		copyInstructions = {'reset_uList':True}
  		return copyInstructions
 
@@ -94,7 +97,7 @@ class Transport_Dilute_Dispersion(LinearVADR_ConstantCoefficients):
 
 class Porous_Media_Flow(TC_base):
 	from proteus.dilutetransport.cdilutetransportCoefficients import ConMassFluidEvaluate
-	def __init__(self,nc=1,nd=1,diff_ModelId = None, adv_ModelId = None, mom_ModelId = None, K = 0.0 , grav = -980., L = 0):
+	def __init__(self,nc=1,nd=1,diff_ModelId = None, adv_ModelId = None, mom_ModelId = None, adv_ModelId2 = None, Alt_Split = False, K = 0.0 , grav = -980., L = 0):
 		mass={}
 		advection={}
 		diffusion={}
@@ -118,6 +121,9 @@ class Porous_Media_Flow(TC_base):
 		self.adv_ModelId  = adv_ModelId
 		self.diff_ModelId = diff_ModelId
 		self.mom_ModelId  = mom_ModelId
+		self.Alt_Split = Alt_Split
+		if self.Alt_Split:
+			self.adv_ModelId2 = adv_ModelId2
 		self.K = K
 		self.grav = grav
 		self.L = L
@@ -128,14 +134,25 @@ class Porous_Media_Flow(TC_base):
 		if (self.adv_ModelId is not None):
 			self.adv_Model = modelList[self.adv_ModelId]
 		self.diff_Model = modelList[self.diff_ModelId]
-		self.q_c  = self.diff_Model.q[('u',0)]
-		self.ebqe_c = self.diff_Model.ebqe[('u',0)]
-		if self.diff_Model.phi_ip.has_key(('u',0)):
-			self.cip_c = self.diff_Model.phi_ip[('u',0)]
-		if self.diff_Model.ebq.has_key(('u',0)):
-			self.ebq_c = self.diff_Model.ebq[('u',0)]
-		if self.diff_Model.ebq_global.has_key(('u',0)):
-			self.ebq_global_c = self.diff_Model.ebq_global[('u',0)]
+		if self.Alt_Split:
+			self.adv_Model2 = modelList[self.adv_ModelId2]
+			self.q_c  = self.adv_Model2.q[('u',0)]
+			self.ebqe_c = self.adv_Model2.ebqe[('u',0)]
+			if self.adv_Model2.phi_ip.has_key(('u',0)):
+				self.cip_c = self.adv_Model2.phi_ip[('u',0)]
+			if self.adv_Model2.ebq.has_key(('u',0)):
+				self.ebq_c = self.adv_Model2.ebq[('u',0)]
+			if self.adv_Model2.ebq_global.has_key(('u',0)):
+				self.ebq_global_c = self.adv_Model2.ebq_global[('u',0)]
+		else:
+			self.q_c  = self.diff_Model.q[('u',0)]
+			self.ebqe_c = self.diff_Model.ebqe[('u',0)]
+			if self.diff_Model.phi_ip.has_key(('u',0)):
+				self.cip_c = self.diff_Model.phi_ip[('u',0)]
+			if self.diff_Model.ebq.has_key(('u',0)):
+				self.ebq_c = self.diff_Model.ebq[('u',0)]
+			if self.diff_Model.ebq_global.has_key(('u',0)):
+				self.ebq_global_c = self.diff_Model.ebq_global[('u',0)]
 
 	def initializeElementQuadrature(self,t,cq):
 		self.q_c = np.zeros(cq[('u',0)].shape,'d')
@@ -152,6 +169,10 @@ class Porous_Media_Flow(TC_base):
 
 	def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
 		self.ebqe_c = np.zeros(cebqe[('u',0)].shape,'d')
+
+
+#	def preStep(self,t,firstStep=False):
+#		import pdb; pdb.set_trace()
 
 	def evaluate(self,t,c):
 		if c[('u',0)].shape == self.diff_Model.q[('u',0)].shape:

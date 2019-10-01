@@ -3189,7 +3189,7 @@ class ParametricFiniteElementSpace:
                                grad_vArray):
         ''' This function calculates the BasisGradientValues for calculations on the reference element
             xiArray (input)               - a list of quadrature points (x,y,z) in 2D case, z = 0
-            inverseJacobianArray (input)  - values of the inverseJacobian matrix used in the affine transformation from 
+            inverseJacobianArray (input)  - values of the inverseJacobian matrix used in the affine transformation from
                                             the physical domain to the reference element
             grad_vArray (output)          - gradient values of basis functions on reference triangle, adjusted for transformation
                                             from physical domain
@@ -3267,7 +3267,7 @@ class ParametricFiniteElementSpace:
                             vArray):
         '''
         This function calculates the basis function values on the trace of the element boundaries.
-        permutations (input)    - 
+        permutations (input)    -
         xiArray (input)         - a list of the element boundary quarature points mapped from the physical domain to the reference triangle.
         vArray (output)         - the vector to store the basis function trace values on the reference triangle
         '''
@@ -3630,7 +3630,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                         permute = np.argsort(self.mesh.globalMesh.nodeNumbering_subdomain2global)
                         u.dof[permute] = ar.hdfFile["/"+u.name+"_t"+str(tCount)][self.mesh.globalMesh.nodeNumbering_subdomain2global[permute].tolist()]
                         #faster way
-                        #u.dof[:] = ar.hdfFile["/"+u.name+"_t"+str(tCount)].value[self.mesh.globalMesh.nodeNumbering_subdomain2global]                        
+                        #u.dof[:] = ar.hdfFile["/"+u.name+"_t"+str(tCount)].value[self.mesh.globalMesh.nodeNumbering_subdomain2global]
                     else:
                         u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)]
                 else:

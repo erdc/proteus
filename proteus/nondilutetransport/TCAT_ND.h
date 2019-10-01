@@ -2,7 +2,7 @@ struct TCAT_var
 {
 	double T = 298.15; // Temperature in Kelvin
 	double R = 8.314e+07; //Universal Gas Constant
-	double MW_a = 199.88; // MW CaBr_2	
+	double MW_a = 199.88; // MW CaBr_2
 	double MW_b = 18.015; // MW Water
 	double poro;
 	double perm;

@@ -70,11 +70,11 @@ void DiluteDispersionEvaluate(const int nPoints,
       density = den(0.0);
       mu = visc(0.0);
 
-      m[k] = u[k]*poro;
-      dm[k] = poro;
+      m[k] = u[k];
+      dm[k] = 1.;
 
       for (I=0;I<nSpace;I++){
-          a[k*nSpace2+I*nSpace+I] = poro*(diff+alpha_L*velocity[k*nSpace+I]);
+          a[k*nSpace2+I*nSpace+I] = (diff+alpha_L*velocity[k*nSpace+I]);
 	  }
    }
 }
@@ -104,13 +104,15 @@ void DiluteEvaluate(const int nPoints,
       density = den(0.0);
       mu = visc(0.0);
 
-      m[k] = u[k]*poro;
-      dm[k] = poro;
-      f[k] = poro*velocity[k]*u[k];
-      df[k] = poro*velocity[k];
+      m[k] = u[k];
+      dm[k] = 1.;
+      f[k] = velocity[k]*u[k];
+      df[k] = velocity[k];
+
+      //printf("%e \n",velocity[k]);
 
       for (I=0;I<nSpace;I++){
-          a[k*nSpace2+I*nSpace+I] = poro*(diff+alpha_L*velocity[k*nSpace+I]);
+          a[k*nSpace2+I*nSpace+I] = diff+alpha_L*velocity[k*nSpace+I];
 	  }
    }
 }

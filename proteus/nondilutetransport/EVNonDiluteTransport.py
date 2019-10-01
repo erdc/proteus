@@ -277,7 +277,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  diff = 1.0,
                  alpha_L = 1.0,
                  beta1 = 0.0,
-                 beta2 = 0.0):
+                 beta2 = 0.0,
+                 mass_in = 0.01,
+                 Alt_Split = False):
 
         self.useMetrics = useMetrics
         self.variableNames=['tim']
@@ -333,7 +335,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.alpha_L = alpha_L
         self.beta1 = beta1
         self.beta2 = beta2
+        self.mass_in = mass_in
         self.entropy = None
+        self.Alt_Split = Alt_Split
+        self.ent_time_old = None
+        self.ent_time = None
 
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -695,6 +701,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('advectiveFlux_bc_flag',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
         self.ebqe[('advectiveFlux_bc',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('advectiveFlux',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+
+        #TIM
+        self.ebq[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.phi_ip[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[0]),'d')
         # mql. Allow the user to provide functions to define the velocity field
         self.hasVelocityFieldAsFunction = False
         if ('velocityFieldAsFunction') in dir (options):
@@ -858,6 +868,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
 
         self.entropy = numpy.zeros( len(self.mesh.nodeArray) ,'d')
+        self.ent_time_old = numpy.zeros( len(self.mesh.nodeArray) ,'d')
+        self.ent_time = numpy.zeros( len(self.mesh.nodeArray) ,'d')
 
 
 
@@ -866,6 +878,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #import pdb; pdb.set_trace()
         MassMatrix = MassMatrix/self.timeIntegration.dt
         limited_solution = numpy.zeros(self.u[0].dof.shape)
+        old_solution = numpy.zeros(self.u[0].dof.shape)
+        if self.coefficients.Alt_Split:
+            if (self.coefficients.variableNames[0] == 'u_adv'):
+                old_solution = self.coefficients.adv_Model.u_dof_old[:]
+            elif (self.coefficients.variableNames[0] == 'u_adv2'):
+                old_solution = self.coefficients.adv_Model2.u_dof_old[:]
+        else:
+            old_solution =  self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage]
         self.evnondilutetransport.FCTStep(
                          self.nnz, #number of non zero entries
                          len(rowptr)-1, #number of DOFs
@@ -912,21 +932,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
 
-    def den(self,u):
-         a0 = 0.9971
-         a1 = 0.83898
-         a2 = 0.48132
-         a3 = 0.86154
-         d = a0 + a1*u + a2*u*u + a3*u*u*u;
-         return d
-
-    def d_den(self,u):
-         a0 = 0.9971
-         a1 = 0.83898
-         a2 = 0.48132
-         a3 = 0.86154
-         d = a1 + 2.*a2*u + 3.*a3*u*u;
-         return d
 
     def getResidual(self,u,r):
         import pdb
@@ -1161,6 +1166,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateResidual = self.evnondilutetransport.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.evnondilutetransport.calculateMassMatrix
+
+        if self.coefficients.u_vel_norm is None:
+            self.coefficients.u_vel_norm = np.copy(self.u_dof_old)
+
         self.calculateResidual(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1267,13 +1276,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.alpha_L,
             self.coefficients.beta1,
             self.coefficients.beta2,
+            self.coefficients.mass_in,
             self.coefficients.mom_Model.u[0].dof,
+            self.coefficients.mom_Model.q[('grad(u)',0)],
             self.entropy,
-            self.coefficients.diff_Model.u[0].dof)
+            self.coefficients.u_vel_norm,
+            self.coefficients.ModelId,
+            self.coefficients.Alt_Split,
+            self.coefficients.Mom_Split,
+            self.ent_time_old,
+            self.ent_time)
 
-
-    #    if ( np.abs(self.timeIntegration.t - self.coefficients.tnList[2]) < 1.):
-    #        exit(0)
 
     #    if self.timeIntegration.t in self.coefficients.tnList:
     #    	fileEnt = 'entropy_results/entropy.csv.'+str(int(self.timeIntegration.t))
@@ -1307,7 +1320,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             degree_polynomial = self.u[0].femSpace.order
         except:
             pass
-
+        #import pdb; pdb.set_trace()
         self.calculateJacobian(#element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,
@@ -1342,7 +1355,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             degree_polynomial,
-            self.u[0].dof,
+            self.u_dof_old,
             self.coefficients.q_v,
             self.timeIntegration.beta_bdf[0],
             self.q[('cfl',0)],
@@ -1463,16 +1476,21 @@ class MyCoefficients(Coefficients):
                  # OUTPUT quantDOFs
                  outputQuantDOFs = False,
                  mom_ModelId = None,
+                 mom_ModelId2 = None,
                  diff_ModelId = None,
                  adv_ModelId = None,
+                 adv_ModelId2 = None,
+                 ModelId = None,
                  poro = 1.0,
                  perm = 1.0e-6,
                  diff = 1.0,
                  alpha_L = 1.0,
                  beta1 = 0.0,
                  beta2 = 0.0,
-                 tnList = None
-                 ):
+                 mass_in = 0.01,
+                 Alt_Split = False,
+                 Mom_Split = False,
+                 tnList = None):
 		self.q={}; self.ebqe={}; self.ebq ={}; self.ebq_global = {}; self.phi_ip = {}
 		self.useMetrics = useMetrics
 		self.variableNames=['u_ev']
@@ -1526,14 +1544,26 @@ class MyCoefficients(Coefficients):
 		self.mom_ModelId  = mom_ModelId
 		self.adv_ModelId  = adv_ModelId
 		self.diff_ModelId = diff_ModelId
+		self.ModelId = ModelId
 		self.poro = poro
 		self.perm = perm
 		self.diff = diff
 		self.alpha_L = alpha_L
 		self.beta1 = beta1
 		self.beta2 = beta2
+		self.mass_in = mass_in
 		self.tnList = tnList
+		self.Alt_Split = Alt_Split
+		self.Mom_Split = Mom_Split
+		if self.Alt_Split:
+		          self.adv_ModelId2 = adv_ModelId2
+		          if self.Mom_Split:
+		                    self.mom_ModelId2 = mom_ModelId2
 		self.entropy = None
+		self.ent_time = None
+		self.ent_time_old = None
+		self.u_vel_norm = None
+
 
 	def attachModels(self,modelList):
 		if (self.mom_ModelId is not None):
@@ -1541,50 +1571,91 @@ class MyCoefficients(Coefficients):
 		self.adv_Model = modelList[self.adv_ModelId]
 		if (self.diff_ModelId is not None):
 			self.diff_Model = modelList[self.diff_ModelId]
-		self.q_v = np.zeros(self.adv_Model.q[('grad(u)',0)].shape,'d')
-		self.ebqe_v = np.zeros(self.adv_Model.ebqe[('grad(u)',0)].shape,'d')
-		self.ebqe_phi = np.zeros(self.adv_Model.ebqe[('u',0)].shape,'d')
+		if self.Alt_Split:
+		          self.adv_Model2 = modelList[self.adv_ModelId2]
+		          if self.Mom_Split:
+		              self.mom_Model2 = modelList[self.mom_ModelId2]
+		          if self.ModelId == self.adv_ModelId:
+		              self.currentModel = self.adv_Model
+		              self.currentMom = self.mom_Model
+		          else:
+		              self.currentModel = self.adv_Model2
+		              if self.Mom_Split:
+		                        self.currentMom = self.mom_Model2
+		              else:
+		                        self.currentMom = self.mom_Model
+		else:
+		          self.currentModel = self.adv_Model
+		          self.currentMom = self.mom_Model
+
+		self.currentModel.q_mf_old = np.copy(self.currentModel.q[('u',0)])
+		self.currentModel.q_mf = np.copy(self.currentModel.q[('u',0)])
+		self.currentModel.cip_mf_old = np.copy(self.currentModel.phi_ip[('u',0)])
+		self.currentModel.cip_mf = np.copy(self.currentModel.phi_ip[('u',0)])
+		self.currentModel.ebqe_mf_old = np.copy(self.currentModel.ebqe[('u',0)])
+		self.currentModel.ebqe_mf = np.copy(self.currentModel.ebqe[('u',0)])
+		if self.diff_Model.ebq.has_key(('u',0)):
+			self.currentModel.ebq_mf_old = np.copy(self.currentModel.ebq[('u',0)])
+			self.currentModel.ebq_mf = np.copy(self.currentModel.ebq[('u',0)])
+		if self.diff_Model.ebq_global.has_key(('u',0)):
+			self.currentModel.ebq_global_mf_old = np.copy(self.currentModel.ebq_global[('u',0)])
+			self.currentModel.ebq_global_mf = np.copy(self.currentModel.ebq_global[('u',0)])
+
+		self.q_v = np.zeros(self.currentModel.q[('grad(u)',0)].shape,'d')
+		self.ebqe_v = np.zeros(self.currentModel.ebqe[('grad(u)',0)].shape,'d')
+		self.ebqe_phi = np.zeros(self.currentModel.ebqe[('u',0)].shape,'d')
+		if self.currentMom.q.has_key(('velocity',0)):
+			self.q_v = self.currentMom.q[('velocity',0)]
+			self.ebqe_v = self.currentMom.ebqe[('velocity',0)]
+		elif self.currentMom.ebq.has_key(('velocity',0)):
+			self.ebq_v = self.currentMom.ebq[('velocity',0)]
+
+	def preStep(self,t,firstStep=True):
 		#import pdb; pdb.set_trace()
-		if self.mom_Model.q.has_key(('velocity',0)):
-			self.q_v = self.mom_Model.q[('velocity',0)]
-			self.ebqe_v = self.mom_Model.ebqe[('velocity',0)]
-		elif self.mom_Model.ebq.has_key(('velocity',0)):
-			self.ebq_v = self.mom_Model.ebq[('velocity',0)]
+		self.currentModel.q_mf_old = self.currentModel.q_mf
+		self.currentModel.cip_mf_old = self.currentModel.cip_mf
+		self.currentModel.ebqe_mf_old = self.currentModel.ebqe_mf
+		if self.diff_Model.ebq.has_key(('u',0)):
+			self.currentModel.ebq_mf_old = self.currentModel.ebq_mf
+		if self.diff_Model.ebq_global.has_key(('u',0)):
+			self.currentModel.ebq_global_mf_old = self.currentModel.ebq_global_mf
 
-	def preStep(self,t,firstStep=False):
-# 		self.adv_Model.u_dof_old[:] = np.copy(self.adv_Model.u[0].dof)
- 		self.adv_Model.u_dof_old[:] = np.copy(self.diff_Model.u[0].dof)
+		if self.Alt_Split:
+			if self.ModelId == self.adv_ModelId:
+			             self.adv_Model.u_dof_old[:] = np.copy(self.adv_Model2.u[0].dof)
+			             self.adv_Model.u[0].dof[:] = np.copy(self.adv_Model2.u[0].dof)
+			elif self.ModelId == self.adv_ModelId2:
+			             self.u_vel_norm = np.copy(self.adv_Model2.u[0].dof)
+			             self.adv_Model2.u_dof_old[:] = np.copy(self.diff_Model.u[0].dof)
+			             self.adv_Model2.u[0].dof[:] = np.copy(self.diff_Model.u[0].dof)
+		else:
+			self.adv_Model.u_dof_old[:] = self.diff_Model.u[0].dof[:]
+			self.u_vel_norm = self.diff_Model.u[0].dof[:]
 
 
-
-	def postStep(self,t,firstStep=False):
+	def postStep(self,t,firstStep=True):
 		self.adv_Model.q['dV_last'][:] = self.adv_Model.q['dV']
+		if self.Alt_Split:
+		    self.adv_Model2.q['dV_last'][:] = self.adv_Model2.q['dV']
+		    self.adv_Model.ent_time_old[:] = self.adv_Model2.ent_time[:]
+		    self.adv_Model2.ent_time_old[:] = self.adv_Model.ent_time[:]
+		else:
+		    self.adv_Model.ent_time_old[:] = self.adv_Model.ent_time[:]
 
-		#for i in range(0,len(self.adv_Model.u[0].dof)):
-		#	self.adv_Model.u[0].dof[i] = self.root(self.adv_Model.u[0].dof[i])
-		self.q_mf_old = np.zeros_like(self.adv_Model.q[('u',0)])
-		self.q_mf_old = np.copy(self.adv_Model.q[('u',0)])
+		self.currentModel.u[0].getValues(self.diff_Model.q[('v',0)],self.currentModel.q[('u',0)])
+		self.currentModel.q_mf = np.copy(self.currentModel.q[('u',0)])
 
-		self.phi_ip = np.zeros_like(self.diff_Model.phi_ip[('u',0)])
-		self.cip_mf_old = np.zeros_like(self.diff_Model.phi_ip[('u',0)])
-		self.adv_Model.phi[0].dof = np.copy(self.adv_Model.u[0].dof)
-		self.adv_Model.phi[0].getValues(self.diff_Model.phi_ip[('v',0)],self.phi_ip)
-		self.cip_mf_old = np.copy(self.phi_ip)
+		self.currentModel.cip_mf = np.zeros_like(self.diff_Model.phi_ip[('u',0)])
+		self.currentModel.phi[0].dof = np.copy(self.currentModel.u[0].dof)
+		self.currentModel.phi[0].getValues(self.diff_Model.phi_ip[('v',0)],self.currentModel.cip_mf)
 
-		self.ebqe = np.zeros_like(self.diff_Model.ebqe[('u',0)])
-		self.ebqe_mf_old = np.zeros_like(self.diff_Model.ebqe[('u',0)])
-		self.adv_Model.u[0].getValuesGlobalExteriorTrace(self.diff_Model.ebqe[('v',0)],self.ebqe)
-		self.ebqe_mf_old = np.copy(self.ebqe)
+		self.currentModel.ebqe_mf = np.zeros_like(self.diff_Model.ebqe[('u',0)])
+		self.currentModel.u[0].getValuesGlobalExteriorTrace(self.diff_Model.ebqe[('v',0)],self.currentModel.ebqe_mf)
 
 		if self.diff_Model.ebq.has_key(('u',0)):
-			self.ebq = np.zeros_like(self.diff_Model.ebq[('u',0)])
-			self.ebq_mf_old = np.zeros_like(self.diff_Model.ebq[('u',0)])
-			self.adv_Model.u[0].getValuesTrace(self.diff_Model.ebq[('v',0)],self.ebq)
-			self.ebq_mf_old = np.copy(self.ebq)
+			self.currentModel.ebq_mf = np.zeros_like(self.diff_Model.ebq[('u',0)])
+			self.currentModel.u[0].getValuesTrace(self.diff_Model.ebq[('v',0)],self.currentModel.ebq_mf)
 
 		if self.diff_Model.ebq_global.has_key(('u',0)):
-			import pdb; pdb.set_trace()
-			self.ebq_global = np.zeros_like(self.diff_Model.ebq_global[('u',0)])
-			self.ebq_global_mf_old = np.zeros_like(self.diff_Model.ebq_global[('u',0)])
-			self.adv_Model.u[0].getValuesTrace(self.diff_Model.ebq_global[('v',0)],self.ebq_global)
-			self.ebq_global_mf_old = np.copy(self.ebq_global)
+			self.currentModel.ebq_global_mf = np.zeros_like(self.diff_Model.ebq_global[('u',0)])
+			self.currentModel.u[0].getValuesTrace(self.diff_Model.ebq_global[('v',0)],self.currentModel.ebq_global_mf)

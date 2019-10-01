@@ -10,7 +10,7 @@
 /**
    \file femIntegrals.h
    \ingroup femIntegrals
-   
+
    \brief A library of functions for computing the discrete finite element
    formulations.
 
@@ -42,14 +42,14 @@ void copyLeftElementBoundaryInfo(int nElementBoundaries_element,
           {
             xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
                k*3+
-               I] = 
+               I] =
               x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 k*3+
                 I];
             ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                k*nSpace_global+
-               I] = 
+               I] =
               n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                 k*nSpace_global+
@@ -68,14 +68,14 @@ void copyLeftElementBoundaryInfo(int nElementBoundaries_element,
           {
             xg[ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
                k*3+
-               I] = 
+               I] =
               x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 k*3+
                 I];
             ng[ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                k*nSpace_global+
-               I] = 
+               I] =
               n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                 k*nSpace_global+
@@ -83,7 +83,7 @@ void copyLeftElementBoundaryInfo(int nElementBoundaries_element,
             x[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
               right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
               k*3+
-              I]= 
+              I]=
               x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 k*3+
@@ -91,7 +91,7 @@ void copyLeftElementBoundaryInfo(int nElementBoundaries_element,
             n[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
               right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
               k*nSpace_global+
-              I]= 
+              I]=
               -n[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                  left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace_global+
                  k*nSpace_global+
@@ -136,8 +136,8 @@ void copyGlobalElementBoundaryInfo(int nElementBoundaries_element,
 	  if(dot < 0.0)
 	    sign=-1.0;
 	  else
-	    sign=1.0;	    
-	
+	    sign=1.0;
+
         for (I=0;I<nSpace_global;I++)
           {
 	    x[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
@@ -229,7 +229,7 @@ void copyLeftElementBoundaryInfo_movingDomain(int nElementBoundaries_element,
             xt[right_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
               right_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
               k*3+
-              I]= 
+              I]=
               xt[left_eN_global*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 left_ebN_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                 k*3+
@@ -302,8 +302,8 @@ void parametricFiniteElementSpace_getValuesGlobalExteriorTrace(int nElementBound
                  k*nDOF_element+
                  j]
             =
-            psi[ebN_local*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element + 
-		k*nDOF_element + 
+            psi[ebN_local*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element +
+		k*nDOF_element +
 		j];
     }
 }
@@ -698,11 +698,11 @@ void parametricMaps_getInverseValues(int nElements_global,
       {
         node0 = l2g[eN*nDOF_element];
         for(I=0;I<nSpace_global;I++)
-          dx[I] = 
+          dx[I] =
             xArray[eN*nQuadraturePoints_element*3+
                    k*3+
                    I]
-            - 
+            -
             nodeArray[node0*3+I];
         for(I=0;I<nSpace_global;I++)
           for(J=0;J<nSpace_global;J++)
@@ -739,12 +739,12 @@ void parametricMaps_getInverseValuesTrace(int nElements_global,
         {
           node0 = l2g[eN*nDOF_element];
           for(I=0;I<nSpace_global;I++)
-            dx[I] = 
+            dx[I] =
               xArray[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*3+
                      ebN*nElementBoundaryQuadraturePoints_elementBoundary*3+
                      k*3+
-                     I] 
-              - 
+                     I]
+              -
               nodeArray[node0*3+I];
           for(I=0;I<nSpace_global;I++)
             for(J=0;J<nSpace_global;J++)
@@ -789,11 +789,11 @@ void parametricMaps_getInverseValuesGlobalExteriorTrace(int nElementBoundaryQuad
         {
           node0 = l2g[eN*nDOF_element];
           for(I=0;I<nSpace_global;I++)
-            dx[I] = 
+            dx[I] =
               xArray[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*3+
                      k*3+
-                     I] 
-              - 
+                     I]
+              -
               nodeArray[node0*3+I];
           for(I=0;I<nSpace_global;I++)
             for(J=0;J<nSpace_global;J++)
@@ -831,7 +831,7 @@ void parametricMaps_getJacobianValues3D(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for(k=0;k<nQuadraturePoints_element;k++)
       {
-        jac = jacobianArray + 
+        jac = jacobianArray +
           eN*nQuadraturePoints_element*9+
           k*9;
         jacDet = jacobianDeterminantArray +
@@ -857,7 +857,7 @@ void parametricMaps_getJacobianValues3D(int nElements_global,
             jac[ZZ] += node[Z]*grad[Z];
           }
         *jacDet
-          = 
+          =
           jac[XX]*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]) -
           jac[XY]*(jac[YX]*jac[ZZ] - jac[YZ]*jac[ZX]) +
           jac[XZ]*(jac[YX]*jac[ZY] - jac[YY]*jac[ZX]);
@@ -893,7 +893,7 @@ void parametricMaps_getJacobianValues2D(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for(k=0;k<nQuadraturePoints_element;k++)
       {
-        jac = jacobianArray + 
+        jac = jacobianArray +
           eN*nQuadraturePoints_element*4+
           k*4;
         jacDet = jacobianDeterminantArray +
@@ -915,7 +915,7 @@ void parametricMaps_getJacobianValues2D(int nElements_global,
             jac[YY] += node[Y]*grad[Y];
           }
         *jacDet
-          = 
+          =
           jac[XX]*jac[YY]- jac[XY]*jac[YX];
         oneOverJacDet = 1.0/(*jacDet);
         jacInv[XX] = oneOverJacDet*jac[YY];
@@ -943,7 +943,7 @@ void parametricMaps_getJacobianValues1D(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for(k=0;k<nQuadraturePoints_element;k++)
       {
-        jac = jacobianArray + 
+        jac = jacobianArray +
           eN*nQuadraturePoints_element+
           k;
         jacDet = jacobianDeterminantArray +
@@ -962,7 +962,7 @@ void parametricMaps_getJacobianValues1D(int nElements_global,
             jac[XX] += node[X]*grad[X];
           }
         *jacDet
-          = 
+          =
           jac[XX];
         oneOverJacDet = 1.0/(*jacDet);
         jacInv[XX] = oneOverJacDet;
@@ -984,7 +984,7 @@ void parametricMaps_getJacobianValuesTrace3D(int nElements_global,
                                              double* unitNormalArray)
 {
   int eN,ebN,k,j,j_global;
-  const int 
+  const int
     X=0,Y=1,Z=2,
     XX=0,XY=1,XZ=2,
     YX=3,YY=4,YZ=5,
@@ -1082,13 +1082,13 @@ void parametricMaps_getJacobianValuesTrace3D(int nElements_global,
           n[X] = (jacInv[XX]*bn[X]+jacInv[YX]*bn[Y]+jacInv[ZX]*bn[Z]);
           n[Y] = (jacInv[XY]*bn[X]+jacInv[YY]*bn[Y]+jacInv[ZY]*bn[Z]);
           n[Z] = (jacInv[XZ]*bn[X]+jacInv[YZ]*bn[Y]+jacInv[ZZ]*bn[Z]);
-          
+
           oneOverNbn = 1.0/sqrt(n[X]*n[X]+n[Y]*n[Y]+n[Z]*n[Z]);
-          
+
           n[X] *= oneOverNbn;
           n[Y] *= oneOverNbn;
           n[Z] *= oneOverNbn;
-          
+
         }
 }
 
@@ -1253,7 +1253,7 @@ void parametricMaps_getJacobianValuesTrace2D_movingDomain(int nElements_global,
 	  xt_dot_n  = xt[X]*n[X]+xt[Y]*n[Y];
 	  //printf("%12.5e %12.5e %12.5e\n",xt_dot_xt,xt_dot_bj,xt_dot_n);
 	  //printf("%12.5e \n",((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));
-          *mtDetSqrt=sqrt(((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));// sqrt(det(G^t G))/sqrt(1 + (xt^t n)^2) 
+          *mtDetSqrt=sqrt(((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));// sqrt(det(G^t G))/sqrt(1 + (xt^t n)^2)
         }
 }
 
@@ -1535,7 +1535,7 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace2D_movingDomain(int nQua
 	  xt_dot_bj = xt[X]*ebmj[X]+xt[Y]*ebmj[Y];
 	  xt_dot_n  = xt[X]*n[X]+xt[Y]*n[Y];
 	  //printf("%12.5e %12.5e %12.5e\n",xt_dot_xt,xt_dot_bj,xt_dot_n);
-          *mtDetSqrt=sqrt(((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));// sqrt(det(G^t G))/sqrt(1 + (xt^t n)^2) 
+          *mtDetSqrt=sqrt(((1.0+xt_dot_xt)*mt[X] - xt_dot_bj*xt_dot_bj)/(1.0+xt_dot_n*xt_dot_n));// sqrt(det(G^t G))/sqrt(1 + (xt^t n)^2)
         }
     }
 }
@@ -1556,7 +1556,7 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace3D(int nQuadraturePoints
 							   double* unitNormalArray)
 {
   int eN,ebN,ebNE,ebN_local,k,j,j_global;
-  const int 
+  const int
     X=0,Y=1,Z=2,
     XX=0,XY=1,XZ=2,
     YX=3,YY=4,YZ=5,
@@ -1653,13 +1653,13 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace3D(int nQuadraturePoints
           n[X] = (jacInv[XX]*bn[X]+jacInv[YX]*bn[Y]+jacInv[ZX]*bn[Z]);
           n[Y] = (jacInv[XY]*bn[X]+jacInv[YY]*bn[Y]+jacInv[ZY]*bn[Z]);
           n[Z] = (jacInv[XZ]*bn[X]+jacInv[YZ]*bn[Y]+jacInv[ZZ]*bn[Z]);
-          
+
           oneOverNbn = 1.0/sqrt(n[X]*n[X]+n[Y]*n[Y]+n[Z]*n[Z]);
-          
+
           n[X] *= oneOverNbn;
           n[Y] *= oneOverNbn;
           n[Z] *= oneOverNbn;
-          
+
         }
     }
 }
@@ -1685,7 +1685,7 @@ void parametricMaps_getJacobianValuesGlobalExteriorTrace3D(int nQuadraturePoints
    @param weak_residual (nElements_global x nDOF_test_element). The element
    weak_residual, which is updated upon return.
 
-   The result of calling this function is 
+   The result of calling this function is
 
    \f[ residual_{e,i} \mapsto residual_{e,i} + \int_{\Omega_e} \rho
    w_i dV \quad \forall e,i \f]
@@ -1706,14 +1706,14 @@ void updateMass_weak(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-        weak_residual[eN*nDOF_test_element + 
-                 i] 
-          += 
-          mt[eN*nQuadraturePoints_element + 
+        weak_residual[eN*nDOF_test_element +
+                 i]
+          +=
+          mt[eN*nQuadraturePoints_element +
             k]
           *
-          w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-	       k*nDOF_test_element + 
+          w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+	       k*nDOF_test_element +
 	       i];
 }
 
@@ -1769,15 +1769,15 @@ void updateMassJacobian_weak(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
-          jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+          jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                    i*nDOF_trial_element+
-                   j] 
-            += 
-            dmt[eN*nQuadraturePoints_element + 
+                   j]
+            +=
+            dmt[eN*nQuadraturePoints_element +
                k]
             *
-            v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element + 
-		     k*nDOF_test_X_trial_element + 
+            v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element +
+		     k*nDOF_test_X_trial_element +
 		     j*nDOF_test_element+
 		     i];
 }
@@ -1796,19 +1796,19 @@ void updateMassJacobian_weak_lowmem(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
-          jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+          jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                    i*nDOF_trial_element+
-                   j] 
-            += 
-            dmt[eN*nQuadraturePoints_element + 
+                   j]
+            +=
+            dmt[eN*nQuadraturePoints_element +
                k]
             *
-            v[eN*nQuadraturePoints_element*nDOF_trial_element + 
-              k*nDOF_trial_element + 
+            v[eN*nQuadraturePoints_element*nDOF_trial_element +
+              k*nDOF_trial_element +
               j]
             *
-            w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                 k*nDOF_test_element + 
+            w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                 k*nDOF_test_element +
                  i];
 }
 
@@ -1820,7 +1820,7 @@ void updateMassJacobian_weak_lowmem(int nElements_global,
 
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param mt (nElements_global x nQuadraturePoints_element) The change
    in mass with respect to time
 
@@ -1840,10 +1840,10 @@ void updateMass_strong(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       strong_residual[eN*nQuadraturePoints_element+
-		  k] 
+		  k]
 	+=
 	mt[eN*nQuadraturePoints_element+
-	  k]; 
+	  k];
 }
 
 /**
@@ -1855,7 +1855,7 @@ void updateMass_strong(int nElements_global,
 
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number  of trial functions per  element
 
    @param dmt (nElements_global x nQuadraturePoints_element) The
@@ -1882,14 +1882,14 @@ void updateMassJacobian_strong(int nElements_global,
     for(j=0;j<nDOF_trial_element;j++)
       for (k=0;k<nQuadraturePoints_element;k++)
         dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-                     k*nDOF_trial_element + 
-                     j] 
-          += 
+                     k*nDOF_trial_element +
+                     j]
+          +=
           dmt[eN*nQuadraturePoints_element+
               k]
           *
           v[eN*nQuadraturePoints_element*nDOF_trial_element+
-            k*nDOF_trial_element + 
+            k*nDOF_trial_element +
             j];
 }
 
@@ -1912,7 +1912,7 @@ void updateMassJacobian_strong(int nElements_global,
    @Lstar_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_test_element). The linearized adjoint applied to the weighted
    element test functions.
-   
+
    The result of calling the function is
 
    \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i} + \frac{\partial m_t}{\partial u}_{k} (w dV)_{k,i}
@@ -1929,15 +1929,15 @@ void updateMass_adjoint(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                   k*nDOF_test_element + 
-                   i] 
-	  += 
-	  dmt[eN*nQuadraturePoints_element + 
+	Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                   k*nDOF_test_element +
+                   i]
+	  +=
+	  dmt[eN*nQuadraturePoints_element +
 	      k]
 	  *
-	  w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-	       k*nDOF_test_element + 
+	  w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+	       k*nDOF_test_element +
 	       i];
 }
 
@@ -1948,38 +1948,38 @@ void updateMass_adjoint(int nElements_global,
    integral.
 
    @param nElements_global The number of elements in the mesh
-   
+
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number of degrees of freedom per
    element in the test space.
-   
+
    @param nDOF_trial_element The number of degrees of freedom per
    element in the trial space.
-   
+
    @param nSpace The number of spatial dimensions.
-   
+
    @param f (nElements_global x nQuadraturePoints_element x
    nSpace). The advection associated with each quadrature point
    (includes integration weight).
-   
+
    @param grad_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_test_element x nSpace). The weighted finite element test
    function gradient values.
-   
+
    @param weak_residual (nElements_global x nDOF_test_element). The element
    weak_residual, which is updated upon return.
 
    The result of calling this function is
-   
+
    \f[ weak_residual_{e,i} \mapsto weak_residual_{e,i} - \int_{\Omega_e}
    \mathbf{f} \cdot \nabla w_i dV \quad \forall e,i \f]
 
    where
 
    \f[
-   \int_{\Omega_e} \mathbf{f} \cdot \nabla w_i dV =  \int_{\Omega_r} \mathbf{f} \cdot \nabla w_i |J_e| d\hat{V} \int_{\Omega_r} \sum_k \mathbf{f}_k \cdot (\nabla w dV)_i  
+   \int_{\Omega_e} \mathbf{f} \cdot \nabla w_i dV =  \int_{\Omega_r} \mathbf{f} \cdot \nabla w_i |J_e| d\hat{V} \int_{\Omega_r} \sum_k \mathbf{f}_k \cdot (\nabla w dV)_i
    \f]
 */
 void updateAdvection_weak(int nElements_global,
@@ -1995,16 +1995,16 @@ void updateAdvection_weak(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
-          weak_residual[eN*nDOF_test_element + 
-                   i] 
+          weak_residual[eN*nDOF_test_element +
+                   i]
             -=
-            f[eN*nQuadraturePoints_element*nSpace + 
-              k*nSpace + 
+            f[eN*nQuadraturePoints_element*nSpace +
+              k*nSpace +
               I]
             *
-            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-		      k*nDOF_test_element*nSpace + 
-		      i*nSpace + 
+            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+		      k*nDOF_test_element*nSpace +
+		      i*nSpace +
 		      I];
 }
 
@@ -2067,18 +2067,18 @@ void updateAdvectionJacobian_weak(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                      i*nDOF_trial_element+
-                     j] 
+                     j]
               -=
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace + 
-			    k*nDOF_test_X_trial_element*nSpace + 
-			    j*nDOF_test_element*nSpace + 
-			    i*nSpace + 
+              v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace +
+			    k*nDOF_test_X_trial_element*nSpace +
+			    j*nDOF_test_element*nSpace +
+			    i*nSpace +
 			    I];
 }
 
@@ -2098,21 +2098,21 @@ void updateAdvectionJacobian_weak_lowmem(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                      i*nDOF_trial_element+
-                     j] 
+                     j]
               -=
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              v[eN*nQuadraturePoints_element*nDOF_trial_element + 
-                k*nDOF_trial_element + 
+              v[eN*nQuadraturePoints_element*nDOF_trial_element +
+                k*nDOF_trial_element +
                 j]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
-                        i*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
+                        i*nSpace +
                         I];
 }
 
@@ -2152,14 +2152,14 @@ void updateAdvection_strong(int nElements_global,
     for (k=0;k<nQuadraturePoints_element;k++)
       for(I=0;I<nSpace;I++)
         strong_residual[eN*nQuadraturePoints_element+
-                    k] 
+                    k]
           +=
-	  df[eN*nQuadraturePoints_element*nSpace + 
-	     k*nSpace + 
+	  df[eN*nQuadraturePoints_element*nSpace +
+	     k*nSpace +
 	     I]
 	  *
-	  grad_u[eN*nQuadraturePoints_element*nSpace + 
-		 k*nSpace + 
+	  grad_u[eN*nQuadraturePoints_element*nSpace +
+		 k*nSpace +
 		 I];
 }
 
@@ -2201,14 +2201,14 @@ void updateAdvectionJacobian_strong(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-                           k*nDOF_trial_element + 
-                           j] 
+                           k*nDOF_trial_element +
+                           j]
             +=
-            df[eN*nQuadraturePoints_element*nSpace + 
-               k*nSpace + 
+            df[eN*nQuadraturePoints_element*nSpace +
+               k*nSpace +
                I]
             *
-            grad_v[eN*nQuadraturePoints_element*nSpace*nDOF_trial_element + 
+            grad_v[eN*nQuadraturePoints_element*nSpace*nDOF_trial_element +
                    k*nSpace*nDOF_trial_element +
                    j*nSpace+
                    I];
@@ -2257,17 +2257,17 @@ void updateAdvection_adjoint(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
 	for (I=0;I<nSpace;I++)
-	  Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-		    k*nDOF_test_element + 
-		    i] 
-	    -=  
-	    df[eN*nQuadraturePoints_element*nSpace + 
-	       k*nSpace + 
+	  Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+		    k*nDOF_test_element +
+		    i]
+	    -=
+	    df[eN*nQuadraturePoints_element*nSpace +
+	       k*nSpace +
 	       I]
 	    *
-	    grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-		      k*nDOF_test_element*nSpace + 
-		      i*nSpace + 
+	    grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+		      k*nDOF_test_element*nSpace +
+		      i*nSpace +
 		      I];
 }
 
@@ -2275,24 +2275,24 @@ void updateAdvection_adjoint(int nElements_global,
    \brief Loop over all the elements and update the element weak_residual
    with the numerical quadrature approximation of the Hamiltonian
    integral.
-   
+
    @param nElements_global The number of elements in the mesh
-   
+
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number of degrees of freedom per element.
-   
+
    @param h (nElements_global x nQuadraturePoints_element). The
    Hamiltonian associated with each quadrature point (includes
    integration weight).
-   
+
    @param w (nElements_global x nQuadraturePoints_element x
    nDOF_test_element). The finite element test function values.
-   
+
    @param weak_residual (nElements_global x nDOF_test_element). The element
    weak_residual, which is updated upon return.
-   
+
    The result of calling this function is
 
    \f[ weak_residual_{e,i} \mapsto weak_residual_{e,i} - \int_{\Omega_e} h w_i
@@ -2314,13 +2314,13 @@ void updateHamiltonian_weak(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-        weak_residual[eN*nDOF_test_element + i] 
+        weak_residual[eN*nDOF_test_element + i]
           +=
-          H[eN*nQuadraturePoints_element + 
+          H[eN*nQuadraturePoints_element +
             k]
           *
-          w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-            k*nDOF_test_element + 
+          w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+            k*nDOF_test_element +
             i];
 }
 
@@ -2384,15 +2384,15 @@ void updateHamiltonianJacobian_weak(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                      i*nDOF_trial_element +
                      j]
               +=
-              dH[eN*nQuadraturePoints_element*nSpace + 
+              dH[eN*nQuadraturePoints_element*nSpace +
                  k*nSpace+
                  I]
               *
-              grad_v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace + 
+              grad_v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace +
 			    k*nDOF_test_X_trial_element*nSpace +
 			    j*nDOF_test_element*nSpace +
 			    i*nSpace+
@@ -2415,20 +2415,20 @@ void updateHamiltonianJacobian_weak_lowmem(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
                      i*nDOF_trial_element +
                      j]
               +=
-              dH[eN*nQuadraturePoints_element*nSpace + 
+              dH[eN*nQuadraturePoints_element*nSpace +
                  k*nSpace+
                  I]
               *
-              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                      k*nDOF_trial_element*nSpace +
                      j*nSpace +
                      I]
               *
-              w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
+              w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
                    k*nDOF_test_element +
                    i];
 }
@@ -2470,8 +2470,8 @@ void updateHamiltonian_strong(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
-	strong_residual[eN*nQuadraturePoints_element+k] 
-	  += 
+	strong_residual[eN*nQuadraturePoints_element+k]
+	  +=
 	  dH[eN*nQuadraturePoints_element*nSpace+
 	     k*nSpace+
 	     I]
@@ -2519,16 +2519,16 @@ void updateHamiltonianJacobian_strong(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-                       k*nDOF_trial_element + 
-                       j] 
-            += 
+                       k*nDOF_trial_element +
+                       j]
+            +=
             dH[eN*nQuadraturePoints_element*nSpace+
                k*nSpace+
                I]
             *
             grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace+
-                   k*nDOF_trial_element*nSpace + 
-                   j*nSpace + 
+                   k*nDOF_trial_element*nSpace +
+                   j*nSpace +
                    I];
 }
 
@@ -2560,7 +2560,7 @@ void updateHamiltonianJacobian_strong(int nElements_global,
 
    The result of  calling this  funciton is
 
-   \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i} 
+   \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i}
    \frac{\partial \mathbf{H}}{\partial \nabla u}_k \cdot \nabla (w dV)_{k,i} \f]
 */
 void updateHamiltonian_adjoint(int nElements_global,
@@ -2576,17 +2576,17 @@ void updateHamiltonian_adjoint(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
 	for (I=0;I<nSpace;I++)
-	  Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                    k*nDOF_test_element + 
-                    i] 
-	    -=  
-	    dH[eN*nQuadraturePoints_element*nSpace + 
-	       k*nSpace + 
+	  Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                    k*nDOF_test_element +
+                    i]
+	    -=
+	    dH[eN*nQuadraturePoints_element*nSpace +
+	       k*nSpace +
 	       I]
 	    *
-	    grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-		      k*nDOF_test_element*nSpace + 
-		      i*nSpace + 
+	    grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+		      k*nDOF_test_element*nSpace +
+		      i*nSpace +
 		      I];
 }
 
@@ -2618,7 +2618,7 @@ void updateHamiltonian_adjoint(int nElements_global,
    weak_residual, which is updated upon return.
 
    The result of calling this function is
-   
+
    \f[ weak_residual_{e,i} \mapsto weak_residual_{e,i} + \int_{\Omega_e}
    \bar{\mathbf{a}} \nabla \phi \cdot \nabla w_i dV \quad \forall e,i
    \f]
@@ -2645,17 +2645,17 @@ void updateDiffusion_weak(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           for (J=0;J<nSpace;J++)
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               +=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
-                k*nSpace2 + 
-                I*nSpace + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
+                k*nSpace2 +
+                I*nSpace +
                 J]
               *
-              grad_phi_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 + 
-				   k*nDOF_test_element*nSpace2 + 
+              grad_phi_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
+				   k*nDOF_test_element*nSpace2 +
 				   i*nSpace2+
-				   J*nSpace + 
+				   J*nSpace +
 				   I];
 }
 
@@ -2676,36 +2676,36 @@ void updateDiffusion_weak_lowmem(int nElements_global,
         for (I=0;I<nSpace;I++)
           {
             J=I;
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               +=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
                 k*nSpace2]
               *
-              grad_phi[eN*nQuadraturePoints_element*nSpace + 
-                       k*nSpace + 
+              grad_phi[eN*nQuadraturePoints_element*nSpace +
+                       k*nSpace +
                        J]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
           }
 #else
         for (I=0;I<nSpace;I++)
           for (J=0;J<nSpace;J++)
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               +=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
-                k*nSpace2 + 
-                I*nSpace + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
+                k*nSpace2 +
+                I*nSpace +
                 J]
               *
-              grad_phi[eN*nQuadraturePoints_element*nSpace + 
-                       k*nSpace + 
+              grad_phi[eN*nQuadraturePoints_element*nSpace +
+                       k*nSpace +
                        J]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
 #endif
@@ -2728,18 +2728,18 @@ void updateDiffusion_weak_sd(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           for (m=rowptr[I];m<rowptr[I+1];m++)
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               +=
               a[eN*nQuadraturePoints_element*nnz+
-                k*nnz + 
+                k*nnz +
                 m]
               *
-              grad_phi[eN*nQuadraturePoints_element*nSpace + 
-                       k*nSpace + 
+              grad_phi[eN*nQuadraturePoints_element*nSpace +
+                       k*nSpace +
                        colind[m]]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
 }
@@ -2839,8 +2839,8 @@ void updateDiffusionJacobian_weak(int nElements_global,
           daProduct=0.0;
           for (I=0;I<nSpace;I++)
             for (J=0;J<nSpace;J++)
-              daProduct 
-                += 
+              daProduct
+                +=
                 da[eN*nQuadraturePoints_element*nSpace2 +
                    k*nSpace2 +
                    I*nSpace +
@@ -2856,32 +2856,32 @@ void updateDiffusionJacobian_weak(int nElements_global,
               dphiProduct=0.0;
               for (I=0;I<nSpace;I++)
                 for (J=0;J<nSpace;J++)
-                  dphiProduct 
+                  dphiProduct
                     +=
-                    a[eN*nQuadraturePoints_element*nSpace2 + 
+                    a[eN*nQuadraturePoints_element*nSpace2 +
                       k*nSpace2+
-                      I*nSpace + 
+                      I*nSpace +
                       J]
                     *
                     grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 +
 				       k*nDOF_test_X_trial_element*nSpace2 +
-				       j*nDOF_test_element*nSpace2 + 
-				       i*nSpace2 + 
-				       J*nSpace + 
+				       j*nDOF_test_element*nSpace2 +
+				       i*nSpace2 +
+				       J*nSpace +
 				       I];
-              jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                       i*nDOF_trial_element + 
-                       j] 
-                += 
+              jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                       i*nDOF_trial_element +
+                       j]
+                +=
                 daProduct
                 *
                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
                   k*nDOF_trial_element+
-                  j] 
+                  j]
                 +
                 dphiProduct
                 *
-                dphi[l2g[eN*nDOF_trial_element + 
+                dphi[l2g[eN*nDOF_trial_element +
                          j]];
             }
         }
@@ -2913,8 +2913,8 @@ void updateDiffusionJacobian_weak_lowmem(int nElements_global,
           for (I=0;I<nSpace;I++)
             {
               J=I;
-              daProduct 
-                += 
+              daProduct
+                +=
                 da[eN*nQuadraturePoints_element*nSpace2 +
                    k*nSpace2]
                 *
@@ -2933,41 +2933,41 @@ void updateDiffusionJacobian_weak_lowmem(int nElements_global,
               for (I=0;I<nSpace;I++)
                 {
                   J=I;
-                  dphiProduct 
+                  dphiProduct
                     +=
-                    a[eN*nQuadraturePoints_element*nSpace2 + 
+                    a[eN*nQuadraturePoints_element*nSpace2 +
                       k*nSpace2]
                     *
                     grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                            k*nDOF_trial_element*nSpace +
-                           j*nSpace + 
+                           j*nSpace +
                            J]
                     *
                     grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                               k*nDOF_test_element*nSpace +
-                              i*nSpace + 
+                              i*nSpace +
                               I];
                 }
-              jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                       i*nDOF_trial_element + 
-                       j] 
-                += 
+              jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                       i*nDOF_trial_element +
+                       j]
+                +=
                 daProduct
                 *
                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
                   k*nDOF_trial_element+
-                  j] 
+                  j]
                 +
                 dphiProduct
                 *
-                dphi[l2g[eN*nDOF_trial_element + 
+                dphi[l2g[eN*nDOF_trial_element +
                          j]];
             }
 #else
           for (I=0;I<nSpace;I++)
             for (J=0;J<nSpace;J++)
-              daProduct 
-                += 
+              daProduct
+                +=
                 da[eN*nQuadraturePoints_element*nSpace2 +
                    k*nSpace2 +
                    I*nSpace +
@@ -2986,35 +2986,35 @@ void updateDiffusionJacobian_weak_lowmem(int nElements_global,
               dphiProduct=0.0;
               for (I=0;I<nSpace;I++)
                 for (J=0;J<nSpace;J++)
-                  dphiProduct 
+                  dphiProduct
                     +=
-                    a[eN*nQuadraturePoints_element*nSpace2 + 
+                    a[eN*nQuadraturePoints_element*nSpace2 +
                       k*nSpace2+
-                      I*nSpace + 
+                      I*nSpace +
                       J]
                     *
                     grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                            k*nDOF_trial_element*nSpace +
-                           j*nSpace + 
+                           j*nSpace +
                            J]
                     *
                     grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                               k*nDOF_test_element*nSpace +
-                              i*nSpace + 
+                              i*nSpace +
                               I];
-              jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                       i*nDOF_trial_element + 
-                       j] 
-                += 
+              jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                       i*nDOF_trial_element +
+                       j]
+                +=
                 daProduct
                 *
                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
                   k*nDOF_trial_element+
-                  j] 
+                  j]
                 +
                 dphiProduct
                 *
-                dphi[l2g[eN*nDOF_trial_element + 
+                dphi[l2g[eN*nDOF_trial_element +
                          j]];
             }
 #endif
@@ -3046,8 +3046,8 @@ void updateDiffusionJacobian_weak_sd(int nElements_global,
           daProduct=0.0;
           for (I=0;I<nSpace;I++)
             for (m=rowptr[I];m<rowptr[I+1];m++)
-              daProduct 
-                += 
+              daProduct
+                +=
                 da[eN*nQuadraturePoints_element*nnz+
                    k*nnz +
                    m]
@@ -3065,34 +3065,34 @@ void updateDiffusionJacobian_weak_sd(int nElements_global,
               dphiProduct=0.0;
               for (I=0;I<nSpace;I++)
                 for(m=rowptr[I];m<rowptr[I+1];m++)
-                  dphiProduct 
+                  dphiProduct
                     +=
-                    a[eN*nQuadraturePoints_element*nnz + 
+                    a[eN*nQuadraturePoints_element*nnz +
                       k*nnz+
                       m]
                     *
                     grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                            k*nDOF_trial_element*nSpace +
-                           j*nSpace + 
+                           j*nSpace +
                            colind[m]]
                     *
                     grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                               k*nDOF_test_element*nSpace +
-                              i*nSpace + 
+                              i*nSpace +
                               I];
-              jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                       i*nDOF_trial_element + 
-                       j] 
-                += 
+              jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                       i*nDOF_trial_element +
+                       j]
+                +=
                 daProduct
                 *
                 v[eN*nQuadraturePoints_element*nDOF_trial_element+
                   k*nDOF_trial_element+
-                  j] 
+                  j]
                 +
                 dphiProduct
                 *
-                dphi[l2g[eN*nDOF_trial_element + 
+                dphi[l2g[eN*nDOF_trial_element +
                          j]];
             }
         }
@@ -3108,7 +3108,7 @@ void updateDiffusionJacobian_weak_sd(int nElements_global,
    per element.
 
    @param nSpace The number of spatial dimensions.
-   
+
    @param da (nElements_global x nQuadraturePoints_element x nSpace x
    nSpace) The derivative of the diffusion tensor with respect to u
 
@@ -3136,18 +3136,18 @@ void updateDiffusion_strong(int nElements_global,
       for(I=0;I<nSpace;I++)
 	for (J=0;J<nSpace;J++)
 	  strong_residual[eN*nQuadraturePoints_element+
-		      k] 
+		      k]
 	    -=
-	    da[eN*nQuadraturePoints_element*nSpace2 + 
-	       k*nSpace2 + 
+	    da[eN*nQuadraturePoints_element*nSpace2 +
+	       k*nSpace2 +
 	       I*nSpace+
 	       J]
 	    *
-	    grad_phi[eN*nQuadraturePoints_element*nSpace + 
-		     k*nSpace + 
+	    grad_phi[eN*nQuadraturePoints_element*nSpace +
+		     k*nSpace +
 		     J]
-	    *grad_u[eN*nQuadraturePoints_element*nSpace + 
-		    k*nSpace + 
+	    *grad_u[eN*nQuadraturePoints_element*nSpace +
+		    k*nSpace +
 		    I];
 }
 void updateDiffusion_strong_sd(int nElements_global,
@@ -3166,17 +3166,17 @@ void updateDiffusion_strong_sd(int nElements_global,
       for(I=0;I<nSpace;I++)
 	for(m=rowptr[I];m<rowptr[I+1];m++)
 	  strong_residual[eN*nQuadraturePoints_element+
-		      k] 
+		      k]
 	    -=
-	    da[eN*nQuadraturePoints_element*nnz + 
+	    da[eN*nQuadraturePoints_element*nnz +
 	       k*nnz+
                m]
 	    *
-	    grad_phi[eN*nQuadraturePoints_element*nSpace + 
-		     k*nSpace + 
+	    grad_phi[eN*nQuadraturePoints_element*nSpace +
+		     k*nSpace +
 		     colind[m]]
-	    *grad_u[eN*nQuadraturePoints_element*nSpace + 
-		    k*nSpace + 
+	    *grad_u[eN*nQuadraturePoints_element*nSpace +
+		    k*nSpace +
 		    I];
 }
 
@@ -3190,7 +3190,7 @@ void updateDiffusion_strong_sd(int nElements_global,
    per element.
 
    @param nSpace The number of spatial dimensions.
-   
+
    @param da (nElements_global x nQuadraturePoints_element x nSpace x
    nSpace) The derivative of the diffusion tensor with respect to u
 
@@ -3313,7 +3313,7 @@ void updateDiffusionJacobian_strong_sd(int nElements_global,
    \brief Loop over all the elements and update the linearized
    adjoint applied to the weighted test function with the diffusion
    term
-   
+
    @param nElements_global The number of elements in the mesh
 
    @param nQuadraturePoints_element The number of quadrature points
@@ -3323,7 +3323,7 @@ void updateDiffusionJacobian_strong_sd(int nElements_global,
    test space per element.
 
    @param nSpace The number of spatial dimensions.
-  
+
    @param da (nElements_global x nQuadraturePoints_element x nSpace x
    nSpace) The derivative of the diffusion tensor with respect to u
 
@@ -3356,12 +3356,12 @@ void updateDiffusion_adjoint(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
 	for (I=0;I<nSpace;I++)
 	  for(J=0;J<nSpace;J++)
-	    Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-		      k*nDOF_test_element + 
-		      i] 
-	      +=  
-	      da[eN*nQuadraturePoints_element*nSpace2 + 
-		 k*nSpace2 + 
+	    Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+		      k*nDOF_test_element +
+		      i]
+	      +=
+	      da[eN*nQuadraturePoints_element*nSpace2 +
+		 k*nSpace2 +
 		 I*nSpace+
 		 J]
 	      *
@@ -3369,9 +3369,9 @@ void updateDiffusion_adjoint(int nElements_global,
 		       k*nSpace+
 		       J]
 	      *
-	      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-			k*nDOF_test_element*nSpace + 
-			i*nSpace + 
+	      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+			k*nDOF_test_element*nSpace +
+			i*nSpace +
 			I];
 }
 
@@ -3392,11 +3392,11 @@ void updateDiffusion_adjoint_sd(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
 	for (I=0;I<nSpace;I++)
 	  for(m=rowptr[I];m<rowptr[I+1];m++)
-	    Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-		      k*nDOF_test_element + 
-		      i] 
-	      +=  
-	      da[eN*nQuadraturePoints_element*nnz + 
+	    Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+		      k*nDOF_test_element +
+		      i]
+	      +=
+	      da[eN*nQuadraturePoints_element*nnz +
 		 k*nnz+
 		 m]
 	      *
@@ -3404,9 +3404,9 @@ void updateDiffusion_adjoint_sd(int nElements_global,
 		       k*nSpace+
 		       colind[m]]
 	      *
-	      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-			k*nDOF_test_element*nSpace + 
-			i*nSpace + 
+	      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+			k*nDOF_test_element*nSpace +
+			i*nSpace +
 			I];
 }
 
@@ -3424,14 +3424,14 @@ void updateDiffusion2_strong(int nElements_global,
 	for (J=0;J<nSpace;J++)
 	  {
             strong_residual[eN*nQuadraturePoints_element+
-                            k] 
+                            k]
               -=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
-                k*nSpace2 + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
+                k*nSpace2 +
                 I*nSpace+
                 J]
               *
-              Hess_phi[eN*nQuadraturePoints_element*nSpace2 + 
+              Hess_phi[eN*nQuadraturePoints_element*nSpace2 +
                        k*nSpace2 +
                        J*nSpace+
                        I];
@@ -3454,13 +3454,13 @@ void updateDiffusion2_strong_sd(int nElements_global,
 	for (m=rowptr[I];m<rowptr[I+1];m++)
 	  {
             strong_residual[eN*nQuadraturePoints_element+
-                            k] 
+                            k]
               -=
-              a[eN*nQuadraturePoints_element*nnz + 
+              a[eN*nQuadraturePoints_element*nnz +
                 k*nnz+
                 m]
               *
-              Hess_phi[eN*nQuadraturePoints_element*nSpace2 + 
+              Hess_phi[eN*nQuadraturePoints_element*nSpace2 +
                        k*nSpace2 +
                        colind[m]*nSpace+
                        I];
@@ -3592,19 +3592,19 @@ void updateDiffusion2_adjoint(int nElements_global,
 	for (I=0;I<nSpace;I++)
 	  for(J=0;J<nSpace;J++)
             {
-              Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                         k*nDOF_test_element + 
-                         i] 
-                -=  
-                a[eN*nQuadraturePoints_element*nSpace2 + 
-                  k*nSpace2 + 
+              Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                         k*nDOF_test_element +
+                         i]
+                -=
+                a[eN*nQuadraturePoints_element*nSpace2 +
+                  k*nSpace2 +
                   I*nSpace+
                   J]
                 *
-                Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 + 
+                Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
                           k*nDOF_test_element*nSpace2 +
                           i*nSpace2+
-                          I*nSpace + 
+                          I*nSpace +
                           J];
             }
 }
@@ -3627,18 +3627,18 @@ void updateDiffusion2_adjoint_sd(int nElements_global,
 	for (I=0;I<nSpace;I++)
 	  for(m=rowptr[I];m<rowptr[I+1];m++)
             {
-              Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                         k*nDOF_test_element + 
-                         i] 
-                -=  
+              Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                         k*nDOF_test_element +
+                         i]
+                -=
                 a[eN*nQuadraturePoints_element*nnz+
                   k*nnz+
                   m]
                 *
-                Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 + 
+                Hess_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
                           k*nDOF_test_element*nSpace2 +
                           i*nSpace2+
-                          I*nSpace + 
+                          I*nSpace +
                           colind[m]];
             }
 }
@@ -3691,32 +3691,32 @@ void updateReaction_weak(int nElements_global,
    \brief Loop over all the elements and update the element Jacobian
    with the numerical quadrature approximation of the reaction
    integral Jacobian.
-   
+
    @param nElements_global The number of elements in the mesh
-   
+
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number of degrees of freedom per
    element in the test space.
-   
+
    @param nDOF_trial_element The number of degrees of freedom per
    element in the trial space.
-   
+
    @param dr (nElements_global x nQuadraturePoints_element). The
    derivate of the reaction associated with each quadrature point
    (includes integration weight).
-   
+
    @param v_X_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_trial_element x nDOF_test_element). The tensor product of the
    finite element trial and test function values.
-   
+
    @param jacobian_weak_residual (nElements_global x nDOF_test_element x
    nDOF_trial_element). The element jacobian, which is updated upon
    return.
 
    The result of calling this function is
-   
+
    \f[ jacobian_{e,i,j} \mapsto jacobian_{e,i,j} +\int_{\Omega_e}
    \frac{\partial r}{\partial u} v_j w_i dV \quad \forall e,i,j \f]
 
@@ -3758,7 +3758,7 @@ void updateReactionJacobian_weak_lowmem(int nElements_global,
 
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param r (nElements_global x nQuadraturePoints_element) The reaction term
 
    @param strong_residual (nElements_global x nQuadraturePoints_element)
@@ -3777,10 +3777,10 @@ void updateReaction_strong(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       strong_residual[eN*nQuadraturePoints_element+
-		  k] 
-	+= 
+		  k]
+	+=
 	r[eN*nQuadraturePoints_element+
-	  k]; 
+	  k];
 }
 
 /**
@@ -3791,7 +3791,7 @@ void updateReaction_strong(int nElements_global,
 
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param r (nElements_global x nQuadraturePoints_element) The reaction term
 
    @param strong_residual (nElements_global x nQuadraturePoints_element)
@@ -3814,14 +3814,14 @@ void updateReactionJacobian_strong(int nElements_global,
     for(j=0;j<nDOF_trial_element;j++)
       for (k=0;k<nQuadraturePoints_element;k++)
         dstrong_residual[eN*nQuadraturePoints_element*nDOF_trial_element+
-                     k*nDOF_trial_element + 
-                     j] 
+                     k*nDOF_trial_element +
+                     j]
           +=
           dr[eN*nQuadraturePoints_element+
-             k] 
+             k]
           *
           v[eN*nQuadraturePoints_element*nDOF_trial_element+
-            k*nDOF_trial_element + 
+            k*nDOF_trial_element +
             j];
 }
 
@@ -3843,7 +3843,7 @@ void updateReactionJacobian_strong(int nElements_global,
    @Lstar_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_test_element). The linearized adjoint applied to the weighted
    element test functions.
-   
+
    The result of calling the function is
 
    \f[ \mathcal{L}^* (w dV)_{k,i} \mapsto \mathcal{L}^* (w dV)_{k,i} + \frac{\partial r}{\partial u}_{k} (w dV)_{k,i}
@@ -3860,15 +3860,15 @@ void updateReaction_adjoint(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-	Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                   k*nDOF_test_element + 
-                   i] 
-	  += 
-	  dr[eN*nQuadraturePoints_element + 
+	Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                   k*nDOF_test_element +
+                   i]
+	  +=
+	  dr[eN*nQuadraturePoints_element +
 	     k]
 	  *
-	  w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-	       k*nDOF_test_element + 
+	  w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+	       k*nDOF_test_element +
 	       i];
 }
 
@@ -3917,13 +3917,13 @@ void updateSubgridError(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
-        weak_residual[eN*nDOF_test_element + i] 
-          += 
-          error[eN*nQuadraturePoints_element + 
+        weak_residual[eN*nDOF_test_element + i]
+          +=
+          error[eN*nQuadraturePoints_element +
 		k]
           *
-          Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                     k*nDOF_test_element + 
+          Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                     k*nDOF_test_element +
                      i];
 }
 
@@ -3931,31 +3931,31 @@ void updateSubgridError(int nElements_global,
    \brief Loop over all the elements and update the element Jacobian
    with the numerical quadrature approximation of the stabilization
    integral Jacobian.
-   
+
    @param nElements_global The number of elements in the mesh
-   
+
    @param nQuadraturePoints_element The number of quadrature points
    per element.
-   
+
    @param nDOF_test_element The number of degrees of freedom per
    element in the test space.
-   
+
    @param nDOF_trial_element The number of degrees of freedom per
    element in the trial space.
-   
+
    @param error (nElements_global x nQuadraturePoints_element). The
    error approximation associated with each quadrature point
 
    @param Lstar_w_dV (nElements_global x nQuadraturePoints_element x
    nDOF_test_element). The linearized adjoint applied to the weighted
    finite element test function values.
-   
+
    @param jacobian_weak_residual (nElements_global x nDOF_test_element x
    nDOF_trial_element). The element jacobian, which is updated upon return.
 
    The result of calling this function is
    \f[
-   jacobian_{e,i,j} \mapsto jacobian_{e,i,j} - \int_{\Omega_e} \tau \frac{\partial \mathcal{R}}{\partial u_j} \mathcal{L^*}(w dV){k,i} \quad \forall e,i 
+   jacobian_{e,i,j} \mapsto jacobian_{e,i,j} - \int_{\Omega_e} \tau \frac{\partial \mathcal{R}}{\partial u_j} \mathcal{L^*}(w dV){k,i} \quad \forall e,i
    \f]
 
    where
@@ -3979,16 +3979,16 @@ void updateSubgridErrorJacobian(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
-          jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                   i*nDOF_trial_element + 
-                   j] 
-            += 
+          jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                   i*nDOF_trial_element +
+                   j]
+            +=
             derror[eN*nQuadraturePoints_element*nDOF_trial_element+
 		   k*nDOF_trial_element+
 		   j]
             *
-            Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
-                   k*nDOF_test_element + 
+            Lstar_w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
+                   k*nDOF_test_element +
                    i];
 }
 
@@ -4044,15 +4044,15 @@ void updateNumericalDiffusion(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
-          weak_residual[eN*nDOF_test_element + i] 
-            += 
-            numDiff[eN*nQuadraturePoints_element + 
+          weak_residual[eN*nDOF_test_element + i]
+            +=
+            numDiff[eN*nQuadraturePoints_element +
                     k]
             *
-            grad_u_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 + 
-			       k*nDOF_test_element*nSpace2 + 
-			       i*nSpace2 + 
-			       I*nSpace + 
+            grad_u_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2 +
+			       k*nDOF_test_element*nSpace2 +
+			       i*nSpace2 +
+			       I*nSpace +
 			       I];
 }
 
@@ -4070,18 +4070,18 @@ void updateNumericalDiffusion_lowmem(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
-          weak_residual[eN*nDOF_test_element + i] 
-            += 
-            numDiff[eN*nQuadraturePoints_element + 
+          weak_residual[eN*nDOF_test_element + i]
+            +=
+            numDiff[eN*nQuadraturePoints_element +
                     k]
             *
-            grad_u[eN*nQuadraturePoints_element*nSpace + 
-                   k*nSpace + 
+            grad_u[eN*nQuadraturePoints_element*nSpace +
+                   k*nSpace +
                    I]
             *
-            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                      k*nDOF_test_element*nSpace + 
-                      i*nSpace + 
+            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                      k*nDOF_test_element*nSpace +
+                      i*nSpace +
                       I];
 }
 
@@ -4143,18 +4143,18 @@ void updateNumericalDiffusionJacobian(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                     i*nDOF_trial_element + 
-                     j] 
-              += 
-              numDiff[eN*nQuadraturePoints_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                     i*nDOF_trial_element +
+                     j]
+              +=
+              numDiff[eN*nQuadraturePoints_element +
                       k]
               *
-              grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 + 
-				 k*nDOF_test_X_trial_element*nSpace2 + 
-				 j*nDOF_test_element*nSpace2 + 
-				 i*nSpace2 + 
-				 I*nSpace + 
+              grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 +
+				 k*nDOF_test_X_trial_element*nSpace2 +
+				 j*nDOF_test_element*nSpace2 +
+				 i*nSpace2 +
+				 I*nSpace +
 				 I];
 }
 
@@ -4174,43 +4174,43 @@ void updateNumericalDiffusionJacobian_lowmem(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                     i*nDOF_trial_element + 
-                     j] 
-              += 
-              numDiff[eN*nQuadraturePoints_element + 
+            jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                     i*nDOF_trial_element +
+                     j]
+              +=
+              numDiff[eN*nQuadraturePoints_element +
                       k]
               *
-              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
-                     k*nDOF_trial_element*nSpace + 
-                     j*nSpace + 
+              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
+                     k*nDOF_trial_element*nSpace +
+                     j*nSpace +
                      I]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
-                        i*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
+                        i*nSpace +
                         I];
 }
 
-/** 
+/**
     \brief Calculate the product of two scalars at the quadrature points
 */
 void calculateScalarScalarProduct(int nElements_global,
                                   int nQuadraturePoints_element,
-                                  double* s1, 
-                                  double* s2, 
+                                  double* s1,
+                                  double* s2,
                                   double* sResult)
 {
   int eN,k;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
-      sResult[eN*nQuadraturePoints_element + 
-              k] 
-        = 
-        s1[eN*nQuadraturePoints_element + 
+      sResult[eN*nQuadraturePoints_element +
+              k]
+        =
+        s1[eN*nQuadraturePoints_element +
            k]
         *
-        s2[eN*nQuadraturePoints_element + 
+        s2[eN*nQuadraturePoints_element +
            k];
 }
 
@@ -4220,23 +4220,23 @@ void calculateScalarScalarProduct(int nElements_global,
 void calculateVectorScalarProduct(int nElements_global,
                                   int nQuadraturePoints_element,
                                   int nSpace,
-                                  double* v, 
-                                  double* s, 
+                                  double* v,
+                                  double* s,
                                   double* vResult)
 {
   int eN,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
-        vResult[eN*nQuadraturePoints_element*nSpace + 
-                k*nSpace + 
-                I] 
-          = 
-          v[eN*nQuadraturePoints_element*nSpace + 
-            k*nSpace + 
+        vResult[eN*nQuadraturePoints_element*nSpace +
+                k*nSpace +
+                I]
+          =
+          v[eN*nQuadraturePoints_element*nSpace +
+            k*nSpace +
             I]
           *
-          s[eN*nQuadraturePoints_element + 
+          s[eN*nQuadraturePoints_element +
             k];
 }
 
@@ -4246,8 +4246,8 @@ void calculateVectorScalarProduct(int nElements_global,
 void calculateTensorScalarProduct(int nElements_global,
                                   int nQuadraturePoints_element,
                                   int nSpace,
-                                  double* t, 
-                                  double* s, 
+                                  double* t,
+                                  double* s,
                                   double* tResult)
 {
   int eN,k,I,J,nSpace2=nSpace*nSpace;
@@ -4255,22 +4255,22 @@ void calculateTensorScalarProduct(int nElements_global,
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
         for (J=0;J<nSpace;J++)
-          tResult[eN*nQuadraturePoints_element*nSpace2 + 
-                  k*nSpace2 + 
-                  I*nSpace + 
-                  J] 
-            = 
-            t[eN*nQuadraturePoints_element*nSpace2 + 
-              k*nSpace2 + 
-              I*nSpace + 
+          tResult[eN*nQuadraturePoints_element*nSpace2 +
+                  k*nSpace2 +
+                  I*nSpace +
+                  J]
+            =
+            t[eN*nQuadraturePoints_element*nSpace2 +
+              k*nSpace2 +
+              I*nSpace +
               J]
             *
-            s[eN*nQuadraturePoints_element + 
+            s[eN*nQuadraturePoints_element +
               k];
 }
 
 
- 
+
 
 
 
@@ -4638,7 +4638,7 @@ void accumulateExteriorElementPressureIntegrals(int nExteriorElementBoundaries_g
           P[elementBoundaryFlag] += p[ebNE*nQuadraturePoints_elementBoundary+k]
 	    *
             dS[ebNE*nQuadraturePoints_elementBoundary+k];
-	  boundaryMeasure[elementBoundaryFlag] += 
+	  boundaryMeasure[elementBoundaryFlag] +=
             dS[ebNE*nQuadraturePoints_elementBoundary+k];
         }
     }
@@ -4661,11 +4661,11 @@ void updateGlobalResidualFromElementResidual(int nElements_global,
   int eN,ii;
   for (eN=0;eN<nElements_global;eN++)
     for (ii=0;ii<nFreeDOF_element_r[eN];ii++)
-      globalResidual[offset_r + 
+      globalResidual[offset_r +
 		     stride_r*freeGlobal_r[eN*nDOF_test_element+
-					 ii]] 
+					 ii]]
         +=
-        elementResidual[eN*nDOF_test_element + 
+        elementResidual[eN*nDOF_test_element +
                         freeLocal_r[eN*nDOF_test_element+
                                     ii]];
 }
@@ -4774,7 +4774,7 @@ void updateGlobalJacobianFromElementJacobian_eb_dense(int* elementNeighbors,
 
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInteriorElementBoundaries_global,
 								       int nElementBoundaries_element,
 								       int nQuadraturePoints_elementBoundary,
@@ -4821,14 +4821,14 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInte
 		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
 						     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
-                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                  jac[jacIndex]
+                    +=
+                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                 0*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]
                     *
-                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
 			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
 			 k*nDOF_test_element+
 			 i];
@@ -4840,13 +4840,13 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInte
 		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
                                                        jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
-                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                  jac[jacIndex]
+                    +=
+                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                 1*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]*
-                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
 			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
 			 k*nDOF_test_element+i];
                 }
@@ -4867,8 +4867,8 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInte
 		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
 						     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    -= 
+                  jac[jacIndex]
+                    -=
                     elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 0*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
@@ -4886,8 +4886,8 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInte
 		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
 						     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    -= 
+                  jac[jacIndex]
+                    -=
                     elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 1*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
@@ -4904,7 +4904,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(int nInte
 
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* elementNeighbors,
                                                                           int nElements_global,
                                                                           int nInteriorElementBoundaries_global,
@@ -4968,15 +4968,15 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[left_eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          += 
-                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                        jac[jacIndex]
+                          +=
+                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                          0*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          k*nDOF_trial_element+
                                                          j]
                           *
-                          w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                          w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
                                left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                                k*nDOF_test_element+
                                i];
@@ -5001,14 +5001,14 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[right_eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          += 
-                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                        jac[jacIndex]
+                          +=
+                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                          1*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          k*nDOF_trial_element+
                                                          j]*
-                          w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                          w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
                                left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                                k*nDOF_test_element+i];
 /*                         printf("ind=%i,ebN = %i,left_eN_global=%i,left_ebN_element=%i,ebN_element=%i,i=%i,j=%i,jac=%12.5e,fjac=%12.5e,w=%12.5e\n", */
@@ -5042,8 +5042,8 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[left_eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          -= 
+                        jac[jacIndex]
+                          -=
                           elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          0*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
@@ -5075,8 +5075,8 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[right_eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          -= 
+                        jac[jacIndex]
+                          -=
                           elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          1*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
@@ -5105,7 +5105,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(int* e
 }
 /**
    \brief Update the global dense Jacobian from the element boundary two-sided Hamiltonflux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(int nInteriorElementBoundaries_global,
 									  int nElementBoundaries_element,
 									  int nQuadraturePoints_elementBoundary,
@@ -5153,15 +5153,15 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(in
 		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
 						       jj];
 		  jacIndex = I+J*nFreeVDOF_global;
-		  jac[jacIndex] 
-		    += 
-		    elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+		  jac[jacIndex]
+		    +=
+		    elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 						       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
 						       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left  neig. dep*/
 						       k*nDOF_trial_element+
 						       j]
 		    *
-		    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+		    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
 			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
 			 k*nDOF_test_element+
 			 i];
@@ -5173,14 +5173,14 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(in
 		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
 						       jj];
 		  jacIndex = I+J*nFreeVDOF_global;
-		  jac[jacIndex] 
-		    += 
-		    elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+		  jac[jacIndex]
+		    +=
+		    elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 						       0*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*left flux*/
 						       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right  neig. dep*/
 						       k*nDOF_trial_element+
 						       j]*
-		    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+		    w_dS[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
 			 left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
 			 k*nDOF_test_element+i];
 		}
@@ -5202,8 +5202,8 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(in
 		  J = offset_u + stride_u*freeGlobal_u[left_eN_global*nDOF_trial_element+
 						     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
+                  jac[jacIndex]
+                    +=
                     elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 						       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
 						       0*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*left neighbor*/
@@ -5222,8 +5222,8 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(in
 		  J = offset_u + stride_u*freeGlobal_u[right_eN_global*nDOF_trial_element+
 						     jj];
                   jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
+                  jac[jacIndex]
+                    +=
                     elementBoundaryFluxJacobian_2sided[ebN*2*2*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 						       1*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + /*right flux*/
 						       1*nQuadraturePoints_elementBoundary*nDOF_trial_element+ /*right neig dep*/
@@ -5241,7 +5241,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(in
 
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExteriorElementBoundaries_global,
                                                                        int nElementBoundaries_element,
                                                                        int nQuadraturePoints_elementBoundary,
@@ -5286,14 +5286,14 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExte
 		  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
                                                        jj];
 		  jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
-                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                  jac[jacIndex]
+                    +=
+                    elementBoundaryFluxJacobian[ebN*2*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                 0*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]
                     *
-                    w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                    w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
 			 ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
 			 k*nDOF_test_element+
 			 i];
@@ -5305,7 +5305,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(int nExte
 
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(int* elementNeighbors,
                                                                           int nElements_global,
                                                                           int nExteriorElementBoundaries_global,
@@ -5362,15 +5362,15 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(int* e
                         J = offset_u + stride_u*freeGlobal_u[eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          += 
-                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                        jac[jacIndex]
+                          +=
+                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                          0*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_eN*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          k*nDOF_trial_element+
                                                          j]
                           *
-                          w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element + 
+                          w_dS[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element +
                                ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                                k*nDOF_test_element+
                                i];
@@ -5395,7 +5395,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(int* e
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at exterior boundaries
           only difference from updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian
           is test function dimensionality right now
-*/    
+*/
 void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(int* elementNeighbors,
 										int nElements_global,
 										int nExteriorElementBoundaries_global,
@@ -5452,9 +5452,9 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(
                         J = offset_u + stride_u*freeGlobal_u[eN_ebN*nDOF_trial_element+
                                                              jj];
                         jacIndex = I+J*nFreeVDOF_global;
-                        jac[jacIndex] 
-                          += 
-                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                        jac[jacIndex]
+                          +=
+                          elementBoundaryFluxJacobian_eb[ebN*2*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element +
                                                          0*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          ebN_eN*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                          k*nDOF_trial_element+
@@ -5482,7 +5482,7 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_dense(
 }
 /**
    \brief Update the global dense Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(int nExteriorElementBoundaries_global,
 									     int nQuadraturePoints_elementBoundary,
 									     int nDOF_test_element,
@@ -5526,8 +5526,8 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_dense(int
 		  J = offset_u + stride_u*freeGlobal_u[eN_global*nDOF_trial_element+
                                                        jj];
 		  jacIndex = I+J*nFreeVDOF_global;
-                  jac[jacIndex] 
-                    += 
+                  jac[jacIndex]
+                    +=
                     elementBoundaryFluxJacobian[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
                                                 k*nDOF_trial_element+
                                                 j]
@@ -5574,8 +5574,8 @@ void updateGlobalJacobianFromElementJacobian_CSR(int nElements_global,
                                   jj];
 	    globalJacobian[jacIndex]
 	      +=
-	      elementJacobian[eN*nDOF_test_X_trial_element + 
-			      i*nDOF_trial_element + 
+	      elementJacobian[eN*nDOF_test_X_trial_element +
+			      i*nDOF_trial_element +
 			      j];
 	  }
       }
@@ -5630,7 +5630,7 @@ void updateGlobalJacobianFromElementJacobian_eb_CSR(int* elementNeighbors,
                     +=
                     elementJacobian_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element +
                                        ebN*nDOF_test_X_trial_element+
-                                       i*nDOF_trial_element + 
+                                       i*nDOF_trial_element +
                                        j];
                 }
             }
@@ -5639,7 +5639,7 @@ void updateGlobalJacobianFromElementJacobian_eb_CSR(int* elementNeighbors,
 
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteriorElementBoundaries_global,
 								     int nElementBoundaries_element,
 								     int nQuadraturePoints_elementBoundary,
@@ -5781,7 +5781,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(int nInteri
 
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(int nExteriorElementBoundaries_global,
 								     int nElementBoundaries_element,
 								     int nQuadraturePoints_elementBoundary,
@@ -5841,7 +5841,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(int nExteri
 }
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_CSR(int nExteriorElementBoundaries_global,
 									   int nQuadraturePoints_elementBoundary,
 									   int nDOF_test_element,
@@ -5898,7 +5898,7 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_CSR(int n
 
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(int* elementNeighbors,
                                                                         int nInteriorElementBoundaries_global,
 								     int nElementBoundaries_element,
@@ -6102,7 +6102,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(int* ele
 
 /**
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at exterior boundaries
-*/    
+*/
 void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(int* elementNeighbors,
                                                                         int nExteriorElementBoundaries_global,
 								     int nElementBoundaries_element,
@@ -6183,7 +6183,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(int* ele
    \brief Update the global CSR Jacobian from the element boundary flux Jacobians at exterior boundaries
           only difference from updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian
           is test function dimensionality right now
-*/    
+*/
 void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(int* elementNeighbors,
 									      int nExteriorElementBoundaries_global,
 									      int nElementBoundaries_element,
@@ -6261,7 +6261,7 @@ void updateGlobalJacobianFromGlobalExteriorElementBoundaryFluxJacobian_eb_CSR(in
 }
 /**
    \brief Update the global CSR Jacobian from the element boundary two-sided Hamiltonian flux Jacobians at interior boundaries
-*/    
+*/
 void updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(int nInteriorElementBoundaries_global,
 									    int nElementBoundaries_element,
 									    int nQuadraturePoints_elementBoundary,
@@ -6424,7 +6424,7 @@ void calculateWeightedShape(int nElements_global,
       for (i=0;i<nDOF_test_element;i++)
         w_dV[eN*nQuadraturePoints_element*nDOF_test_element+
 	     k*nDOF_test_element+
-	     i] 
+	     i]
 	  =
           w[eN*nQuadraturePoints_element*nDOF_test_element+
 	    k*nDOF_test_element+
@@ -6435,7 +6435,7 @@ void calculateWeightedShape(int nElements_global,
           abs_det_jac[eN*nQuadraturePoints_element+
                       k];
 }
-          
+
 /**
    \brief Weight the test function with the integration weights
 */
@@ -6456,7 +6456,7 @@ void calculateWeightedShapeGradients(int nElements_global,
           grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
                     k*nDOF_test_element*nSpace+
                     i*nSpace+
-                    I] 
+                    I]
             =
             grad_w[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
                    k*nDOF_test_element*nSpace+
@@ -6487,7 +6487,7 @@ void calculateWeightedPiolaShapeGradients(int nElements_global,
           grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
                     k*nDOF_test_element*nSpace+
                     i*nSpace+
-                    I] 
+                    I]
             =
             grad_w[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
                    k*nDOF_test_element*nSpace+
@@ -6517,7 +6517,7 @@ void calculateWeightedShapeHessians(int nElements_global,
 		      k*nDOF_test_element*nSpace2+
 		      i*nSpace2+
 		      I*nSpace+
-		      J] 
+		      J]
 	      =
 	      Hess_w[eN*nQuadraturePoints_element*nDOF_test_element*nSpace2+
 		     k*nDOF_test_element*nSpace2+
@@ -6530,7 +6530,7 @@ void calculateWeightedShapeHessians(int nElements_global,
 	      abs_det_jac[eN*nQuadraturePoints_element+
 			  k];
 }
-          
+
 /**
    \brief Calcualte the tensor product of trial and test functions at the quadrature  points
 */
@@ -6547,16 +6547,16 @@ void calculateShape_X_weightedShape(int nElements_global,
     for (k=0;k<nQuadraturePoints_element;k++)
       for (i=0;i<nDOF_test_element;i++)
         for (j=0;j<nDOF_trial_element;j++)
-          v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element + 
+          v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element +
                    k*nDOF_test_X_trial_element+
                    j*nDOF_test_element+
-                   i] 
-            = 
-            v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+                   i]
+            =
+            v[eN*nQuadraturePoints_element*nDOF_trial_element +
               k*nDOF_trial_element+
               j]
             *
-            w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
+            w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
                  k*nDOF_test_element+
                  i];
 }
@@ -6579,17 +6579,17 @@ void calculateShape_X_weightedGradShape(int nElements_global,
       for (i=0;i<nDOF_test_element;i++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace + 
+            v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace +
                           k*nDOF_test_X_trial_element*nSpace+
                           j*nDOF_test_element*nSpace+
                           i*nSpace+
-                          I] 
-              = 
-              v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+                          I]
+              =
+              v[eN*nQuadraturePoints_element*nDOF_trial_element +
                 k*nDOF_trial_element+
                 j]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                         k*nDOF_test_element*nSpace+
                         i*nSpace+
                         I];
@@ -6613,18 +6613,18 @@ void calculateGradShape_X_weightedShape(int nElements_global,
       for (i=0;i<nDOF_test_element;i++)
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
-            grad_v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace + 
+            grad_v_X_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace +
                           k*nDOF_test_X_trial_element*nSpace+
                           j*nDOF_test_element*nSpace+
                           i*nSpace+
-                          I] 
-              = 
-              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+                          I]
+              =
+              grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                      k*nDOF_trial_element*nSpace+
                      j*nSpace+
                      I]
               *
-              w_dV[eN*nQuadraturePoints_element*nDOF_test_element + 
+              w_dV[eN*nQuadraturePoints_element*nDOF_test_element +
                    k*nDOF_test_element+
                    i];
 }
@@ -6648,19 +6648,19 @@ void calculateGradShape_X_weightedGradShape(int nElements_global,
         for (j=0;j<nDOF_trial_element;j++)
           for (I=0;I<nSpace;I++)
             for (J=0;J<nSpace;J++)
-              grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 + 
+              grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 +
                                  k*nDOF_test_X_trial_element*nSpace2+
                                  j*nDOF_test_element*nSpace2+
                                  i*nSpace2+
                                  I*nSpace+
-                                 J] 
-                = 
-                grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+                                 J]
+                =
+                grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                        k*nDOF_trial_element*nSpace+
                        j*nSpace+
                        I]
                 *
-                grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
+                grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
                           k*nDOF_test_element*nSpace+
                           i*nSpace+
                           J];
@@ -6687,7 +6687,7 @@ void calculateWeightedShapeTrace(int nElements_global,
             w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
                  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                  k*nDOF_test_element+
-                 i] 
+                 i]
               =
               w[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
                 ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
@@ -6719,7 +6719,7 @@ void calculateWeightedPiolaShapeTrace(int nElements_global,
             w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
                  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                  k*nDOF_test_element+
-                 i] 
+                 i]
               =
               w[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
                 ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
@@ -6733,7 +6733,7 @@ void calculateWeightedPiolaShapeTrace(int nElements_global,
                          k];
           }
 }
-          
+
 /**
    \brief Calcualte the tensor product of trial and test functions at the quadrature  points
 */
@@ -6752,18 +6752,18 @@ void calculateShape_X_weightedShapeTrace(int nElements_global,
       for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
         for (i=0;i<nDOF_test_element;i++)
           for (j=0;j<nDOF_trial_element;j++)
-            v_X_w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element + 
+            v_X_w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element +
                      ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element +
                      k*nDOF_test_X_trial_element+
                      j*nDOF_test_element+
-                     i] 
-              = 
-              v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element + 
+                     i]
+              =
+              v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element +
                 ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element +
                 k*nDOF_trial_element+
                 j]
               *
-              w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element + 
+              w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                    ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                    k*nDOF_trial_element+
                    i];
@@ -6789,21 +6789,21 @@ void calculateGradShape_X_weightedShapeTrace(int nElements_global,
         for (i=0;i<nDOF_test_element;i++)
           for (j=0;j<nDOF_trial_element;j++)
             for (I=0;I<nSpace;I++)
-              grad_v_X_w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace + 
-                            ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace + 
+              grad_v_X_w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace +
+                            ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace +
                             k*nDOF_test_X_trial_element*nSpace+
                             j*nDOF_test_element*nSpace+
                             i*nSpace+
-                            I] 
-                = 
-                grad_v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
-                       ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+                            I]
+                =
+                grad_v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+                       ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
                        k*nDOF_trial_element*nSpace+
                        j*nSpace+
                        I]
                 *
-                w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element + 
-                     ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element + 
+                w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
+                     ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                      k*nDOF_test_element+
                      i];
 }
@@ -6830,7 +6830,7 @@ void calculateWeightedShapeGlobalExteriorTrace(int nElementBoundaryQuadraturePoi
           {
             w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                  k*nDOF_test_element+
-                 i] 
+                 i]
               =
               w[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
                 k*nDOF_test_element+
@@ -6866,8 +6866,8 @@ void calculateShape_X_weightedShapeGlobalExteriorTrace(int nElementBoundaryQuadr
 	  v_X_w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element +
 		   k*nDOF_test_X_trial_element+
 		   j*nDOF_test_element+
-		   i] 
-	    = 
+		   i]
+	    =
 	    v[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element +
 	      k*nDOF_trial_element+
 	      j]
@@ -6898,18 +6898,18 @@ void calculateGradShape_X_weightedShapeGlobalExteriorTrace(int nElementBoundaryQ
       for (i=0;i<nDOF_test_element;i++)
 	for (j=0;j<nDOF_trial_element;j++)
 	  for (I=0;I<nSpace;I++)
-	    grad_v_X_w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace + 
+	    grad_v_X_w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_X_trial_element*nSpace +
 			  k*nDOF_test_X_trial_element*nSpace+
 			  j*nDOF_test_element*nSpace+
 			  i*nSpace+
-			  I] 
-	      = 
-	      grad_v[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+			  I]
+	      =
+	      grad_v[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
 		     k*nDOF_trial_element*nSpace+
 		     j*nSpace+
 		     I]
 	      *
-	      w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element + 
+	      w_dS[ebNE*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
 		   k*nDOF_test_element+
 		   i];
 }
@@ -6978,7 +6978,7 @@ void calculateGlobalExteriorElementBoundaryIntegrationWeights(int nQuadraturePoi
 
 /**
    \brief Calculate the values of a multicomponent finite element function at the quadrature  points from the degrees of freedom and the test function values at the quadrature points
-*/ 
+*/
 void calculateFiniteElementFunctionValues(int nElements_global,
                                           int nQuadraturePoints_element,
                                           int nDOF_trial_element,
@@ -6996,8 +6996,8 @@ void calculateFiniteElementFunctionValues(int nElements_global,
         for (t=0;t<nComponents;t++){
           u[eN*nQuadraturePoints_element*nComponents+
             k*nComponents+
-            t] 
-            += 
+            t]
+            +=
             dof[l2g[eN*nDOF_trial_element+
                     j]*nComponents+
                 t]
@@ -7013,7 +7013,7 @@ void calculateFiniteElementFunctionValues(int nElements_global,
 
 /**
    \brief Calculate the gradient values of a multicomponent finite element function at the quadrature  points from the degrees of freedom and the test function gradient values at the quadrature points
-*/ 
+*/
 void calculateFiniteElementFunctionGradientValues(int nElements_global,
                                                   int nQuadraturePoints_element,
                                                   int nDOF_trial_element,
@@ -7147,21 +7147,21 @@ void calculateFiniteElementFunctionGradientTensorValues(int nElements_global,
             for(I=0;I<nSpace;I++)
               for(J=0;J<nSpace;J++)
                 grad_u_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nComponents*nSpace2+
-                                   k*nDOF_test_element*nComponents*nSpace2 + 
+                                   k*nDOF_test_element*nComponents*nSpace2 +
                                    i*nComponents*nSpace2 +
                                    t*nSpace2 +
-                                   I*nSpace + 
-                                   J] 
+                                   I*nSpace +
+                                   J]
                   +=
                   dof[l2g[eN*nDOF_trial_element+
                           j]*nComponents+
                       t]
                   *
-                  grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 + 
-                                     k*nDOF_test_X_trial_element*nSpace2 + 
-                                     j*nDOF_test_element*nSpace2 + 
-                                     i*nSpace2 + 
-                                     I*nSpace + 
+                  grad_v_X_grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_X_trial_element*nSpace2 +
+                                     k*nDOF_test_X_trial_element*nSpace2 +
+                                     j*nDOF_test_element*nSpace2 +
+                                     i*nSpace2 +
+                                     I*nSpace +
                                      J];
 }
 
@@ -7188,8 +7188,8 @@ void calculateFiniteElementFunctionValuesTrace(int nElements_global,
             u[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nComponents+
               ebN*nQuadraturePoints_elementBoundary*nComponents+
               k*nComponents+
-              t] 
-              += 
+              t]
+              +=
               dof[l2g[eN*nDOF_trial_element+j]*nComponents+
                   t]
               *
@@ -7226,8 +7226,8 @@ void calculateFiniteElementFunctionGradientValuesTrace(int nElements_global,
                      ebN*nQuadraturePoints_elementBoundary*nComponents*nSpace+
                      k*nComponents*nSpace+
                      t*nSpace+
-                     I] 
-                += 
+                     I]
+                +=
                 dof[l2g[eN*nDOF_trial_element+j]*nComponents+
                     t]
                 *
@@ -7261,8 +7261,8 @@ void calculateFiniteElementFunctionValuesGlobalExteriorTrace(int nQuadraturePoin
           for(t=0;t<nComponents;t++)
             u[ebNE*nQuadraturePoints_elementBoundary*nComponents+
               k*nComponents+
-              t] 
-              += 
+              t]
+              +=
               dof[l2g[eN*nDOF_trial_element+j]*nComponents+
                   t]
               *
@@ -7299,8 +7299,8 @@ void calculateFiniteElementFunctionGradientValuesGlobalExteriorTrace(int nQuadra
               grad_u[ebNE*nQuadraturePoints_elementBoundary*nComponents*nSpace+
                      k*nComponents*nSpace+
                      t*nSpace+
-                     I] 
-                += 
+                     I]
+                +=
                 dof[l2g[eN*nDOF_trial_element+j]*nComponents+
                     t]
                 *
@@ -7348,14 +7348,14 @@ void calculateFlowVelocity(int nElements_global,
               grad_phi[eN*nQuadraturePoints_element*nSpace+
                        k*nSpace+
                        J];
-        }
+        } 
 }
 
 /**
    \brief Update a single  element of the Jacobian
 */
-void updateAddJacobian_CSR(int jacIndex, 
-                           double val, 
+void updateAddJacobian_CSR(int jacIndex,
+                           double val,
                            double* jac)
 {
   jac[jacIndex] += val;
@@ -7364,7 +7364,7 @@ void updateAddJacobian_CSR(int jacIndex,
 /**
    \brief  Set all the Jacobian entries  to 0.0
 */
-void zeroJacobian_CSR(int nNonzeros, 
+void zeroJacobian_CSR(int nNonzeros,
                       double* jac)
 {
   memset(jac,0,sizeof(double)*nNonzeros);
@@ -7397,8 +7397,8 @@ void calculateInteriorElementBoundaryVelocities(int nInteriorElementBoundaries_g
       right_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+1];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
 	{
-	  mLeft 
-	    = 
+	  mLeft
+	    =
 	    m[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
 	      left_ebN_element*nQuadraturePoints_elementBoundary+
 	      k];
@@ -7409,8 +7409,8 @@ void calculateInteriorElementBoundaryVelocities(int nInteriorElementBoundaries_g
 	      k];
 	  for (I=0;I<nSpace;I++)
 	    {
-	      vLeft 
-		= 
+	      vLeft
+		=
 		f[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 		  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
 		  k*nSpace+
@@ -7423,8 +7423,8 @@ void calculateInteriorElementBoundaryVelocities(int nInteriorElementBoundaries_g
 		  I];
 	      for (J=0;J<nSpace;J++)
 		{
-		  vLeft 
-		    -= 
+		  vLeft
+		    -=
 		    a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
 		      left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
 		      k*nSpace2+
@@ -7487,23 +7487,23 @@ void calculateExteriorElementBoundaryVelocities(int nExteriorElementBoundaries_g
       left_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
 	{
-	  mLeft 
-	    = 
+	  mLeft
+	    =
 	    m[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
 	      left_ebN_element*nQuadraturePoints_elementBoundary+
 	      k];
 	  for (I=0;I<nSpace;I++)
 	    {
-	      vLeft 
-		= 
+	      vLeft
+		=
 		f[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 		  left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
 		  k*nSpace+
 		  I];
 	      for (J=0;J<nSpace;J++)
 		{
-		  vLeft 
-		    -= 
+		  vLeft
+		    -=
 		    a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
 		      left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
 		      k*nSpace2+
@@ -7559,7 +7559,7 @@ void setExteriorGlobalElementBoundaryVelocityValues(int updateFluxValues,
 	  {
 	    v_out[ebN*nQuadraturePoints_elementBoundary*nSpace+
 		 k*nSpace+
-		 I] = 
+		 I] =
 	      multiple*v_out[ebN*nQuadraturePoints_elementBoundary*nSpace+
 			     k*nSpace+
 			     I]
@@ -7570,7 +7570,7 @@ void setExteriorGlobalElementBoundaryVelocityValues(int updateFluxValues,
 	      *
 	      vn_in[ebN*nQuadraturePoints_elementBoundary+
 		    k];
-	    
+
 	    /*mwf debug*/
 	    printf("setExtGlobElmVel ebN=%d k=%d I=%d vn_in=%g v_out=%g \n",
 		   ebN,k,I,
@@ -7582,9 +7582,9 @@ void setExteriorGlobalElementBoundaryVelocityValues(int updateFluxValues,
 
 	  }
     }
-  
+
 }
-				       
+
 
 /**
    \brief Calculate the Peclet and Courant-Friedrichs-Lewy numbers for the scalar advection-diffusion-reaction equation
@@ -7612,34 +7612,34 @@ void calculateDimensionlessNumbersADR(int nElements_global,
           Vlin = 0.0;
           Alin = 0.0;
           for(I=0;I<nSpace;I++)
-            Vlin 
-              += 
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+            Vlin
+              +=
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I];
           Vlin = sqrt(Vlin);
           /*max diagonal entry for A. This choice needs to be looked into*/
           for(I=0;I<nSpace;I++)
             {
-              A_II = a[eN*nQuadraturePoints_element*nSpace2 + 
-                       k*nSpace2 + 
-                       I*nSpace + 
+              A_II = a[eN*nQuadraturePoints_element*nSpace2 +
+                       k*nSpace2 +
+                       I*nSpace +
                        I];
               Alin = (A_II > Alin) ? A_II : Alin;
             }
-          Alin*=dphi[eN*nQuadraturePoints_element + 
+          Alin*=dphi[eN*nQuadraturePoints_element +
                      k];
           cfl1 = Vlin/h;
           cfl2 = Alin/(h*h);
 	  if (computeDiffusiveTimeStepLimit)
-	    cfl[eN*nQuadraturePoints_element + 
+	    cfl[eN*nQuadraturePoints_element +
                 k] = cfl2;
 	  else
-            cfl[eN*nQuadraturePoints_element + 
+            cfl[eN*nQuadraturePoints_element +
                 k] = cfl1;
           num = 0.5*Vlin*h + 1.0e-8;
           den = Alin + num*1.0e-8;
@@ -7674,14 +7674,14 @@ void calculateDimensionlessNumbersADR_sd(int nElements_global,
           Alin = 0.0;
           for(I=0;I<nSpace;I++)
             {
-              Vlin 
-                += 
-                df[eN*nQuadraturePoints_element*nSpace + 
-                   k*nSpace + 
+              Vlin
+                +=
+                df[eN*nQuadraturePoints_element*nSpace +
+                   k*nSpace +
                    I]
                 *
-                df[eN*nQuadraturePoints_element*nSpace + 
-                   k*nSpace + 
+                df[eN*nQuadraturePoints_element*nSpace +
+                   k*nSpace +
                    I];
             }
           Vlin = sqrt(Vlin);
@@ -7699,16 +7699,16 @@ void calculateDimensionlessNumbersADR_sd(int nElements_global,
                     }
                 }
             }
-          Alin*=dphi[eN*nQuadraturePoints_element + 
+          Alin*=dphi[eN*nQuadraturePoints_element +
                      k];
           cfl1 = Vlin/h;
           cfl2 = Alin/(h*h);
 
 	  if (computeDiffusiveTimeStepLimit)
-	    cfl[eN*nQuadraturePoints_element + 
+	    cfl[eN*nQuadraturePoints_element +
                 k] = cfl2;
 	  else
-            cfl[eN*nQuadraturePoints_element + 
+            cfl[eN*nQuadraturePoints_element +
                 k] = cfl1;
           num = 0.5*Vlin*h + 1.0e-8;
           den = Alin + num*1.0e-8;
@@ -7736,18 +7736,18 @@ void calculateCFLADR(int nElements_global,
 	  dmdu = dm[eN*nQuadraturePoints_element + k];
           Vlin = 0.0;
           for(I=0;I<nSpace;I++)
-            Vlin 
-              += 
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+            Vlin
+              +=
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              df[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              df[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I];
           Vlin = sqrt(Vlin)/(dmdu+1.0e-10);
           cfl1 = Vlin/h;
-	  cfl[eN*nQuadraturePoints_element + 
+	  cfl[eN*nQuadraturePoints_element +
 	      k] = cfl1;
 
         }
@@ -7773,27 +7773,27 @@ void calculateCFLADR2speeds(int nElements_global,
 	  dmdu = dm[eN*nQuadraturePoints_element + k];
           Vlin = 0.0;
           for(I=0;I<nSpace;I++)
-            Vlin 
-              += 
-              df1[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+            Vlin
+              +=
+              df1[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  I]
               *
-              df1[eN*nQuadraturePoints_element*nSpace + 
-		  k*nSpace + 
+              df1[eN*nQuadraturePoints_element*nSpace +
+		  k*nSpace +
 		  I]
-	      + 
-              df2[eN*nQuadraturePoints_element*nSpace + 
-		  k*nSpace + 
+	      +
+              df2[eN*nQuadraturePoints_element*nSpace +
+		  k*nSpace +
 		  I]
               *
-              df2[eN*nQuadraturePoints_element*nSpace + 
-		  k*nSpace + 
+              df2[eN*nQuadraturePoints_element*nSpace +
+		  k*nSpace +
 		  I];
 
           Vlin = sqrt(Vlin)/(dmdu+1.0e-10);
           cfl1 = Vlin/h;
-	  cfl[eN*nQuadraturePoints_element + 
+	  cfl[eN*nQuadraturePoints_element +
 	      k] = cfl1;
 
         }
@@ -7803,7 +7803,7 @@ void calculateCFLADR2speeds(int nElements_global,
 
 /**
    \brief Calculate the diffusive flux at interior element boundary quadrature points
-*/ 
+*/
 void updateInteriorElementBoundaryDiffusiveVelocity(int nInteriorElementBoundaries_global,
                                                     int nElementBoundaries_element,
                                                     int nQuadraturePoints_elementBoundary,
@@ -7830,7 +7830,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity(int nInteriorElementBoundari
               velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
-                -= 
+                -=
                 a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
                   left_ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
                   k*nSpace2+
@@ -7839,7 +7839,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity(int nInteriorElementBoundari
                 *
                 grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                          left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                         k*nSpace+J];     
+                         k*nSpace+J];
               velocity[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
@@ -7885,7 +7885,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBound
               velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
-                -= 
+                -=
                 a[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
                   left_ebN_element*nQuadraturePoints_elementBoundary*nnz+
                   k*nnz+
@@ -7893,10 +7893,10 @@ void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBound
                 *
                 grad_phi[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                          left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-                         k*nSpace+colind[m]]; 
+                         k*nSpace+colind[m]];
 
 
-    
+
               velocity[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                        right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                        k*nSpace+I]
@@ -7918,7 +7918,7 @@ void updateInteriorElementBoundaryDiffusiveVelocity_sd(int nInteriorElementBound
 
 /**
    \brief Calculate the diffusive flux at exterior element boundary quadrature points
-*/ 
+*/
 void updateExteriorElementBoundaryDiffusiveVelocity(int nExteriorElementBoundaries_global,
                                                     int nElementBoundaries_element,
                                                     int nQuadraturePoints_elementBoundary,
@@ -7944,7 +7944,7 @@ void updateExteriorElementBoundaryDiffusiveVelocity(int nExteriorElementBoundari
 		velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 			 ebN_element*nQuadraturePoints_elementBoundary*nSpace+
 			 k*nSpace+I]
-		  -= 
+		  -=
 		  a[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace2+
 		    ebN_element*nQuadraturePoints_elementBoundary*nSpace2+
 		    k*nSpace2+
@@ -7986,7 +7986,7 @@ void updateExteriorElementBoundaryDiffusiveVelocity_sd(int nExteriorElementBound
 		velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 			 ebN_element*nQuadraturePoints_elementBoundary*nSpace+
 			 k*nSpace+I]
-		  -= 
+		  -=
 		  a[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz+
 		    ebN_element*nQuadraturePoints_elementBoundary*nnz+
 		    k*nnz+
@@ -8002,7 +8002,7 @@ void updateExteriorElementBoundaryDiffusiveVelocity_sd(int nExteriorElementBound
 
 /**
    \brief Calculate the diffusive flux at exterior element boundary quadrature points
-*/ 
+*/
 void updateGlobalExteriorElementBoundaryDiffusiveVelocity(int nExteriorElementBoundaries_global,
 							  int nQuadraturePoints_elementBoundary,
 							  int nSpace,
@@ -8023,7 +8023,7 @@ void updateGlobalExteriorElementBoundaryDiffusiveVelocity(int nExteriorElementBo
 	      {
 		velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
 			 k*nSpace+I]
-		  -= 
+		  -=
 		  a[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
 		    k*nSpace2+
 		    I*nSpace+
@@ -8058,7 +8058,7 @@ void updateGlobalExteriorElementBoundaryDiffusiveVelocity_sd(int nExteriorElemen
 	      {
 		velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
 			 k*nSpace+I]
-		  -= 
+		  -=
 		  a[ebNE*nQuadraturePoints_elementBoundary*nnz+
 		    k*nnz+
 		    m]
@@ -8098,8 +8098,8 @@ void updateInteriorElementBoundaryAdvectiveVelocity(int nInteriorElementBoundari
             velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                      left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                      k*nSpace+
-                     J]      
-              += 
+                     J]
+              +=
               f[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                 left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                 k*nSpace+
@@ -8108,7 +8108,7 @@ void updateInteriorElementBoundaryAdvectiveVelocity(int nInteriorElementBoundari
                      right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                      k*nSpace+
                      J]
-              += 
+              +=
               f[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
                 right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
                 k*nSpace+
@@ -8183,7 +8183,7 @@ void updateGlobalExteriorElementBoundaryAdvectiveVelocity(int nExteriorElementBo
 
 /**
    \brief Calculate the velocity from shock capturing at interior element boundary quadrature points
-*/ 
+*/
 void updateInteriorElementBoundaryShockCapturingVelocity(int nInteriorElementBoundaries_global,
 							 int nElementBoundaries_element,
 							 int nQuadraturePoints_elementBoundary,
@@ -8214,12 +8214,12 @@ void updateInteriorElementBoundaryShockCapturingVelocity(int nInteriorElementBou
 	    velocity[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 		     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
 		     k*nSpace+I]
-	      -= 
+	      -=
 	      numDiffAvg_left
 	      *
 	      grad_u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 		     left_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
-		     k*nSpace+I];     
+		     k*nSpace+I];
 	    velocity[right_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 		     right_ebN_element*nQuadraturePoints_elementBoundary*nSpace+
 		     k*nSpace+I]
@@ -8235,7 +8235,7 @@ void updateInteriorElementBoundaryShockCapturingVelocity(int nInteriorElementBou
 
 /**
    \brief Calculate the shock capturing flux at exterior element boundary quadrature points
-*/ 
+*/
 void updateExteriorElementBoundaryShockCapturingVelocity(int nExteriorElementBoundaries_global,
 							 int nElementBoundaries_element,
 							 int nQuadraturePoints_elementBoundary,
@@ -8263,21 +8263,21 @@ void updateExteriorElementBoundaryShockCapturingVelocity(int nExteriorElementBou
 	    velocity[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 		     ebN_element*nQuadraturePoints_elementBoundary*nSpace+
 		     k*nSpace+I]
-		  -= 
+		  -=
 		  numDiffAvg
 		  *
 		  grad_u[eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
 			 ebN_element*nQuadraturePoints_elementBoundary*nSpace+
 			 k*nSpace+I];
-	      
+
 	  }/*I*/
     }/*ebN*/
 }
 
- 
+
 /**
    \brief Calculate the shock capturing flux at exterior element boundary quadrature points
-*/ 
+*/
 void updateGlobalExteriorElementBoundaryShockCapturingVelocity(int nExteriorElementBoundaries_global,
 							       int nQuadraturePoints_elementBoundary,
 							       int nSpace,
@@ -8298,12 +8298,12 @@ void updateGlobalExteriorElementBoundaryShockCapturingVelocity(int nExteriorElem
 	    numDiffAvg  = numDiff[ebNE*nQuadraturePoints_elementBoundary+k];
 	    velocity[ebNE*nQuadraturePoints_elementBoundary*nSpace+
 		     k*nSpace+I]
-		  -= 
+		  -=
 		  numDiffAvg
 		  *
 		  grad_u[ebNE*nQuadraturePoints_elementBoundary*nSpace+
 			 k*nSpace+I];
-	      
+
 	  }/*I*/
     }/*ebN*/
 }
@@ -8361,7 +8361,7 @@ void calculateExteriorElementBoundaryAverageVelocity(int nExteriorElementBoundar
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         for (I=0;I<nSpace;I++)
 	  {
-	    
+
 	    vAverage[ebN*nQuadraturePoints_elementBoundary*nSpace+
 		     k*nSpace+
 		     I]
@@ -8400,10 +8400,10 @@ void calculateConservationResidualDG(int nElements_global,
 
 /**
  \brief calculate mass conservation error as
-\f[ 
+\f[
    \sum_{i} res_{E,i} + \sum_{E,e} \int_{e} \vec v \cdot \vec n_e \ds
 \f]
-  where \f$res_{E,i}\f$ is the \f$i\f$'th test function's residual on element \f$E\f$   
+  where \f$res_{E,i}\f$ is the \f$i\f$'th test function's residual on element \f$E\f$
 */
 void calculateConservationResidual(int nElements_global,
 				   int nDOF_test_element,
@@ -8424,7 +8424,7 @@ void calculateConservationResidual(int nElements_global,
 
       for (i = 0; i < nDOF_test_element; i++)
 	conservationResidual[eN] += elementResidual[eN*nDOF_test_element + i];
-      
+
       boundaryFlux = 0.0;
       for (ebN = 0; ebN < nElementBoundaries_element; ebN++)
 	{
@@ -8432,19 +8432,19 @@ void calculateConservationResidual(int nElements_global,
 	    {
 	      for (I = 0; I < nSpace; I++)
 		{
-		  boundaryFlux += 
-		    n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + 
-		      ebN*nQuadraturePoints_elementBoundary*nSpace + 
-		      k*nSpace + 
+		  boundaryFlux +=
+		    n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+		      ebN*nQuadraturePoints_elementBoundary*nSpace +
+		      k*nSpace +
 		      I]
 		    *
-		    velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + 
-			     ebN*nQuadraturePoints_elementBoundary*nSpace + 
-			     k*nSpace + 
+		    velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+			     ebN*nQuadraturePoints_elementBoundary*nSpace +
+			     k*nSpace +
 			     I]
 		    *
-		    dS_u[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary + 
-			 ebN*nQuadraturePoints_elementBoundary + 
+		    dS_u[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary +
+			 ebN*nQuadraturePoints_elementBoundary +
 			 k];
 		}/*I*/
 	    }/*k*/
@@ -8452,7 +8452,7 @@ void calculateConservationResidual(int nElements_global,
       /*mwf debug
       printf("calcConsRes eN=%d accum= %g boundaryFlux= %g diff=%g \n",eN,conservationResidual[eN],boundaryFlux,
 	     conservationResidual[eN] -boundaryFlux);
-     
+
       */
       conservationResidual[eN] += boundaryFlux;
 
@@ -8579,17 +8579,17 @@ void copyGlobalElementBoundaryVelocityToElementBoundary(int nElements_global,
 	  {
 	    velocityBoundary_element[eN_left*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 				     ebN_left_element*nQuadraturePoints_elementBoundary*nSpace +
-				     k*nSpace + 
-				     I] = 
+				     k*nSpace +
+				     I] =
 	      velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
-				      k*nSpace + 
+				      k*nSpace +
 				      I];
 	    velocityBoundary_element[eN_right*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 				     ebN_right_element*nQuadraturePoints_elementBoundary*nSpace +
-				     k*nSpace + 
-				     I] = 
+				     k*nSpace +
+				     I] =
 	      velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
-				      k*nSpace + 
+				      k*nSpace +
 				      I];
 
 	  }
@@ -8606,13 +8606,13 @@ void copyGlobalElementBoundaryVelocityToElementBoundary(int nElements_global,
 	  {
 	    velocityBoundary_element[eN_left*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 				     ebN_left_element*nQuadraturePoints_elementBoundary*nSpace +
-				     k*nSpace + 
-				     I] = 
+				     k*nSpace +
+				     I] =
 	      velocityBoundary_global[ebN*nQuadraturePoints_elementBoundary*nSpace +
-				      k*nSpace + 
+				      k*nSpace +
 				      I];
 	  }
-    }/*ebNE*/ 
+    }/*ebNE*/
 }
 void loadBoundaryFluxIntoGlobalElementBoundaryVelocity(int nExteriorElementBoundaries_global,
 						       int nQuadraturePoints_elementBoundary,
@@ -8635,22 +8635,22 @@ void loadBoundaryFluxIntoGlobalElementBoundaryVelocity(int nExteriorElementBound
 	    {
 	      for (I=0; I < nSpace; I++)
 		{
-		  val = velocity[ebN*nQuadraturePoints_elementBoundary*nSpace + 
+		  val = velocity[ebN*nQuadraturePoints_elementBoundary*nSpace +
 				 k*nSpace + I];
-		  velocity[ebN*nQuadraturePoints_elementBoundary*nSpace + 
+		  velocity[ebN*nQuadraturePoints_elementBoundary*nSpace +
 			   k*nSpace + I]
-		    = val*updateCoef + 
+		    = val*updateCoef +
 		    flux[ebN*nQuadraturePoints_elementBoundary +
-			 k] 
+			 k]
 		    *
-		    normal[ebN*nQuadraturePoints_elementBoundary*nSpace + 
+		    normal[ebN*nQuadraturePoints_elementBoundary*nSpace +
 			   k*nSpace + I];
 		  /*mwf debug
 		  printf("load fluxes ebNE=%d ebN=%d k=%d I=%d val=%g flux=%g n=%g vel=%g\n",
 			 ebNE,ebN,k,I,val,
 			 flux[ebN*nQuadraturePoints_elementBoundary+k],
 			 normal[ebN*nQuadraturePoints_elementBoundary*nSpace + k*nSpace + I],
-			 velocity[ebN*nQuadraturePoints_elementBoundary*nSpace + 
+			 velocity[ebN*nQuadraturePoints_elementBoundary*nSpace +
 				  k*nSpace + I]);
 		  */
 		}
@@ -8862,7 +8862,7 @@ void updateInteriorElementBoundary_MixedForm_weakJacobian(int nInteriorElementBo
                   -=
                   dphi_trace_left[ebN*nQuadraturePoints_elementBoundary+
                                   k]*
-                  
+
                   v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                     left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                     k*nDOF_test_element+
@@ -8908,7 +8908,7 @@ void updateInteriorElementBoundary_MixedForm_weakJacobian(int nInteriorElementBo
                   -=
                   dphi_trace_left[ebN*nQuadraturePoints_elementBoundary+
                                   k]*
-                  
+
                   v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                     left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_test_element+
                     k*nDOF_test_element+
@@ -9083,17 +9083,17 @@ void updatePotential_MixedForm_weak_gwvd(int nElements_global,
 				    double* w_dV,
                                     double* grad_w_dV,
                                     double* b,
-				    double* mf) 
+				    double* mf)
 {
   int eN,i,k,I;
   for(eN=0;eN<nElements_global;eN++)
     for (I=0;I<nSpace;I++)
       for (i=0;i<nDOF_test_element;i++)
         for (k=0;k<nQuadraturePoints_element;k++)
-          { 
+          {
 	    b[eN*nDOF_test_element*nSpace +
             I*nDOF_test_element+i]
-	      += 
+	      +=
             phi[eN*nQuadraturePoints_element+
                 k]
             *
@@ -9102,7 +9102,7 @@ void updatePotential_MixedForm_weak_gwvd(int nElements_global,
 		      i*nSpace +
 		      I];
 	        if (I==nSpace-1)
-	      { 
+	      {
 		b[eN*nDOF_test_element*nSpace +
 		I*nDOF_test_element+i]
 	       -= epsilon*mf[eN*nQuadraturePoints_element+
@@ -9272,7 +9272,7 @@ void calculateVelocityQuadrature_MixedForm2(int nElements_global,
 	  info=0;
 	  dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
 	  dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
-	  
+
 	  /* velocity DOF */
 	  for(i=0;i<nDOF_element;i++)
 	    {
@@ -9384,7 +9384,7 @@ void calculateVelocityQuadrature_MixedForm2_sd(int nElements_global,
 	  info=0;
 	  dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
 	  dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
-	  
+
 	  /* velocity DOF */
 	  for(i=0;i<nDOF_element;i++)
 	    {
@@ -9500,7 +9500,7 @@ void calculateVelocityQuadrature_MixedForm2_vdof_sd(int nElements_global,
 	  info=0;
 	  dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
 	  dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
-	  
+
 	  /* velocity DOF */
 	  for(i=0;i<nDOF_element;i++)
 	    {
@@ -9516,7 +9516,7 @@ void calculateVelocityQuadrature_MixedForm2_vdof_sd(int nElements_global,
 		  b[eN*nSpace*nDOF_element+
 		    I*nDOF_element+
 		    j];
-	        vel_dofs_temp[eN][I][i] 
+	        vel_dofs_temp[eN][I][i]
 		+= A_inv[i*nDOF_element+
 			j]
 		  *
@@ -9534,7 +9534,7 @@ void calculateVelocityQuadrature_MixedForm2_vdof_sd(int nElements_global,
 	       j*nSpace+
 	       I]
 	      =vel_dofs_temp[eN][I][j];
-	  
+
       /* evaluate at element quadrature */
       for(k=0;k<nQuadraturePoints_element;k++)
 	for(j=0;j<nDOF_element;j++)
@@ -9549,7 +9549,7 @@ void calculateVelocityQuadrature_MixedForm2_vdof_sd(int nElements_global,
 		 k*nDOF_element+
 		 j];
 
-     
+
       /* evaluate at element boundary quadrature*/
       for (ebN=0;ebN<nElementBoundaries_element;ebN++)
 	for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
@@ -10160,19 +10160,19 @@ void updateDiffusion_MixedForm_weak(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           for (J=0;J<nSpace;J++)
-            weak_residual[eN*nDOF_test_element + i] 
+            weak_residual[eN*nDOF_test_element + i]
               -=
-              a[eN*nQuadraturePoints_element*nSpace2 + 
-                k*nSpace2 + 
-                I*nSpace + 
+              a[eN*nQuadraturePoints_element*nSpace2 +
+                k*nSpace2 +
+                I*nSpace +
                 J]
               *
-              qV[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              qV[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  J]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
 }
@@ -10197,18 +10197,18 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
         for (I=0;I<nSpace;I++)
           for (m=rowptr[I];m<rowptr[I+1];m++)
             {
-	    weak_residual[eN*nDOF_test_element + i] 
+	    weak_residual[eN*nDOF_test_element + i]
               -=
              a[eN*nQuadraturePoints_element*nnz+
                 k*nnz+
                 m]
               *
-              qV[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
+              qV[eN*nQuadraturePoints_element*nSpace +
+                 k*nSpace +
                  colind[m]]
               *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         I];
 	    }
@@ -10220,21 +10220,21 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
 	    {
 	      for (m=rowptr[I];m<rowptr[I+1];m++)
 		{
-		  velocity[eN*nQuadraturePoints_element*nSpace + 
+		  velocity[eN*nQuadraturePoints_element*nSpace +
 			   k*nSpace + I]
 		    += a[eN*nQuadraturePoints_element*nnz+
 			 k*nnz+ m]
 		    *
-		    qV[eN*nQuadraturePoints_element*nSpace + 
+		    qV[eN*nQuadraturePoints_element*nSpace +
 		       k*nSpace + colind[m]];
 	        }
 	    }
 	  else if (rho_split==1)
 	    {
-	      velocity[eN*nQuadraturePoints_element*nSpace + 
+	      velocity[eN*nQuadraturePoints_element*nSpace +
 			   k*nSpace + I]
-		    = 
-		    qV[eN*nQuadraturePoints_element*nSpace + 
+		    =
+		    qV[eN*nQuadraturePoints_element*nSpace +
 		       k*nSpace + I];
 	    }
 }
@@ -10265,19 +10265,19 @@ void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
             daProduct=0.0;
             for (I=0;I<nSpace;I++)
               for (J=0;J<nSpace;J++)
-                daProduct 
-                  -= 
+                daProduct
+                  -=
                   da[eN*nQuadraturePoints_element*nSpace2 +
                      k*nSpace2 +
                      I*nSpace +
                      J]
                   *
-                  qV[eN*nQuadraturePoints_element*nSpace + 
-                     k*nSpace + 
+                  qV[eN*nQuadraturePoints_element*nSpace +
+                     k*nSpace +
                      J]
                   *
-                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                            k*nDOF_test_element*nSpace + 
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
                             i*nSpace+
                             I];
             for (j=0;j<nDOF_trial_element;j++)
@@ -10285,31 +10285,31 @@ void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
                 dphiProduct=0.0;
                 for (I=0;I<nSpace;I++)
                   for (J=0;J<nSpace;J++)
-                    dphiProduct 
+                    dphiProduct
                       -=
-                      a[eN*nQuadraturePoints_element*nSpace2 + 
+                      a[eN*nQuadraturePoints_element*nSpace2 +
                         k*nSpace2+
-                        I*nSpace + 
+                        I*nSpace +
                         J]
                       *
-                      qDV[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+                      qDV[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                           k*nDOF_trial_element*nSpace +
                           j*nSpace+
                           J]
                       *
-                      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                                k*nDOF_test_element*nSpace + 
+                      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                                k*nDOF_test_element*nSpace +
                                 i*nSpace+
                                 I];
-                jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                                       i*nDOF_trial_element + 
-                                       j] 
-                  += 
+                jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                                       i*nDOF_trial_element +
+                                       j]
+                  +=
                   daProduct
                   *
                   v[eN*nQuadraturePoints_element*nDOF_trial_element+
                     k*nDOF_trial_element+
-                    j] 
+                    j]
                   +
                   dphiProduct;
               }
@@ -10323,11 +10323,11 @@ void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
                   dphiProduct=0.0;
                   for (I=0;I<nSpace;I++)
                     for (J=0;J<nSpace;J++)
-                      dphiProduct 
+                      dphiProduct
                         -=
-                        a[eN*nQuadraturePoints_element*nSpace2 + 
+                        a[eN*nQuadraturePoints_element*nSpace2 +
                           k*nSpace2+
-                          I*nSpace + 
+                          I*nSpace +
                           J]
                         *
                         qDV_eb[eN*nElementBoundaries_element*nQuadraturePoints_element*nDOF_trial_element*nSpace +
@@ -10336,18 +10336,18 @@ void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
                                j*nSpace+
                                J]
                         *
-                        grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                                  k*nDOF_test_element*nSpace + 
+                        grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                                  k*nDOF_test_element*nSpace +
                                   i*nSpace+
                                   I];
-                  jacobian_weak_residual_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element + 
-                                            ebN*nDOF_test_X_trial_element + 
-                                            i*nDOF_trial_element + 
-                                            j] 
-                    += 
+                  jacobian_weak_residual_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element +
+                                            ebN*nDOF_test_X_trial_element +
+                                            i*nDOF_trial_element +
+                                            j]
+                    +=
                     dphiProduct;
                 }
-            }       
+            }
     }
 }
 
@@ -10379,18 +10379,18 @@ void updateDiffusionJacobian_MixedForm_weak_sd(int nElements_global,
             daProduct=0.0;
             for (I=0;I<nSpace;I++)
               for (m=rowptr[I];m<rowptr[I+1];m++)
-                daProduct 
-                  -= 
+                daProduct
+                  -=
                   da[eN*nQuadraturePoints_element*nnz+
                      k*nnz+
                      m]
                   *
-                  qV[eN*nQuadraturePoints_element*nSpace + 
-                     k*nSpace + 
+                  qV[eN*nQuadraturePoints_element*nSpace +
+                     k*nSpace +
                      colind[m]]
                   *
-                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                            k*nDOF_test_element*nSpace + 
+                  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                            k*nDOF_test_element*nSpace +
                             i*nSpace+
                             I];
             for (j=0;j<nDOF_trial_element;j++)
@@ -10398,30 +10398,30 @@ void updateDiffusionJacobian_MixedForm_weak_sd(int nElements_global,
                 dphiProduct=0.0;
                 for (I=0;I<nSpace;I++)
                   for(m=rowptr[I];m<rowptr[I+1];m++)
-                    dphiProduct 
+                    dphiProduct
                       -=
                       a[eN*nQuadraturePoints_element*nnz+
                         k*nnz+
                         m]
                       *
-                      qDV[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace + 
+                      qDV[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
                           k*nDOF_trial_element*nSpace +
                           j*nSpace+
                           colind[m]]
                       *
-                      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                                k*nDOF_test_element*nSpace + 
+                      grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                                k*nDOF_test_element*nSpace +
                                 i*nSpace+
                                 I];
-                jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
-                                       i*nDOF_trial_element + 
-                                       j] 
-                  += 
+                jacobian_weak_residual[eN*nDOF_test_X_trial_element +
+                                       i*nDOF_trial_element +
+                                       j]
+                  +=
                   daProduct
                   *
                   v[eN*nQuadraturePoints_element*nDOF_trial_element+
                     k*nDOF_trial_element+
-                    j] 
+                    j]
                   +
                   dphiProduct;
               }
@@ -10435,7 +10435,7 @@ void updateDiffusionJacobian_MixedForm_weak_sd(int nElements_global,
                   dphiProduct=0.0;
                   for (I=0;I<nSpace;I++)
                     for(m=rowptr[I];m<rowptr[I+1];m++)
-                      dphiProduct 
+                      dphiProduct
                         -=
                         a[eN*nQuadraturePoints_element*nnz+
                           k*nnz+
@@ -10447,18 +10447,18 @@ void updateDiffusionJacobian_MixedForm_weak_sd(int nElements_global,
                                j*nSpace+
                                colind[m]]
                         *
-                        grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                                  k*nDOF_test_element*nSpace + 
+                        grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                                  k*nDOF_test_element*nSpace +
                                   i*nSpace+
                                   I];
-                  jacobian_weak_residual_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element + 
-                                            ebN*nDOF_test_X_trial_element + 
-                                            i*nDOF_trial_element + 
-                                            j] 
-                    += 
+                  jacobian_weak_residual_eb[eN*nElementBoundaries_element*nDOF_test_X_trial_element +
+                                            ebN*nDOF_test_X_trial_element +
+                                            i*nDOF_trial_element +
+                                            j]
+                    +=
                     dphiProduct;
                 }
-            }       
+            }
     }
 }
 
@@ -10530,7 +10530,7 @@ void estimate_mt_lowmem(int nElements_global,
               {
                 mt[eN*nQuadraturePoints_element+
                    k] = 0.0;
-                massMatrix[i*nDOF_element+j] += 
+                massMatrix[i*nDOF_element+j] +=
                   v[eN*nQuadraturePoints_element*nDOF_element+
                     k*nDOF_element+
                     j]
@@ -10575,7 +10575,7 @@ void copyExteriorElementBoundaryValuesFromElementBoundaryValues(int nExteriorEle
 	  {
 	    ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
 		   k*nValuesPerQuadraturePoint + i]
-	      = 
+	      =
 	      ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
 		      ebN_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
 		      k*nValuesPerQuadraturePoint+
@@ -10609,8 +10609,8 @@ void copyExteriorElementBoundaryValuesToElementBoundaryValues(int nExteriorEleme
 	    ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
 		    ebN_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
 		    k*nValuesPerQuadraturePoint+
-		    i] 
-	      = 
+		    i]
+	      =
 	      ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
 		       k*nValuesPerQuadraturePoint + i];
 	  }/*i,k*/
@@ -10638,8 +10638,8 @@ void copyExteriorElementBoundaryValuesToGlobalElementBoundaryValues(int nExterio
 	  {
 	    ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
 			   k*nValuesPerQuadraturePoint+
-			   i] 
-	      = 
+			   i]
+	      =
 	      ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
 		       k*nValuesPerQuadraturePoint + i];
 	  }/*i,k*/
@@ -10671,7 +10671,7 @@ void copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(int nExter
 	      =
 	      ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint+
 			     k*nValuesPerQuadraturePoint+
-			     i]; 
+			     i];
 	  }/*i,k*/
     }/*ebNE*/
 }
@@ -10797,7 +10797,7 @@ double fluxDomainBoundaryIntegralFromVector(int nExteriorElementBoundaries,
 }
 
 
-void computeC0P1InterpolantDGP12(int nElements_global,		     
+void computeC0P1InterpolantDGP12(int nElements_global,
 				 int nNodes_global,
 				 int nNodes_element,
 				 int nDOF_element,
@@ -10831,7 +10831,7 @@ void computeC0P1InterpolantDGP12(int nElements_global,
     }/*iv*/
 }
 
-void computeC0P1InterpolantDGP0(int nElements_global,		     
+void computeC0P1InterpolantDGP0(int nElements_global,
 				int nNodes_global,
 				int nNodes_element,
 				int nDOF_element,
@@ -10865,7 +10865,7 @@ void computeC0P1InterpolantDGP0(int nElements_global,
     }
 }
 
-void computeC0P1InterpolantNCP1(int nElements_global,		     
+void computeC0P1InterpolantNCP1(int nElements_global,
 				int nNodes_global,
 				int nNodes_element,
 				int nDOF_element,
@@ -10887,9 +10887,9 @@ void computeC0P1InterpolantNCP1(int nElements_global,
       for (eN = 0; eN < nElements_global; eN++)
 	{
 	  /*
-	    recall N_i = n_d(1/n_d - \lambda_i) 
+	    recall N_i = n_d(1/n_d - \lambda_i)
 	    lambda_i = barycentric coord for node i
-	    
+
 	  */
 	  for (i = 0; i < nNodes_element; i++)
 	    {
@@ -10948,10 +10948,10 @@ int checkElementBoundaryAndExteriorElementBoundaryArraysSame(int nElementBoundar
 	{
 	  val1 = ebq_val[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
 			 ebN_local*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-			 k*nValuesPerQuadraturePoint + 
+			 k*nValuesPerQuadraturePoint +
 			 i];
 	  val2 = ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-			  k*nValuesPerQuadraturePoint + 
+			  k*nValuesPerQuadraturePoint +
 			  i];
 	  if (fabs(val1-val2) > tolerance)
 	    {
@@ -10991,10 +10991,10 @@ int checkGlobalElementBoundaryAndExteriorElementBoundaryArraysSame(int nExterior
       for (i=0; i < nValuesPerQuadraturePoint; i++)
 	{
 	  val1 = ebq_global_val[ebN*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-				k*nValuesPerQuadraturePoint + 
+				k*nValuesPerQuadraturePoint +
 				i];
 	  val2 = ebqe_val[ebNE*nQuadraturePoints_elementBoundary*nValuesPerQuadraturePoint +
-			  k*nValuesPerQuadraturePoint + 
+			  k*nValuesPerQuadraturePoint +
 			  i];
 	  if (fabs(val1-val2) > tolerance)
 	    {
@@ -11072,8 +11072,8 @@ void updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundarie
 	      for (J=0;J<nSpace;J++)
 		{
 		  residual[left_eN_global*nDOF_test_element+
-			   i] 
-		    -= 
+			   i]
+		    -=
 		    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
 				  left_ebN_element*nQuadraturePoints_elementBoundary+
 				  k]
@@ -11098,7 +11098,7 @@ void updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundarie
 				   k]);
 		  residual[right_eN_global*nDOF_test_element+
 			   i]
-		    -= 
+		    -=
 		    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
 				  left_ebN_element*nQuadraturePoints_elementBoundary+
 				  k]
@@ -11125,7 +11125,7 @@ void updateInteriorElementBoundaryDiffusionAdjoint(int nInteriorElementBoundarie
 	  }
     }
 }
-			       
+
 void updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundaries_global,
 						   int nQuadraturePoints_elementBoundary,
 						   int nDOF_test_element,
@@ -11157,8 +11157,8 @@ void updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundarie
 		  for (J=0;J<nSpace;J++)
 		    {
 		      residual[eN_global*nDOF_test_element+
-			       i] 
-			-= 
+			       i]
+			-=
 			sigma*((u[ebNE*nQuadraturePoints_elementBoundary+
 				      k]
 				    -ub[ebNE*nQuadraturePoints_elementBoundary+
@@ -11181,7 +11181,7 @@ void updateExteriorElementBoundaryDiffusionAdjoint(int nExteriorElementBoundarie
 	  }
     }
 }
-			       
+
 void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int nInteriorElementBoundaries_global,
 									   int nElementBoundaries_element,
 									   int nQuadraturePoints_elementBoundary,
@@ -11236,7 +11236,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(int n
 		  jacIndex = I+J*nFreeVDOF_global;
 		  for (II=0;II<nSpace;II++)
 		    for (JJ=0;JJ<nSpace;JJ++)
-		      jac[jacIndex] 
+		      jac[jacIndex]
 			-= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					k*nDOF_trial_element+
@@ -11418,7 +11418,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(int n
 		    {
 		      for (II=0;II<nSpace;II++)
 			for (JJ=0;JJ<nSpace;JJ++)
-			  jac[jacIndex] 
+			  jac[jacIndex]
 			    -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					k*nDOF_trial_element+
 					j]
@@ -11474,8 +11474,8 @@ void updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBounda
 	      for (m=rowptr[I];m<rowptr[I+1];m++)
 		{
 		  residual[left_eN_global*nDOF_test_element+
-			   i] 
-		    -= 
+			   i]
+		    -=
 		    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
 				  left_ebN_element*nQuadraturePoints_elementBoundary+
 				  k]
@@ -11500,7 +11500,7 @@ void updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBounda
 				   k]);
 		  residual[right_eN_global*nDOF_test_element+
 			   i]
-		    -= 
+		    -=
 		    sigma*0.5*((u[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
 				  left_ebN_element*nQuadraturePoints_elementBoundary+
 				  k]
@@ -11527,7 +11527,7 @@ void updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBounda
 	  }
     }
 }
-			       
+
 void updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBoundaries_global,
 						      int nQuadraturePoints_elementBoundary,
 						      int nDOF_test_element,
@@ -11561,8 +11561,8 @@ void updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBounda
 		  for (m=rowptr[I];m<rowptr[I+1];m++)
 		    {
 		      residual[eN_global*nDOF_test_element+
-			       i] 
-			-= 
+			       i]
+			-=
 			sigma*((u[ebNE*nQuadraturePoints_elementBoundary+
 				      k]
 				    -ub[ebNE*nQuadraturePoints_elementBoundary+
@@ -11584,7 +11584,7 @@ void updateExteriorElementBoundaryDiffusionAdjoint_sd(int nExteriorElementBounda
 	  }
     }
 }
-			       
+
 void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(int nInteriorElementBoundaries_global,
 									      int nElementBoundaries_element,
 									      int nQuadraturePoints_elementBoundary,
@@ -11642,7 +11642,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(in
 		  for (II=0;II<nSpace;II++)
 		    for(m=rowptr[II];m<rowptr[II+1];m++)
 		      {
-			jac[jacIndex] 
+			jac[jacIndex]
 			  -= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					  left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					  k*nDOF_trial_element+
@@ -11830,7 +11830,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(in
 		    {
 		      for (II=0;II<nSpace;II++)
 			for (m=rowptr[II];m<rowptr[II+1];m++)
-			  jac[jacIndex] 
+			  jac[jacIndex]
 			    -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					k*nDOF_trial_element+
 					j]
@@ -11913,7 +11913,7 @@ void updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
                                            jj];
 		  for (II=0;II<nSpace;II++)
 		    for(m=rowptr[II];m<rowptr[II+1];m++)
-		      jac[jacIndex] 
+		      jac[jacIndex]
 			-= sigma*0.5*(v[left_eN_global*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					k*nDOF_trial_element+
@@ -12112,7 +12112,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
 		    {
 		      for (II=0;II<nSpace;II++)
 			for (m=rowptr[II];m<rowptr[II+1];m++)
-			  jac[jacIndex] 
+			  jac[jacIndex]
 			    -= sigma*(v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 					k*nDOF_trial_element+
 					j]
@@ -12146,15 +12146,15 @@ void update_f_movingDomain_q(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
-	f[eN*nQuadraturePoints_element*nSpace + 
-	  k*nSpace + 
-	  I] 
+	f[eN*nQuadraturePoints_element*nSpace +
+	  k*nSpace +
+	  I]
 	  -=
-	  m[eN*nQuadraturePoints_element + 
+	  m[eN*nQuadraturePoints_element +
 	    k]
 	  *
-	  xt[eN*nQuadraturePoints_element*3 + 
-	     k*3 + 
+	  xt[eN*nQuadraturePoints_element*3 +
+	     k*3 +
 	     I];
 }
 
@@ -12168,12 +12168,12 @@ void update_f_movingDomain_constantMass_q(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     for (k=0;k<nQuadraturePoints_element;k++)
       for (I=0;I<nSpace;I++)
-	f[eN*nQuadraturePoints_element*nSpace + 
-	  k*nSpace + 
-	  I] 
+	f[eN*nQuadraturePoints_element*nSpace +
+	  k*nSpace +
+	  I]
 	  -=
-	  xt[eN*nQuadraturePoints_element*3 + 
-	     k*3 + 
+	  xt[eN*nQuadraturePoints_element*3 +
+	     k*3 +
 	     I];
 }
 
@@ -12190,18 +12190,18 @@ void update_f_movingDomain_ebq(int nElements_global,
     for(ebN=0;ebN<nElementBoundaries_element;ebN++)
       for (k=0;k<nQuadraturePoints_elementBoundary;k++)
 	for (I=0;I<nSpace;I++)
-	  f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + 
+	  f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 	    ebN*nQuadraturePoints_elementBoundary*nSpace+
-	    k*nSpace + 
-	    I] 
+	    k*nSpace +
+	    I]
 	    -=
 	    m[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary+
 	      ebN*nQuadraturePoints_elementBoundary+
 	      k]
 	    *
-	    xt[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*3+ 
+	    xt[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*3+
 	       ebN*nQuadraturePoints_elementBoundary*3+
-	       k*3 + 
+	       k*3 +
 	       I];
 }
 
@@ -12217,14 +12217,14 @@ void update_f_movingDomain_constantMass_ebq(int nElements_global,
     for(ebN=0;ebN<nElementBoundaries_element;ebN++)
       for (k=0;k<nQuadraturePoints_elementBoundary;k++)
 	for (I=0;I<nSpace;I++)
-	  f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + 
+	  f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 	    ebN*nQuadraturePoints_elementBoundary*nSpace+
-	    k*nSpace + 
-	    I] 
+	    k*nSpace +
+	    I]
 	    -=
-	    xt[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*3+ 
+	    xt[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*3+
 	       ebN*nQuadraturePoints_elementBoundary*3+
-	       k*3 + 
+	       k*3 +
 	       I];
 }
 
@@ -12245,39 +12245,39 @@ void updateStress_weak(int nElements_global,
 	for (J=0;J<nSpace;J++)
 	  {
 	    I=0;
-	    weak_residual_x[eN*nDOF_test_element + i] 
+	    weak_residual_x[eN*nDOF_test_element + i]
 	      +=
 	      sigma[eN*nQuadraturePoints_element*nSpace2+
-		    k*nSpace2 + 
+		    k*nSpace2 +
 		    I*nSpace+
 		    J]
 	      *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         J];
 	    I=1;
-	    weak_residual_y[eN*nDOF_test_element + i] 
+	    weak_residual_y[eN*nDOF_test_element + i]
 	      +=
 	      sigma[eN*nQuadraturePoints_element*nSpace2+
-		    k*nSpace2 + 
+		    k*nSpace2 +
 		    I*nSpace+
 		    J]
 	      *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         J];
 	    I=2;
-	    weak_residual_z[eN*nDOF_test_element + i] 
+	    weak_residual_z[eN*nDOF_test_element + i]
 	      +=
 	      sigma[eN*nQuadraturePoints_element*nSpace2+
-		    k*nSpace2 + 
+		    k*nSpace2 +
 		    I*nSpace+
 		    J]
 	      *
-              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace + 
-                        k*nDOF_test_element*nSpace + 
+              grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+                        k*nDOF_test_element*nSpace +
                         i*nSpace+
                         J];
 	  }
@@ -12318,174 +12318,174 @@ void updateStressJacobian_weak(int nElements_global,
 	    for(J=0;J<nSpace;J++)
 	      {
 		//x
-		jacobian_weak_residual_xx[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_xx[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_xx[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_xx[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
-		jacobian_weak_residual_xy[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_xy[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_xy[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_xy[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
-		jacobian_weak_residual_xz[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_xz[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_xz[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_xz[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
 		//y
-		jacobian_weak_residual_yx[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_yx[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_yx[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_yx[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
-		jacobian_weak_residual_yy[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_yy[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_yy[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_yy[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
-		jacobian_weak_residual_yz[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_yz[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_yz[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_yz[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
 		//z
-		jacobian_weak_residual_zx[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_zx[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_zx[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_zx[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
-		jacobian_weak_residual_zy[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_zy[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_zy[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_zy[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
-		jacobian_weak_residual_zz[eN*nDOF_test_X_trial_element + 
-					  i*nDOF_trial_element + 
+		jacobian_weak_residual_zz[eN*nDOF_test_X_trial_element +
+					  i*nDOF_trial_element +
 					  j]
 		  +=
-		  dsigma_zz[eN*nQuadraturePoints_element*nSpace2 + 
+		  dsigma_zz[eN*nQuadraturePoints_element*nSpace2 +
 			    k*nSpace2+
 			    I*nSpace+
 			    J]
 		  *
 		  grad_v[eN*nQuadraturePoints_element*nDOF_trial_element*nSpace +
 			 k*nDOF_trial_element*nSpace +
-			 j*nSpace + 
+			 j*nSpace +
 			 J]
 		  *
 		  grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
 			    k*nDOF_test_element*nSpace +
-			    i*nSpace + 
+			    i*nSpace +
 			    I];
 	      }
 }
 
-/*load nodal degrees of freedom from an element based set of interpolation values*/ 
+/*load nodal degrees of freedom from an element based set of interpolation values*/
 void projectFromNodalInterpolationConditions(int nElements_global,
 					     int nDOF_element,
 					     int dim_dof,
@@ -12495,7 +12495,7 @@ void projectFromNodalInterpolationConditions(int nElements_global,
 					     double * dofs)
 {
   int eN,i,j,k;
-  
+
   //  printf("dim_dof = %d, nDOF_element = %d\n",dim_dof,nDOF_element);
   for (eN = 0; eN < nElements_global; eN++)
     {
@@ -12509,7 +12509,7 @@ void projectFromNodalInterpolationConditions(int nElements_global,
 	      //     printf("l2g[%d]*%d+%d = %d  \n", eN*nDOF_element+i, dim_dof, j, l2g[eN*nDOF_element+i]*dim_dof + j);
 	      //     printf("interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j] = %.2f \n", interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j]);
 	      dofs[l2g[eN*nDOF_element+i]*dim_dof + j] = interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j];
-	      
+
 	    }
 	}
     }

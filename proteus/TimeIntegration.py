@@ -1489,13 +1489,13 @@ class VBDF(TI_base):
         Initially, use
 
         .. math::
-        
+
             (\vec y^{n+1}-\vec y^{n+1,p})/2
 
         for first order and
 
         .. math:
-        
+
             r/(1+r)(\vec y^{n+1}-(1+r)\vec y^{n}+r\vec y^{n-1})
 
         for second order.
@@ -1763,7 +1763,7 @@ class ExplicitRK_base(TI_base):
 
             alpha[l,k] -->  alpha_{l+1,k}
             beta[l,k]  -->  beta_{l+1,k}
-            dcoefs[k]  -->  d_{k+1} 
+            dcoefs[k]  -->  d_{k+1}
 
         because of the whole caching\delayed eval deal second index
         (k) is actual level
@@ -2106,7 +2106,7 @@ class LinearSSPRKintegration(ExplicitRK_base):
     .. math::
          d_{l} = l \Delta t l < m,
          d_m = 1.0
-      
+
     which doesn't make a lot of sense for time dependent problems
 
     """
@@ -2209,7 +2209,7 @@ class SSPRKPIintegration(ExplicitRK_base):
 
     Try to put this into Rothe paradigm with linear implicit mass matrix
     evaluation by saying at stage l
-    
+
     .. math::
 
         m_t \approx \frac{u^l - \sum_{k=0}^{l-1}\alpha_{l,k}u^k}{\Delta t}
@@ -2242,7 +2242,7 @@ class SSPRKPIintegration(ExplicitRK_base):
         For TVD schemes beta_{l,k} = 0  k < l-1
 
         Note that
-          
+
         alpha[l,k] -->  alpha_{l+1,k}
         beta[l,k]  -->  beta_{l+1,k}
         dcoefs[k]  -->  d_{k+1} because of the whole caching\ delayed eval deal
@@ -3430,13 +3430,13 @@ class DGlimiterP1Lagrange1d_Sw(DGlimiterP1Lagrange1d):
         Then go through and eliminate negative values of water height
 
         for cells that have average (h_bar < h_eps)
-           
+
         if average height is negative, then zero
-           
+
         if both vertices are positive leave alone (could kill slope)
-        
+
         if one of the vertices is negative choose slope so that this value is exactly zero
-           
+
         zero discharge at this vertex
 
         May need to add additional step that limits discharge where h is much less than h_eps
@@ -3482,11 +3482,11 @@ class DGlimiterP2Lagrange1d_Sw(DGlimiterP2Lagrange1d):
         Then go through and eliminate negative values of water height
 
         for cells that have average (h_bar < h_eps)
-           
+
         if average height is negative, then zero
-           
+
         if both vertices are positive leave alone (could kill slope)
-           
+
         if one of the vertices is negative, choose slope so that this
         value is exactly zero, zero discharge at this vertex
 

@@ -4,7 +4,7 @@ import numpy as np
 class Transport_NonDilute_Dispersion(LinearVADR_ConstantCoefficients):
 	from proteus.nondilutetransport.cnondilutetransportCoefficients import NonDiluteDispersionEvaluate
 	from proteus.nondilutetransport.cnondilutetransportCoefficients import NonDilutePhiDispersionEvaluate
-	def __init__(self, nc = 2, poro = 0, diff=0, alpha_L=0, mom_ModelId = None, diff_ModelId = None, adv_ModelId = None, R = 0, theta = 0, MW_a = 0, MW_b = 0, beta1 = 0, beta2 = 0):
+	def __init__(self, nc = 2, poro = 0, diff=0, alpha_L=0, mom_ModelId = None, diff_ModelId = None, adv_ModelId = None, mom_ModelId2 = None, adv_ModelId2 = None, ModelId = None, Alt_Split = False, Mom_Split = False, R = 0, theta = 0, MW_a = 0, MW_b = 0, beta1 = 0, beta2 = 0):
 		mass={}
 		advection={}
 		diffusion={}
@@ -15,11 +15,11 @@ class Transport_NonDilute_Dispersion(LinearVADR_ConstantCoefficients):
                 1:{1:'constant'}}
 		advection = {0:{0:'constant'},
                      1:{1:'constant'}}
-		diffusion = {0:{0:{0:'nonlinear',1:'constant'},
+		diffusion = {0:{0:{0:'nonlinear',1:'nonlinear'},
                         1:{0:'nonlinear',1:'nonlinear'}},
-                     1:{0:{0:'constant',1:'constant'},
-                        1:{0:'constant',1:'constant'}}}
-		potential = {0:{0:'u'},
+                     1:{0:{0:'nonlinear',1:'nonlinear'},
+                        1:{0:'nonlinear',1:'nonlinear'}}}
+		potential = {0:{0:'nonlinear'},
                      1:{0:'nonlinear',
                         1:'nonlinear'}}
 		reaction = {0:{0:'constant'},
@@ -40,6 +40,12 @@ class Transport_NonDilute_Dispersion(LinearVADR_ConstantCoefficients):
 		self.mom_ModelId  = mom_ModelId
 		self.diff_ModelId = diff_ModelId
 		self.adv_ModelId = adv_ModelId
+		self.Alt_Split = Alt_Split
+		self.Mom_Split = Mom_Split
+		if self.Alt_Split:
+			if self.Mom_Split:
+				self.mom_ModelId2 = mom_ModelId2
+			self.adv_ModelId2 = adv_ModelId2
 		self.variableNames=['u','act']
 		self.nd = 1
 		self.nc = nc
@@ -48,35 +54,49 @@ class Transport_NonDilute_Dispersion(LinearVADR_ConstantCoefficients):
 		self.mom_Model = modelList[self.mom_ModelId]
 		self.diff_Model = modelList[self.diff_ModelId]
 		self.adv_Model = modelList[self.adv_ModelId]
+		if self.Alt_Split:
+			self.adv_Model2 = modelList[self.adv_ModelId2]
+			if self.Mom_Split:
+				self.mom_Model2 = modelList[self.mom_ModelId2]
 		self.q_p  = self.mom_Model.q[('u',0)]
 		self.ebqe_p = self.mom_Model.ebqe[('u',0)]
 		if self.mom_Model.ebq.has_key(('u',0)):
 			self.ebq_p = self.mom_Model.ebq[('u',0)]
 		if self.mom_Model.ebq_global.has_key(('u',0)):
-			self.ebq_global_p = self.mom_Model.ebq_global[('u',0)] 
+			self.ebq_global_p = self.mom_Model.ebq_global[('u',0)]
+		self.diff_Model.q_mf_old = np.copy(self.diff_Model.q[('u',0)])
+		self.diff_Model.q_mf = np.copy(self.diff_Model.q[('u',0)])
+		self.diff_Model.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
+		self.diff_Model.cip_mf = np.copy(self.diff_Model.phi_ip[('u',0)])
+		self.diff_Model.ebqe_mf_old = np.copy(self.diff_Model.ebqe[('u',0)])
+		self.diff_Model.ebqe_mf = np.copy(self.diff_Model.ebqe[('u',0)])
+		if self.diff_Model.ebq.has_key(('u',0)):
+			self.diff_Model.ebq_mf_old = np.copy(self.diff_Model.ebq[('u',0)])
+			self.diff_Model.ebq_mf = np.copy(self.diff_Model.ebq[('u',0)])
+		if self.diff_Model.ebq_global.has_key(('u',0)):
+			self.diff_Model.ebq_global_mf_old = np.copy(self.diff_Model.ebq_global[('u',0)])
+			self.diff_Model.ebq_global_mf = np.copy(self.diff_Model.ebq_global[('u',0)])
 
-# 	def postStep(self,t,firstStep=True):
-# 		self.dof_mf_old = np.copy(self.diff_Model.u[0].dof)
-# 		self.q_mf_old  = np.copy(self.diff_Model.q[('u',0)])
-# 		self.ebqe_mf_old = np.copy(self.diff_Model.ebqe[('u',0)])
-# 		if self.diff_Model.phi_ip.has_key(('u',0)):
-# 			self.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
-# 		if self.diff_Model.ebq.has_key(('u',0)):
-# 			self.ebq_mf_old = np.copy(self.diff_Model.ebq[('u',0)])
-# 		if self.diff_Model.ebq_global.has_key(('u',0)):
-# 			self.ebq_global_mf_old = np.copy(self.diff_Model.ebq_global[('u',0)] )
 
 	def preStep(self,t,firstStep=True):
-		self.q_mf_old  = np.copy(self.diff_Model.q[('u',0)])
-		self.ebqe_mf_old = np.copy(self.diff_Model.ebqe[('u',0)])
-		if self.diff_Model.phi_ip.has_key(('u',0)):
-			self.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
-		if self.diff_Model.ebq.has_key(('u',0)):
-			self.ebq_mf_old = np.copy(self.diff_Model.ebq[('u',0)])
-		if self.diff_Model.ebq_global.has_key(('u',0)):
-			self.ebq_global_mf_old = np.copy(self.diff_Model.ebq_global[('u',0)] )
- 		#self.diff_Model.timeIntegration.m_tmp[0] = self.adv_Model.timeIntegration.m_tmp[0]
- 		#self.diff_Model.timeIntegration.m_last[0] = self.adv_Model.timeIntegration.m_tmp[0]
+		if self.Alt_Split:
+			#import pdb; pdb.set_trace()
+			self.diff_Model.q_mf_old = np.copy(self.adv_Model2.q_mf)
+			self.diff_Model.cip_mf_old = np.copy(self.adv_Model2.cip_mf)
+			self.diff_Model.ebqe_mf_old = np.copy(self.adv_Model2.ebqe_mf)
+			if self.diff_Model.ebq.has_key(('u',0)):
+				self.diff_Model.ebq_mf_old = np.copy(self.adv_Model2.ebq_mf)
+			if self.diff_Model.ebq_global.has_key(('u',0)):
+				self.diff_Model.ebq_global_mf_old = np.copy(self.adv_Model2.ebq_global_mf)
+		else:
+			self.diff_Model.q_mf_old = np.copy(self.diff_Model.q[('u',0)])
+			self.diff_Model.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
+			self.diff_Model.ebqe_mf_old = np.copy(self.diff_Model.ebqe[('u',0)])
+			if self.diff_Model.ebq.has_key(('u',0)):
+				self.diff_Model.ebq_mf_old = np.copy(self.diff_Model.ebq[('u',0)])
+			if self.diff_Model.ebq_global.has_key(('u',0)):
+				self.diff_Model.ebq_global_mf_old = np.copy(self.diff_Model.ebq_globa[('u',0)])
+
 		self.diff_Model.u[0].dof = np.copy(self.adv_Model.u[0].dof)
  		self.diff_Model.calculateCoefficients()
  		self.diff_Model.calculateElementResidual()
@@ -86,6 +106,17 @@ class Transport_NonDilute_Dispersion(LinearVADR_ConstantCoefficients):
  		copyInstructions = {'copy_uList':True,'uList_model':self.diff_ModelId}
  		copyInstructions = {'reset_uList':True}
  		return copyInstructions
+
+	def postStep(self,t,firstStep=True):
+		self.diff_Model.q_mf = np.copy(self.diff_Model.q[('u',0)])
+		self.diff_Model.cip_mf = np.copy(self.diff_Model.phi_ip[('u',0)])
+		self.diff_Model.ebqe_mf = np.copy(self.diff_Model.ebqe[('u',0)])
+		if self.diff_Model.ebq.has_key(('u',0)):
+			self.diff_Model.ebq_mf = np.copy(self.diff_Model.ebq[('u',0)])
+		if self.diff_Model.ebq_global.has_key(('u',0)):
+			self.diff_Model.ebq_global_mf = np.copy(self.diff_Model.ebq_globa[('u',0)])
+
+
 
 	def initializeElementQuadrature(self,t,cq):
 		self.q_x_shape = cq['x'].shape
@@ -98,35 +129,38 @@ class Transport_NonDilute_Dispersion(LinearVADR_ConstantCoefficients):
 		self.ebq_global_vel = numpy.zeros((cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd),'d')
 
 	def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
-		self.cip_vel = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1],self.nd),'d') 
+		self.cip_vel = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1],self.nd),'d')
 
 	def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
 		self.ebqe_x_shape = cebqe['x'].shape
 		self.ebqe_vel = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
 
-	def evaluate(self,t,c): 
-		phi_eval = False;
+	def evaluate(self,t,c):
+		phi_eval = False
 		if self.q_vel.shape == c[('df',0,0)].shape:
 			velocity = self.mom_Model.q[('velocity',0)]/self.poro
 			pressure = self.q_p;
-			if len(self.q_mf_old) < 1:
+			w_old = np.zeros_like(c[('u',0)])
+			if len(self.diff_Model.q_mf_old) < 1:
 				w_old = c[('u',0)]
 			else:
-				w_old = self.q_mf_old
+				w_old = self.diff_Model.q_mf_old
 		elif self.ebqe_vel.shape == c[('df',0,0)].shape:
 			velocity = self.mom_Model.ebqe[('velocity',0)]/self.poro
 			pressure = self.ebqe_p
-			if len(self.ebqe_mf_old) < 1:
+			w_old = np.zeros_like(c[('u',0)])
+			if len(self.diff_Model.ebqe_mf_old) < 1:
 				w_old = c[('u',0)]
 			else:
-				w_old = self.ebqe_mf_old
+				w_old = self.diff_Model.ebqe_mf_old
 		elif self.ebq_vel.shape == c[('df',0,0)].shape:
 			velocity = self.mom_Model.ebq[('velocity',0)]/self.poro
 			pressure = self.ebq_p
-			if len(self.ebq_mf_old) < 1:
+			w_old = np.zeros_like(c[('u',0)])
+			if len(self.diff_Model.ebq_mf_old) < 1:
 				w_old = c[('u',0)]
 			else:
-				w_old = self.ebq_mf_old
+				w_old = self.diff_Model.ebq_mf_old
 		elif self.cip_vel.shape == c[('df',0,0)].shape:
 			phi_eval = True
 		else:
@@ -191,7 +225,7 @@ class Transport_NonDilute_Dispersion(LinearVADR_ConstantCoefficients):
 
 class Porous_Media_Flow(TC_base):
 	from proteus.nondilutetransport.cnondilutetransportCoefficients import ConMassFluidEvaluate
-	def __init__(self,nc=1,nd=1,diff_ModelId = None, adv_ModelId = None, mom_ModelId = None, K = 0.0 , grav = -980., poro = 0.0, L = 0.0):
+	def __init__(self,nc=1,nd=1,diff_ModelId = None, adv_ModelId = None, mom_ModelId = None, mom_ModelId2 = None, adv_ModelId2 = None, ModelId = None, Alt_Split = False, Mom_Split = False, K = 0.0 , grav = -980., poro = 0.0, L = 0.0):
 		mass={}
 		advection={}
 		diffusion={}
@@ -201,9 +235,9 @@ class Porous_Media_Flow(TC_base):
 		self.nd=nd
 		mass = {0:{0:'constant'}}
 		advection = {0:{0:'constant'}}
-		diffusion = {0:{0:{0:'nonlinear'}}}
-		potential = {0:{0:'nonlinear'}}
-		reaction = {0:{0:'nonlinear'}}
+		diffusion = {0:{0:{0:'constant'}}}
+		potential = {0:{0:'u'}}
+		reaction = {0:{0:'constant'}}
 		TC_base.__init__(self,
                          nc,
                          mass,
@@ -215,35 +249,42 @@ class Porous_Media_Flow(TC_base):
 		self.adv_ModelId  = adv_ModelId
 		self.diff_ModelId = diff_ModelId
 		self.mom_ModelId  = mom_ModelId
+		self.Alt_Split = Alt_Split
+		self.Mom_Split = Mom_Split
+		if self.Alt_Split:
+			if self.Mom_Split:
+				self.mom_ModelId2 = mom_ModelId2
+			self.adv_ModelId2 = adv_ModelId2
+		self.ModelId = ModelId
 		self.K = K
 		self.grav = grav
 		self.poro = poro
 		self.L = L
 		self.variableNames=['pressure']
 		self.dt = 0.0
-        
+		self.nc = nc
+
 	def attachModels(self,modelList):
 		self.mom_Model = modelList[self.mom_ModelId]
 		if (self.diff_ModelId is not None):
 			self.diff_Model = modelList[self.diff_ModelId]
 		if (self.adv_ModelId is not None):
-			self.adv_Model = modelList[self.adv_ModelId]
-			if (self.diff_ModelId is None):
-				self.oldTime_Model = self.adv_Model
-				self.currentTime_Model = self.adv_Model
-			elif (self.adv_ModelId > self.diff_ModelId):
-				self.currentTime_Model = self.adv_Model
+				self.adv_Model = modelList[self.adv_ModelId]
+		if self.Alt_Split:
+			self.adv_Model2 = modelList[self.adv_ModelId2]
+			if self.Mom_Split:
+				self.mom_Model2 = modelList[self.mom_ModelId2]
+
+		if self.Alt_Split:
+			if self.ModelId == self.mom_ModelId:
+				self.oldTime_Model = self.adv_Model2
+				self.currentTime_Model = self.adv_Model2
+			elif self.ModelId == self.mom_ModelId2:
 				self.oldTime_Model = self.diff_Model
-			else:
 				self.currentTime_Model = self.diff_Model
-				self.oldTime_Model = self.adv_Model
 		else:
 			self.oldTime_Model = self.diff_Model
 			self.currentTime_Model = self.diff_Model
-
-		#TIM HACK Keep ONLY DIFF  MODEL
-		self.oldTime_Model = self.diff_Model
-		self.currentTime_Model = self.diff_Model
 
 		self.q_c  = self.currentTime_Model.q[('u',0)]
 		self.ebqe_c = self.currentTime_Model.ebqe[('u',0)]
@@ -252,55 +293,62 @@ class Porous_Media_Flow(TC_base):
 		if self.currentTime_Model.ebq.has_key(('u',0)):
 			self.ebq_c = self.currentTime_Model.ebq[('u',0)]
 		if self.currentTime_Model.ebq_global.has_key(('u',0)):
-			self.ebq_global_c = self.currentTime_Model.ebq_global[('u',0)] 
+			self.ebq_global_c = self.currentTime_Model.ebq_global[('u',0)]
 
 	def preStep(self,t,firstStep=True):
-		self.dt = self.oldTime_Model.timeIntegration.dt
+		self.dt = self.currentTime_Model.timeIntegration.dt
+
 
 	def initializeElementQuadrature(self,t,cq):
 		self.q_c = np.zeros(cq[('u',0)].shape,'d')
 
 	def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
-		self.cip_c = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1]),'d') 
+		self.cip_c = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1]),'d')
 
 	def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-		ebq_shape = cebq['x'].shape[:-1];         
+		ebq_shape = cebq['x'].shape[:-1];
 		ebq_global_shape = cebq_global['x'].shape[:-1]
-		self.ebq_c = np.zeros(ebq_shape,'d');  
+		self.ebq_c = np.zeros(ebq_shape,'d');
 		self.ebq_global_c = np.zeros(ebq_global_shape,'d')
 
 	def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
 		self.ebqe_c = np.zeros(cebqe[('u',0)].shape,'d')
 
 	def evaluate(self,t,c):
-		import pdb; #pdb.set_trace()
+		#import pdb; pdb.set_trace()
 		if c[('u',0)].shape == self.currentTime_Model.q[('u',0)].shape:
-			mass_frac = self.currentTime_Model.q[('u',0)]; 
-			if ( not hasattr(self.oldTime_Model.coefficients,'q_mf_old')  or len(self.oldTime_Model.coefficients.q_mf_old) < 1):
+			mass_frac = self.currentTime_Model.q_mf;
+			if ( not hasattr(self.oldTime_Model,'q_mf_old')  or len(self.oldTime_Model.q_mf_old) < 1):
 				mass_frac_old = mass_frac
  			else:
-				mass_frac_old = self.oldTime_Model.coefficients.q_mf_old
+				mass_frac_old = self.oldTime_Model.q_mf_old
+				#import pdb; pdb.set_trace()
 		elif c[('u',0)].shape == self.currentTime_Model.ebqe[('u',0)].shape:
-			mass_frac  = self.currentTime_Model.ebqe[('u',0)];
-			if (not hasattr(self.oldTime_Model.coefficients,'ebqe_mf_old') or len(self.oldTime_Model.coefficients.ebqe_mf_old) < 1):
+			mass_frac  = self.currentTime_Model.ebqe_mf;
+			if (not hasattr(self.oldTime_Model,'ebqe_mf_old') or len(self.oldTime_Model.ebqe_mf_old) < 1):
 				mass_frac_old = mass_frac
  			else:
-				mass_frac_old  = self.oldTime_Model.coefficients.ebqe_mf_old   
+				mass_frac_old  = self.oldTime_Model.ebqe_mf_old
 		elif c[('u',0)].shape == self.currentTime_Model.ebq[('u',0)].shape:
-			mass_frac  = self.currentTime_Model.ebq[('u',0)]; 
-			if (not hasattr(self.oldTime_Model.coefficients,'ebq_mf_old') or len(self.oldTime_Model.coefficients.ebq_mf_old) < 1):
+			mass_frac  = self.currentTime_Model.ebq_mf;
+			if (not hasattr(self.oldTime_Model,'ebq_mf_old') or len(self.oldTime_Model.ebq_mf_old) < 1):
 				mass_frac_old = mass_frac
  			else:
-				mass_frac_old  = self.oldTime_Model.coefficients.ebq_mf_old
+				mass_frac_old  = self.oldTime_Model.ebq_mf_old
 		elif c[('u',0)].shape == self.currentTime_Model.phi_ip[('u',0)].shape:
-			mass_frac  = self.currentTime_Model.phi_ip[('u',0)]; 
-			if (not hasattr(self.oldTime_Model.coefficients,'cip_mf_old') or len(self.oldTime_Model.coefficients.cip_mf_old) < 1):
+			mass_frac  = self.currentTime_Model.cip_mf;
+			if (not hasattr(self.oldTime_Model,'cip_mf_old') or len(self.oldTime_Model.cip_mf_old) < 1):
 				mass_frac_old = mass_frac
  			else:
-				mass_frac_old  = self.oldTime_Model.coefficients.cip_mf_old
+				mass_frac_old  = self.oldTime_Model.cip_mf_old
 		else:
 			raise NotImplementedError
-		self.ConMassFluidEvaluate(self.K,
+		elements = mass_frac.shape[0]
+		points = mass_frac.shape[1]
+		dof_length = self.currentTime_Model.u[0].dof.shape[0]
+		self.ConMassFluidEvaluate(elements,points,dof_length,
+		                          self.currentTime_Model.u[0].dof,
+		                          self.K,
                                   self.grav,
                                   self.dt,
                                   self.poro,
@@ -318,7 +366,6 @@ class Porous_Media_Flow(TC_base):
                                   c[('x')],
                                   mass_frac,
                                   mass_frac_old)
-		#pdb.set_trace()
 
 class Transport_NonDilute(LinearVADR_ConstantCoefficients):
 	from proteus.nondilutetransport.cnondilutetransportCoefficients import NonDiluteEvaluate
@@ -364,22 +411,43 @@ class Transport_NonDilute(LinearVADR_ConstantCoefficients):
 	def attachModels(self,modelList):
 		self.mom_Model = modelList[self.mom_ModelId]
 		self.diff_Model = modelList[self.diff_ModelId]
-		self.q_p  = self.mom_Model.q[('u',0)]
-		self.ebqe_p = self.mom_Model.ebqe[('u',0)]
-		if self.mom_Model.ebq.has_key(('u',0)):
-			self.ebq_p = self.mom_Model.ebq[('u',0)]
-		if self.mom_Model.ebq_global.has_key(('u',0)):
-			self.ebq_global_p = self.mom_Model.ebq_global[('u',0)] 
+		self.q_p  = self.mom_Model.q[('grad(u)',0)]
+		self.ebqe_p = self.mom_Model.ebqe[('grad(u)',0)]
+		if self.mom_Model.ebq.has_key(('grad(u)',0)):
+			self.ebq_p = self.mom_Model.ebq[('grad(u)',0)]
+		if self.mom_Model.ebq_global.has_key(('grad(u)',0)):
+			self.ebq_global_p = self.mom_Model.ebq_global[('grad(u)',0)]
+		self.diff_Model.q_mf_old = np.copy(self.diff_Model.q[('u',0)])
+		self.diff_Model.q_mf = np.copy(self.diff_Model.q[('u',0)])
+		self.diff_Model.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
+		self.diff_Model.cip_mf = np.copy(self.diff_Model.phi_ip[('u',0)])
+		self.diff_Model.ebqe_mf_old = np.copy(self.diff_Model.ebqe[('u',0)])
+		self.diff_Model.ebqe_mf = np.copy(self.diff_Model.ebqe[('u',0)])
+		if self.diff_Model.ebq.has_key(('u',0)):
+			self.diff_Model.ebq_mf_old = np.copy(self.diff_Model.ebq[('u',0)])
+			self.diff_Model.ebq_mf = np.copy(self.diff_Model.ebq[('u',0)])
+		if self.diff_Model.ebq_global.has_key(('u',0)):
+			self.diff_Model.ebq_global_mf_old = np.copy(self.diff_Model.ebq_global[('u',0)])
+			self.diff_Model.ebq_global_mf = np.copy(self.diff_Model.ebq_global[('u',0)])
 
 	def preStep(self,t,firstStep=True):
-		self.q_mf_old  = np.copy(self.diff_Model.q[('u',0)])
-		self.ebqe_mf_old = np.copy(self.diff_Model.ebqe[('u',0)])
+		self.diff_Model.q_mf_old  = np.copy(self.diff_Model.q[('u',0)])
+		self.diff_Model.ebqe_mf_old = np.copy(self.diff_Model.ebqe[('u',0)])
 		if self.diff_Model.phi_ip.has_key(('u',0)):
-			self.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
+			self.diff_Model.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
 		if self.diff_Model.ebq.has_key(('u',0)):
-			self.ebq_mf_old = np.copy(self.diff_Model.ebq[('u',0)])
+			self.diff_Model.ebq_mf_old = np.copy(self.diff_Model.ebq[('u',0)])
 		if self.diff_Model.ebq_global.has_key(('u',0)):
-			self.ebq_global_mf_old = np.copy(self.diff_Model.ebq_global[('u',0)] )
+			self.diff_Model.ebq_global_mf_old = np.copy(self.diff_Model.ebq_global[('u',0)] )
+
+	def postStep(self,t,firstStep=True):
+		self.diff_Model.q_mf = np.copy(self.diff_Model.q[('u',0)])
+		self.diff_Model.cip_mf = np.copy(self.diff_Model.phi_ip[('u',0)])
+		self.diff_Model.ebqe_mf = np.copy(self.diff_Model.ebqe[('u',0)])
+		if self.diff_Model.ebq.has_key(('u',0)):
+			self.diff_Model.ebq_mf = np.copy(self.diff_Model.ebq[('u',0)])
+		if self.diff_Model.ebq_global.has_key(('u',0)):
+			self.diff_Model.ebq_global_mf = np.copy(self.diff_Model.ebq_globa[('u',0)])
 
 	def initializeElementQuadrature(self,t,cq):
 		self.q_x_shape = cq['x'].shape
@@ -392,13 +460,13 @@ class Transport_NonDilute(LinearVADR_ConstantCoefficients):
 		self.ebq_global_vel = numpy.zeros((cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd),'d')
 
 	def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
-		self.cip_vel = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1],self.nd),'d') 
+		self.cip_vel = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1],self.nd),'d')
 
 	def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
 		self.ebqe_x_shape = cebqe['x'].shape
 		self.ebqe_vel = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
 
-	def evaluate(self,t,c): 
+	def evaluate(self,t,c):
 		phi_eval = False;
 		if self.q_vel.shape == c[('df',0,0)].shape:
 			velocity = self.mom_Model.q[('velocity',0)]/self.poro; #import pdb; pdb.set_trace()
@@ -531,7 +599,7 @@ class Transport_Advection(LinearVADR_ConstantCoefficients):
 		self.ebqe_vel = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
 
 
-	def evaluate(self,t,c): 
+	def evaluate(self,t,c):
 		#import pdb; pdb.set_trace()
 		if self.q_vel.shape == c[('df',0,0)].shape:
 			velocity = self.mom_Model.q[('velocity',0)]/self.poro
@@ -612,7 +680,7 @@ class Transport_NonDilute_TEST(LinearVADR_ConstantCoefficients):
 		self.ebq_global_vel = numpy.zeros((cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd),'d')
 
 	def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
-		self.cip_vel = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1],self.nd),'d') 
+		self.cip_vel = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1],self.nd),'d')
 
 	def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
 		self.ebqe_x_shape = cebqe['x'].shape
@@ -620,7 +688,7 @@ class Transport_NonDilute_TEST(LinearVADR_ConstantCoefficients):
 
 
 
-	def evaluate(self,t,c): 
+	def evaluate(self,t,c):
 		#import pdb; pdb.set_trace()
 		phi_eval = False
 		if self.q_vel.shape == c[('df',0,0)].shape:
@@ -630,7 +698,7 @@ class Transport_NonDilute_TEST(LinearVADR_ConstantCoefficients):
 		elif self.ebq_vel.shape == c[('df',0,0)].shape:
 			pass
 		elif self.cip_vel.shape == c[('df',0,0)].shape:
-			phi_eval = True; 
+			phi_eval = True;
 		else:
 			print "no v---------------------"
 			raise RuntimeError
@@ -678,7 +746,7 @@ class Transport_NonDilute_TEST(LinearVADR_ConstantCoefficients):
 
 
 
-		else: 
+		else:
 			self.NonDilutePhiTESTEvaluate(self.poro,
                                self.grav,
                                self.L,
@@ -692,4 +760,3 @@ class Transport_NonDilute_TEST(LinearVADR_ConstantCoefficients):
                                c[('dphi',1,1)],
                                c[('f',0)],
                                c[('x')])
-

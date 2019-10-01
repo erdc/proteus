@@ -6,13 +6,18 @@
 #define DDATA(p) ((double *) (((PyArrayObject *)p)->data))
 #define IDATA(p) ((int *) (((PyArrayObject *)p)->data))
 
-static PyObject* cnondilutetransportCoefficientsConMassFluidEvaluate(PyObject* self, 
+static PyObject* cnondilutetransportCoefficientsConMassFluidEvaluate(PyObject* self,
                                                                PyObject* args)
 {
   int i,nPoints=1;
+  int elements,points,dof_length;
   double K,grav,dt,poro,L;
-  PyObject *u,*m,*dm,*f,*df,*phi,*dphi,*a,*da,*r,*x,*mass_frac,*mass_frac_old;
-  if(!PyArg_ParseTuple(args,"dddddOOOOOOOOOOOOO",
+  PyObject *mass_frac_dof,*u,*m,*dm,*f,*df,*phi,*dphi,*a,*da,*r,*x,*mass_frac,*mass_frac_old;
+  if(!PyArg_ParseTuple(args,"iiiOdddddOOOOOOOOOOOOO",
+                       &elements,
+                       &points,
+                       &dof_length,
+                       &mass_frac_dof,
                        &K,
                        &grav,
                        &dt,
@@ -36,6 +41,10 @@ static PyObject* cnondilutetransportCoefficientsConMassFluidEvaluate(PyObject* s
       nPoints *= SHAPE(f)[i];
   ConMassFluidEvaluate(nPoints,
                        SHAPE(f)[ND(f)-1],
+                       elements,
+                       points,
+                       dof_length,
+                       DDATA(mass_frac_dof),
                        K,
                        grav,
                        dt,
@@ -54,12 +63,12 @@ static PyObject* cnondilutetransportCoefficientsConMassFluidEvaluate(PyObject* s
                        DDATA(x),
                        DDATA(mass_frac),
                        DDATA(mass_frac_old));
-  Py_INCREF(Py_None); 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
 
-static PyObject* cnondilutetransportCoefficientsNonDiluteDispersionEvaluate(PyObject* self, 
+static PyObject* cnondilutetransportCoefficientsNonDiluteDispersionEvaluate(PyObject* self,
                                                                PyObject* args)
 {
   int i,nPoints=1;
@@ -141,12 +150,12 @@ static PyObject* cnondilutetransportCoefficientsNonDiluteDispersionEvaluate(PyOb
                      DDATA(dphi10),
                      DDATA(dphi11),
                      DDATA(x));
-  Py_INCREF(Py_None); 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
 
-static PyObject* cnondilutetransportCoefficientsNonDilutePhiDispersionEvaluate(PyObject* self, 
+static PyObject* cnondilutetransportCoefficientsNonDilutePhiDispersionEvaluate(PyObject* self,
                                                                PyObject* args)
 {
   int i,nPoints=1;
@@ -194,7 +203,7 @@ static PyObject* cnondilutetransportCoefficientsNonDilutePhiDispersionEvaluate(P
                      DDATA(dphi10),
                      DDATA(dphi11),
                      DDATA(f));
-  Py_INCREF(Py_None); 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
@@ -204,7 +213,7 @@ static PyObject* cnondilutetransportCoefficientsNonDilutePhiDispersionEvaluate(P
 
 
 
-static PyObject* cnondilutetransportCoefficientsNonDiluteEvaluate(PyObject* self, 
+static PyObject* cnondilutetransportCoefficientsNonDiluteEvaluate(PyObject* self,
                                                                PyObject* args)
 {
   int i,nPoints=1;
@@ -284,12 +293,12 @@ static PyObject* cnondilutetransportCoefficientsNonDiluteEvaluate(PyObject* self
                      DDATA(dphi10),
                      DDATA(dphi11),
                      DDATA(x));
-  Py_INCREF(Py_None); 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
 
-static PyObject* cnondilutetransportCoefficientsNonDilutePhiEvaluate(PyObject* self, 
+static PyObject* cnondilutetransportCoefficientsNonDilutePhiEvaluate(PyObject* self,
                                                                PyObject* args)
 {
   int i,nPoints=1;
@@ -337,14 +346,14 @@ static PyObject* cnondilutetransportCoefficientsNonDilutePhiEvaluate(PyObject* s
                      DDATA(dphi10),
                      DDATA(dphi11),
                      DDATA(f));
-  Py_INCREF(Py_None); 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
 
 
 
-static PyObject* cnondilutetransportCoefficientsAdvectionEvaluate(PyObject* self, 
+static PyObject* cnondilutetransportCoefficientsAdvectionEvaluate(PyObject* self,
                                                                PyObject* args)
 {
   int i,nPoints=1;
@@ -378,7 +387,7 @@ static PyObject* cnondilutetransportCoefficientsAdvectionEvaluate(PyObject* self
                        DDATA(a),
                        DDATA(da),
                        DDATA(velocity));
-  Py_INCREF(Py_None); 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
@@ -387,7 +396,7 @@ static PyObject* cnondilutetransportCoefficientsAdvectionEvaluate(PyObject* self
 
 
 
-static PyObject* cnondilutetransportCoefficientsNonDiluteTESTEvaluate(PyObject* self, 
+static PyObject* cnondilutetransportCoefficientsNonDiluteTESTEvaluate(PyObject* self,
                                                                PyObject* args)
 {
   int i,nPoints=1;
@@ -469,12 +478,12 @@ static PyObject* cnondilutetransportCoefficientsNonDiluteTESTEvaluate(PyObject* 
                      DDATA(da111),
                      DDATA(x),
                      DDATA(grad_press));
-  Py_INCREF(Py_None); 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
 
-static PyObject* cnondilutetransportCoefficientsNonDilutePhiTESTEvaluate(PyObject* self, 
+static PyObject* cnondilutetransportCoefficientsNonDilutePhiTESTEvaluate(PyObject* self,
                                                                PyObject* args)
 {
   int i,nPoints=1;
@@ -512,7 +521,7 @@ static PyObject* cnondilutetransportCoefficientsNonDilutePhiTESTEvaluate(PyObjec
                      DDATA(dphi11),
                      DDATA(f),
                      DDATA(x));
-  Py_INCREF(Py_None); 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
@@ -533,38 +542,38 @@ static PyObject* cnondilutetransportCoefficientsNonDilutePhiTESTEvaluate(PyObjec
 
 
 static PyMethodDef cnondilutetransportCoefficientsMethods[] = {
-  { "ConMassFluidEvaluate", 
+  { "ConMassFluidEvaluate",
       cnondilutetransportCoefficientsConMassFluidEvaluate,
-      METH_VARARGS, 
-      "Evaluate the coefficients of Darcy's Law NonDilute"}, 
-  { "NonDiluteDispersionEvaluate", 
+      METH_VARARGS,
+      "Evaluate the coefficients of Darcy's Law NonDilute"},
+  { "NonDiluteDispersionEvaluate",
       cnondilutetransportCoefficientsNonDiluteDispersionEvaluate,
-      METH_VARARGS, 
-      "Evaluate the coefficients for NonDilute Diffusion"}, 
-{ "NonDilutePhiDispersionEvaluate", 
+      METH_VARARGS,
+      "Evaluate the coefficients for NonDilute Diffusion"},
+{ "NonDilutePhiDispersionEvaluate",
       cnondilutetransportCoefficientsNonDilutePhiDispersionEvaluate,
-      METH_VARARGS, 
-      "Evaluate the interpolation points for NonDilute Diffusion"}, 
-  { "NonDiluteEvaluate", 
+      METH_VARARGS,
+      "Evaluate the interpolation points for NonDilute Diffusion"},
+  { "NonDiluteEvaluate",
       cnondilutetransportCoefficientsNonDiluteEvaluate,
-      METH_VARARGS, 
-      "Evaluate the coefficients for NonDilute Transport"}, 
-  { "NonDilutePhiEvaluate", 
+      METH_VARARGS,
+      "Evaluate the coefficients for NonDilute Transport"},
+  { "NonDilutePhiEvaluate",
       cnondilutetransportCoefficientsNonDilutePhiEvaluate,
-      METH_VARARGS, 
-      "Evaluate the phi coefficients for NonDilute Transport"}, 
-  { "AdvectionEvaluate", 
+      METH_VARARGS,
+      "Evaluate the phi coefficients for NonDilute Transport"},
+  { "AdvectionEvaluate",
       cnondilutetransportCoefficientsAdvectionEvaluate,
-      METH_VARARGS, 
-      "Evaluate the coefficients for Dilute Advective Transport"}, 
-  { "NonDiluteTESTEvaluate", 
+      METH_VARARGS,
+      "Evaluate the coefficients for Dilute Advective Transport"},
+  { "NonDiluteTESTEvaluate",
       cnondilutetransportCoefficientsNonDiluteTESTEvaluate,
-      METH_VARARGS, 
-      "Evaluate the coefficients for NonDilute Transport"}, 
-  { "NonDilutePhiTESTEvaluate", 
+      METH_VARARGS,
+      "Evaluate the coefficients for NonDilute Transport"},
+  { "NonDilutePhiTESTEvaluate",
       cnondilutetransportCoefficientsNonDilutePhiTESTEvaluate,
-      METH_VARARGS, 
-      "Evaluate the phi coefficients for NonDilute Transport"}, 
+      METH_VARARGS,
+      "Evaluate the phi coefficients for NonDilute Transport"},
 };
 
 
@@ -575,4 +584,3 @@ PyMODINIT_FUNC initcnondilutetransportCoefficients(void)
   d = PyModule_GetDict(m);
   import_array();
 }
-

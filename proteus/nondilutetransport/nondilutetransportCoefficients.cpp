@@ -8,6 +8,10 @@
 
 void ConMassFluidEvaluate(const int nPoints,
                           const int nSpace,
+                          const int elements,
+                          const int points,
+                          const int dof_length,
+                          double *mass_frac_dof,
                           const double K,
                           const double grav,
                           const double dt,
@@ -27,12 +31,34 @@ void ConMassFluidEvaluate(const int nPoints,
                           double *mass_frac,
                           double *mass_frac_old)
 {
-  int k,I;
+  int i,j,k,l;
   const int nSpace2=nSpace*nSpace;
-  double density,d_density,mu,density_old,hold;
+  double density,density_av,d_density,mu,density_old,hold;
+  double mass_frac_av[elements];
 
+  if(points == 3){
+    for (i=0;i<elements-1;i++){
+      mass_frac_av[i] = 0.5*(mass_frac_dof[i]+mass_frac_dof[i+1]);
+    }
+    mass_frac_av[elements-1] = mass_frac_dof[dof_length-1];
+  }
+  else if(points == 2){
+    for (i=0;i<elements-1;i++){
+      mass_frac_av[i] = 0.5*(mass_frac_dof[i]+mass_frac_dof[i+1]);
+    }
+    mass_frac_av[elements-1] = mass_frac_dof[dof_length-1];
+  }
+  else if(points==1){
+    mass_frac_av[0] = 0.5*(mass_frac_dof[0]+mass_frac_dof[1]);
+    mass_frac_av[elements-1] = mass_frac_dof[dof_length-1];
+  }
 
-  for (k=0;k<nPoints;k++){
+  k = 0;
+  for (i=0;i<elements;i++){
+
+ density_av = den(mass_frac_av[i]);
+
+    for (j=0;j<points;j++){
 
       density = den(mass_frac[k]);
       density_old = den(mass_frac_old[k]);
@@ -40,23 +66,25 @@ void ConMassFluidEvaluate(const int nPoints,
 
       m[k] = 0.0;
       dm[k] = 0.0;
-      f[k] = 0.0;
+      f[k] = K/mu*density*density_av*grav;
       df[k] = 0.0;
 
-      phi[k] = u[k] - density*grav*(x[k*3] - L);
-      dphi[k] = 1.0;
+      phi[k] = u[k];// - density_av*grav*x[k*3];
+      dphi[k] = 1.;//
+
       if (dt < 1.e-12){
-		r[k] = 0.0;
-	  }
-	  else{
-      r[k] = poro/dt*(density - density_old);
-	 }
+	    	r[k] = 0.0;
+	    }
+	    else{
+        r[k] = poro/dt*(density - density_old);
+    	}
 
-      for (I=0;I<nSpace;I++){
-          a[k*nSpace2+I*nSpace+I] = K/mu*density;
-	  }
-
+      for (l=0;l<nSpace;l++){
+          a[k*nSpace2+l*nSpace+l] = K/mu*density;
+	    }
+     k++;
    }
+ }
 }
 
 
@@ -131,8 +159,8 @@ void NonDiluteDispersionEvaluate(const int nPoints,
       Disp = poro*alpha_L*velocity[k];
 
     if(d_act_w > 0.0){
-		arg = Disp*density*grad_w[k]*(beta1 + beta2*w[k]/act_w*MW_b/MW_w*d_act_w);
-        arg2 = Disp*density*grad_w[k]*beta2;
+		  arg = Disp*density*grad_w[k]*(beta1 + beta2*w[k]/act_w*MW_b/MW_w*d_act_w);
+      arg2 = Disp*density*grad_w[k]*beta2;
     	d_arg = d_density*Disp*grad_w[k]*(beta1 + beta2*w[k]/act_w*MW_b/MW_w*d_act_w)
     	        + arg2*1.0/act_w*MW_b/MW_w*d_act_w
    	            - arg2*w[k]*d_act_w/(act_w*act_w)*MW_b/MW_w*d_act_w
@@ -140,15 +168,15 @@ void NonDiluteDispersionEvaluate(const int nPoints,
   	            + arg2*w[k]/act_w*MW_b/MW_w*d2_act_w ;
 	}
 	else{
-		arg = Disp*density*grad_w[k]*beta1;
-    	d_arg = d_density*Disp*grad_w[k]*beta1;
+	 	arg = Disp*density*grad_w[k]*beta1;
+    d_arg = d_density*Disp*grad_w[k]*beta1;
 	}
 
-      if ( (1.0 - arg) < 0.0){
-			arg = 0.0;
-			d_arg = 0.0;
-			alpha_T = alpha_L;
-            d_alpha_T = 0.0;
+    if ( (1.0 - arg) < 0.0){
+			  arg = 0.0;
+			  d_arg = 0.0;
+			  alpha_T = alpha_L;
+        d_alpha_T = 0.0;
       }
       else{
       		arg = sqrt(1. - arg);
@@ -179,9 +207,8 @@ void NonDiluteDispersionEvaluate(const int nPoints,
           a00[k*nSpace2+I*nSpace+I] = density*poro*Disp;
           da000[k*nSpace2+I*nSpace+I] = d_density*poro*Disp + density*poro*velocity[k*nSpace+I]*d_alpha_T;
 
-
           a01[k*nSpace2+I*nSpace+I] = poro*density*w[k]/act_w*MW_b/MW_w*Disp;
-           da010[k*nSpace2+I*nSpace+I] = poro*d_density*w[k]/act_w*MW_b/MW_w*Disp
+          da010[k*nSpace2+I*nSpace+I] = poro*d_density*w[k]/act_w*MW_b/MW_w*Disp
                                        + poro*density*1.0/act_w*MW_b/MW_w*Disp
                                        - poro*density*w[k]*d_act_w/(act_w*act_w)*MW_b/MW_w*Disp
                                        - poro*density*w[k]/act_w*MW_b*d_MW_w/(MW_w*MW_w)*Disp
@@ -231,7 +258,6 @@ void NonDilutePhiDispersionEvaluate(const int nPoints,
 
    }
 }
-
 
 
 
@@ -292,6 +318,7 @@ void NonDiluteEvaluate(const int nPoints,
     d_act_w = d_act(w[k],molal_w,d_molal_w,act_w);
     d2_act_w = d2_act(w[k],molal_w,d_molal_w,act_w,d_act_w);
 
+
     density = den(w[k]);
     d_density = d_den(w[k]);
     mu = visc(w[k]);
@@ -302,6 +329,7 @@ void NonDiluteEvaluate(const int nPoints,
 	  d_MW_w = d_mol_weight(d_x_a,TCAT_v);
 
     velocity[k] = velocity[k]/density;
+
     Disp = poro*alpha_L*velocity[k];
 
     if(d_act_w > 0.0){
@@ -319,15 +347,14 @@ void NonDiluteEvaluate(const int nPoints,
 
 
       if (arg > 1.0){
-			arg = 0.0;
-			d_arg = 0.0;
-			alpha_T = alpha_L;
-            d_alpha_T = 0.0;
+			   arg = 0.0;
+			   d_arg = 0.0;
+			   alpha_T = alpha_L;
+         d_alpha_T = 0.0;
       }
       else{
       		arg = sqrt(1. - arg);
       		d_arg = -d_arg/(2.*arg);
-
       		alpha_T = 2.*alpha_L/(1. + arg);
       		d_alpha_T = -2.*alpha_L*d_arg/((1.+arg)*(1.+arg));
       }
@@ -344,8 +371,6 @@ void NonDiluteEvaluate(const int nPoints,
       f[k] = poro*density*velocity[k]*w[k];
       df[k] = poro*velocity[k]*(w[k]*d_density + density);
 
-      //printf("%e %e \n",velocity[k],w[k]);
-
       r[k] = scale*(act[k] - act_w);
       dr0[k] = -scale*d_act_w;
       dr1[k] =  scale;
@@ -357,7 +382,7 @@ void NonDiluteEvaluate(const int nPoints,
 
 
           a01[k*nSpace2+I*nSpace+I] = poro*density*w[k]/act_w*MW_b/MW_w*Disp;
-           da010[k*nSpace2+I*nSpace+I] = poro*d_density*w[k]/act_w*MW_b/MW_w*Disp
+          da010[k*nSpace2+I*nSpace+I] = poro*d_density*w[k]/act_w*MW_b/MW_w*Disp
                                        + poro*density*1.0/act_w*MW_b/MW_w*Disp
                                        - poro*density*w[k]*d_act_w/(act_w*act_w)*MW_b/MW_w*Disp
                                        - poro*density*w[k]/act_w*MW_b*d_MW_w/(MW_w*MW_w)*Disp

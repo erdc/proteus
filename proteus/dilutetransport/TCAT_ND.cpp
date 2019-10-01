@@ -123,9 +123,12 @@ rho = den(0.0);
 x_a = mole_frac(0.0,TCAT_v);
 MW_w = mol_weight(0.0,TCAT_v);
 
+
 velocity = -perm/mu*(grad_p - rho*grav)/poro;
 D = (diff + alpha_L*velocity);
 
+w = w * 1.e-6;
+grad_w = grad_w / 88.9  * 1.e-6;
 
 // If MW_w = f(w^A)
 //denom = w*w*w*(MW_a-MW_b) + w*w*(MW_b-MW_a) + w*MW_a;
@@ -133,7 +136,12 @@ D = (diff + alpha_L*velocity);
 
 // If MW_w != f(w^A)
 denom = w*(1.-w)*MW_a;
-ent = mu/(perm*T)*(poro*poro*velocity*velocity) + poro*rho*R*D/denom*grad_w*grad_w;
+if (denom < 1.e-20){
+	ent = mu/(perm*T)*(poro*poro*velocity*velocity);
+}
+else{
+	ent = mu/(perm*T)*(poro*poro*velocity*velocity) + poro*rho*R*D/denom*grad_w*grad_w;
+}
 //printf("%e %e %e \n",ent,mu/(perm*T)*(poro*poro*velocity*velocity),poro*rho*R*D/denom*grad_w*grad_w);
 
 return ent;

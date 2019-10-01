@@ -238,8 +238,8 @@ double d2_act(double x,double m, double dm, double act, double d_act)
 	else{
     	I = 3.*m;
     	dI = 3.*dm;
-        dm2 = d2_molal(x);
-        dI2 = 3.*dm2;
+      dm2 = d2_molal(x);
+      dI2 = 3.*dm2;
     	I_hp = sqrt(I);
 
    		m2 = m*m;
@@ -248,10 +248,10 @@ double d2_act(double x,double m, double dm, double act, double d_act)
     	m5 = m4*m;
     	m6 = m5*m;
 
-        arg = ac2 + 2.0*ac3*m + 3.0*ac4*m2 + 4.0*ac5*m3 + 5.0*ac6*m4 + 6.0*ac7*m5;
+      arg = ac2 + 2.0*ac3*m + 3.0*ac4*m2 + 4.0*ac5*m3 + 5.0*ac6*m4 + 6.0*ac7*m5;
    		deriv = -ac0*dI/((2.0*I_hp)*(ac1*I_hp + 1.0)*(ac1*I_hp + 1.0)) + arg*dm;
-        num = ac0*((3.*ac1*I_hp + 1.)*dI*dI - 2.*I*(ac1*I_hp + 1.)*dI2);
-        denom = 4.*I_hp*I*(ac1*I_hp + 1.)*(ac1*I_hp + 1.)*(ac1*I_hp + 1.);
+      num = ac0*((3.*ac1*I_hp + 1.)*dI*dI - 2.*I*(ac1*I_hp + 1.)*dI2);
+      denom = 4.*I_hp*I*(ac1*I_hp + 1.)*(ac1*I_hp + 1.)*(ac1*I_hp + 1.);
     	deriv_2 = num/denom + dm2*arg + 2.*dm*dm*( ac3 + 3.*ac4*m + 6.*ac5*m2 + 10.*ac6*m3 + 15.*ac7*m4);
     	d2_ax = act*(deriv_2 + deriv*deriv);
 	}

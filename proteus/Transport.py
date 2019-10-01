@@ -47,7 +47,7 @@ class OneLevelTransport(NonlinearEquation):
     Objects of this type take the initial-boundary value
     problem for
 
-    .. math:: 
+    .. math::
 
             m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik}
             \nabla \phi^k) + H^i(\nabla u) + r^i = 0
@@ -74,7 +74,7 @@ class OneLevelTransport(NonlinearEquation):
     Attributes
     ----------
     ebq_global[('velocityAverage',0)] : array
-        This attribute stores the average velocity along an edge given 
+        This attribute stores the average velocity along an edge given
         a discontinous velocity field.
 
     """
@@ -110,7 +110,7 @@ class OneLevelTransport(NonlinearEquation):
         Parameters
         ----------
         uDict : dict
-            Dictionary of 
+            Dictionary of
             :class:`proteus.FemTools.FiniteElementFunction` objects.
 
         phiDict : dict
@@ -121,18 +121,18 @@ class OneLevelTransport(NonlinearEquation):
             Dictionary of FiniteElementSpace objects
 
         dofBoundaryConditionsDict : dict
-            Dictionary of DOFBoundaryConditions objects for the 
+            Dictionary of DOFBoundaryConditions objects for the
             Dirichlet conditions.
 
         coefficients : :class:`proteus.TransportCoefficients.TC_base`
             Problem's Transport Coefficients class.
 
         elementQuadratureDict : dict
-            Dictionary of dictionaries of quadrature rules for each 
+            Dictionary of dictionaries of quadrature rules for each
             element integral in each component equation.
 
         elementBoundaryQuadratureDict : dict
-            Dictionary of dictionaries of quadrature rules for each 
+            Dictionary of dictionaries of quadrature rules for each
             element boundary integral in each component equation
 
         stabilization : bool
@@ -171,10 +171,10 @@ class OneLevelTransport(NonlinearEquation):
 
         * ebq -- at element boundary quadrature, unique to elements
 
-        * ebq_global -- at element boundary quadrature, unique to element 
+        * ebq_global -- at element boundary quadrature, unique to element
           boundary
 
-        * ebqe -- at element boundary quadrature, unique to global, 
+        * ebqe -- at element boundary quadrature, unique to global,
           exterior element boundary
 
         * phi_ip -- at the generalized interpolation points required to
@@ -3191,7 +3191,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #get u,grad(u), and grad(u)Xgrad(w) at the quadrature points
         #
-        
+
         for cj in range(self.nc):
             self.u[cj].getValues(self.q[('v',cj)],
                                  self.q[('u',cj)])
@@ -6012,8 +6012,8 @@ class OneLevelTransport(NonlinearEquation):
 
         Notes
         -----
-        This function creates a Laplace matrix and stores the result in the 
-        :class:`proteus.OneLevelTransport` class to assist in the construction 
+        This function creates a Laplace matrix and stores the result in the
+        :class:`proteus.OneLevelTransport` class to assist in the construction
         of physics based preconditione
         """
 
@@ -6047,13 +6047,13 @@ class OneLevelTransport(NonlinearEquation):
         scalar_quad = StorageSet(shape=(self.mesh.nElements_global,
                                         self.nQuadraturePoints_element))
         tensors_quad = StorageSet(shape={})
-        
+
         scalar_quad |= set([('u',ci) for ci in range(self.nc)])
         tensors_quad |= set([('a',ci,ci) for ci in range(self.nc)])
         tensors_quad |= set([('da',ci,ci,ci) for ci in range(self.nc)])
 
         scalar_quad.allocate(self.Laplace_q)
-        
+
         for k in tensors_quad:
             self.Laplace_q[k] = numpy.zeros(
                 (self.mesh.nElements_global,
@@ -6063,7 +6063,7 @@ class OneLevelTransport(NonlinearEquation):
 
         if _nd == 2:
             self.LaplaceOperatorCoeff.evaluate(_t,self.Laplace_q)
-        
+
         LaplaceJacobian = {}
         for ci in range(self.nc):
             LaplaceJacobian[ci] = {}
@@ -6101,7 +6101,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                           self.LaplaceOperator)
 
         self.LaplaceOperatorpetsc = superlu_2_petsc4py(self.LaplaceOperator)
-        
+
         var_range = []
         isp_list = []
         starting_idx = 0
@@ -6194,7 +6194,7 @@ class MultilevelTransport:
             raise Exception,  'Proteus is trying to create a' \
             ' Multilevel Transport object with no trial space.  Make' \
             ' sure femSpaces is properly specified in your numerics.'
-        
+
         self.weakDirichletConditions=weakDirichletConditions
         self.jacobianList=[]
         self.par_jacobianList=[]

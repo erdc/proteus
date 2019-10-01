@@ -864,7 +864,7 @@ class ExplicitConsistentMassMatrixWithRedistancing(Newton):
 
 class ExplicitConsistentMassMatrixForVOF(Newton):
     """
-     This is a fake solver meant to be used with optimized code
+    This is a fake solver meant to be used with optimized code
     A simple iterative solver that is Newton's method
     if you give it the right Jacobian
     """
@@ -872,7 +872,7 @@ class ExplicitConsistentMassMatrixForVOF(Newton):
         #########################
         # COMPUTE MAIN SOLUTION #
         #########################
-        #import pdb; pdb.set_trace()
+        u = self.F.coefficients.currentModel.u_dof_old
         self.computeResidual(u,r,b)
         if self.updateJacobian or self.fullNewton:
             self.F.getJacobian(self.J)

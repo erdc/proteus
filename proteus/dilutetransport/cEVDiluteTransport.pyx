@@ -116,7 +116,10 @@ cdef extern from "EVDiluteTransport.h" namespace "proteus":
                                double diff,
                                double alpha_L,
                                double* p_dof,
-                               double* entropy)
+                               double* entropy,
+                               bint Alt_Split,
+                               double* ent_time_old,
+                               double* ent_time)
         void calculateResidual_entropy_viscosity(double dt,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -213,7 +216,10 @@ cdef extern from "EVDiluteTransport.h" namespace "proteus":
                                double diff,
                                double alpha_L,
                                double* p_dof,
-                               double* entropy)
+                               double* entropy,
+                               bint Alt_Split,
+                               double* ent_time_old,
+                               double* ent_time)
         void calculateJacobian(double dt,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -472,7 +478,10 @@ cdef class cEVDiluteTransport_base:
                          double diff,
                          double alpha_L,
                          numpy.ndarray p_dof,
-                         numpy.ndarray entropy):
+                         numpy.ndarray entropy,
+                         bint Alt_Split,
+                         numpy.ndarray ent_time_old,
+                         numpy.ndarray ent_time):
        self.thisptr.calculateResidual(dt,
                                        <double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -569,7 +578,10 @@ cdef class cEVDiluteTransport_base:
                                         diff,
                                         alpha_L,
                                         <double*> p_dof.data,
-                                        <double*> entropy.data)
+                                        <double*> entropy.data,
+                                        Alt_Split,
+                                        <double*> ent_time_old.data,
+                                        <double*> ent_time.data)
    def calculateResidual_entropy_viscosity(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
@@ -666,7 +678,10 @@ cdef class cEVDiluteTransport_base:
                          double diff,
                          double alpha_L,
                          numpy.ndarray p_dof,
-                         numpy.ndarray entropy):
+                         numpy.ndarray entropy,
+                         bint Alt_Split,
+                         numpy.ndarray ent_time_old,
+                         numpy.ndarray ent_time):
        self.thisptr.calculateResidual_entropy_viscosity(dt,
                                        <double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -763,7 +778,10 @@ cdef class cEVDiluteTransport_base:
                                         diff,
                                         alpha_L,
                                         <double*> p_dof.data,
-                                        <double*> entropy.data)
+                                        <double*> entropy.data,
+                                        Alt_Split,
+                                        <double*> ent_time_old.data,
+                                        <double*> ent_time.data)
    def calculateJacobian(self,
                          double dt,
                          numpy.ndarray mesh_trial_ref,
