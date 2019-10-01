@@ -301,7 +301,7 @@ Source Code Documentation
 .. toctree::
    :maxdepth: 1
    :caption: Models
-   :name: sec-tools
+   :name: sec-models
 
    models/body_dynamics
    models/free_surface
