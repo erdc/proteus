@@ -90,4 +90,4 @@ analyticalSolution = {0: analyticalSolution['h_exact'],
                       1: analyticalSolution['hu_exact'],
                       2: analyticalSolution['hv_exact'],
                       3: analyticalSolution['hw_exact'],
-                      4: analyticalSolution['hv_exact']}                    
+                      4: analyticalSolution['hv_exact']}

@@ -25,18 +25,22 @@ we are doing simulation in 2d but only consider x direction velocity
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
-T = 20.0
-g = 9.81
-h0 = 1.0
-# Tstar corresponds to experimental data time at Tstar = {10,15,20,...,65}
+
+# Here we define Tstar which corresponds to experimental data time
+# Tstar = {10,15,20,...,65} for the final time
+
+T = 30.0
+g = 9.81  # gravity
+h0 = 1.0  # water depth
 Tstar = T * np.sqrt(h0 / g)
 
 opts = Context.Options([
-    ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", Tstar, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.33, "Desired CFL restriction"),
-    ("refinement", 4, "Refinement level")
+    ("cfl", 0.2, "Desired CFL restriction"),
+    ("refinement", 4, "Refinement level"),
+    ("reflecting_BCs",True,"Use reflecting BCs")
 ])
 
 ###################
@@ -51,7 +55,6 @@ X_coords = (-35.0, 10.0)  # this is domain in x direction, used in BCs
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 10) + 1
-
 he = old_div(L[0], float(nnx - 1))
 triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 
@@ -59,12 +62,12 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 #  CONSTANTS NEEDED FOR SETUP #
 ###############################
 
-a = 0.28  # amplitude
+a = 0.28  # relative amplitude
 slope = 1.0 / 19.850
 k_wavenumber = np.sqrt(3.0 * a / (4.0 * h0**3))  # wavenumber
 z = np.sqrt(3.0 * a * h0) / (2.0 * h0 * np.sqrt(h0 * (1.0 + a)))  # width of solitary wave
-L_wave = 2.0 / k_wavenumber * np.arccosh(np.sqrt(1.0 / 0.050)) # wavelength of solitary wave
-c = np.sqrt(g * (1.0 + a) * h0)  # wave speed
+L_wave = 2.0 / k_wavenumber * np.arccosh(np.sqrt(20.0)) # wavelength of solitary wave
+c = np.sqrt(g * (1.0 + a) * h0)  # wave celerity (or speed)
 x0 = - h0 / slope - L_wave / 2.0  # location of the toe of the beach
 
 ###############################
@@ -82,6 +85,10 @@ def bathymetry_function(X):
     x = X[0]
     return np.maximum(slope * x, -h0)
 
+class Zero(object):
+    def uOfXT(self, x, t):
+        return 0.0
+
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
@@ -89,19 +96,16 @@ def bathymetry_function(X):
 
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        eta = solitary_wave(X[0], 0)
-        h = eta - bathymetry_function(X)
-        hp = max(h, 0.)
-        return hp
+        hTilde = solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.0)
+        return h
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        eta = solitary_wave(X[0], 0)
-        h = eta - bathymetry_function(X)
-        hp = max(h, 0.)
-        Umom = hp * c * eta / (h0 + eta)
-        return Umom
+        hTilde = solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.0)
+        return h * c * hTilde / (h0 + hTilde)
 
 
 class y_mom_at_t0(object):
@@ -111,9 +115,11 @@ class y_mom_at_t0(object):
 
 
 """
-heta and hw are needed for the dispersive modified green naghdi equations
-source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
+heta and hw are needed for the modified green naghdi equations.
+Note that the BCs for the heta and hw should be same as h.
+For more details see: 'Robust explicit relaxation techinque for solving
+the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
+JCP 2019
 """
 
 
@@ -125,11 +131,10 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        eta = solitary_wave(X[0], 0)
-        h = eta - bathymetry_function(X)
-        hp = max(h, 0.)
-        hprime = -2.0 * z * eta * np.tanh(z * (X[0] - x0 - c * t))
-        hw = hp * (-c * h0 * eta * hprime / (h0 + eta)**2)
+        hTilde = solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.0)
+        hTildePrime = -2.0 * z * hTilde * np.tanh(z * (X[0] - x0 - c * t))
+        hw = -h**2 * (c * h0 * hTildePrime / (h0 + hTilde)**2)
         return hw
 
 ###############################
@@ -172,6 +177,12 @@ boundaryConditions = {'water_height': water_height_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
+#analyticalSolution
+analyticalSolution={'h_exact': Zero(),
+                  'hu_exact': Zero(),
+                  'hv_exact': Zero(),
+                  'heta_exact':Zero(),
+                  'hw_exact':Zero()}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -182,6 +193,7 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              bathymetry=bathymetry_function)
+                                              bathymetry=bathymetry_function,
+                                              analyticalSolution=analyticalSolution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.016

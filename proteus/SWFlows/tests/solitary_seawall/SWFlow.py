@@ -28,7 +28,7 @@ opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 12.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.2, "Desired CFL restriction"),
+    ("cfl", 0.07, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
     ("reflecting_BCs",True,"Use reflecting BCs")
 ])
@@ -52,14 +52,12 @@ triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
 #  CONSTANTS NEEDED FOR SETUP #
 ###############################
 g = 9.81
+# water depth and relative amplitude
 h0 = 0.2
-# amplitude
 a = 0.35
-# wavenumber
+# wavenumber, width and wave celerity
 k_wavenumber = np.sqrt(3.0 * a / (4.0 * h0**3))
 z = np.sqrt(3.0 * a * h0) / (2.0 * h0 * np.sqrt(h0 * (1.0 + a)))
-# wavelength of solitary wave
-L_wave = 2.0 / k_wavenumber * np.arccosh(np.sqrt(1.0 / 0.050))
 c = np.sqrt(g * (1.0 + a) * h0)
 # initial location of solitary wave
 x0 = 5.9
@@ -110,9 +108,13 @@ class y_mom_at_t0(object):
         return 0.
 
 
-# heta and hw are needed for the modified green naghdi equations
-# source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-# THE GREEN NAGHDI EQUATIONS' by Guermond, Popov, Tovar, Kees
+"""
+heta and hw are needed for the modified green naghdi equations.
+Note that the BCs for the heta and hw should be same as h.
+For more details see: 'Robust explicit relaxation techinque for solving
+the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
+JCP 2019
+"""
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):
