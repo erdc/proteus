@@ -13,11 +13,10 @@ import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 
 
 """
-Note that this set up for a solitary wave is from  equation 31
-in the the paper
-A rapid numerical method for solving Serre Green Naghdi
-equations describing long free surface gravity waves by
-Favrie and Gavrilyuk. It assumes the reference height is h1.
+This test uses the definition of a solitary wave from eqn 31
+in the the paper 'A rapid numerical method for solving Serre Green Naghdi
+equations describing long free surface gravity waves' by
+Favrie and Gavrilyuk.
 """
 
 # *************************** #
@@ -26,17 +25,17 @@ Favrie and Gavrilyuk. It assumes the reference height is h1.
 
 opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 2.0, "Final time for simulation"),
+    ("final_time", 4.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.2, "Desired CFL restriction"),
-    ("refinement", 4, "Refinement level")
+    ("refinement", 5, "Refinement level")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (12.0, 1.0)
-X_coords = (0.0, 12.0)  # this is domain, used in BCs
+L = (10.0, 1.0)
+X_coords = (0.0, 10.0)  # this is domain, used in BCs
 domain = RectangularDomain(L=L, x=[0, 0, 0])
 
 # CREATE REFINEMENT #
@@ -50,25 +49,28 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 ###################################
 # SOLITARY WAVE FUCTIONS AND BATH #
 ###################################
-h1 = 0.1
-h2 = 0.11
-x0 = 2.0  # initial location of solitary wave
 g = 9.81
+h1 = .10
+h2 = .11
+# initial location of solitary wave
+x0 = 2.0
+# solitary wave celerity and  width
 c = np.sqrt(g * h2)
 r = np.sqrt(old_div(3.0 * (h2 - h1), 4 * h2 * h1**2))
 
-def soliton(x, t):
+def solitary_wave(x, t):
     phase = x - c * t - x0
     return h1 + (h2 - h1) * old_div(1.0, np.cosh(r * phase)**2)
 
 
 def u(x, t):
-    h = soliton(x,t)
+    h = solitary_wave(x,t)
     return c * (1.0 - old_div(h1, h))
 
 
 def bathymetry_function(X):
     x = X[0]
+    # then return vector of zeros
     return x * 0.0
 
 
@@ -82,7 +84,7 @@ class Zero(object):
 
 class water_height_at_tfinal(object):
     def uOfXT(self, X, t):
-        return soliton(X[0], opts.final_time)
+        return solitary_wave(X[0], opts.final_time)
 
 
 ##############################
@@ -92,12 +94,12 @@ class water_height_at_tfinal(object):
 
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        return soliton(X[0], 0.0)
+        return solitary_wave(X[0], 0.0)
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        h = soliton(X[0], 0.0)
+        h = solitary_wave(X[0], 0.0)
         return h * u(X[0], 0.0)
 
 
@@ -108,9 +110,11 @@ class y_mom_at_t0(object):
 
 
 """
-heta and hw are needed for the dispersive modified green naghdi equations
-source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
+heta and hw are needed for the modified green naghdi equations.
+Note that the BCs for the heta and hw should be same as h.
+For more details see: 'Robust explicit relaxation techinque for solving
+the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
+JCP 2019
 """
 
 
@@ -122,8 +126,9 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        # since there is no bathymatry
-        # hw = -h^2 * div(vel) = -h^2 * (c * h1 * h'/h^2) = -c * h1 * h'
+        # since there is no bathymetry, waterHeight = htilde
+        # hw = -waterHeight^2 * div(vel)
+        #    = -h^2 * (c * h1 * hTildePrime/hTilde^2) = -c * h1 * hTildePrime
         x = X[0]
         phase = x - c * t - x0
         sechSqd = old_div(1.0, np.cosh(r * phase)**2)
@@ -138,10 +143,11 @@ class hw_at_t0(object):
 
 
 def water_height_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
-    elif X[0] == X_coords[1]:
-        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
+    return None
+    # if X[0] == X_coords[0]:
+    #     return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
+    # elif X[0] == X_coords[1]:
+    #     return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
 
 
 def x_mom_DBC(X, flag):
@@ -156,17 +162,19 @@ def y_mom_DBC(X, flag):
 
 
 def heta_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
-    elif X[0] == X_coords[1]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
+    return None
+    # if X[0] == X_coords[0]:
+    #     return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
+    # elif X[0] == X_coords[1]:
+    #     return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
 
 
 def hw_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
-    elif X[0] == X_coords[1]:
-        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
+    return None
+    # if X[0] == X_coords[0]:
+    #     return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
+    # elif X[0] == X_coords[1]:
+    #     return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
 
 
 # ********************************** #

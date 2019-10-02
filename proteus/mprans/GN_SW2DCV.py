@@ -819,6 +819,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.extendedSourceTerm_hv = None
         self.extendedSourceTerm_heta = None
         self.extendedSourceTerm_hw = None
+        self.new_SourceTerm_hu = None
+        self.new_SourceTerm_hv = None
+        self.new_SourceTerm_heta = None
+        self.new_SourceTerm_hw = None
         self.dH_minus_dL = None
         self.muH_minus_muL = None
         # NORMALS
@@ -1011,7 +1015,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.huBT,
                                  self.hvBT,
                                  self.hetaBT,
-                                 self.hwBT)
+                                 self.hwBT,
+                                 self.new_SourceTerm_hu,
+                                 self.new_SourceTerm_hv,
+                                 self.new_SourceTerm_heta,
+                                 self.new_SourceTerm_hw)
 
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex] = limited_hnp1
@@ -1305,6 +1313,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.extendedSourceTerm_hv = numpy.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_heta = numpy.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_hw = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_hu = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_hv = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_heta = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_hw = numpy.zeros(self.u[0].dof.shape, 'd')
         self.dataStructuresInitialized = True
     #
 
@@ -1501,7 +1513,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hvBT,
             self.hetaBT,
             self.hwBT,
-            self.timeIntegration.lstage)
+            self.timeIntegration.lstage,
+            self.new_SourceTerm_hu,
+            self.new_SourceTerm_hv,
+            self.new_SourceTerm_heta,
+            self.new_SourceTerm_hw)
 
         self.COMPUTE_NORMALS = 0
         if self.forceStrongConditions:
