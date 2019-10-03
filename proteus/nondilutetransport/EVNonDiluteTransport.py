@@ -1277,8 +1277,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.beta1,
             self.coefficients.beta2,
             self.coefficients.mass_in,
-            self.coefficients.mom_Model.u[0].dof,
-            self.coefficients.mom_Model.q[('grad(u)',0)],
+            self.coefficients.currentMom.u[0].dof,
+            self.coefficients.currentMom.q[('grad(u)',0)],
             self.entropy,
             self.coefficients.u_vel_norm,
             self.coefficients.ModelId,
@@ -1527,7 +1527,7 @@ class MyCoefficients(Coefficients):
 		self.q_porosity = None; self.ebq_porosity = None; self.ebqe_porosity = None
 		self.porosity_dof = None
 		self.setParamsFunc   = setParamsFunc
-		self.flowCoefficients=None
+		self.flowCoefficients =None
 		self.movingDomain=movingDomain
         # EDGE BASED (AND ENTROPY) VISCOSITY
 		self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX

@@ -81,13 +81,13 @@ class Transport_NonDilute_Dispersion(LinearVADR_ConstantCoefficients):
 	def preStep(self,t,firstStep=True):
 		if self.Alt_Split:
 			#import pdb; pdb.set_trace()
-			self.diff_Model.q_mf_old = np.copy(self.adv_Model2.q_mf)
-			self.diff_Model.cip_mf_old = np.copy(self.adv_Model2.cip_mf)
-			self.diff_Model.ebqe_mf_old = np.copy(self.adv_Model2.ebqe_mf)
+			self.diff_Model.q_mf_old = np.copy(self.diff_Model.q[('u',0)])
+			self.diff_Model.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
+			self.diff_Model.ebqe_mf_old = np.copy(self.diff_Model.ebqe[('u',0)])
 			if self.diff_Model.ebq.has_key(('u',0)):
-				self.diff_Model.ebq_mf_old = np.copy(self.adv_Model2.ebq_mf)
+				self.diff_Model.ebq_mf_old = np.copy(self.diff_Model.ebq[('u',0)])
 			if self.diff_Model.ebq_global.has_key(('u',0)):
-				self.diff_Model.ebq_global_mf_old = np.copy(self.adv_Model2.ebq_global_mf)
+				self.diff_Model.ebq_global_mf_old = np.copy(self.diff_Model.ebq_globa[('u',0)])
 		else:
 			self.diff_Model.q_mf_old = np.copy(self.diff_Model.q[('u',0)])
 			self.diff_Model.cip_mf_old = np.copy(self.diff_Model.phi_ip[('u',0)])
@@ -298,6 +298,9 @@ class Porous_Media_Flow(TC_base):
 	def preStep(self,t,firstStep=True):
 		self.dt = self.currentTime_Model.timeIntegration.dt
 
+	# def postStep(self,t,firstStep=True):
+	# 	print self.ModelId
+	# 	print np.max(self.mom_Model.q['velocity',0]-self.mom_Model2.q['velocity',0])
 
 	def initializeElementQuadrature(self,t,cq):
 		self.q_c = np.zeros(cq[('u',0)].shape,'d')
