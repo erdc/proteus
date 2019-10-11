@@ -1083,7 +1083,6 @@ class ShapeSTL(Shape):
             self.BC[key] = self.BC_class(shape=self, name=key)
             self.BC_list += [self.BC[key]]
         # self.BC = BCContainer(self.BC_dict)
-    
 
 def getInfoFromSTL(filename):
     """
