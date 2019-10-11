@@ -39,6 +39,7 @@ class TestEllipticRedistancing(object):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = 0
         reload(rdls_p)
+        reload(rdls_n)
         reload(vortex2D_so)        
         pnList = [(ncls_p,ncls_n),
                   (rdls_p,rdls_n)]
@@ -75,6 +76,7 @@ class TestEllipticRedistancing(object):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = 1
         reload(rdls_p)
+        reload(rdls_n)
         reload(vortex2D_so)
         pnList = [(ncls_p,ncls_n),
                   (rdls_p,rdls_n)]
@@ -114,6 +116,7 @@ class TestEllipticRedistancing(object):
         reload(default_p)
         reload(default_so)
         reload(rdls_p)
+        reload(rdls_n)
         reload(vortex2D_so)
         pnList = [(ncls_p,ncls_n),
                   (rdls_p,rdls_n)]
@@ -144,7 +147,7 @@ class TestEllipticRedistancing(object):
                                                opts)
         ns.calculateSolution('rdls')
         actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_2.h5','r')
-        print np.amax(actual.root.u_t1)
+        print(np.amax(actual.root.u_t1))
         assert np.isclose(np.amax(actual.root.u_t1),0.1060107277952287,atol=1e-10)
         actual.close()
 
@@ -152,6 +155,7 @@ class TestEllipticRedistancing(object):
         # Set parameters for test #
         vortex2D.ct.ELLIPTIC_REDISTANCING = 3
         reload(rdls_p)
+        reload(rdls_n)
         reload(vortex2D_so)
         pnList = [(ncls_p,ncls_n),
                   (rdls_p,rdls_n)]

@@ -10,7 +10,7 @@ if not prefix:
 
 PROTEUS_OPT = os.getenv('PROTEUS_OPT')
 if not PROTEUS_OPT:
-    PROTEUS_OPT=['-O3','-DNDEBUG']
+    PROTEUS_OPT=[]
 else:
     PROTEUS_OPT=PROTEUS_OPT.split()
 
@@ -22,7 +22,6 @@ platform_extra_link_args = []
 platform_blas_h = None
 platform_lapack_h = None
 platform_lapack_integer = None
-
 if sys.platform == 'darwin':
     platform_extra_link_args = ['-framework', 'Accelerate']
     platform_lapack_integer = '__CLPK_integer'
@@ -31,7 +30,7 @@ if sys.platform == 'darwin':
     platform_extra_compile_args = ['-flax-vector-conversions','-DPETSC_INCLUDE_AS_C','-DPETSC_SKIP_COMPLEX']
     major,minor = platform.mac_ver()[0].split('.')[0:2]
     os.environ["MACOSX_DEPLOYMENT_TARGET"]= major+'.'+minor
-elif sys.platform == 'linux2':
+elif sys.platform == 'linux':
     platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C', '-DPETSC_SKIP_COMPLEX']
     platform_extra_link_args = ['-L'+PROTEUS_LIB_DIR,'-Wl,-rpath,' + PROTEUS_LIB_DIR]
     platform_blas_h = r'"proteus_blas.h"'
@@ -67,7 +66,7 @@ if sys.platform == 'darwin':
     PROTEUS_BLAS_LIB_DIR = PROTEUS_LIB_DIR
     PROTEUS_BLAS_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
     PROTEUS_EXTRA_LINK_ARGS=platform_extra_link_args
-elif sys.platform == 'linux2':
+elif sys.platform == 'linux':
     PROTEUS_BLAS_LIB   ='openblas'
     PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
 
@@ -182,7 +181,7 @@ PROTEUS_HDF5_LIB_DIRS = [PROTEUS_HDF5_LIB_DIR]
 PROTEUS_HDF5_LIBS = ['hdf5']
 PROTEUS_HDF5_INCLUDE_DIRS = [PROTEUS_HDF5_INCLUDE_DIR]
 
-if sys.platform == 'linux2':
+if sys.platform == 'linux':
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_HDF5_LIB_DIR]
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_PETSC_LIB_DIR]
     PROTEUS_EXTRA_LINK_ARGS += ['-Wl,-rpath,' + PROTEUS_SCOREC_LIB_DIR]

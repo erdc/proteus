@@ -43,14 +43,13 @@ class Test_ibm(object):
 
 
     def example_setting(self, pre_setting):
+        from importlib import reload
         Context.contextOptionsString = pre_setting
-
         from . import cylinder_so as my_so
         reload(my_so)
         # defined in iproteus
         opts.profile = False
-        opts.gatherArchive = True
-        
+        opts.gatherArchive = True        
         pList=[]
         nList=[]
         sList=[]

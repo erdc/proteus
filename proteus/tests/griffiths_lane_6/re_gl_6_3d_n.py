@@ -7,14 +7,14 @@ except:
     from re_gl_6_3d_p import *
 
 #unsteady
-timeIntegration = FLCBDF
-stepController  = FLCBDF_controller
-systemStepControllerType = SplitOperator.Sequential_MinFLCBDFModelStep
+#timeIntegration = FLCBDF
+#stepController  = FLCBDF_controller
+#systemStepControllerType = SplitOperator.Sequential_MinFLCBDFModelStep
 rtol_u[0] = 0.001*he
 atol_u[0] = 0.001*he
 tnList = [0.0,1.0e-5,1.0e5]
-#timeIntegration = BackwardEuler
-#stepController = HeuristicNL_dt_controller
+timeIntegration = BackwardEuler
+stepController = HeuristicNL_dt_controller
 nonlinearIterationsFloor =5
 nonlinearIterationsCeil=10
 #systemStepControllerType = SplitOperator.Sequential_MinModelStep
@@ -61,14 +61,16 @@ levelNonlinearSolver = Newton
 
 fullNewtonFlag = True
 
-tolFac = 0.0
+tolFac = 1.0e-10
 
-atol = 0.0001*he#0.001*vFine
+#atol = 0.0001*he#0.001*vFine
+atol = 1.e-10
 
-nl_rtol_res = 0.0
-nl_atol_res = atol#0.001*vFine#1.0e-4
+nl_rtol_res = 1.0e-10
+#nl_atol_res = atol#0.001*vFine#1.0e-4
+nl_atol_res = 1.0e-10
 atol_res = {0:atol}
-rtol_res = {0:0.0}
+rtol_res = {0:nl_rtol_res}
 matrix = SparseMatrix
 
 #multilevelLinearSolver =PETSc

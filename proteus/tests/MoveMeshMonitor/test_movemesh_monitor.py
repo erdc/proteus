@@ -35,7 +35,7 @@ class TestMoveMeshMonitor(unittest.TestCase):
     def test_MoveMeshMonitor(self):
         from proteus import default_so
         reload(default_so)
-        import movemesh_monitor_so
+        from . import movemesh_monitor_so
         pList = []
         nList = []
         for (p,n) in movemesh_monitor_so.pnList:

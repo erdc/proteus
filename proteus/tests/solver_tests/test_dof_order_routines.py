@@ -49,9 +49,9 @@ def test_interlaced_vel_dof_order(ownership_range,
         assert np.array_equal(global_IS[i-1].array , global_vals)
 
     for i in range(1,num_components):
-        scaled_ownership_range = ownership_range[0] * (num_components-1) / num_components
+        scaled_ownership_range = ownership_range[0] * (num_components-1) // num_components
         local_vals = np.arange(start=scaled_ownership_range + i - 1,
-                               stop=scaled_ownership_range + int( num_equations * (num_components-1) / num_components ),
+                               stop=scaled_ownership_range + int( num_equations * (num_components-1) // num_components ),
                                step=num_components-1)
         assert np.array_equal(vel_IS[i-1].array, local_vals)
 

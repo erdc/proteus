@@ -651,7 +651,7 @@ class TestHsu(unittest.TestCase):
         nuT = 1e-2
         beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
         mint = gl.sedSt.mIntFluid(sedF, rhoFluid, uf, us, ufp1, nu, nuT, gradc)
-        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*(ufp1)/(1.-sedF)/rhoFluid ).all() , 10))
+        assert np.allclose(mint,-sedF*beta*(ufp1)/(1.-sedF)/rhoFluid,atol=1e-10)
     def testMintSolid(self):
         gl=GlobalVariables()
         import random
@@ -666,7 +666,7 @@ class TestHsu(unittest.TestCase):
         nuT = 1e-2
         beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
         mint = gl.sedSt.mIntSolid(sedF, rhoFluid, uf, us, usp1 , nu, nuT, gradc)
-        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*( - usp1) / (1.-sedF)).all() , 10))
+        assert np.allclose(mint, -sedF*beta*( - usp1) / (1.-sedF)/rhoFluid,atol=1.0e-10, rtol=1.0e-10)
     def testMintgradC(self):
         import random
         gl=GlobalVariables()
@@ -681,7 +681,7 @@ class TestHsu(unittest.TestCase):
         nuT = 1e-2
         beta = gl.sedSt.betaCoeff(sedF,rhoFluid, uf, us, nu)      
         mint = gl.sedSt.mIntgradC(sedF,rhoFluid, uf, us , nu, nuT, gradc)
-        self.assertTrue(round(mint.all(),10) == round(( - sedF * beta * gradc * nuT / gl.sigmaC / rhoFluid / (1.-sedF)).all() , 10))
+        assert np.allclose(mint,- sedF * beta * gradc * nuT / gl.sigmaC / rhoFluid / (1.-sedF), 1.0e-10)
 
     def testdMintdUf(self):
         import random

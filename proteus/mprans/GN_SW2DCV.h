@@ -2112,7 +2112,6 @@ public:
         double meshSizei = std::sqrt(mi); // local mesh size in 2d
         double pTildei = -(LAMBDA_MGN * g / meshSizei) / 3.0 * 6.0 * hi *
                          (hetai - std::pow(hi, 2.0));
-
         // if (hetai > std::pow(hi, 2.0)) {
         //   pTildei = -(LAMBDA_MGN * g / (3.0 * meshSizei)) * 2.0 *
         //             diff_over_h_i *
