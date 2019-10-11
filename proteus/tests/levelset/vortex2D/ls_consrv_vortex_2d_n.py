@@ -1,9 +1,12 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .ls_consrv_vortex_2d_p import *
-from .vortex2D import *
-
+try:
+    from .ls_consrv_vortex_2d_p import *
+    from .vortex2D import *
+except:
+    from ls_consrv_vortex_2d_p import *
+    from vortex2D import *
 
 timeIntegrator = ForwardIntegrator
 timeIntegration = NoIntegration
@@ -23,8 +26,10 @@ if cDegree_ls==0:
         elif pDegree_ls==2:
             femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
         base_quad_rule = SimplexGaussQuadrature(nd,vortex_quad_order)
-        elementQuadrature = CompositeTriangle(base_quad_rule,hk)
-        #elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
+        if compQuad:
+            elementQuadrature = CompositeTriangle(base_quad_rule,hk)
+        else:
+            elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
     if parallel or LevelModelType in [MCorr.LevelModel]:#,MCorrElement.LevelModel]:
         numericalFluxType = DoNothing#Diffusion_IIPG_exterior
@@ -66,6 +71,7 @@ nonlinearSmoother = NLGaussSeidel
 fullNewtonFlag = True
 
 tolFac = 0.0
+#maxLineSearches =0
 
 nl_atol_res = atolConservation
 useEisenstatWalker = True
@@ -86,5 +92,5 @@ else:
 
 
 conservativeFlux = {}
-if checkMass:
-    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex2d"+repr(lRefinement)+"p"+repr(pDegree_ls))]
+#if checkMass:
+#    auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex2d"+repr(lRefinement)+"p"+repr(pDegree_ls))]

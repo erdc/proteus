@@ -17,7 +17,7 @@ opts=Context.Options([
 AUTOMATED_TEST=True
 if AUTOMATED_TEST:
     opts.T=10.0
-    opts.nDTout=1.
+    opts.nDTout=1
     opts.refinement=2
 #
 

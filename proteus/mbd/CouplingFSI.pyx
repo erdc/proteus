@@ -106,6 +106,8 @@ cdef class ProtChBody:
         self.applyAddedMass = True  # will apply added mass in Chrono calculations if True
         self.useIBM = False
         self.Aij_factor = 1.
+        self.Aij_updated_global = False
+        self.Aij_transform_local = False
         self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
@@ -128,7 +130,7 @@ cdef class ProtChBody:
         if 'ChRigidBody' not in shape.auxiliaryVariables:
             shape.auxiliaryVariables['ChRigidBody'] = self
             if take_shape_name is True:
-                self.setName(shape.name)
+                self.setName(bytes(shape.name,'utf-8'))
         self.nd = shape.Domain.nd
         new_vec = chrono.ChVectorD(shape.barycenter[0],
                                    shape.barycenter[1],
@@ -526,28 +528,55 @@ cdef class ProtChBody:
             Added mass matrix (must be 6x6 array!)
         """
 
-        Aij[0, 1:] *= self.thisptr.free_x.x()
-        Aij[1, 0] *= self.thisptr.free_x.y()
-        Aij[1, 2:] *= self.thisptr.free_x.y()
-        Aij[2, :2] *= self.thisptr.free_x.z()
-        Aij[2, 3:] *= self.thisptr.free_x.z()
-        Aij[3, :3] *= self.thisptr.free_r.x()
-        Aij[3, 4:] *= self.thisptr.free_r.x()
-        Aij[4, :4] *= self.thisptr.free_r.y()
-        Aij[4, 5] *= self.thisptr.free_r.y()
-        Aij[5, :5] *= self.thisptr.free_r.z()
-        assert Aij.shape[0] == 6, 'Added mass matrix must be 6x6 (np)'
-        assert Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
+        assert Aij.shape[0] == Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
         cdef double mass = self.ChBody.GetMass()
         cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
-        cdef np.ndarray AM = np.zeros((6,6))  # added mass matrix
         cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
         cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
         cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
+
         # added mass matrix
-        AM += Aij
-        self.Aij[:] = AM
+        cdef ch.ChQuaternion rot
+        cdef ch.ChMatrix33 rotch
+        cdef ch.ChMatrix33 rotchT
+        cdef np.ndarray rotMarr_big
+        cdef np.ndarray rotMarrT_big
+        # store Aij in global frame
+        cdef np.ndarray Aij_global = np.zeros((6, 6))
+        Aij_global[:] = Aij[:]
+        # transform Aij in local frame
+        if self.Aij_updated_global is True and self.Aij_transform_local is True:
+            # converting from global to local: Rot*Aij*RotT*v
+            rot = deref(self.thisptr.body).GetRot()
+            rotch = ch.ChMatrix33[double](rot)
+            rotchT = ch.ChMatrix33[double]()
+            rotMarr_big = np.zeros((6, 6))
+            rotMarrT_big = np.zeros((6, 6))
+            rotchT.CopyFromMatrixT(rotch)
+            for i in range(6):
+                for j in range(6):
+                    if i < 3 and j < 3 :
+                        rotMarr_big[i, j] = rotch.GetElement(i, j)
+                        rotMarrT_big[i, j] = rotchT.GetElement(i, j)
+                    elif i >=3 and j >= 3:
+                        rotMarr_big[i, j] = rotch.GetElement(i-3, j-3)
+                        rotMarrT_big[i, j] = rotchT.GetElement(i-3, j-3)
+            # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
+            self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
+        else:
+            self.Aij[:] = Aij
+        # remove terms from restrained DOFs
+        self.Aij[0, 1:] *= self.thisptr.free_x.x()
+        self.Aij[1, 0] *= self.thisptr.free_x.y()
+        self.Aij[1, 2:] *= self.thisptr.free_x.y()
+        self.Aij[2, :2] *= self.thisptr.free_x.z()
+        self.Aij[2, 3:] *= self.thisptr.free_x.z()
+        self.Aij[3, :3] *= self.thisptr.free_r.x()
+        self.Aij[3, 4:] *= self.thisptr.free_r.x()
+        self.Aij[4, :4] *= self.thisptr.free_r.y()
+        self.Aij[4, 5] *= self.thisptr.free_r.y()
+        self.Aij[5, :5] *= self.thisptr.free_r.z()
         # mass matrix
         MM[0,0] = mass
         MM[1,1] = mass
@@ -556,10 +585,10 @@ cdef class ProtChBody:
             for j in range(3):
                 MM[i+3, j+3] = iner[i, j]
         # full mass
-        FM += AM
+        FM += self.Aij
         FM += MM
         Profiling.logEvent('Mass Matrix:\n'+str(MM))
-        Profiling.logEvent('Added Mass Matrix:\n'+str(AM))
+        Profiling.logEvent('Added Mass Matrix:\n'+str(self.Aij))
         Profiling.logEvent('Full Mass Matrix:\n'+str(FM))
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
@@ -574,8 +603,8 @@ cdef class ProtChBody:
         aa = np.zeros(6)
 
         aa[:3] = pyvec2array(self.ChBody.GetPos_dtdt())
-        aa[3:] = pyvec2array(self.ChBody.GetWacc_loc())
-        Aija = np.dot(Aij, aa)
+        aa[3:] = pyvec2array(self.ChBody.GetWacc_par())
+        Aija = np.dot(Aij_global, aa)
         self.F_Aij = Aija[:3]
         self.M_Aij = Aija[3:]
 
@@ -670,6 +699,7 @@ cdef class ProtChBody:
                 # getting added mass matrix
                 self.Aij[:] = 0
                 am = self.ProtChSystem.model_addedmass.levelModelList[-1]
+                self.Aij_updated_global = am.coefficients.updated_global
                 for flag in self.boundaryFlags:
                     if self.useIBM:
                         self.Aij += am.coefficients.particle_Aij[flag]
@@ -1206,7 +1236,8 @@ cdef class ProtChBody:
     def _recordValues(self):
         """Records values of body attributes in a csv file.
         """
-        record_file = os.path.join(Profiling.logDir, self.name)
+        Profiling.logEvent('recording values file of '+str(self.name))
+        record_file = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name),'utf-8')
         t_chrono = self.ProtChSystem.ChSystem.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
@@ -1226,7 +1257,7 @@ cdef class ProtChBody:
             with open(record_file+'.csv', 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
-        for key, val in self.record_dict.iteritems():
+        for key, val in self.record_dict.items():
             if val[1] is not None:
                 values_towrite += [getattr(self, val[0])[val[1]]]
             else:
@@ -1251,15 +1282,17 @@ cdef class ProtChBody:
             with open(record_file+'_Aij.csv', 'a') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(values_towrite)
+        Profiling.logEvent('finished recording values file of '+str(self.name))
 
     def _recordH5(self):
+        Profiling.logEvent('recording h5 file of '+str(self.name))
         tCount = self.ProtChSystem.tCount
         self.hdfFileName = self.name
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         if tCount == 0:
-            f = h5py.File(hdfFileName, 'w')
+            f = h5py.File(hdfFileName, 'w', libver='latest')
         else:
-            f = h5py.File(hdfFileName, 'a')
+            f = h5py.File(hdfFileName, 'a', libver='latest')
         poss, element_connection = self.getTriangleMeshInfo()
         pos = np.zeros_like(poss)
         self.thisptr.updateTriangleMeshVisualisationPos()
@@ -1271,11 +1304,13 @@ cdef class ProtChBody:
         dset[...] = pos
         dset = f.create_dataset('elements_t'+str(tCount), element_connection.shape, dtype='i8')
         dset[...] = element_connection
+        Profiling.logEvent('finished recording h5 file of '+str(self.name))
 
     def _recordXML(self):
+        Profiling.logEvent('recording xml file of '+str(self.name))
         tCount = self.ProtChSystem.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
-        xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
+        xmlFile = os.path.join(bytes(Profiling.logDir,'utf-8'), self.name)+'.xmf'
         # if tCount == 0:
         root = ET.Element("Xdmf",
                         {"Version": "2.0",
@@ -1328,15 +1363,15 @@ cdef class ProtChBody:
 
         tree = ET.ElementTree(root)
 
-        with open(xmlFile, "w") as f:
+        with open(xmlFile, "wb") as f:
             xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
-            f.write(xmlHeader)
+            f.write(bytes(xmlHeader,"utf-8"))
             indentXML(tree.getroot())
             tree.write(f)
 
         # dump xml str in h5 file
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
-        f = h5py.File(hdfFileName, 'a')
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
+        f = h5py.File(hdfFileName, 'a', libver='latest')
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
                                 (1,),
@@ -1344,6 +1379,7 @@ cdef class ProtChBody:
         dset[0] = datav
         # close file
         f.close()
+        Profiling.logEvent('finished recording xml file of '+str(self.name))
 
 
     def addPrismaticLinksWithSpring(self, np.ndarray pris1,
@@ -1376,7 +1412,7 @@ cdef class ProtChBody:
             name of the body
         """
         self.name = name
-        self.thisptr.setName(name)
+        self.thisptr.setName(self.name)
 
 
 cdef class ProtChSystem:
@@ -1409,7 +1445,7 @@ cdef class ProtChSystem:
         self.min_nb_steps = 1  # minimum number of chrono substeps
         self.proteus_dt = 1.
         self.first_step = True  # just to know if first step
-        self.setCouplingScheme("CSS")
+        self.setCouplingScheme(b"CSS")
         self.dt_fluid = 1.
         self.dt_fluid_next = 1.
         self.proteus_dt_next = 1.
@@ -1562,6 +1598,7 @@ cdef class ProtChSystem:
         self.record_values = False
         self.first_step = False  # first step passed
         self.tCount += 1
+        Profiling.logEvent("Chrono poststep finished")
 
     def calculate_init(self):
         """Does chrono system initialisation
@@ -1581,7 +1618,7 @@ cdef class ProtChSystem:
         if not self.initialised:
             self.nBodiesIBM = 0  # will be incremented by bodies calculate_init()
             Profiling.logEvent("Starting init"+str(self.next_sample))
-            self.directory = str(Profiling.logDir)+'/'
+            self.directory = bytes(Profiling.logDir+str("/"),'utf-8')
             self.thisptr.setDirectory(self.directory)
             for s in self.subcomponents:
                 s.calculate_init()
@@ -1988,7 +2025,8 @@ cdef class ProtChMoorings:
                                    )
         self.nodes_function = lambda s: (s, s, s)
         self.nodes_built = False
-        self.setName('mooring')
+        name=b'mooring'
+        self.setName(name)
         self.external_forces_from_ns = True
         self.external_forces_manual = True
         self._record_etas = np.array([0.])
@@ -2023,14 +2061,15 @@ cdef class ProtChMoorings:
                                         'sz'+str(eta)]
 
     def _recordH5(self):
+        Profiling.logEvent('recording h5 file of '+str(self.name))
         tCount = self.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
         self.hdfFileName = self.name
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
         if tCount == 0:
-            f = h5py.File(hdfFileName, 'w')
+            f = h5py.File(hdfFileName, 'w', libver='latest')
         else:
-            f = h5py.File(hdfFileName, 'a')
+            f = h5py.File(hdfFileName, 'a', libver='latest')
         pos = self.getNodesPosition()
         element_connection = np.array([[i, i+1] for i in range(len(pos)-1)])
         dset = f.create_dataset('nodesSpatial_Domain'+str(tCount), pos.shape)
@@ -2115,11 +2154,13 @@ cdef class ProtChMoorings:
         dset[...] = datav[:,2]
         # close file
         f.close()
+        Profiling.logEvent('finished recording h5 file of '+str(self.name))
 
     def _recordXML(self):
+        Profiling.logEvent('recording xml file of '+str(self.name))
         tCount = self.tCount
         t = self.ProtChSystem.ChSystem.GetChTime()
-        xmlFile = os.path.join(Profiling.logDir, self.name)+'.xmf'
+        xmlFile = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name)+b'.xmf','utf-8')
         # if tCount == 0:
         root = ET.Element("Xdmf",
                           {"Version": "2.0",
@@ -2146,29 +2187,29 @@ cdef class ProtChMoorings:
                                {"GridType": "Uniform"})
         arTime = ET.SubElement(arGrid,
                                "Time",
-                               {"Value": str(t),
-                                "Name": str(tCount)})
+                               {"Value": "{0:e}".format(t),
+                                "Name": "{0:d}".format(tCount)})
         topology = ET.SubElement(arGrid,
                                 "Topology",
                                 {"Type": Xdmf_ElementTopology,
-                                 "NumberOfElements": str(Xdmf_NumberOfElements)})
+                                 "NumberOfElements": "{0:d}".format(Xdmf_NumberOfElements)})
 
         elements = ET.SubElement(topology,
                                  "DataItem",
                                  {"Format": dataItemFormat,
                                   "DataType": "Int",
-                                  "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
+                                  "Dimensions": "{0:d} {1:d}".format(Xdmf_NumberOfElements,
                                                          Xdmf_NodesPerElement)})
-        elements.text = self.hdfFileName+".h5:/elementsSpatial_Domain"+str(tCount)
+        elements.text = "{0}.h5:/elementsSpatial_Domain{1:d}".format(str(self.hdfFileName,'utf-8'),tCount)
         geometry = ET.SubElement(arGrid,"Geometry",{"Type":"XYZ"})
         nodes = ET.SubElement(geometry,
                               "DataItem",
                               {"Format": dataItemFormat,
                                "DataType": "Float",
                                "Precision": "8",
-                               "Dimensions": "%i %i" % (pos.shape[0],
+                               "Dimensions": "{0:d} {0:d}".format(pos.shape[0],
                                                         pos.shape[1])})
-        nodes.text = self.hdfFileName+".h5:/nodesSpatial_Domain"+str(tCount)
+        nodes.text = "{0}.h5:/nodesSpatial_Domain{1:d}".format(str(self.hdfFileName,'utf-8'),tCount)
         all_names = self._record_names+self._record_etas_names
         for name in all_names:
             attr = ET.SubElement(arGrid,
@@ -2181,32 +2222,34 @@ cdef class ProtChMoorings:
                                  {"Format": dataItemFormat,
                                   "DataType": "Float",
                                   "Precision": "8",
-                                  "Dimensions": "%i" % (pos.shape[0])})
-            data.text = self.hdfFileName+".h5:/"+name+"_t"+str(tCount)
+                                  "Dimensions": "{0:d}".format(pos.shape[0])})
+            data.text = "{0}.h5:/{1}{2:d}".format(str(self.hdfFileName,'utf-8'), name, tCount)
 
         tree = ET.ElementTree(root)
 
-        with open(xmlFile, "w") as f:
+        with open(xmlFile, "wb") as f:
             xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
-            f.write(xmlHeader)
+            f.write(bytes(xmlHeader,"utf-8"))
             indentXML(tree.getroot())
             tree.write(f)
 
         # dump xml str in h5 file
-        hdfFileName = os.path.join(Profiling.logDir, self.hdfFileName)+'.h5'
-        f = h5py.File(hdfFileName, 'a')
+        hdfFileName = os.path.join(bytes(Profiling.logDir,'utf-8'), self.hdfFileName)+b'.h5'
+        f = h5py.File(hdfFileName, 'a', libver='latest')
         datav = ET.tostring(arGrid)
-        dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
+        dset = f.create_dataset('Mesh_Spatial_Domain_{0:d}'.format(tCount),
                                 (1,),
                                 dtype=h5py.special_dtype(vlen=str))
         dset[...] = datav
         # close file
         f.close()
+        Profiling.logEvent('finished recording xmf file of '+str(self.name))
 
     def _recordValues(self):
         """Records values in csv files
         """
-        self.record_file = os.path.join(Profiling.logDir, self.name)
+        Profiling.logEvent('recording values file of '+str(self.name))
+        self.record_file = str(os.path.join(bytes(Profiling.logDir,'utf-8'), self.name),'utf-8')
         def record(record_file, row, mode='a'):
             with open(record_file, mode) as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
@@ -2300,6 +2343,7 @@ cdef class ProtChMoorings:
         # accelerations = self.fluid_acceleration_array
         # row = (accelerations.flatten('C')).tolist()
         # record(self.record_file+file_name, row)
+        Profiling.logEvent('finished recording values file of '+str(self.name))
 
     def getTensionBack(self):
         """
@@ -2594,7 +2638,7 @@ cdef class ProtChMoorings:
         # get pointers to access elements in python
         cdef int elemN
         self.elements = []
-        for elemN in range(self.thisptr.nb_elems_tot-1):
+        for elemN in range(self.thisptr.nb_elems_tot):
             if self.beam_type == "BeamEuler":
                 elem = chrono_fea.ChElementBeamEuler()
             elif self.beam_type == "CableANCF":
@@ -2807,7 +2851,6 @@ cdef class ProtChMoorings:
                     vel_arr[:] = 0
             self.fluid_velocity_array[i] = vel_arr
             vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
-            fluid_velocity.push_back(vel)
             if self.fluid_velocity_function is not None and fluid_velocity_array is None:
                 vel_arr = self.fluid_velocity_function(coords, self.ProtChSystem.t)
                 vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])

@@ -89,6 +89,7 @@ def Options(optionsList=None,mutable=False):
     if contextOptionsString=="?":
         print(help)
         contextOptionsString=None
+        sys.exit(0)
     if contextOptionsString is not None:
         option_overides=contextOptionsString.split(" ")
         for option in option_overides:
