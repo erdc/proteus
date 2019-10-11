@@ -133,6 +133,8 @@ params.physical.surf_tension_coeff = sigma_01
 # MODEL PARAMETERS
 m = params.Models
 m.rans2p.index = 0
+m.rans2p.p.CoefficientsOptions.useVF = 1.0
+m.rans2p.p.CoefficientsOptions.NONCONSERVATIVE_FORM = 0.0
 m.addedMass.index = 1
 
 # auxiliary variables

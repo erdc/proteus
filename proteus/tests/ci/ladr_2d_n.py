@@ -23,7 +23,7 @@ numericalFluxType = Advection_DiagonalUpwind_Diffusion_SIPG_exterior
 nnx=41; nny=41
 tnList=[old_div(float(i),40.0) for i in range(11)]
 matrix = SparseMatrix
-multilevelLinearSolver = LU
+multilevelLinearSolver = KSP_petsc4py#LU
 linearSmoother = None
 l_atol_res = 1.0e-8
 parallelPartitioningType = MeshParallelPartitioningTypes.node

@@ -255,33 +255,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
-	    for ci in range(self.nc):
-		if ci in coefficients.mass:
-		    for flag in list(coefficients.mass[ci].values()):
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  ci in coefficients.advection:
-		    for  flag  in list(coefficients.advection[ci].values()):
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  ci in coefficients.diffusion:
-		    for diffusionDict in list(coefficients.diffusion[ci].values()):
-			for  flag  in list(diffusionDict.values()):
-			    if flag != 'constant':
-				self.stabilizationIsNonlinear=True
-		if  ci in coefficients.potential:
- 		    for flag in list(coefficients.potential[ci].values()):
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if ci in coefficients.reaction:
-		    for flag in list(coefficients.reaction[ci].values()):
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if ci in coefficients.hamiltonian:
-		    for flag in list(coefficients.hamiltonian[ci].values()):
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
+        if self.stabilization != None:
+            for ci in range(self.nc):
+                if ci in coefficients.mass:
+                    for flag in list(coefficients.mass[ci].values()):
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  ci in coefficients.advection:
+                    for  flag  in list(coefficients.advection[ci].values()):
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  ci in coefficients.diffusion:
+                    for diffusionDict in list(coefficients.diffusion[ci].values()):
+                        for  flag  in list(diffusionDict.values()):
+                            if flag != 'constant':
+                                self.stabilizationIsNonlinear=True
+                if  ci in coefficients.potential:
+                    for flag in list(coefficients.potential[ci].values()):
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if ci in coefficients.reaction:
+                    for flag in list(coefficients.reaction[ci].values()):
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if ci in coefficients.hamiltonian:
+                    for flag in list(coefficients.hamiltonian[ci].values()):
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
@@ -290,7 +290,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -428,15 +428,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
-	self.inflowBoundaryBC = {}
-	self.inflowBoundaryBC_values = {}
-	self.inflowFlux = {}
- 	for cj in range(self.nc):
- 	    self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
- 	    self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
- 	    self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.inflowBoundaryBC = {}
+        self.inflowBoundaryBC_values = {}
+        self.inflowFlux = {}
+        for cj in range(self.nc):
+            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -470,8 +470,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         #lay out components/equations contiguously for now
         self.offset = [0]
-	for ci in range(1,self.nc):
-	    self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
+        for ci in range(1,self.nc):
+            self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
         self.stride = [1 for ci in range(self.nc)]
         #use contiguous layout of components for parallel, requires weak DBC's
         comm = Comm.get()
@@ -619,7 +619,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #physics
             self.mesh.nElements_global,
             self.ebqe['penalty'],#double* ebqe_penalty_ext,
-            self.mesh.elementMaterialTypes,#int* elementMaterialTypes,	
+            self.mesh.elementMaterialTypes,#int* elementMaterialTypes,  
             self.coefficients.isSeepageFace,
             self.coefficients.sdInfo[(0,0)][0],#int* a_rowptr,
             self.coefficients.sdInfo[(0,0)][1],#int* a_colind,
@@ -631,12 +631,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.thetaR_types,#double* thetaR,
             self.coefficients.thetaSR_types,#double* thetaSR,
             self.coefficients.Ksw_types,#double* KWs,            
-	    False,#self.coefficients.useMetrics, 
+            False,#self.coefficients.useMetrics, 
             self.timeIntegration.alpha_bdf,
             0,#self.shockCapturing.lag,
             0.0,#cek hack self.shockCapturing.shockCapturingFactor,
-	    0.0,#self.coefficients.sc_uref, 
-	    0.0,#self.coefficients.sc_beta,
+            0.0,#self.coefficients.sc_uref, 
+            0.0,#self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
@@ -668,9 +668,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.q[('mt',0)] *= self.timeIntegration.alpha_bdf
         #self.q[('mt',0)] += self.timeIntegration.beta_bdf[0]
         #self.timeIntegration.calculateElementCoefficients(self.q)
-	if self.forceStrongConditions:#
-	    for cj in range(len(self.dirichletConditionsForceDOF)):#
-		for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
@@ -682,8 +682,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
         self.vof.calculateJacobian(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -708,7 +708,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.mesh.nElements_global,
             self.ebqe['penalty'],#double* ebqe_penalty_ext,
-            self.mesh.elementMaterialTypes,#int* elementMaterialTypes,	
+            self.mesh.elementMaterialTypes,#int* elementMaterialTypes,  
             self.coefficients.isSeepageFace,
             self.coefficients.sdInfo[(0,0)][0],#int* a_rowptr,
             self.coefficients.sdInfo[(0,0)][1],#int* a_colind,
@@ -720,7 +720,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.thetaR_types,#double* thetaR,
             self.coefficients.thetaSR_types,#double* thetaSR,
             self.coefficients.Ksw_types,#double* KWs,            
-	    False,#self.coefficients.useMetrics, 
+            False,#self.coefficients.useMetrics, 
             self.timeIntegration.alpha_bdf,
             0,#self.shockCapturing.lag,
             0.0,#self.shockCapturing.shockCapturingFactor,
@@ -790,7 +790,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         #get physical locations of element boundary quadrature points
         #
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)

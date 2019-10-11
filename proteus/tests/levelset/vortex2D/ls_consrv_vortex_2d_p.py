@@ -2,7 +2,10 @@ from __future__ import absolute_import
 from builtins import object
 from proteus import *
 from proteus.default_p import *
-from .vortex2D import *
+try:
+    from .vortex2D import *
+except:
+    from vortex2D import *
 name=soname+"_phicor"
 from proteus.mprans import MCorr
 
@@ -18,7 +21,8 @@ coefficients = MCorr.Coefficients(applyCorrection=applyCorrection,
                                   VOFModel_index=2,
                                   checkMass=checkMass,
                                   nd=nd,
-                                  useMetrics=useMetrics)
+                                  useMetrics=useMetrics,
+                                  useExact=useExact)
 
 class zero_phi(object):
     def __init__(self):

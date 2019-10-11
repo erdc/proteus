@@ -173,6 +173,7 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              domain=domain,
                                              initialConditions=initialConditions,
                                              boundaryConditions=boundaryConditions,
+                                             triangleFlag=triangleFlag,
                                              useSuperlu=True)
 physical_parameters = myTpFlowProblem.Parameters.physical
 physical_parameters['gravity'] = [0.0, -0.98, 0.0]
@@ -192,6 +193,8 @@ else: #test_case=2
 
 myTpFlowProblem.useBoundaryConditionsModule = False
 m = myTpFlowProblem.Parameters.Models
+m.rans3p.p.CoefficientsOptions.useVF=1.0
+m.rans3p.p.CoefficientsOptions.weak_bc_penalty_constant = 1e6
 m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
 m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
 m.clsvof.p.CoefficientsOptions.disc_ICs = True
