@@ -83,13 +83,14 @@ Test problems and some analytical solutions have been implemented for
 * The eikonal (signed distance) equation
 * The diffusive wave equations for overland flow
 * 1D and 2D Shallow Water Equations
+* 2D Dispersive Shallow Water Equations
 * Richards' equation (mass conservative head- and saturation-based)
 * Two-phase flow in porous media with diffuse interface (fully coupled  and IMPES formulations)
 * Two-phase flow in porous media with a sharp interface (level set formulation)
 * Stokes equations
 * Navier-Stokes equations
 * Reynolds-Averged Navier-Stokes equations
-* Two-phase Stokes/Navier-Stokes/RANS flow with a sharp interface (level set/VOF formulation) 
+* Two-phase Stokes/Navier-Stokes/RANS flow with a sharp interface (level set/VOF formulation)
 * Linear elasticity
 
 These problems are solved on unstructured simplicial meshes. Simple
@@ -113,7 +114,7 @@ Discontinuous Galerkin methods
 
 Non-conforming and mixed methods
 
-* :math:`P_1` non-conforming 
+* :math:`P_1` non-conforming
 * :math:`C_0 P_1 C_0 P_2` Taylor-Hood
 
 The time integration methods are
@@ -163,6 +164,9 @@ These are not hard and fast rules, and there is no time table for releases.
 References
 ==========
 
+* `Robust explicit relaxation technique for solving the Green-Naghdi equations
+  <https://doi.org/10.1016/j.jcp.2019.108917>`_ (2019) J.-L. Guermond,
+  B. Popov, E. Tovar, C.E. Kees, *Journal of Computational Physics*
 * `An Unstructured Finite Element Model for Incompressible Two-Phase
   Flow Based on a Monolithic Conservative Level Set Method
   <https://arxiv.org/abs/1903.06919>`_
@@ -297,7 +301,7 @@ Source Code Documentation
    tools/spatial_tools
    tools/two_phase_flow
    tools/wave_tools
-   
+
 .. toctree::
    :maxdepth: 1
    :caption: Models
@@ -308,3 +312,4 @@ Source Code Documentation
    models/mesh_adaptivity
    models/mesh_motion
    models/navier_stokes
+   models/SWFlows
