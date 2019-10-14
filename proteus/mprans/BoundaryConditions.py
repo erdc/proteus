@@ -470,7 +470,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.BC_type = "Wall function"
         self.dissipation_diffusive.resetBC()
         self.k_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): wf.get_k_dirichlet(x, t, n)
-        self.dissipation_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): wf.get_dissipation_dirichlet(x, t)
+        self.dissipation_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): wf.get_dissipation_dirichlet(x, t ,n)
         """
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
         self.vof_advective.setConstantBC(0.)
