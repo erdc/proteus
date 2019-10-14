@@ -22,7 +22,7 @@ class TestCable(unittest.TestCase):
         d = np.array([1e-3])
         rho = np.array([1000.])
         E = np.array([1e10])
-        cable_type = "CableANCF"
+        cable_type = b"CableANCF"
         mooring = fsi.ProtChMoorings(system=system, mesh=mesh, length=L, nb_elems=nb_elems, d=d, rho=rho, E=E, beam_type=cable_type)
         mooring.external_forces_manual = True # tri: should work without this line
         # vertical cable

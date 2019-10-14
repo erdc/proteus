@@ -670,7 +670,7 @@ class TestBC(unittest.TestCase):
                 H = 0.
                 wave_u = waves.u(x, t)
             elif smoothing > 0 and 0 < wavePhi <= smoothing:
-                H = smoothedHeaviside(0.5*smoothing, wavePhi-0.5*smoothing)
+                H = smoothedHeaviside(smoothing, wavePhi-0.5*smoothing)
                 x_max = list(x)
                 x_max[1] = waveHeight
                 wave_u = waves.u(x_max, t)
@@ -682,9 +682,9 @@ class TestBC(unittest.TestCase):
             p_calc += [np.sum(U*b_or[b_i])]
             if wavePhi >= old_div(smoothing,2.):
                 Hvof = 1.
-            elif smoothing > 0 and old_div(-smoothing,2.) < wavePhi < old_div(smoothing,2.):
+            elif smoothing > 0 and -smoothing/2. < wavePhi < smoothing/2.:
                 Hvof = smoothedHeaviside(smoothing, wavePhi)
-            elif wavePhi <= old_div(-smoothing,2.):
+            elif wavePhi <= -smoothing/2.:
                 Hvof = 0.
             vof_calc += [Hvof]
         u_calc = np.array(u_calc)
@@ -765,7 +765,7 @@ class TestBC(unittest.TestCase):
             if phiCalc <= 0.: 
                 Heav = 0.
             elif 0. < phiCalc <= smoothing: 
-                Heav = smoothedHeaviside(old_div(smoothing,2.), phiCalc - old_div(smoothing,2.))
+                Heav = smoothedHeaviside(smoothing, phiCalc - smoothing/2.)
             else: 
                 Heav = 1.
             u, v, w = Heav*np.array(Uwind) + (1.-Heav)*np.array(U0)

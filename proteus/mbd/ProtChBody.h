@@ -289,7 +289,7 @@ void cppRigidBody::prestep(double* force, double* torque)
   body->Accumulate_torque(ChVector<double>(torque[0]*free_r.x(),
                                            torque[1]*free_r.y(),
                                            torque[2]*free_r.z()),
-                          true);
+                          false);
   if (spring!=0) {
       double spring_length = spring->Get_SpringLength();
       if (spring_length < mooring_restlength) {

@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+from libcpp cimport bool
 import numpy
 cimport numpy
 
@@ -11,6 +12,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double MOVING_DOMAIN,
                                double PSTAB,
                                int * mesh_l2g,
+                               double * x_ref,
                                double * dV_ref,
                                int nDOF_per_element_pressure,
                                double * p_trial_ref,
@@ -103,6 +105,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double useVF,
                                double * vf,
                                double * phi,
+                               double * phi_dof,
                                double * normal_phi,
                                double * kappa_phi,
                                double * q_mom_u_acc,
@@ -245,7 +248,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
                                int *rowptr_1D, int *colind_1D,
                                double *isBoundary_1D,
-                               int INT_BY_PARTS_PRESSURE)
+                               int INT_BY_PARTS_PRESSURE,
+                               bool useExact)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -253,6 +257,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double MOVING_DOMAIN,
                                double PSTAB,
                                int * mesh_l2g,
+                               double * x_ref,
                                double * dV_ref,
                                double * p_trial_ref,
                                double * p_grad_trial_ref,
@@ -331,6 +336,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double useVF,
                                double * vf,
                                double * phi,
+                               double * phi_dof,
                                double * normal_phi,
                                double * kappa_phi,
                                double * q_mom_u_acc_beta_bdf,
@@ -457,7 +463,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       int stride_u, int stride_v, int stride_w,
                                int *rowptr_1D, int *colind_1D,
                                int *rowptr, int *colind,
-                               int INT_BY_PARTS_PRESSURE)
+                               int INT_BY_PARTS_PRESSURE,
+                               bool useExact)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -587,6 +594,7 @@ cdef class RANS3PF:
                           double MOVING_DOMAIN,
                           double PSTAB,
                           numpy.ndarray mesh_l2g,
+                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           int nDOF_per_element_pressure,
                           numpy.ndarray p_trial_ref,
@@ -677,6 +685,7 @@ cdef class RANS3PF:
                           double useVF,
                           numpy.ndarray vf,
                           numpy.ndarray phi,
+                          numpy.ndarray phi_dof,
                           numpy.ndarray normal_phi,
                           numpy.ndarray kappa_phi,
                           numpy.ndarray q_mom_u_acc,
@@ -816,7 +825,8 @@ cdef class RANS3PF:
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
                           numpy.ndarray isBoundary_1D,
-                          int INT_BY_PARTS_PRESSURE):
+                          int INT_BY_PARTS_PRESSURE,
+                          bool useExact):
         cdef numpy.ndarray uStar_dof = uStar[0]
         cdef numpy.ndarray vStar_dof = uStar[1]
         cdef numpy.ndarray wStar_dof = uStar[2]
@@ -830,6 +840,7 @@ cdef class RANS3PF:
                                        MOVING_DOMAIN,
                                        PSTAB,
                                        < int * > mesh_l2g.data,
+                                       < double * > x_ref.data,
                                        < double * > dV_ref.data,
                                        nDOF_per_element_pressure,
                                        < double * > p_trial_ref.data,
@@ -920,6 +931,7 @@ cdef class RANS3PF:
                                        useVF,
                                        < double * > vf.data,
                                        < double * > phi.data,
+                                       < double * > phi_dof.data,
                                        < double * > normal_phi.data,
                                        < double * > kappa_phi.data,
                                        < double * > q_mom_u_acc.data,
@@ -1059,7 +1071,8 @@ cdef class RANS3PF:
                                        <int*> rowptr_1D.data,
                                        <int*> colind_1D.data,
                                        <double*> isBoundary_1D.data,
-                                       INT_BY_PARTS_PRESSURE)
+                                       INT_BY_PARTS_PRESSURE,
+                                       useExact)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -1068,6 +1081,7 @@ cdef class RANS3PF:
                           double MOVING_DOMAIN,
                           double PSTAB,
                           numpy.ndarray mesh_l2g,
+                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray p_trial_ref,
                           numpy.ndarray p_grad_trial_ref,
@@ -1146,6 +1160,7 @@ cdef class RANS3PF:
                           double useVF,
                           numpy.ndarray vf,
                           numpy.ndarray phi,
+                          numpy.ndarray phi_dof,
                           numpy.ndarray normal_phi,
                           numpy.ndarray kappa_phi,
                           numpy.ndarray q_mom_u_acc_beta_bdf, numpy.ndarray q_mom_v_acc_beta_bdf, numpy.ndarray q_mom_w_acc_beta_bdf,
@@ -1268,7 +1283,8 @@ cdef class RANS3PF:
 			  int stride_u, int stride_v, int stride_w,
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
-                          int INT_BY_PARTS_PRESSURE):
+                          int INT_BY_PARTS_PRESSURE,
+                          useExact):
         cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
         cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
         cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
@@ -1281,6 +1297,7 @@ cdef class RANS3PF:
                                         MOVING_DOMAIN,
                                         PSTAB,
                                         < int * > mesh_l2g.data,
+                                        < double * > x_ref.data,
                                         < double * > dV_ref.data,
                                         < double * > p_trial_ref.data,
                                         < double * > p_grad_trial_ref.data,
@@ -1357,6 +1374,7 @@ cdef class RANS3PF:
                                         useVF,
                                         < double * > vf.data,
                                         < double * > phi.data,
+                                        < double * > phi_dof.data,
                                         < double * > normal_phi.data,
                                         < double * > kappa_phi.data,
                                         < double * > q_mom_u_acc_beta_bdf.data, < double * > q_mom_v_acc_beta_bdf.data, < double * > q_mom_w_acc_beta_bdf.data,
@@ -1481,7 +1499,8 @@ cdef class RANS3PF:
                                        <int*> colind_1D.data,
                                        <int*> rowptr.data,
                                        <int*> colind.data,
-                                       INT_BY_PARTS_PRESSURE)
+                                       INT_BY_PARTS_PRESSURE,
+                                       useExact)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -1567,6 +1586,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double MOVING_DOMAIN,
                                double PSTAB,
                                int * mesh_l2g,
+                               double * x_ref,
                                double * dV_ref,
                                int nDOF_per_element_pressure,
                                double * p_trial_ref,
@@ -1659,6 +1679,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double useVF,
                                double * vf,
                                double * phi,
+                               double * phi_dof,
                                double * normal_phi,
                                double * kappa_phi,
                                double * q_mom_u_acc,
@@ -1801,7 +1822,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       int *csrRowIndeces_1D, int *csrColumnOffsets_1D,
                                int *rowptr_1D, int *colind_1D,
                                double *isBoundary_1D,
-                               int INT_BY_PARTS_PRESSURE)
+                               int INT_BY_PARTS_PRESSURE,
+                               bool useExact)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1809,6 +1831,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double MOVING_DOMAIN,
                                double PSTAB,
                                int * mesh_l2g,
+                               double * x_ref,
                                double * dV_ref,
                                double * p_trial_ref,
                                double * p_grad_trial_ref,
@@ -1887,6 +1910,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double useVF,
                                double * vf,
                                double * phi,
+                               double * phi_dof,
                                double * normal_phi,
                                double * kappa_phi,
                                double * q_mom_u_acc_beta_bdf,
@@ -2013,7 +2037,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       int stride_u, int stride_v, int stride_w,
                                int *rowptr_1D, int *colind_1D,
                                int *rowptr, int *colind,
-                               int INT_BY_PARTS_PRESSURE)
+                               int INT_BY_PARTS_PRESSURE,
+                               useExact)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -2142,6 +2167,7 @@ cdef class RANS3PF2D:
                           double MOVING_DOMAIN,
                           double PSTAB,
                           numpy.ndarray mesh_l2g,
+                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           int nDOF_per_element_pressure,
                           numpy.ndarray p_trial_ref,
@@ -2232,6 +2258,7 @@ cdef class RANS3PF2D:
                           double useVF,
                           numpy.ndarray vf,
                           numpy.ndarray phi,
+                          numpy.ndarray phi_dof,
                           numpy.ndarray normal_phi,
                           numpy.ndarray kappa_phi,
                           numpy.ndarray q_mom_u_acc,
@@ -2371,7 +2398,8 @@ cdef class RANS3PF2D:
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
                           numpy.ndarray isBoundary_1D,
-                          int INT_BY_PARTS_PRESSURE):
+                          int INT_BY_PARTS_PRESSURE,
+                          useExact):
         cdef numpy.ndarray uStar_dof = uStar[0]
         cdef numpy.ndarray vStar_dof = uStar[1]
         cdef numpy.ndarray wStar_dof = uStar[2]
@@ -2385,6 +2413,7 @@ cdef class RANS3PF2D:
                                        MOVING_DOMAIN,
                                        PSTAB,
                                        < int * > mesh_l2g.data,
+                                       < double * > x_ref.data,
                                        < double * > dV_ref.data,
                                        nDOF_per_element_pressure,
                                        < double * > p_trial_ref.data,
@@ -2475,6 +2504,7 @@ cdef class RANS3PF2D:
                                        useVF,
                                        < double * > vf.data,
                                        < double * > phi.data,
+                                       < double * > phi_dof.data,
                                        < double * > normal_phi.data,
                                        < double * > kappa_phi.data,
                                        < double * > q_mom_u_acc.data,
@@ -2615,7 +2645,8 @@ cdef class RANS3PF2D:
                                        <int*> rowptr_1D.data,
                                        <int*> colind_1D.data,
                                        <double*> isBoundary_1D.data,
-                                       INT_BY_PARTS_PRESSURE)
+                                       INT_BY_PARTS_PRESSURE,
+                                       useExact)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -2624,6 +2655,7 @@ cdef class RANS3PF2D:
                           double MOVING_DOMAIN,
                           double PSTAB,
                           numpy.ndarray mesh_l2g,
+                          numpy.ndarray x_ref,
                           numpy.ndarray dV_ref,
                           numpy.ndarray p_trial_ref,
                           numpy.ndarray p_grad_trial_ref,
@@ -2702,6 +2734,7 @@ cdef class RANS3PF2D:
                           double useVF,
                           numpy.ndarray vf,
                           numpy.ndarray phi,
+                          numpy.ndarray phi_dof,
                           numpy.ndarray normal_phi,
                           numpy.ndarray kappa_phi,
                           numpy.ndarray q_mom_u_acc_beta_bdf, numpy.ndarray q_mom_v_acc_beta_bdf, numpy.ndarray q_mom_w_acc_beta_bdf,
@@ -2824,7 +2857,8 @@ cdef class RANS3PF2D:
 			  int stride_u, int stride_v, int stride_w,
                           numpy.ndarray rowptr_1D,
                           numpy.ndarray colind_1D,
-                          int INT_BY_PARTS_PRESSURE):
+                          int INT_BY_PARTS_PRESSURE,
+                          useExact):
         cdef numpy.ndarray uStar_dMatrix = dMatrix[0]
         cdef numpy.ndarray vStar_dMatrix = dMatrix[1]
         cdef numpy.ndarray wStar_dMatrix = dMatrix[2]
@@ -2837,6 +2871,7 @@ cdef class RANS3PF2D:
                                         MOVING_DOMAIN,
                                         PSTAB,
                                         < int * > mesh_l2g.data,
+                                        < double * > x_ref.data,
                                         < double * > dV_ref.data,
                                         < double * > p_trial_ref.data,
                                         < double * > p_grad_trial_ref.data,
@@ -2913,6 +2948,7 @@ cdef class RANS3PF2D:
                                         useVF,
                                         < double * > vf.data,
                                         < double * > phi.data,
+                                        < double * > phi_dof.data,
                                         < double * > normal_phi.data,
                                         < double * > kappa_phi.data,
                                         < double * > q_mom_u_acc_beta_bdf.data, < double * > q_mom_v_acc_beta_bdf.data, < double * > q_mom_w_acc_beta_bdf.data,
@@ -3037,7 +3073,8 @@ cdef class RANS3PF2D:
                                        <int*> colind_1D.data,
                                        <int*> rowptr.data,
                                        <int*> colind.data,
-                                       INT_BY_PARTS_PRESSURE)
+                                       INT_BY_PARTS_PRESSURE,
+                                       useExact)
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
                                  numpy.ndarray exteriorElementBoundariesArray,

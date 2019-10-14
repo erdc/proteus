@@ -47,6 +47,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.u_dirichlet = BoundaryCondition()  # velocity u
         self.v_dirichlet = BoundaryCondition()  # velocity v
         self.w_dirichlet = BoundaryCondition()  # velocity w
+        self.phi_dirichlet = BoundaryCondition()  # phi
         self.vof_dirichlet = BoundaryCondition()  # VOF
         self.k_dirichlet = BoundaryCondition()  # kappa
         self.dissipation_dirichlet = BoundaryCondition()  # dissipation
@@ -111,6 +112,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.u_dirichlet.resetBC()
         self.v_dirichlet.resetBC()
         self.w_dirichlet.resetBC()
+        self.phi_dirichlet.resetBC()
         self.vof_dirichlet.resetBC()
         self.k_dirichlet.resetBC()
         self.dissipation_dirichlet.resetBC()
@@ -569,12 +571,15 @@ class BC_RANS(BoundaryConditions.BC_Base):
             wind_speed = np.zeros(3)
         self.waves = __cppClass_WavesCharacteristics(waves=wave, vert_axis=vert_axis, b_or=self._b_or,
                                                      wind_speed=wind_speed, smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
+
         self.u_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
         self.v_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
         self.w_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
+        self.phi_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_phi_dirichlet(x, t)
         self.vof_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
         self.p_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
         self.pInc_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+
         self.pInc_diffusive.setConstantBC(0.0)
         self.pInit_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)#setConstantBC(0.0)
         self.vos_dirichlet.setConstantBC(0.0)
@@ -614,6 +619,13 @@ class BC_RANS(BoundaryConditions.BC_Base):
         xx[2] = x[2]
         return self.waves.__cpp_calculate_pressure(xx, t)
 
+    def __cpp_UnsteadyTwoPhaseVelocityInlet_phi_dirichlet(self, x, t):
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self.waves.__cpp_calculate_phi(xx, t)
+    
     def __cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
         xx[0] = x[0]
@@ -679,12 +691,16 @@ class BC_RANS(BoundaryConditions.BC_Base):
                 if phi <= 0.:
                     H = 0.0
                 elif 0 < phi <= smoothing:
-                    H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
+                    H = smoothedHeaviside(smoothing, phi-smoothing/2.)#smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
                 else:
                     H = 1.0
                 u = H * Uwind[i] + (1 - H) * U[i]
                 return u
             return ux_dirichlet
+
+        def inlet_phi_dirichlet(x, t):
+            phi = x[vert_axis] - waterLevel
+            return phi
 
         def inlet_vof_dirichlet(x, t):
             phi = x[vert_axis] - waterLevel
@@ -703,7 +719,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
+                H = smoothedHeaviside(smoothing, phi-smoothing/2.)#smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             u = H * Uwind + (1 - H) * U
@@ -717,7 +733,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
+                H = smoothedHeaviside(smoothing, phi-smoothing/2.)#smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * kInflowAir + (1 - H) * kInflow
@@ -727,7 +743,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             if phi <= 0.:
                 H = 0.0
             elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
+                H = smoothedHeaviside(smoothing, phi-smoothing/2.)#smoothedHeaviside(old_div(smoothing, 2.), phi - old_div(smoothing, 2.))
             else:
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
@@ -735,6 +751,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.u_dirichlet.uOfXT = get_inlet_ux_dirichlet(0)
         self.v_dirichlet.uOfXT = get_inlet_ux_dirichlet(1)
         self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2)
+        self.phi_dirichlet.uOfXT = inlet_phi_dirichlet
         self.vof_dirichlet.uOfXT = inlet_vof_dirichlet
         self.p_advective.uOfXT = inlet_p_advective
         if kInflow is not None:
@@ -782,6 +799,10 @@ class BC_RANS(BoundaryConditions.BC_Base):
                                            (smoothedHeaviside_integral(smoothing, phi_top)
                                             -
                                             smoothedHeaviside_integral(smoothing, phi)))
+
+        def hydrostaticPressureOutletWithDepth_phi_dirichlet(x, t):
+            phi = x[vert_axis] - seaLevel
+            return phi
 
         def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             phi = x[vert_axis] - seaLevel
@@ -836,6 +857,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInit_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.pInc_dirichlet.setConstantBC(0.)
+        self.phi_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_phi_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
@@ -870,34 +892,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.dissipation_advective.resetBC()
             self.dissipation_diffusive.resetBC()
 
-
-# FOLLOWING BOUNDARY CONDITION IS UNTESTED #
-
-    # def setHydrostaticPressureOutlet(self, rho, g, refLevel, vof, pRef=0.0,
-    #                                vert_axis=-1):
-    #    self.reset()
-    #    a0 = pRef - rho*g[vert_axis]*refLevel
-    #    a1 = rho*g[vert_axis]
-    #    # This is the normal velocity, based on the boundary orientation
-    #
-    #    def get_outlet_ux_dirichlet(i):
-    #        def ux_dirichlet(x, t):
-    #            b_or = self._b_or
-    #            if b_or[i] == 0:
-    #                return 0.
-    #        return ux_dirichlet
-    #
-    #        self.u_dirichlet.uOfXT = get_outlet_ux_dirichlet(0)
-    #        self.v_dirichlet.uOfXT = get_outlet_ux_dirichlet(1)
-    #        if len(g) == 3:
-    #            self.w_dirichlet.uOfXT = get_outlet_ux_dirichlet(2)
-    #
-    #    self.p_dirichlet.setLinearBC(a0, a1, vert_axis)
-    #    self.vof_dirichlet.setConstantBC(vof)
-
-
 # for regions
-
 
 class RelaxationZone:
     """

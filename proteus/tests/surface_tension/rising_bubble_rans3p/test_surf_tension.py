@@ -109,9 +109,9 @@ class TestSurfaceTension(object):
         expected_path = 'comparison_files/risingBubble_2D_supg.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('risingBubble_2D_supg.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-7)        
+        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-5)
+        assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-5)
+        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-5)        
         expected.close()
         actual.close()
 
@@ -153,9 +153,9 @@ class TestSurfaceTension(object):
         expected_path = 'comparison_files/risingBubble_2D_ev.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('risingBubble_2D_ev.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-7)        
+        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-5)
+        assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-5)
+        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-5)        
         expected.close()
         actual.close()
 
@@ -197,9 +197,9 @@ class TestSurfaceTension(object):
         expected_path = 'comparison_files/risingBubble_3D_supg.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('risingBubble_3D_supg.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-7)        
+        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-5)
+        assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-5)
+        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-5)        
         expected.close()
         actual.close()
 
@@ -242,8 +242,8 @@ class TestSurfaceTension(object):
         expected_path = 'comparison_files/risingBubble_3D_ev.h5'
         expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('risingBubble_3D_ev.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
-        assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-10)
+        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-5)
+        assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-5)
         assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-5)        
         expected.close()
         actual.close()                        
