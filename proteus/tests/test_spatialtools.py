@@ -11,6 +11,7 @@ from past.utils import old_div
 import unittest
 import numpy.testing as npt
 import numpy as np
+import os
 from nose.tools import eq_
 from proteus import Comm, Profiling, Gauges
 from proteus.Profiling import logEvent as log
@@ -25,7 +26,8 @@ from proteus.mprans.SpatialTools import (Rectangle as RectangleRANS,
                                          CustomShape as CustomShapeRANS,
                                          assembleDomain as assembleDomainRANS,
                                          Tank2D,
-                                         Tank3D)
+                                         Tank3D,
+                                         ShapeSTL)
 from proteus.mprans.BodyDynamics import RigidBody
 
 comm = Comm.init()
@@ -93,6 +95,9 @@ def create_tank2D(domain, dim=(0., 0.), coords=None):
 
 def create_tank3D(domain, dim=(0., 0., 0.), coords=None):
     return Tank3D(domain, dim, coords)
+def create_stl3D(domain,stlfile):
+    return ShapeSTL(domain,stlfile)
+
 
 class TestShapeDomainBuilding(unittest.TestCase):
 
@@ -112,6 +117,9 @@ class TestShapeDomainBuilding(unittest.TestCase):
         custom2DRANS = create_custom2D(domain2D, folder='mprans')
         custom3D = create_custom3D(domain3D)
         custom3DRANS = create_custom3D(domain3D, folder='mprans')
+        path1 = getpath()
+        stl = create_stl3D(domain3D,os.path.join(path1,"STLBlocks.stl"))
+        
 
     def test_assemble_domain(self):
         """
@@ -122,6 +130,7 @@ class TestShapeDomainBuilding(unittest.TestCase):
         domain2DRANS = create_domain2D()
         domain3D = create_domain3D()
         domain3DRANS = create_domain3D()
+        domainSTL = create_domain3D()
         dim2D = np.array([1., 1.])
         dim3D = np.array([1., 1., 1.])
         coords2D = np.array([0.5, 0.5])
@@ -183,6 +192,17 @@ class TestShapeDomainBuilding(unittest.TestCase):
         npt.assert_equal(x2DRANS, [0., 0.])
         npt.assert_equal(x3DRANS, [0., 0., 0.])
 
+        #stl domain checks
+        path1 = getpath()
+        stl = create_stl3D(domainSTL,os.path.join(path1,"STLBlocks.stl"))
+        assembleDomainRANS(domainSTL)
+        STLnames = ["Bed0","Concrete0","Inlet0","Outlet0","Top0","Wall0"]
+        nSTLs = len(STLnames)
+        npt.assert_equal(nSTLs,max(stl.vertexFlags))
+        npt.assert_equal(nSTLs,max(stl.facetFlags))
+        npt.assert_equal(nSTLs,max(domainSTL.vertexFlags))
+        npt.assert_equal(nSTLs,max(domainSTL.facetFlags))
+                         
     def test_BC_flags(self):
         """
         Testing the flags of shapes and their in their domain
@@ -192,6 +212,7 @@ class TestShapeDomainBuilding(unittest.TestCase):
         domain3D = create_domain3D()
         domain2DRANS = create_domain2D()
         domain3DRANS = create_domain3D()
+        domainSTL = create_domain3D()
         flags_v2D = []
         flags_s2D = []
         flags_v3D = []
@@ -240,7 +261,21 @@ class TestShapeDomainBuilding(unittest.TestCase):
         npt.assert_equal(domain2DRANS.segmentFlags, flags_s2DRANS)
         npt.assert_equal(domain3DRANS.vertexFlags, flags_v3DRANS)
         npt.assert_equal(domain3DRANS.facetFlags, flags_f3DRANS)
+        #stl flags
+        path1 = getpath()
+        stl = create_stl3D(domainSTL,os.path.join(path1,"STLBlocks.stl"))
+        assembleDomainRANS(domainSTL)
+        STLnames = ["Bed0","Concrete0","Inlet0","Outlet0","Top0","Wall0"]
+        nSTLs = len(STLnames)
+        j = 0
+        print
+        for key,value in stl.boundaryTags.items():
+            self.assertTrue(STLnames[value-1]==key)
+        for key,value in domainSTL.boundaryTags.items():
+            self.assertTrue(stl.name+'_'+STLnames[value-1]==key)
 
+        npt.assert_equal(nSTLs,len(stl.boundaryTags))
+        
 
 class TestShapeRANS(unittest.TestCase):
 
@@ -568,7 +603,9 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(zone.dragBeta, dragBeta)
         npt.assert_equal(zone.porosity, porosity)
         npt.assert_equal(zone.Shape, custom)
-
+def getpath():
+    path = os.path.dirname(os.path.abspath(__file__))
+    return path    
 if __name__ == '__main__':
 
     unittest.main(verbosity=2)
