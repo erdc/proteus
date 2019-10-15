@@ -196,6 +196,31 @@ Complete Examples
    my_cylinder.BC['y-'].setNoSlip()
    my_cylinder.BC['y+'].setNoSlip()
 
+3D with STL
+---
+
+.. code-block:: python
+
+   #See complete case in  https://github.com/erdc/air-water-vv/tree/master/3d/STLShape
+   from proteus import Domain
+   from proteus.mprans import SpatialTools as st
+   from proteus.Profiling import logEvent as log
+
+   domain = Domain.PiecewiseLinearComplexDomain()
+
+   SG=st.ShapeSTL(domain,'Blocks.stl')
+   log("Boundary Tags are:" + str(SG.boundaryTags))
+
+
+   # All boundaries are free-slip for simplicity.
+   #See https://github.com/erdc/air-water-vv/tree/master/3d/STLShape for more advanced BC's
+   SG.BC['Top0'].setFreeSlip()
+   SG.BC['Wall0'].setFreeSlip()
+   SG.BC['Bed0'].setFreeSlip()
+   SG.BC['Concrete0'].setFreeSlip()
+   SG.BC['Inlet0'].setFreeSlip()
+   SG.BC['Outlet0'].setFreeSlip()
+
 Classes
 =======
 
@@ -326,6 +351,39 @@ boundary tag/flag for the whole STL geometry.
 
     my_stl = st.ShapeSTL(domain=domain,
                          filename='path/to/my/file.stl')
+
+The function has the capability of reading multi-block stl ASCII files. Multiblock files can be created by concatenating multiple STL files containing a single geometry block into one file. You can do this quickly in a bash shell as follows:
+
+.. code-block:: bash 
+
+   cat file_1.stl file_2.stl file_3.stl > block.stl 
+
+.. code-block:: bash 
+ 
+   solid block0 
+   ... 
+   facet normal ni nj nk 
+      outer loop 
+        vertex v1x v1y v1z 
+        vertex v2x v2y v2z 
+        vertex v3x v3y v3z 
+        endloop 
+   endfacet 
+   ... 
+   endsolid 
+   solid block1 
+   ... 
+   endsolid 
+   ... 
+   solid blockFinal 
+   ... 
+   endsolid 
+  
+When reading the block stl file, the ``ShapeSTL`` class will read also the stl blocks and, in addition to vertices and facets, tags for boundaryTags, vertices and facets will be assigned. The names of boundaries are given according to the naming of the blocks. E.g. block0 will form boundary block0 etc. 
+
+The user should be able to mesh a whole domain, as long as the STL files create a watertight domain. A simple example of setting up a 3D domain is given in the beginning of this section and the air-water-vv repository https://github.com/erdc/air-water-vv/blob/master/3d/STLShape/
+ 
+
 
 mprans specific
 ---------------
