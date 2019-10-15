@@ -197,7 +197,7 @@ Complete Examples
    my_cylinder.BC['y+'].setNoSlip()
 
 3D with STL
----
+-----------
 
 .. code-block:: python
 
