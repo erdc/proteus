@@ -249,12 +249,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useRBLES=0.0,
                  useMetrics=0.0,
                  modelIndex=0,
+                 outputQuantDOFs=False,
                  cE=1.0,
                  LUMPED_MASS_MATRIX=1,
                  LINEAR_FRICTION=0,
                  mannings=0.,
+                 absorbingBCs=None,
                  forceStrongConditions=True,
                  constrainedDOFs=None):
+        self.absorbingBCs=absorbingBCs
+        self.outputQuantDOFs=outputQuantDOFs
         self.viscosity=viscosity
         self.forceStrongConditions=forceStrongConditions
         self.constrainedDOFs=constrainedDOFs
@@ -815,8 +819,48 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.dofsXCoord=None
         self.dofsYCoord=None
         self.constrainedDOFsIndices=None
+        self.constrain_cjComponent=None
         self.dataStructuresInitialized=False
 
+        self.absorbingDOFsIndices=None
+        self.absorbing_xNormal=None
+        self.absorbing_yNormal=None
+
+        self.x_grad_h = None
+        self.x_grad_hu = None
+        self.x_grad_hv = None        
+        self.y_grad_h = None
+        self.y_grad_hu = None
+        self.y_grad_hv = None
+
+        # PARALLEL VECTORS #
+        self.par_x_grad_h = None
+        self.par_x_grad_hu = None
+        self.par_x_grad_hv = None        
+        self.par_y_grad_h = None
+        self.par_y_grad_hu = None
+        self.par_y_grad_hv = None
+        self.par_normalx = None
+        self.par_normaly = None
+        self.par_ML = None
+        
+        self.ebqe_nx = None
+        self.ebqe_ny = None
+        self.hasNormalFieldAsFunction = False
+        if ('normalFieldAsFunction') in dir(options):
+            self.normalFieldAsFunction = options.normalFieldAsFunction
+            self.hasNormalFieldAsFunction = True
+        #
+
+    def updateNormalFieldAsFunction(self):
+        self.ebqe_nx = np.zeros(self.ebqe[('x')][:,:,0].shape,'d')
+        self.ebqe_ny = np.zeros(self.ebqe[('x')][:,:,0].shape,'d')
+        ebqe_X = {0:self.ebqe['x'][:,:,0],
+                  1:self.ebqe['x'][:,:,1]}
+        self.ebqe_nx[:] = self.normalFieldAsFunction[0](ebqe_X)
+        self.ebqe_ny[:] = self.normalFieldAsFunction[1](ebqe_X)
+    #
+        
     def FCTStep(self):
         # NOTE: this function is meant to be called within the solver
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
@@ -857,9 +901,65 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.hReg,
                                  self.coefficients.LUMPED_MASS_MATRIX,
                                  self.dLow,
+                                 self.hLow,
+                                 self.huLow,
+                                 self.hvLow,
                                  self.hBT,
                                  self.huBT,
                                  self.hvBT)
+
+        # Impose absorbing BCs
+        if self.absorbingDOFsIndices is not None:
+            for i in self.absorbingDOFsIndices:
+                # fully explicit
+                hB = self.h_dof_old[i]
+                huB = self.hu_dof_old[i]
+                hvB = self.hv_dof_old[i]
+
+                dx = np.sqrt(self.ML[i])
+                grad_h_dot_n = self.x_grad_h[i]*self.normalx[i] + self.y_grad_h[i]*self.normaly[i]
+                grad_hu_dot_n = self.x_grad_hu[i]*self.normalx[i] + self.y_grad_hu[i]*self.normaly[i]
+                grad_hv_dot_n = self.x_grad_hv[i]*self.normalx[i] + self.y_grad_hv[i]*self.normaly[i]
+                
+                hI = hB -  dx*grad_h_dot_n
+                if hI<self.hEps:
+                    hI=0
+                    huI=0
+                    hvI=0
+                else:
+                    huI = huB - dx*grad_hu_dot_n
+                    hvI = hvB - dx*grad_hv_dot_n
+                #
+
+                # via extrapolation
+                limited_hnp1[i]  = hI
+                limited_hunp1[i] = huI
+                limited_hvnp1[i] = hvI
+            #
+        #
+            
+        #Impose constraints
+        if self.coefficients.constrainedDOFs is not None:
+            # Constrain the DoFs
+            for i in self.constrainedDOFsIndices:
+                x = self.dofsXCoord[i]
+                y = self.dofsYCoord[i]
+                (h, hu, hv) = self.coefficients.constrainedDOFs[1](x,y,
+                                                                   self.h_dof_old[i],
+                                                                   self.hu_dof_old[i],
+                                                                   self.hv_dof_old[i])
+                if h is not None:
+                    limited_hnp1[i]  = h
+                    self.u[0].dof[i] = h
+                if hu is not None:
+                    limited_hunp1[i] = hu
+                    self.u[1].dof[i] = hu
+                if hv is not None:
+                    limited_hvnp1[i] = hv
+                    self.u[2].dof[i] = hv
+                #
+            #
+        #
 
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex] = limited_hnp1
@@ -993,6 +1093,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         diamD2 = numpy.sum(self.q['abs(det(J))'][:] * self.elementQuadratureWeights[('u', 0)])
         self.ML = np.zeros((self.nFreeDOF_global[0],), 'd')
         self.hReg = np.zeros((self.nFreeDOF_global[0],), 'd')
+        self.hLow = np.zeros((self.nFreeDOF_global[0],), 'd')
+        self.huLow = np.zeros((self.nFreeDOF_global[0],), 'd')
+        self.hvLow = np.zeros((self.nFreeDOF_global[0],), 'd')
         for i in range(self.nFreeDOF_global[0]):
             self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i + 1]].sum()
             self.hReg[i] = self.ML[i] / diamD2 * self.u[0].dof.max()
@@ -1061,29 +1164,95 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.numNonZeroEntries = len(self.Cx)
     #
 
-    def updateConstrainedDOFs(self):
+    def updateConstrainedDOFs(self,u):
         # get indices for constrained DOFs
         if self.constrainedDOFsIndices is None:
             self.constrainedDOFsIndices = []
             self.constrainedDOFsIndices = self.coefficients.constrainedDOFs[0](self.dofsXCoord,
                                                                                self.dofsYCoord)
+        #
+        # Constrain the DoFs
         for i in self.constrainedDOFsIndices:
             x = self.dofsXCoord[i]
             y = self.dofsYCoord[i]
-            (h, hu, hv) = self.coefficients.constrainedDOFs[1](x,y,self.timeIntegration.t,
-                                                               self.u[0].dof[i],
-                                                               self.u[1].dof[i],
-                                                               self.u[2].dof[i])
+            (h, hu, hv) = self.coefficients.constrainedDOFs[1](x,y,
+                                                               self.h_dof_old[i],
+                                                               self.hu_dof_old[i],
+                                                               self.hv_dof_old[i])
+            hIndex = self.stride[0]*i+self.offset[0]
+            huIndex= self.stride[1]*i+self.offset[1]
+            hvIndex= self.stride[2]*i+self.offset[2]
             if h is not None:
+                u[hIndex] = h
                 self.u[0].dof[i] = h
             if hu is not None:
+                u[huIndex] = hu
                 self.u[1].dof[i] = hu
             if hv is not None:
+                u[hvIndex] = hv
                 self.u[2].dof[i] = hv
+            #
+
+            if self.constrain_cjComponent is None:
+                self.constrain_cjComponent = np.zeros(3,'i')
+                self.constrain_cjComponent[0] = 1 if h is not None else 0
+                self.constrain_cjComponent[1] = 1 if hu is not None else 0
+                self.constrain_cjComponent[2] = 1 if hv is not None else 0                    
+            #
+        #        
     #
 
+    def updateAbsorbingBCs(self,u):
+        # get indices for constrained DOFs
+        if self.absorbingDOFsIndices is None:
+            self.absorbingDOFsIndices = []
+            self.absorbing_xNormal = np.zeros(len(self.u[0].dof))
+            self.absorbing_yNormal = np.zeros(len(self.u[0].dof))
+            
+            self.absorbingDOFsIndices = self.coefficients.absorbingBCs[0](self.dofsXCoord,
+                                                                          self.dofsYCoord)
+        #
+        # Constrain the DoFs
+        for i in self.absorbingDOFsIndices:
+            hIndex= self.stride[0]*i+self.offset[0]
+            huIndex= self.stride[1]*i+self.offset[1]
+            hvIndex= self.stride[2]*i+self.offset[2]
+
+            # fully explicit
+            hB = self.h_dof_old[i]
+            huB = self.hu_dof_old[i]
+            hvB = self.hv_dof_old[i]
+            
+            dx = np.sqrt(self.ML[i])
+            grad_h_dot_n = self.x_grad_h[i]*self.normalx[i] + self.y_grad_h[i]*self.normaly[i]
+            grad_hu_dot_n = self.x_grad_hu[i]*self.normalx[i] + self.y_grad_hu[i]*self.normaly[i]
+            grad_hv_dot_n = self.x_grad_hv[i]*self.normalx[i] + self.y_grad_hv[i]*self.normaly[i]
+                
+            hI = hB -  dx*grad_h_dot_n
+            if hI<self.hEps:
+                hI=0
+                huI=0
+                hvI=0
+            else:
+                huI = huB - dx*grad_hu_dot_n
+                hvI = hvB - dx*grad_hv_dot_n
+            #        
+
+            # via extrapolation
+            # h component
+            u[hIndex] = hI 
+            self.u[0].dof[i] = hI
+            # hu component
+            u[huIndex] = huI
+            self.u[1].dof[i] = huI
+            # hv component 
+            u[hvIndex] = hvI
+            self.u[2].dof[i] = hvI
+            #
+        #        
+    #    
+
     def updateReflectingBoundaryConditions(self):
-        self.forceStrongConditions = False
         for dummy, index in enumerate(self.boundaryIndex):
             vx = self.u[1].dof[index]
             vy = self.u[2].dof[index]
@@ -1118,6 +1287,56 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.muH_minus_muL = np.zeros(self.Cx.shape, 'd')
         self.extendedSourceTerm_hu = numpy.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_hv = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.x_grad_h = numpy.zeros(self.u[0].dof.shape,'d')
+        self.x_grad_hu = numpy.zeros(self.u[0].dof.shape,'d')
+        self.x_grad_hv = numpy.zeros(self.u[0].dof.shape,'d')
+        self.y_grad_h = numpy.zeros(self.u[0].dof.shape,'d')
+        self.y_grad_hu = numpy.zeros(self.u[0].dof.shape,'d')
+        self.y_grad_hv = numpy.zeros(self.u[0].dof.shape,'d')
+        # PARALLEL VECTORS #
+        n=self.u[0].par_dof.dim_proc
+        N=self.u[0].femSpace.dofMap.nDOF_all_processes
+        nghosts = self.u[0].par_dof.nghosts
+        subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
+        self.par_x_grad_h = proteus.LinearAlgebraTools.ParVec_petsc4py(self.x_grad_h,
+                                                                           bs=1,
+                                                                           n=n,N=N,nghosts=nghosts,
+                                                                           subdomain2global=subdomain2global)
+        self.par_x_grad_hu = proteus.LinearAlgebraTools.ParVec_petsc4py(self.x_grad_hu,
+                                                                        bs=1,
+                                                                        n=n,N=N,nghosts=nghosts,
+                                                                        subdomain2global=subdomain2global)
+        self.par_x_grad_hv = proteus.LinearAlgebraTools.ParVec_petsc4py(self.x_grad_hv,
+                                                                        bs=1,
+                                                                        n=n,N=N,nghosts=nghosts,
+                                                                        subdomain2global=subdomain2global)
+        #
+        self.par_y_grad_h = proteus.LinearAlgebraTools.ParVec_petsc4py(self.y_grad_h,
+                                                                           bs=1,
+                                                                           n=n,N=N,nghosts=nghosts,
+                                                                           subdomain2global=subdomain2global)
+        self.par_y_grad_hu = proteus.LinearAlgebraTools.ParVec_petsc4py(self.y_grad_hu,
+                                                                        bs=1,
+                                                                        n=n,N=N,nghosts=nghosts,
+                                                                        subdomain2global=subdomain2global)
+        self.par_y_grad_hv = proteus.LinearAlgebraTools.ParVec_petsc4py(self.y_grad_hv,
+                                                                        bs=1,
+                                                                        n=n,N=N,nghosts=nghosts,
+                                                                        subdomain2global=subdomain2global)
+        #
+        self.par_normalx = proteus.LinearAlgebraTools.ParVec_petsc4py(self.normalx,
+                                                                      bs=1,
+                                                                      n=n,N=N,nghosts=nghosts,
+                                                                      subdomain2global=subdomain2global)
+        self.par_normaly = proteus.LinearAlgebraTools.ParVec_petsc4py(self.normaly,
+                                                                      bs=1,
+                                                                      n=n,N=N,nghosts=nghosts,
+                                                                      subdomain2global=subdomain2global)
+        self.par_ML = proteus.LinearAlgebraTools.ParVec_petsc4py(self.ML,
+                                                                 bs=1,
+                                                                 n=n,N=N,nghosts=nghosts,
+                                                                 subdomain2global=subdomain2global)
+        self.par_ML.scatter_forward_insert()
         self.dataStructuresInitialized=True
     #
 
@@ -1126,6 +1345,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
 
+        # Normal Field as function
+        if self.ebqe_nx is None and self.hasNormalFieldAsFunction:
+            self.updateNormalFieldAsFunction()
+        #
+                    
         # COMPUTE C MATRIX #
         if self.cterm_global is None:
             self.getCMatrices()
@@ -1146,14 +1370,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             self.updateReflectingBoundaryConditions()
         #
-        # INIT BOUNDARY INDEX #
-        # NOTE: this must be done after the first call to getResidual (to have normalx and normaly initialized)
-        # I do this in preStep if firstStep=True
 
         # CONSTRAINT DOFs #
         if self.coefficients.constrainedDOFs is not None:
-            self.updateConstrainedDOFs()
+            self.updateConstrainedDOFs(u)
         #
+
+        if self.coefficients.absorbingBCs is not None:
+            self.updateAbsorbingBCs(u)
+        #
+            
         # DIRICHLET BOUNDARY CONDITIONS #
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
@@ -1164,6 +1390,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if (self.check_positivity_water_height == True):
             assert self.u[0].dof.min() >= 0, ("Negative water height: ", self.u[0].dof.min())
         #
+        
+        self.x_grad_h.fill(0.0)
+        self.x_grad_hu.fill(0.0)
+        self.x_grad_hv.fill(0.0)
+        #
+        self.y_grad_h.fill(0.0)
+        self.y_grad_hu.fill(0.0)
+        self.y_grad_hv.fill(0.0)
+
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1291,7 +1526,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.COMPUTE_NORMALS,
             self.normalx,
             self.normaly,
+            self.ebqe_nx,
+            self.ebqe_ny,
+            self.x_grad_h,
+            self.x_grad_hu,
+            self.x_grad_hv,
+            self.y_grad_h,
+            self.y_grad_hu,
+            self.y_grad_hv,
             self.dLow,
+            self.hLow,
+            self.huLow,
+            self.hvLow,
             self.hBT,
             self.huBT,
             self.hvBT,
@@ -1299,7 +1545,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # for viscosity
             self.coefficients.viscosity)
 
-        self.COMPUTE_NORMALS = 0
+        self.par_x_grad_h.scatter_forward_insert()
+        self.par_x_grad_hu.scatter_forward_insert()
+        self.par_x_grad_hv.scatter_forward_insert()
+        #
+        self.par_y_grad_h.scatter_forward_insert()
+        self.par_y_grad_hu.scatter_forward_insert()
+        self.par_y_grad_hv.scatter_forward_insert()
+
+        if self.COMPUTE_NORMALS==1:
+            self.par_normalx.scatter_forward_insert()
+            self.par_normaly.scatter_forward_insert()
+            self.COMPUTE_NORMALS = 0
+        #
+        
+        if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
+            for dummy, index in enumerate(self.boundaryIndex):
+                r[self.offset[1]+self.stride[1]*index]=0.
+                r[self.offset[2]+self.stride[2]*index]=0.
+            #
+        #
+            
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
@@ -1430,6 +1696,26 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hu_dof_old,
             self.hv_dof_old)
 
+        if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
+            for dummy, index in enumerate(self.boundaryIndex):
+                global_dofN = self.offset[1] + self.stride[1] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+                global_dofN = self.offset[2] + self.stride[2] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0                        
+                    #
+                #
+            #
+        #
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0  # probably want to add some scaling to match non-dirichlet diagonals in linear system
@@ -1445,13 +1731,48 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.constrainedDOFsIndices is not None:
             for index in self.constrainedDOFsIndices:
                 for cj in range(self.nc):
-                    global_dofN = self.offset[cj] + self.stride[cj] * index
-                    for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
-                        if (self.colind[i] == global_dofN):
-                            self.nzval[i] = 1.0
-                        else:
-                            self.nzval[i] = 0.0
+                    if self.constrain_cjComponent[cj] == 1:
+                        global_dofN = self.offset[cj] + self.stride[cj] * index
+                        for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                            if (self.colind[i] == global_dofN):
+                                self.nzval[i] = 1.0
+                            else:
+                                self.nzval[i] = 0.0
+                            #
+                        #
+                    #
+                #
+            #
         #
+        if self.absorbingDOFsIndices is not None:
+            for index in self.absorbingDOFsIndices:
+                global_dofN = self.offset[0] + self.stride[0] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+                global_dofN = self.offset[1] + self.stride[1] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                
+                global_dofN = self.offset[2] + self.stride[2] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+            #
+        #
+        
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1

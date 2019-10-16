@@ -80,7 +80,7 @@ namespace proteus
   class SW2DCV_base
   {
   public:
-    std::valarray<double> Rneg, Rpos, hLow, huLow, hvLow, Kmax;
+    std::valarray<double> Rneg, Rpos, hhLow, hhuLow, hhvLow, Kmax;
     virtual ~SW2DCV_base(){}
     virtual void FCTStep(double dt,
 			 int NNZ, //number on non-zero entries on sparsity pattern
@@ -108,6 +108,9 @@ namespace proteus
 			 int LUMPED_MASS_MATRIX,
 			 // LOCAL LIMITING
 			 double* dLow,
+			 double* hLow,
+			 double* huLow,
+			 double* hvLow,
 			 double* hBT,
 			 double* huBT,
 			 double* hvBT
@@ -138,6 +141,9 @@ namespace proteus
 				int LUMPED_MASS_MATRIX,
 				// LOCAL LIMITING
 				double* dLow,
+				double* hLow,
+				double* huLow,
+				double* hvLow,
 				double* hBT,
 				double* huBT,
 				double* hvBT
@@ -297,7 +303,18 @@ namespace proteus
                                    int COMPUTE_NORMALS,
                                    double* normalx,
                                    double* normaly,
+				   double* ebqe_nx,
+				   double* ebqe_ny,
+				   double* x_grad_h,
+				   double* x_grad_hu,
+				   double* x_grad_hv,
+				   double* y_grad_h,
+				   double* y_grad_hu,
+				   double* y_grad_hv,
                                    double* dLow,
+				   double* hLow,
+				   double* huLow,
+				   double* hvLow,
 				   double* hBT,
 				   double* huBT,
 				   double* hvBT,
@@ -878,15 +895,18 @@ namespace proteus
 		 double* hReg,
 		 int LUMPED_MASS_MATRIX,
 		 double* dLow,
+		 double* hLow,
+		 double* huLow,
+		 double* hvLow,
 		 double* hBT,
 		 double* huBT,
 		 double* hvBT)
     {
       Rneg.resize(numDOFs,0.0);
       Rpos.resize(numDOFs,0.0);
-      hLow.resize(numDOFs,0.0);
-      huLow.resize(numDOFs,0.0);
-      hvLow.resize(numDOFs,0.0);
+      hhLow.resize(numDOFs,0.0);
+      hhuLow.resize(numDOFs,0.0);
+      hhvLow.resize(numDOFs,0.0);
 
       ////////////////////////
       // FIRST LOOP in DOFs //
@@ -907,9 +927,9 @@ namespace proteus
           double Pnegi=0., Pposi=0.;
 
 	  // LOW ORDER SOLUTION without extended source term. Eqn 6.23
-	  hLow[i]  = hi;
-	  huLow[i] = hui;
-	  hvLow[i] = hvi;
+	  hhLow[i]  = hi;
+	  hhuLow[i] = hui;
+	  hhvLow[i] = hvi;
 
           // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
           for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -942,23 +962,23 @@ namespace proteus
 	      // COMPUTE LOW ORDER SOLUTION (WITHOUT EXTENDED SOURCE) //
 	      if (i!=j)
 		{
-		  hLow[i]  += hi*(-dt/mi*2*dLow[ij])  + dt/mi*(2*dLow[ij]*hBT[ij]);
-		  huLow[i] += hui*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*huBT[ij]);
-		  hvLow[i] += hvi*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hvBT[ij]);
+		  hhLow[i]  += hi*(-dt/mi*2*dLow[ij])  + dt/mi*(2*dLow[ij]*hBT[ij]);
+		  hhuLow[i] += hui*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*huBT[ij]);
+		  hhvLow[i] += hvi*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hvBT[ij]);
 		}
               //update ij
               ij+=1;
             }
 	  // clean up hLow from round off error
-	  if (hLow[i] < hEps)
-	    hLow[i]=0;
+	  if (hhLow[i] < hEps)
+	    hhLow[i]=0;
           ///////////////////////
           // COMPUTE Q VECTORS //
           ///////////////////////
 	  if (GLOBAL_FCT==1)
 	    hiMin=0;
-          double Qnegi = mi*(hiMin-hLow[i]);
-	  double Qposi = mi*(hiMax-hLow[i]);
+          double Qnegi = mi*(hiMin-hhLow[i]);
+	  double Qposi = mi*(hiMax-hhLow[i]);
 
           ///////////////////////
           // COMPUTE R VECTORS //
@@ -1052,16 +1072,16 @@ namespace proteus
               ij+=1;
             }
           double one_over_mi = 1.0/lumped_mass_matrix[i];
-	  limited_hnp1[i]  = hLow[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
-          limited_hunp1[i] = ((huLow[i] - dt/mi*extendedSourceTerm_hu[i]) // low_order_hunp1+...
+	  limited_hnp1[i]  = hhLow[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+          limited_hunp1[i] = ((hhuLow[i] - dt/mi*extendedSourceTerm_hu[i]) // low_order_hunp1+...
 	  		      +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2);
-          limited_hvnp1[i] = ((hvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
+          limited_hvnp1[i] = ((hhvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
 			      +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3);
 
           if (limited_hnp1[i] < -hEps && dt < 1.0)
             {
               std::cout << "Limited water height is negative: "
-			<< "hLow: " << hLow[i] << "\t"
+			<< "hLow: " << hhLow[i] << "\t"
                         << "hHigh: " << limited_hnp1[i] << "\t"
                         << " ... aborting!" << std::endl;
               abort();
@@ -1108,15 +1128,18 @@ namespace proteus
 			double* hReg,
 			int LUMPED_MASS_MATRIX,
 			double* dLow,
+			double* hLow,
+			double* huLow,
+			double* hvLow,
 			double* hBT,
 			double* huBT,
 			double* hvBT)
     {
       Rneg.resize(numDOFs,0.0);
       Rpos.resize(numDOFs,0.0);
-      hLow.resize(numDOFs,0.0);
-      huLow.resize(numDOFs,0.0);
-      hvLow.resize(numDOFs,0.0);
+      hhLow.resize(numDOFs,0.0);
+      hhuLow.resize(numDOFs,0.0);
+      hhvLow.resize(numDOFs,0.0);
       Kmax.resize(numDOFs,0.0);
 
       ////////////////////////
@@ -1138,9 +1161,9 @@ namespace proteus
           double Pnegi=0., Pposi=0.;
 
 	  // LOW ORDER SOLUTION without extended source term. Eqn 6.23
-	  hLow[i]  = hi;
-	  huLow[i] = hui;
-	  hvLow[i] = hvi;
+	  hhLow[i]  = hi;
+	  hhuLow[i] = hui;
+	  hhvLow[i] = hvi;
 	  Kmax[i] = 0;
 
           // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
@@ -1179,21 +1202,22 @@ namespace proteus
 	      // COMPUTE LOW ORDER SOLUTION (WITHOUT EXTENDED SOURCE) //
 	      if (i!=j)
 		{
-		  hLow[i]  += hi*(-dt/mi*2*dLow[ij])  + dt/mi*(2*dLow[ij]*hBT[ij]);
-		  huLow[i] += hui*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*huBT[ij]);
-		  hvLow[i] += hvi*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hvBT[ij]);
+		  hhLow[i]  += hi*(-dt/mi*2*dLow[ij])  + dt/mi*(2*dLow[ij]*hBT[ij]);
+		  hhuLow[i] += hui*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*huBT[ij]);
+		  hhvLow[i] += hvi*(-dt/mi*2*dLow[ij]) + dt/mi*(2*dLow[ij]*hvBT[ij]);
 		}
               // UPDATE ij //
               ij+=1;
+
             }
 	  // clean up hLow from round off error
-	  if (hLow[i] < hEps)
-	    hLow[i]=0;
+	  if (hhLow[i] < hEps)
+	    hhLow[i]=0;
           ///////////////////////
           // COMPUTE Q VECTORS //
           ///////////////////////
-          double Qnegi = mi*(hiMin-hLow[i]);
-	  double Qposi = mi*(hiMax-hLow[i]);
+          double Qnegi = mi*(hiMin-hhLow[i]);
+	  double Qposi = mi*(hiMax-hhLow[i]);
 
           ///////////////////////
           // COMPUTE R VECTORS //
@@ -1231,7 +1255,7 @@ namespace proteus
           double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
           double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
 
-	  double ci = Kmax[i]*hLow[i]-0.5*(huLow[i]*huLow[i]+hvLow[i]*hvLow[i]); // for conv. lim.
+	  double ci = Kmax[i]*hhLow[i]-0.5*(hhuLow[i]*hhuLow[i]+hhvLow[i]*hhvLow[i]); // for conv. lim.
 
           // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
           for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -1286,7 +1310,7 @@ namespace proteus
 	      double Phv_ij = FluxCorrectionMatrix3/mi/lambdaj;
 
 	      double ai = -0.5*(Phu_ij*Phu_ij+Phv_ij*Phv_ij);
-	      double bi = Kmax[i]*Ph_ij-(huLow[i]*Phu_ij + hvLow[i]*Phv_ij);
+	      double bi = Kmax[i]*Ph_ij-(hhuLow[i]*Phu_ij + hhvLow[i]*Phv_ij);
 
 	      double r1 = ai==0 ? (bi==0 ? 1. : -ci/bi) : (-bi + std::sqrt(bi*bi-4*ai*ci))/2./ai;
 	      double r2 = ai==0 ? (bi==0 ? 1. : -ci/bi) : (-bi - std::sqrt(bi*bi-4*ai*ci))/2./ai;
@@ -1300,12 +1324,12 @@ namespace proteus
 	      // root of jth-DOF (To compute transpose component)
 	      double lambdai = csrRowIndeces_DofLoops[j+1]-csrRowIndeces_DofLoops[j]-1;
 	      double mj = lumped_mass_matrix[j];
-	      double cj = Kmax[j]*hLow[j]-0.5*(huLow[j]*huLow[j]+hvLow[j]*hvLow[j]);
+	      double cj = Kmax[j]*hhLow[j]-0.5*(hhuLow[j]*hhuLow[j]+hhvLow[j]*hhvLow[j]);
 	      double Ph_ji  = -FluxCorrectionMatrix1/mj/lambdai; //Aij=-Aji
 	      double Phu_ji = -FluxCorrectionMatrix2/mj/lambdai;
 	      double Phv_ji = -FluxCorrectionMatrix3/mj/lambdai;
 	      double aj = -0.5*(Phu_ji*Phu_ji+Phv_ji*Phv_ji);
-	      double bj = Kmax[j]*Ph_ji-(huLow[j]*Phu_ji + hvLow[j]*Phv_ji);
+	      double bj = Kmax[j]*Ph_ji-(hhuLow[j]*Phu_ji + hhvLow[j]*Phv_ji);
 
 	      r1 = aj==0 ? (bj==0 ? 1. : -cj/bj) : (-bj + std::sqrt(bj*bj-4*aj*cj))/2./aj;
 	      r2 = aj==0 ? (bj==0 ? 1. : -cj/bj) : (-bj - std::sqrt(bj*bj-4*aj*cj))/2./aj;
@@ -1328,16 +1352,20 @@ namespace proteus
               ij+=1;
             }
           double one_over_mi = 1.0/lumped_mass_matrix[i];
-          limited_hnp1[i]  = hLow[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
-          limited_hunp1[i] = ((huLow[i] - dt/mi*extendedSourceTerm_hu[i]) // low_order_hunp1+...
+          limited_hnp1[i]  = hhLow[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+          limited_hunp1[i] = ((hhuLow[i] - dt/mi*extendedSourceTerm_hu[i]) // low_order_hunp1+...
 			      +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2);
-          limited_hvnp1[i] = ((hvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
+          limited_hvnp1[i] = ((hhvLow[i] - dt/mi*extendedSourceTerm_hv[i]) // low_order_hvnp1+...
 			      +one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3);
 
+	  //limited_hnp1[i] = hLow[i];
+	  //limited_hunp1[i] = huLow[i];
+	  //limited_hvnp1[i] = hvLow[i];
+	  
           if (limited_hnp1[i] < -hEps && dt < 1.0)
 	    {
               std::cout << "Limited water height is negative: "
-			<< "hLow: " << hLow[i] << "\t"
+			<< "hLow: " << hhLow[i] << "\t"
                         << "hHigh: " << limited_hnp1[i] << "\t"
                         << " ... aborting!" << std::endl;
               abort();
@@ -1417,7 +1445,7 @@ namespace proteus
                                                                 hi,hui,hvi,
                                                                 hEps,hEps,debug)*cji_norm); //hEps
                   dLowii -= dLow[ij];
-
+		  
                   // FOR SMOOTHNESS INDICATOR //
                   alpha_numerator += hj - hi;
                   alpha_denominator += fabs(hj - hi);
@@ -1657,8 +1685,19 @@ namespace proteus
                            int COMPUTE_NORMALS,
                            double* normalx,
                            double* normaly,
+			   double* ebqe_nx,
+			   double* ebqe_ny,
+			   double* x_grad_h,
+			   double* x_grad_hu,
+			   double* x_grad_hv,
+			   double* y_grad_h,
+			   double* y_grad_hu,
+			   double* y_grad_hv,
                            double* dLow,
 			   // LOCAL LIMITING
+			   double* hLow,
+			   double* huLow,
+			   double* hvLow,
 			   double* hBT,
 			   double* huBT,
 			   double* hvBT,
@@ -1687,7 +1726,6 @@ namespace proteus
             elementResidual_h[nDOF_test_element],
             elementResidual_hu[nDOF_test_element],
             elementResidual_hv[nDOF_test_element];
-
           for (int i=0;i<nDOF_test_element;i++)
             {
               elementResidual_h[i]=0.0;
@@ -1705,7 +1743,7 @@ namespace proteus
                 eN_nDOF_trial_element = eN*nDOF_trial_element;
               register double
                 h=0.0,hu=0.0,hv=0.0, // solution at current time
-		grad_h_old[nSpace], grad_hu[nSpace], grad_hv[nSpace],
+		grad_h_old[nSpace], grad_h[nSpace], grad_hu[nSpace], grad_hv[nSpace], 
                 h_old=0.0,hu_old=0.0,hv_old=0.0, // solution at lstage
                 jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
                 h_test_dV[nDOF_trial_element],
@@ -1762,6 +1800,10 @@ namespace proteus
 			     &h_l2g[eN_nDOF_trial_element],
 			     h_grad_trial,
 			     grad_h_old);
+	      ck.gradFromDOF(h_dof,
+			     &h_l2g[eN_nDOF_trial_element],
+			     h_grad_trial,
+			     grad_h);
 	      ck.gradFromDOF(hu_dof,
 			     &vel_l2g[eN_nDOF_trial_element],
 			     vel_grad_trial,
@@ -1823,13 +1865,54 @@ namespace proteus
               register int eN_i=eN*nDOF_test_element+i;
               int h_gi = h_l2g[eN_i]; //global i-th index for h
               int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities
-
+	      
               // distribute time derivative to global residual
               globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
               globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
               globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
             }
         }
+
+      int ij=0;
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  double mi=lumped_mass_matrix[i];
+
+	  x_grad_h[i] = 0;
+	  x_grad_hu[i] = 0;
+	  x_grad_hv[i] = 0;
+	  //
+	  y_grad_h[i] = 0;
+	  y_grad_hu[i] = 0;
+	  y_grad_hv[i] = 0;
+	  
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    { //loop in j (sparsity pattern)
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hj  = h_dof_old[j];
+	      double huj = hu_dof_old[j];
+	      double hvj = hv_dof_old[j];
+	      
+	      x_grad_h[i]  += hj*Cx[ij];
+	      x_grad_hu[i] += huj*Cx[ij];
+	      x_grad_hv[i] += hvj*Cx[ij];
+
+	      y_grad_h[i]  += hj*Cy[ij];
+	      y_grad_hu[i] += huj*Cy[ij];
+	      y_grad_hv[i] += hvj*Cy[ij];
+
+	      // update index
+	      ij+=1;
+	    }
+	  
+	  x_grad_h[i]  /= mi;
+	  x_grad_hu[i] /= mi;
+	  x_grad_hv[i] /= mi;
+
+	  y_grad_h[i]  /= mi;
+	  y_grad_hu[i] /= mi;
+	  y_grad_hv[i] /= mi;
+	}
       // ********** END OF CELL LOOPS ********** //
 
       if (SECOND_CALL_CALCULATE_RESIDUAL==0) // This is to save some time
@@ -1857,7 +1940,7 @@ namespace proteus
 	  //     * Extended source term (eqn 6.19)
 	  //     * Smoothness indicator
 	  //     * global entropy residual
-          int ij = 0;
+          ij = 0;
           register double
 	    hyp_flux_h[numDOFsPerEqn],
 	    hyp_flux_hu[numDOFsPerEqn],
@@ -2006,7 +2089,15 @@ namespace proteus
 
               // HIGH ORDER DISSIPATIVE TERMS
               double
-                ith_dHij_minus_muHij_times_hStarStates=0.,
+                ith_dLij_minus_muLij_times_hStarStates=0.,
+                ith_dLij_minus_muLij_times_huStarStates=0.,
+                ith_dLij_minus_muLij_times_hvStarStates=0.,
+                ith_muLij_times_hStates=0.,
+                ith_muLij_times_huStates=0.,
+                ith_muLij_times_hvStates=0.;
+
+	      double
+		ith_dHij_minus_muHij_times_hStarStates=0.,
                 ith_dHij_minus_muHij_times_huStarStates=0.,
                 ith_dHij_minus_muHij_times_hvStarStates=0.,
                 ith_muHij_times_hStates=0.,
@@ -2095,61 +2186,6 @@ namespace proteus
 		      huBT[ij] = huBar_ij + huTilde_ij;
 		      hvBT[ij] = hvBar_ij + hvTilde_ij;
 
-		      // CHECKING SOME STUFF // (only to debug)
-		      /*
-		      if (hBT[ij] < 0)
-			{
-			  double aux1 = 2*dLij*(hBar_ij + hTilde_ij) - (-((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])+dLij*(hj+hi)
-									+ (dLij - muLij)*((hStarji-hj)-(hStarij-hi)));
-			  std::cout << "hBT<0: " << hBT[ij] << std::endl;
-			  std::cout << 2*dLij*(hBar_ij + hTilde_ij) << "\t"
-				    << (-((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])+dLij*(hj+hi)
-					+ (dLij - muLij)*((hStarji-hj)-(hStarij-hi)))
-				    << std::endl;
-			  std::cout << aux1 << std::endl;
-
-			  double aux2 = 2*dLij*(hBar_ij + hTilde_ij) - (-((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])
-									+ muLij*(hj+hi) + (dLij-muLij)*(hj+hi)
-									+ (dLij - muLij)*((hStarji-hj)-(hStarij-hi)));
-			  std::cout << 2*dLij*(hBar_ij + hTilde_ij) << "\t"
-				    << (-((hj*uj-hi*ui)*Cx[ij] + (hj*vj-hi*vi)*Cy[ij])
-					+ muLij*(hj+hi) + (dLij-muLij)*(hj+hi)
-					+ (dLij - muLij)*((hStarji-hj)-(hStarij-hi)))
-				    << std::endl;
-			  std::cout << aux2 << std::endl;
-
-			  std::cout << "dLij: " << dLij << ", muLij: " << muLij << ", "
-				    << "dLij-muLij: " << dLij - muLij << std::endl;
-			  std::cout << "hStarji + 2*hi - hStarij: " << (hStarji + 2*hi - hStarij) << std::endl;
-
-			  std::cout << "hi, hj: " << hi << ", " << hj << std::endl;
-
-			  std::cout << "... dLij" << std::endl;
-			  maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
-							hi,hui,hvi,
-							hj,huj,hvj,
-							hEps,hEps,true)*cij_norm;
-			  std::cout << "... dLji" << std::endl;
-			  maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
-							hj,huj,hvj,
-							hi,hui,hvi,
-							hEps,hEps,true)*cji_norm;
-
-			  std::cout << "muLowij: " << fmax(0.,-(ui*Cx[ij] + vi*Cy[ij]))
-				    << ", " << fmax(0,(uj*Cx[ij] + vj*Cy[ij])) << std::endl;
-
-
-			  std::cout << fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
-                                                                      hi,hui,hvi,
-                                                                      hj,huj,hvj,
-                                                                      hEps,hEps,false)*cij_norm,
-                                        maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
-                                                                      hj,huj,hvj,
-                                                                      hi,hui,hvi,
-                                                                      hEps,hEps,false)*cji_norm) << std::endl;
-			  abort();
-			}
-		      */
                       ///////////////////////
                       // ENTROPY VISCOSITY //
                       ///////////////////////
@@ -2167,6 +2203,17 @@ namespace proteus
                       ith_muHij_times_huStates += muHij*(huj-hui);
                       ith_muHij_times_hvStates += muHij*(hvj-hvi);
 
+		      // low order components
+		      // compute dij_minus_muij times star solution terms
+                      ith_dLij_minus_muLij_times_hStarStates  += (dLij - muLij)*(hStarji-hStarij);
+                      ith_dLij_minus_muLij_times_huStarStates += (dLij - muLij)*(huStarji-huStarij);
+                      ith_dLij_minus_muLij_times_hvStarStates += (dLij - muLij)*(hvStarji-hvStarij);
+
+                      // compute muij times solution terms
+                      ith_muLij_times_hStates  += muLij*(hj-hi);
+                      ith_muLij_times_huStates += muLij*(huj-hui);
+                      ith_muLij_times_hvStates += muLij*(hvj-hvi);
+
                       // compute dH_minus_dL
                       dH_minus_dL[ij] = dHij - dLij;
                       muH_minus_muL[ij] = muHij - muLij;
@@ -2179,6 +2226,18 @@ namespace proteus
                   // update ij
                   ij+=1;
                 }
+	      hLow[i] = hi - dt/mi*(hyp_flux_h[i]
+				   - ith_dLij_minus_muLij_times_hStarStates
+				   - ith_muLij_times_hStates);
+	      huLow[i] = hui - dt/mi*(hyp_flux_hu[i]
+				      + extendedSourceTerm_hu[i]
+				      - ith_dLij_minus_muLij_times_huStarStates
+				      - ith_muLij_times_huStates);
+	      hvLow[i] = hvi - dt/mi*(hyp_flux_hv[i]
+				      + extendedSourceTerm_hv[i]
+				      - ith_dLij_minus_muLij_times_hvStarStates
+				      - ith_muLij_times_hvStates);
+	      
 	      if (LUMPED_MASS_MATRIX==1)
 		{
 		  globalResidual[offset_h+stride_h*i]
@@ -2192,7 +2251,7 @@ namespace proteus
 				   - ith_muHij_times_huStates);
 		  globalResidual[offset_hv+stride_hv*i]
 		    = hvi - dt/mi*(hyp_flux_hv[i]
-				   + extendedSourceTerm_hu[i]
+				   + extendedSourceTerm_hv[i]
 				   - ith_dHij_minus_muHij_times_hvStarStates
 				   - ith_muHij_times_hvStates);
 		  // clean up potential negative water height due to machine precision
@@ -2216,7 +2275,7 @@ namespace proteus
 			   );
 		  globalResidual[offset_hv+stride_hv*i]
 		    += dt*(hyp_flux_hv[i]
-			   + extendedSourceTerm_hu[i]
+			   + extendedSourceTerm_hv[i]
 			   - ith_dHij_minus_muHij_times_hvStarStates
 			   - ith_muHij_times_hvStates
 			   );
@@ -2231,13 +2290,16 @@ namespace proteus
           // This is to identify the normals and create a vector of normal components
           for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
             {
+	      double nx=0;
+	      double ny=0;
               register int ebN = exteriorElementBoundariesArray[ebNE],
                 eN  = elementBoundaryElementsArray[ebN*2+0],
                 ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
               register double normal[3];
               { // "Loop" in quad points
                 int kb = 0; // NOTE: I need to consider just one quad point since the element is not curved so the normal is constant per element
-                register int ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb;
+                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+		  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb;
                 register double
                   jac_ext[nSpace*nSpace],jacDet_ext,jacInv_ext[nSpace*nSpace],boundaryJac[nSpace*(nSpace-1)],
                   metricTensor[(nSpace-1)*(nSpace-1)],metricTensorDetSqrt,x_ext,y_ext;
@@ -2260,13 +2322,19 @@ namespace proteus
                                                     normal_ref,
                                                     normal,
                                                     x_ext,y_ext);
+		// The following is if I want the user to define the normal field (at the boundary)
+		//nx = ebqe_nx[ebNE_kb];
+		//ny = ebqe_ny[ebNE_kb];
               }
               // distribute the normal vectors
               for (int i=0;i<nDOF_test_element;i++)
                 {
                   int eN_i = eN*nDOF_test_element+i;
                   int gi = h_l2g[eN_i];
-                  normalx[gi] += 0.5*normal[0]*(i==ebN_local ? 0. : 1.);
+                  //normalx[gi] += 0.5*nx*(i==ebN_local ? 0. : 1.);
+                  //normaly[gi] += 0.5*ny*(i==ebN_local ? 0. : 1.);
+
+		  normalx[gi] += 0.5*normal[0]*(i==ebN_local ? 0. : 1.);
                   normaly[gi] += 0.5*normal[1]*(i==ebN_local ? 0. : 1.);
                 }
             }
@@ -2283,7 +2351,7 @@ namespace proteus
         }
       // ********** END OF COMPUTING NORMALS ********** //
     }
-
+    
     void calculateMassMatrix(//element
                              double* mesh_trial_ref,
                              double* mesh_grad_trial_ref,
