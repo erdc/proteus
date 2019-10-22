@@ -22,12 +22,12 @@ places in the tank measuring the water height (location can be see in bottom)
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts = Context.Options([
-    ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 12.0, "Final time for simulation"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
+    ("final_time", 30.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.25, "Desired CFL restriction"),
+    ("cfl", 0.2, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs", True, "Use reflecting BCs")
+    ("reflecting_BCs", False, "Use reflecting BCs")
 ])
 
 ###################
@@ -36,6 +36,9 @@ opts = Context.Options([
 L = (48.8, 26.5)  # this is length in x direction and y direction
 refinement = opts.refinement
 domain = RectangularDomain(L=L,x=[0,-13.25,0])
+X_coords = (0.0, 48.8)  # this is x domain, used in BCs
+Y_coords = (-13.25, 13.25)  # this is x domain, used in BCs
+
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -53,7 +56,8 @@ g = 9.81
 h0 = 0.78
 alpha = 0.5 * h0
 xs = 5.0
-vel = np.sqrt(old_div(3. * alpha, (4. * h0**3)))
+r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
+c = np.sqrt(g * (h0 + alpha))
 
 # stuff for bathymetry, including shelf and cone
 rcone = 3.
@@ -64,10 +68,10 @@ yc = 13.25
 #####################################
 #   Some functions defined here    #
 ####################################
+
 def solitary_wave(x, t):
-    sechSqd = (1.00 / np.cosh(vel * (x - xs)))**2.00
-    soliton = alpha * sechSqd
-    return soliton
+    sechSqd = (1.00 / np.cosh(r * (x - xs)))**2.0
+    return alpha * sechSqd
 
 
 def bathymetry_function(X):
@@ -78,43 +82,66 @@ def bathymetry_function(X):
     cone = np.maximum(
         hcone - np.sqrt(((x - 17.0)**2 + (y - yc)**2) / (rcone / hcone)**2), 0.0)
 
-    # define some stuff we need for shelf
-    dist = 1.0 - np.minimum(1.0, np.abs(y - yc) / yc)
-    aux_x = 12.50 + 12.4999 * (1.0 - dist)
-    aux_z = 0.70 + 0.050 * (1.0 - dist)
-
-    # initialize bath with shape of x array
-    bath = 0. * x
+    # initialize base with shape of x array
+    base = 0. * x
 
     # silly hack because X switches from list to array of
     # length 3 (x,y,z) when called in initial conditions
     if (isinstance(X, list)):
         for i, value in enumerate(X[0]):
             if value < 10.2:
-                bath[i] = 0.
-            if ((10.2 <= value) & (value  <= aux_x[i])):
-                bath[i] = aux_z[i] / (aux_x[i] - 10.20) * (value - 10.2)
-            if ((aux_x[i] <= value) & (value <= 25.)):
-                bath[i] = 0.75 + (aux_z[i] - 0.75) / \
-                    (aux_x[i] - 25.) * (value - 25.)
-            if ((25. < value) & (value <= 32.5)):
-                bath[i] = 1. + (1. - 0.5) / (32.5 - 17.5) * (value - 32.5)
+                base[i] = 0.
+            if ((10.2 <= value) & (value  <= 17.5)):
+                base[i] = (0.5 - 0.0) / (17.5 - 10.20) * (value - 10.2)
+            if ((17.5 <= value) & (value <= 32.5)):
+                base[i] = 1.0 + (1.0- 0.5) / \
+                    (32.5 - 17.5) * (value - 32.5)
             if (32.5 < value):
-                bath[i] = 1.
+                base[i] = 1.
     else:
             if x < 10.2:
-                bath = 0.0
+                base = 0.0
+            if ((10.2 < x) & (x <= 17.5)):
+                base = (0.5 - 0.0) / (17.5 - 10.20) * (x - 10.2)
+            if ((17.5 <= x) & (x <= 32.5)):
+                base = 1.0 + (1.0 - 0.5) / \
+                    (32.5 - 17.5) * (x - 32.5)
+            if (32.5 < x):
+                base = 1.
+
+    # define stuff for shelf
+    shelf = 0. * x
+    dist = 1.0 - np.minimum(1.0, np.abs(y - yc) / yc)
+    aux_x = 12.50 + 12.4999 * (1.0 - dist)
+    aux_z = 0.70 + 0.050 * (1.0 - dist)
+
+    if (isinstance(X, list)):
+        for i, value in enumerate(X[0]):
+            if value < 10.2:
+                shelf[i] = 0.
+            if ((10.2 <= value) & (value  <= aux_x[i])):
+                shelf[i] = aux_z[i] / (aux_x[i] - 10.20) * (value - 10.2)
+            if ((aux_x[i] <= value) & (value <= 25.)):
+                shelf[i] = 0.75 + (aux_z[i] - 0.75) / \
+                    (aux_x[i] - 25.) * (value - 25.)
+            if ((25. < value) & (value <= 32.5)):
+                shelf[i] = 1. + (1. - 0.5) / (32.5 - 17.5) * (value - 32.5)
+            if (32.5 < value):
+                shelf[i] = 1.
+    else:
+            if x < 10.2:
+                shelf = 0.0
             if ((10.2 < x) & (x <= aux_x)):
-                bath = aux_z / (aux_x - 10.20) * (x - 10.2)
+                shelf = aux_z / (aux_x - 10.20) * (x - 10.2)
             if ((aux_x <= x) & (x <= 25.)):
-                bath = 0.75 + (aux_z - 0.75) / \
+                shelf = 0.75 + (aux_z - 0.75) / \
                     (aux_x - 25.) * (x - 25.)
             if ((25. < x) & (x <= 32.5)):
-                bath = 1. + (1. - 0.5) / (32.5 - 17.5) * (x - 32.5)
+                shelf = 1. + (1. - 0.5) / (32.5 - 17.5) * (x - 32.5)
             if (32.5 < x):
-                bath = 1.
+                shelf = 1.
 
-    bath = bath + cone
+    bath = np.maximum(base, shelf) + cone
     return bath
 
 ##############################
@@ -124,14 +151,16 @@ def bathymetry_function(X):
 
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        eta = h0 + solitary_wave(X[0], 0)
-        h = max(eta - bathymetry_function(X), 0.)
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
         return h
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        return solitary_wave(X[0], 0) * np.sqrt(g / h0)
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
+        return h * c * old_div(hTilde-h0, hTilde)
 
 
 class y_mom_at_t0(object):
@@ -147,28 +176,40 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        hw = 2.0 * solitary_wave(X[0], 0) * vel * np.sinh(vel * (X[0] - xs))
+        sechSqd = (1.0 / np.cosh(r * (X[0] - xs)))**2.0
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
+        hTildePrime = -2.0 * alpha * r * np.tanh(r*(X[0]-xs)) * sechSqd
+        hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
         return hw
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
 
-# Actually don't need any of these
+
+class Zero(object):
+    def uOfXT(self, x, t):
+        return 0.0
+
 
 
 def water_height_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
+    return None
 
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0]:
-        return lambda X, t: x_mom_at_t0().uOfXT(X, 0.0)
+        return lambda X, t: 0.0
+    elif X[0] == X_coords[1]:
+        return lambda x, t: 0.0
 
 
 def y_mom_DBC(X, flag):
-    return lambda x, t: 0.0
+    if X[1] == Y_coords[0]:
+        return lambda X, t: 0.0
+    elif X[1] == Y_coords[1]:
+        return lambda x, t: 0.0
 
 
 def heta_DBC(X, flag):
@@ -203,10 +244,16 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0()}
 boundaryConditions = {'water_height': lambda x, flag: None,
-                      'x_mom': lambda x, flag: None,
-                      'y_mom': lambda x, flag: None,
+                      'x_mom': x_mom_DBC,
+                      'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
                       'h_times_w': lambda x, flag: None}
+#analyticalSolution
+analyticalSolution={'h_exact': Zero(),
+                'hu_exact': Zero(),
+                'hv_exact': Zero(),
+                'heta_exact':Zero(),
+                'hw_exact':Zero()}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -218,6 +265,7 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
                                               reflectingBCs=opts.reflecting_BCs,
-                                              bathymetry=bathymetry_function)
+                                              bathymetry=bathymetry_function,
+                                              analyticalSolution=analyticalSolution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
-mySWFlowProblem.physical_parameters['mannings'] = 0.02
+mySWFlowProblem.physical_parameters['mannings'] = 0.014

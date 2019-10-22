@@ -14,8 +14,8 @@ class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions,
                  getPeriodicBoundaryConditions=None,
-                 h_eps=1.0e-8,
-                 tol_u=1.0e-8):
+                 h_eps=1.0e-5,
+                 tol_u=1.0e-5):
         proteus.NumericalFlux.ShallowWater_2D.__init__(self, vt, getPointwiseBoundaryConditions,
                                                        getAdvectiveFluxBoundaryConditions,
                                                        getDiffusiveFluxBoundaryConditions,
@@ -106,6 +106,9 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.t = self.tLast + self.dt
         # Ignoring dif. time step levels
         self.substeps = [self.t for i in range(self.nStages)]
+
+        assert (self.dt > 1E-5), ("Time step is probably too small: ", self.dt)
+
 
     def initialize_dt(self, t0, tOut, q):
         """
@@ -972,8 +975,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hetanp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hwnp1 = numpy.zeros(self.h_dof_old.shape)
-        # Do some type of limitation
-
+    #     # Do some type of limitation
+    #
         self.sw2d.convexLimiting(self.timeIntegration.dt,
                                  # self.sw2d.FCTStep(self.timeIntegration.dt,
                                  self.nnz,  # number of non zero entries
@@ -1164,7 +1167,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ML = np.zeros((self.nFreeDOF_global[0],), 'd')
         self.hReg = np.zeros((self.nFreeDOF_global[0],), 'd')
         for i in range(self.nFreeDOF_global[0]):
-            self.ML[i] = self.MC_a[rowptr_cMatrix[i]                                   :rowptr_cMatrix[i + 1]].sum()
+            self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i + 1]].sum()
             self.hReg[i] = self.ML[i] / diamD2 * self.u[0].dof.max()
         # np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
         # np.testing.assert_almost_equal(self.ML.sum(), diamD2, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
@@ -1360,10 +1363,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(
                         self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         #
-        # CHECK POSITIVITY OF WATER HEIGHT #
+        # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-5 -EJT
         if (self.check_positivity_water_height == True):
             assert self.u[0].dof.min(
-            ) >= 0, ("Negative water height: ", self.u[0].dof.min())
+            ) >= -1E-5 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
         #
 
         self.calculateResidual(

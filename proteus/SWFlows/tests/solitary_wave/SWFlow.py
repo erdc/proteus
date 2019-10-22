@@ -144,10 +144,6 @@ class hw_at_t0(object):
 
 def water_height_DBC(X, flag):
     return None
-    # if X[0] == X_coords[0]:
-    #     return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
-    # elif X[0] == X_coords[1]:
-    #     return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
 
 
 def x_mom_DBC(X, flag):
