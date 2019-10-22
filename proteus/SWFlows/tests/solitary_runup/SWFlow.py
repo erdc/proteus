@@ -14,12 +14,9 @@ import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 from proteus import WaveTools as wt
 
 """
-This is the problem of a solitary wave going up
-a plane beach. Experiments were conducted by
-Synolakas is 1980 (?) and set up of the problem
-can be found at http://mail178.taseptrev.com/src/test/beach.c
-Note that this is a fake 1D problem, ie
-we are doing simulation in 2d but only consider x direction velocity
+This is the problem of a solitary wave run-up on a sloping beach.
+Experiments were reported in Synolakas 1987, 'The runup of solitary waves'.
+We use the probelm set up seen in http://basilisk.fr/src/test/beach.c
 """
 
 # *************************** #
@@ -29,7 +26,7 @@ we are doing simulation in 2d but only consider x direction velocity
 # Here we define Tstar which corresponds to experimental data time
 # Tstar = {10,15,20,...,65} for the final time
 
-T = 30.0
+T = 65.0
 g = 9.81  # gravity
 h0 = 1.0  # water depth
 Tstar = T * np.sqrt(h0 / g)
@@ -40,16 +37,16 @@ opts = Context.Options([
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.2, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs",True,"Use reflecting BCs")
+    ("reflecting_BCs",False,"Use reflecting BCs")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (45.0, 1.0)
+L = (50.0, 1.0)
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[-35.0, 0, 0])
-X_coords = (-35.0, 10.0)  # this is domain in x direction, used in BCs
+X_coords = (-35.0, 15.0)  # this is domain in x direction, used in BCs
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -63,10 +60,10 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 ###############################
 
 a = 0.28  # relative amplitude
-slope = 1.0 / 19.850
+slope = 1.0 / 19.85  # beach slope
 k_wavenumber = np.sqrt(3.0 * a / (4.0 * h0**3))  # wavenumber
 z = np.sqrt(3.0 * a * h0) / (2.0 * h0 * np.sqrt(h0 * (1.0 + a)))  # width of solitary wave
-L_wave = 2.0 / k_wavenumber * np.arccosh(np.sqrt(20.0)) # wavelength of solitary wave
+L_wave = 2.0 / k_wavenumber * np.arccosh(np.sqrt(20.0))  # wavelength of solitary wave
 c = np.sqrt(g * (1.0 + a) * h0)  # wave celerity (or speed)
 x0 = - h0 / slope - L_wave / 2.0  # location of the toe of the beach
 
@@ -77,21 +74,22 @@ x0 = - h0 / slope - L_wave / 2.0  # location of the toe of the beach
 
 def solitary_wave(x, t):
     sechSqd = (1.00 / np.cosh(z * (x - x0 - c * t)))**2.00
-    soliton = a * h0 * sechSqd
-    return soliton
+    return a * h0 * sechSqd
 
 
 def bathymetry_function(X):
     x = X[0]
     return np.maximum(slope * x, -h0)
 
+
 class Zero(object):
     def uOfXT(self, x, t):
         return 0.0
 
-##############################
-##### INITIAL CONDITIONS #####
-##############################
+
+######################
+# INITIAL CONDITIONS #
+######################
 
 
 class water_height_at_t0(object):
@@ -147,7 +145,9 @@ def water_height_DBC(X, flag):
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0]:
-        return lambda X, t: x_mom_at_t0().uOfXT(X, 0.0)
+        return lambda X, t: 0.0
+    if X[0] == X_coords[1]:
+        return lambda X, t: 0.0
 
 
 def y_mom_DBC(X, flag):
@@ -197,3 +197,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=analyticalSolution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.016
+# mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1
