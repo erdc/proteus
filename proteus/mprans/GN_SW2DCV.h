@@ -15,7 +15,7 @@
 // 5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define GLOBAL_FCT 0
-#define POWER_SMOOTHNESS_INDICATOR 4
+#define POWER_SMOOTHNESS_INDICATOR 0
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 0
 #define LAMBDA_MGN 1
@@ -37,7 +37,7 @@ inline double GN_nu1(const double &g, const double &hL, const double &uL,
   }
   augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2.0);
 
-  return uL - sqrt(g * hL) * sqrt(1 + augL);
+  return uL - sqrt(g * hL) * sqrt(1. + augL);
 }
 inline double GN_nu3(const double &g, const double &hR, const double &uR,
                      const double &etaR, const double &meshSizeR) {
@@ -473,82 +473,6 @@ public:
     double etaR = 2 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hetaR;
     double meshSizeL = sqrt(lumpedL);
     double meshSizeR = sqrt(lumpedR);
-
-// Don't need this right now but keeping it just in case we need it later
-#if 0
-    if (debugging)
-      std::cout << "hL, hR, hVelL, hVelR, velL, velR: " << hL << "\t" << hR
-                << "\t" << hVelL << "\t" << hVelR << "\t" << velL << "\t"
-                << velR << "\t" << std::endl;
-    // CHECK IF BOTH STATES ARE DRY:
-    if (hL == 0 && hR == 0) {
-      lambda1 = 0.;
-      lambda3 = 0.;
-    } else if (hL == 0) // left dry state
-    {
-      lambda1 = velR - 2 * sqrt(g * hR);
-      lambda3 = velR + sqrt(g * hR);
-      if (debugging) {
-        std::cout << "hL=0" << std::endl;
-        std::cout << lambda1 << "\t" << lambda3 << std::endl;
-      }
-    } else if (hR == 0) // right dry state
-    {
-      lambda1 = velL - sqrt(g * hL);
-      lambda3 = velL + 2 * sqrt(g * hL);
-      if (debugging) {
-        std::cout << "hR=0" << std::endl;
-        std::cout << lambda1 << "\t" << lambda3 << std::endl;
-      }
-    } else // both states are wet
-    {
-      double x0 = std::pow(2. * sqrt(2.) - 1., 2.);
-      double hMin = fmin(hL, hR);
-      double hMax = fmax(hL, hR);
-
-      double hStar;
-      double fMin = phi(g, x0 * hMin, hL, hR, velL, velR);
-      double fMax = phi(g, x0 * hMax, hL, hR, velL, velR);
-
-      if (debugging)
-        std::cout << "hMin, hMax, fMin, fMax: " << hMin << ", " << hMax << ",
-        "
-                  << fMin << ", " << fMax << std::endl;
-
-      if (0 <= fMin) {
-        hStar = std::pow(
-                    fmax(0., velL - velR + 2 * sqrt(g) * (sqrt(hL) +
-                    sqrt(hR))), 2) /
-                16. / g;
-        if (debugging)
-          std::cout << "**********... THIS IS A RAREFACTION" << std::endl;
-        if (debugging) {
-          std::cout << "h* = " << hStar << std::endl;
-          lambda1 = nu1(g, hStar, hL, velL);
-          lambda3 = nu3(g, hStar, hR, velR);
-          std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3
-                    << std::endl;
-        }
-      } else if (0 <= fMax)
-        hStar = std::pow(-sqrt(2 * hMin) +
-                             sqrt(3 * hMin + 2 * sqrt(2 * hMin * hMax) +
-                                  sqrt(2. / g) * (velL - velR) * sqrt(hMin)),
-                         2);
-      else // fMax < 0
-        hStar = sqrt(hMin * hMax) * (1 + (sqrt(2) * (velL - velR)) /
-                                             (sqrt(g * hMin) + sqrt(g *
-                                             hMax)));
-      // Compute max wave speed based on hStar0
-      lambda1 = nu1(g, hStar, hL, velL);
-      lambda3 = nu3(g, hStar, hR, velR);
-    }
-    if (debugging) {
-      std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3
-                << std::endl;
-      if (isinf(lambda1) == 1 || isinf(lambda3) == 1)
-        abort();
-    }
-#endif
 
     /* See equation 4.12 from mGN paper:
       1-eigenvalue: uL-sqrt(g*hL)*sqrt(1 + augL)
@@ -1656,7 +1580,7 @@ public:
       // CALCULATE EDGE BASED CFL //
       //////////////////////////////
       mi = lumped_mass_matrix[i];
-      edge_based_cfl[i] = 2.0 * fabs(dLowii) / mi;
+      edge_based_cfl[i] = 1.0 * fabs(dLowii) / mi;
       max_edge_based_cfl = fmax(max_edge_based_cfl, edge_based_cfl[i]);
 
       // At the moment, we don't need to compute the smoothness indicator for
@@ -1979,6 +1903,8 @@ public:
         double alphai; // smoothness indicator of solution
         double alpha_numerator = 0;
         double alpha_denominator = 0;
+        double alpha_zero = 0.75;
+        double alpha_factor = (1.0 / (1.0 - alpha_zero));
 
         // loop in j (sparsity pattern)
         for (int offset = csrRowIndeces_DofLoops[i];
@@ -2016,11 +1942,16 @@ public:
           }
 
           // auxiliary functions to compute fluxes
-          double aux_h = hj * uj * Cx[ij] + hj * vj * Cy[ij];
-          double aux_hu = uj * huj * Cx[ij] + vj * huj * Cy[ij];
-          double aux_hv = uj * hvj * Cx[ij] + vj * hvj * Cy[ij];
-          double aux_heta = uj * hetaj * Cx[ij] + vj * hetaj * Cy[ij];
-          double aux_hw = uj * hwj * Cx[ij] + vj * hwj * Cy[ij];
+          double aux_h =
+              (uj * hj - ui * hi) * Cx[ij] + (vj * hi - vi * hi) * Cy[ij];
+          double aux_hu =
+              (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
+          double aux_hv =
+              (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
+          double aux_heta = (uj * hetaj - ui * hetai) * Cx[ij] +
+                            (vj * hetaj - vi * hetai) * Cy[ij];
+          double aux_hw =
+              (uj * hwj - ui * hwi) * Cx[ij] + (vj * hwj - vi * hwi) * Cy[ij];
 
           /* HYPERBOLIC FLUX */
           hyp_flux_h[i] += aux_h;
@@ -2073,7 +2004,6 @@ public:
                   ith_flux_term3 * eta_prime3));
 
         // COMPUTE SMOOTHNESS INDICATOR //
-        // hReg makes the method more robust -mql
         if (hi <= hEps) {
           alphai = 1.;
           global_entropy_residual[i] = 1E10;
@@ -2085,9 +2015,7 @@ public:
             alphai =
                 (fabs(alpha_numerator) - hEps) / fabs(alpha_denominator - hEps);
           }
-
-          double alpha_zero = 0.75;
-          alphai = fmax(alphai - alpha_zero, 0.0) * (1.0 / (1.0 - alpha_zero));
+          alphai = fmax(alphai - alpha_zero, 0.0) * alpha_factor;
         }
         if (POWER_SMOOTHNESS_INDICATOR == 0)
           psi[i] = 1.0;
@@ -2100,7 +2028,6 @@ public:
       /////////////////////////////////////////////
       // ********** MAIN LOOP ON DOFs **********
       // To compute:
-      //      * flux terms
       //      * dissipative terms
       //      * bar states
       /////////////////////////////////////////////
@@ -2121,7 +2048,6 @@ public:
         double ui = hui * one_over_hiReg;
         double vi = hvi * one_over_hiReg;
         double etai = hetai * one_over_hiReg;
-        double wi = hwi * one_over_hiReg;
         double meshSizei = std::sqrt(mi); // local mesh size in 2d
 
         // We define pTilde at ith node here
@@ -2235,7 +2161,7 @@ public:
             muLij = muLowij;
             dLij = fmax(dLowij, muLij);
 
-            // Then save dLow for limiting step
+            // Then save dLow for limiting step, maybe a bit confusing
             dLow[ij] = fmax(dLij, muLij);
 
             ////////////////////////
@@ -2296,8 +2222,8 @@ public:
             ///////////////////////
             double dEVij = cE * fmax(global_entropy_residual[i],
                                      global_entropy_residual[j]);
-            dHij = fmin(dLowij, dEVij);
-            muHij = fmin(muLowij, dEVij);
+            // dHij = fmin(dLowij, dEVij);
+            // muHij = fmin(muLowij, dEVij);
 
             // Assume no EV for now and just use the alpha limiting for
             // higher order method. -EJT
@@ -2348,22 +2274,22 @@ public:
                         ith_muHij_times_hStates);
           globalResidual[offset_hu + stride_hu * i] =
               hui - dt / mi *
-                        (hyp_flux_hu[i] + extendedSourceTerm_hu[i] -
+                        ((hyp_flux_hu[i] + extendedSourceTerm_hu[i]) -
                          ith_dHij_minus_muHij_times_huStarStates -
                          ith_muHij_times_huStates);
           globalResidual[offset_hv + stride_hv * i] =
               hvi - dt / mi *
-                        (hyp_flux_hv[i] + extendedSourceTerm_hv[i] -
+                        ((hyp_flux_hv[i] + extendedSourceTerm_hv[i]) -
                          ith_dHij_minus_muHij_times_hvStarStates -
                          ith_muHij_times_hvStates);
           globalResidual[offset_heta + stride_heta * i] =
               hetai - dt / mi *
-                          (hyp_flux_heta[i] + extendedSourceTerm_heta[i] -
+                          ((hyp_flux_heta[i] + extendedSourceTerm_heta[i]) -
                            ith_dHij_minus_muHij_times_hetaStarStates -
                            ith_muHij_times_hetaStates);
           globalResidual[offset_hw + stride_hw * i] =
               hwi - dt / mi *
-                        (hyp_flux_hw[i] + extendedSourceTerm_hw[i] -
+                        ((hyp_flux_hw[i] + extendedSourceTerm_hw[i]) -
                          ith_dHij_minus_muHij_times_hwStarStates -
                          ith_muHij_times_hwStates);
 
