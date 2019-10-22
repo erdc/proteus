@@ -107,7 +107,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         # Ignoring dif. time step levels
         self.substeps = [self.t for i in range(self.nStages)]
 
-        assert (self.dt > 1E-5), ("Time step is probably too small: ", self.dt)
+        assert (self.dt > 1E-6), ("Time step is probably getting too small: ", self.dt)
 
 
     def initialize_dt(self, t0, tOut, q):
@@ -951,8 +951,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateResidual = self.sw2d.calculateResidual
         if (self.coefficients.LUMPED_MASS_MATRIX):
             self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
+            print("calculating lumped ")
         else:
             self.calculateJacobian = self.sw2d.calculateMassMatrix
+            print("calculating full mass matrix")
         #
         self.dofsXCoord = None
         self.dofsYCoord = None
@@ -976,7 +978,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hetanp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hwnp1 = numpy.zeros(self.h_dof_old.shape)
     #     # Do some type of limitation
-    #
         self.sw2d.convexLimiting(self.timeIntegration.dt,
                                  # self.sw2d.FCTStep(self.timeIntegration.dt,
                                  self.nnz,  # number of non zero entries
@@ -1366,7 +1367,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-5 -EJT
         if (self.check_positivity_water_height == True):
             assert self.u[0].dof.min(
-            ) >= -1E-5 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
+            ) > -1E-4 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
         #
 
         self.calculateResidual(

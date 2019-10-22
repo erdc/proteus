@@ -153,7 +153,7 @@ class FESpace:
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-default_physical_parameters = {'gravity': 9.8,
+default_physical_parameters = {'gravity': 9.81,
                                'LINEAR_FRICTION': 0,
                                'mannings': 0.0}
 

@@ -197,4 +197,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=analyticalSolution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.016
-# mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1
+mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1
