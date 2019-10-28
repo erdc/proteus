@@ -801,14 +801,14 @@ class SimulationProcessor(object):
                             if hasAnalyticalSolution[ci]:
                                 err = Norms.L1errorSFEMvsAF2(self.analyticalSolution[ci],
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             list(m.elementQuadratureWeights.values())[0],
+                                                             m.q['dV'][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             np.ones_like(list(m.elementQuadratureWeights.values())[0]),
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              T=tsim)
                                 exa = Norms.L1errorSFEMvsAF2(zeroFunction(),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             list(m.elementQuadratureWeights.values())[0],
+                                                             m.q['dV'][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             np.ones_like(list(m.elementQuadratureWeights.values())[0]),
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              T=tsim)
                             else:

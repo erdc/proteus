@@ -96,40 +96,6 @@ velList=[vel]
 #velList = [lambda t,x: (0.0,0.0,0.0),
 #           lambda t,x: (0.0,0.0,0.0)]
 
-p.coefficients = RANS2P.Coefficients(epsFact=1.5,
-                                     sigma=0.0,
-                                     rho_0=rho,nu_0=nu,
-                                     rho_1=rho,nu_1=nu,
-                                     g=gravity,
-                                     nd=p.nd,
-                                     ME_model=0,
-                                     VF_model=None,
-                                     LS_model=None,
-                                     Closure_0_model=None,
-                                     Closure_1_model=None,
-                                     epsFact_density=1.5,
-                                     stokes=False,
-                                     useVF=0.0,
-                                     useRBLES=0.0,
-                                     useMetrics=1.0,
-                                     eb_adjoint_sigma=1.0,
-                                     eb_penalty_constant=100.0,
-                                     forceStrongDirichlet=not opts.weak,
-                                     turbulenceClosureModel=0,
-                                     NONCONSERVATIVE_FORM=1.0,
-                                     MOMENTUM_SGE=0.0 if opts.useTaylorHood else 1.0,
-                                     PRESSURE_SGE=0.0 if opts.useTaylorHood else 1.0,
-                                     VELOCITY_SGE=0.0 if opts.useTaylorHood else 1.0,
-                                     nullSpace=nullSpace,
-                                     particle_sdfList=sdfList,
-                                     particle_velocityList=velList,
-                                     nParticles=1,
-                                     particle_epsFact=1.5,
-                                     particle_alpha=0.0,
-                                     particle_beta=0.0,
-                                     particle_penalty_constant=10.0,
-                                     use_ball_as_particle=0,
-                                     useExact=True)
 
 eps=1.0e-8
 if opts.periodic:
@@ -212,6 +178,42 @@ elif p.nd == 3:
     p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol, 3: vRot()}
 
 initialConditions = p.analyticalSolution
+
+p.coefficients = RANS2P.Coefficients(epsFact=1.5,
+                                     sigma=0.0,
+                                     rho_0=rho,nu_0=nu,
+                                     rho_1=rho,nu_1=nu,
+                                     g=gravity,
+                                     nd=p.nd,
+                                     ME_model=0,
+                                     VF_model=None,
+                                     LS_model=None,
+                                     Closure_0_model=None,
+                                     Closure_1_model=None,
+                                     epsFact_density=1.5,
+                                     stokes=False,
+                                     useVF=0.0,
+                                     useRBLES=0.0,
+                                     useMetrics=1.0,
+                                     eb_adjoint_sigma=1.0,
+                                     eb_penalty_constant=100.0,
+                                     forceStrongDirichlet=not opts.weak,
+                                     turbulenceClosureModel=0,
+                                     NONCONSERVATIVE_FORM=1.0,
+                                     MOMENTUM_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     PRESSURE_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     VELOCITY_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     nullSpace=nullSpace,
+                                     particle_sdfList=sdfList,
+                                     particle_velocityList=velList,
+                                     nParticles=1,
+                                     particle_epsFact=1.5,
+                                     particle_alpha=0.0,
+                                     particle_beta=0.0,
+                                     particle_penalty_constant=10.0,
+                                     use_ball_as_particle=0,
+                                     useExact=True,
+                                     analyticalSolution=p.analyticalSolution)
 
 nsave=25
 dt_init = 1.0e-3

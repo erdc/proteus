@@ -222,7 +222,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
                  nullSpace='NoNullSpace',
-                 useExact=False):
+                 useExact=False,
+                 analyticalSolution=None):
+        self.analyticalSolution=analyticalSolution
         self.useExact=useExact
         self.use_pseudo_penalty = 0
         self.use_ball_as_particle = use_ball_as_particle
@@ -442,6 +444,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def attachModels(self, modelList):
         # level set
         self.model = modelList[self.ME_model]
+        if self.analyticalSolution is not None:
+            for eN in range(self.model.q['x'].shape[0]):
+                for k in range(self.model.q['x'].shape[1]):
+                    self.model.q[('u', 0)][eN,k] = self.analyticalSolution[0].uOfXT(self.model.q['x'][eN,k],0.)
+                    self.model.q[('u', 1)][eN,k] = self.analyticalSolution[1].uOfXT(self.model.q['x'][eN,k],0.)
+                    self.model.q[('u', 2)][eN,k] = self.analyticalSolution[2].uOfXT(self.model.q['x'][eN,k],0.)
         self.model.q['phi_solid'] = self.q_phi_solid
         self.model.q['velocity_solid'] = self.q_velocity_solid
         if self.CLSVOF_model is not None: # use CLSVOF
