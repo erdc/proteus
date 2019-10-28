@@ -2304,7 +2304,10 @@ namespace proteus
         double mesh_volume_conservation=0.0,
           mesh_volume_conservation_weak=0.0,
           mesh_volume_conservation_err_max=0.0,
-          mesh_volume_conservation_err_max_weak=0.0;
+          mesh_volume_conservation_err_max_weak=0.0,
+          p_L1=0.0, u_L1=0.0, v_L1=0.0,
+          p_L2=0.0, u_L2=0.0, v_L2=0.0,
+          p_Linfty=0.0, u_Linfty=0.0, v_Linfty=0.0;
         double globalConservationError=0.0;
         for(int eN=0;eN<nElements_global;eN++)
           {
@@ -2591,6 +2594,31 @@ namespace proteus
                 const double H_s = gf_s.H(particle_eps,phi_solid[eN_k]);
                 if ( H_s != 0.0)
                   element_active=true;
+                //save velocity at quadrature points for other models to use
+                double p_e = q_u_0[eN_k] - p,
+                  u_e = q_u_1[eN_k] - u,
+                  v_e = q_u_2[eN_k] - v;
+
+                p_L1 += fabs(p_e)*H_s*dV;
+                u_L1 += fabs(u_e)*H_s*dV;
+                v_L1 += fabs(v_e)*H_s*dV;
+                
+                p_L2 += p_e*p_e*H_s*dV;
+                u_L2 += u_e*u_e*H_s*dV;
+                v_L2 += v_e*v_e*H_s*dV;
+
+                if (phi_solid[eN_k] >= 0.0)
+                  {
+                    p_Linfty = fmax(p_Linfty, fabs(p_e));
+                    u_Linfty = fmax(u_Linfty, fabs(u_e));
+                    v_Linfty = fmax(v_Linfty, fabs(v_e));
+                  }
+                
+                /* q_u_0[eN_k] = p; */
+                /* q_u_1[eN_k] = u; */
+                /* q_u_2[eN_k] = v; */
+                /* q_u_3[eN_k] = 0.0; */
+                
                 evaluateCoefficients(fluid_fac,
                                      H_s,
                                      NONCONSERVATIVE_FORM,
@@ -3116,37 +3144,40 @@ namespace proteus
 
                 elementResidual_p_save.data()[eN_i] +=  elementResidual_p[i];
                 mesh_volume_conservation_element_weak += elementResidual_mesh[i];
-<<<<<<< HEAD
                 globalResidual.data()[offset_p+stride_p*rp_l2g.data()[eN_i]]+=elementResidual_p[i];
-=======
-                globalResidual[offset_p+stride_p*rp_l2g[eN_i]]+=elementResidual_p[i];
                 if (element_active)
-                  isActiveDOF[offset_p+stride_p*rp_l2g[eN_i]] = 1.0;
->>>>>>> WIP on UNCUTFEM, working poiseuille 2D case
+                  isActiveDOF.data()[offset_p+stride_p*rp_l2g.data()[eN_i]] = 1.0;
               }
             for(int i=0;i<nDOF_v_test_element;i++)
               {
                 register int eN_i=eN*nDOF_v_test_element+i;
 
-<<<<<<< HEAD
                 globalResidual.data()[offset_u+stride_u*rvel_l2g.data()[eN_i]]+=elementResidual_u[i];
                 globalResidual.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]]+=elementResidual_v[i];
-=======
-                globalResidual[offset_u+stride_u*rvel_l2g[eN_i]]+=elementResidual_u[i];
-                globalResidual[offset_v+stride_v*rvel_l2g[eN_i]]+=elementResidual_v[i];
 
                 if (element_active)
                   {
-                    isActiveDOF[offset_u+stride_u*rvel_l2g[eN_i]] = 1.0;
-                    isActiveDOF[offset_v+stride_v*rvel_l2g[eN_i]] = 1.0;
+                    isActiveDOF.data()[offset_u+stride_u*rvel_l2g.data()[eN_i]] = 1.0;
+                    isActiveDOF.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]] = 1.0;
                   }
->>>>>>> WIP on UNCUTFEM, working poiseuille 2D case
               }//i
             mesh_volume_conservation += mesh_volume_conservation_element;
             mesh_volume_conservation_weak += mesh_volume_conservation_element_weak;
             mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element));
             mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
           }//elements
+        p_L2 = sqrt(p_L2);
+        u_L2 = sqrt(u_L2);
+        v_L2 = sqrt(v_L2);
+        std::cout<<"p_1.append("<<p_L1<<")"<<std::endl
+                 <<"u_1.append("<<u_L1<<")"<<std::endl
+                 <<"v_1.append("<<v_L1<<")"<<std::endl
+                 <<"p_2.append("<<p_L2<<")"<<std::endl
+                 <<"u_2.append("<<u_L2<<")"<<std::endl
+                 <<"v_2.append("<<v_L2<<")"<<std::endl
+                 <<"p_I.append("<<p_Linfty<<")"<<std::endl
+                 <<"u_I.append("<<u_Linfty<<")"<<std::endl
+                 <<"v_I.append("<<v_Linfty<<")"<<std::endl;
         //
         //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
         //
