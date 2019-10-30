@@ -40,7 +40,7 @@ def clearh5(filename,dataDir='.',addname="_clean", tCount=None, global_sync=True
         for gridChild in TemporalGridCollection.findall("Grid"):
             counter=int(gridChild.find('Time').attrib['Name'])
             if(counter >= tCount):
-              print counter
+              print(counter)
               Domain[0].remove(gridChild)
 
     import re
