@@ -3,8 +3,8 @@
 SpatialTools
 ************
 
-source: :py:mod:`proteus.BoundaryConditions` and
-:py:mod:`proteus.mprans.BoundaryConditions`
+source: :py:mod:`proteus.SpatialTools` and
+:py:mod:`proteus.mprans.SpatialTools`
 
 Usage
 =====
