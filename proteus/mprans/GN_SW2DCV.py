@@ -107,7 +107,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         # Ignoring dif. time step levels
         self.substeps = [self.t for i in range(self.nStages)]
 
-        assert (self.dt > 1E-6), ("Time step is probably getting too small: ", self.dt)
+        assert (self.dt > 1E-8), ("Time step is probably getting too small: ", self.dt, adjusted_maxCFL,)
 
 
     def initialize_dt(self, t0, tOut, q):
@@ -972,65 +972,65 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         hetaIndex = index[3::5]
         hwIndex = index[4::5]
         # create limited solution
-        limited_hnp1 = numpy.zeros(self.h_dof_old.shape)
-        limited_hunp1 = numpy.zeros(self.h_dof_old.shape)
-        limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
-        limited_hetanp1 = numpy.zeros(self.h_dof_old.shape)
-        limited_hwnp1 = numpy.zeros(self.h_dof_old.shape)
-    #     # Do some type of limitation
-        self.sw2d.convexLimiting(self.timeIntegration.dt,
-                                 # self.sw2d.FCTStep(self.timeIntegration.dt,
-                                 self.nnz,  # number of non zero entries
-                                 len(rowptr) - 1,  # number of DOFs
-                                 self.ML,  # Lumped mass matrix
-                                 self.h_dof_old,
-                                 self.hu_dof_old,
-                                 self.hv_dof_old,
-                                 self.heta_dof_old,
-                                 self.hw_dof_old,
-                                 self.coefficients.b.dof,
-                                 # high order solution
-                                 self.timeIntegration.u[hIndex],
-                                 self.timeIntegration.u[huIndex],
-                                 self.timeIntegration.u[hvIndex],
-                                 self.timeIntegration.u[hetaIndex],
-                                 self.timeIntegration.u[hwIndex],
-                                 self.extendedSourceTerm_hu,
-                                 self.extendedSourceTerm_hv,
-                                 self.extendedSourceTerm_heta,
-                                 self.extendedSourceTerm_hw,
-                                 limited_hnp1,
-                                 limited_hunp1,
-                                 limited_hvnp1,
-                                 limited_hetanp1,
-                                 limited_hwnp1,
-                                 # Row indices for Sparsity Pattern (convenient for DOF loops)
-                                 rowptr,
-                                 # Column indices for Sparsity Pattern (convenient for DOF loops)
-                                 colind,
-                                 MassMatrix,
-                                 self.dH_minus_dL,
-                                 self.muH_minus_muL,
-                                 self.hEps,
-                                 self.hReg,
-                                 self.coefficients.LUMPED_MASS_MATRIX,
-                                 self.dLow,
-                                 self.hBT,
-                                 self.huBT,
-                                 self.hvBT,
-                                 self.hetaBT,
-                                 self.hwBT,
-                                 self.new_SourceTerm_hu,
-                                 self.new_SourceTerm_hv,
-                                 self.new_SourceTerm_heta,
-                                 self.new_SourceTerm_hw)
-
-        # Pass the post processed hnp1 solution to global solution u
-        self.timeIntegration.u[hIndex] = limited_hnp1
-        self.timeIntegration.u[huIndex] = limited_hunp1
-        self.timeIntegration.u[hvIndex] = limited_hvnp1
-        self.timeIntegration.u[hetaIndex] = limited_hetanp1
-        self.timeIntegration.u[hwIndex] = limited_hwnp1
+    #     limited_hnp1 = numpy.zeros(self.h_dof_old.shape)
+    #     limited_hunp1 = numpy.zeros(self.h_dof_old.shape)
+    #     limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
+    #     limited_hetanp1 = numpy.zeros(self.h_dof_old.shape)
+    #     limited_hwnp1 = numpy.zeros(self.h_dof_old.shape)
+    # #     # Do some type of limitation
+    #     self.sw2d.convexLimiting(self.timeIntegration.dt,
+    #                              # self.sw2d.FCTStep(self.timeIntegration.dt,
+    #                              self.nnz,  # number of non zero entries
+    #                              len(rowptr) - 1,  # number of DOFs
+    #                              self.ML,  # Lumped mass matrix
+    #                              self.h_dof_old,
+    #                              self.hu_dof_old,
+    #                              self.hv_dof_old,
+    #                              self.heta_dof_old,
+    #                              self.hw_dof_old,
+    #                              self.coefficients.b.dof,
+    #                              # high order solution
+    #                              self.timeIntegration.u[hIndex],
+    #                              self.timeIntegration.u[huIndex],
+    #                              self.timeIntegration.u[hvIndex],
+    #                              self.timeIntegration.u[hetaIndex],
+    #                              self.timeIntegration.u[hwIndex],
+    #                              self.extendedSourceTerm_hu,
+    #                              self.extendedSourceTerm_hv,
+    #                              self.extendedSourceTerm_heta,
+    #                              self.extendedSourceTerm_hw,
+    #                              limited_hnp1,
+    #                              limited_hunp1,
+    #                              limited_hvnp1,
+    #                              limited_hetanp1,
+    #                              limited_hwnp1,
+    #                              # Row indices for Sparsity Pattern (convenient for DOF loops)
+    #                              rowptr,
+    #                              # Column indices for Sparsity Pattern (convenient for DOF loops)
+    #                              colind,
+    #                              MassMatrix,
+    #                              self.dH_minus_dL,
+    #                              self.muH_minus_muL,
+    #                              self.hEps,
+    #                              self.hReg,
+    #                              self.coefficients.LUMPED_MASS_MATRIX,
+    #                              self.dLow,
+    #                              self.hBT,
+    #                              self.huBT,
+    #                              self.hvBT,
+    #                              self.hetaBT,
+    #                              self.hwBT,
+    #                              self.new_SourceTerm_hu,
+    #                              self.new_SourceTerm_hv,
+    #                              self.new_SourceTerm_heta,
+    #                              self.new_SourceTerm_hw)
+    #
+    #     # Pass the post processed hnp1 solution to global solution u
+    #     self.timeIntegration.u[hIndex] = limited_hnp1
+    #     self.timeIntegration.u[huIndex] = limited_hunp1
+    #     self.timeIntegration.u[hvIndex] = limited_hvnp1
+    #     self.timeIntegration.u[hetaIndex] = limited_hetanp1
+    #     self.timeIntegration.u[hwIndex] = limited_hwnp1
 
     def getDOFsCoord(self):
         # get x,y coordinates of all DOFs #
@@ -1293,7 +1293,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.heta_dof_old = numpy.copy(self.u[3].dof)
         self.hw_dof_old = numpy.copy(self.u[4].dof)
         # hEps
-        eps = 1E-5  # JLG uses 1E-5 so I put it here too -EJT
+        eps = 1E-5
         self.hEps = eps * self.u[0].dof.max()
         # normal vectors
         self.normalx = numpy.zeros(self.u[0].dof.shape, 'd')
@@ -1364,11 +1364,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(
                         self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         #
-        # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-5 -EJT
-        if (self.check_positivity_water_height == True):
+        # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-4 -EJT
+        if (self.check_positivity_water_height == False):
             assert self.u[0].dof.min(
-            ) > -1E-4 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
-        #
+            ) > -1E-5 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
 
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,

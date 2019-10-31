@@ -790,7 +790,7 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         #############################
         # FCT STEP, CONVEX LIMITING #
         #############################
-        #logEvent(" FCT Step", level=1)
+        logEvent(" FCT Step", level=1)
         self.F.FCTStep()
         if par_u is not None:
             par_u.scatter_forward_insert()
