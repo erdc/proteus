@@ -480,14 +480,14 @@ public:
     lambda1 = GN_nu1(g, hL, velL, etaL, meshSizeL);
     lambda3 = GN_nu3(g, hR, velR, etaR, meshSizeR);
 
-    if (debugging) {
-      std::cout << "lambda 1 " << lambda1 << std::endl;
-      std::cout << "lambda 3 " << lambda3 << std::endl;
-      std::cout << "hL " << hL << " velL " << velL << " etaL " << etaL
-                << " hetaL " << hetaL << std::endl;
-      std::cout << "hR " << hR << " velR " << velR << " etaR " << etaR
-                << " hetaR " << hetaR << std::endl;
-    }
+    // if (debugging) {
+    //   std::cout << "lambda 1 " << lambda1 << std::endl;
+    //   std::cout << "lambda 3 " << lambda3 << std::endl;
+    //   std::cout << "hL " << hL << " velL " << velL << " etaL " << etaL
+    //             << " hetaL " << hetaL << std::endl;
+    //   std::cout << "hR " << hR << " velR " << velR << " etaR " << etaR
+    //             << " hetaR " << hetaR << std::endl;
+    // }
     return fmax(fabs(lambda1), fabs(lambda3));
   }
 
@@ -1348,7 +1348,7 @@ public:
         double huStarji = hunj * hStarji * one_over_hjReg;
         double hvStarji = hvnj * hStarji * one_over_hjReg;
         double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
-        double hwStarji = hwnj * std::pow(hStarij * one_over_hiReg, 2);
+        double hwStarji = hwnj * std::pow(hStarij * one_over_hjReg, 2);
 
         // COMPUTE FLUX CORRECTION MATRICES
         double ML_minus_MC = (LUMPED_MASS_MATRIX == 1
@@ -1397,13 +1397,6 @@ public:
         else
           Lij = fmin(Lij, std::min(Rneg_heta[i], Rpos_heta[j]));
 
-        // CONVEX LIMITING // for kinetic energy
-        // root of ith-DOF
-        // double huLow[j] =
-        //     (huLow[j] - new_SourceTerm_hu[j] * dt / mi);
-        // double hvLow[j] =
-        //     (hvLow[j] - new_SourceTerm_hv[j] * dt / mi);
-
         double lambdaj =
             csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i] - 1;
         double Ph_ij = FluxCorrectionMatrix1 / mi / lambdaj;
@@ -1449,7 +1442,6 @@ public:
 
         // COMPUTE LIMITER //
         Lij = fmin(fmin(ri, Lij), fmin(rj, Lij)); // Lij=Lji
-        Lij = 1.0;
 
         // COMPUTE LIMITED FLUX //
         ith_Limiter_times_FluxCorrectionMatrix1 += Lij * FluxCorrectionMatrix1;
@@ -1465,10 +1457,10 @@ public:
       limited_hnp1[i] =
           hLow[i] + one_over_mi * ith_Limiter_times_FluxCorrectionMatrix1;
       limited_hunp1[i] =
-          ((huLow[i] - dt / mi * extendedSourceTerm_hu[i]) +
+          ((huLow[i] + dt / mi * new_SourceTerm_hu[i]) +
            one_over_mi * ith_Limiter_times_FluxCorrectionMatrix2);
       limited_hvnp1[i] =
-          ((hvLow[i] - dt / mi * extendedSourceTerm_hv[i]) +
+          ((hvLow[i] + dt / mi * new_SourceTerm_hv[i]) +
            one_over_mi * ith_Limiter_times_FluxCorrectionMatrix3);
       limited_hetanp1[i] =
           ((hetaLow[i] - dt / mi * extendedSourceTerm_heta[i]) +
@@ -2269,28 +2261,6 @@ public:
           ij += 1;
 
         } /*j loop ends here*/
-
-        /* DEBUGGING */
-        if (abs(hetai - dt / mi *
-                            ((hyp_flux_heta[i] + extendedSourceTerm_heta[i]) -
-                             ith_dHij_minus_muHij_times_hetaStarStates -
-                             ith_muHij_times_hetaStates)) > 100.0) {
-          std::cout << "hi " << hi << std::endl;
-          std::cout << "hEps " << hEps << std::endl;
-          std::cout << "ratio_i "
-                    << (2.0 * hetai) / (etai * etai + hi * hi + hEps)
-                    << std::endl;
-          std::cout << "hwi " << hwi << std::endl;
-          std::cout << "hyp_flux_hw[i] " << hyp_flux_hw[i] << std::endl;
-          std::cout << "extendedSourceTerm_hw[i] " << extendedSourceTerm_hw[i]
-                    << std::endl;
-          std::cout << "ui " << ui << std::endl;
-          std::cout << "ith_dHij_minus_muHij_times_hwStarStates "
-                    << ith_dHij_minus_muHij_times_hwStarStates << std::endl;
-          std::cout << "ith_muHij_times_hwStates " << ith_muHij_times_hwStates
-                    << std::endl;
-          abort();
-        }
 
         /* Define global residual */
         if (LUMPED_MASS_MATRIX == 1) {
