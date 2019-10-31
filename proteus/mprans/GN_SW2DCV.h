@@ -15,7 +15,7 @@
 // 5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define GLOBAL_FCT 0
-#define POWER_SMOOTHNESS_INDICATOR 0
+#define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 0
 #define LAMBDA_MGN 1
@@ -35,7 +35,7 @@ inline double GN_nu1(const double &g, const double &hL, const double &uL,
   if (etaL >= hL) {
     augL = LAMBDA_MGN / (3. * meshSizeL) * (6. * hL);
   }
-  augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2.0);
+  augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2);
 
   return uL - sqrt(g * hL) * sqrt(1. + augL);
 }
@@ -48,8 +48,7 @@ inline double GN_nu3(const double &g, const double &hR, const double &uR,
   if (etaR >= hR) {
     augR = LAMBDA_MGN / (3. * meshSizeR) * (6. * hR);
   }
-  augR = augR * std::pow(meshSizeR / fmax(meshSizeR, hR), 2.0);
-
+  augR = augR * std::pow(meshSizeR / fmax(meshSizeR, hR), 2);
   return uR + sqrt(g * hR) * sqrt(1 + augR);
 }
 
@@ -467,10 +466,10 @@ public:
 
     double hVelL = nx * huL + ny * hvL;
     double hVelR = nx * huR + ny * hvR;
-    double velL = 2 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hVelL;
-    double velR = 2 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hVelR;
-    double etaL = 2 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hetaL;
-    double etaR = 2 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hetaR;
+    double velL = 2.0 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hVelL;
+    double velR = 2.0 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hVelR;
+    double etaL = 2.0 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hetaL;
+    double etaR = 2.0 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hetaR;
     double meshSizeL = sqrt(lumpedL);
     double meshSizeR = sqrt(lumpedR);
 
@@ -480,6 +479,15 @@ public:
     */
     lambda1 = GN_nu1(g, hL, velL, etaL, meshSizeL);
     lambda3 = GN_nu3(g, hR, velR, etaR, meshSizeR);
+
+    if (debugging) {
+      std::cout << "lambda 1 " << lambda1 << std::endl;
+      std::cout << "lambda 3 " << lambda3 << std::endl;
+      std::cout << "hL " << hL << " velL " << velL << " etaL " << etaL
+                << " hetaL " << hetaL << std::endl;
+      std::cout << "hR " << hR << " velR " << velR << " etaR " << etaR
+                << " hetaR " << hetaR << std::endl;
+    }
     return fmax(fabs(lambda1), fabs(lambda3));
   }
 
@@ -674,6 +682,7 @@ public:
     cfl = sqrt(cflx * cflx + cfly * cfly); // hack, conservative estimate
   }
 
+  // Don't use FCTstep
   void FCTStep(double dt,
                int NNZ,     // number on non-zero entries on sparsity pattern
                int numDOFs, // number of DOFs
@@ -704,7 +713,6 @@ public:
     hvLow.resize(numDOFs, 0.0);
     hetaLow.resize(numDOFs, 0.0);
     hwLow.resize(numDOFs, 0.0);
-    std::cout << "FCT TEST?" << std::endl;
 
     /* For reference, see section 6.3 of friction shallow water paper
     by Guermond, Quezada De Luna, Popov, Kees, Farthing */
@@ -1261,14 +1269,8 @@ public:
       ///////////////////////
       double Qnegi = std::min(mi * (hiMin - hLow[i]), 0.0);
       double Qposi = std::max(mi * (hiMax - hLow[i]), 0.0);
-      // for heta, note that we subtract the sources term from the low order
-      // solution
-      double Qnegi_heta = std::min(
-          mi * (hetai_Min - (hetaLow[i] - new_SourceTerm_heta[i] * dt / mi)),
-          0.0);
-      double Qposi_heta = std::max(
-          mi * (hetai_Max - (hetaLow[i] - new_SourceTerm_heta[i] * dt / mi)),
-          0.0);
+      double Qnegi_heta = std::min(mi * (hetai_Min - hetaLow[i]), 0.0);
+      double Qposi_heta = std::max(mi * (hetai_Max - hetaLow[i]), 0.0);
 
       ///////////////////////
       // COMPUTE R VECTORS //
@@ -1316,13 +1318,9 @@ public:
       double ith_Limiter_times_FluxCorrectionMatrix4 = 0.;
       double ith_Limiter_times_FluxCorrectionMatrix5 = 0.;
 
-      double huLow_minus_source_i = (huLow[i] - new_SourceTerm_hu[i] * dt / mi);
-      double hvLow_minus_source_i = (hvLow[i] - new_SourceTerm_hv[i] * dt / mi);
-
       double ci =
           Kmax[i] * hLow[i] -
-          0.5 * (huLow_minus_source_i * huLow_minus_source_i +
-                 hvLow_minus_source_i * hvLow_minus_source_i); // for KE lim.
+          0.5 * (huLow[i] * huLow[i] + hvLow[i] * hvLow[i]); // for KE lim.
 
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       for (int offset = csrRowIndeces_DofLoops[i];
@@ -1401,10 +1399,10 @@ public:
 
         // CONVEX LIMITING // for kinetic energy
         // root of ith-DOF
-        double huLow_minus_source_j =
-            (huLow[j] - new_SourceTerm_hu[j] * dt / mi);
-        double hvLow_minus_source_j =
-            (hvLow[j] - new_SourceTerm_hv[j] * dt / mi);
+        // double huLow[j] =
+        //     (huLow[j] - new_SourceTerm_hu[j] * dt / mi);
+        // double hvLow[j] =
+        //     (hvLow[j] - new_SourceTerm_hv[j] * dt / mi);
 
         double lambdaj =
             csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i] - 1;
@@ -1413,8 +1411,7 @@ public:
         double Phv_ij = FluxCorrectionMatrix3 / mi / lambdaj;
 
         double ai = -0.5 * (Phu_ij * Phu_ij + Phv_ij * Phv_ij);
-        double bi = Kmax[i] * Ph_ij - (huLow_minus_source_i * Phu_ij +
-                                       hvLow_minus_source_i * Phv_ij);
+        double bi = Kmax[i] * Ph_ij - (huLow[i] * Phu_ij + hvLow[i] * Phv_ij);
 
         double r1 = ai == 0
                         ? (bi == 0 ? 1. : -ci / bi)
@@ -1433,14 +1430,12 @@ public:
             csrRowIndeces_DofLoops[j + 1] - csrRowIndeces_DofLoops[j] - 1;
         double mj = lumped_mass_matrix[j];
         double cj = Kmax[j] * hLow[j] -
-                    0.5 * (huLow_minus_source_j * huLow_minus_source_j +
-                           hvLow_minus_source_j * hvLow_minus_source_j);
+                    0.5 * (huLow[j] * huLow[j] + hvLow[j] * hvLow[j]);
         double Ph_ji = -FluxCorrectionMatrix1 / mj / lambdai; // Aij=-Aji
         double Phu_ji = -FluxCorrectionMatrix2 / mj / lambdai;
         double Phv_ji = -FluxCorrectionMatrix3 / mj / lambdai;
         double aj = -0.5 * (Phu_ji * Phu_ji + Phv_ji * Phv_ji);
-        double bj = Kmax[j] * Ph_ji - (huLow_minus_source_j * Phu_ji +
-                                       hvLow_minus_source_j * Phv_ji);
+        double bj = Kmax[j] * Ph_ji - (huLow[j] * Phu_ji + hvLow[j] * Phv_ji);
 
         r1 = aj == 0 ? (bj == 0 ? 1. : -cj / bj)
                      : (-bj + std::sqrt(bj * bj - 4 * aj * cj)) / 2. / aj;
@@ -1454,6 +1449,7 @@ public:
 
         // COMPUTE LIMITER //
         Lij = fmin(fmin(ri, Lij), fmin(rj, Lij)); // Lij=Lji
+        Lij = 1.0;
 
         // COMPUTE LIMITED FLUX //
         ith_Limiter_times_FluxCorrectionMatrix1 += Lij * FluxCorrectionMatrix1;
@@ -1469,16 +1465,16 @@ public:
       limited_hnp1[i] =
           hLow[i] + one_over_mi * ith_Limiter_times_FluxCorrectionMatrix1;
       limited_hunp1[i] =
-          ((huLow[i] + dt / mi * new_SourceTerm_hu[i]) +
+          ((huLow[i] - dt / mi * extendedSourceTerm_hu[i]) +
            one_over_mi * ith_Limiter_times_FluxCorrectionMatrix2);
       limited_hvnp1[i] =
-          ((hvLow[i] + dt / mi * new_SourceTerm_hv[i]) +
+          ((hvLow[i] - dt / mi * extendedSourceTerm_hv[i]) +
            one_over_mi * ith_Limiter_times_FluxCorrectionMatrix3);
       limited_hetanp1[i] =
-          ((hetaLow[i] + dt / mi * new_SourceTerm_heta[i]) +
+          ((hetaLow[i] - dt / mi * extendedSourceTerm_heta[i]) +
            one_over_mi * ith_Limiter_times_FluxCorrectionMatrix4);
       limited_hwnp1[i] =
-          ((hwLow[i] + dt / mi * new_SourceTerm_hw[i]) +
+          ((hwLow[i] - dt / mi * extendedSourceTerm_hw[i]) +
            one_over_mi * ith_Limiter_times_FluxCorrectionMatrix5);
 
       if (limited_hnp1[i] < -hEps && dt < 1.0) {
@@ -1569,25 +1565,33 @@ public:
                                                  mi, hEps, hEps, debug) *
                        cji_norm); // hEps
           dLowii -= dLow[ij];
+          if (fabs(dLow[ij]) > 100.) {
+            std::cout << dLow[ij] << " this is edge based dLow[ij] "
+                      << std::endl;
+            std::cout << " this is left lambda "
+                      << fabs(maxWaveSpeedSharpInitialGuess(
+                             g, nxij, nyij, hi, hui, hvi, hetai, mi, hj, huj,
+                             hvj, hetaj, mj, hEps, hEps, true))
+                      << std::endl;
+            std::cout << " this is right lambda "
+                      << fabs(maxWaveSpeedSharpInitialGuess(
+                             g, nxji, nyji, hj, huj, hvj, hetaj, mj, hi, hui,
+                             hvi, hetai, mi, hEps, hEps, true))
+                      << std::endl;
+            abort();
+          }
 
         } else
           dLow[ij] = 0.;
-        // muLow[ij] = 0.;
         // update ij
         ij += 1;
       }
       //////////////////////////////
       // CALCULATE EDGE BASED CFL //
       //////////////////////////////
-      mi = lumped_mass_matrix[i];
+      // mi = lumped_mass_matrix[i];
       edge_based_cfl[i] = 1.0 * fabs(dLowii) / mi;
       max_edge_based_cfl = fmax(max_edge_based_cfl, edge_based_cfl[i]);
-
-      // At the moment, we don't need to compute the smoothness indicator for
-      // edge CFL
-      //////////////////////////////////
-      // COMPUTE SMOOTHNESS INDICATOR //
-      //////////////////////////////////
     }
 
     return max_edge_based_cfl;
@@ -1868,7 +1872,7 @@ public:
         }
 
         // Define some things for heta and hw sources
-        double ratioi = (2.0 * hetai) / (etai * etai + hi * hi + hEps);
+        double ratio_i = (2.0 * hetai) / (etai * etai + hi * hi + hEps);
         double diff_over_h_i = (hetai - hi * hi) * one_over_hiReg;
         double hSqd_GammaPi = 6.0 * (hetai - hi * hi);
         if (IF_BOTH_GAMMA_BRANCHES) {
@@ -1878,14 +1882,14 @@ public:
         }
 
         // heta source
-        extendedSourceTerm_heta[i] = -hwi * mi * ratioi;
-        new_SourceTerm_heta[i] = hwi * mi * ratioi;
+        extendedSourceTerm_heta[i] = -hwi * mi * ratio_i;
+        new_SourceTerm_heta[i] = hwi * mi * ratio_i;
 
         // hw source
         extendedSourceTerm_hw[i] =
-            (LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratioi;
+            (LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratio_i;
         new_SourceTerm_hw[i] =
-            -(LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratioi;
+            -(LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratio_i;
 
         /* HYPERBOLIC FLUXES */
         hyp_flux_h[i] = 0;
@@ -1903,8 +1907,8 @@ public:
         double alphai; // smoothness indicator of solution
         double alpha_numerator = 0;
         double alpha_denominator = 0;
-        double alpha_zero = 0.75;
-        double alpha_factor = (1.0 / (1.0 - alpha_zero));
+        double alpha_zero = 0.0;
+        double alpha_factor = 1.0 / (1.0 - alpha_zero);
 
         // loop in j (sparsity pattern)
         for (int offset = csrRowIndeces_DofLoops[i];
@@ -1922,7 +1926,7 @@ public:
 
           // Then define some things here using above
           double one_over_hjReg =
-              2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
+              2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
           double uj = huj * one_over_hjReg;
           double vj = hvj * one_over_hjReg;
           double etaj = hetaj * one_over_hjReg;
@@ -1943,7 +1947,7 @@ public:
 
           // auxiliary functions to compute fluxes
           double aux_h =
-              (uj * hj - ui * hi) * Cx[ij] + (vj * hi - vi * hi) * Cy[ij];
+              (uj * hj - ui * hi) * Cx[ij] + (vj * hj - vi * hi) * Cy[ij];
           double aux_hu =
               (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
           double aux_hv =
@@ -1989,7 +1993,7 @@ public:
 
           // update ij
           ij += 1;
-        }
+        } // end j loop
 
         // COMPUTE ENTROPY RESIDUAL //
         double one_over_entNormFactori = 2. / (etaMax[i] - etaMin[i] + 1E-15);
@@ -2005,7 +2009,8 @@ public:
 
         // COMPUTE SMOOTHNESS INDICATOR //
         if (hi <= hEps) {
-          alphai = 1.;
+          alphai = 1.0;
+          psi[i] = 1.0;
           global_entropy_residual[i] = 1E10;
         } else {
           // Force alphai=0 in constant states
@@ -2016,12 +2021,12 @@ public:
                 (fabs(alpha_numerator) - hEps) / fabs(alpha_denominator - hEps);
           }
           alphai = fmax(alphai - alpha_zero, 0.0) * alpha_factor;
+          if (POWER_SMOOTHNESS_INDICATOR == 0)
+            psi[i] = 1.0;
+          else
+            psi[i] = std::pow(
+                alphai, POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^4 for mGN
         }
-        if (POWER_SMOOTHNESS_INDICATOR == 0)
-          psi[i] = 1.0;
-        else
-          psi[i] = std::pow(
-              alphai, POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^4 for mGN
       }
       // ********** END OF 2nd LOOP ON DOFS ********** //
 
@@ -2089,11 +2094,10 @@ public:
           double Zj = b_dof[j];
 
           double one_over_hjReg =
-              2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
+              2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
           double uj = huj * one_over_hjReg;
           double vj = hvj * one_over_hjReg;
           double etaj = hetaj * one_over_hjReg;
-          double wj = hwj * one_over_hjReg;
           double mj = lumped_mass_matrix[j];
           double meshSizej = std::sqrt(mj); // local mesh size in 2d
 
@@ -2123,7 +2127,7 @@ public:
           double huStarji = huj * hStarji * one_over_hjReg;
           double hvStarji = hvj * hStarji * one_over_hjReg;
           double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg, 2);
-          double hwStarji = hwj * std::pow(hStarji * one_over_hiReg, 2);
+          double hwStarji = hwj * std::pow(hStarji * one_over_hjReg, 2);
 
           // Dissipative well balancing term
           double muLowij = 0., muLij = 0., muHij = 0.;
@@ -2155,7 +2159,7 @@ public:
             // WELL BALANCING DISSIPATIVE MATRIX //
             ///////////////////////////////////////
             muLowij = fmax(fmax(0., -(ui * Cx[ij] + vi * Cy[ij])),
-                           fmax(0, (uj * Cx[ij] + vj * Cy[ij])));
+                           fmax(0., (uj * Cx[ij] + vj * Cy[ij])));
 
             // Define dLij as low order dijs
             muLij = muLowij;
@@ -2266,6 +2270,28 @@ public:
 
         } /*j loop ends here*/
 
+        /* DEBUGGING */
+        if (abs(hetai - dt / mi *
+                            ((hyp_flux_heta[i] + extendedSourceTerm_heta[i]) -
+                             ith_dHij_minus_muHij_times_hetaStarStates -
+                             ith_muHij_times_hetaStates)) > 100.0) {
+          std::cout << "hi " << hi << std::endl;
+          std::cout << "hEps " << hEps << std::endl;
+          std::cout << "ratio_i "
+                    << (2.0 * hetai) / (etai * etai + hi * hi + hEps)
+                    << std::endl;
+          std::cout << "hwi " << hwi << std::endl;
+          std::cout << "hyp_flux_hw[i] " << hyp_flux_hw[i] << std::endl;
+          std::cout << "extendedSourceTerm_hw[i] " << extendedSourceTerm_hw[i]
+                    << std::endl;
+          std::cout << "ui " << ui << std::endl;
+          std::cout << "ith_dHij_minus_muHij_times_hwStarStates "
+                    << ith_dHij_minus_muHij_times_hwStarStates << std::endl;
+          std::cout << "ith_muHij_times_hwStates " << ith_muHij_times_hwStates
+                    << std::endl;
+          abort();
+        }
+
         /* Define global residual */
         if (LUMPED_MASS_MATRIX == 1) {
           globalResidual[offset_h + stride_h * i] =
@@ -2295,9 +2321,11 @@ public:
 
           // clean up potential negative water height due to machine
           // precision
-          if (globalResidual[offset_h + stride_h * i] >= -hEps &&
-              globalResidual[offset_h + stride_h * i] < hEps)
-            globalResidual[offset_h + stride_h * i] = 0;
+          // if (globalResidual[offset_h + stride_h * i] >= -hEps &&
+          //     globalResidual[offset_h + stride_h * i] < hEps) {
+          //   globalResidual[offset_h + stride_h * i] = 0.0;
+          //   globalResidual[offset_heta + stride_heta * i] = 0.0;
+          // }
 
         } else {
           // Distribute residual

@@ -25,7 +25,7 @@ opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 30.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.2, "Desired CFL restriction"),
+    ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
     ("reflecting_BCs", False, "Use reflecting BCs")
 ])
@@ -35,7 +35,7 @@ opts = Context.Options([
 ###################
 L = (48.8, 26.5)  # this is length in x direction and y direction
 refinement = opts.refinement
-domain = RectangularDomain(L=L,x=[0,-13.25,0])
+domain = RectangularDomain(L=L, x=[0, -13.25, 0])
 X_coords = (0.0, 48.8)  # this is x domain, used in BCs
 Y_coords = (-13.25, 13.25)  # this is x domain, used in BCs
 
@@ -222,17 +222,6 @@ def hw_DBC(X, flag):
         return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
 
 
-# **************************** #
-# ********** GAUGES ********** #
-# **************************** #
-# from proteus.Gauges import PointGauges
-# p = PointGauges(gauges=((('h'), ((30, 15, 0), (60, 15, 0))),),
-#                 activeTime=(0, 10),
-#                 sampleRate=0.1,
-#                 fileName='island_gauges.csv')
-# auxiliaryVariables = [p]
-
-
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
@@ -254,6 +243,24 @@ analyticalSolution={'h_exact': Zero(),
                 'hv_exact': Zero(),
                 'heta_exact':Zero(),
                 'hw_exact':Zero()}
+# **************************** #
+# ********** GAUGES ********** #
+# **************************** #
+from proteus.Gauges import PointGauges
+p = PointGauges(gauges=(( ('h'), ((7.5, 0.0,  0),
+                                  (13.0, 0.0, 0),
+                                  (21.0, 0.0, 0),
+                                  (7.5, 5.0, 0),
+                                  (13.0, 5.0, 0),
+                                  (21.0, 5.0, 0),
+                                  (25.0, 0.0, 0),
+                                  (25.0, 5.0, 0),
+                                  (25.0, 10.0, 0))),),
+                activeTime=(0, 3.),
+                sampleRate=0.1,
+                fileName='gauges.csv')
+auxiliaryVariables=[p]
+
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -268,4 +275,5 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               bathymetry=bathymetry_function,
                                               analyticalSolution=analyticalSolution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
-mySWFlowProblem.physical_parameters['mannings'] = 0.014
+mySWFlowProblem.physical_parameters['mannings'] = 0.0
+mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1
