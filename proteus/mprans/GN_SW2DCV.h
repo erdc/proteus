@@ -1557,21 +1557,21 @@ public:
                                                  mi, hEps, hEps, debug) *
                        cji_norm); // hEps
           dLowii -= dLow[ij];
-          if (fabs(dLow[ij]) > 100.) {
-            std::cout << dLow[ij] << " this is edge based dLow[ij] "
-                      << std::endl;
-            std::cout << " this is left lambda "
-                      << fabs(maxWaveSpeedSharpInitialGuess(
-                             g, nxij, nyij, hi, hui, hvi, hetai, mi, hj, huj,
-                             hvj, hetaj, mj, hEps, hEps, true))
-                      << std::endl;
-            std::cout << " this is right lambda "
-                      << fabs(maxWaveSpeedSharpInitialGuess(
-                             g, nxji, nyji, hj, huj, hvj, hetaj, mj, hi, hui,
-                             hvi, hetai, mi, hEps, hEps, true))
-                      << std::endl;
-            abort();
-          }
+          // if (fabs(dLow[ij]) > 100.) {
+          //   std::cout << dLow[ij] << " this is edge based dLow[ij] "
+          //             << std::endl;
+          //   std::cout << " this is left lambda "
+          //             << fabs(maxWaveSpeedSharpInitialGuess(
+          //                    g, nxij, nyij, hi, hui, hvi, hetai, mi, hj, huj,
+          //                    hvj, hetaj, mj, hEps, hEps, true))
+          //             << std::endl;
+          //   std::cout << " this is right lambda "
+          //             << fabs(maxWaveSpeedSharpInitialGuess(
+          //                    g, nxji, nyji, hj, huj, hvj, hetaj, mj, hi, hui,
+          //                    hvi, hetai, mi, hEps, hEps, true))
+          //             << std::endl;
+          //   abort();
+          // }
 
         } else
           dLow[ij] = 0.;

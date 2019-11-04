@@ -190,12 +190,11 @@ boundaryConditions = {'water_height': water_height_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
-#analyticalSolution
-analyticalSolution={'h_exact': water_height_at_tfinal(),
-                    'hu_exact': Zero(),
-                    'hv_exact': Zero(),
-                    'heta_exact':Zero(),
-                    'hw_exact':Zero()}
+analytical_Solution = {'h_exact': water_height_at_tfinal(),
+                       'hu_exact': Zero(),
+                       'hv_exact': Zero(),
+                       'heta_exact': Zero(),
+                       'hw_exact': Zero()}
 
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=0.25,
@@ -208,6 +207,6 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
                                               bathymetry=bathymetry_function,
-                                              analyticalSolution=analyticalSolution)
+                                              analyticalSolution=analytical_Solution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0

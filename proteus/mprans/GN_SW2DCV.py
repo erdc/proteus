@@ -951,10 +951,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateResidual = self.sw2d.calculateResidual
         if (self.coefficients.LUMPED_MASS_MATRIX):
             self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
-            print("Calculating lumped mass matrix... ")
         else:
             self.calculateJacobian = self.sw2d.calculateMassMatrix
-            print("Calculating consistent mass matrix...")
         #
         self.dofsXCoord = None
         self.dofsYCoord = None
@@ -1365,9 +1363,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         #
         # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-4 -EJT
-        if (self.check_positivity_water_height == False):
+        if (self.check_positivity_water_height == True):
             assert self.u[0].dof.min(
-            ) > -1E-5 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
+            ) > -1E-4 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
 
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,

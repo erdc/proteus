@@ -165,6 +165,6 @@ default_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
                           'SSPOrder': 3,
                           'cE': 1}
 default_GN_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
-                             'cfl': 0.20,
+                             'cfl': 0.33,
                              'SSPOrder': 3,
                              'cE': 1}
