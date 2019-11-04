@@ -1,7 +1,0 @@
-[submodule "air-water-vv"]
-	path = air-water-vv
-	url = ../air-water-vv.git
-	branch = master
-[submodule "stack"]
-	path = stack
-	url = ../stack
