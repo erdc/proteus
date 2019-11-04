@@ -30,6 +30,9 @@ opts = Context.Options([
     ("reflecting_BCs", False, "Use reflecting BCs")
 ])
 
+if (opts.refinement >= 6):
+    opts.cfl = 0.175
+
 ###################
 # DOMAIN AND MESH #
 ###################
@@ -237,12 +240,6 @@ boundaryConditions = {'water_height': lambda x, flag: None,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
                       'h_times_w': lambda x, flag: None}
-#analyticalSolution
-analyticalSolution={'h_exact': Zero(),
-                'hu_exact': Zero(),
-                'hv_exact': Zero(),
-                'heta_exact':Zero(),
-                'hw_exact':Zero()}
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
@@ -273,6 +270,6 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               boundaryConditions=boundaryConditions,
                                               reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function,
-                                              analyticalSolution=analyticalSolution)
+                                              analyticalSolution=None)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0

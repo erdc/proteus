@@ -71,7 +71,7 @@ numericalFluxType = GN_SW2DCV.NumericalFlux
 # ************************************ #
 matrix = SparseMatrix
 multilevelLinearSolver = LU
-levelLinearSolver =  LU  #  KSP_petsc4py
+levelLinearSolver =  LU #KSP_petsc4py
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 
