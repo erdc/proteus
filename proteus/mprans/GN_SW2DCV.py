@@ -14,8 +14,8 @@ class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions,
                  getPeriodicBoundaryConditions=None,
-                 h_eps=1.0e-8,
-                 tol_u=1.0e-8):
+                 h_eps=1.0e-5,
+                 tol_u=1.0e-5):
         proteus.NumericalFlux.ShallowWater_2D.__init__(self, vt, getPointwiseBoundaryConditions,
                                                        getAdvectiveFluxBoundaryConditions,
                                                        getDiffusiveFluxBoundaryConditions,
@@ -106,6 +106,9 @@ class RKEV(proteus.TimeIntegration.SSP):
         self.t = self.tLast + self.dt
         # Ignoring dif. time step levels
         self.substeps = [self.t for i in range(self.nStages)]
+
+        assert (self.dt > 1E-8), ("Time step is probably getting too small: ", self.dt, adjusted_maxCFL,)
+
 
     def initialize_dt(self, t0, tOut, q):
         """
@@ -386,8 +389,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def preStep(self, t, firstStep=False):
         if firstStep:
             # Init boundaryIndex
-            assert (self.model.boundaryIndex is None and self.model.normalx is not None,
-                    "Check boundaryIndex, normalx and normaly")
+            assert self.model.boundaryIndex is None and self.model.normalx is not None , \
+                    "Check boundaryIndex, normalx and normaly"
             self.model.boundaryIndex = []
             for i in range(self.model.normalx.size):
                 if self.model.normalx[i] != 0 or self.model.normaly[i] != 0:
@@ -819,6 +822,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.extendedSourceTerm_hv = None
         self.extendedSourceTerm_heta = None
         self.extendedSourceTerm_hw = None
+        self.new_SourceTerm_hu = None
+        self.new_SourceTerm_hv = None
+        self.new_SourceTerm_heta = None
+        self.new_SourceTerm_hw = None
         self.dH_minus_dL = None
         self.muH_minus_muL = None
         # NORMALS
@@ -968,8 +975,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hetanp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hwnp1 = numpy.zeros(self.h_dof_old.shape)
-        # Do some type of limitation
-
+    #     # Do some type of limitation
         self.sw2d.convexLimiting(self.timeIntegration.dt,
                                  # self.sw2d.FCTStep(self.timeIntegration.dt,
                                  self.nnz,  # number of non zero entries
@@ -1011,7 +1017,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                  self.huBT,
                                  self.hvBT,
                                  self.hetaBT,
-                                 self.hwBT)
+                                 self.hwBT,
+                                 self.new_SourceTerm_hu,
+                                 self.new_SourceTerm_hv,
+                                 self.new_SourceTerm_heta,
+                                 self.new_SourceTerm_hw)
 
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex] = limited_hnp1
@@ -1156,7 +1166,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ML = np.zeros((self.nFreeDOF_global[0],), 'd')
         self.hReg = np.zeros((self.nFreeDOF_global[0],), 'd')
         for i in range(self.nFreeDOF_global[0]):
-            self.ML[i] = self.MC_a[rowptr_cMatrix[i]                                   :rowptr_cMatrix[i + 1]].sum()
+            self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i + 1]].sum()
             self.hReg[i] = self.ML[i] / diamD2 * self.u[0].dof.max()
         # np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
         # np.testing.assert_almost_equal(self.ML.sum(), diamD2, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
@@ -1281,7 +1291,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.heta_dof_old = numpy.copy(self.u[3].dof)
         self.hw_dof_old = numpy.copy(self.u[4].dof)
         # hEps
-        eps = 1E-5  # JLG uses 1E-5 so I put it here too -EJT
+        eps = 1E-5
         self.hEps = eps * self.u[0].dof.max()
         # normal vectors
         self.normalx = numpy.zeros(self.u[0].dof.shape, 'd')
@@ -1305,6 +1315,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.extendedSourceTerm_hv = numpy.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_heta = numpy.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_hw = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_hu = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_hv = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_heta = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_hw = numpy.zeros(self.u[0].dof.shape, 'd')
         self.dataStructuresInitialized = True
     #
 
@@ -1348,11 +1362,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(
                         self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         #
-        # CHECK POSITIVITY OF WATER HEIGHT #
+        # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-4 -EJT
         if (self.check_positivity_water_height == True):
             assert self.u[0].dof.min(
-            ) >= 0, ("Negative water height: ", self.u[0].dof.min())
-        #
+            ) > -1E-4 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
 
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,
@@ -1501,7 +1514,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hvBT,
             self.hetaBT,
             self.hwBT,
-            self.timeIntegration.lstage)
+            self.timeIntegration.lstage,
+            self.new_SourceTerm_hu,
+            self.new_SourceTerm_hv,
+            self.new_SourceTerm_heta,
+            self.new_SourceTerm_hw)
 
         self.COMPUTE_NORMALS = 0
         if self.forceStrongConditions:

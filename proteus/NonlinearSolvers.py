@@ -689,7 +689,6 @@ class AddedMassNewton(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         if self.F.timeIntegration.t >= self.F.coefficients.next_solve:
             self.F.coefficients.next_solve += self.F.coefficients.solve_rate
-            self.F.coefficients.updated_global = True
             if self.F.coefficients.nd == 3:
                 accelerations = list(range(6))
             elif self.F.coefficients.nd == 2:
@@ -700,7 +699,6 @@ class AddedMassNewton(Newton):
                 self.F.added_mass_i=i
                 Newton.solve(self,u,r,b,par_u,par_r)
         else:
-            self.F.coefficients.updated_global = False
             logEvent("Skipping model AddedMass; next solve at t={t}".format(t=self.F.coefficients.solve_rate))
 
 class MoveMeshMonitorNewton(Newton):
@@ -756,10 +754,10 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         self.computeResidual(u,r,b)
         u[:] = r
 
-        ############################
-        # FCT STEP ON WATER HEIGHT #
-        ############################
-        logEvent("   FCT Step", level=1)
+        #############################
+        # FCT STEP, CONVEX LIMITING #
+        #############################
+        logEvent("   FCT/Convex Limiting Step", level=1)
         self.F.FCTStep()
 
         #############################################
@@ -789,10 +787,10 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.secondCallCalculateResidual = 0
         logEvent(" Entropy viscosity solution with consistent mass matrix", level=1)
         Newton.solve(self,u,r,b,par_u,par_r,linear=True)
-        ############################
-        # FCT STEP ON WATER HEIGHT #
-        ############################
-        logEvent(" FCT Step", level=1)
+        #############################
+        # FCT STEP, CONVEX LIMITING #
+        #############################
+        logEvent(" FCT/Convex Limiting Step", level=1)
         self.F.FCTStep()
         if par_u is not None:
             par_u.scatter_forward_insert()
