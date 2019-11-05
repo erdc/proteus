@@ -30,9 +30,6 @@ opts = Context.Options([
     ("reflecting_BCs", False, "Use reflecting BCs")
 ])
 
-if (opts.refinement >= 6):
-    opts.cfl = 0.175
-
 ###################
 # DOMAIN AND MESH #
 ###################
