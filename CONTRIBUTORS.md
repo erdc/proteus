@@ -21,6 +21,7 @@
 - Copyright 2018 Manuel Quezada de Luna manuel.quezada.dl@gmail.com
 - Copyright 2018 Yong Yang wacyyang@gmail.com
 - Copyright 2019 Greg Burgreen greg.burgreen@msstate.edu
+- Copyright 2019 Eric Tovar eric.j.tovar@usace.army.mil
 
 **Note for U.S. Federal Employees**
 
