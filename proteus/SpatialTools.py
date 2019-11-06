@@ -1071,15 +1071,18 @@ class ShapeSTL(Shape):
         self.__class__.count += 1
         self.name = 'STL'+str(self.__class__.count)
         self.filename = filename
-        self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
-        self.facetFlags = np.ones(len(self.facets))
-        self.vertexFlags = np.ones(len(self.vertices))
+        self.vertices, self.facets, self.facetnormals,self.vertexFlags,self.facetFlags,self.boundaryTags = getInfoFromSTL(self.filename)
+        
+#        self.facetFlags = np.ones(len(self.facets))
+#        self.vertexFlags = np.ones(len(self.vertices))
         self.volumes = [[[i for i in range(len(self.facets))]]]
-        self.boundaryTags = {'stl': 1}
-        self.BC = {'stl': self.BC_class(shape=self, name='stl')}
-        self.BC_list = [self.BC['stl']]
+        #        self.boundaryTags = {'stl': 1}
+        self.BC={}
+        self.BC_list=[]
+        for key,value in self.boundaryTags.items():
+            self.BC[key] = self.BC_class(shape=self, name=key)
+            self.BC_list += [self.BC[key]]
         # self.BC = BCContainer(self.BC_dict)
-
 
 def getInfoFromSTL(filename):
     """
@@ -1099,6 +1102,13 @@ def getInfoFromSTL(filename):
         Array of facets (loops of 3 vertices)
     facetnormals: array_like
         normal vertors of each facet
+    vertexFlags: array_like
+        vertex flags according to boundary ownership
+    facetFlags: array_like
+        facet flags according to boundary ownership
+    boundaryTags: dictionary
+        Dictionary of boundaries. Has the same number and name as the stl blocks contained 
+        in the stl file
     """
     file = open(filename, 'r')
     facetnormals = []
@@ -1106,32 +1116,45 @@ def getInfoFromSTL(filename):
     facets = []
     vertices = []
     vFlag = 0
+    vertexFlags=[]
+    facetFlags=[]
+    bFlag = 0
+    bTags = {}
     for line in file:
-        if "vertex" in line:
+        if ("solid" in line) and (not "endsolid" in line) :
+            word_list = line.split()
+            name = word_list[1]
+            bFlag+=1
+            bTags[name]=int(bFlag)
+        elif "vertex" in line:
             word_list = line.split()
             vertex = (word_list[1], word_list[2], word_list[3])
             vertices += [vertex]
             facet += [vFlag]
             vFlag += 1
+            vertexFlags += [bFlag] 
         if "facet normal" in line:
             word_list = line.split()
             facetnormals += [[word_list[2], word_list[3], word_list[4]]]
         elif "endfacet" in line:
             facets += [[facet]]
+            facetFlags+=[bFlag]
             facet = []
-        elif "endsolid" in line:
-            pass
-        elif "solid" in line:
-            word_list = line.split()
-            name = word_list[1]
+
     file.close()
     # vertices_u, inverse = np.unique(vertices, return_inverse=True)
     vertices = np.array(vertices).astype(float)
     facets = np.array(facets).astype(int)
-    vertices, inverse = unique_rows(vertices)
+    vertexFlags = np.array(vertexFlags).astype(int)
+    facetFlags =np.array(facetFlags).astype(int)
+
+    vertices, inverse, indices = unique_rows(vertices)
     facets = inverse[facets]
     facetnormals = np.array(facetnormals).astype(float)
-    return vertices, facets, facetnormals
+
+    indices = np.array(indices).astype(int)
+    vertexFlags = vertexFlags[indices]
+    return vertices, facets, facetnormals,vertexFlags,facetFlags,bTags
 
 def unique_rows(arr):
     arr = np.array(arr)
@@ -1141,7 +1164,7 @@ def unique_rows(arr):
     # sort_indices = np.argsort(counts)[::-1]
     # sorted_arr = arr[indices[sort_indices]]
     # sorted_count = counts[sort_indices]
-    return (arr[indices], inverse)
+    return (arr[indices], inverse ,indices)
 
 class BCContainer(object):
     """
