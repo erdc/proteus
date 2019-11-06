@@ -815,8 +815,8 @@ class Mesh(object):
                         elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
                         nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
+                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -854,8 +854,8 @@ class Mesh(object):
                         ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+str(tCount)
                         ebnodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elementBoundaries'+name+str(tCount),self.elementBoundaryNodesArray)
-                            #ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                            ar.hdfFile.create_array("/",'elementBoundaries'+name+str(tCount),self.elementBoundaryNodesArray)
+                            #ar.hdfFile.create_array("/",'nodes'+name+`tCount`,self.nodeArray)
                 else:
                     SubElement(ebelements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elementBoundaries"+name+".txt"})
                     SubElement(ebnodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -895,8 +895,8 @@ class Mesh(object):
                         nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+str(tCount)
                         elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'nodeMapL2G'+name+str(tCount),self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.hdfFile.createArray("/",'cellMapL2G'+name+str(tCount),self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                            ar.hdfFile.create_array("/",'nodeMapL2G'+name+str(tCount),self.globalMesh.nodeNumbering_subdomain2global)
+                            ar.hdfFile.create_array("/",'cellMapL2G'+name+str(tCount),self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                 else:
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodeMapL2G"+name+".txt"})
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/cellMapL2G"+name+".txt"})
@@ -992,14 +992,14 @@ class Mesh(object):
                             ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
                     else:
                         nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                        ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
+                        ar.hdfFile.create_array("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                        ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                        ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
                         if EB:
                             ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                            #ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
+                            #ar.hdfFile.create_array("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
                             elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+str(tCount)
-                            ar.hdfFile.createArray("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
+                            ar.hdfFile.create_array("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
                 else:
                     numpy.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.nodeMaterialTypes)
                     SubElement(nodeMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"})
@@ -3336,9 +3336,9 @@ class Mesh2DM(Mesh):
                         nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
-                            ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
+                            ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -3706,9 +3706,9 @@ class Mesh3DM(Mesh):
                         nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
                         elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                         if init or meshChanged:
-                            ar.hdfFile.createArray("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.createArray("/",'nodes'+name+str(tCount),self.nodeArray)
-                            ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
+                            ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
