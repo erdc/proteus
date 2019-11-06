@@ -816,8 +816,8 @@ public:
         ij += 1;
       }
       // clean up hLow from round off error
-      if (hLow[i] < hEps)
-        hLow[i] = 0;
+      // if (hLow[i] < hEps)
+      //   hLow[i] = 0;
       ///////////////////////
       // COMPUTE Q VECTORS //
       ///////////////////////
@@ -1003,8 +1003,8 @@ public:
         abort();
       } else {
         // clean up uHigh from round off error
-        if (limited_hnp1[i] < hEps)
-          limited_hnp1[i] = 0;
+        // if (limited_hnp1[i] < hEps)
+        //   limited_hnp1[i] = 0;
         // double aux = fmax(limited_hnp1[i],hEps); // hEps
         double aux =
             fmax(limited_hnp1[i], hReg[i]); // hReg makes the code more robust
@@ -1261,8 +1261,8 @@ public:
       } // j loop ends here
 
       // clean up hLow from round off error
-      if (hLow[i] < hEps)
-        hLow[i] = 0.0;
+      // if (hLow[i] < hEps)
+      //   hLow[i] = 0.0;
 
       ///////////////////////
       // COMPUTE Q VECTORS //
@@ -1478,23 +1478,23 @@ public:
         abort();
       } else {
         // clean up uHigh from round off error
-        if (limited_hnp1[i] < hEps)
-          limited_hnp1[i] = 0.0;
-        // double aux = fmax(limited_hnp1[i], hEps); // hEps
-        double aux =
-            fmax(limited_hnp1[i], hEps); // hReg makes the code more robust
-        limited_hunp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                             std::pow(aux, VEL_FIX_POWER));
-        limited_hvnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                             std::pow(aux, VEL_FIX_POWER));
-        limited_hetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                               std::pow(aux, VEL_FIX_POWER));
-        limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                             std::pow(aux, VEL_FIX_POWER));
+        // if (limited_hnp1[i] < hEps)
+        //   limited_hnp1[i] = 0.0;
+        // // double aux = fmax(limited_hnp1[i], hEps); // hEps
+        // double aux =
+        //     fmax(limited_hnp1[i], hEps); // hReg makes the code more robust
+        // limited_hunp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+        //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+        //                      std::pow(aux, VEL_FIX_POWER));
+        // limited_hvnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+        //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+        //                      std::pow(aux, VEL_FIX_POWER));
+        // limited_hetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+        //                       (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+        //                        std::pow(aux, VEL_FIX_POWER));
+        // limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+        //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+        //                      std::pow(aux, VEL_FIX_POWER));
       }
     }
   }
@@ -1557,21 +1557,6 @@ public:
                                                  mi, hEps, hEps, debug) *
                        cji_norm); // hEps
           dLowii -= dLow[ij];
-          // if (fabs(dLow[ij]) > 100.) {
-          //   std::cout << dLow[ij] << " this is edge based dLow[ij] "
-          //             << std::endl;
-          //   std::cout << " this is left lambda "
-          //             << fabs(maxWaveSpeedSharpInitialGuess(
-          //                    g, nxij, nyij, hi, hui, hvi, hetai, mi, hj, huj,
-          //                    hvj, hetaj, mj, hEps, hEps, true))
-          //             << std::endl;
-          //   std::cout << " this is right lambda "
-          //             << fabs(maxWaveSpeedSharpInitialGuess(
-          //                    g, nxji, nyji, hj, huj, hvj, hetaj, mj, hi, hui,
-          //                    hvi, hetai, mi, hEps, hEps, true))
-          //             << std::endl;
-          //   abort();
-          // }
 
         } else
           dLow[ij] = 0.;
