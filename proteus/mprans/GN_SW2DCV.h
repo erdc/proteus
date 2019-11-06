@@ -480,14 +480,6 @@ public:
     lambda1 = GN_nu1(g, hL, velL, etaL, meshSizeL);
     lambda3 = GN_nu3(g, hR, velR, etaR, meshSizeR);
 
-    // if (debugging) {
-    //   std::cout << "lambda 1 " << lambda1 << std::endl;
-    //   std::cout << "lambda 3 " << lambda3 << std::endl;
-    //   std::cout << "hL " << hL << " velL " << velL << " etaL " << etaL
-    //             << " hetaL " << hetaL << std::endl;
-    //   std::cout << "hR " << hR << " velR " << velR << " etaR " << etaR
-    //             << " hetaR " << hetaR << std::endl;
-    // }
     return fmax(fabs(lambda1), fabs(lambda3));
   }
 
