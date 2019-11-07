@@ -2363,7 +2363,7 @@ namespace proteus
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
             gf_s.calculate(element_phi_s, element_nodes, x_ref.data());
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(), rho_0*nu_0, rho_1*nu_1);
             //
             //loop over quadrature points and compute integrands
             //
@@ -4272,7 +4272,7 @@ namespace proteus
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
               }//i
             gf_s.calculate(element_phi_s, element_nodes, x_ref.data());
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(), rho_0*nu_0, rho_1*nu_1);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point

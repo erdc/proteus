@@ -13,8 +13,12 @@ namespace equivalent_polynomials
   public:
     Regularized(bool useExact=false)
     {}
-    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb)
     {}
+    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    {
+      calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0);
+    }
     inline void set_quad(unsigned int q)
     {}
     inline double H(double eps, double phi)
@@ -64,8 +68,13 @@ namespace equivalent_polynomials
       _set_Ainv<nSpace,nP>(Ainv);
     }
     
-    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r);
+    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb);
 
+    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    {
+      calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0);
+    }
+    
     inline void set_quad(unsigned int q)
     {
       assert(q >= 0);
@@ -81,6 +90,12 @@ namespace equivalent_polynomials
           _H_q   = _H[q];
           _ImH_q = _ImH[q];
         }
+      //basis functions already adjusted for inside_out
+      for(int i=0;i<nN;i++)
+        {
+          _va_q[i] = _va[q*nN+i];
+          _vb_q[i] = _vb[q*nN+i];
+        }
     }
     
     inline double* get_H(){return _H;};
@@ -89,13 +104,17 @@ namespace equivalent_polynomials
     inline double H(double eps, double phi){return _H_q;};
     inline double ImH(double eps, double phi){return _ImH_q;};
     inline double D(double eps, double phi){return _D_q;};
+    inline double VA(int i){return _va_q[i];};
+    inline double VB(int i){return _vb_q[i];};
     bool inside_out;
     static const unsigned int nN=nSpace+1;
     double phi_dof_corrected[nN];
   private:
-    double _H_q, _ImH_q, _D_q;
+    double _H_q, _ImH_q, _D_q, _va_q[nN], _vb_q[nN];
     unsigned int root_node, permutation[nN];
     double phi[nN], nodes[nN*3];
+    double _a1[nN],_a2[nN],_a3[nN],
+      _b1[nN],_b2[nN],_b3[nN];
     double Jac[nSpace*nSpace], inv_Jac[nSpace*nSpace];
     double level_set_normal[nSpace], X_0[nSpace], phys_nodes_cut[(nN-1)*3];
     static const unsigned int nDOF=((nSpace-1)/2)*(nSpace-2)*(nP+1)*(nP+2)*(nP+3)/6 + (nSpace-1)*(3-nSpace)*(nP+1)*(nP+2)/2 + (2-nSpace)*((3-nSpace)/2)*(nP+1);
@@ -105,7 +124,17 @@ namespace equivalent_polynomials
     inline void _calculate_cuts();
     inline void _calculate_C();
     inline void _correct_phi(const double* phi_dof, const double* phi_nodes);
-    double _H[nQ], _ImH[nQ], _D[nQ];
+    double _H[nQ], _ImH[nQ], _D[nQ], _va[nQ*nN], _vb[nQ*nN];
+    inline void _calculate_basis_coefficients(const double ma, const double mb);
+    inline void _calculate_basis(const double* xi,double& va, double& vb)
+    {
+      for (int k=0;k<nQ;k++)
+        for (int i=0;i<nN;i++)
+          {
+            _va[k*nN + i] = _a1[i] + _a2[i]*xi[0] + _a3[i]*xi[1];
+            _vb[k*nN + i] = _b1[i] + _b2[i]*xi[0] + _b3[i]*xi[1];
+          }
+    }
   };
   
   template<int nSpace, int nP, int nQ>
@@ -296,9 +325,37 @@ namespace equivalent_polynomials
           }
       }
   }
-  
+
   template<int nSpace, int nP, int nQ>
-  inline void Simplex<nSpace,nP,nQ>::calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+  inline void Simplex<nSpace,nP,nQ>::_calculate_basis_coefficients(const double ma, const double mb)
+  {
+    assert(nN==3);
+    double v[3]={0.0,0.0,0.0};
+    double nx=0.0,ny=0.0;
+    for (int J=0;J<2;J++)
+      {
+        nx += inv_Jac[0*2+J]*level_set_normal[J];
+        ny += inv_Jac[1*2+J]*level_set_normal[J];
+      }
+    double x0=X_0[0],
+      y0=X_0[1];
+    for (int i=0; i < 3; i++)
+      {
+        double v[3]={0.0,0.0,0.0};
+        v[i]=1.0;
+        _a1[i] = v[0];
+        _a2[i] =  (ny*v[1]*y0*(ma*x0 - ma - mb*x0 + mb) - v[0]*(ma*ny*x0 - ma*ny*y0 + mb*nx*y0 + mb*ny*y0) + v[2]*(-ma*ny*x0*y0 + ma*ny*x0 + mb*nx*y0 + mb*ny*x0*y0))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
+        _a3[i] = (nx*v[2]*x0*(ma*y0 - ma - mb*y0 + mb) - v[0]*(-ma*nx*x0 + ma*nx*y0 + mb*nx*x0 + mb*ny*x0) + v[1]*(-ma*nx*x0*y0 + ma*nx*y0 + mb*nx*x0*y0 + mb*ny*x0))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
+        _b1[i] =  (ma*v[0]*(nx*y0 + ny*x0) - nx*v[2]*x0*y0*(ma - mb) - ny*v[1]*x0*y0*(ma - mb))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
+        _b2[i] =  (-ma*v[0]*(nx*y0 + ny*x0) + ny*v[1]*x0*y0*(ma - mb) + v[2]*(ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*ny*x0*y0))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
+        _b3[i] =  (-ma*v[0]*(nx*y0 + ny*x0) + nx*v[2]*x0*y0*(ma - mb) + v[1]*(-ma*nx*x0*y0 + ma*nx*y0 + ma*ny*x0 + mb*nx*x0*y0))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
+      }
+
+
+  }
+
+  template<int nSpace, int nP, int nQ>
+  inline void Simplex<nSpace,nP,nQ>::calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb)
   {
     //initialize phi_dof_corrected -- correction can only be actually computed on cut cells
     for (unsigned int i=0; i < nN;i++)
@@ -326,6 +383,16 @@ namespace equivalent_polynomials
       }
     _calculate_cuts();//X_0, array of interface cuts on reference simplex
     _calculate_normal<nSpace>(phys_nodes_cut, level_set_normal);//normal to interface
+    if (inside_out)
+      {
+        if (nN==3)
+        _calculate_basis_coefficients(mb, ma);
+      }
+    else
+      {
+        if (nN==3)
+          _calculate_basis_coefficients(mb, ma);
+      }
     _calculate_C();//coefficients of equiv poly
     _correct_phi(phi_dof, phi_nodes);
     //compute the default affine map based on phi_nodes[0]
@@ -359,7 +426,10 @@ namespace equivalent_polynomials
         if (nSpace == 1)
           _calculate_polynomial_1D<nP>(xi,C_H,C_ImH,C_D,_H[q],_ImH[q],_D[q]);
         else if (nSpace == 2)
-          _calculate_polynomial_2D<nP>(xi,C_H,C_ImH,C_D,_H[q],_ImH[q],_D[q]);
+          {
+            _calculate_polynomial_2D<nP>(xi,C_H,C_ImH,C_D,_H[q],_ImH[q],_D[q]);
+            _calculate_basis(xi,_va[q],_vb[q]);
+          }
         else if (nSpace == 3)
           _calculate_polynomial_3D<nP>(xi,C_H,C_ImH,C_D,_H[q],_ImH[q],_D[q]);
       }
@@ -377,17 +447,22 @@ namespace equivalent_polynomials
       useExact(useExact)
     {}
     
-    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb)
     {
       //hack for testing
-      exact.calculate(phi_dof, phi_nodes, xi_r);
+      exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb);
       /* if(useExact) */
-      /*   exact.calculate(phi_dof, phi_nodes, xi_r); */
+      /*   exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb); */
       /* else//for inexact just copy over local phi_dof */
       /*   for (int i=0; i<exact.nN;i++) */
       /*     exact.phi_dof_corrected[i] = phi_dof[i]; */
       /* for (int i=0; i<exact.nN;i++) */
       /*   exact.phi_dof_corrected[i] = phi_dof[i]; */
+    }
+    
+    inline void calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    {
+      calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0);
     }
     
     inline void set_quad(unsigned int q)
