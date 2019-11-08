@@ -816,8 +816,8 @@ public:
         ij += 1;
       }
       // clean up hLow from round off error
-      // if (hLow[i] < hEps)
-      //   hLow[i] = 0;
+      if (hLow[i] < hEps)
+        hLow[i] = 0;
       ///////////////////////
       // COMPUTE Q VECTORS //
       ///////////////////////
@@ -1232,14 +1232,12 @@ public:
         hiMin = std::max(drelax[i] * hiMin,
                          hiMin - std::abs(bar_deltaSqd_h[i]) / 2.0);
         hetai_Min = std::max(drelax[i] * hetai_Min,
-                             hetai_Min - std::abs(bar_deltaSqd_heta[i])
-                             / 2.0);
+                             hetai_Min - std::abs(bar_deltaSqd_heta[i]) / 2.0);
 
         hiMax = std::min(urelax[i] * hiMax,
                          hiMax + std::abs(bar_deltaSqd_h[i]) / 2.0);
         hetai_Max = std::min(urelax[i] * hetai_Max,
-                             hetai_Max + std::abs(bar_deltaSqd_heta[i])
-                             / 2.0);
+                             hetai_Max + std::abs(bar_deltaSqd_heta[i]) / 2.0);
 #endif
 
         /* COMPUTE LOW ORDER SOLUTION. See EQN 6.23 in
@@ -1261,8 +1259,8 @@ public:
       } // j loop ends here
 
       // clean up hLow from round off error
-      // if (hLow[i] < hEps)
-      //   hLow[i] = 0.0;
+      if (hLow[i] < hEps)
+        hLow[i] = 0.0;
 
       ///////////////////////
       // COMPUTE Q VECTORS //
@@ -1478,23 +1476,23 @@ public:
         abort();
       } else {
         // clean up uHigh from round off error
-        // if (limited_hnp1[i] < hEps)
-        //   limited_hnp1[i] = 0.0;
+        if (limited_hnp1[i] < hEps)
+          limited_hnp1[i] = 0.0;
         // // double aux = fmax(limited_hnp1[i], hEps); // hEps
-        // double aux =
-        //     fmax(limited_hnp1[i], hEps); // hReg makes the code more robust
-        // limited_hunp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-        //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-        //                      std::pow(aux, VEL_FIX_POWER));
-        // limited_hvnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-        //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-        //                      std::pow(aux, VEL_FIX_POWER));
-        // limited_hetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-        //                       (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-        //                        std::pow(aux, VEL_FIX_POWER));
-        // limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-        //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-        //                      std::pow(aux, VEL_FIX_POWER));
+        double aux =
+            fmax(limited_hnp1[i], hEps); // hReg makes the code more robust
+        limited_hunp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                             std::pow(aux, VEL_FIX_POWER));
+        limited_hvnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                             std::pow(aux, VEL_FIX_POWER));
+        limited_hetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                               std::pow(aux, VEL_FIX_POWER));
+        limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                             std::pow(aux, VEL_FIX_POWER));
       }
     }
   }
@@ -2203,13 +2201,13 @@ public:
             ///////////////////////
             double dEVij = cE * fmax(global_entropy_residual[i],
                                      global_entropy_residual[j]);
-            // dHij = fmin(dLowij, dEVij);
-            // muHij = fmin(muLowij, dEVij);
+            dHij = fmin(dLowij, dEVij);
+            muHij = fmin(muLowij, dEVij);
 
             // Assume no EV for now and just use the alpha limiting for
             // higher order method. -EJT
-            dHij = fmax(psi[i], psi[j]) * dLij;
-            muHij = fmax(psi[i], psi[j]) * muLij;
+            // dHij = fmax(psi[i], psi[j]) * dLij;
+            // muHij = fmax(psi[i], psi[j]) * muLij;
 
             // compute dij_minus_muij times star solution terms
             // see: eqn (6.13)
