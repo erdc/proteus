@@ -2,6 +2,7 @@
 #define EQUIVALENT_POLYNOMIALS_H
 #include <cmath>
 #include <cassert>
+#include <iostream>
 #include "equivalent_polynomials_coefficients.h"
 #include "equivalent_polynomials_utils.h"
 
@@ -49,6 +50,8 @@ namespace equivalent_polynomials
         d = 0.5*(1.0 + cos(M_PI*phi/eps))/eps;
       return d;
     }
+    inline double VA(int i){return -1.0;};
+    inline double VB(int i){return -1.0;};
   };
   
   template<int nSpace, int nP, int nQ>
@@ -95,6 +98,7 @@ namespace equivalent_polynomials
         {
           _va_q[i] = _va[q*nN+i];
           _vb_q[i] = _vb[q*nN+i];
+          std::cout<<"_va_q[i] = _va[q*nN+i] "<<_va_q[i]<<'\t'<<i<<'\t'<<_va[q*nN+i]<<'\t'<<q<<'\t'<<nN<<'\t'<<i<<std::endl;
         }
     }
     
@@ -126,14 +130,15 @@ namespace equivalent_polynomials
     inline void _correct_phi(const double* phi_dof, const double* phi_nodes);
     double _H[nQ], _ImH[nQ], _D[nQ], _va[nQ*nN], _vb[nQ*nN];
     inline void _calculate_basis_coefficients(const double ma, const double mb);
-    inline void _calculate_basis(const double* xi,double& va, double& vb)
+    inline void _calculate_basis(const double* xi,double* va, double* vb)
     {
-      for (int k=0;k<nQ;k++)
-        for (int i=0;i<nN;i++)
-          {
-            _va[k*nN + i] = _a1[i] + _a2[i]*xi[0] + _a3[i]*xi[1];
-            _vb[k*nN + i] = _b1[i] + _b2[i]*xi[0] + _b3[i]*xi[1];
-          }
+      for (int i=0;i<nN;i++)
+        {
+          va[i] = _a1[i] + _a2[i]*xi[0] + _a3[i]*xi[1];
+          vb[i] = _b1[i] + _b2[i]*xi[0] + _b3[i]*xi[1];
+          std::cout<<"va[i] = _a1[i] + _a2[i]*xi[0] + _a3[i]*xi[1] "<<va[i]<<'\t'<<_a1[i]<<'\t'<<_a2[i]<<'\t'<<xi[0]<<'\t'<<_a3[i]<<'\t'<<xi[1]<<std::endl;;
+          std::cout<<"vb[i] = _b1[i] + _b2[i]*xi[0] + _b3[i]*xi[1] "<<vb[i]<<'\t'<<_b1[i]<<'\t'<<_b2[i]<<'\t'<<xi[0]<<'\t'<<_b3[i]<<'\t'<<xi[1]<<std::endl;;
+        }
     }
   };
   
@@ -330,7 +335,6 @@ namespace equivalent_polynomials
   inline void Simplex<nSpace,nP,nQ>::_calculate_basis_coefficients(const double ma, const double mb)
   {
     assert(nN==3);
-    double v[3]={0.0,0.0,0.0};
     double nx=0.0,ny=0.0;
     for (int J=0;J<2;J++)
       {
@@ -349,6 +353,7 @@ namespace equivalent_polynomials
         _b1[i] =  (ma*v[0]*(nx*y0 + ny*x0) - nx*v[2]*x0*y0*(ma - mb) - ny*v[1]*x0*y0*(ma - mb))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
         _b2[i] =  (-ma*v[0]*(nx*y0 + ny*x0) + ny*v[1]*x0*y0*(ma - mb) + v[2]*(ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*ny*x0*y0))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
         _b3[i] =  (-ma*v[0]*(nx*y0 + ny*x0) + nx*v[2]*x0*y0*(ma - mb) + v[1]*(-ma*nx*x0*y0 + ma*nx*y0 + ma*ny*x0 + mb*nx*x0*y0))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
+        std::cout<<_a1[i]<<'\t'<<_a2[i]<<'\t'<<_a3[i]<<'\t'<<_b1[i]<<'\t'<<_b2[i]<<'\t'<<_b3[i]<<std::endl;
       }
 
 
@@ -386,7 +391,7 @@ namespace equivalent_polynomials
     if (inside_out)
       {
         if (nN==3)
-        _calculate_basis_coefficients(mb, ma);
+          _calculate_basis_coefficients(mb, ma);
       }
     else
       {
@@ -428,7 +433,7 @@ namespace equivalent_polynomials
         else if (nSpace == 2)
           {
             _calculate_polynomial_2D<nP>(xi,C_H,C_ImH,C_D,_H[q],_ImH[q],_D[q]);
-            _calculate_basis(xi,_va[q],_vb[q]);
+            _calculate_basis(xi,&_va[q*nN],&_vb[q*nN]);
           }
         else if (nSpace == 3)
           _calculate_polynomial_3D<nP>(xi,C_H,C_ImH,C_D,_H[q],_ImH[q],_D[q]);
@@ -493,6 +498,20 @@ namespace equivalent_polynomials
         return exact.D(eps, phi);
       else
         return regularized.D(eps, phi);
+    }
+    inline double VA(int i)
+    {
+      if(useExact)
+        return exact.VA(i);
+      else
+        return regularized.VA(i);
+    }
+    inline double VB(int i)
+    {
+      if(useExact)
+        return exact.VB(i);
+      else
+        return regularized.VB(i);
     }
   };
 }//equivalent_polynomials

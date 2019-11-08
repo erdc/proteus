@@ -2359,7 +2359,11 @@ namespace proteus
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
             gf_s.calculate(element_phi_s, element_nodes, x_ref);
-            gf.calculate(element_phi, element_nodes, x_ref, rho_0*nu_0, rho_1*nu_1);
+            //gf.calculate(element_phi, element_nodes, x_ref, rho_0*nu_0, rho_1*nu_1);
+            //testing hack
+            double mufake=1.0;
+            //gf.calculate(element_phi, element_nodes, x_ref, mufake, mufake);
+            gf.calculate(element_phi, element_nodes, x_ref);
             //
             //loop over quadrature points and compute integrands
             //
@@ -2475,6 +2479,7 @@ namespace proteus
                   G[nSpace*nSpace],G_dd_G,tr_G,norm_Rv,h_phi, dmom_adv_star[nSpace],dmom_adv_sge[nSpace],dmom_ham_grad_sge[nSpace];
                 //get jacobian, etc for mapping reference element
                 gf_s.set_quad(k);
+                std::cout<<"fluid-fluid"<<std::endl;
                 gf.set_quad(k);
                 ck.calculateMapping_element(eN,
                                             k,
@@ -4263,7 +4268,10 @@ namespace proteus
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
               }//i
             gf_s.calculate(element_phi_s, element_nodes, x_ref);
-            gf.calculate(element_phi, element_nodes, x_ref, rho_0*nu_0, rho_1*nu_1);
+            //gf.calculate(element_phi, element_nodes, x_ref, rho_0*nu_0, rho_1*nu_1);
+            double mufake=1.0;
+            //gf.calculate(element_phi, element_nodes, x_ref, mufake, mufake);
+            gf.calculate(element_phi, element_nodes, x_ref);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
@@ -4390,7 +4398,12 @@ namespace proteus
                   G[nSpace*nSpace],G_dd_G,tr_G,h_phi, dmom_adv_star[nSpace], dmom_adv_sge[nSpace], dmom_ham_grad_sge[nSpace];
                 //get jacobian, etc for mapping reference element
                 gf_s.set_quad(k);
+                std::cout<<"fluid-fluid"<<std::endl;
                 gf.set_quad(k);
+                for (int vi=0; vi< nDOF_v_trial_element; vi++)
+                  {
+                    std::cout<<"Trial "<<vel_trial_ref[k*nDOF_v_trial_element + vi]<<'\t'<<gf_s.VA(vi)<<'\t'<<gf_s.VB(vi)<<std::endl;
+                  }
                 ck.calculateMapping_element(eN,
                                             k,
                                             mesh_dof,
@@ -4422,7 +4435,6 @@ namespace proteus
 
                 eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-
                 //get the trial function gradients
                 ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
                 ck_v.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_v_trial_element*nSpace],jacInv,vel_grad_trial);
