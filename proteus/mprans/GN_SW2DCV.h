@@ -480,6 +480,14 @@ public:
     lambda1 = GN_nu1(g, hL, velL, etaL, meshSizeL);
     lambda3 = GN_nu3(g, hR, velR, etaR, meshSizeR);
 
+    // if (debugging) {
+    //   std::cout << "lambda 1 " << lambda1 << std::endl;
+    //   std::cout << "lambda 3 " << lambda3 << std::endl;
+    //   std::cout << "hL " << hL << " velL " << velL << " etaL " << etaL
+    //             << " hetaL " << hetaL << std::endl;
+    //   std::cout << "hR " << hR << " velR " << velR << " etaR " << etaR
+    //             << " hetaR " << hetaR << std::endl;
+    // }
     return fmax(fabs(lambda1), fabs(lambda3));
   }
 
@@ -995,8 +1003,8 @@ public:
         abort();
       } else {
         // clean up uHigh from round off error
-        if (limited_hnp1[i] < hEps)
-          limited_hnp1[i] = 0;
+        // if (limited_hnp1[i] < hEps)
+        //   limited_hnp1[i] = 0;
         // double aux = fmax(limited_hnp1[i],hEps); // hEps
         double aux =
             fmax(limited_hnp1[i], hReg[i]); // hReg makes the code more robust
@@ -1224,14 +1232,12 @@ public:
         hiMin = std::max(drelax[i] * hiMin,
                          hiMin - std::abs(bar_deltaSqd_h[i]) / 2.0);
         hetai_Min = std::max(drelax[i] * hetai_Min,
-                             hetai_Min - std::abs(bar_deltaSqd_heta[i])
-                             / 2.0);
+                             hetai_Min - std::abs(bar_deltaSqd_heta[i]) / 2.0);
 
         hiMax = std::min(urelax[i] * hiMax,
                          hiMax + std::abs(bar_deltaSqd_h[i]) / 2.0);
         hetai_Max = std::min(urelax[i] * hetai_Max,
-                             hetai_Max + std::abs(bar_deltaSqd_heta[i])
-                             / 2.0);
+                             hetai_Max + std::abs(bar_deltaSqd_heta[i]) / 2.0);
 #endif
 
         /* COMPUTE LOW ORDER SOLUTION. See EQN 6.23 in
@@ -1472,7 +1478,7 @@ public:
         // clean up uHigh from round off error
         if (limited_hnp1[i] < hEps)
           limited_hnp1[i] = 0.0;
-        // double aux = fmax(limited_hnp1[i], hEps); // hEps
+        // // double aux = fmax(limited_hnp1[i], hEps); // hEps
         double aux =
             fmax(limited_hnp1[i], hEps); // hReg makes the code more robust
         limited_hunp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
@@ -1549,21 +1555,6 @@ public:
                                                  mi, hEps, hEps, debug) *
                        cji_norm); // hEps
           dLowii -= dLow[ij];
-          // if (fabs(dLow[ij]) > 100.) {
-          //   std::cout << dLow[ij] << " this is edge based dLow[ij] "
-          //             << std::endl;
-          //   std::cout << " this is left lambda "
-          //             << fabs(maxWaveSpeedSharpInitialGuess(
-          //                    g, nxij, nyij, hi, hui, hvi, hetai, mi, hj, huj,
-          //                    hvj, hetaj, mj, hEps, hEps, true))
-          //             << std::endl;
-          //   std::cout << " this is right lambda "
-          //             << fabs(maxWaveSpeedSharpInitialGuess(
-          //                    g, nxji, nyji, hj, huj, hvj, hetaj, mj, hi, hui,
-          //                    hvi, hetai, mi, hEps, hEps, true))
-          //             << std::endl;
-          //   abort();
-          // }
 
         } else
           dLow[ij] = 0.;
@@ -2210,13 +2201,13 @@ public:
             ///////////////////////
             double dEVij = cE * fmax(global_entropy_residual[i],
                                      global_entropy_residual[j]);
-            // dHij = fmin(dLowij, dEVij);
-            // muHij = fmin(muLowij, dEVij);
+            dHij = fmin(dLowij, dEVij);
+            muHij = fmin(muLowij, dEVij);
 
             // Assume no EV for now and just use the alpha limiting for
             // higher order method. -EJT
-            dHij = fmax(psi[i], psi[j]) * dLij;
-            muHij = fmax(psi[i], psi[j]) * muLij;
+            // dHij = fmax(psi[i], psi[j]) * dLij;
+            // muHij = fmax(psi[i], psi[j]) * muLij;
 
             // compute dij_minus_muij times star solution terms
             // see: eqn (6.13)
