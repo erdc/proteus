@@ -513,8 +513,6 @@ class Newton(NonlinearSolver):
                      %(self.its-1, self.norm_r), level=7)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(old_div(self.norm_r,(self.rtol_r*self.norm_r0+self.atol_r))),self.convergenceTest),level=1)
-            import pdb
-            pdb.set_trace()
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
