@@ -2553,6 +2553,46 @@ namespace proteus
                     //get the trial function gradients
                     ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
                     ck_v.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_v_trial_element*nSpace],jacInv,vel_grad_trial);
+                    if (icase == 0)
+                      {
+                        for (int vi=0; vi < nDOF_v_trial_element; vi++)
+                          {
+                            if (fluid_phase == 0)
+                              {
+                                vel_trial_ref[k*nDOF_v_trial_element + vi] = gf.VA(vi);
+                                vel_grad_trial[vi*nSpace + 0] = gf.VA_x(vi);
+                                vel_grad_trial[vi*nSpace + 1] = gf.VA_y(vi);
+                              }
+                            else
+                              {
+                                vel_trial_ref[k*nDOF_v_trial_element + vi] = gf.VB(vi);
+                                vel_grad_trial[vi*nSpace + 0] = gf.VB_x(vi);
+                                vel_grad_trial[vi*nSpace + 1] = gf.VB_y(vi);
+                              }
+                            //cek debug -- check that basis is identical when mu_0 == mu_1
+                            /* bool prob=false; */
+                            /* if (fabs(vel_trial_ref[k*nDOF_v_trial_element + vi] - gf.VA(vi)) > 1.0e-8) */
+                            /*   { */
+                            /*     for (int vj=0; vj < nDOF_v_trial_element; vj++) */
+                            /*       std::cout<<"Trial "<<vel_trial_ref[k*nDOF_v_trial_element + vj]<<'\t'<<gf.VA(vj)<<'\t'<<gf.VB(vj)<<std::endl; */
+                            /*     prob=true; */
+                            /*   } */
+                            /* if (fabs(vel_grad_trial[vi*nSpace + 0] - gf.VA_x(vi)) > 1.0e-8) */
+                            /*   { */
+                            /*     for (int vj=0; vj < nDOF_v_trial_element; vj++) */
+                            /*       std::cout<<"Grad Trial x"<<vel_grad_trial[vj*nSpace + 0]<<'\t'<<gf.VA_x(vj)<<'\t'<<gf.VB_x(vj)<<std::endl; */
+                            /*     prob=true; */
+                            /*   } */
+                            /* if (fabs(vel_grad_trial[vi*nSpace + 1] - gf.VA_y(vi)) > 1.0e-8) */
+                            /*   { */
+                            /*     for (int vj=0; vj < nDOF_v_trial_element; vj++) */
+                            /*       std::cout<<"Grad Trial y "<<vel_grad_trial[vj*nSpace + 1]<<'\t'<<gf.VA_y(vj)<<'\t'<<gf.VB_y(vj)<<std::endl; */
+                            /*     prob=true; */
+                            /*   } */
+                            /* if (prob) */
+                            /*   break; */
+                          }
+                      }
                     //get the solution
                     ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
                     ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],u);
@@ -3220,7 +3260,7 @@ namespace proteus
             mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element));
             mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
           }//elements
-        std::cout<<p_L2<<'\t'<<u_L2<<'\t'<<v_L2<<'\t'<<domain_volume<<std::endl;
+        std::cout<<"p,u,v L2 error integrals (shoudl be non-negative) "<<p_L2<<'\t'<<u_L2<<'\t'<<v_L2<<'\t Flow Domain Volume = '<<domain_volume<<std::endl;
         assert(p_L2 >= 0.0);
         assert(u_L2 >= 0.0);
         assert(v_L2 >= 0.0);
@@ -4532,6 +4572,46 @@ namespace proteus
                     //get the trial function gradients
                     ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
                     ck_v.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_v_trial_element*nSpace],jacInv,vel_grad_trial);
+                    if (icase == 0)
+                      {
+                        for (int vi=0; vi < nDOF_v_trial_element; vi++)
+                          {
+                            if (fluid_phase == 0)
+                              {
+                                vel_trial_ref[k*nDOF_v_trial_element + vi] = gf.VA(vi);
+                                vel_grad_trial[vi*nSpace + 0] = gf.VA_x(vi);
+                                vel_grad_trial[vi*nSpace + 1] = gf.VA_y(vi);
+                              }
+                            else
+                              {
+                                vel_trial_ref[k*nDOF_v_trial_element + vi] = gf.VB(vi);
+                                vel_grad_trial[vi*nSpace + 0] = gf.VB_x(vi);
+                                vel_grad_trial[vi*nSpace + 1] = gf.VB_y(vi);
+                              }
+                            //cek debug -- check that basis is identical when mu_0 == mu_1
+                            /* bool prob=false; */
+                            /* if (fabs(vel_trial_ref[k*nDOF_v_trial_element + vi] - gf.VA(vi)) > 1.0e-8) */
+                            /*   { */
+                            /*     for (int vj=0; vj < nDOF_v_trial_element; vj++) */
+                            /*       std::cout<<"Trial "<<vel_trial_ref[k*nDOF_v_trial_element + vj]<<'\t'<<gf.VA(vj)<<'\t'<<gf.VB(vj)<<std::endl; */
+                            /*     prob=true; */
+                            /*   } */
+                            /* if (fabs(vel_grad_trial[vi*nSpace + 0] - gf.VA_x(vi)) > 1.0e-8) */
+                            /*   { */
+                            /*     for (int vj=0; vj < nDOF_v_trial_element; vj++) */
+                            /*       std::cout<<"Grad Trial x"<<vel_grad_trial[vj*nSpace + 0]<<'\t'<<gf.VA_x(vj)<<'\t'<<gf.VB_x(vj)<<std::endl; */
+                            /*     prob=true; */
+                            /*   } */
+                            /* if (fabs(vel_grad_trial[vi*nSpace + 1] - gf.VA_y(vi)) > 1.0e-8) */
+                            /*   { */
+                            /*     for (int vj=0; vj < nDOF_v_trial_element; vj++) */
+                            /*       std::cout<<"Grad Trial y "<<vel_grad_trial[vj*nSpace + 1]<<'\t'<<gf.VA_y(vj)<<'\t'<<gf.VB_y(vj)<<std::endl; */
+                            /*     prob=true; */
+                            /*   } */
+                            /* if (prob) */
+                            /*   break; */
+                          }
+                      }
                     //get the solution
                     ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
                     ck_v.valFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],&vel_trial_ref[k*nDOF_v_trial_element],u);
@@ -4546,33 +4626,6 @@ namespace proteus
                     ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p_old);
                     ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u_old);
                     ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v_old);
-                    if (icase == 0)
-                      {
-                        for (int vi=0; vi < nDOF_v_trial_element; vi++)
-                          {
-                            bool prob=false;
-                            if (fabs(vel_trial_ref[k*nDOF_v_trial_element + vi] - gf.VA(vi)) > 1.0e-8)
-                              {
-                                for (int vj=0; vj < nDOF_v_trial_element; vj++)
-                                  std::cout<<"Trial "<<vel_trial_ref[k*nDOF_v_trial_element + vj]<<'\t'<<gf.VA(vj)<<'\t'<<gf.VB(vj)<<std::endl;
-                                prob=true;
-                              }
-                            if (fabs(vel_grad_trial[vi*nSpace + 0] - gf.VA_x(vi)) > 1.0e-8)
-                              {
-                                for (int vj=0; vj < nDOF_v_trial_element; vj++)
-                                  std::cout<<"Grad Trial x"<<vel_grad_trial[vj*nSpace + 0]<<'\t'<<gf.VA_x(vj)<<'\t'<<gf.VB_x(vj)<<std::endl;
-                                prob=true;
-                              }
-                            if (fabs(vel_grad_trial[vi*nSpace + 1] - gf.VA_y(vi)) > 1.0e-8)
-                              {
-                                for (int vj=0; vj < nDOF_v_trial_element; vj++)
-                                  std::cout<<"Grad Trial y "<<vel_grad_trial[vj*nSpace + 1]<<'\t'<<gf.VA_y(vj)<<'\t'<<gf.VB_y(vj)<<std::endl;
-                                prob=true;
-                              }
-                            if (prob)
-                              break;
-                          }
-                      }
                     //precalculate test function products with integration weights
                     for (int j=0;j<nDOF_test_element;j++)
                       {
