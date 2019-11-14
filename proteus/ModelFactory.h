@@ -2,7 +2,7 @@
 #define MODELFACTORY_H
 #include <iostream>
 
-//#define FULL_BUILD 1
+#define FULL_BUILD 1
 #define NO_INSTANCE std::cout<<"Constructing model object from template class:"<<std::endl \
   <<"return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<" \
   <<nSpaceIn<<","                                                       \
@@ -273,6 +273,16 @@ namespace proteus
                         {
                           if (nQuadraturePoints_elementBoundaryIn == 5)
                             return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,7,3,3,3,5>());
+                          else
+                            {
+                              NO_INSTANCE;
+                              abort();
+                            }
+                        }
+                      else if (nQuadraturePoints_elementIn == 12)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 6)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,12,3,3,3,6>());
                           else
                             {
                               NO_INSTANCE;
