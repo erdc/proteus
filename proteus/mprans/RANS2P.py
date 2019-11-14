@@ -485,8 +485,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebq_n = None
                 self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
             else:
-                self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
-                self.phi_dof = -numpy.ones_like(self.model.u[0].dof)
+                self.q_phi = 0.5 - self.model.q['x'][...,1]#10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
+                self.phi_dof = 0.5 - self.model.mesh.nodeArray[...,1]#-numpy.ones_like(self.model.u[0].dof)
                 self.ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.bc_ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')

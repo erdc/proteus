@@ -104,7 +104,6 @@ namespace equivalent_polynomials
         {
           _va_q[i] = _va[q*nN+i];
           _vb_q[i] = _vb[q*nN+i];
-          //std::cout<<"_va_q[i] = _va[q*nN+i] "<<_va_q[i]<<'\t'<<i<<'\t'<<_va[q*nN+i]<<'\t'<<q<<'\t'<<nN<<'\t'<<i<<std::endl;
         }
     }
     
@@ -149,8 +148,6 @@ namespace equivalent_polynomials
         {
           va[i] = _a1[i] + _a2[i]*xi[0] + _a3[i]*xi[1];
           vb[i] = _b1[i] + _b2[i]*xi[0] + _b3[i]*xi[1];
-          //std::cout<<"va[i] = _a1[i] + _a2[i]*xi[0] + _a3[i]*xi[1] "<<va[i]<<'\t'<<_a1[i]<<'\t'<<_a2[i]<<'\t'<<xi[0]<<'\t'<<_a3[i]<<'\t'<<xi[1]<<std::endl;;
-          //std::cout<<"vb[i] = _b1[i] + _b2[i]*xi[0] + _b3[i]*xi[1] "<<vb[i]<<'\t'<<_b1[i]<<'\t'<<_b2[i]<<'\t'<<xi[0]<<'\t'<<_b3[i]<<'\t'<<xi[1]<<std::endl;;
         }
     }
   };
@@ -261,12 +258,19 @@ namespace equivalent_polynomials
             nodes[i*3 + I] = phi_nodes[permutation[i]*3 + I];//nodes always 3D
           }
       }
-    for(unsigned int i=0; i < nN - 1; i++)
-      for(unsigned int I=0; I < nSpace; I++)
-        {
-          Jac[I*nSpace+i] = nodes[(1+i)*3 + I] - nodes[I];
-        }
+    double JacTest[nSpace*nSpace];
+    for(unsigned int I=0; I < nSpace; I++)
+      {
+        for(unsigned int i=0; i < nN - 1; i++)
+          {
+            Jac[I*nSpace+i] = nodes[(1+i)*3 + I] - nodes[I];
+            JacTest[I*nSpace+i] = phi_nodes[(1+i)*3 + I] - phi_nodes[I];
+          }
+      }
     double det_Jac = det<nSpace>(Jac);
+    double det_JacTest = det<nSpace>(JacTest);
+    assert(det_JacTest >= 0.0);
+    assert(det_Jac >= 0.0);
     if(det_Jac < 0.0)
       {
         double tmp = permutation[nN-1];
@@ -356,10 +360,16 @@ namespace equivalent_polynomials
       }
     double x0=X_0[0],
       y0=X_0[1];
-    for (int i=0; i < 3; i++)
+    double vall[9]={1.,0.,0.,
+                    0.,0.,1.,
+                    0.,1.,0.};
+    for (int j=0; j < 3; j++)
       {
+        int i = permutation[j];
         double v[3]={0.0,0.0,0.0},grad_va[2]={0.0,0.0},grad_vb[2]={0.0,0.0},grad_va_ref[2],grad_vb_ref[2];
-        v[i]=1.0;
+        v[0] = vall[j*3+0];
+        v[1] = vall[j*3+1];
+        v[2] = vall[j*3+2];
         _a1[i] = v[0];
         _a2[i] =  (ny*v[1]*y0*(ma*x0 - ma - mb*x0 + mb) - v[0]*(ma*ny*x0 - ma*ny*y0 + mb*nx*y0 + mb*ny*y0) + v[2]*(-ma*ny*x0*y0 + ma*ny*x0 + mb*nx*y0 + mb*ny*x0*y0))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
         _a3[i] = (nx*v[2]*x0*(ma*y0 - ma - mb*y0 + mb) - v[0]*(-ma*nx*x0 + ma*nx*y0 + mb*nx*x0 + mb*ny*x0) + v[1]*(-ma*nx*x0*y0 + ma*nx*y0 + mb*nx*x0*y0 + mb*ny*x0))/(-ma*nx*x0*y0 + ma*nx*y0 - ma*ny*x0*y0 + ma*ny*x0 + mb*nx*x0*y0 + mb*ny*x0*y0);
@@ -420,7 +430,7 @@ namespace equivalent_polynomials
     else
       {
         if (nN==3)
-          _calculate_basis_coefficients(mb, ma);
+          _calculate_basis_coefficients(ma, mb);
       }
     _calculate_C();//coefficients of equiv poly
     _correct_phi(phi_dof, phi_nodes);
