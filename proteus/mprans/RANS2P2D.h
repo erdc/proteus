@@ -568,8 +568,8 @@ namespace proteus
       const int nDOF_v_test_X_v_trial_element;
       CompKernelType ck;
       CompKernelType_v ck_v;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf_s;
+      GeneralizedFunctions<nSpace,4,nQuadraturePoints_element> gf;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element> gf_s;
     RANS2P2D():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         nDOF_test_X_v_trial_element(nDOF_test_element*nDOF_v_trial_element),
