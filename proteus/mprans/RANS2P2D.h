@@ -2301,6 +2301,7 @@ namespace proteus
           mesh_volume_conservation_weak=0.0,
           mesh_volume_conservation_err_max=0.0,
           mesh_volume_conservation_err_max_weak=0.0,
+          domain_volume=0.0,
           p_L1=0.0, u_L1=0.0, v_L1=0.0,
           p_L2=0.0, u_L2=0.0, v_L2=0.0,
           p_Linfty=0.0, u_Linfty=0.0, v_Linfty=0.0;
@@ -2363,10 +2364,8 @@ namespace proteus
             //
             //loop over quadrature points and compute integrands
             //
-            std::cout<<"icase "<<icase<<'\t'<<2 - abs(icase)<<'\t'<<eN<<std::endl;
             for(int fluid_phase=0;fluid_phase < 2 - abs(icase);fluid_phase++)
               {
-                assert(fluid_phase == 0);
                 double rho_0_in=rho_0,rho_1_in=rho_1,
                   nu_0_in=nu_0,nu_1_in=nu_1;
                 if (useExact)
@@ -2633,20 +2632,6 @@ namespace proteus
                       u_e = q_u_1[eN_k] - u,
                       v_e = q_u_2[eN_k] - v;
 
-                    p_L1 += fabs(p_e)*H_s*dV;
-                    u_L1 += fabs(u_e)*H_s*dV;
-                    v_L1 += fabs(v_e)*H_s*dV;
-                
-                    p_L2 += p_e*p_e*H_s*dV;
-                    u_L2 += u_e*u_e*H_s*dV;
-                    v_L2 += v_e*v_e*H_s*dV;
-
-                    if (phi_solid[eN_k] >= 0.0)
-                      {
-                        p_Linfty = fmax(p_Linfty, fabs(p_e));
-                        u_Linfty = fmax(u_Linfty, fabs(u_e));
-                        v_Linfty = fmax(v_Linfty, fabs(v_e));
-                      }
                 
                     /* q_u_0[eN_k] = p; */
                     /* q_u_1[eN_k] = u; */
@@ -3114,14 +3099,39 @@ namespace proteus
                     mesh_vel[0] = xt;
                     mesh_vel[1] = yt;
                     double pf=1.0;
-                    if (useExact)
+                    if (useExact && icase == 0)
                       {
                         if (fluid_phase == 0)
                           pf = gf.ImH(0.,0.);
                         else
                           pf = gf.H(0.,0.);
                       }
-                    assert(pf == 1.0);
+                    else
+                      pf = 1.0;
+                    if (icase == 0)
+                      {
+                        //std::cout<<"pf "<<pf<<" fluid_phase "<<fluid_phase<<" eN "<<eN<<std::endl;
+                      }
+                    else
+                      {
+                        assert(pf == 1);
+                      }
+                    domain_volume += H_s*dV*pf;
+                    p_L1 += fabs(p_e)*H_s*dV*pf;
+                    u_L1 += fabs(u_e)*H_s*dV*pf;
+                    v_L1 += fabs(v_e)*H_s*dV*pf;
+                
+                    p_L2 += p_e*p_e*H_s*dV*pf;
+                    u_L2 += u_e*u_e*H_s*dV*pf;
+                    v_L2 += v_e*v_e*H_s*dV*pf;
+
+                    if (phi_solid[eN_k] >= 0.0)
+                      {
+                        p_Linfty = fmax(p_Linfty, fabs(p_e));
+                        u_Linfty = fmax(u_Linfty, fabs(u_e));
+                        v_Linfty = fmax(v_Linfty, fabs(v_e));
+                      }
+
                     for(int i=0;i<nDOF_test_element;i++)
                       {
                         register int i_nSpace=i*nSpace;
@@ -3210,6 +3220,10 @@ namespace proteus
             mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element));
             mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
           }//elements
+        std::cout<<p_L2<<'\t'<<u_L2<<'\t'<<v_L2<<'\t'<<domain_volume<<std::endl;
+        assert(p_L2 >= 0.0);
+        assert(u_L2 >= 0.0);
+        assert(v_L2 >= 0.0);
         p_L2 = sqrt(p_L2);
         u_L2 = sqrt(u_L2);
         v_L2 = sqrt(v_L2);
@@ -4317,10 +4331,8 @@ namespace proteus
               }//i
             gf_s.calculate(element_phi_s, element_nodes, x_ref);
             int icase=gf.calculate(element_phi, element_nodes, x_ref, rho_0*nu_0, rho_1*nu_1);
-            std::cout<<"icase "<<icase<<'\t'<<2 - abs(icase)<<'\t'<<eN<<std::endl;
             for (int fluid_phase=0;fluid_phase < 2 - abs(icase); fluid_phase++)
               {
-                assert(fluid_phase == 0);
                 double rho_0_in=rho_0,rho_1_in=rho_1,
                   nu_0_in=nu_0,nu_1_in=nu_1;
                 if (useExact)
@@ -4534,12 +4546,32 @@ namespace proteus
                     ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p_old);
                     ck_v.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_u_old);
                     ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial,grad_v_old);
-                    std::cout<<"fluid-fluid"<<std::endl;
-                    for (int vi=0; vi < nDOF_v_trial_element; vi++)
+                    if (icase == 0)
                       {
-                        std::cout<<"Trial "<<vel_trial_ref[k*nDOF_v_trial_element + vi]<<'\t'<<gf_s.VA(vi)<<'\t'<<gf_s.VB(vi)<<std::endl;
-                        std::cout<<"Grad Trial "<<vel_grad_trial[vi*nSpace + 0]<<'\t'<<gf_s.VA_x(vi)<<'\t'<<gf_s.VB_x(vi)<<std::endl;
-                        std::cout<<"Grad Trial "<<vel_grad_trial[vi*nSpace + 1]<<'\t'<<gf_s.VA_y(vi)<<'\t'<<gf_s.VB_y(vi)<<std::endl;
+                        for (int vi=0; vi < nDOF_v_trial_element; vi++)
+                          {
+                            bool prob=false;
+                            if (fabs(vel_trial_ref[k*nDOF_v_trial_element + vi] - gf.VA(vi)) > 1.0e-8)
+                              {
+                                for (int vj=0; vj < nDOF_v_trial_element; vj++)
+                                  std::cout<<"Trial "<<vel_trial_ref[k*nDOF_v_trial_element + vj]<<'\t'<<gf.VA(vj)<<'\t'<<gf.VB(vj)<<std::endl;
+                                prob=true;
+                              }
+                            if (fabs(vel_grad_trial[vi*nSpace + 0] - gf.VA_x(vi)) > 1.0e-8)
+                              {
+                                for (int vj=0; vj < nDOF_v_trial_element; vj++)
+                                  std::cout<<"Grad Trial x"<<vel_grad_trial[vj*nSpace + 0]<<'\t'<<gf.VA_x(vj)<<'\t'<<gf.VB_x(vj)<<std::endl;
+                                prob=true;
+                              }
+                            if (fabs(vel_grad_trial[vi*nSpace + 1] - gf.VA_y(vi)) > 1.0e-8)
+                              {
+                                for (int vj=0; vj < nDOF_v_trial_element; vj++)
+                                  std::cout<<"Grad Trial y "<<vel_grad_trial[vj*nSpace + 1]<<'\t'<<gf.VA_y(vj)<<'\t'<<gf.VB_y(vj)<<std::endl;
+                                prob=true;
+                              }
+                            if (prob)
+                              break;
+                          }
                       }
                     //precalculate test function products with integration weights
                     for (int j=0;j<nDOF_test_element;j++)
@@ -5060,14 +5092,16 @@ namespace proteus
 
                     //cek todo add RBLES terms consistent to residual modifications or ignore the partials w.r.t the additional RBLES terms
                     double pf=1.0;
-                    if (useExact)
+                    if (useExact && icase == 0)
                       {
                         if (fluid_phase == 0)
                           pf = gf.ImH(0.,0.);
                         else
                           pf = gf.H(0.,0.);
                       }
-                    assert(pf == 1.0);
+                    else
+                      pf = 1.0;
+
                     for(int i=0;i<nDOF_test_element;i++)
                       {
                         register int i_nSpace = i*nSpace;
