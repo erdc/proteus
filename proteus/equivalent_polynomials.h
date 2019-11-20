@@ -269,8 +269,8 @@ namespace equivalent_polynomials
       }
     double det_Jac = det<nSpace>(Jac);
     double det_JacTest = det<nSpace>(JacTest);
-    assert(det_JacTest >= 0.0);
-    assert(det_Jac >= 0.0);
+    /* assert(det_JacTest >= 0.0); */
+    /* assert(det_Jac >= 0.0); */
     if(det_Jac < 0.0)
       {
         double tmp = permutation[nN-1];
