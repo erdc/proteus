@@ -3320,7 +3320,8 @@ namespace proteus
         for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); ++it)
           {
             std::map<int,double> Dw_Dn_jump;
-            register double gamma_cutfem=10.0,h_cutfem=0.0;
+            std::map<int,int> hits;
+            register double gamma_cutfem=0.5,h_cutfem=0.0;
             for (int eN_side=0;eN_side < 2; eN_side++)
               {
                 register int ebN = *it,
@@ -3331,6 +3332,7 @@ namespace proteus
                     Dw_Dn_jump[rvel_l2g[eN*nDOF_test_element+i]] = 0.0;
                     Ru_i[rvel_l2g[eN*nDOF_test_element+i]] = 0.0;
                     Rv_i[rvel_l2g[eN*nDOF_test_element+i]] = 0.0;
+                    hits[rvel_l2g[eN*nDOF_test_element+i]] = 0;
                   }
               }
             for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
@@ -3341,7 +3343,10 @@ namespace proteus
                     register int ebN = *it,
                       eN  = elementBoundaryElementsArray[ebN*2+eN_side];
                     for (int i=0;i<nDOF_v_test_element;i++)
-                      Dw_Dn_jump[rvel_l2g[eN*nDOF_test_element+i]] = 0.0;
+                      {
+                        Dw_Dn_jump[rvel_l2g[eN*nDOF_test_element+i]] = 0.0;
+                        hits[rvel_l2g[eN*nDOF_test_element+i]] = 0;
+                      }
                   }
                 // if(ebN_side == 0)
                 //   {
@@ -3416,22 +3421,30 @@ namespace proteus
                     ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_int);
                     for (int I=0;I<nSpace;I++)
                       {
-                        Du_Dn_jump += normal[I]*grad_u_int[I]; 
-                        Dv_Dn_jump += normal[I]*grad_v_int[I];
-                        for (int i=0;i<nDOF_v_test_element;i++)
-                          {
-                            Dw_Dn_jump[rvel_l2g[eN_nDOF_v_trial_element+i]] += vel_grad_trial_trace[i*nSpace+I]*normal[I];
-                          }
+                        Du_Dn_jump += grad_u_int[I]*normal[I]; 
+                        Dv_Dn_jump += grad_v_int[I]*normal[I];
+                      }
+                    for (int i=0;i<nDOF_v_test_element;i++)
+                      {
+                        for (int I=0;I<nSpace;I++)
+                          Dw_Dn_jump[rvel_l2g[eN_nDOF_v_trial_element+i]] += vel_grad_trial_trace[i*nSpace+I]*normal[I];
+                        hits[rvel_l2g[eN_nDOF_v_trial_element+i]] += 1;
                       }
                   }//eN_side
                 for (std::map<int,double>::iterator w_it=Dw_Dn_jump.begin(); w_it!=Dw_Dn_jump.end(); ++w_it)
                   {
                     int i_global = w_it->first;
                     double Dw_Dn_jump_i = w_it->second;
+                    /* if (true)//hits[i_global] == 2) */
+                    /*   { */
                     globalResidual[offset_u+stride_u*i_global]+=gamma_cutfem*h_cutfem*Du_Dn_jump*Dw_Dn_jump_i*dS;
                     globalResidual[offset_v+stride_v*i_global]+=gamma_cutfem*h_cutfem*Dv_Dn_jump*Dw_Dn_jump_i*dS;
-                    //Ru_i[i_global]+=gamma_cutfem*h_cutfem*Du_Dn_jump*Dw_Dn_jump_i*dS;
-                    //Rv_i[i_global]+=gamma_cutfem*h_cutfem*Dv_Dn_jump*Dw_Dn_jump_i*dS;
+                    //                        //std::cout<<"hits["<<i_global<<"] ="<<hits[i_global]<<std::endl;
+                    //  }
+                    //else
+                    //std::cout<<"hits["<<i_global<<"] ="<<hits[i_global]<<std::endl;
+                    Ru_i[i_global]+=gamma_cutfem*h_cutfem*Du_Dn_jump*Dw_Dn_jump_i*dS;
+                    Rv_i[i_global]+=gamma_cutfem*h_cutfem*Dv_Dn_jump*Dw_Dn_jump_i*dS;
                   }//i
               }//kb
           }//cutfem element boundaries
@@ -3439,8 +3452,8 @@ namespace proteus
           it_v=Rv_i.begin();
         while (it_u != Ru_i.end())
           {
-            std::cout<<"Ru["<<it_u->first<<"]="<<it_u->second<<std::endl;
-            std::cout<<"Rv["<<it_v->first<<"]="<<it_v->second<<std::endl;
+            //std::cout<<"Ru["<<it_u->first<<"]="<<it_u->second<<std::endl;
+            //std::cout<<"Rv["<<it_v->first<<"]="<<it_v->second<<std::endl;
             ++it_u; ++it_v;
           }
         //
@@ -5462,7 +5475,7 @@ namespace proteus
         for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); ++it)
           {
             std::map<int,double> Dw_Dn_jump;
-            register double gamma_cutfem=10.0,h_cutfem=0.0;
+            register double gamma_cutfem=0.5,h_cutfem=0.0;
             std::map<std::pair<int, int>, int> u_u_nz, v_v_nz;
             for (int eN_side=0;eN_side < 2; eN_side++)
               {
@@ -5545,26 +5558,61 @@ namespace proteus
                     //compute shape and solution information
                     //shape
                     ck_v.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_v_trial_element],jacInv_int,vel_grad_trial_trace);
-                    for (int I=0;I<nSpace;I++)
-                      for (int i=0;i<nDOF_v_test_element;i++)
-                        {
-                          int eN_i = eN*nDOF_v_test_element;
-                          Dw_Dn_jump[vel_l2g[eN_nDOF_v_trial_element+i]] += vel_grad_trial_trace[i*nSpace+I]*normal[I];
-                          for (int j=0;j<nDOF_v_test_element;j++)
-                            {
-                              int eN_i_j = eN_i*nDOF_v_test_element + j;
-                              u_u_nz[std::make_pair(vel_l2g[eN_nDOF_v_trial_element+i], vel_l2g[eN_nDOF_v_trial_element+j])] =  csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j];
-                              v_v_nz[std::make_pair(vel_l2g[eN_nDOF_v_trial_element+i], vel_l2g[eN_nDOF_v_trial_element+j])] =  csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j];
-                            }
-                        }
+                    for (int i=0;i<nDOF_v_test_element;i++)
+                      {
+                        int eN_i = eN*nDOF_v_test_element + i;
+                        for (int I=0;I<nSpace;I++)
+                          Dw_Dn_jump[vel_l2g[eN_i]] += vel_grad_trial_trace[i*nSpace+I]*normal[I];
+                      }
                   }//eN_side
+                for (int eN_side=0;eN_side < 2; eN_side++)
+                  {
+                    register int ebN = *it,
+                      eN  = elementBoundaryElementsArray[ebN*2+eN_side];
+                    for (int i=0;i<nDOF_v_test_element;i++)
+                      {
+                        register int eN_i = eN*nDOF_v_test_element+i;
+                        for (int eN_side2=0;eN_side2 < 2; eN_side2++)
+                          {
+                            register int eN2  = elementBoundaryElementsArray[ebN*2+eN_side2];
+                            for (int j=0;j<nDOF_v_test_element;j++)
+                              {
+                                int eN_i_j = eN_i*nDOF_v_test_element + j;
+                                int eN2_j = eN2*nDOF_v_test_element + j;
+                                register int ebN_i_j = ebN*4*nDOF_v_test_X_trial_element + \
+                                  eN_side*2*nDOF_v_test_X_trial_element + \
+                                  eN_side2*nDOF_v_test_X_trial_element + \
+                                  i*nDOF_v_trial_element +              \
+                                  j;
+                                std::pair<int,int> ij = std::make_pair(vel_l2g[eN_i], vel_l2g[eN2_j]);
+                                if (u_u_nz.count(ij))
+                                  assert(u_u_nz[ij] == csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]);//std::cout<<"u_u_nz exists "<<u_u_nz[ij]<<'\t'<<csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]<<std::endl;
+                                else
+                                  u_u_nz[ij] =  csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j];
+                                if (v_v_nz.count(ij))
+                                  assert(v_v_nz[ij] == csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]);//std::cout<<"v_v_nz exists "<<v_v_nz[ij]<<'\t'<<csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]<<std::endl;
+                                else
+                                  v_v_nz[ij] =  csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j];
+                              }
+                          }
+                      }
+                  }
                 for (std::map<int,double>::iterator wi_it=Dw_Dn_jump.begin(); wi_it!=Dw_Dn_jump.end(); ++wi_it)
                   for (std::map<int,double>::iterator wj_it=Dw_Dn_jump.begin(); wj_it!=Dw_Dn_jump.end(); ++wj_it)
                   {
-                    int i_global = wi_it->first,j_global = wj_it->first;
-                    double Dw_Dn_jump_i = wi_it->second, Dw_Dn_jump_j = wj_it->second;
-                    globalJacobian[u_u_nz[std::make_pair(i_global, j_global)]] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
-                    globalJacobian[v_v_nz[std::make_pair(i_global, j_global)]] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
+                    int i_global = wi_it->first,
+                      j_global = wj_it->first;
+                    double Dw_Dn_jump_i = wi_it->second,
+                      Dw_Dn_jump_j = wj_it->second;
+                    std::pair<int,int> ij = std::make_pair(i_global, j_global);
+                    if (u_u_nz.count(ij))
+                      globalJacobian[u_u_nz.at(ij)] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
+                    else
+                      std::cout<<"not in u_u stencil "<<i_global<<'\t'<<j_global<<std::endl;
+                    if (v_v_nz.count(ij))
+                      globalJacobian[v_v_nz.at(ij)] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;                    
+                    else
+                      std::cout<<"not in v_v stencil "<<i_global<<'\t'<<j_global<<std::endl;
                   }//i,j
               }//kb
           }//cutfem element boundaries
