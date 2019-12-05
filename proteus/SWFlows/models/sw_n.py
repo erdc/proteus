@@ -46,7 +46,7 @@ femSpaces = {0: FESpace['basis']}
 femSpaces = {0: FESpace['basis'],
              1: FESpace['basis'],
              2: FESpace['basis']}
-             
+
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
@@ -70,7 +70,7 @@ numericalFluxType = SW2DCV.NumericalFlux
 # ************************************ #
 matrix = SparseMatrix
 multilevelLinearSolver = LU
-levelLinearSolver = LU  #  KSP_petsc4py
+levelLinearSolver = KSP_petsc4py #LU
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 

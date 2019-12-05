@@ -7,6 +7,7 @@ from proteus.mprans import SW2DCV
 from proteus.mprans import GN_SW2DCV
 from proteus.Domain import RectangularDomain
 import numpy as np
+from proteus.Gauges import PointGauges
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
@@ -142,8 +143,7 @@ def hw_DBC(X, flag):
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-from proteus.Gauges import PointGauges
-p = PointGauges(gauges=(( ('h'), ((30, 15, 0), (60,15,0)) ),),
+p = PointGauges(gauges=(( ('eta0'), ((30, 15, 0), (60,15,0)) ),),
                 activeTime=(0, 10),
                 sampleRate=0.1,
                 fileName='island_gauges.csv')
