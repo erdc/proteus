@@ -28,7 +28,7 @@ opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 12.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.07, "Desired CFL restriction"),
+    ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
     ("reflecting_BCs",True,"Use reflecting BCs")
 ])

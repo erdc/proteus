@@ -10,10 +10,11 @@ import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
+from proteus.Gauges import PointGauges
 import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 
 """
-This is the problem of a solitary wave overtopping a canonical island.
+This is the problem of a solitary wave overtopping a conical island.
 This experiment was done at (insert ref here). There were several gauges
 places in the tank measuring the water height (location can be see in bottom)
 """
@@ -240,21 +241,23 @@ boundaryConditions = {'water_height': lambda x, flag: None,
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-from proteus.Gauges import PointGauges
-p = PointGauges(gauges=(( ('h'), ((7.5, 0.0,  0),
-                                  (13.0, 0.0, 0),
-                                  (21.0, 0.0, 0),
-                                  (7.5, 5.0, 0),
-                                  (13.0, 5.0, 0),
-                                  (21.0, 5.0, 0),
-                                  (25.0, 0.0, 0),
-                                  (25.0, 5.0, 0),
-                                  (25.0, 10.0, 0))),),
-                activeTime=(0, 3.),
+heightPointGauges = PointGauges(gauges=((('h'), ((7.5, 0.0,  0),
+                                 (13.0, 0.0, 0),
+                                 (21.0, 0.0, 0),
+                                 (7.5, 5.0, 0),
+                                 (13.0, 5.0, 0),
+                                 (21.0, 5.0, 0),
+                                 (25.0, 0.0, 0),
+                                 (25.0, 5.0, 0),
+                                 (25.0, 10.0, 0))),),
+                activeTime=(0., opts.final_time),
                 sampleRate=0.1,
-                fileName='gauges.csv')
-auxiliaryVariables=[p]
+                fileName='wave_gauges.csv')
 
+
+# ********************************************* #
+# ********** Create my SWFlowProblem ********** #
+# ********************************************* #
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -270,3 +273,5 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=None)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
+
+mySWFlowProblem.auxiliaryVariables=[heightPointGauges]

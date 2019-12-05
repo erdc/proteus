@@ -14,6 +14,7 @@ useSuperlu = mySWFlowProblem.useSuperlu
 domain = mySWFlowProblem.domain
 SSPOrder = mySWFlowProblem.swe_parameters['SSPOrder']
 LUMPED_MASS_MATRIX = mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX']
+auxiliaryVariables = mySWFlowProblem.auxiliaryVariables
 
 # *************************************** #
 # ********** MESH CONSTRUCTION ********** #
@@ -71,7 +72,7 @@ numericalFluxType = GN_SW2DCV.NumericalFlux
 # ************************************ #
 matrix = SparseMatrix
 multilevelLinearSolver = LU
-levelLinearSolver =  LU #KSP_petsc4py
+levelLinearSolver =  KSP_petsc4py #LU
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 
