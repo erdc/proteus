@@ -5,11 +5,11 @@ cfg_vars = sysconfig.get_config_vars()
 for key, value in cfg_vars.items():
     if type(value) == str:
         cfg_vars[key] = cfg_vars[key].replace("-Wstrict-prototypes", "")
-        cfg_vars[key] = cfg_vars[key].replace("-Wall", "-w")
-        cfg_vars[key] = cfg_vars[key].replace("-O3", "")
-        cfg_vars[key] = cfg_vars[key].replace("-O2", "")
-        cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "-UNDEBUG")
-        cfg_vars[key] = cfg_vars[key].replace(" -g ", "  ")#linux-gnu gotcha
+        #cfg_vars[key] = cfg_vars[key].replace("-Wall", "-w")
+        #cfg_vars[key] = cfg_vars[key].replace("-O3", "")
+        #cfg_vars[key] = cfg_vars[key].replace("-O2", "")
+        #cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "-UNDEBUG")
+        #cfg_vars[key] = cfg_vars[key].replace(" -g ", "  ")#linux-gnu gotcha
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
 
