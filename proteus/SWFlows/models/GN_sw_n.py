@@ -62,7 +62,7 @@ else:
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
 # ************************************ #
-try_supg_stabilization = True
+try_supg_stabilization = False
 subgridError = None
 shockCapturing = None
 numericalFluxType = GN_SW2DCV.NumericalFlux
@@ -72,14 +72,14 @@ numericalFluxType = GN_SW2DCV.NumericalFlux
 # ************************************ #
 matrix = SparseMatrix
 multilevelLinearSolver = LU
-levelLinearSolver =  KSP_petsc4py #LU
+levelLinearSolver =  LU  #KSP_petsc4py
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = 1.0e-7
+nl_atol_res = 1.0e-5
 nl_rtol_res = 0.0
 l_atol_res = 1.0e-7
 l_rtol_res = 0.0
