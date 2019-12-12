@@ -1,0 +1,42 @@
+name: proteus-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - compilers
+  - make
+  - setuptools
+  - cython
+  - daetk 1.0.1
+  - hdf5 =*=*mpich*
+  - metis=5
+  - mpich
+  - numpy=1.14
+  - openblas=0.2
+  - parmetis=4.0
+  - petsc4py=3.11
+  - petsc=3.11
+  - python=3
+  - scorec
+  - superlu=5
+  - superlu_dist=6
+  - triangle=1.6
+  - pychrono
+  - mpi4py
+  # This is an optional dependency
+  # - gmsh        [not osx]
+  - matplotlib
+  - mpi4py
+  - nose
+  - pytables
+  - pytest
+  - pytest-xdist
+  - scipy
+  - tetgen
+  - ncurses
+  - pychrono
+  - python=3
+  - future
+  - ipyparallel
+  - pillow
+  - recordtype

@@ -748,7 +748,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
                                                       1: {1:lambda x, flag: domain.BCbyFlag[flag].v_diffusive.uOfXT}}
             if nd == 3:
                 self.p.dirichletConditions[2] = lambda x, flag: domain.BCbyFlag[flag].w_dirichlet.uOfXT
-                self.p.advectiveFLuxBoundaryConditions[2] = lambda x, flag: domain.BCbyFlag[flag].w_advective.uOfXT
+                self.p.advectiveFluxBoundaryConditions[2] = lambda x, flag: domain.BCbyFlag[flag].w_advective.uOfXT
                 self.p.diffusiveFluxBoundaryConditions[2] = {2: lambda x, flag: domain.BCbyFlag[flag].w_diffusive.uOfXT}
 
     def _initializeNumerics(self):

@@ -538,7 +538,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
     def __cpp_MoveMesh_hz(self, x, t):
         return self.__cpp_MoveMesh_h(x, t)[2]
 
-    def setUnsteadyTwoPhaseVelocityInlet(self, wave, smoothing, vert_axis=None,
+    def setUnsteadyTwoPhaseVelocityInlet(self, wave, smoothing, vert_axis=None,orientation=None,
                                          wind_speed=None, vof_air=1., vof_water=0.,kInflow=1e-30, dInflow = 1e-10):
         """
         Imposes a velocity profile on the fluid with input wave and wind
@@ -569,7 +569,12 @@ class BC_RANS(BoundaryConditions.BC_Base):
             vert_axis = self.nd - 1
         if wind_speed is None:
             wind_speed = np.zeros(3)
-        self.waves = __cppClass_WavesCharacteristics(waves=wave, vert_axis=vert_axis, b_or=self._b_or,
+        if orientation is not None:
+            b_or = orientation
+        else:
+            b_or=self._b_or
+        assert b_or is not None, "ERROR: Boundary orientation for Unsteady flow inlet is not defined"
+        self.waves = __cppClass_WavesCharacteristics(waves=wave, vert_axis=vert_axis, b_or=b_or,
                                                      wind_speed=wind_speed, smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
 
         self.u_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
@@ -764,7 +769,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.dissipation_diffusive.resetBC()
 
     def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
-                                              refLevel, smoothing, U=None, Uwind=None,
+                                              refLevel, smoothing, orientation=None,U=None, Uwind=None,
                                               pRef=0.0, vert_axis=None,
                                               air=1.0, water=0.0,
                                               kInflow=None, dissipationInflow=None,
@@ -834,15 +839,20 @@ class BC_RANS(BoundaryConditions.BC_Base):
                 H = 1.0
             return H * dissipationInflowAir + (1 - H) * dissipationInflow
 
-        if self._b_or[0] == 1. or self._b_or[0] == -1.:
+        if orientation is not None:
+            b_or = orientation
+        else:
+            b_or=self._b_or
+        assert b_or is not None, "ERROR: Boundary orientation for Hydrostatic flow outlet is not defined"
+        if b_or[0] == 1. or b_or[0] == -1.:
             self.v_dirichlet.setConstantBC(0.)
             self.w_dirichlet.setConstantBC(0.)
             self.u_diffusive.setConstantBC(0.)
-        if self._b_or[1] == 1. or self._b_or[1] == -1.:
+        if b_or[1] == 1. or b_or[1] == -1.:
             self.u_dirichlet.setConstantBC(0.)
             self.w_dirichlet.setConstantBC(0.)
             self.v_diffusive.setConstantBC(0.)
-        if self._b_or[2] == 1. or self._b_or[2] == -1.:
+        if b_or[2] == 1. or b_or[2] == -1.:
             self.u_dirichlet.setConstantBC(0.)
             self.v_dirichlet.setConstantBC(0.)
             self.w_diffusive.setConstantBC(0.)
