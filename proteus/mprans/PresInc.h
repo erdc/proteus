@@ -749,7 +749,6 @@ namespace proteus
             jacInv[nSpace*nSpace],
             u_grad_trial[nDOF_trial_element*nSpace],
             dV,
-            u_test_dV[nDOF_test_element],
             u_grad_test_dV[nDOF_test_element*nSpace],
             x,y,z,
             G[nSpace*nSpace],G_dd_G,tr_G;
@@ -778,7 +777,6 @@ namespace proteus
           //precalculate test function products with integration weights
           for (int j=0;j<nDOF_trial_element;j++)
             {
-              u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
               for (int I=0;I<nSpace;I++)
                 {
                   u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -932,18 +930,8 @@ namespace proteus
               register double h_b=0.0,
                 u_ext=0.0,
                 grad_u_ext[nSpace],
-                m_ext=0.0,
-                dm_ext=0.0,
                 a_ext=0.0,
                 f_ext[nSpace],
-                df_ext[nSpace],
-                dflux_u_u_ext=0.0,
-                bc_u_ext=0.0,
-                bc_m_ext=0.0,
-                bc_dm_ext=0.0,
-                bc_f_ext[nSpace],
-                bc_df_ext[nSpace],
-                fluxJacobian_u_u[nDOF_trial_element],
                 jac_ext[nSpace*nSpace],
                 jacDet_ext,
                 jacInv_ext[nSpace*nSpace],
@@ -954,8 +942,8 @@ namespace proteus
                 u_test_dS[nDOF_test_element],
                 u_grad_trial_trace[nDOF_trial_element*nSpace],
                 u_grad_test_dS[nDOF_test_element*nSpace],
-                normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
-                    penalty=0.0,
+                normal[nSpace],x_ext,y_ext,z_ext,
+                penalty=0.0,
                 //
                 G[nSpace*nSpace],G_dd_G,tr_G;
               //
