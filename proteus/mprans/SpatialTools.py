@@ -203,7 +203,7 @@ class ShapeRANS(Shape):
         self._attachAuxiliaryVariable('kWallFunction', auxvar)
 
     def setAbsorptionZones(self, flags, epsFact_solid, center, orientation,
-                           dragAlpha, dragBeta=0.,
+                           dragAlpha, g, dragBeta=0.,
                            porosity=1.):
         """
         Sets a region (given the local flag) to an absorption zone
@@ -212,6 +212,8 @@ class ShapeRANS(Shape):
         ----------
         dragAlpha: Optional
             Relaxation zone coefficient.
+        g : numpy.ndarray
+            Gravitational acceleration vector 
         flags: array_like, int
             Local flags of the region. Can be an integer or a list.
         epsFact_solid: float
@@ -226,6 +228,14 @@ class ShapeRANS(Shape):
             Relaxation zone coefficient.
         """
         self._attachAuxiliaryVariable('RelaxZones')
+        vert = get_unit_vector(g)
+        vert_axis = -1
+        for i,ni in enumerate(vert):
+            if(ni == 1):
+                vert_axis = i
+        if(vert_axis<0):
+            logEvent("ERROR: Gravity axis must be aligned with  x,y or z direction.")
+            sys.exit(1)
         waves = None
         wind_speed = np.array([0., 0., 0.])
         if isinstance(flags, int):
@@ -249,10 +259,11 @@ class ShapeRANS(Shape):
                                                  epsFact_solid=epsFact_solid[i],
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
-                                                 porosity=porosity[i])
+                                                 porosity=porosity[i],
+                                                 vert_axis=vert_axis)
 
     def setGenerationZones(self, flags, epsFact_solid, center, orientation,
-                           waves, dragAlpha,
+                           waves, dragAlpha,g,
                            wind_speed=(0., 0., 0.), dragBeta=0.,
                            porosity=1., smoothing=0.):
         """
@@ -270,8 +281,10 @@ class ShapeRANS(Shape):
             Orientation vector pointing ACCORDING WITH the direction of generated waves.
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
-        dragAlpha: Optional[float]
+        dragAlpha: float
             Relaxation zone coefficient.
+        g : numpy.ndarray
+            Gravitational acceleration vector 
         wind_speed: Optional[array_like]
             Speed of wind in generation zone (default is (0., 0., 0.))
         dragBeta: Optional[float]
@@ -280,6 +293,14 @@ class ShapeRANS(Shape):
             Relaxation zone coefficient.
         """
         self._attachAuxiliaryVariable('RelaxZones')
+        vert = get_unit_vector(g)
+        vert_axis = -1
+        for i,ni in enumerate(vert):
+            if(ni == 1):
+                vert_axis = i
+        if(vert_axis<0):
+            logEvent("ERROR: Gravity axis must be aligned with  x,y or z direction.")
+            sys.exit(1)
         if isinstance(flags, int):
             flags = [flags]
             epsFact_solid = [epsFact_solid]
@@ -305,7 +326,8 @@ class ShapeRANS(Shape):
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i],
-                                                 smoothing=smoothing[i])
+                                                 smoothing=smoothing[i],
+                                                 vert_axis = vert_axis)
 
     def setPorousZones(self, flags, dragAlpha, dragBeta,
                        porosity):
@@ -783,7 +805,7 @@ class Tank3D(ShapeRANS):
         self.regionFlags = np.array(regionFlags)
         self.volumes = volumes
 
-    def setAbsorptionZones(self, dragAlpha, allSponge=False,
+    def setAbsorptionZones(self, dragAlpha, g,allSponge=False,
                            y_n=False, y_p=False,
                            x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
@@ -794,6 +816,8 @@ class Tank3D(ShapeRANS):
         ----------
         dragAlpha: float
             Relaxation zone coefficient.
+        g : numpy.ndarray
+            Gravitational acceleration vector 
         allSponge: bool
             If True, all sponge layers are converted to absorption zones.
         x_p: bool
@@ -809,6 +833,10 @@ class Tank3D(ShapeRANS):
         porosity: Optional[float]
             Relaxation zone coefficient.
         """
+        vert = get_unit_vector(g)
+        if abs(vert[2])!=1:
+            logEvent("ERROR: Gravity axis must be aligned with z  direction for Tank3D class.")
+            sys.exit(1)
         self.abs_zones = {'y-': y_n, 'y+': y_p, 'x-': x_n, 'x+': x_p}
         if allSponge is True:
             for key in self.abs_zones:
@@ -850,7 +878,7 @@ class Tank3D(ShapeRANS):
                                                      dragBeta=dragBeta,
                                                      porosity=porosity)
 
-    def setGenerationZones(self,  dragAlpha, smoothing, waves=None,
+    def setGenerationZones(self,  dragAlpha, smoothing, g, waves=None,
                            wind_speed=(0., 0., 0.), allSponge=False, y_n=False,
                            y_p=False, x_n=False, x_p=False, dragBeta=0.,
                            porosity=1.):
@@ -863,6 +891,8 @@ class Tank3D(ShapeRANS):
             Relaxation zone coefficient.
         smoothing: float
             Smoothing distance (typically 3.*he)
+        g : numpy.ndarray
+            Gravitational acceleration vector 
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
         wind_speed: Optional[array_like]
@@ -882,6 +912,11 @@ class Tank3D(ShapeRANS):
         porosity: Optional[float]
             Relaxation zone coefficient.
         """
+        vert = get_unit_vector(g)
+        if abs(vert[2])!=1:
+            logEvent("ERROR: Gravity axis must be aligned with z  direction for Tank3D class.")
+            sys.exit(1)
+            
         self.abs_zones = {'y-': y_n, 'y+': y_p, 'x-': x_n, 'x+': x_p}
         if allSponge is True:
             for key in self.abs_zones:
@@ -1143,7 +1178,7 @@ class Tank2D(ShapeRANS):
         self.spongeLayers['x+'] = x_p
         self.constructShape()
 
-    def setAbsorptionZones(self, dragAlpha, x_n=False, x_p=False,
+    def setAbsorptionZones(self, dragAlpha, g,x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to absorption zones
@@ -1152,6 +1187,8 @@ class Tank2D(ShapeRANS):
         ----------
         dragAlpha: float
             Relaxation zone coefficient.
+        g : numpy.ndarray
+            Gravitational acceleration vector 
         allSponge: bool
             If True, all sponge layers are converted to absorption zones.
         x_p: bool
@@ -1163,6 +1200,10 @@ class Tank2D(ShapeRANS):
         porosity: Optional[float]
             Relaxation zone coefficient.
         """
+        vert = get_unit_vector(g)
+        if abs(vert[1])!=1:
+            logEvent("ERROR: Gravity axis must be aligned with z  direction for Tank3D class.")
+            sys.exit(1)
         waves = None
         wind_speed = np.array([0., 0., 0.])
         if x_n or x_p:
@@ -1204,7 +1245,7 @@ class Tank2D(ShapeRANS):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
 
-    def setGenerationZones(self,  dragAlpha,  smoothing,
+    def setGenerationZones(self,  dragAlpha,  smoothing,g
                            waves=None, wind_speed=(0., 0., 0.),
                            x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
@@ -1217,6 +1258,8 @@ class Tank2D(ShapeRANS):
             Relaxation zone coefficient
         smoothing:
             Smoothing distance
+        g : numpy.ndarray
+            Gravitational acceleration vector 
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
         wind_speed: Optional[array_like]
@@ -1232,6 +1275,10 @@ class Tank2D(ShapeRANS):
         porosity: Optional[float]
             Relaxation zone coefficient.
         """
+        vert = get_unit_vector(g)
+        if abs(vert[1])!=1:
+            logEvent("ERROR: Gravity axis must be aligned with y  direction for Tank2D class.")
+            sys.exit(1)
         waves = waves
         wind_speed = np.array(wind_speed)
         if x_n or x_p:
@@ -1881,7 +1928,7 @@ class TankWithObstacles2D(Tank2D):
 
         return [[vertical_line, interior_point], ]
 
-    def setAbsorptionZones(self, dragAlpha, x_n=False, x_p=False,
+    def setAbsorptionZones(self, dragAlpha,g, x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to absorption zones
@@ -1890,6 +1937,8 @@ class TankWithObstacles2D(Tank2D):
         ----------
         dragAlpha: float
             Relaxation zone coefficient
+        g : numpy.ndarray
+            Gravitational acceleration vector 
         allSponge: bool
             If True, all sponge layers are converted to absorption zones.
         x_p: bool
@@ -1901,6 +1950,10 @@ class TankWithObstacles2D(Tank2D):
         porosity: Optional[float]
             Relaxation zone coefficient.
         """
+        vert = get_unit_vector(g)
+        if abs(vert[1])!=1:
+            logEvent("ERROR: Gravity axis must be aligned with z  direction for Tank3D class.")
+            sys.exit(1)
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
         sponge_x0 = self.x0y0[0]
@@ -1945,7 +1998,7 @@ class TankWithObstacles2D(Tank2D):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
 
-    def setGenerationZones(self,  dragAlpha, smoothing, waves=None,
+    def setGenerationZones(self,  dragAlpha, smoothing, g, waves=None,
                            wind_speed=(0., 0., 0.), x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
@@ -1957,6 +2010,8 @@ class TankWithObstacles2D(Tank2D):
             Relaxation zone coefficient.
         smoothing: float
             Smoothing distance (typically 3*he)
+        g : numpy.ndarray
+            Gravitational acceleration vector 
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
         wind_speed: Optional[array_like]
@@ -1972,6 +2027,9 @@ class TankWithObstacles2D(Tank2D):
         porosity: Optional[float]
             Relaxation zone coefficient.
         """
+        if abs(vert[1])!=1:
+            logEvent("ERROR: Gravity axis must be aligned with z  direction for Tank2D class.")
+            sys.exit(1)
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
         sponge_x0 = self.x0y0[0]
