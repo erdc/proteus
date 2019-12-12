@@ -26,22 +26,20 @@ we are doing simulation in 2d but only consider x direction velocity
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
-g = 9.81  # define gravity
 opts = Context.Options([
-    ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 40, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.33, "Desired CFL restriction"),
+    ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (20.0, 0.5)
+L = (20.0, 1.0)
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[-10.0, 0, 0])
-X_coords = (-10.0, 10.0)  # this is domain, used in BCs
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -53,6 +51,7 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 ###############################
 #  CONSTANTS NEEDED FOR SETUP #
 ###############################
+g = 9.81
 q = 1  # this is flow rate
 a = 0.2  # this is amplitude
 r = 1  # this is solitary wave width
@@ -65,16 +64,15 @@ x0 = 0  # wave is centered at x = 0
 #   Functions defined here    #
 ###############################
 def solitary_wave(x, t):
-    sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2.0)
-    soliton = h0 + a * h0 * sechSqd
-    return soliton
+    sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
+    return h0 + a * h0 * sechSqd
 
 
 def bathymetry_function(X):
     x = X[0]
-    num = -3 * 3**(1/3) * a**(3/2) * g + 8 * q**2 * r**2 * np.sqrt((1+a)*r**2)
+    num = -3. * np.sqrt(3.) * a**(3/2) * g + 8 * q**2 * r**2 * np.sqrt((1+a)*r**2)
     denom = 6 * g * np.sqrt((1+a)*r**2)
-    sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2.0)
+    sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
     z = old_div(num, denom) * sechSqd
     return z
 
@@ -83,7 +81,7 @@ def bathymetry_function(X):
 ##############################
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        h = h0 + solitary_wave(X[0], 0)
+        h = solitary_wave(X[0], 0)
         return h
 
 class x_mom_at_t0(object):
@@ -111,11 +109,15 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        return 0
+        x = X[0]
+        sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
+        hw = -2.0 * a * h0 * r * sechSqd * np.tanh(r*(x-x0))
+        return hw
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
+X_coords = (-10.0, 10.0)  # this is domain, used in BCs
 
 
 def water_height_DBC(X, flag):
@@ -132,11 +134,6 @@ def x_mom_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda X, t: x_mom_exact().uOfXT(X, 0.0)
 
-
-def y_mom_DBC(X, flag):
-    return lambda x, t: 0.0
-
-
 def heta_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
@@ -148,7 +145,7 @@ def hw_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
     elif X[0]==X_coords[1]:
-        return lambda x,t: hw_height_at_t0().uOfXT(X, 0.0)
+        return lambda x,t: hw_at_t0().uOfXT(X, 0.0)
 
 
 # ********************************** #

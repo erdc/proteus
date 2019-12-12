@@ -22,8 +22,6 @@
 #define IF_BOTH_GAMMA_BRANCHES 0
 
 namespace proteus {
-/* FOR mGN, maybe we don't need a lot of these inline functions for now after
- * first two that I defined */
 
 // for mGN stuff "max" wave speeds. See section 4.4 of first mGN paper by
 // Guermond, Popov, Tovar, Kees for formulas
@@ -1068,6 +1066,7 @@ public:
     std::valarray<double> drelax;
     drelax.resize(numDOFs, 0.0);
 
+    // for h
     std::valarray<double> delta_Sqd_h;
     delta_Sqd_h.resize(numDOFs, 0.0);
     std::valarray<double> bar_deltaSqd_h;
@@ -1080,7 +1079,6 @@ public:
     // for kinetic energy
     std::valarray<double> kin;
     kin.resize(numDOFs, 0.0);
-    // for heta
     std::valarray<double> delta_Sqd_kin;
     delta_Sqd_kin.resize(numDOFs, 0.0);
     std::valarray<double> bar_deltaSqd_kin;
@@ -1127,6 +1125,7 @@ public:
         }
       } // j loop ends here
     }   // i loops ends here
+
     for (int i = 0; i < numDOFs; i++) {
       bar_deltaSqd_h[i] =
           bar_deltaSqd_h[i] /
@@ -1139,9 +1138,9 @@ public:
           (csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i]) / 2.0;
     }
 
-    ////////////////////////
-    // FIRST LOOP in DOFs //
-    ////////////////////////
+    /////////////////////////////
+    // FIRST Main LOOP in DOFs //
+    /////////////////////////////
     int ij = 0;
     for (int i = 0; i < numDOFs; i++) {
       // read some vectors
