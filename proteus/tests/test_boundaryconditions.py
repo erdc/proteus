@@ -895,7 +895,7 @@ class TestBC(unittest.TestCase):
         uDir = uTan - gradU*Y
         # Wall objects
         kWall = mbc.kWall(Y=Y, Yplus=Yplus, b_or=b_or_wall)
-        wall = mbc.WallFunctions(turbModel=turbModel, kWall=kWall, b_or=b_or_wall, Y=Y, Yplus=Yplus, U0=U0)
+        wall = mbc.WallFunctions(turbModel=turbModel, kWall=kWall, Y=Y, Yplus=Yplus, U0=U0)
         kWall.model = None
         wall.model = None
         # Boundary conditions
