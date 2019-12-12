@@ -1587,14 +1587,13 @@ class kWall(AuxiliaryVariables.AV_base):
     class instance acting as a wall for the k variable.
     """
 
-    def __init__(self, Y, Yplus, b_or, nu=1.004e-6, Cmu=0.09):
+    def __init__(self, Y, Yplus, nu=1.004e-6, Cmu=0.09):
         """
         Sets turbulent boundaries for wall treatment.
         """
         self.kappa = 1e-10
         self.Y = Y
         self.Yplus = Yplus
-        self._b_or = b_or
         self.nu = nu
         self.model = None
         self.Cmu = Cmu
