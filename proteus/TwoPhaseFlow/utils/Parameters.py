@@ -315,10 +315,17 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.epsFact_viscosity = epsFact
         copts.epsFact_density = epsFact
         copts.forceStrongDirichlet = False
+<<<<<<< HEAD
         copts.weak_bc_penalty_constant = 100.0
         copts.useRBLES = 0
         copts.useVF = 0.0
         copts.timeOrder = 1
+=======
+        copts.weak_bc_penalty_constant = 10
+        copts.useRBLES = 0
+        copts.useVF = 0
+        copts.timeOrder = 2
+>>>>>>> adimako/parameters1.6
         copts.stokes = False
         copts.eb_adjoint_sigma = 1.
         copts.Closure_0_model = None
@@ -590,7 +597,11 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.epsFact_density = epsFact
         copts.forceStrongDirichlet = False
         copts.ns_sed_forceStrongDirichlet = False
+<<<<<<< HEAD
         copts.weak_bc_penalty_constant = 100.0
+=======
+        copts.weak_bc_penalty_constant = 10
+>>>>>>> adimako/parameters1.6
         copts.useRBLES = 0
         copts.useVF = 0
         copts.PSTAB = 0
