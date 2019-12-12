@@ -46,7 +46,6 @@ opts = Context.Options([
 L = (50.0, 1.0)
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[-35.0, 0, 0])
-X_coords = (-35.0, 15.0)  # this is domain in x direction, used in BCs
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -70,8 +69,6 @@ x0 = - h0 / slope - L_wave / 2.0  # location of the toe of the beach
 ###############################
 #   Functions defined here    #
 ###############################
-
-
 def solitary_wave(x, t):
     sechSqd = (1.00 / np.cosh(z * (x - x0 - c * t)))**2.00
     return a * h0 * sechSqd
@@ -138,29 +135,15 @@ class hw_at_t0(object):
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
+X_coords = (-35.0, 15.0)  # this is domain in x direction, used in BCs
 
 
 def water_height_DBC(X, flag):
     return None
 
 def x_mom_DBC(X, flag):
-    if X[0] == X_coords[0]:
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
         return lambda X, t: 0.0
-    if X[0] == X_coords[1]:
-        return lambda X, t: 0.0
-
-
-def y_mom_DBC(X, flag):
-    return lambda x, t: 0.0
-
-
-def heta_DBC(X, flag):
-    return None
-
-
-def hw_DBC(X, flag):
-    return None
-
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -172,17 +155,12 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0()}
-boundaryConditions = {'water_height': water_height_DBC,
+boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
-                      'h_times_eta': heta_DBC,
-                      'h_times_w': hw_DBC}
-#analyticalSolution
-analyticalSolution={'h_exact': Zero(),
-                  'hu_exact': Zero(),
-                  'hv_exact': Zero(),
-                  'heta_exact':Zero(),
-                  'hw_exact':Zero()}
+                      'h_times_eta': lambda x, flag: None,
+                      'h_times_w': lambda x, flag: None}
+
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -193,8 +171,6 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              bathymetry=bathymetry_function,
-                                              analyticalSolution=analyticalSolution)
+                                              bathymetry=bathymetry_function)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.016
-mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1

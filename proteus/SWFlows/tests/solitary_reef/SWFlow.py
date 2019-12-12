@@ -10,10 +10,11 @@ import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
+from proteus.Gauges import PointGauges
 import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 
 """
-This is the problem of a solitary wave overtopping a canonical island.
+This is the problem of a solitary wave overtopping a conical island.
 This experiment was done at (insert ref here). There were several gauges
 places in the tank measuring the water height (location can be see in bottom)
 """
@@ -23,7 +24,7 @@ places in the tank measuring the water height (location can be see in bottom)
 # *************************** #
 opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 30.0, "Final time for simulation"),
+    ("final_time", 10.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
@@ -36,9 +37,6 @@ opts = Context.Options([
 L = (48.8, 26.5)  # this is length in x direction and y direction
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[0, -13.25, 0])
-X_coords = (0.0, 48.8)  # this is x domain, used in BCs
-Y_coords = (-13.25, 13.25)  # this is x domain, used in BCs
-
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -54,7 +52,7 @@ g = 9.81
 
 # stuff for solitary wave
 h0 = 0.78
-alpha = 0.5 * h0
+alpha = 0.4  # 0.5 * h0
 xs = 5.0
 r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
 c = np.sqrt(g * (h0 + alpha))
@@ -70,7 +68,7 @@ yc = 13.25
 ####################################
 
 def solitary_wave(x, t):
-    sechSqd = (1.00 / np.cosh(r * (x - xs)))**2.0
+    sechSqd = (1.00 / np.cosh(r * (x - xs - c * t)))**2.0
     return alpha * sechSqd
 
 
@@ -144,9 +142,9 @@ def bathymetry_function(X):
     bath = np.maximum(base, shelf) + cone
     return bath
 
-##############################
-##### INITIAL CONDITIONS #####
-##############################
+######################
+# INITIAL CONDITIONS #
+######################
 
 
 class water_height_at_t0(object):
@@ -186,16 +184,8 @@ class hw_at_t0(object):
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
-
-
-class Zero(object):
-    def uOfXT(self, x, t):
-        return 0.0
-
-
-
-def water_height_DBC(X, flag):
-    return None
+X_coords = (0.0, 48.8)  # this is x domain, used in BCs
+Y_coords = (-13.25, 13.25)  # this is x domain, used in BCs
 
 
 def x_mom_DBC(X, flag):
@@ -211,15 +201,6 @@ def y_mom_DBC(X, flag):
     elif X[1] == Y_coords[1]:
         return lambda x, t: 0.0
 
-
-def heta_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
-
-
-def hw_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
 
 
 # ********************************** #
@@ -240,21 +221,22 @@ boundaryConditions = {'water_height': lambda x, flag: None,
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-from proteus.Gauges import PointGauges
-p = PointGauges(gauges=(( ('h'), ((7.5, 0.0,  0),
-                                  (13.0, 0.0, 0),
-                                  (21.0, 0.0, 0),
-                                  (7.5, 5.0, 0),
-                                  (13.0, 5.0, 0),
-                                  (21.0, 5.0, 0),
-                                  (25.0, 0.0, 0),
-                                  (25.0, 5.0, 0),
-                                  (25.0, 10.0, 0))),),
-                activeTime=(0, 3.),
-                sampleRate=0.1,
-                fileName='gauges.csv')
-auxiliaryVariables=[p]
+want_gauges = True
+heightPointGauges = PointGauges(gauges=((('h'), ((7.5, 0.0,  0),
+                                 (13.0, 0.0, 0),
+                                 (21.0, 0.0, 0),
+                                 (7.5, 5.0, 0),
+                                 (13.0, 5.0, 0),
+                                 (21.0, 5.0, 0),
+                                 (25.0, 0.0, 0),
+                                 (25.0, 5.0, 0),
+                                 (25.0, 10.0, 0))),),
+                activeTime=(0., opts.final_time),
+                fileName='wave_gauges.csv')
 
+# ********************************************* #
+# ********** Create my SWFlowProblem ********** #
+# ********************************************* #
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -270,3 +252,5 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=None)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
+if want_gauges:
+    mySWFlowProblem.auxiliaryVariables = [heightPointGauges]
