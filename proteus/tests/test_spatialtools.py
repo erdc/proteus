@@ -337,10 +337,10 @@ class TestShapeRANS(unittest.TestCase):
         dragBeta = 0.
         porosity = 1.
         domain = create_domain2D()
-        # for custom (same principle for rectangle or cuboid)
+        # for custom (same principle for rectangle or cuboid or STL)
         custom = create_custom2D(domain, 'mprans')
         custom.setAbsorptionZones(flags=flag, epsFact_solid=epsFact_solid,
-                                  center=center, orientation=orientation,
+                                  center=center, orientation=orientation,vert_axis=0,
                                   dragAlpha=dragAlpha, dragBeta=dragBeta,
                                   porosity=porosity)
         npt.assert_equal(custom.auxiliaryVariables['RelaxZones'], custom.zones)
@@ -356,6 +356,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(zone.dragBeta, dragBeta)
         npt.assert_equal(zone.porosity, porosity)
         npt.assert_equal(zone.Shape, custom)
+        npt.assert_equal(zone.vert_axis, 0)
         # for tanks in 2D
         tank = create_tank2D(domain, dim=[4., 4.])
         tank.setSponge(x_n=1.5, x_p=2.)
@@ -453,11 +454,11 @@ class TestShapeRANS(unittest.TestCase):
                                       depth=0.9, g=np.array([0., -9.81, 0.]),
                                       waveDir=np.array([1., 0., 0.]))
         domain = create_domain2D()
-        # for custom (same principle for rectangle or cuboid)
+        # for custom (same principle for rectangle or cuboid or STL)
         custom = create_custom2D(domain, 'mprans')
         custom.setGenerationZones(flags=flag, epsFact_solid=epsFact_solid,
                                   center=center, orientation=orientation,
-                                  waves=waves, dragAlpha=dragAlpha,
+                                  vert_axis=0,waves=waves, dragAlpha=dragAlpha,
                                   dragBeta=dragBeta, porosity=porosity)
         npt.assert_equal(custom.auxiliaryVariables['RelaxZones'], custom.zones)
         zone = custom.zones[flag]
@@ -472,6 +473,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(zone.dragBeta, dragBeta)
         npt.assert_equal(zone.porosity, porosity)
         npt.assert_equal(zone.Shape, custom)
+        npt.assert_equal(zone.vert_axis, 0)
         # for tanks in 2D
         tank = create_tank2D(domain, dim=[4., 4.])
         tank.setSponge(x_n=1.5, x_p=2.)
