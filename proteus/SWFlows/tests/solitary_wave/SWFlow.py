@@ -27,8 +27,8 @@ opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 4.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.2, "Desired CFL restriction"),
-    ("refinement", 5, "Refinement level")
+    ("cfl", 0.25, "Desired CFL restriction"),
+    ("refinement", 4, "Refinement level")
 ])
 
 ###################
@@ -52,9 +52,8 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 g = 9.81
 h1 = .10
 h2 = .11
-# initial location of solitary wave
-x0 = 2.0
-# solitary wave celerity and  width
+x0 = 2.0 # initial location of solitary wave
+# solitary wave celerity and width
 c = np.sqrt(g * h2)
 r = np.sqrt(old_div(3.0 * (h2 - h1), 4 * h2 * h1**2))
 
@@ -142,35 +141,9 @@ class hw_at_t0(object):
 ###############################
 
 
-def water_height_DBC(X, flag):
-    return None
-
-
 def x_mom_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: x_mom_at_t0().uOfXT(X, 0.0)
-    elif X[0] == X_coords[1]:
-        return lambda x, t: x_mom_at_t0().uOfXT(X, 0.0)
-
-
-def y_mom_DBC(X, flag):
-    return lambda x, t: 0.0
-
-
-def heta_DBC(X, flag):
-    return None
-    # if X[0] == X_coords[0]:
-    #     return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
-    # elif X[0] == X_coords[1]:
-    #     return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
-
-
-def hw_DBC(X, flag):
-    return None
-    # if X[0] == X_coords[0]:
-    #     return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
-    # elif X[0] == X_coords[1]:
-    #     return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
+        return lambda x, t: 0.0
 
 
 # ********************************** #
@@ -185,11 +158,11 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0()}
-boundaryConditions = {'water_height': water_height_DBC,
+boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
-                      'h_times_eta': heta_DBC,
-                      'h_times_w': hw_DBC}
+                      'h_times_eta': lambda x, flag: None,
+                      'h_times_w': lambda x, flag: None}
 analytical_Solution = {'h_exact': water_height_at_tfinal(),
                        'hu_exact': Zero(),
                        'hv_exact': Zero(),
