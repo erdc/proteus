@@ -203,7 +203,7 @@ class ShapeRANS(Shape):
         self._attachAuxiliaryVariable('kWallFunction', auxvar)
 
     def setAbsorptionZones(self, flags, epsFact_solid, center, orientation,
-                           dragAlpha, vert_axis,dragBeta=0.,
+                           dragAlpha, vert_axis=None,dragBeta=0.,
                            porosity=1.):
         """
         Sets a region (given the local flag) to an absorption zone
