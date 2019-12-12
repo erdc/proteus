@@ -56,9 +56,7 @@ class ParametersHolder:
         # gain access to problem class if necessary
         self._Problem = ProblemInstance
         # default options
-        self.nModels = 0
-        self.models_list = []
-        #self.Models = ParametersModelsHolder(self._Problem)
+        self.model_list = []
         self.physical = ParametersPhysical()
         self.mesh = self._Problem.domain.MeshOptions
 
@@ -76,7 +74,6 @@ class ParametersHolder:
         logEvent('----------')
         n_base = Numerics_base()
         p_base = Physics_base()
-        self.models_list = self.model_list
 
         #attach problem object to each model, identify index, and then form dictionary
         for (idx,model) in enumerate(self.model_list):
