@@ -58,8 +58,7 @@ class TwoPhaseFlowProblem:
         self.domain=domain
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
         self.Parameters.model_list = models
-        self.ns_model=ns_model
-        self.ls_model = ls_model
+        self.ns_model=None
         self.modelIdxDict = {}
         self.nd=nd
         self.cfl=cfl
@@ -85,7 +84,7 @@ class TwoPhaseFlowProblem:
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         if 'rans2p' in self.modelIdxDict:
             self.ns_model = 0
-        else if 'rans3p' in self.modelIdxDict:
+        elif 'rans3p' in self.modelIdxDict:
             self.ns_model = 1
         self.FESpace = FESpace(self.ns_model, self.nd)
         self.FESpace.setFESpace()
