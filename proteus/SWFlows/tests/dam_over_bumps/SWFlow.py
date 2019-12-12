@@ -42,14 +42,6 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 ######################
 ##### BATHYMETRY #####
 ######################
-h0 = 10
-a = 3000
-B = 5
-k = 0.002
-g = SWFlowProblem.default_physical_parameters['gravity']
-p = old_div(np.sqrt(8 * g * h0), a)
-s = old_div(np.sqrt(p**2 - k**2), 2.)
-mannings = k
 
 
 def bathymetry_function(X):
@@ -84,7 +76,6 @@ class Zero(object):
 # heta and hw are needed for the modified Green-Naghdi equations,
 # ie dispersive shallow water equations
 
-
 class heta_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
@@ -93,13 +84,7 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        eta = solitary_wave(X[0], 0)
-        h = eta - bathymetry_function(X)
-        hp = max(h, 0.)
-        hprime = -2.0 * z * eta * np.tanh(z * (X[0] - x0 - c * t))
-        hw = hp * (-c * h0 * eta * hprime / (h0 + eta)**2)
-        return hw
-
+        return 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #

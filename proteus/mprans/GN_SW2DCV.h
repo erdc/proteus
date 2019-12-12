@@ -22,8 +22,6 @@
 #define IF_BOTH_GAMMA_BRANCHES 0
 
 namespace proteus {
-/* FOR mGN, maybe we don't need a lot of these inline functions for now after
- * first two that I defined */
 
 // for mGN stuff "max" wave speeds. See section 4.4 of first mGN paper by
 // Guermond, Popov, Tovar, Kees for formulas
@@ -1059,35 +1057,44 @@ public:
     hwLow.resize(numDOFs, 0.0);
     Kmax.resize(numDOFs, 0.0);
 
-#if 0
     //////////////////////////////
     // For relaxation of bounds //
     //////////////////////////////
 
-    // Change all of these to valarray
-
-    std::vector<double> urelax;
+    std::valarray<double> urelax;
     urelax.resize(numDOFs, 0.0);
-    std::vector<double> drelax;
+    std::valarray<double> drelax;
     drelax.resize(numDOFs, 0.0);
 
-    std::vector<double> delta_Sqd_h;
+    // for h
+    std::valarray<double> delta_Sqd_h;
     delta_Sqd_h.resize(numDOFs, 0.0);
-    std::vector<double> bar_deltaSqd_h;
+    std::valarray<double> bar_deltaSqd_h;
     bar_deltaSqd_h.resize(numDOFs, 0.0);
     // for heta
-    std::vector<double> delta_Sqd_heta;
+    std::valarray<double> delta_Sqd_heta;
     delta_Sqd_heta.resize(numDOFs, 0.0);
-    std::vector<double> bar_deltaSqd_heta;
+    std::valarray<double> bar_deltaSqd_heta;
     bar_deltaSqd_heta.resize(numDOFs, 0.0);
+    // for kinetic energy
+    std::valarray<double> kin;
+    kin.resize(numDOFs, 0.0);
+    std::valarray<double> delta_Sqd_kin;
+    delta_Sqd_kin.resize(numDOFs, 0.0);
+    std::valarray<double> bar_deltaSqd_kin;
+    bar_deltaSqd_kin.resize(numDOFs, 0.0);
 
     double size_of_domain = 0.0;
+
+    // loop to define size of domain and kinetic energy
     for (int i = 0; i < numDOFs; i++) {
       size_of_domain += lumped_mass_matrix[i];
+      kin[i] = 0.5 * (hu_old[i] * hu_old[i] + hv_old[i] * hv_old[i]);
+      kin[i] *= 2.0 * h_old[i] /
+                (h_old[i] * h_old[i] + std::pow(fmax(h_old[i], hEps), 2));
     }
 
     // First loop
-    int ij = 0;
     for (int i = 0; i < numDOFs; i++) {
       urelax[i] =
           1.0 +
@@ -1101,14 +1108,12 @@ public:
         if (i != j) {
           delta_Sqd_h[i] += h_old[i] - h_old[j];
           delta_Sqd_heta[i] += heta_old[i] - heta_old[j];
+          delta_Sqd_kin[i] += kin[i] - kin[j];
         }
-        // UPDATE ij //
-        ij += 1;
       } // j loop ends here
     }   // i loops ends here
 
     // Second loop
-    ij = 0;
     for (int i = 0; i < numDOFs; i++) {
       for (int offset = csrRowIndeces_DofLoops[i];
            offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
@@ -1116,11 +1121,11 @@ public:
         if (i != j) {
           bar_deltaSqd_h[i] += delta_Sqd_h[j] + delta_Sqd_h[i];
           bar_deltaSqd_heta[i] += delta_Sqd_heta[j] + delta_Sqd_heta[i];
+          bar_deltaSqd_kin[i] += delta_Sqd_kin[j] + delta_Sqd_kin[i];
         }
-        // UPDATE ij //
-        ij += 1;
       } // j loop ends here
     }   // i loops ends here
+
     for (int i = 0; i < numDOFs; i++) {
       bar_deltaSqd_h[i] =
           bar_deltaSqd_h[i] /
@@ -1128,12 +1133,14 @@ public:
       bar_deltaSqd_heta[i] =
           bar_deltaSqd_heta[i] /
           (csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i]) / 2.0;
+      bar_deltaSqd_kin[i] =
+          bar_deltaSqd_kin[i] /
+          (csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i]) / 2.0;
     }
-#endif
 
-    ////////////////////////
-    // FIRST LOOP in DOFs //
-    ////////////////////////
+    /////////////////////////////
+    // FIRST Main LOOP in DOFs //
+    /////////////////////////////
     int ij = 0;
     for (int i = 0; i < numDOFs; i++) {
       // read some vectors
@@ -1175,7 +1182,7 @@ public:
         double one_over_hBT =
             2.0 * hBT[ij] /
             (hBT[ij] * hBT[ij] + std::pow(fmax(hBT[ij], hEps), 2));
-        psi_ij = one_over_hBT * (huBT[ij] * huBT[ij] + huBT[ij] * huBT[ij]) /
+        psi_ij = one_over_hBT * (huBT[ij] * huBT[ij] + hvBT[ij] * hvBT[ij]) /
                  2.0; // Eqn (6.31)
         Kmax[i] = fmax(psi_ij, Kmax[i]);
 
@@ -1226,9 +1233,8 @@ public:
         hetai_Min = std::min(hetai_Min, hetaBT[ij]);
         hetai_Max = std::max(hetai_Max, hetaBT[ij]);
 
-// Then do relaxation of bounds here. If confused, see (4.12) of Euler
-// convex limiting paper. Turn this off for now
-#if 0
+        // Then do relaxation of bounds here. If confused, see (4.12) of Euler
+        // convex limiting paper. Turn this off for now
         hiMin = std::max(drelax[i] * hiMin,
                          hiMin - std::abs(bar_deltaSqd_h[i]) / 2.0);
         hetai_Min = std::max(drelax[i] * hetai_Min,
@@ -1238,7 +1244,8 @@ public:
                          hiMax + std::abs(bar_deltaSqd_h[i]) / 2.0);
         hetai_Max = std::min(urelax[i] * hetai_Max,
                              hetai_Max + std::abs(bar_deltaSqd_heta[i]) / 2.0);
-#endif
+        Kmax[i] = std::min(urelax[i] * Kmax[i],
+                           Kmax[i] + std::abs(bar_deltaSqd_kin[i]) / 2.0);
 
         /* COMPUTE LOW ORDER SOLUTION. See EQN 6.23 in
          * SW friction paper */
@@ -1828,6 +1835,7 @@ public:
           extendedSourceTerm_hu[i] = mannings * hui * mi;
           extendedSourceTerm_hv[i] = mannings * hvi * mi;
           // For use in the convex limiting function -EJT
+          // actually didn't need to do this but it helps with signs
           new_SourceTerm_hu[i] = -mannings * hui * mi;
           new_SourceTerm_hv[i] = -mannings * hvi * mi;
         } else {
@@ -1841,7 +1849,7 @@ public:
                       fmax(hi_to_the_gamma, xi * g * n2 * dt * veli_norm)));
           extendedSourceTerm_hu[i] = friction_aux * hui;
           extendedSourceTerm_hv[i] = friction_aux * hvi;
-          // For use in the convex limiting functio -EJT
+          // For use in the convex limiting function -EJT
           new_SourceTerm_hu[i] = -friction_aux * hui;
           new_SourceTerm_hv[i] = -friction_aux * hvi;
         }
@@ -1970,8 +1978,17 @@ public:
           ij += 1;
         } // end j loop
 
+        // Change rescaling to match TAMU code -EJT, 12/9/2019
+        // Here we divide by eps = 1E-5 so that small recale = 1/2 g eps
+        // H_{0,max}^2
+        double small_rescale = g * hEps * hEps / 1E-5;
+        double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
+
         // COMPUTE ENTROPY RESIDUAL //
-        double one_over_entNormFactori = 2. / (etaMax[i] - etaMin[i] + 1E-15);
+        double one_over_entNormFactori = 1.0 / rescale;
+        // double one_over_entNormFactori = 2. / (etaMax[i] - etaMin[i] +
+        // 1E-15);
+
         double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0.,
                                         one_over_hiReg); // NOTE: FLAT BOTTOM
         double eta_prime2 = DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);

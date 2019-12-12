@@ -28,9 +28,9 @@ opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 12.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.07, "Desired CFL restriction"),
+    ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs",True,"Use reflecting BCs")
+    ("reflecting_BCs",False,"Use reflecting BCs")
 ])
 
 ###################
@@ -39,7 +39,6 @@ opts = Context.Options([
 L = (15.0, 1.0)  # this is length in x direction and y direction
 refinement = opts.refinement
 domain = RectangularDomain(L=L, x=[0, 0, 0])  # x is bottom left corner
-X_coords = (0.0, 15.0)  # this is domain in x direction, used for BCs
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -65,10 +64,11 @@ x0 = 5.9
 ###############################
 #   Functions defined here    #
 ###############################
+
+
 def solitary_wave(x, t):
     sechSqd = (1.00 / np.cosh(z * (x - x0 - c * t)))**2.00
-    soliton = a * h0 * sechSqd
-    return soliton
+    return a * h0 * sechSqd
 
 
 def bathymetry_function(X):
@@ -133,33 +133,11 @@ class hw_at_t0(object):
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
-
-
-def water_height_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
-    # elif X[0]==X_coords[1]:
-    #     return lambda x,t: water_height_at_t0().uOfXT(X,0.0)
-
+X_coords = (0.0, 15.0)  # this is domain in x direction, used for BCs
 
 def x_mom_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda X, t: x_mom_at_t0().uOfXT(X, 0.0)
-
-
-def y_mom_DBC(X, flag):
-    return lambda x, t: 0.0
-
-
-def heta_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
-
-
-def hw_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
-
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
+        return lambda x, t: 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -171,11 +149,11 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0()}
-boundaryConditions = {'water_height': water_height_DBC,
+boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
-                      'h_times_eta': heta_DBC,
-                      'h_times_w': hw_DBC}
+                      'h_times_eta': lambda x, flag: None,
+                      'h_times_w': lambda x, flag: None}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
