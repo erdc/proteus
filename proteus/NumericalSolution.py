@@ -1171,7 +1171,7 @@ class NS_base(object):  # (HasTraits):
         n0 = self.nList[0]
 
         if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
+            domain = p0.domain
             rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
             nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
             rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
@@ -1358,10 +1358,7 @@ class NS_base(object):  # (HasTraits):
             #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             #p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
 
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-        else:
-            domain = p0.domain
+        domain = p0.domain
 
         if (hasattr(domain, 'PUMIMesh') and
             domain.PUMIMesh.adaptMesh() and
@@ -1464,10 +1461,7 @@ class NS_base(object):  # (HasTraits):
         p0 = self.pList[0]#.ct
         n0 = self.nList[0]#.ct
 
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-        else:
-            domain = p0.domain
+        domain = p0.domain
 
         sfConfig = domain.PUMIMesh.size_field_config()
         if(hasattr(self,"nSolveSteps")):

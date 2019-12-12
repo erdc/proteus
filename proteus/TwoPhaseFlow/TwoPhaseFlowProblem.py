@@ -15,6 +15,7 @@ class TwoPhaseFlowProblem:
     def __init__(self,
                  ns_model=0, #0: rans2p, 1: rans3p
                  ls_model=1, #0: vof+ncls+rdls+mcorr, 1: clsvof
+                 models=None, #list of models
                  nd=2,
                  # TIME STEPPING #
                  cfl=0.33,
@@ -62,8 +63,10 @@ class TwoPhaseFlowProblem:
         # ***** SAVE PARAMETERS ***** #
         self.domain=domain
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
+        self.Parameters.model_list = models
         self.ns_model=ns_model
         self.ls_model = ls_model
+        self.modelIdxDict = {}
         self.nd=nd
         self.cfl=cfl
         self.outputStepping=outputStepping
@@ -95,46 +98,6 @@ class TwoPhaseFlowProblem:
         self.rans3p_parameters = default_rans3p_parameters
         self.clsvof_parameters = default_clsvof_parameters
 
-        # set indice of models if ns_model and ls_model is set
-        ind = 0
-        if self.ls_model == 0:
-            if self.ns_model == 0:
-                self.Parameters.Models.rans2p.index = ind
-                ind += 1
-            else:
-                self.Parameters.Models.rans3p.index = ind
-                ind += 1
-                self.Parameters.Models.pressureIncrement.index = ind
-                ind += 1
-                self.Parameters.Models.pressure.index = ind
-                ind += 1
-                self.Parameters.Models.pressureInitial.index = ind
-                ind += 1
-            self.Parameters.Models.vof.index = ind
-            ind += 1
-            self.Parameters.Models.ncls.index = ind
-            ind += 1
-            self.Parameters.Models.rdls.index = ind
-            ind += 1
-            self.Parameters.Models.mcorr.index = ind
-            ind += 1
-        elif self.ls_model == 1:
-            if self.ns_model == 0:
-                self.Parameters.Models.rans2p.index = ind
-                ind += 1
-                self.Parameters.Models.clsvof.index = ind
-                ind += 1
-            else:
-                self.Parameters.Models.clsvof.index = ind
-                ind += 1
-                self.Parameters.Models.rans3p.index = ind
-                ind += 1
-                self.Parameters.Models.pressureIncrement.index = ind
-                ind += 1
-                self.Parameters.Models.pressure.index = ind
-                ind += 1
-                self.Parameters.Models.pressureInitial.index = ind
-                ind += 1
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
         self.fastArchive = fastArchive
@@ -230,16 +193,15 @@ class TwoPhaseFlowProblem:
         so = self.so
         params = self.Parameters
         # list of models
-        so.pnList = [None for i in range(params.nModels)]
-        for i in range(params.nModels):
-            model = params.models_list[i]
+        so.pnList = [None for i in range(len(params.model_list))]
+        for model in params.model_list:
             so.pnList[model.index] = (model.p, model.n)
         so.systemStepControllerType = SplitOperator.Sequential_MinAdaptiveModelStep
         if self.outputStepping.dt_fixed:
             so.dt_system_fixed = self.outputStepping.dt_fixed
         # rans3p specific options
-        if params.Models.rans3p.index is not None: #rans3p
-            PINIT_model = params.Models.pressureInitial.index
+        if 'rans3p' in self.modelIdxDict:
+            PINIT_model = self.params.model_list[0].fetchIndex(self.modelIdxDict,'pressureInitial') #there must be a cleaner way to do this
             assert PINIT_model is not None, 'must set pressureInitial model index when using rans3p'
             so.modelSpinUpList = [PINIT_model]
             from proteus.default_so import defaultSystem
