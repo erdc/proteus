@@ -482,25 +482,12 @@ namespace proteus
                 ebN_local_kb_nSpace = ebN_local_kb*nSpace;
               register double u_ext=0.0,
                 grad_u_ext[nSpace],
-                //m_ext=0.0,
-                //dm_ext=0.0,
-                //H_ext=0.0,
-                //dH_ext[nSpace],
-                //flux_ext=0.0,
-                //bc_u_ext=0.0,
-                //bc_grad_u_ext[nSpace],
-                //bc_m_ext=0.0,
-                //bc_dm_ext=0.0,
-                //bc_H_ext=0.0,
-                //bc_dH_ext[nSpace],
                 jac_ext[nSpace*nSpace],
                 jacDet_ext,
                 jacInv_ext[nSpace*nSpace],
                 boundaryJac[nSpace*(nSpace-1)],
                 metricTensor[(nSpace-1)*(nSpace-1)],
                 metricTensorDetSqrt,
-                dS,
-                //u_test_dS[nDOF_test_element],
                 u_grad_trial_trace[nDOF_trial_element*nSpace],
                 normal[nSpace],x_ext,y_ext,z_ext,
                 G[nSpace*nSpace],G_dd_G,tr_G,norm;
@@ -525,7 +512,6 @@ namespace proteus
                                                   normal_ref,
                                                   normal,
                                                   x_ext,y_ext,z_ext);
-              dS = metricTensorDetSqrt*dS_ref[kb];
               //get the metric tensor
               //cek todo use symmetry
               ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
@@ -599,9 +585,7 @@ namespace proteus
       double epsHeaviside,epsDirac,epsDiffusion;
       for  (int k=0;k<nQuadraturePoints_element;k++)
         {
-          int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
-            eN_k_nSpace = eN_k*nSpace;
-            //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+          int eN_k = eN*nQuadraturePoints_element+k; //index to a scalar at a quadrature point
 
           //declare local storage
           register double u=0.0,
