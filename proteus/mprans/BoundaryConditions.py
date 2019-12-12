@@ -950,6 +950,7 @@ class RelaxationZone:
         self.orientation = orientation
         if vert_axis is None:
             vert_axis = self.Shape.Domain.nd - 1
+        self.vert_axis = vert_axis
         if waves is not None:
             self.waves = __cppClass_WavesCharacteristics(waves=waves, wind_speed=wind_speed, vert_axis=vert_axis,
                                                          smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
