@@ -400,13 +400,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             ball_angular_acceleration=copts.ball_angular_acceleration,
             ball_density=copts.ball_density,
         )
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure'],
-                                    1: IC['vel_u'],
-                                    2: IC['vel_v']}
-        if nd == 3:
-            self.p.initialConditions[3] = IC['vel_w']
+         
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -684,12 +678,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
             ball_angular_velocity=copts.ball_angular_velocity,
             particles=copts.particles,
         )
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['vel_u'],
-                                    1: IC['vel_v']}
-        if nd == 3:
-            self.p.initialConditions[2] = IC['vel_w']
+
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -790,9 +779,6 @@ class ParametersModelPressure(ParametersModelBase):
                                                 fluidModelIndex=V_model,
                                                 pressureIncrementModelIndex=PINC_model,
                                                 useRotationalForm=copts.useRotationalForm)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -852,9 +838,6 @@ class ParametersModelPressureInitial(ParametersModelBase):
                                                   modelIndex=PINIT_model,
                                                   fluidModelIndex=V_model,
                                                   pressureModelIndex=PRESSURE_model)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -926,9 +909,6 @@ class ParametersModelPressureIncrement(ParametersModelBase):
                                                    modelIndex=PINC_model,
                                                    fluidModelIndex=V_model,
                                                    fixNullSpace=False)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure_increment']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1052,9 +1032,6 @@ class ParametersModelKappa(ParametersModelBase):
                                                  sc_beta=copts.sc_beta,
                                                  default_dissipation=default_dissipation_turbulence,
                                                  closure=copts.closure)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['k']}
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1199,9 +1176,6 @@ class ParametersModelDissipation(ParametersModelBase):
                                                  sc_beta=copts.sc_beta,
                                                  default_kappa=default_kappa_turbulence,
                                                  closure=copts.closure)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['dissipation']}
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1305,9 +1279,6 @@ class ParametersModelCLSVOF(ParametersModelBase):
                                                   computeMetrics=copts.computeMetrics,
                                                   disc_ICs=copts.disc_ICs)
         self.p.coefficients.variableNames = ['phi']
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['clsvof']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1401,9 +1372,6 @@ class ParametersModelVOF(ParametersModelBase):
                                                sc_uref=copts.sc_uref,
                                                sc_beta=copts.sc_beta,
                                                movingDomain=self.p.movingDomain)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['vof']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1516,9 +1484,6 @@ class ParametersModelNCLS(ParametersModelBase):
                                                 sc_uref=copts.sc_uref,
                                                 sc_beta=copts.sc_beta,
                                                 movingDomain=self.p.movingDomain)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['ncls']}
         # BOUNDARY CONDITIONS
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1622,9 +1587,6 @@ class ParametersModelRDLS(ParametersModelBase):
                                                 useMetrics=copts.useMetrics,
                                                 backgroundDiffusionFactor=copts.backgroundDiffusionFactor,
                                                 ELLIPTIC_REDISTANCING=copts.ELLIPTIC_REDISTANCING)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['rdls']}
         # BOUNDARY CONDITIONS
         self.p.dirichletConditions = {0: lambda x, flag: None}
         self.p.weakDirichletConditions = {0: RDLS.setZeroLSweakDirichletBCsSimple}
@@ -1944,8 +1906,6 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
                                                            grading_type=copts.grading_type,
                                                            scale_with_nd=copts.scale_with_nd,
                                                            do_firstStep=copts.do_firstStep)
-        # INITIAL CONDITIONS
-        self.p.initialConditions = None
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: None}
@@ -2035,8 +1995,6 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
                                                     modelType_block=smFlags,
                                                     modelParams_block=smTypes,
                                                     meIndex=ME_model)
-        # INITIAL CONDITIONS
-        self.p.initialConditions = None
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:

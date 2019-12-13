@@ -57,9 +57,9 @@ class TwoPhaseFlowProblem:
         # ***** SAVE PARAMETERS ***** #
         self.domain=domain
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
-        self.Parameters.model_list = models
-        self.ns_model=None
-        self.modelIdxDict = {}
+        self.modelList=[] #list used for internal tracking of models
+        self.modelDict={} #dict used to allow user access to models
+        self.modelIdxDict = {} #dict used for internal tracking of model indices
         self.nd=nd
         self.cfl=cfl
         self.outputStepping=outputStepping
@@ -82,17 +82,22 @@ class TwoPhaseFlowProblem:
 
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
+        ns_model = None 
         if 'rans2p' in self.modelIdxDict:
-            self.ns_model = 0
+            ns_model = 0
         elif 'rans3p' in self.modelIdxDict:
-            self.ns_model = 1
-        self.FESpace = FESpace(self.ns_model, self.nd)
+            ns_model = 1
+        self.FESpace = FESpace(ns_model, self.nd)
         self.FESpace.setFESpace()
 
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
         self.fastArchive = fastArchive
         self.usePETScOptionsFileExternal = False
+
+    def addModel(self,modelObject,name):
+        self.modelList.append(modelObject)
+        self.modelDict[name] = modelObject
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
@@ -161,6 +166,7 @@ class TwoPhaseFlowProblem:
         #    assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
 
     def initializeAll(self):
+        self.Parameters.model_list=self.modelList
         # initial conditions
         self.assert_initialConditions()
         # boundary conditions
