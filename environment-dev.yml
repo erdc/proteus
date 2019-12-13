@@ -23,8 +23,7 @@ dependencies:
   - triangle=1.6
   - pychrono
   - mpi4py
-  # This is an optional dependency
-  # - gmsh        [not osx]
+  - gmsh
   - matplotlib
   - mpi4py
   - nose
