@@ -1,6 +1,6 @@
-# Proteus -- SWFlows app
+# Proteus -- SWFlow app
 
-The SWFlows app contains a number of tests for the the 2D nonlinear Shallow Water Equations, and the 2D modified Green-Naghdi equations. Both models are
+The SWFlow app contains a number of tests for the the 2D nonlinear Shallow Water Equations, and the 2D modified Green-Naghdi equations. Both models are
 numerically solved using continuous, linear finite elements as seen in
 [Guermond, *et al* 2018](https://doi.org/10.1137/17M1156162) and [Guermond *et al* 2019].
 
@@ -27,11 +27,11 @@ make develop
 
 ## Running the tests
 
-Each test directory in `proteus/SWFlows/tests/` contains a python file named
+Each test directory in `proteus/SWFlow/tests/` contains a python file named
 `SWFlow.py`. This is the file that sets up the computational domain, initial conditions,
-boundary conditions, and other problem specific options. Note that using the filename `SWFlow.py` is not necessary, one can use a different filename if wanted. Thus, in all following instructions, one can replace `SWFlow.py` with `some_filename.py`. 
+boundary conditions, and other problem specific options. Note that using the filename `SWFlow.py` is not necessary, one can use a different filename if wanted. Thus, in all following instructions, one can replace `SWFlow.py` with `some_filename.py`.
 
-Each `SWFlow.py` file has its own set of default context options. These include choosing which model to use, final run time of the simulation, refinement level of mesh, etc. For example, in `SWFlows/tests/dam_over_bumps`, we see the following set of default options:
+Each `SWFlow.py` file has its own set of default context options. These include choosing which model to use, final run time of the simulation, refinement level of mesh, etc. For example, in `SWFlow/tests/dam_over_bumps`, we see the following set of default options:
 
 ```
 opts= Context.Options([
@@ -46,7 +46,7 @@ opts= Context.Options([
 ```
 Here `sw_model` refers to which model is chosen: 0 for the Shallow Water Equations and 1 for the modified Green-Naghdi equations (or "Dispersive SWEs"). The rest of the options are straight forward.
 
-To run a single test, go to a test directory of your choice. For this description, we will be using the directory `SWFlows/tests/dam_over_bumps` as an example. Without any modifications to the default context options, one can run the following command:
+To run a single test, go to a test directory of your choice. For this description, we will be using the directory `SWFlow/tests/dam_over_bumps` as an example. Without any modifications to the default context options, one can run the following command:
 
 ```
 parun --SWEs -l1 -v SWFlow.py
@@ -67,7 +67,7 @@ which switches the model to the dispersive model and increases the final time to
 Creating a new test is as simple as copying one of the existing directories,
 and modifying appropriately to fit your needs.
 
-Currently, most of the tests are set up to use a rectangular domain with triangle elements created by an in house function in Proteus. The SWFlows Apps can be used with meshes created by Triangle and Gmsh. The "real world" tests such as the Malpesset problem and Colorado River problem are using meshes created by the software SMS (https://www.aquaveo.com/software/sms-surface-water-modeling-system-introduction) in the ADH format. If you would like to use your own mesh, but aren't sure how to use it, please contact us and we can gladly help.
+Currently, most of the tests are set up to use a rectangular domain with triangle elements created by an in house function in Proteus. The SWFlow Apps can be used with meshes created by Triangle and Gmsh. The "real world" tests such as the Malpesset problem and Colorado River problem are using meshes created by the software SMS (https://www.aquaveo.com/software/sms-surface-water-modeling-system-introduction) in the ADH format. If you would like to use your own mesh, but aren't sure how to use it, please contact us and we can gladly help.
 
 ## Tests that aren't ready
 elliptic_shoal
