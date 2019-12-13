@@ -13,8 +13,7 @@ class TwoPhaseFlowProblem:
     """ TwoPhaseFlowProblem """
 
     def __init__(self,
-                 ns_model=0, #0: rans2p, 1: rans3p
-                 ls_model=1, #0: vof+ncls+rdls+mcorr, 1: clsvof
+                 models=None, #list of models
                  nd=2,
                  # TIME STEPPING #
                  cfl=0.33,
@@ -37,10 +36,6 @@ class TwoPhaseFlowProblem:
                  useSuperlu=True,
                  fastArchive=False):
         # ***** SET OF ASSERTS ***** #
-        if ns_model is not None:
-            assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
-        if ls_model is not None:
-            assert ls_model in [0,1], "ls_model={0,1} for vof+ncls+rdls+mcorr or clsvof respectively"
         assert nd in [2,3], "nd={2,3}"
         assert cfl <= 1, "Choose cfl <= 1"
         assert isinstance (outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
@@ -62,8 +57,9 @@ class TwoPhaseFlowProblem:
         # ***** SAVE PARAMETERS ***** #
         self.domain=domain
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
-        self.ns_model=ns_model
-        self.ls_model = ls_model
+        self.modelList=[] #list used for internal tracking of models
+        self.modelDict={} #dict used to allow user access to models
+        self.modelIdxDict = {} #dict used for internal tracking of model indices
         self.nd=nd
         self.cfl=cfl
         self.outputStepping=outputStepping
@@ -84,133 +80,105 @@ class TwoPhaseFlowProblem:
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
+        # ***** CREATE FINITE ELEMENT  ***** #
+        self.FESpace = FESpace(self.nd)
 
-        # ***** CREATE FINITE ELEMENT SPACES ***** #
-        self.FESpace = FESpace(self.ns_model, self.nd)
-        self.FESpace.setFESpace()
-
-        # ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
-        self.physical_parameters = default_physical_parameters
-        self.rans2p_parameters = default_rans2p_parameters
-        self.rans3p_parameters = default_rans3p_parameters
-        self.clsvof_parameters = default_clsvof_parameters
-
-        # set indice of models if ns_model and ls_model is set
-        ind = 0
-        if self.ls_model == 0:
-            if self.ns_model == 0:
-                self.Parameters.Models.rans2p.index = ind
-                ind += 1
-            else:
-                self.Parameters.Models.rans3p.index = ind
-                ind += 1
-                self.Parameters.Models.pressureIncrement.index = ind
-                ind += 1
-                self.Parameters.Models.pressure.index = ind
-                ind += 1
-                self.Parameters.Models.pressureInitial.index = ind
-                ind += 1
-            self.Parameters.Models.vof.index = ind
-            ind += 1
-            self.Parameters.Models.ncls.index = ind
-            ind += 1
-            self.Parameters.Models.rdls.index = ind
-            ind += 1
-            self.Parameters.Models.mcorr.index = ind
-            ind += 1
-        elif self.ls_model == 1:
-            if self.ns_model == 0:
-                self.Parameters.Models.rans2p.index = ind
-                ind += 1
-                self.Parameters.Models.clsvof.index = ind
-                ind += 1
-            else:
-                self.Parameters.Models.clsvof.index = ind
-                ind += 1
-                self.Parameters.Models.rans3p.index = ind
-                ind += 1
-                self.Parameters.Models.pressureIncrement.index = ind
-                ind += 1
-                self.Parameters.Models.pressure.index = ind
-                ind += 1
-                self.Parameters.Models.pressureInitial.index = ind
-                ind += 1
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
         self.fastArchive = fastArchive
         self.usePETScOptionsFileExternal = False
 
+    def addModel(self,modelObject,name):
+        self.modelList.append(modelObject)
+        self.modelDict[name] = modelObject
+
+    def attachModels(self):
+        #attach problem object to each model, identify index, and then form dictionary
+        for (idx,model) in enumerate(self.modelList):
+            model._Problem = self
+            model.index = idx
+            model._Problem.modelIdxDict[model.name]=idx
+
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
         nd = self.nd
-        ns_model = self.ns_model
-        ls_model = self.ls_model
-        if ns_model is not None:
-            assert 'pressure' in initialConditions, 'Provide pressure in ICs'
-            assert 'vel_u' in initialConditions, 'Provide vel_u in ICs'
-            assert 'vel_v' in initialConditions, 'Provide vel_v in ICs'
-            if nd==3:
-                assert 'vel_w' in initialConditions, 'Provide vel_w in ICs'
-            if self.ns_model == 1: #rans3p
-                assert 'pressure_increment' in initialConditions, 'Provide pressure_increment in ICs'
-        if ls_model == 0:
-            assert 'vof' in initialConditions, 'Provide vof in ICs'
-            assert 'ncls' in initialConditions, 'Provide ncls in ICs'
-        elif self.ls_model == 1:
-            assert 'clsvof' in initialConditions or ('ncls' in initialConditions and 'vof' in initialConditions), 'Provide clsvof or ncls and vof in ICs'
+        #ns_model = self.ns_model
+        #ls_model = self.ls_model
+        #if ns_model is not None:
+        #    assert 'pressure' in initialConditions, 'Provide pressure in ICs'
+        #    assert 'vel_u' in initialConditions, 'Provide vel_u in ICs'
+        #    assert 'vel_v' in initialConditions, 'Provide vel_v in ICs'
+        #    if nd==3:
+        #        assert 'vel_w' in initialConditions, 'Provide vel_w in ICs'
+        #    if self.ns_model == 1: #rans3p
+        #        assert 'pressure_increment' in initialConditions, 'Provide pressure_increment in ICs'
+        #if ls_model == 0:
+        #    assert 'vof' in initialConditions, 'Provide vof in ICs'
+        #    assert 'ncls' in initialConditions, 'Provide ncls in ICs'
+        #elif self.ls_model == 1:
+        #    assert 'clsvof' in initialConditions or ('ncls' in initialConditions and 'vof' in initialConditions), 'Provide clsvof or ncls and vof in ICs'
     #
     def assert_boundaryConditions(self):
         boundaryConditions = self.boundaryConditions
         nd = self.nd
-        ns_model = self.ns_model
-        ls_model = self.ls_model
-        if boundaryConditions is not None:
-            # check dirichlet BCs
-            if ns_model is not None:
-                assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
-                assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
-                assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
-                if nd==3:
-                    assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
-            if ls_model == 0:
-                assert 'vof_DBC' in boundaryConditions, "Provide vof_DBC"
-                assert 'ncls_DBC' in boundaryConditions, "Provide ncls_DBC"
-            elif ls_model == 1:
-                assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
-            # check advective flux BCs
-            if ns_model is not None:
-                assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
-                assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
-                assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
-                if nd==3:
-                    assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
-            if ls_model == 1:
-                assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
-            if ls_model == 0:
-                assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
-            # check diffusive flux BCs
-            if ns_model is not None:
-                assert 'vel_u_DFBC' in boundaryConditions, "provide vel_u_DFBC"
-                assert 'vel_v_DFBC' in boundaryConditions, "provide vel_v_DFBC"
-                if nd==3:
-                    assert 'vel_w_DFBC' in boundaryConditions, "provide vel_w_DFBC"
-            if ls_model == 1:
-                assert 'clsvof_DFBC' in boundaryConditions, "provide clsvof_DFBC"
-            if ns_model==1: #rans3p
-                # check dirichlet BCs
-                assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
-                # check advective flux BCs
-                assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
-                # check diffusive flux BCs
-                assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
-        else:
-            assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
+        #ns_model = self.ns_model
+        #ls_model = self.ls_model
+        #if boundaryConditions is not None:
+        #    # check dirichlet BCs
+        #    if ns_model is not None:
+        #        assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
+        #        assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
+        #        assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
+        #        if nd==3:
+        #            assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
+        #    if ls_model == 0:
+        #        assert 'vof_DBC' in boundaryConditions, "Provide vof_DBC"
+        #        assert 'ncls_DBC' in boundaryConditions, "Provide ncls_DBC"
+        #    elif ls_model == 1:
+        #        assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
+        #    # check advective flux BCs
+        #    if ns_model is not None:
+        #        assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
+        #        assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
+        #        assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
+        #        if nd==3:
+        #            assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
+        #    if ls_model == 1:
+        #        assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
+        #    if ls_model == 0:
+        #        assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
+        #    # check diffusive flux BCs
+        #    if ns_model is not None:
+        #        assert 'vel_u_DFBC' in boundaryConditions, "provide vel_u_DFBC"
+        #        assert 'vel_v_DFBC' in boundaryConditions, "provide vel_v_DFBC"
+        #        if nd==3:
+        #            assert 'vel_w_DFBC' in boundaryConditions, "provide vel_w_DFBC"
+        #    if ls_model == 1:
+        #        assert 'clsvof_DFBC' in boundaryConditions, "provide clsvof_DFBC"
+        #    if ns_model==1: #rans3p
+        #        # check dirichlet BCs
+        #        assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
+        #        # check advective flux BCs
+        #        assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
+        #        # check diffusive flux BCs
+        #        assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
+        #else:
+        #    assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
 
     def initializeAll(self):
+
+        #model organization
+        self.attachModels()
+        self.Parameters.model_list=self.modelList
+
         # initial conditions
         self.assert_initialConditions()
         # boundary conditions
         self.assert_boundaryConditions()
+
+        # ***** SET FINITE ELEMENT  ***** #
+        self.FESpace.setFESpace(self.modelIdxDict)
+
         # parameters
         self.Parameters.initializeParameters()
         # mesh
@@ -224,22 +192,22 @@ class TwoPhaseFlowProblem:
         #     self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
         #     self.domain.use_gmsh = True
         # split operator
+
         self.initializeSO()
 
     def initializeSO(self):
         so = self.so
         params = self.Parameters
         # list of models
-        so.pnList = [None for i in range(params.nModels)]
-        for i in range(params.nModels):
-            model = params.models_list[i]
+        so.pnList = [None for i in range(len(params.model_list))]
+        for model in params.model_list:
             so.pnList[model.index] = (model.p, model.n)
         so.systemStepControllerType = SplitOperator.Sequential_MinAdaptiveModelStep
         if self.outputStepping.dt_fixed:
             so.dt_system_fixed = self.outputStepping.dt_fixed
         # rans3p specific options
-        if params.Models.rans3p.index is not None: #rans3p
-            PINIT_model = params.Models.pressureInitial.index
+        if 'rans3p' in self.modelIdxDict:
+            PINIT_model = self.modelIdxDict['pressureInitial'] 
             assert PINIT_model is not None, 'must set pressureInitial model index when using rans3p'
             so.modelSpinUpList = [PINIT_model]
             from proteus.default_so import defaultSystem
@@ -272,7 +240,6 @@ class TwoPhaseFlowProblem:
         if self.archiveAllSteps is True:
             so.archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
         so.systemStepExact = outputStepping.systemStepExact
-
 
 class OutputStepping:
     """
@@ -308,24 +275,34 @@ class FESpace:
     """
     Create FE Spaces.
     """
-    def __init__(self,ns_model,nd):
-        if ns_model is not None:
-            assert ns_model == 0 or ns_model == 1, "ns_model must be 0 (rans2p) or 1 (rans3p)"
+    def __init__(self,nd):
         assert nd in [2,3], 'number of dimensions must be 2 or 3'
-        self.ns_model=ns_model
         self.nd=nd
-        # For now we just support rans2p with: p1-p1 and rans3p with: p2-p1
-        if ns_model == 0 or ns_model is None: # rans2p or None
-            self.velSpaceOrder=1
-            self.pSpaceOrder=1
-        else: #rans3p
-            self.velSpaceOrder=2
-            self.pSpaceOrder=1
+        self.velSpaceOrder=None
+        self.pSpaceOrder=None
 
     def __getitem__(self, key):
         return self.__dict__[key]
 
-    def setFESpace(self):
+    def setFESpace(self,modelIdxDict):
+        """
+        User is allowed to define velSpaceOrder and pSpaceOrder. If not specified, defaults will be chosen based on 
+        """
+        
+        # For now we just support rans2p with: p1-p1 and rans3p with: p2-p1
+        if(self.velSpaceOrder is None and self.pSpaceOrder is None):
+            if 'rans2p' in modelIdxDict: # rans2p or None
+                self.velSpaceOrder=1
+                self.pSpaceOrder=1
+            elif 'rans3p' in modelIdxDict: #rans3p
+                self.velSpaceOrder=2
+                self.pSpaceOrder=1
+            else:
+                assert False, "the rans2p or rans3p model needs to be added to the problem"
+        assert self.velSpaceOrder is not None, "need to set problem.FESpace.velSpaceOrder"
+        assert self.pSpaceOrder is not None, "need to set problem.FESpace.pSpaceOrder"
+
+
         ##################
         # VELOCITY SPACE #
         ##################
