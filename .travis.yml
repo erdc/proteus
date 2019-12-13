@@ -32,7 +32,7 @@ install:
   - conda info -a
   - conda env create -f environment-dev.yml
   - conda activate proteus-dev
-  - pip install -e .
+  - pip install -v -e .
 
 cache:
   - timeout: 1000
