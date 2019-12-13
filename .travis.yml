@@ -6,8 +6,8 @@ language: python
 
 env:
   - TEST_PROFILE="proteus"
-  - TEST_PROFILE="1st_set"
-  - TEST_PROFILE="2nd_set"
+  #- TEST_PROFILE="1st_set"
+  #- TEST_PROFILE="2nd_set"
 
 python:
   - "3.7"
@@ -41,9 +41,9 @@ script:
   - export MPLBACKEND="AGG"
   - if [[ "${TEST_PROFILE}" == "proteus" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
 
-#  - if [[ "${TEST_PROFILE}" == "1st_set" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
+  #- if [[ "${TEST_PROFILE}" == "1st_set" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
 
-#  - if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set; fi
+  #- if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set; fi
   - unset LD_LIBRARY_PATH #reset things so we don't break cache?
 
 notifications:
