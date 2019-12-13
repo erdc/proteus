@@ -185,22 +185,17 @@ class hw_at_t0(object):
 ##### BOUNDARY CONDITIONS #####
 ###############################
 X_coords = (0.0, 48.8)  # this is x domain, used in BCs
-Y_coords = (-13.25, 13.25)  # this is x domain, used in BCs
+Y_coords = (-13.25, 13.25)  # this is y domain, used in BCs
 
 
 def x_mom_DBC(X, flag):
-    if X[0] == X_coords[0]:
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
         return lambda X, t: 0.0
-    elif X[0] == X_coords[1]:
-        return lambda x, t: 0.0
 
 
 def y_mom_DBC(X, flag):
-    if X[1] == Y_coords[0]:
+    if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
         return lambda X, t: 0.0
-    elif X[1] == Y_coords[1]:
-        return lambda x, t: 0.0
-
 
 
 # ********************************** #

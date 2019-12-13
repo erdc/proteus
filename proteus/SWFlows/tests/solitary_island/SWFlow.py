@@ -23,12 +23,12 @@ places in the tank measuring the water height (location can be see in bottom)
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts = Context.Options([
-    ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 9.0, "Final time for simulation"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
+    ("final_time", 10.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs",True,"Use reflecting BCs")
+    ("reflecting_BCs",False,"Use reflecting BCs")
 ])
 
 ###################
@@ -52,9 +52,10 @@ g = 9.81
 
 # stuff for solitary wave
 h0 = 0.32
-alpha = 1 * h0
-xs = 15.0 - 12.96
-vel = np.sqrt(old_div(3 * alpha, (4 * h0**3)))
+alpha = 0.181 * h0
+xs = 7.56
+r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
+c = np.sqrt(g * (h0 + alpha))
 
 # stuff for cone bathymetry
 htop = 0.625
@@ -67,15 +68,14 @@ hcone = 0.9
 #   Some functions defined here    #
 ####################################
 def solitary_wave(x, t):
-    sechSqd = (1.00 / np.cosh(vel * (x - xs)))**2.00
-    soliton = alpha * sechSqd
-    return soliton
+    sechSqd = (1.00 / np.cosh(r * (x - xs)))**2.00
+    return alpha * sechSqd
 
 
 def bathymetry_function(X):
     x = X[0]
     y = X[1]
-    radius = np.sqrt((x - 15.0)**2 + (y - 13.0)**2)
+    radius = np.sqrt((x - 12.96)**2 + (y - 13.80)**2)
 
     # need to do this annoying thing for piecewise functions
     conds = [radius <= rcone, radius > rcone]
@@ -87,14 +87,16 @@ def bathymetry_function(X):
 ##############################
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        eta = h0 + solitary_wave(X[0], 0)
-        h = max(eta - bathymetry_function(X), 0.)
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
         return h
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        return solitary_wave(X[0], 0) * np.sqrt(g / h0)
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
+        return h * c * old_div(hTilde-h0, hTilde)
 
 
 class y_mom_at_t0(object):
@@ -110,45 +112,42 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        hw = 2.0 * solitary_wave(X[0], 0) * vel * np.sinh(vel * (X[0]-xs))
+        sechSqd = (1.0 / np.cosh(r * (X[0] - xs)))**2.0
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
+        hTildePrime = -2.0 * alpha * r * np.tanh(r*(X[0]-xs)) * sechSqd
+        hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
         return hw
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
-
-# Actually don't need any of these
-def water_height_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: water_height_at_t0().uOfXT(X, 0.0)
+X_coords = (0.0, 30.0)  # this is x domain, used in BCs
+Y_coords = (0.0, 25.0)  # this is y domain, used in BCs
 
 def x_mom_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda X, t: x_mom_at_t0().uOfXT(X, 0.0)
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
+        return lambda X, t: 0.0
 
 
 def y_mom_DBC(X, flag):
-    return lambda x, t: 0.0
-
-
-def heta_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
-
-
-def hw_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
+    if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
+        return lambda X, t: 0.0
 
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-p = PointGauges(gauges=(( ('eta0'), ((30, 15, 0), (60,15,0)) ),),
-                activeTime=(0, 10),
-                sampleRate=0.1,
-                fileName='island_gauges.csv')
-auxiliaryVariables = [p]
-
+want_gauges = True
+heightPointGauges = PointGauges(gauges=((('h'), ((7.56, 16.05,  0),
+                                 (7.56, 14.55, 0),
+                                 (7.56, 13.05, 0),
+                                 (7.56, 11.55, 0),
+                                 (9.36, 13.80, 0),
+                                 (10.36, 13.80, 0),
+                                 (12.96, 11.22, 0),
+                                 (15.56, 13.80, 0))),),
+                activeTime=(0., opts.final_time),
+                fileName='wave_gauges.csv')
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -160,11 +159,11 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0()}
-boundaryConditions = {'water_height': lambda x,flag: None,
-                      'x_mom': lambda x,flag: None,
-                      'y_mom': lambda x,flag: None,
-                      'h_times_eta': lambda x,flag: None,
-                      'h_times_w': lambda x,flag: None}
+boundaryConditions = {'water_height': lambda x, flag: None,
+                      'x_mom': x_mom_DBC,
+                      'y_mom': y_mom_DBC,
+                      'h_times_eta': lambda x, flag: None,
+                      'h_times_w': lambda x, flag: None}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
@@ -179,3 +178,5 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               bathymetry=bathymetry_function)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
+if want_gauges:
+    mySWFlowProblem.auxiliaryVariables = [heightPointGauges]
