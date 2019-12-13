@@ -137,7 +137,7 @@ def y_mom_DBC(X, flag):
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-want_gauges = True
+want_gauges = False
 heightPointGauges = PointGauges(gauges=((('h'), ((7.56, 16.05,  0),
                                  (7.56, 14.55, 0),
                                  (7.56, 13.05, 0),
