@@ -216,7 +216,7 @@ boundaryConditions = {'water_height': lambda x, flag: None,
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-want_gauges = True
+want_gauges = False
 heightPointGauges = PointGauges(gauges=((('h'), ((7.5, 0.0,  0),
                                  (13.0, 0.0, 0),
                                  (21.0, 0.0, 0),
