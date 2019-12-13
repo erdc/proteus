@@ -10,7 +10,7 @@ import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
-import proteus.SWFlows.SWFlowProblem as SWFlowProblem
+import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 from proteus import WaveTools as wt
 
 

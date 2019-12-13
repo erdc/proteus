@@ -20,6 +20,7 @@ initialConditions = mySWFlowProblem.initialConditions
 boundaryConditions = mySWFlowProblem.boundaryConditions
 bathymetry = mySWFlowProblem.bathymetry
 reflecting_BCs = mySWFlowProblem.reflectingBCs
+analyticalSolution = mySWFlowProblem.analyticalSolution
 
 # DOMAIN #
 nd = 2
@@ -74,3 +75,10 @@ advectiveFluxBoundaryConditions = {0: lambda x, flag: lambda x, t: 0.0,
 diffusiveFluxBoundaryConditions = {0: {},
                                    1: {1: lambda x, flag: lambda x, t: 0.0},
                                    2: {2: lambda x, flag: lambda x, t: 0.0}}
+# **************************************** #
+# ********** ANALYTICAL SOLUTION ********* #
+# **************************************** #
+if (mySWFlowProblem.analyticalSolution != None):
+    analyticalSolution = {0: analyticalSolution['h_exact'],
+                          1: analyticalSolution['hu_exact'],
+                          2: analyticalSolution['hv_exact']}
