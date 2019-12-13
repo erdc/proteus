@@ -56,28 +56,11 @@ class ParametersHolder:
         # gain access to problem class if necessary
         self._Problem = ProblemInstance
         # default options
-        self.nModels = 0
-        self.models_list = []
-        self.Models = ParametersModelsHolder(self._Problem)
+        self.model_list = []
         self.physical = ParametersPhysical()
         self.mesh = self._Problem.domain.MeshOptions
 
     def initializeParameters(self):
-        all_models = [self.Models.rans2p,
-                      self.Models.rans3p,
-                      self.Models.clsvof,
-                      self.Models.vof,
-                      self.Models.ncls,
-                      self.Models.rdls,
-                      self.Models.moveMeshElastic,
-                      self.Models.moveMeshMonitor,
-                      self.Models.addedMass,
-                      self.Models.pressureInitial,
-                      self.Models.pressure,
-                      self.Models.pressureIncrement,
-                      self.Models.kappa,
-                      self.Models.dissipation,
-                      self.Models.mcorr]
         logEvent('----------')
         logEvent('Mesh Options')
         for key, value in self.mesh.__dict__.items():
@@ -89,49 +72,44 @@ class ParametersHolder:
             if key[0] != '_':  # do not print hidden attributes
                 logEvent('{key}: {value}'. format(key=key, value=value))
         logEvent('----------')
-        self.nModels = 0
-        self.models_list = []
         n_base = Numerics_base()
         p_base = Physics_base()
-        for i in range(len(all_models)):
-            model = all_models[i]
-            if model['index'] is not None:
-                model.initializePhysics()
-                model.initializeNumerics()
-                model.initializePETScOptions()
-                self.nModels += 1
-                self.models_list += [model]
-                logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
-                logEvent('-----')
-                logEvent('{name} PHYSICS'.format(name=model.name))
-                logEvent('-----')
-                logEvent('COEFFICIENTS OPTIONS')
-                for key, value in sorted(model.p.CoefficientsOptions.__dict__.items()):
-                    if key[0] != '_':  # do not print hidden attributes
+
+        for (idx,model) in enumerate(self.model_list):
+            model.initializePhysics()
+            model.initializeNumerics()
+            model.initializePETScOptions()
+            logEvent('TwoPhaseFlow parameters for model: {name}'.format(name=model['name']))
+            logEvent('-----')
+            logEvent('{name} PHYSICS'.format(name=model.name))
+            logEvent('-----')
+            logEvent('COEFFICIENTS OPTIONS')
+            for key, value in sorted(model.p.CoefficientsOptions.__dict__.items()):
+                if key[0] != '_':  # do not print hidden attributes
+                    logEvent('{key}: {value}'. format(key=key, value=value))
+            logEvent('END OF COEFFICIENTS OPTIONS')
+            for key, value in sorted(model.p.__dict__.items()):
+                if key[0] != '_':  # do not print hidden attributes
+                    if key in p_base.__dict__.keys():
+                        if value != p_base.__dict__[key]:
+                            logEvent('(!) {key}: {value}'. format(key=key, value=value))
+                        else:
+                            logEvent('{key}: {value}'. format(key=key, value=value))
+                    else:
                         logEvent('{key}: {value}'. format(key=key, value=value))
-                logEvent('END OF COEFFICIENTS OPTIONS')
-                for key, value in sorted(model.p.__dict__.items()):
-                    if key[0] != '_':  # do not print hidden attributes
-                        if key in p_base.__dict__.keys():
-                            if value != p_base.__dict__[key]:
-                                logEvent('(!) {key}: {value}'. format(key=key, value=value))
-                            else:
-                                logEvent('{key}: {value}'. format(key=key, value=value))
+            logEvent('-----')
+            logEvent('{name} NUMERICS'.format(name=model.name))
+            logEvent('-----')
+            for key, value in sorted(model.n.__dict__.items()):
+                if key[0] != '_':  # do not print hidden attributes
+                    if key in n_base.__dict__.keys():
+                        if value != n_base.__dict__[key]:
+                            logEvent('(!) {key}: {value}'. format(key=key, value=value))
                         else:
                             logEvent('{key}: {value}'. format(key=key, value=value))
-                logEvent('-----')
-                logEvent('{name} NUMERICS'.format(name=model.name))
-                logEvent('-----')
-                for key, value in sorted(model.n.__dict__.items()):
-                    if key[0] != '_':  # do not print hidden attributes
-                        if key in n_base.__dict__.keys():
-                            if value != n_base.__dict__[key]:
-                                logEvent('(!) {key}: {value}'. format(key=key, value=value))
-                            else:
-                                logEvent('{key}: {value}'. format(key=key, value=value))
-                        else:
-                            logEvent('{key}: {value}'. format(key=key, value=value))
-                logEvent('----------')
+                    else:
+                        logEvent('{key}: {value}'. format(key=key, value=value))
+            logEvent('----------')
 
         logEvent('-----')
         logEvent('PETSc OPTIONS')
@@ -139,29 +117,6 @@ class ParametersHolder:
         for key, val in sorted(petsc_info.items()):
             logEvent(str(key)+': '+str(val))
         logEvent('-----')
-
-
-class ParametersModelsHolder:
-    """
-    """
-    def __init__(self, ProblemInstance=None):
-        self._Problem = ProblemInstance
-        self.rans2p = ParametersModelRANS2P(Problem=self._Problem)
-        self.vof = ParametersModelVOF(Problem=self._Problem)
-        self.ncls = ParametersModelNCLS(Problem=self._Problem)
-        self.rdls = ParametersModelRDLS(Problem=self._Problem)
-        self.addedMass = ParametersModelAddedMass(Problem=self._Problem)
-        self.moveMeshMonitor = ParametersModelMoveMeshMonitor(Problem=self._Problem)
-        self.moveMeshElastic = ParametersModelMoveMeshElastic(Problem=self._Problem)
-        self.clsvof = ParametersModelCLSVOF(Problem=self._Problem)
-        self.rans3p = ParametersModelRANS3PF(Problem=self._Problem)
-        self.pressureInitial = ParametersModelPressureInitial(Problem=self._Problem)
-        self.pressure = ParametersModelPressure(Problem=self._Problem)
-        self.pressureIncrement = ParametersModelPressureIncrement(Problem=self._Problem)
-        self.kappa = ParametersModelKappa(Problem=self._Problem)
-        self.dissipation = ParametersModelDissipation(Problem=self._Problem)
-        self.mcorr = ParametersModelMCorr(Problem=self._Problem)
-
 
 class FreezableClass(object):
     """Base class for all parameters class, enforces attribute freezing
@@ -194,16 +149,13 @@ class ParametersModelBase(FreezableClass):
     """
     """
     def __init__(self,
-                 name=None,
-                 index=None,
-                 Problem=None):
+                 name=None):
         super(ParametersModelBase, self).__init__(name=name)
-        self.index = index
+        self.index = None
         self.auxiliaryVariables = []
-        self._Problem = Problem
+        self._Problem = None
         self.OptDB = PETSc.Options()
-        self.p = Physics_base(nd=self._Problem.domain.nd)
-        self.p.myTpFlowProblem = self._Problem
+        self.p = Physics_base()
         self.p.name = name
         self.p.CoefficientsOptions = FreezableClass()
         self.p._freeze()
@@ -300,14 +252,18 @@ class ParametersModelBase(FreezableClass):
 
     def _initializePETScOptions(self):
         pass
-
+    
+    def fetchIndex(self,idxDict,name):
+        try:
+            return idxDict[name]
+        except:
+            return None
 
 class ParametersModelRANS2P(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelRANS2P, self).__init__(name='rans2p', index=None,
-                                                    Problem=Problem)
+    def __init__(self):
+        super(ParametersModelRANS2P, self).__init__(name='rans2p')
         self.timeDiscretization = 'be'
         copts = self.p.CoefficientsOptions
         copts.NONCONSERVATIVE_FORM = 1.
@@ -366,18 +322,18 @@ class ParametersModelRANS2P(ParametersModelBase):
         self._freeze()
 
     def _initializePhysics(self):
-        mparams = self._Problem.Parameters.Models
         pparams = self._Problem.Parameters.physical # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        ME_model = mparams.rans2p.index
+        idxDict = self._Problem.modelIdxDict
+        ME_model = self.fetchIndex(idxDict,self.name)
         assert ME_model is not None, 'rans2p model index was not set!'
-        CLSVOF_model = mparams.clsvof.index
-        VF_model = mparams.vof.index
-        LS_model = mparams.ncls.index
-        K_model = mparams.kappa.index
-        DISS_model =mparams.dissipation.index
+        CLSVOF_model = self.fetchIndex(idxDict, 'clsvof')
+        VF_model = self.fetchIndex(idxDict, 'vof')
+        LS_model = self.fetchIndex(idxDict, 'ncls')
+        K_model = self.fetchIndex(idxDict, 'kappa')
+        DISS_model = self.fetchIndex(idxDict, 'dissipation')
         # POROSITY / RELAXATION
         if hasattr(domain, 'porosityTypes'):
             porosityTypes = domain.porosityTypes
@@ -438,13 +394,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             ball_angular_acceleration=copts.ball_angular_acceleration,
             ball_density=copts.ball_density,
         )
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure'],
-                                    1: IC['vel_u'],
-                                    2: IC['vel_v']}
-        if nd == 3:
-            self.p.initialConditions[3] = IC['vel_w']
+         
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -579,9 +529,8 @@ class ParametersModelRANS2P(ParametersModelBase):
 class ParametersModelRANS3PF(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelRANS3PF, self).__init__(name='rans3p', index=None,
-                                                    Problem=Problem)
+    def __init__(self):
+        super(ParametersModelRANS3PF, self).__init__(name='rans3p')
         self.timeOrder = 2
         self.timeDiscretization = 'vbdf'
         copts = self.p.CoefficientsOptions
@@ -649,23 +598,26 @@ class ParametersModelRANS3PF(ParametersModelBase):
         self._freeze()
 
     def _initializePhysics(self):
-        mparams = self._Problem.Parameters.Models
         pparams = self._Problem.Parameters.physical # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        VOF_model=mparams.vof.index
-        LS_model=mparams.ncls.index
-        RD_model=mparams.rdls.index
-        MCORR_model=mparams.mcorr.index
+        idxDict = self._Problem.modelIdxDict
+        nModelId = self.fetchIndex(idxDict, 'ncls')
+
+        VOF_model=self.fetchIndex(idxDict,'vof')
+        LS_model=self.fetchIndex(idxDict,'ncls')
+        RD_model=self.fetchIndex(idxDict,'rdls')
+        MCORR_model=self.fetchIndex(idxDict,'mcorr')
         SED_model=None
         VOS_model=None
-        CLSVOF_model = mparams.clsvof.index
-        V_model = mparams.rans3p.index
-        PINC_model = mparams.pressureIncrement.index
-        PRESSURE_model = mparams.pressure.index
-        K_model = mparams.kappa.index
-        DISS_model = mparams.dissipation.index
+        CLSVOF_model = self.fetchIndex(idxDict,'clsvof')
+        V_model = self.fetchIndex(idxDict,self.name)
+        PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
+        PRESSURE_model = self.fetchIndex(idxDict,'pressure')
+        K_model = self.fetchIndex(idxDict,'kappa')
+        DISS_model = self.fetchIndex(idxDict,'dissipation')
+
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         if copts.forceTerms is not None:
@@ -720,12 +672,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
             ball_angular_velocity=copts.ball_angular_velocity,
             particles=copts.particles,
         )
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['vel_u'],
-                                    1: IC['vel_v']}
-        if nd == 3:
-            self.p.initialConditions[2] = IC['vel_w']
+
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -789,9 +736,8 @@ class ParametersModelRANS3PF(ParametersModelBase):
 class ParametersModelPressure(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelPressure, self).__init__(name='pressure', index=None,
-                                                      Problem=Problem)
+    def __init__(self):
+        super(ParametersModelPressure, self).__init__(name='pressure')
         copts = self.p.CoefficientsOptions
         copts.useRotationalForm = False
         copts._freeze()
@@ -817,19 +763,16 @@ class ParametersModelPressure(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        PRESSURE_model = mparams.pressure.index
-        V_model = mparams.rans3p.index
-        PINC_model = mparams.pressureIncrement.index
+        idxDict = self._Problem.modelIdxDict
+        PRESSURE_model = self.fetch(idxDict,'pressure')
+        V_model = self.fetch(idxDict,'rans3p')
+        PINC_model = self.fetch(idxDict,'pressureIncrement')
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = Pres.Coefficients(modelIndex=PRESSURE_model,
                                                 fluidModelIndex=V_model,
                                                 pressureIncrementModelIndex=PINC_model,
                                                 useRotationalForm=copts.useRotationalForm)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -857,9 +800,8 @@ class ParametersModelPressure(ParametersModelBase):
 class ParametersModelPressureInitial(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelPressureInitial, self).__init__(name='pressureInitial', index=None,
-                                                             Problem=Problem)
+    def __init__(self):
+        super(ParametersModelPressureInitial, self).__init__(name='pressureInitial')
         # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.ConstantAdvection_exterior
         # NON LINEAR SOLVER
@@ -881,18 +823,15 @@ class ParametersModelPressureInitial(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        PRESSURE_model = mparams.pressure.index
-        V_model = mparams.rans3p.index
-        PINIT_model = mparams.pressureInitial.index
+        idxDict = self._Problem.modelIdxDict
+        PRESSURE_model = self.fetch(idxDict,'pressure')
+        V_model = self.fetch(idxDict,'rans3p')
+        PINIT_model = self.fetch(idxDict,'pressureInitial')
         # COEFFICIENTS
         self.p.coefficients=PresInit.Coefficients(nd=nd,
                                                   modelIndex=PINIT_model,
                                                   fluidModelIndex=V_model,
                                                   pressureModelIndex=PRESSURE_model)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -927,9 +866,8 @@ class ParametersModelPressureInitial(ParametersModelBase):
 class ParametersModelPressureIncrement(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement', index=None,
-                                                               Problem=Problem)
+    def __init__(self):
+        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement')
         # LEVEL MODEL
         self.p.LevelModelType = PresInc.LevelModel
         # NUMERICAL FLUX
@@ -955,9 +893,9 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         nd = domain.nd
         pparams = self._Problem.Parameters.physical
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        V_model = mparams.rans3p.index
-        PINC_model = mparams.pressureIncrement.index
+        idxDict = self._Problem.modelIdxDict
+        V_model = self.fetch(idxDict,'rans3p')
+        PINC_model = self.fetch(idxDict,'pressureIncrement')
         # COEFFICIENTS
         self.p.coefficients = PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*pparams.densityB,
                                                    rho_s_min = (1.0-1.0e-8)*pparams.densityA,
@@ -965,9 +903,6 @@ class ParametersModelPressureIncrement(ParametersModelBase):
                                                    modelIndex=PINC_model,
                                                    fluidModelIndex=V_model,
                                                    fixNullSpace=False)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure_increment']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1002,9 +937,8 @@ class ParametersModelPressureIncrement(ParametersModelBase):
 class ParametersModelKappa(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelKappa, self).__init__(name='kappa', index=None,
-                                                    Problem=Problem)
+    def __init__(self):
+        super(ParametersModelKappa, self).__init__(name='kappa')
 
         self.timeOrder = 2
         self.timeDiscretization = 'be'
@@ -1046,28 +980,28 @@ class ParametersModelKappa(ParametersModelBase):
         self._freeze()
 
     def _initializePhysics(self):
-        mparams = self._Problem.Parameters.Models
+        idxDict = self._Problem.modelIdxDict
         pparams = self._Problem.Parameters.physical # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        VOF_model=mparams.vof.index
-        LS_model=mparams.ncls.index
-        RD_model=mparams.rdls.index
-        MCORR_model=mparams.mcorr.index
+        VOF_model=self.fetch(idxDict,'vof')
+        LS_model=self.fetch(idxDict,'ncls')
+        RD_model=self.fetch(idxDict,'rdls')
+        MCORR_model=self.fetch(idxDict,'mcorr')
         SED_model=None
         VOS_model=None
-        CLSVOF_model = mparams.clsvof.index
-        if(mparams.rans3p.index is not None):
-            V_model = mparams.rans3p.index
-        elif(mparams.rans2p.index is not None):
-            V_model = mparams.rans2p.index
+        CLSVOF_model = self.fetch(idxDict,'clsvof')
+        if(self.fetch(idxDict,'rans3p') is not None):
+            V_model = self.fetch(idxDict,'rans3p')
+        elif(self.fetch(idxDict,'rans2p') is not None):
+            V_model = self.fetch(idxDict,'rans2p')
         else:
             raise ValueError("Kappa model: RANS2P or RANS3P model has not been defined. Please define either one (but not both)")
-        PINC_model = mparams.pressureIncrement.index
-        PRESSURE_model = mparams.pressure.index
-        K_model = mparams.kappa.index
-        DISS_model = mparams.dissipation.index
+        PINC_model = self.fetch(idxDict,'pressureIncrement')
+        PRESSURE_model = self.fetch(idxDict,'pressure')
+        K_model = self.fetch(idxDict,'kappa')
+        DISS_model = self.fetch(idxDict,'dissipation')
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = Kappa.Coefficients(VOS_model=None, # Solid model
@@ -1092,9 +1026,6 @@ class ParametersModelKappa(ParametersModelBase):
                                                  sc_beta=copts.sc_beta,
                                                  default_dissipation=default_dissipation_turbulence,
                                                  closure=copts.closure)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['k']}
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1146,9 +1077,8 @@ class ParametersModelDissipation(ParametersModelBase):
     """
     """
 
-    def __init__(self, Problem):
-        super(ParametersModelDissipation, self).__init__(name='dissipation', index=None,
-                                                   Problem=Problem)
+    def __init__(self):
+        super(ParametersModelDissipation, self).__init__(name='dissipation')
 
         self.timeOrder = 2
         self.timeDiscretization = 'be'
@@ -1190,28 +1120,28 @@ class ParametersModelDissipation(ParametersModelBase):
         self._freeze()
 
     def _initializePhysics(self):
-        mparams = self._Problem.Parameters.Models
+        idxDict = self._Problem.modelIdxDict
         pparams = self._Problem.Parameters.physical  # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        VOF_model = mparams.vof.index
-        LS_model = mparams.ncls.index
-        RD_model = mparams.rdls.index
-        MCORR_model = mparams.mcorr.index
+        VOF_model = self.fetch(idxDict,'vof')
+        LS_model = self.fetch(idxDict,'ncls')
+        RD_model = self.fetch(idxDict,'rdls')
+        MCORR_model = self.fetch(idxDict,'mcorr')
         SED_model = None
         VOS_model = None
-        CLSVOF_model = mparams.clsvof.index
-        if(mparams.rans3p.index is not None):
-            V_model = mparams.rans3p.index
-        elif(mparams.rans2p.index is not None):
-            V_model = mparams.rans2p.index
+        CLSVOF_model = self.fetch(idxDict,'clsvof')
+        if(self.fetch(idxDict,'rans3p') is not None):
+            V_model = self.fetch(idxDict,'rans3p')
+        elif(self.fetch(idxDict,'rans2p') is not None):
+            V_model = self.fetch(idxDict,'rans2p')
         else:
             raise ValueError("Dissipation model: RANS2P or RANS3P model has not been defined. Please define either one (but not both)")
-        PINC_model = mparams.pressureIncrement.index
-        PRESSURE_model = mparams.pressure.index
-        K_model = mparams.kappa.index
-        DISS_model = mparams.dissipation.index
+        PINC_model = self.fetch(idxDict,'pressureIncrement')
+        PRESSURE_model = self.fetch(idxDict,'pressure')
+        K_model = self.fetch(idxDict,'kappa')
+        DISS_model = self.fetch(idxDict,'dissipation')
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = Dissipation.Coefficients(VOS_model=None,  # Solid model
@@ -1240,9 +1170,6 @@ class ParametersModelDissipation(ParametersModelBase):
                                                  sc_beta=copts.sc_beta,
                                                  default_kappa=default_kappa_turbulence,
                                                  closure=copts.closure)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['dissipation']}
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1291,9 +1218,8 @@ class ParametersModelDissipation(ParametersModelBase):
 
 
 class ParametersModelCLSVOF(ParametersModelBase):
-    def __init__(self, Problem):
-        super(ParametersModelCLSVOF, self).__init__(name='clsvof', index=None,
-                                                    Problem=Problem)
+    def __init__(self):
+        super(ParametersModelCLSVOF, self).__init__(name='clsvof')
         copts = self.p.CoefficientsOptions
         copts.useMetrics = 1.
         copts.epsFactHeaviside = epsFact
@@ -1329,11 +1255,11 @@ class ParametersModelCLSVOF(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        CLSVOF_model = mparams.clsvof.index
-        V_model = mparams.rans2p.index
+        idxDict = self._Problem.modelIdxDict
+        CLSVOF_model = self.fetch(idxDict,'clsvof')
+        V_model = self.fetch(idxDict,'rans2p')
         if V_model is None:
-            V_model = mparams.rans3p.index
+            V_model = self.fetch(idxDict,'rans3p')
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = CLSVOF.Coefficients(V_model=V_model,
@@ -1347,9 +1273,6 @@ class ParametersModelCLSVOF(ParametersModelBase):
                                                   computeMetrics=copts.computeMetrics,
                                                   disc_ICs=copts.disc_ICs)
         self.p.coefficients.variableNames = ['phi']
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['clsvof']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1384,9 +1307,8 @@ class ParametersModelCLSVOF(ParametersModelBase):
 class ParametersModelVOF(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelVOF, self).__init__(name='vof', index=None,
-                                                 Problem=Problem)
+    def __init__(self):
+        super(ParametersModelVOF, self).__init__(name='vof')
         copts = self.p.CoefficientsOptions
         copts.useMetrics = True
         copts.checkMass = True
@@ -1421,17 +1343,18 @@ class ParametersModelVOF(ParametersModelBase):
     def _initializePhysics(self):
         domain = self._Problem.domain
         nd = domain.nd
-        # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        ME_model = mparams.vof.index
-        assert ME_model is not None, 'ls model index was not set!'
-        if mparams.rans2p.index is not None:
-            V_model = mparams.rans2p.index
-        elif mparams.rans3p.index is not None:
-            V_model = mparams.rans3p.index
+        # MODEL INDEX
+        idxDict = self._Problem.modelIdxDict
+        ME_model = self.fetchIndex(idxDict,self.name)
+        assert ME_model is not None, 'vof model index was not set!'
+        if('rans2p' in idxDict):
+            V_model = self.fetchIndex(idxDict, 'rans2p')
+        elif ('rans3p' in idxDict):
+            V_model = self.fetchIndex(idxDict, 'rans3p')
         else:
-            assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
-        RD_model = mparams.rdls.index
+            assert False, 'RANS2P or RANS3PF must be used with VOF'
+        RD_model = self.fetchIndex(idxDict,'rdls')
+
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = VOF.Coefficients(V_model=V_model,
@@ -1443,9 +1366,6 @@ class ParametersModelVOF(ParametersModelBase):
                                                sc_uref=copts.sc_uref,
                                                sc_beta=copts.sc_beta,
                                                movingDomain=self.p.movingDomain)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['vof']}
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1498,9 +1418,8 @@ class ParametersModelVOF(ParametersModelBase):
 class ParametersModelNCLS(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelNCLS, self).__init__(name='ncls', index=None,
-                                                  Problem=Problem)
+    def __init__(self):
+        super(ParametersModelNCLS, self).__init__(name='ncls')
         # PHYSICS
         copts = self.p.CoefficientsOptions
         copts.useMetrics = True
@@ -1537,16 +1456,18 @@ class ParametersModelNCLS(ParametersModelBase):
     def _initializePhysics(self):
         domain = self._Problem.domain
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        ME_model = mparams.ncls.index
+        idxDict = self._Problem.modelIdxDict
+        ME_model = self.fetchIndex(idxDict, self.name)
         assert ME_model is not None, 'ls model index was not set!'
-        if mparams.rans2p.index is not None:
-            V_model = mparams.rans2p.index
-        elif mparams.rans3p.index is not None:
-            V_model = mparams.rans3p.index
+        if('rans2p' in idxDict):
+            V_model = self.fetchIndex(idxDict, 'rans2p')
+        elif ('rans3p' in idxDict):
+            V_model = self.fetchIndex(idxDict, 'rans3p')
         else:
-            assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
-        RD_model = mparams.rdls.index
+            assert False, 'RANS2P or RANS3PF must be used with LS'
+
+
+        RD_model = self.fetchIndex(idxDict, 'rdls') 
         copts = self.p.CoefficientsOptions
         self.p.coefficients = NCLS.Coefficients(V_model=V_model,
                                                 RD_model=RD_model,
@@ -1557,9 +1478,6 @@ class ParametersModelNCLS(ParametersModelBase):
                                                 sc_uref=copts.sc_uref,
                                                 sc_beta=copts.sc_beta,
                                                 movingDomain=self.p.movingDomain)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['ncls']}
         # BOUNDARY CONDITIONS
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1612,9 +1530,8 @@ class ParametersModelNCLS(ParametersModelBase):
 class ParametersModelRDLS(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelRDLS, self).__init__(name='rdls', index=None,
-                                                  Problem=Problem)
+    def __init__(self):
+        super(ParametersModelRDLS, self).__init__(name='rdls')
         copts = self.p.CoefficientsOptions
         copts.useMetrics = True
         copts.applyRedistancing = True
@@ -1650,10 +1567,11 @@ class ParametersModelRDLS(ParametersModelBase):
 
     def _initializePhysics(self):
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        nModelId = mparams.ncls.index
+        idxDict = self._Problem.modelIdxDict
+        nModelId = self.fetchIndex(idxDict, 'ncls')
         assert nModelId is not None, 'ncls model index was not set!'
-        rdModelId = mparams.rdls.index
+        rdModelId = self.fetchIndex(idxDict, self.name)
+
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = RDLS.Coefficients(applyRedistancing=copts.applyRedistancing,
@@ -1663,9 +1581,6 @@ class ParametersModelRDLS(ParametersModelBase):
                                                 useMetrics=copts.useMetrics,
                                                 backgroundDiffusionFactor=copts.backgroundDiffusionFactor,
                                                 ELLIPTIC_REDISTANCING=copts.ELLIPTIC_REDISTANCING)
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['rdls']}
         # BOUNDARY CONDITIONS
         self.p.dirichletConditions = {0: lambda x, flag: None}
         self.p.weakDirichletConditions = {0: RDLS.setZeroLSweakDirichletBCsSimple}
@@ -1716,9 +1631,8 @@ class ParametersModelRDLS(ParametersModelBase):
 class ParametersModelMCorr(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelMCorr, self).__init__(name='mcorr', index=None,
-                                                   Problem=Problem)
+    def __init__(self):
+        super(ParametersModelMCorr, self).__init__(name='mcorr')
         copts = self.p.CoefficientsOptions
         copts.useMetrics = True
         copts.checkMass = False
@@ -1754,17 +1668,19 @@ class ParametersModelMCorr(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        ME_model = mparams.mcorr.index
-        assert ME_model is not None, 'vof model index was not set!'
-        LS_model = mparams.ncls.index
-        VOF_model = mparams.vof.index
-        if mparams.rans2p.index is not None:
-            V_model = mparams.rans2p.index
-        elif mparams.rans3p.index is not None:
-            V_model = mparams.rans3p.index
+        idxDict = self._Problem.modelIdxDict
+        ME_model = self.fetchIndex(idxDict, self.name)
+        assert ME_model is not None, 'mcorr model index was not set!'
+        LS_model = self.fetchIndex(idxDict, 'ncls')
+        VOF_model = self.fetchIndex(idxDict, 'vof')
+
+        if('rans2p' in idxDict):
+            V_model = self.fetchIndex(idxDict, 'rans2p')
+        elif ('rans3p' in idxDict):
+            V_model = self.fetchIndex(idxDict, 'rans3p')
         else:
-            assert mparams.rans2p.index is not None or params.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
+            assert False, 'RANS2P or RANS3PF must be used with VOF'
+
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = MCorr.Coefficients(LSModel_index=LS_model,
@@ -1819,9 +1735,8 @@ class ParametersModelMCorr(ParametersModelBase):
 class ParametersModelAddedMass(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelAddedMass, self).__init__(name='addedMass', index=None,
-                                                       Problem=Problem)
+    def __init__(self):
+        super(ParametersModelAddedMass, self).__init__(name='addedMass')
         copts = self.p.CoefficientsOptions
         copts.flags_rigidbody = None
         copts.solve_rate = 0.
@@ -1855,13 +1770,13 @@ class ParametersModelAddedMass(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        if mparams.rans2p.index is not None:
-            V_model = mparams.rans2p.index
-        elif mparams.rans3p.index is not None:
-            V_model = mparams.rans3p.index
+        idxDict = self._Problem.modelIdxDict
+        if self.fetch(idxDict,'rans2p') is not None:
+            V_model = self.fetch(idxDict,'rans2p')
+        elif self.fetch(idxDict,'rans3p') is not None:
+            V_model = self.fetch(idxDict,'rans3p')
         else:
-            assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with addedMass'
+            assert self.fetch(idxDict,'rans2p') is not None or self.fetch(idxDict,'rans3p') is not None, 'RANS2P or RANS3PF must be used with addedMass'
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = AddedMass.Coefficients(nd=nd,
@@ -1911,9 +1826,8 @@ class ParametersModelAddedMass(ParametersModelBase):
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor', index=None,
-                                                             Problem=Problem)
+    def __init__(self):
+        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor')
         copts = self.p.CoefficientsOptions
         copts.func = lambda x, t: 1000.
         copts.he_min = 0.
@@ -1959,11 +1873,11 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
+        idxDict = self._Problem.modelIdxDict
         ME_MODEL = self.index
         assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
         if self.p.CoefficientsOptions.useLS is True:
-            LS_MODEL = mparams.ncls.index
+            LS_MODEL = self.fetch(idxDict,'ncls')
         else:
             LS_MODEL = None
         # COEFFICIENTS
@@ -1986,8 +1900,6 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
                                                            grading_type=copts.grading_type,
                                                            scale_with_nd=copts.scale_with_nd,
                                                            do_firstStep=copts.do_firstStep)
-        # INITIAL CONDITIONS
-        self.p.initialConditions = None
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: None}
@@ -2024,9 +1936,8 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
 class ParametersModelMoveMeshElastic(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic', index=None,
-                                                             Problem=Problem)
+    def __init__(self):
+        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic')
         copts = self.p.CoefficientsOptions
         copts.E = 1.
         copts.nu = 0.3
@@ -2062,15 +1973,15 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         smTypes[:, 0] = copts.E
         smTypes[:, 1] = copts.nu
         # MODEL INDEXING
-        mparams = self._Problem.Parameters.Models
-        ME_model = mparams.moveMeshElastic.index
+        idxDict = self._Problem.modelIdxDict
+        ME_model = self.fetch(idxDict,'moveMeshElastic')
         assert ME_model is not None, 'vof model index was not set!'
-        if mparams.rans2p.index is not None:
-            V_model = mparams.rans2p.index
-        elif mparams.rans3p.index is not None:
-            V_model = mparams.rans3p.index
+        if self.fetch(idxDict,'rans2p') is not None:
+            V_model = self.fetch(idxDict,'rans2p')
+        elif self.fetch(idxDict,'rans3p') is not None:
+            V_model = self.fetch(idxDict,'rans3p')
         else:
-            assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
+            assert self.fetch(idxDict,'rans2p') is not None or self.fetch(idxDict,'rans3p') is not None, 'RANS2P or RANS3PF must be used with VOF'
         # COEFFICIENTS
         copts = self.p.CoefficientsOptions
         self.p.coefficients = MoveMesh.Coefficients(nd=nd,
@@ -2078,8 +1989,6 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
                                                     modelType_block=smFlags,
                                                     modelParams_block=smTypes,
                                                     meIndex=ME_model)
-        # INITIAL CONDITIONS
-        self.p.initialConditions = None
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
