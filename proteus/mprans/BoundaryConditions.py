@@ -1432,7 +1432,7 @@ class WallFunctions(AuxiliaryVariables.AV_base):
         """
         Extraction of the velocity at y+ distance from the boundary.
         """
-        coords = self.setYplusNormalDirection(x, t)
+        coords = self.setYplusNormalDirection(x, t, n)
         xi, element, rank = self.findElementContainingCoords(coords)
         if rank is not None:
             u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
@@ -1441,11 +1441,13 @@ class WallFunctions(AuxiliaryVariables.AV_base):
             while rank is None:
                 coords_relax = self.setYplusNormalDirection(x, t, n ,relax)
                 xi, element, rank = self.findElementContainingCoords(coords_relax)
+                print (rank)
                 relax *= 0.5
             # just use the element containing the boundary quadrature point to interpolate to the y+ point
             u, v, w = self.getFluidVelocityLocalCoords(self.femSpace_velocity.elementMaps.getInverseValue(element, coords),
                                                        element,
                                                        rank)
+        print("END")
         self.xi, self.element, self.rank = xi, element, rank
         return u, v, w
 
