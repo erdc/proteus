@@ -75,12 +75,6 @@ class ParametersHolder:
         n_base = Numerics_base()
         p_base = Physics_base()
 
-        #attach problem object to each model, identify index, and then form dictionary
-        for (idx,model) in enumerate(self.model_list):
-            model._Problem = self._Problem
-            model.index = idx
-            model._Problem.modelIdxDict[model.name]=idx
-
         for (idx,model) in enumerate(self.model_list):
             model.initializePhysics()
             model.initializeNumerics()

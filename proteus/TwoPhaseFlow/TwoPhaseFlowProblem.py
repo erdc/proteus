@@ -80,15 +80,8 @@ class TwoPhaseFlowProblem:
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
-
-        # ***** CREATE FINITE ELEMENT SPACES ***** #
-        ns_model = None 
-        if 'rans2p' in self.modelIdxDict:
-            ns_model = 0
-        elif 'rans3p' in self.modelIdxDict:
-            ns_model = 1
-        self.FESpace = FESpace(ns_model, self.nd)
-        self.FESpace.setFESpace()
+        # ***** CREATE FINITE ELEMENT  ***** #
+        self.FESpace = FESpace(self.nd)
 
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
@@ -98,6 +91,13 @@ class TwoPhaseFlowProblem:
     def addModel(self,modelObject,name):
         self.modelList.append(modelObject)
         self.modelDict[name] = modelObject
+
+    def attachModels(self):
+        #attach problem object to each model, identify index, and then form dictionary
+        for (idx,model) in enumerate(self.modelList):
+            model._Problem = self
+            model.index = idx
+            model._Problem.modelIdxDict[model.name]=idx
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
@@ -166,11 +166,19 @@ class TwoPhaseFlowProblem:
         #    assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
 
     def initializeAll(self):
+
+        #model organization
+        self.attachModels()
         self.Parameters.model_list=self.modelList
+
         # initial conditions
         self.assert_initialConditions()
         # boundary conditions
         self.assert_boundaryConditions()
+
+        # ***** SET FINITE ELEMENT  ***** #
+        self.FESpace.setFESpace(self.modelIdxDict)
+
         # parameters
         self.Parameters.initializeParameters()
         # mesh
@@ -184,6 +192,7 @@ class TwoPhaseFlowProblem:
         #     self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
         #     self.domain.use_gmsh = True
         # split operator
+
         self.initializeSO()
 
     def initializeSO(self):
@@ -232,7 +241,6 @@ class TwoPhaseFlowProblem:
             so.archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
         so.systemStepExact = outputStepping.systemStepExact
 
-
 class OutputStepping:
     """
     OutputStepping handles how often the solution is outputted.
@@ -267,24 +275,34 @@ class FESpace:
     """
     Create FE Spaces.
     """
-    def __init__(self,ns_model,nd):
-        if ns_model is not None:
-            assert ns_model == 0 or ns_model == 1, "ns_model must be 0 (rans2p) or 1 (rans3p)"
+    def __init__(self,nd):
         assert nd in [2,3], 'number of dimensions must be 2 or 3'
-        self.ns_model=ns_model
         self.nd=nd
-        # For now we just support rans2p with: p1-p1 and rans3p with: p2-p1
-        if ns_model == 0 or ns_model is None: # rans2p or None
-            self.velSpaceOrder=1
-            self.pSpaceOrder=1
-        else: #rans3p
-            self.velSpaceOrder=2
-            self.pSpaceOrder=1
+        self.velSpaceOrder=None
+        self.pSpaceOrder=None
 
     def __getitem__(self, key):
         return self.__dict__[key]
 
-    def setFESpace(self):
+    def setFESpace(self,modelIdxDict):
+        """
+        User is allowed to define velSpaceOrder and pSpaceOrder. If not specified, defaults will be chosen based on 
+        """
+        
+        # For now we just support rans2p with: p1-p1 and rans3p with: p2-p1
+        if(self.velSpaceOrder is None and self.pSpaceOrder is None):
+            if 'rans2p' in modelIdxDict: # rans2p or None
+                self.velSpaceOrder=1
+                self.pSpaceOrder=1
+            elif 'rans3p' in modelIdxDict: #rans3p
+                self.velSpaceOrder=2
+                self.pSpaceOrder=1
+            else:
+                assert False, "the rans2p or rans3p model needs to be added to the problem"
+        assert self.velSpaceOrder is not None, "need to set problem.FESpace.velSpaceOrder"
+        assert self.pSpaceOrder is not None, "need to set problem.FESpace.pSpaceOrder"
+
+
         ##################
         # VELOCITY SPACE #
         ##################
