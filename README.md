@@ -25,7 +25,7 @@ For a development installation, you want to install Proteus's dependencies and c
 ```bash
 conda env create -f environment-dev.yml
 conda activate proteus-dev
-python setup.py install
+pip install -e .
 ```
 
 # Developer Information
