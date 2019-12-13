@@ -29,8 +29,9 @@ class SWFlowProblem:
                  reflectingBCs=False,
                  # OTHERS #
                  useSuperlu=None,
-                 # ANALYTICAL SOLUTION #,
-                 analyticalSolution=None):
+                 analyticalSolution=None,
+                 # AUXILIARY VARIABLES #
+                 auxiliaryVariables=None):
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         assert sw_model in [
@@ -72,6 +73,7 @@ class SWFlowProblem:
         self.reflectingBCs = reflectingBCs
         self.useSuperlu = useSuperlu
         self.analyticalSolution = analyticalSolution
+        self.auxiliaryVariables = []
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace().getFESpace()
@@ -154,7 +156,7 @@ class FESpace:
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
 # ***************************************** #
-default_physical_parameters = {'gravity': 9.8,
+default_physical_parameters = {'gravity': 9.81,
                                'LINEAR_FRICTION': 0,
                                'mannings': 0.0}
 
@@ -166,6 +168,6 @@ default_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
                           'SSPOrder': 3,
                           'cE': 1}
 default_GN_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
-                             'cfl': 0.20,
+                             'cfl': 0.33,
                              'SSPOrder': 3,
                              'cE': 1}

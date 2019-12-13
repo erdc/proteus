@@ -11,7 +11,7 @@ from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 from proteus.Gauges import PointGauges
-import proteus.SWFlows.SWFlowProblem as SWFlowProblem
+import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 
 """
 This is the problem of a solitary wave overtopping a conical island.
