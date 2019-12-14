@@ -9,7 +9,7 @@ dependencies:
   - cython
   - daetk 1.0.1
   - hdf5 =*=*mpich*
-  - h5py
+  - h5py =*=*mpich*
   - metis=5
   - mpich
   - numpy=1.14
