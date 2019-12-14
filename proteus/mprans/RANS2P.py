@@ -485,8 +485,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebq_n = None
                 self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
             else:
-                self.q_phi = 0.5 - self.model.q['x'][...,1]#10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
-                self.phi_dof = 0.5 - self.model.mesh.nodeArray[...,1]#-numpy.ones_like(self.model.u[0].dof)
+                self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
+                self.phi_dof = 10.0 * numpy.ones_like(self.model.u[0].dof)
                 self.ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.bc_ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
@@ -1512,6 +1512,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.timeIntegration.t)
                         if self.MOVING_DOMAIN == 1.0:
                             self.u[cj].dof[dofN] += self.mesh.nodeVelocityArray[dofN, cj - 1]
+        #print("ball velocity", self.coefficients.ball_velocity)
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
@@ -1728,7 +1729,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.use_pseudo_penalty,
                                       self.coefficients.useExact,
                                       self.isActiveDOF)
-        r*=self.isActiveDOF
+        try:
+            self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = self.coefficients.ball_velocity[0][0]
+            self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = self.coefficients.ball_velocity[0][1]
+            #print("ball velocity x at nodes", self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]] == 0.0])
+            #print("ball velocity y at nodes", self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]] == 0.0])
+            r*=self.isActiveDOF
+        except:
+            assert((self.isActiveDOF == 1.0).all())
+            print("Skipped deactivation of solid phase nodes")
+            pass
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         
@@ -1793,7 +1803,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3, 1)] = self.csrColumnOffsets[(0, 2)]
             self.csrColumnOffsets_eb[(3, 2)] = self.csrColumnOffsets[(0, 2)]
             self.csrColumnOffsets_eb[(3, 3)] = self.csrColumnOffsets[(0, 2)]
-
+        #print("ball velocity", self.coefficients.ball_velocity)
         self.rans2p.calculateJacobian(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,

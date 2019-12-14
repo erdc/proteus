@@ -1181,7 +1181,7 @@ class LevelModel(OneLevelTransport):
 
         #if(self.timeIntegration.t > 0.002):
         #  import pdb; pdb.set_trace()
-
+        
         self.calculateResidual(  # element
             self.timeIntegration.dt,
             self.u[0].femSpace.elementMaps.psi,

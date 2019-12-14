@@ -350,11 +350,11 @@ class FESpace:
         # QUADRATURE RULE #
         ###################
         if max(self.velSpaceOrder,self.pSpaceOrder)==1:
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 3)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 3)
+            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 6)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 6)
         else:
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 5)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 5)
+            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 6)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 6)
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
@@ -376,12 +376,12 @@ default_rans2p_parameters = {'useMetrics': 1.0,
                              'weak_bc_penalty_constant': 1.0E6,
                              'useRBLES': 0.0,
                              'ns_closure': 0,
-                             'useVF': 1.0,
+                             'useVF': 0.0,
                              'ns_shockCapturingFactor': 0.25,
                              'ns_lag_shockCapturing': True,
                              'ns_lag_subgridError': True,
                              'timeDiscretization': 'vbdf',
-                             'timeOrder': 2}
+                             'timeOrder': 1}
 default_rans3p_parameters = {'useMetrics': 1.0,
                              'epsFact_viscosity': 1.5,
                              'epsFact_density': 1.5,
@@ -391,7 +391,7 @@ default_rans3p_parameters = {'useMetrics': 1.0,
                              'useRBLES': 0.0,
                              'useRANS': 0.0,
                              'ns_closure': 0,
-                             'useVF': 1.0,
+                             'useVF': 0.0,
                              'ns_shockCapturingFactor': 0.5,
                              'ns_lag_shockCapturing': True,
                              'ns_lag_subgridError': True,

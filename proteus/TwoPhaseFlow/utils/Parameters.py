@@ -40,10 +40,10 @@ from proteus import (StepControl,
                      NumericalFlux)
 
 # default values for several models
-epsFact = 1.5
+epsFact = 3.0
 sc_uref = 1.
 sc_beta = 1.5
-shockCapturingFactor = 0.5
+shockCapturingFactor = 0.9
 minTol = 1e-8
 default_kappa_turbulence = 1e-3
 default_dissipation_turbulence = 1e-3
@@ -340,7 +340,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.ball_density = None
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
-        scopts.shockCapturingFactor = shockCapturingFactor
+        scopts.shockCapturingFactor = 0.9#shockCapturingFactor
         scopts.lag = True
         scopts._freeze()
         seopts = self.n.SubgridErrorOptions
@@ -437,6 +437,10 @@ class ParametersModelRANS2P(ParametersModelBase):
             ball_center_acceleration=copts.ball_center_acceleration,
             ball_angular_acceleration=copts.ball_angular_acceleration,
             ball_density=copts.ball_density,
+            useExact=True,
+            MOMENTUM_SGE=1.0,
+            PRESSURE_SGE=1.0,
+            VELOCITY_SGE=1.0,
         )
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
@@ -512,6 +516,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.01*self.n.nl_atol_res
+        #self.n.conservativeFlux = {0:'pwl-bdm-opt'}
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
@@ -1641,8 +1646,11 @@ class ParametersModelRDLS(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'rdls_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.tolFac = 0.
+        #self.n.maxNonlinearIts = 1
         self.n.maxNonlinearIts = 50
         self.n.maxLineSearches = 0
         # freeze attributes
@@ -1662,7 +1670,8 @@ class ParametersModelRDLS(ParametersModelBase):
                                                 rdModelId=rdModelId,
                                                 useMetrics=copts.useMetrics,
                                                 backgroundDiffusionFactor=copts.backgroundDiffusionFactor,
-                                                ELLIPTIC_REDISTANCING=copts.ELLIPTIC_REDISTANCING)
+                                                ELLIPTIC_REDISTANCING=copts.ELLIPTIC_REDISTANCING,
+                                                useExact=False)
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['rdls']}
@@ -1691,7 +1700,7 @@ class ParametersModelRDLS(ParametersModelBase):
         # TOLERANCES
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.1*mesh.he)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
@@ -1741,6 +1750,8 @@ class ParametersModelMCorr(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'mcorr_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.
@@ -1777,7 +1788,8 @@ class ParametersModelMCorr(ParametersModelBase):
                                                  useMetrics=copts.useMetrics,
                                                  epsFactHeaviside=copts.epsFactHeaviside,
                                                  epsFactDirac=copts.epsFactDirac,
-                                                 epsFactDiffusion=copts.epsFactDiffusion)
+                                                 epsFactDiffusion=copts.epsFactDiffusion,
+                                                 useExact=False)
         # INITIAL CONDITIONS
         class zero_phi:
             def __init__(self):
@@ -1803,7 +1815,7 @@ class ParametersModelMCorr(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
-
+        
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
         if self._Problem.useSuperlu:
@@ -1843,6 +1855,8 @@ class ParametersModelAddedMass(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'am_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.
