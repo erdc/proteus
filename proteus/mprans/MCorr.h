@@ -476,8 +476,8 @@ namespace proteus
     {
     public:
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf;
-      GeneralizedFunctions<nSpace,1,nDOF_trial_element> gf_nodes;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element> gf;
+      GeneralizedFunctions<nSpace,2,nDOF_trial_element> gf_nodes;
     MCorr():ck()
 	{}
 

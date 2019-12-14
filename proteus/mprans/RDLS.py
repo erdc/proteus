@@ -205,7 +205,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.dof_u0 = None
         self.u0 = u0
         self.applyRedistancing = applyRedistancing
-        self.weakBC_on = True  # False
+        self.weakBC_on = True
         self.penaltyParameter = penaltyParameter
         self.backgroundDiffusionFactor = backgroundDiffusionFactor
         self.weakDirichletFactor = weakDirichletFactor
@@ -353,7 +353,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def setZeroLSweakDirichletBCs(vt):
         if vt.coefficients.weakBC_on:
-            # print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Setting new weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Setting new weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             vt.dirichletNodeSetList[0] = []
             vt.dirichletGlobalNodeSet[0] = set()
             vt.dirichletValues[0] = {}
@@ -400,7 +400,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         vt.dirichletNodeSetList[0][eN].add(j)
                         vt.dirichletValues[0][(eN, j)] = float(vt.u[0].dof[J])
         else:
-            # print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Unsetting weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Unsetting weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             vt.dirichletNodeSetList[0] = []
             vt.dirichletGlobalNodeSet[0] = set()
             vt.dirichletValues[0] = {}
@@ -450,7 +450,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def setZeroLSweakDirichletBCs3(vt):
         if vt.coefficients.weakBC_on:
-            # print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Setting new weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Setting new weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             vt.dirichletNodeSetList[0] = []
             vt.dirichletGlobalNodeSet[0] = set()
             vt.dirichletValues[0] = {}
@@ -466,7 +466,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         vt.dirichletValues[0][(eN, j)] = float(vt.u[0].dof[J])
                         vt.dirichletGlobalNodeSet[0].add(J)
         else:
-            # print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Unsetting weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Unsetting weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             vt.dirichletNodeSetList[0] = []
             vt.dirichletGlobalNodeSet[0] = set()
             vt.dirichletValues[0] = {}
@@ -850,7 +850,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         # create storage for enforcing weak dirichlet boundary conditions around zero level set contour
-        self.freezeLevelSet = 1  # True
+        self.freezeLevelSet = 1  
         self.u_dof_last = numpy.zeros(self.u[0].dof.shape, 'd')
         self.weakDirichletConditionFlags = numpy.zeros(self.u[0].dof.shape, 'i')
         self.dofFlag_element = numpy.zeros((self.nDOF_trial_element[0],), 'i')
