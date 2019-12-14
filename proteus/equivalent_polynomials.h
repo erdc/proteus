@@ -238,6 +238,8 @@ namespace equivalent_polynomials
       }
     else
       {
+        if (zcount >= nN-1)
+          std::cout<<"zcount "<<zcount<<" >= "<<nN-1<<std::endl;
         assert(zcount < nN-1);
         if(pcount)
           return 1;
@@ -422,15 +424,36 @@ namespace equivalent_polynomials
       }
     _calculate_cuts();//X_0, array of interface cuts on reference simplex
     _calculate_normal<nSpace>(phys_nodes_cut, level_set_normal);//normal to interface
+    //cek hack - 2D, pressure basis for discontinuous density
+    double jump_scale = level_set_normal[1]*(1.0-2.0*double(inside_out)),
+      m_average = 0.5*(ma + mb),
+      m_jump = 0.5*(mb - ma),
+      mb_scale = m_average + jump_scale*m_jump,//mb when jump_scale=1
+      ma_scale = m_average - jump_scale*m_jump;//ma when jump_scale=1
+    //std::cout<<inside_out<<'\t'<<level_set_normal[1]<<'\t'<<mb_scale<<'\t'<<mb<<'\t'<<ma_scale<<'\t'<<ma<<std::endl;
+    //    double mb_scale=mb, ma_scale=ma;
+    //cek hack end
     if (inside_out)
       {
         if (nN==3)
-          _calculate_basis_coefficients(mb, ma);
+          {
+            _calculate_basis_coefficients(mb_scale, ma_scale);
+            for (int i=0; i < 3; i++)
+              {
+                double tmp;
+                tmp = _va_x[i];
+                _va_x[i] = _vb_x[i];
+                _vb_x[i] = tmp;
+                tmp = _va_y[i];
+                _va_y[i] = _vb_y[i];
+                _vb_y[i] = tmp;
+              }
+          }
       }
     else
       {
         if (nN==3)
-          _calculate_basis_coefficients(ma, mb);
+          _calculate_basis_coefficients(ma_scale, mb_scale);
       }
     _calculate_C();//coefficients of equiv poly
     _correct_phi(phi_dof, phi_nodes);
@@ -490,14 +513,16 @@ namespace equivalent_polynomials
     inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb)
     {
       //hack for testing
-      return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb);
-      /* if(useExact) */
-      /*   exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb); */
-      /* else//for inexact just copy over local phi_dof */
-      /*   for (int i=0; i<exact.nN;i++) */
-      /*     exact.phi_dof_corrected[i] = phi_dof[i]; */
-      /* for (int i=0; i<exact.nN;i++) */
-      /*   exact.phi_dof_corrected[i] = phi_dof[i]; */
+      //return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb);
+      //
+      if(useExact)
+        return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb);
+      else//for inexact just copy over local phi_dof
+        {
+          for (int i=0; i<exact.nN;i++)
+            exact.phi_dof_corrected[i] = phi_dof[i];
+          return 1;
+        }
     }
     
     inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
