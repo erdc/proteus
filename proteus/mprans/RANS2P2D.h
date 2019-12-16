@@ -15,8 +15,8 @@ const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume cha
 const double inertial_term=1.0;
 namespace proteus
 {
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
   class RANS2P2D_base
   {
@@ -48,6 +48,7 @@ namespace proteus
                                    //element boundary
                                    double *mesh_trial_trace_ref,
                                    double *mesh_grad_trial_trace_ref,
+                                   double *xb_ref,
                                    double *dS_ref,
                                    double *p_trial_trace_ref,
                                    double *p_grad_trial_trace_ref,
@@ -256,6 +257,7 @@ namespace proteus
                                    //element boundary
                                    double *mesh_trial_trace_ref,
                                    double *mesh_grad_trial_trace_ref,
+                                   double *xb_ref,
                                    double *dS_ref,
                                    double *p_trial_trace_ref,
                                    double *p_grad_trial_trace_ref,
@@ -575,8 +577,8 @@ namespace proteus
       const int nDOF_v_test_X_v_trial_element;
       CompKernelType ck;
       CompKernelType_v ck_v;
-      GeneralizedFunctions<nSpace,3,nQuadraturePoints_element> gf;
-      GeneralizedFunctions<nSpace,3,nQuadraturePoints_element> gf_s;
+      GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
+      GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf_s;
     RANS2P2D():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         nDOF_test_X_v_trial_element(nDOF_test_element*nDOF_v_trial_element),
@@ -2115,6 +2117,7 @@ namespace proteus
                              //element boundary
                              double* mesh_trial_trace_ref,
                              double* mesh_grad_trial_trace_ref,
+                             double* xb_ref,
                              double* dS_ref,
                              double* p_trial_trace_ref,
                              double* p_grad_trial_trace_ref,
@@ -2378,7 +2381,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref);
+            int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref,false);
             if (icase_s == 0)
               {
                 //only works for simplices
@@ -2389,9 +2392,9 @@ namespace proteus
                       cutfem_boundaries.insert(ebN);
                   }
               }
-            //int icase = gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
-            //int icase = gf.calculate(element_phi, element_nodes, x_ref, 1.0/(-rho_0*g[1]), 1.0/(-rho_1*g[1]));
-            int icase = gf.calculate(element_phi, element_nodes, x_ref, -rho_1*g[1], -rho_0*g[1]);
+            //int icase = gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1,false);
+            //int icase = gf.calculate(element_phi, element_nodes, x_ref, 1.0/(-rho_0*g[1]), 1.0/(-rho_1*g[1]),false);
+            int icase = gf.calculate(element_phi, element_nodes, x_ref, -rho_1*g[1], -rho_0*g[1],false);
             if (icase == 0)
               {
                 //only works for simplices
@@ -3567,6 +3570,24 @@ namespace proteus
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
               }
+            double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
+            for (int j=0;j<nDOF_mesh_trial_element;j++)
+              {
+                register int eN_j = eN*nDOF_mesh_trial_element+j;
+                element_phi[j] = phi_nodes[p_l2g[eN_j]];
+                element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
+              }
+            double element_nodes[nDOF_mesh_trial_element*3];
+            for (int i=0;i<nDOF_mesh_trial_element;i++)
+              {
+                register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+              }//i
+            gf_s.calculate(element_phi_s, element_nodes, xb_ref,true);
+            //cek hack
+            //int icase=gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
+            int icase = gf.calculate(element_phi, element_nodes, xb_ref, -rho_1*g[1], -rho_0*g[1],true);
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
                 register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
@@ -3723,6 +3744,8 @@ namespace proteus
                   G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty,
                   force_x,force_y,force_z,force_p_x,force_p_y,force_p_z,force_v_x,force_v_y,force_v_z,r_x,r_y,r_z;
                 //compute information about mapping from reference element to physical element
+                gf_s.set_boundary_quad(kb);
+                gf.set_boundary_quad(kb);
                 ck.calculateMapping_elementBoundary(eN,
                                                     ebN_local,
                                                     kb,
@@ -4385,6 +4408,7 @@ namespace proteus
                              //element boundary
                              double* mesh_trial_trace_ref,
                              double* mesh_grad_trial_trace_ref,
+                             double* xb_ref,
                              double* dS_ref,
                              double* p_trial_trace_ref,
                              double* p_grad_trial_trace_ref,
@@ -4632,10 +4656,10 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
               }//i
-            gf_s.calculate(element_phi_s, element_nodes, x_ref);
+            gf_s.calculate(element_phi_s, element_nodes, x_ref,false);
             //cek hack
             //int icase=gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
-            int icase = gf.calculate(element_phi, element_nodes, x_ref, -rho_1*g[1], -rho_0*g[1]);
+            int icase = gf.calculate(element_phi, element_nodes, x_ref, -rho_1*g[1], -rho_0*g[1],false);
             for (int fluid_phase=0;fluid_phase < 2 - abs(icase); fluid_phase++)
           {
             double rho_0_in=rho_0,rho_1_in=rho_1,
@@ -5744,7 +5768,7 @@ namespace proteus
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
-        gf.useExact = false;
+        //gf.useExact = false;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray[ebNE],
@@ -5753,6 +5777,24 @@ namespace proteus
               eN_nDOF_v_trial_element = eN*nDOF_v_trial_element,
               ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
             register double eps_rho,eps_mu;
+            double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
+            for (int j=0;j<nDOF_mesh_trial_element;j++)
+              {
+                register int eN_j = eN*nDOF_mesh_trial_element+j;
+                element_phi[j] = phi_nodes[p_l2g[eN_j]];
+                element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
+              }
+            double element_nodes[nDOF_mesh_trial_element*3];
+            for (int i=0;i<nDOF_mesh_trial_element;i++)
+              {
+                register int eN_i=eN*nDOF_mesh_trial_element+i;
+                for(int I=0;I<3;I++)
+                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+              }//i
+            gf_s.calculate(element_phi_s, element_nodes, xb_ref,true);
+            //cek hack
+            //int icase=gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
+            int icase = gf.calculate(element_phi, element_nodes, xb_ref, -rho_1*g[1], -rho_0*g[1],true);
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
                 register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
@@ -5930,6 +5972,8 @@ namespace proteus
                   porosity_ext,
                   //
                   G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+                gf_s.set_boundary_quad(kb);
+                gf.set_boundary_quad(kb);
                 ck.calculateMapping_elementBoundary(eN,
                                                     ebN_local,
                                                     kb,

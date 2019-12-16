@@ -1539,6 +1539,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       # element boundary
                                       self.u[0].femSpace.elementMaps.psi_trace,
                                       self.u[0].femSpace.elementMaps.grad_psi_trace,
+                                      self.elementBoundaryQuadraturePoints,
                                       self.elementBoundaryQuadratureWeights[('u', 0)],
                                       self.u[0].femSpace.psi_trace,
                                       self.u[0].femSpace.grad_psi_trace,
@@ -1829,6 +1830,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       # element boundary
                                       self.u[0].femSpace.elementMaps.psi_trace,
                                       self.u[0].femSpace.elementMaps.grad_psi_trace,
+                                      self.elementBoundaryQuadraturePoints,
                                       self.elementBoundaryQuadratureWeights[('u', 0)],
                                       self.u[0].femSpace.psi_trace,
                                       self.u[0].femSpace.grad_psi_trace,
