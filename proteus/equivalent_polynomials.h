@@ -8,19 +8,21 @@
 
 namespace equivalent_polynomials
 {
-  template<int nSpace, int nP, int nQ>
+  template<int nSpace, int nP, int nQ, int nEBQ>
   class Regularized
   {
   public:
     Regularized(bool useExact=false)
     {}
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb)
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary)
     {}
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, bool isBoundary)
     {
-      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0);
+      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0, isBoundary);
     }
     inline void set_quad(unsigned int q)
+    {}
+    inline void set_boundary_quad(unsigned int ebq)
     {}
     inline double H(double eps, double phi)
     {
@@ -53,14 +55,14 @@ namespace equivalent_polynomials
     inline double VA(int i){return -1.0;};
     inline double VA_x(int i){return -1.0;};
     inline double VA_y(int i){return -1.0;};
-    //inline double VA_z(int i){return -1.0;};
+    inline double VA_z(int i){return -1.0;};
     inline double VB(int i){return -1.0;};
     inline double VB_x(int i){return -1.0;};
     inline double VB_y(int i){return -1.0;};
-    //inline double VB_z(int i){return -1.0;};
+    inline double VB_z(int i){return -1.0;};
   };
   
-  template<int nSpace, int nP, int nQ>
+  template<int nSpace, int nP, int nQ, int nEBQ>
   class Simplex
   {
   public:
@@ -77,11 +79,11 @@ namespace equivalent_polynomials
       _set_Ainv<nSpace,nP>(Ainv);
     }
     
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb);
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary);
 
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, bool isBoundary)
     {
-      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0);
+      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0, isBoundary);
     }
     
     inline void set_quad(unsigned int q)
@@ -107,6 +109,29 @@ namespace equivalent_polynomials
         }
     }
     
+    inline void set_boundary_quad(unsigned int ebq)
+    {
+      assert(ebq >= 0);
+      assert(ebq < nEBQ);
+      _D_q = _D_ebq[ebq];
+      if(inside_out)
+        {
+          _H_q   = _ImH_ebq[ebq];
+          _ImH_q = _H_ebq[ebq];
+        }
+      else
+        {
+          _H_q   = _H_ebq[ebq];
+          _ImH_q = _ImH_ebq[ebq];
+        }
+      //basis functions already adjusted for inside_out
+      for(int i=0;i<nN;i++)
+        {
+          _va_q[i] = _va_ebq[ebq*nN+i];
+          _vb_q[i] = _vb_ebq[ebq*nN+i];
+        }
+    }
+    
     inline double* get_H(){return _H;};
     inline double* get_ImH(){return _ImH;};
     inline double* get_D(){return _D;};
@@ -116,17 +141,17 @@ namespace equivalent_polynomials
     inline double VA(int i){return _va_q[i];};
     inline double VA_x(int i){return _va_x[i];};
     inline double VA_y(int i){return _va_y[i];};
-    //inline double VA_z(int i){return _va_q[i];};
+    inline double VA_z(int i){return _va_z[i];};
     inline double VB(int i){return _vb_q[i];};
     inline double VB_x(int i){return _vb_x[i];};
     inline double VB_y(int i){return _vb_y[i];};
-    //inline double VB_z(int i){return _vb_q[i];};
+    inline double VB_z(int i){return _vb_z[i];};
     bool inside_out;
     static const unsigned int nN=nSpace+1;
     double phi_dof_corrected[nN];
   private:
     double _H_q, _ImH_q, _D_q, _va_q[nN], _vb_q[nN],
-      _va_x[nN],_va_y[nN],_vb_x[nN],_vb_y[nN];
+      _va_x[nN],_va_y[nN],_va_z[nN],_vb_x[nN],_vb_y[nN],_vb_z[nN];
     unsigned int root_node, permutation[nN];
     double phi[nN], nodes[nN*3];
     double _a1[nN],_a2[nN],_a3[nN],
@@ -141,6 +166,7 @@ namespace equivalent_polynomials
     inline void _calculate_C();
     inline void _correct_phi(const double* phi_dof, const double* phi_nodes);
     double _H[nQ], _ImH[nQ], _D[nQ], _va[nQ*nN], _vb[nQ*nN];
+    double _H_ebq[nEBQ], _ImH_ebq[nEBQ], _D_ebq[nEBQ], _va_ebq[nEBQ*nN], _vb_ebq[nEBQ*nN];//cek hack: this is confusing because we use no suffice for the q arrays and _ebq for the ebq arrays, then use _q above for generic quad point
     inline void _calculate_basis_coefficients(const double ma, const double mb);
     inline void _calculate_basis(const double* xi,double* va, double* vb)
     {
@@ -152,8 +178,8 @@ namespace equivalent_polynomials
     }
   };
   
-  template<int nSpace, int nP, int nQ>
-  inline void Simplex<nSpace,nP,nQ>::_calculate_C()
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_C()
   {
     register double b_H[nDOF], b_ImH[nDOF], b_dH[nDOF*nSpace];
     _calculate_b<nSpace,nP>(X_0, b_H, b_ImH, b_dH);
@@ -183,8 +209,8 @@ namespace equivalent_polynomials
       }
   }
   
-  template<int nSpace, int nP, int nQ>
-  inline int Simplex<nSpace,nP,nQ>::_calculate_permutation(const double* phi_dof, const double* phi_nodes)
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  inline int Simplex<nSpace,nP,nQ,nEBQ>::_calculate_permutation(const double* phi_dof, const double* phi_nodes)
   {
     int p_i, pcount=0, n_i, ncount=0, z_i, zcount=0;
     root_node=0;
@@ -298,8 +324,8 @@ namespace equivalent_polynomials
     return 0;
   }
   
-  template<int nSpace, int nP, int nQ>
-  inline void Simplex<nSpace,nP,nQ>::_calculate_cuts()
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_cuts()
   {
     for (unsigned int i=0; i < nN-1;i++)
       {
@@ -325,8 +351,8 @@ namespace equivalent_polynomials
       }
   }
   
-  template<int nSpace, int nP, int nQ>
-  inline void Simplex<nSpace,nP,nQ>::_correct_phi(const double* phi_dof, const double* phi_nodes)
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  inline void Simplex<nSpace,nP,nQ,nEBQ>::_correct_phi(const double* phi_dof, const double* phi_nodes)
   {
     register double cut_barycenter[3] ={0.,0.,0.};
     const double one_by_nNm1 = 1.0/(nN-1.0);
@@ -350,8 +376,8 @@ namespace equivalent_polynomials
       }
   }
 
-  template<int nSpace, int nP, int nQ>
-  inline void Simplex<nSpace,nP,nQ>::_calculate_basis_coefficients(const double ma, const double mb)
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_basis_coefficients(const double ma, const double mb)
   {
     assert(nN==3);
     double nx=0.0,ny=0.0;
@@ -395,8 +421,8 @@ namespace equivalent_polynomials
       }
   }
 
-  template<int nSpace, int nP, int nQ>
-  inline int Simplex<nSpace,nP,nQ>::calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb)
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  inline int Simplex<nSpace,nP,nQ,nEBQ>::calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary)
   {
     //initialize phi_dof_corrected -- correction can only be actually computed on cut cells
     for (unsigned int i=0; i < nN;i++)
@@ -410,6 +436,12 @@ namespace equivalent_polynomials
             _ImH[q] = 0.0;
             _D[q] = 0.0;
           }
+        for (unsigned int ebq=0; ebq < nEBQ; ebq++)
+          {
+            _H_ebq[ebq] = 1.0;
+            _ImH_ebq[ebq] = 0.0;
+            _D_ebq[ebq] = 0.0;
+          }
         return icase;
       }
     else if(icase == -1)
@@ -419,6 +451,12 @@ namespace equivalent_polynomials
             _H[q] = 0.0;
             _ImH[q] = 1.0;
             _D[q] = 0.0;
+          }
+        for (unsigned int ebq=0; ebq < nEBQ; ebq++)
+          {
+            _H_ebq[ebq] = 0.0;
+            _ImH_ebq[ebq] = 1.0;
+            _D_ebq[ebq] = 0.0;
           }
         return icase;
       }
@@ -462,6 +500,8 @@ namespace equivalent_polynomials
     for(unsigned int i=0; i < nN - 1; i++)
       for(unsigned int I=0; I < nSpace; I++)
         Jac_0[I*nSpace+i] = phi_nodes[(1+i)*3 + I] - phi_nodes[I];
+    if (not isBoundary)
+      {
     for(unsigned int q=0; q < nQ; q++)
       {
         //Due to the permutation, the quadrature points on the reference may be rotated
@@ -496,27 +536,65 @@ namespace equivalent_polynomials
           _calculate_polynomial_3D<nP>(xi,C_H,C_ImH,C_D,_H[q],_ImH[q],_D[q]);
       }
     set_quad(0);
+      }
+    else
+      {
+    for(unsigned int ebq=0; ebq < nEBQ; ebq++)
+      {
+        //Due to the permutation, the quadrature points on the reference may be rotated
+        //map reference to physical simplex, then back to permuted reference
+        register double x[nSpace], xi[nSpace];
+        //to physical coordinates
+        for (unsigned int I=0; I < nSpace; I++)
+          {
+            x[I]=phi_nodes[I];
+            for (unsigned int J=0; J < nSpace;J++)
+              {
+                x[I] += Jac_0[I*nSpace + J]*xi_r[ebq*3 + J];
+              }
+          }
+        //back to reference coordinates on possibly permuted 
+        for (unsigned int I=0; I < nSpace; I++)
+          {
+            xi[I] = 0.0;
+            for (unsigned int J=0; J < nSpace; J++)
+              {
+                xi[I] += inv_Jac[I*nSpace + J]*(x[J] - nodes[J]);
+              }
+          }
+        if (nSpace == 1)
+          _calculate_polynomial_1D<nP>(xi,C_H,C_ImH,C_D,_H_ebq[ebq],_ImH_ebq[ebq],_D_ebq[ebq]);
+        else if (nSpace == 2)
+          {
+            _calculate_polynomial_2D<nP>(xi,C_H,C_ImH,C_D,_H_ebq[ebq],_ImH_ebq[ebq],_D_ebq[ebq]);
+            _calculate_basis(xi,&_va_ebq[ebq*nN],&_vb_ebq[ebq*nN]);
+          }
+        else if (nSpace == 3)
+          _calculate_polynomial_3D<nP>(xi,C_H,C_ImH,C_D,_H_ebq[ebq],_ImH_ebq[ebq],_D_ebq[ebq]);
+      }
+    set_boundary_quad(0);
+      }
     return icase;
   }
 
-  template<int nSpace, int nP, int nQ>
+  template<int nSpace, int nP, int nQ, int nEBQ>
   class GeneralizedFunctions_mix
   {
   public:
-    Regularized<nSpace, nP, nQ> regularized;
-    Simplex<nSpace, nP, nQ> exact;
+    Regularized<nSpace, nP, nQ, nEBQ> regularized;
+    Simplex<nSpace, nP, nQ, nEBQ> exact;
     bool useExact;
     GeneralizedFunctions_mix(bool useExact=true):
       useExact(useExact)
     {}
     
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb)
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary)
     {
       //hack for testing
       //return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb);
       //
       if(useExact)
-        return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb);
+        return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb,isBoundary);
       else//for inexact just copy over local phi_dof
         {
           for (int i=0; i<exact.nN;i++)
@@ -525,15 +603,21 @@ namespace equivalent_polynomials
         }
     }
     
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r)
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, bool isBoundary)
     {
-      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0);
+      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0,isBoundary);
     }
     
     inline void set_quad(unsigned int q)
     {
       if(useExact)
         exact.set_quad(q);
+    }
+
+    inline void set_boundary_quad(unsigned int ebq)
+    {
+      if(useExact)
+        exact.set_boundary_quad(ebq);
     }
     
     inline double H(double eps, double phi)

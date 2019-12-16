@@ -14,8 +14,8 @@ namespace py = pybind11;
 namespace proteus
 {
 
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
   //using GeneralizedFunctions = equivalent_polynomials::Regularized<nSpace, nP, nQ>;
   //using GeneralizedFunctions = equivalent_polynomials::EquivalentPolynomials<nSpace, nP, nQ>;
 
@@ -476,8 +476,8 @@ namespace proteus
     {
     public:
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element> gf;
-      GeneralizedFunctions<nSpace,2,nDOF_trial_element> gf_nodes;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
+      GeneralizedFunctions<nSpace,2,nDOF_trial_element,nQuadraturePoints_elementBoundary> gf_nodes;
     MCorr():ck()
 	{}
 
@@ -742,7 +742,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
 	    calculateElementResidual(mesh_trial_ref.data(),
 				     mesh_grad_trial_ref.data(),
 				     mesh_dof.data(),
@@ -1103,7 +1103,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+          gf.calculate(element_phi, element_nodes, x_ref.data(),false);
 	    calculateElementJacobian(mesh_trial_ref.data(),
 				     mesh_grad_trial_ref.data(),
 				     mesh_dof.data(),
@@ -1883,7 +1883,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
@@ -2008,8 +2008,8 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
-            gf_nodes.calculate(element_phi, element_nodes, element_nodes);
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+            gf_nodes.calculate(element_phi, element_nodes, element_nodes,false);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
@@ -2480,7 +2480,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage

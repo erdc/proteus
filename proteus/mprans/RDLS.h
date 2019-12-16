@@ -19,8 +19,8 @@ namespace proteus
     return (z>0 ? 1. : (z<0 ? 0. : 0.5));
   }
 
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
   
   class RDLS_base
@@ -342,7 +342,7 @@ namespace proteus
     public:
       const int nDOF_test_X_trial_element;
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element> gf,gfu;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf,gfu;
     RDLS():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
@@ -540,7 +540,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
             /* for (int i=0;i<nDOF_test_element;i++) */
             /*   { */
 	    /*     register int eN_i=eN*nDOF_trial_element+i; */
@@ -998,7 +998,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());            
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);            
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
@@ -1499,7 +1499,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());                        
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);                        
             //loop over quadrature points and compute integrands
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
@@ -1802,7 +1802,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
