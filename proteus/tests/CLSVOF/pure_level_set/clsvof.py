@@ -8,7 +8,10 @@ from proteus import Context
 from proteus.mprans import CLSVOF
 import numpy as np
 import math
-from .parameters import *
+try:
+    from .parameters import *
+except:
+    from parameters import *
 
 AUTOMATED_TEST=True
 

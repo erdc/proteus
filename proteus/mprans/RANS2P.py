@@ -1730,13 +1730,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.use_pseudo_penalty,
                                       self.coefficients.useExact,
                                       self.isActiveDOF)
+        #assert((self.isActiveDOF ==1.0).all())
         try:
-            self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = self.coefficients.ball_velocity[0][0]
-            self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = self.coefficients.ball_velocity[0][1]
+            #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = self.coefficients.ball_velocity[0][0]
+            #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = self.coefficients.ball_velocity[0][1]
+            #u[self.isActiveDOF==0.0] = -1000.0
+            #tmp = u.copy()
+            #check that inactive DOF can be set arbitrarily
+            u[self.isActiveDOF==0.0] = -1000.0
+            #u[:] = np.where(self.isActiveDOF==1.0,u,-1000.0)
+            #assert((tmp == u).all())
+            #print("inactive ",u[self.isActiveDOF==0.0])
+            #import pdb
+            #pdb.set_trace()
+            self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = -1000.0
+            self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = -1000.0
+            self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = -1000.0
+            #self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]::self.stride[0]]==1.0, self.u[0].dof,-1000.0)
+            #self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]::self.stride[1]]==1.0, self.u[1].dof,-1000.0)
+            #self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]::self.stride[2]]==1.0, self.u[2].dof,-1000.0)
             #print("ball velocity x at nodes", self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]] == 0.0])
             #print("ball velocity y at nodes", self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]] == 0.0])
             r*=self.isActiveDOF
+            #print(r[np.argwhere(self.isActiveDOF==0.0)])
         except:
+            assert(False)
             assert((self.isActiveDOF == 1.0).all())
             print("Skipped deactivation of solid phase nodes")
             pass
@@ -2013,14 +2031,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant,
                                       self.coefficients.use_pseudo_penalty,
-                                      self.coefficients.useExact)
-        
+                                      self.coefficients.useExact,
+                                      self.isActiveDOF)
+        #assert((self.isActiveDOF ==1.0).all())
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
         else:
             self.pp_hasConstantNullSpace = False
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
+            assert(false)
             for cj in range(self.nc):
                 for dofN in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys()):
                     global_dofN = self.offset[cj] + self.stride[cj] * dofN
@@ -2030,7 +2050,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         else:
                             self.nzval[i] = 0.0
                             # print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-        for global_dofN in np.where(self.isActiveDOF==0.0)[0]:
+        for global_dofN_a in np.argwhere(self.isActiveDOF==0.0):
+            #assert(False)
+            global_dofN = global_dofN_a[0]
+            #print("inactive ", global_dofN)
             for i in range(
                     self.rowptr[global_dofN],
                     self.rowptr[global_dofN + 1]):
@@ -2038,6 +2061,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.nzval[i] = 1.0
                 else:
                     self.nzval[i] = 0.0
+        #check that inactive DOF have no non-zero coefficients in active rows
+        for global_dofN_a in np.argwhere(self.isActiveDOF==1.0):
+            global_dofN = global_dofN_a[0]
+            for i in range(
+                    self.rowptr[global_dofN],
+                    self.rowptr[global_dofN + 1]):
+                if(self.isActiveDOF[self.colind[i]] == 0.0):
+                    #pass
+                    assert(self.nzval[i] == 0.0), ("row", global_dofN, "column", self.colind[i], "val", self.nzval[i],                                      self.offset[0], self.offset[1], self.offset[2], self.offset[3],
+                                      self.stride[0], self.stride[1], self.stride[2], self.stride[3])
+
+                
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
