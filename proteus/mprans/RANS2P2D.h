@@ -437,7 +437,8 @@ namespace proteus
                                    double particle_beta,
                                    double particle_penalty_constant,
                                    const int use_pseudo_penalty,
-                                   bool useExact) = 0;
+                                   bool useExact,
+                                   double* isActiveDOF) = 0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           xt::pyarray<int>& exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -575,6 +576,8 @@ namespace proteus
     public:
       std::set<int> ifem_boundaries, ifem_boundary_elements,
         cutfem_boundaries, cutfem_boundary_elements;
+      std::valarray<bool> elementIsActive;
+
       const int nDOF_test_X_trial_element;
       const int nDOF_test_X_v_trial_element;
       const int nDOF_v_test_X_trial_element;
@@ -2314,6 +2317,7 @@ namespace proteus
         ifem_boundary_elements.clear();
         cutfem_boundaries.clear();
         cutfem_boundary_elements.clear();
+        elementIsActive.resize(nElements_global);
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -2338,6 +2342,7 @@ namespace proteus
               velocityErrorElement[nDOF_v_test_element],
               eps_rho,eps_mu;
             bool element_active=false;
+            elementIsActive[eN]=false;
             const double* elementResidual_w(NULL);
             double mesh_volume_conservation_element=0.0,
               mesh_volume_conservation_element_weak=0.0;
@@ -2745,7 +2750,10 @@ namespace proteus
                 double fluid_fac;
                 const double H_s = gf_s.H(particle_eps,phi_solid.data()[eN_k]);
                 if ( H_s != 0.0)
-                  element_active=true;
+                  {
+                    element_active=true;
+                    elementIsActive[eN]=true;
+                  }
                 //save velocity at quadrature points for other models to use
                 double p_e = q_u_0.data()[eN_k] - p,
                   u_e = q_u_1.data()[eN_k] - u,
@@ -3356,6 +3364,9 @@ namespace proteus
             //
             //load element into global residual and save element residual
             //
+            assert(elementIsActive[eN] == element_active);
+            if (!elementIsActive[eN])
+              assert(gf_s.H(0.,0.) == 0.0);
             for(int i=0;i<nDOF_test_element;i++)
               {
                 register int eN_i=eN*nDOF_test_element+i;
@@ -3371,6 +3382,12 @@ namespace proteus
               {
                 register int eN_i=eN*nDOF_v_test_element+i;
                 //std::cout<<icase<<'\t'<<elementResidual_p[i]<<'\t'<<elementResidual_u[i]<<'\t'<<elementResidual_v[i]<<std::endl;
+                if (!elementIsActive[eN])
+                  {
+                    //std::cout<<"elementResidual "<<elementResidual_u[i]<<'\t'<<elementResidual_v[i]<<std::endl;;
+                    assert(elementResidual_u[i]==0.0);
+                    assert(elementResidual_v[i]==0.0);
+                  }
                 globalResidual.data()[offset_u+stride_u*rvel_l2g.data()[eN_i]]+=elementResidual_u[i];
                 globalResidual.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]]+=elementResidual_v[i];
 
@@ -3412,11 +3429,13 @@ namespace proteus
         //     std::cout<<"ifem_y.append(["<<mesh_dof[mesh_l2g.data()[eN*3+(ebN_local+1)%3]*3 + 1]<<","<<mesh_dof[mesh_l2g.data()[eN*3+(ebN_local+2)%3]*3+1]<<"])"<<std::endl;
         //   }
         std::map<int,double> Ru_i, Rv_i;
-        for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); ++it)
+        for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); )
           {
             std::map<int,double> Dw_Dn_jump;
             std::map<int,int> hits;
             register double gamma_cutfem=0.5,h_cutfem=0.0;
+            if(elementIsActive[elementBoundaryElementsArray[(*it)*2+0]] && elementIsActive[elementBoundaryElementsArray[(*it)*2+1]])
+              {
             for (int eN_side=0;eN_side < 2; eN_side++)
               {
                 register int ebN = *it,
@@ -3536,6 +3555,13 @@ namespace proteus
                     Rv_i[i_global]+=gamma_cutfem*h_cutfem*Dv_Dn_jump*Dw_Dn_jump_i*dS;
                   }//i
               }//kb
+            ++it;
+              }
+            else
+              {
+                //std::cout<<"Removing "<<(*it)<<" as one of "<<((*it)*2+0)<<" and "<<((*it)*2+1)<<" is inactive "<<elementIsActive[elementBoundaryElementsArray[(*it)*2+0]]<<'\t'<<elementIsActive[elementBoundaryElementsArray[(*it)*2+1]]<<std::endl;
+                it = cutfem_boundaries.erase(it);
+              }
           }//cutfem element boundaries
         /* std::map<int,double>::iterator it_u=Ru_i.begin(), */
         /*   it_v=Rv_i.begin(); */
@@ -3551,7 +3577,6 @@ namespace proteus
         //ebNE is the Exterior element boundary INdex
         //ebN is the element boundary INdex
         //eN is the element index
-        gf.useExact = false;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray.data()[ebNE],
@@ -3843,7 +3868,9 @@ namespace proteus
                   }
                 //else ebq_global_phi_s[ebNE_kb] is computed in Prestep
                 double fluid_fac;
-                const double H_s=1.0;
+                //const double H_s=1.0;
+                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                const double H_s = gf_s.H(particle_eps,ebq_global_phi_s[ebNE_kb]);
                 evaluateCoefficients(fluid_fac,
                                      H_s,
                                      NONCONSERVATIVE_FORM,
@@ -4302,7 +4329,8 @@ namespace proteus
                 //
                 //update residuals
                 //
-                if(true)//boundaryFlags.data()[ebN] > 0)
+                //if(true)//boundaryFlags.data()[ebN] > 0)
+                if (elementIsActive[eN])
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int i=0;i<nDOF_test_element;i++)
                       {
@@ -4365,6 +4393,8 @@ namespace proteus
             //
             //update the element and global residual storage
             //
+            if (!elementIsActive[eN])
+              assert(gf_s.H(0.,0.) == 0.0);
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
@@ -4590,7 +4620,8 @@ namespace proteus
                              double particle_beta,
                              double particle_penalty_constant,
                              const int use_pseudo_penalty,
-                             bool useExact)
+                             bool useExact,
+                             double* isActiveDOF)
       {
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
@@ -5589,6 +5620,8 @@ namespace proteus
             //
             //load into element Jacobian into global Jacobian
             //
+            //cek hack
+            const int offset_p=0,offset_u=1,offset_v=2,stride_p=3,stride_u=3,stride_v=3;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 register int eN_i = eN*nDOF_test_element+i;
@@ -5773,7 +5806,6 @@ namespace proteus
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
-        //gf.useExact = false;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray.data()[ebNE],
@@ -6066,7 +6098,9 @@ namespace proteus
                 }
                 //else distance_to_solids is updated in PreStep
                 double fluid_fac;
-                const double H_s = 1.0;
+                //const double H_s = 1.0;
+                const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                const double H_s = gf_s.H(particle_eps,ebq_global_phi_s[ebNE_kb]);
                 evaluateCoefficients(fluid_fac,
                                      H_s,
                                      NONCONSERVATIVE_FORM,
@@ -6441,7 +6475,8 @@ namespace proteus
                 //
                 ck.calculateGScale(G,normal,h_penalty);
                 penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext.data()[ebNE_kb];
-                if(true)//boundaryFlags[ebN] > 0)
+                if (elementIsActive[eN])
+                  //                if(true)//boundaryFlags[ebN] > 0)
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
                     for (int j=0;j<nDOF_trial_element;j++)
                       {
@@ -6509,11 +6544,15 @@ namespace proteus
                 //
                 //update the global Jacobian from the flux Jacobian
                 //
+                const int offset_p=0,offset_u=1,offset_v=2,stride_p=3,stride_u=3,stride_v=3;
+                if (elementIsActive[eN])
+                  {
                 for (int i=0;i<nDOF_test_element;i++)
                   {
                     register int eN_i = eN*nDOF_test_element+i;
                     for (int j=0;j<nDOF_trial_element;j++)
                       {
+                        register int eN_j = eN*nDOF_trial_element+j;
                         register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 
                         globalJacobian.data()[csrRowIndeces_p_p.data()[eN_i] + csrColumnOffsets_eb_p_p.data()[ebN_i_j]] += fluxJacobian_p_p[j]*p_test_dS[i];
@@ -6524,6 +6563,7 @@ namespace proteus
                     register int eN_i = eN*nDOF_test_element+i;
                     for (int j=0;j<nDOF_v_trial_element;j++)
                       {
+                        register int eN_j = eN*nDOF_v_trial_element+j;
                         register int ebN_i_j = ebN*4*nDOF_test_X_v_trial_element + i*nDOF_v_trial_element + j,ebN_local_kb_j=ebN_local_kb*nDOF_v_trial_element+j;
                         globalJacobian.data()[csrRowIndeces_p_u.data()[eN_i] + csrColumnOffsets_eb_p_u.data()[ebN_i_j]] += fluxJacobian_p_u[j]*p_test_dS[i];
                         globalJacobian.data()[csrRowIndeces_p_v.data()[eN_i] + csrColumnOffsets_eb_p_v.data()[ebN_i_j]] += fluxJacobian_p_v[j]*p_test_dS[i];
@@ -6534,6 +6574,7 @@ namespace proteus
                     register int eN_i = eN*nDOF_v_test_element+i;
                     for (int j=0;j<nDOF_trial_element;j++)
                       {
+                        register int eN_j = eN*nDOF_trial_element+j;
                         register int ebN_i_j = ebN*4*nDOF_v_test_X_trial_element + i*nDOF_trial_element + j,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
                         globalJacobian.data()[csrRowIndeces_u_p.data()[eN_i] + csrColumnOffsets_eb_u_p.data()[ebN_i_j]] += fluxJacobian_u_p[j]*vel_test_dS[i];
                         globalJacobian.data()[csrRowIndeces_v_p.data()[eN_i] + csrColumnOffsets_eb_v_p.data()[ebN_i_j]] += fluxJacobian_v_p[j]*vel_test_dS[i];
@@ -6544,6 +6585,7 @@ namespace proteus
                     register int eN_i = eN*nDOF_v_test_element+i;
                     for (int j=0;j<nDOF_v_trial_element;j++)
                       {
+                        register int eN_j = eN*nDOF_v_trial_element+j;
                         register int ebN_i_j = ebN*4*nDOF_v_test_X_v_trial_element + i*nDOF_v_trial_element + j,ebN_local_kb_j=ebN_local_kb*nDOF_v_trial_element+j;
                         globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] += fluxJacobian_u_u[j]*vel_test_dS[i]+
                           ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u.data()[ebNE_kb],
@@ -6564,7 +6606,7 @@ namespace proteus
                                                                              sdInfo_u_v_rowptr.data(),
                                                                              sdInfo_u_v_colind.data(),
                                                                              mom_uv_diff_ten_ext,
-                                                                             &vel_grad_test_dS[i*nSpace]);
+                                                                             &vel_grad_test_dS[i*nSpace]));
 
                         globalJacobian.data()[csrRowIndeces_v_u.data()[eN_i] + csrColumnOffsets_eb_v_u.data()[ebN_i_j]] += fluxJacobian_v_u[j]*vel_test_dS[i]+
                           ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u.data()[ebNE_kb],
@@ -6585,9 +6627,10 @@ namespace proteus
                                                                              sdInfo_v_v_rowptr.data(),
                                                                              sdInfo_v_v_colind.data(),
                                                                              mom_vv_diff_ten_ext,
-                                                                             &vel_grad_test_dS[i*nSpace]);
+                                                                             &vel_grad_test_dS[i*nSpace]));
                       }//j
                   }//i
+                  }
               }//kb
           }//ebNE
       }//computeJacobian

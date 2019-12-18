@@ -433,7 +433,8 @@ namespace proteus
                                    double particle_beta,
                                    double particle_penalty_constant,
                                    const int use_pseudo_penalty,
-                                   bool useExact) = 0;
+                                   bool useExact,
+                                   double* isActiveDOF) = 0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           xt::pyarray<int>& exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -4700,7 +4701,8 @@ namespace proteus
                              double particle_beta,
                              double particle_penalty_constant,
                              const int use_pseudo_penalty,
-                             bool useExact)
+                             bool useExact,
+                             double* isActiveDOF)
       {
           const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
           std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
