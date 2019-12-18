@@ -415,7 +415,8 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double particle_beta,
                                double particle_penalty_constant,
                                int use_pseudo_penalty,
-                               bool useExact)
+                               bool useExact,
+                               double* isActiveDOF)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -1190,7 +1191,8 @@ cdef class cRANS2P2D_base:
                           double particle_beta,
                           double particle_penalty_constant,
                           int use_pseudo_penalty,
-                          bool useExact):
+                          bool useExact,
+                          numpy.ndarray isActiveDOF):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(NONCONSERVATIVE_FORM,
@@ -1376,7 +1378,7 @@ cdef class cRANS2P2D_base:
                                        < double * > ball_angular_acceleration.data,
                                        < double * > ball_density.data,
                                        < double * > particle_signed_distances.data,
-                                       , double * > particle_signed_distance_normals.data,
+                                       < double * > particle_signed_distance_normals.data,
                                        < double * > particle_velocities.data,
                                        < double * > particle_centroids.data,
                                        < double * > ebq_global_phi_s.data,
@@ -1392,7 +1394,8 @@ cdef class cRANS2P2D_base:
                                        particle_beta,
                                        particle_penalty_constant,
                                        use_pseudo_penalty,
-                                       useExact)
+                                       useExact,
+                                       <double*> isActiveDOF.data)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
