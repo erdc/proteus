@@ -37,26 +37,26 @@ class TestSWFlow(object):
     def test_parab1D(self):
         # Call runSWEs
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v parab1D.py -C 'refinement=4 final_time=10.0'")
+                  "-l1 -v parab1D.py -C 'refinement=4 final_time=10.0 dt_output=0.1'")
         self.compare_vs_saved_files("parab1D")
 
     def test_dam3Bumps(self):
         # Call runSWEs
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v dam3Bumps.py -C 'refinement=4 final_time=0.1'")
+                  "-l1 -v dam3Bumps.py -C 'refinement=4 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("dam3Bumps")
 
     def test_GN_steady(self):
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v GN_steady.py -C 'refinement=4 final_time=0.1'")
+                  "-l1 -v GN_steady.py -C 'refinement=4 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("GN_steady")
 
     def test_solitary_reef(self):
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v solitary_reef.py -C 'refinement=4 final_time=0.1'")
+                  "-l1 -v solitary_reef.py -C 'refinement=4 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("solitary_reef")
 
     def test_seawall(self):
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v seawall.py -C 'refinement=4 final_time=0.1'")
+                  "-l1 -v seawall.py -C 'refinement=4 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("seawall")
