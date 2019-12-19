@@ -29,12 +29,26 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
         pass
 
     def teardown_method(self, method):
-        pass
+        """ Tear down function """
+        FileList = ['mesh.ele',
+                    'mesh.edge',
+                    'mesh.node',
+                    'mesh.neigh',
+                    'mesh.face',
+                    'mesh.poly',
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
+
 
 
     def test_ex1(self):
         self.compare_name = "T001_P1_sbm_3Dmesh"
         self.example_setting("T=0.01 spaceOrder=1 onlySaveFinalSolution=True")
+        self.teardown_method(self)
 
     # really slow
 #     def test_ex2(self):

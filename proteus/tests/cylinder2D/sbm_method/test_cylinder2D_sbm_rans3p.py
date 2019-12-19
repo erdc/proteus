@@ -30,7 +30,20 @@ class Test_sbm(object):
         self.aux_names = []
 
     def teardown_method(self, method):
-        pass
+        """ Tear down function """
+        FileList = ['mesh.ele',
+                    'mesh.edge',
+                    'mesh.node',
+                    'mesh.neigh',
+                    'mesh.face',
+                    'mesh.poly',
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
+
 
 
 #     def test_ex1(self):
@@ -40,6 +53,7 @@ class Test_sbm(object):
     def test_ex2(self):
         self.compare_name = "T1_sbm_rans3p"
         self.example_setting("T=0.01 onlySaveFinalSolution=True")
+        self.teardown_method(self)
 
 
     def example_setting(self, pre_setting):
