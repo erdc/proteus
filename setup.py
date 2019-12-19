@@ -694,7 +694,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.matrix_constructor.import_modules',
                       'proteus.SWFlow',
                       'proteus.SWFlow.utils',
-                      'proteus.SWFlow.tests',
+                      'proteus.tests.SWFlow',
                       'proteus.MeshAdaptPUMI',
                       'proteus.MeshAdaptPUMI',
                       'proteus.tests.MeshAdaptPUMI',
