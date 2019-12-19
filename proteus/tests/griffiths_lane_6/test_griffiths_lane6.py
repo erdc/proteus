@@ -28,7 +28,20 @@ class TestRichards(object):
 
     @classmethod
     def teardown_class(cls):
-        pass
+        """ Tear down function """
+        FileList = ['mesh.ele',
+                    'mesh.edge',
+                    'mesh.node',
+                    'mesh.neigh',
+                    'mesh.face',
+                    'mesh.poly',
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
+
 
     def setup_method(self,method):
         self.aux_names = []
@@ -74,6 +87,7 @@ class TestRichards(object):
         expected.close()
         actual.close()
         del ns
+        self.teardown_method(self)
         
     def test_elastoplastic(self,use_strong_constraints=False):
         pList = [sm_gl_6_3d_p]
@@ -100,6 +114,7 @@ class TestRichards(object):
         expected.close()
         actual.close()
         del ns
+        self.teardown_method(self)
         
 if __name__ == '__main__':
     pass

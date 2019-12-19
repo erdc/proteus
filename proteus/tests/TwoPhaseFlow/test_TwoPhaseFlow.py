@@ -16,6 +16,22 @@ Profiling.verbose=True
 
 class TestTwoPhaseFlow(object):
 
+    def teardown_method(self, method):
+        """ Tear down function """
+        FileList = ['mesh.ele',
+                    'mesh.edge',
+                    'mesh.node',
+                    'mesh.neigh',
+                    'mesh.face',
+                    'mesh.poly',
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
+
+
     def setup_method(self,method):
         self._scriptdir = os.path.dirname(__file__)
         self.path = proteus.__path__[0]+"/tests/TwoPhaseFlow/"
@@ -62,8 +78,10 @@ class TestTwoPhaseFlow(object):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "marin.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.5'")
         self.compare_vs_saved_files("marin")
+        self.teardown_method(self)
 
     def test_moses(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "moses.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.5'")
         self.compare_vs_saved_files("moses")
+        self.teardown_method(self)
