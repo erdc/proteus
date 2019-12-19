@@ -1425,7 +1425,7 @@ class WallFunctions(AuxiliaryVariables.AV_base):
         direction from the boundary.
         """
         # near wall point
-        nP = (relax * self.Y * n) + x
+        nP = (relax * self.Y * (-n)) + x
         return nP
 
     def extractVelocity(self, x, t, n):
