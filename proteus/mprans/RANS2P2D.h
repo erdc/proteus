@@ -1254,29 +1254,28 @@ namespace proteus
             double rel_vel_norm = sqrt((uStar - u_s) * (uStar - u_s) +
                                        (vStar - v_s) * (vStar - v_s) +
                                        (wStar - w_s) * (wStar - w_s));
-            /* double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty; */
-            /* double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm); */
             double C_surf = mu * penalty;
-            //double C_vol = (alpha + beta * rel_vel_norm);
-            double C_vol = 0.0;
-
+            double C_vol = 0.0;//(alpha + beta * rel_vel_norm); //ghost fluid
+            
             C = (D_s * C_surf + ImH_s * C_vol);
-            force_x = dV * D_s * (p * fluid_outward_normal[0]
-                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
-                                  +C_surf*(u-u_s)*rho
-                                  );
-            force_y = dV * D_s * (p * fluid_outward_normal[1]
-                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
-                                  +C_surf*(v-v_s)*rho
-                                  );
-            force_p_x = dV * D_s * p * fluid_outward_normal[0];
-            force_p_y = dV * D_s * p * fluid_outward_normal[1];
-            force_stress_x = dV * D_s * (-mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
-                                  +C_surf*(u-u_s)*rho
-                                  );
-            force_stress_y = dV * D_s * (-mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
-                                  +C_surf*(v-v_s)*rho
-                                  );
+            force_x = porosity * dV * D_s * (p * fluid_outward_normal[0]
+                                             //                                  -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+                                             -mu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1])
+                                             +C_surf*(u-u_s)
+                                             );
+            force_y = porosity * dV * D_s * (p * fluid_outward_normal[1]
+                                             //                                  -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+                                             -mu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1])
+                                             +C_surf*(v-v_s)
+                                             );
+            force_p_x = porosity * dV * D_s * p * fluid_outward_normal[0];
+            force_p_y = porosity * dV * D_s * p * fluid_outward_normal[1];
+            force_stress_x = porosity * dV * D_s * (-mu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1])
+                                                    +C_surf*(u-u_s)
+                                                    );
+            force_stress_y = porosity * dV * D_s * (-mu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1])
+                                                    +C_surf*(v-v_s)
+                                                    );
             //always 3D for particle centroids
             r_x = x - center[0];
             r_y = y - center[1];
@@ -1293,26 +1292,12 @@ namespace proteus
                 particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
             }
 
-            // These should be done inside to make sure the correct velocity of different particles are used
-            //(1)
-            //if (D_s != 0.0)
-            //  std::cout<<"u_s "<<u_s<<"v_s "<<v_s<<"C "<<C<<std::endl;
             mom_u_source += C * (u - u_s);
             mom_v_source += C * (v - v_s);
 
             dmom_u_source[0] += C;
             dmom_v_source[1] += C;
-            /* if(use_pseudo_penalty==-2)// not pseudo-penalty method == IBM */
-            /*   if (NONCONSERVATIVE_FORM > 0.0) */
-            /*     { */
-            /*       mom_u_source += ImH_s*(ball_density[i]-rho)*acceleration[0]; */
-            /*       mom_v_source += ImH_s*(ball_density[i]-rho)*acceleration[1]; */
-            /*     } */
-            /*   else */
-            /*     { */
-            /*       mom_u_source += ImH_s*(ball_density[i]-rho)*acceleration[0]/rho; */
-            /*       mom_v_source += ImH_s*(ball_density[i]-rho)*acceleration[1]/rho; */
-            /*     } */
+
             if (NONCONSERVATIVE_FORM > 0.0)
             {
               mom_u_ham -= D_s * porosity * mu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
@@ -3530,7 +3515,7 @@ namespace proteus
                     ck_v.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_int);
                     for (int I=0;I<nSpace;I++)
                       {
-                        Du_Dn_jump += grad_u_int[I]*normal[I]; 
+                        Du_Dn_jump += grad_u_int[I]*normal[I];
                         Dv_Dn_jump += grad_v_int[I]*normal[I];
                       }
                     for (int i=0;i<nDOF_v_test_element;i++)

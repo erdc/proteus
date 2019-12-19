@@ -1731,15 +1731,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #u[self.isActiveDOF==0.0] = -1000.0
             #tmp = u.copy()
             #check that inactive DOF can be set arbitrarily
-            u[self.isActiveDOF==0.0] = -1000.0
             #u[:] = np.where(self.isActiveDOF==1.0,u,-1000.0)
             #assert((tmp == u).all())
             #print("inactive ",u[self.isActiveDOF==0.0])
             #import pdb
             #pdb.set_trace()
-            self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = -1000.0
-            self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = -1000.0
-            self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = -1000.0
+            #test that solution doesn't depend on inactive DOF
+            #u[self.isActiveDOF==0.0] = -1000.0
+            #self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = -1000.0
+            #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = -1000.0
+            #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = -1000.0
+            u[self.isActiveDOF==0.0] = 0.0
+            self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = 0.0
+            self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = 0.0
+            self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = 0.0
             #self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]::self.stride[0]]==1.0, self.u[0].dof,-1000.0)
             #self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]::self.stride[1]]==1.0, self.u[1].dof,-1000.0)
             #self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]::self.stride[2]]==1.0, self.u[2].dof,-1000.0)
