@@ -48,12 +48,12 @@ class TestRichards(object):
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:
                 pass
-        FileList = ['mesh.ele',
-                    'mesh.edge',
-                    'mesh.node',
-                    'mesh.neigh',
-                    'mesh.face',
-                    'mesh.poly',
+        FileList = ['gl_6_3d.ele',
+                    'gl_6_3d.edge',
+                    'gl_6_3d.node',
+                    'gl_6_3d.neigh',
+                    'gl_6_3d.face',
+                    'gl_6_3d.poly',
                     ]
         for file in FileList:
             if os.path.isfile(file):
