@@ -57,7 +57,18 @@ class TestCLSVOF_with_RANS3PF(object):
         self._scriptdir = os.path.dirname(__file__)
 
     def teardown_method(self,method):
-        pass
+        FileList = ['mesh.ele',
+                    'mesh.edge',
+                    'mesh.node',
+                    'mesh.neigh',
+                    'mesh.face',
+                    'mesh.poly',
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
 
     def test_2D_falling_bubble(self):
         # Set parameters for this test
@@ -97,6 +108,7 @@ class TestCLSVOF_with_RANS3PF(object):
             (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
         expected.close()
         actual.close()
+        self.teardown_method(self)
 
     def test_3D_falling_bubble(self):
         # Set parameters for this test
@@ -136,4 +148,5 @@ class TestCLSVOF_with_RANS3PF(object):
             (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
         expected.close()
         actual.close()        
+        self.teardown_method(self)
 
