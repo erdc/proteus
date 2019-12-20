@@ -50,28 +50,33 @@ class TestTwoPhaseFlow(object):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "risingBubble.py -l5 -v -C 'final_time=0.1 dt_output=0.1 refinement=1'")
         self.compare_vs_saved_files("risingBubble")
+        self.teardown_method(self)
 
     def test_damBreak(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "damBreak.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1'")
         self.compare_vs_saved_files("damBreak")
+        self.teardown_method(self)
 
     def test_damBreak_solver_options(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "damBreak_solver_options.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.05'")
         self.compare_vs_saved_files("damBreak_solver_options")
+        self.teardown_method(self)
 
 #    @pytest.mark.skip(reason="long test")
     def test_TwoDimBucklingFlow(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "TwoDimBucklingFlow.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.05'")
         self.compare_vs_saved_files("TwoDimBucklingFlow")
+        self.teardown_method(self)
 
 #    @pytest.mark.skip(reason="long test")
     def test_fillingTank(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "fillingTank.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.01'")
         self.compare_vs_saved_files("fillingTank")
+        self.teardown_method(self)
 
     # *** 3D tests *** #
     def test_marin(self):

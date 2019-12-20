@@ -28,20 +28,7 @@ class TestRichards(object):
 
     @classmethod
     def teardown_class(cls):
-        """ Tear down function """
-        FileList = ['mesh.ele',
-                    'mesh.edge',
-                    'mesh.node',
-                    'mesh.neigh',
-                    'mesh.face',
-                    'mesh.poly',
-                    ]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-            else:
-                pass
-
+        pass
 
     def setup_method(self,method):
         self.aux_names = []
@@ -61,6 +48,19 @@ class TestRichards(object):
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:
                 pass
+        FileList = ['mesh.ele',
+                    'mesh.edge',
+                    'mesh.node',
+                    'mesh.neigh',
+                    'mesh.face',
+                    'mesh.poly',
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
+
             
     def test_richards(self,use_strong_constraints=False):
         pList = [re_gl_6_3d_p]
