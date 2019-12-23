@@ -807,7 +807,8 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
             for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
                                     list(self.DOFBoundaryConditionsDictList[ci].values()),
                                     list(self.DOFBoundaryPointDictList[ci].values())):
-                self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+                self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t, numpy.array(self.vt.ebqe['n'][ebNE,k]))
+                                        
         for ci in range(self.nc):
             for bci in list(self.periodicBoundaryConditionsDictList[ci].values()):
                 self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
@@ -1798,25 +1799,28 @@ class NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
         self.hasInterior=False
     def setDirichletValues(self,ebqe):
         for ci in range(self.nc):
-            try:
-                self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
-                for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
+#           try:
+            self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
+            for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
                                         list(self.DOFBoundaryConditionsDictList[ci].values()),
                                         list(self.DOFBoundaryPointDictList[ci].values())):
-                    self.ebqe[('u',ci)][ebNE,k]=g(x, self.vt.timeIntegration.t, self.vt.ebqe['n'][ebNE,k])
+                print(str("Numerical Flux "))
+                print(str(numpy.array(self.vt.ebqe['n'][ebNE,k])))
+                print(str("\n"))
+                self.ebqe[('u',ci)][ebNE,k]=g(x, self.vt.timeIntegration.t, numpy.array(self.vt.ebqe['n'][ebNE,k]))
                     #print("used normal ",self.vt.ebqe['n'][ebNE,k])
-            except:
-                #Exception as inst:
-                #print(type(inst))    # the exception instance
-                #print(inst.args)     # arguments stored in .args
-                #print(inst)
-                #import pdb
-                #pdb.set_trace()
-                self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
-                for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
-                                        list(self.DOFBoundaryConditionsDictList[ci].values()),
-                                        list(self.DOFBoundaryPointDictList[ci].values())):
-                    self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+#            except:
+#                #Exception as inst:
+#                #print(type(inst))    # the exception instance
+#                #print(inst.args)     # arguments stored in .args
+#                #print(inst)
+#                #import pdb
+#                #pdb.set_trace()
+#                self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
+#                for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
+#                                        list(self.DOFBoundaryConditionsDictList[ci].values()),
+#                                        list(self.DOFBoundaryPointDictList[ci].values())):
+#                    self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
         for ci in range(self.nc):
             for bci in list(self.periodicBoundaryConditionsDictList[ci].values()):
                 self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
