@@ -8,7 +8,7 @@ dependencies:
   - make
   - setuptools
   - cython
-  - daetk 1.0.1
+  - daetk
   - hdf5 =*=*mpich*
   - h5py =*=*mpich*
   - metis=5
