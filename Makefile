@@ -10,9 +10,9 @@ N=1
 PROTEUS ?= $(shell python3 -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_BUILD_CMD = python3 setup.py build_ext
-PROTEUS_INSTALL_CMD = pip3 --disable-pip-version-check install -v . #python3 setup.py install
+PROTEUS_INSTALL_CMD = pip --disable-pip-version-check install -v . #python3 setup.py install
 PROTEUS_DEVELOP_BUILD_CMD = python3 setup.py build_ext -i
-PROTEUS_DEVELOP_CMD = pip3 --disable-pip-version-check install -v -e .
+PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
 #
 ifeq (${N}, 1)
 PROTEUS_BUILD_CMD = python3 -c "print('Letting install handle build_ext')"
@@ -28,7 +28,7 @@ PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" ||
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python3 -c "import sys; print(sys.platform)")
-PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
+PROTEUS_PREFIX ?= ${CONDA_PREFIX}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python3
 PROTEUS_VERSION := $(shell ${VER_CMD})
 TEST_MARKER="' '"
@@ -102,19 +102,6 @@ distclean: clean
 	-rm -rf build proteus/elastoplastic/*.pyc proteus/elastoplastic/*.so proteus/elastoplastic/*.a
 	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
-stack/hit/bin/hit:
-	@echo "Updating stack submodule"
-	git submodule update --init stack
-	@echo "Updating stack/hit submodule"
-	cd stack && git submodule update --init
-	@echo "Adding source cache if not done already"
-	-./stack/hit/bin/hit init-home
-	-./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
-
-stack:
-	@echo "Updating stack submodule"
-	git submodule update --init stack
-
 air-water-vv:
 	@echo "Updating air-water-vv submodule"
 	git submodule update --init air-water-vv
@@ -128,26 +115,7 @@ cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.tx
 	python3 stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
-stack/default.yaml: stack/hit/bin/hit
-	@echo "Linking stack/default.yaml for this arch"
-	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
-
-# A hashstack profile will be rebuilt if Make detects any files in the stack 
-# directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
-	@echo "************************"
-	@echo "Building dependencies..."
-	@echo "************************"
-
-	$(call show_info)
-
-	cd stack && ${PROTEUS}/stack/hit/bin/hit develop -j ${N} ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
-
-	@echo "************************"
-	@echo "Dependency build complete"
-	@echo "************************"
-
-${PROTEUS_PREFIX}/bin/proteus_env.sh: ${PROTEUS_PREFIX}/artifact.json
+${PROTEUS_PREFIX}/bin/proteus_env.sh:
 	@echo "************************"
 	@echo "Installing proteus_env.sh"
 	@echo "************************"
@@ -181,7 +149,7 @@ install: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	$(call show_info)
 	$(call howto)
 
-develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFIX}/artifact.json
+develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/cmake/* ${PROTEUS}/${PROTEUS_ARCH}/lib/cmake
 	@echo "************************"
@@ -249,7 +217,7 @@ doc:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
-	-${PROTEUS_ENV} pip3 install sphinx sphinx-bootstrap-theme
+	-${PROTEUS_ENV} pip install sphinx sphinx-bootstrap-theme
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 	@echo "**********************************"
 	@echo "Trying to open the html at"
@@ -279,7 +247,7 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip3 install configparser ipyparallel ipython terminado jupyter ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume ipysheet xonsh[ptk,linux,proctitle] ipytree
+	pip install configparser ipyparallel ipython terminado jupyter ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
 	jupyter nbextension enable --py --sys-prefix ipysheet
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
@@ -309,7 +277,7 @@ jupyterlab:
 	@echo "************************************"
 	@echo "Enabling jupyter lab"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip3 install jupyterlab jupyterlab_latex
+	pip install jupyterlab jupyterlab_latex
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter serverextension enable --sys-prefix --py jupyterlab_latex
 	jupyter labextension install @jupyter-widgets/jupyterlab-manager

@@ -8,21 +8,21 @@ dependencies:
   - make
   - setuptools
   - cython
-  - daetk
+  - daetk 1.0.1
   - hdf5 =*=*mpich*
   - h5py =*=*mpich*
-  - metis
+  - metis=5
   - mpich
-  - numpy
-  - openblas
-  - parmetis
-  - petsc4py
-  - petsc
+  - numpy=1.14
+  - openblas=0.2
+  - parmetis=4.0
+  - petsc4py=3.11
+  - petsc=3.11
   - python=3
   - scorec
-  - superlu
-  - superlu_dist
-  - triangle
+  - superlu=5
+  - superlu_dist=6
+  - triangle=1.6
   - pychrono
   - mpi4py
   - gmsh
