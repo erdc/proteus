@@ -14,7 +14,7 @@ dependencies:
   - metis=5
   - mpich
   - numpy=1.14
-  - openblas=0.2
+  - openblas
   - parmetis=4.0
   - petsc4py=3.11
   - petsc=3.11
