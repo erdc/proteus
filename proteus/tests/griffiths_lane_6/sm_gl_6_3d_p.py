@@ -3,10 +3,10 @@ from __future__ import absolute_import
 from __future__ import division
 from builtins import range
 from past.utils import old_div
-import os
 from proteus import *
 from proteus.default_p import *
 from proteus.elastoplastic import ElastoPlastic
+import os
 """
 Soil mechanics model for problem 6.3 in Smith and Griffiths
 """
@@ -23,7 +23,7 @@ domain = gl_6_3d(width=he)
 boundaryFlags = domain.boundaryFlags
 #domain.regionConstraints = [old_div((he**3),6.0)]
 domain.regionConstraints = [128.0]
-domain.polyfile="gl_6_3d"
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"gl_6_3d"
 #domain.writePoly("gl_6_3d")
 #domain.writePLY("gl_6_3d")
 triangleOptions="VApfeen"
