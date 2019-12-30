@@ -19,6 +19,13 @@ from . import (ls_vortex_3d_p,
                ls_consrv_vortex_3d_n,
                ls_vortex_3d_so)
 
+from proteus.tests import Norms
+
+
+L2_norm_u_baseline=0.32286117059721 
+L2_norm_phid_baseline=0.3233715883969594 
+L2_norm_vof_baseline=0.2011088172141378
+
 class TestVortex3D(object):
 
     @classmethod
@@ -74,22 +81,17 @@ class TestVortex3D(object):
                                         ls_consrv_vortex_3d_n],
                                        sList,
                                        opts)
-        ns.calculateSolution(ls_vortex_3d_so.name)
+        try:
+            ns.calculateSolution(ls_vortex_3d_so.name)
+        except:
+            assert 0, "Calculate solution failed"
         self.aux_names.append(ls_vortex_3d_so.name)
         # COMPARE VS SAVED FILES #
-        expected_path = ls_vortex_3d_so.name+'_expected.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file(ls_vortex_3d_so.name+'.h5','r')
-        assert np.allclose(expected.root.u_t80,
-                           actual.root.u_t80,
-                           atol=1e-10)
-        assert np.allclose(expected.root.phid_t80,
-                           actual.root.phid_t80,
-                           atol=1e-10)
-        assert np.allclose(expected.root.vof_t80,
-                           actual.root.vof_t80,
-                           atol=1e-10)
-        expected.close()
+        L2_norm_u = Norms.get_L2_norm(actual,actual.root.u_t80)
+        L2_norm_phid = Norms.get_L2_norm(actual,actual.root.phid_t80)
+        L2_norm_vof = Norms.get_L2_norm(actual,actual.root.vof_t80)
+        np.testing.assert_almost_equal(np.array([L2_norm_u,L2_norm_phid,L2_norm_vof]),[L2_norm_u_baseline, L2_norm_phid_baseline, L2_norm_vof_baseline])
         actual.close()
         del ns
         
