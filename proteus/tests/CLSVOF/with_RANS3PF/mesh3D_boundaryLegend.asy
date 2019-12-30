@@ -1,11 +1,3 @@
-import palette;
-pen[] allPens=Wheel();
-unitsize(1.0 pt);
-pen[] allPens=Wheel();
-pen[] myPens = new pen[0];
-for(int i=0;i< 0;++i)
-  {
-   int iPen = round(i*allPens.length/0);
-   myPens[i] = allPens[iPen];
-  }
-dotfactor=12;
+version https://git-lfs.github.com/spec/v1
+oid sha256:e5bb429fac484838b8a07c79f91962cfe3885171829d3becdb44e158383dd85a
+size 222
