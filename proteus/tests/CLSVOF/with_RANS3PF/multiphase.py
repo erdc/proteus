@@ -7,6 +7,7 @@ import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus.Profiling import logEvent
+import os
 try:
     from .parameters import *
 except:
@@ -42,7 +43,7 @@ if ct.test_case==1:
 else:
     nd=3
 if ct.test_case==1:
-    structured = True
+    structured = False#True
 else:
     structured = False
 # refinement
@@ -67,7 +68,7 @@ else:
     g = [0.0, 0.0, -9.8]
     
 # ----- Discretization -- input options ----- #
-genMesh = True
+genMesh = False#True
 movingDomain = False
 applyRedistancing = True
 useOldPETSc = False
@@ -133,12 +134,13 @@ elif pspaceOrder == 2:
 # Domain and mesh
 if ct.test_case==1: #2D
     L = (1.0 , 2.0)
-    he = old_div(L[0],float(4*Refinement-1))
-    he*=0.5
-    he*=0.5
+    #he = old_div(L[0],float(4*Refinement-1))
+    he = 0.25
+    #he*=0.5
+    #he*=0.5
 elif ct.test_case==2: #3D
     L = (1.0, 1.0, 2.0)
-    he = old_div(L[0],float(4*Refinement-1))
+    he = 0.5#old_div(L[0],float(4*Refinement-1))
 
 weak_bc_penalty_constant = 1.0E6
 nLevels = 1
@@ -228,13 +230,20 @@ else:
                                                          regionFlags=regionFlags)            
         #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
-        domain.writePoly("mesh")
-        domain.writePLY("mesh")
-        domain.writeAsymptote("mesh")
         if nd==2:
+            domain.writePoly("mesh2D")
+            domain.writePLY("mesh2D")
+            domain.writeAsymptote("mesh2D")
+            #domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh2D"
             triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+            #triangleOptions = "VApen"
         else:
+            #domain.writePoly("mesh3D")
+            #domain.writePLY("mesh3D")
+            #domain.writeAsymptote("mesh3D")
+            domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh3D"
             triangleOptions="VApq1.4q12feena%21.16e" % (old_div((he**3),6.0),)
+            #triangleOptions="VApfeena0.002"
             
         logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 

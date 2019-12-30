@@ -9,7 +9,6 @@ from proteus import Comm
 comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
-import os
 import numpy as np
 import tables
 import pytest
@@ -27,6 +26,11 @@ from . import (parameters,
                pressure_n,
                pressureInitial_p,
                pressureInitial_n)
+
+fallingBubble2D_L2_norm_phi_baseline = 0.8835532486567429
+fallingBubble3D_L2_norm_phi_baseline = 0.8872560371423814
+
+from proteus.tests import Norms
 
 class TestCLSVOF_with_RANS3PF(object):
 
@@ -57,18 +61,19 @@ class TestCLSVOF_with_RANS3PF(object):
         self._scriptdir = os.path.dirname(__file__)
 
     def teardown_method(self,method):
-        FileList = ['mesh.ele',
-                    'mesh.edge',
-                    'mesh.node',
-                    'mesh.neigh',
-                    'mesh.face',
-                    'mesh.poly',
-                    ]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-            else:
-                pass
+        pass
+        #FileList = ['mesh.ele',
+        #            'mesh.edge',
+        #            'mesh.node',
+        #            'mesh.neigh',
+        #            'mesh.face',
+        #            'mesh.poly',
+        #            ]
+        #for file in FileList:
+        #    if os.path.isfile(file):
+        #        os.remove(file)
+        #    else:
+        #        pass
 
     def test_2D_falling_bubble(self):
         # Set parameters for this test
@@ -93,22 +98,31 @@ class TestCLSVOF_with_RANS3PF(object):
             sList.append(default_s)
         self.so.name += "_2D_falling_bubble"
         # NUMERICAL SOLUTION #
-        ns = proteus.NumericalSolution.NS_base(self.so,
+        try:
+            ns = proteus.NumericalSolution.NS_base(self.so,
                                                pList,
                                                nList,
                                                sList,
                                                opts)
-        ns.calculateSolution('2D_falling_bubble')
+        except:
+            assert 0, "Numerical setup failed"
+        try:
+            ns.calculateSolution('2D_falling_bubble')
+        except:
+            assert 0, "Calculate solution failed" 
+
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/multiphase_2D_falling_bubble.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        #expected_path = 'comparison_files/multiphase_2D_falling_bubble.h5'
+        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('multiphase_2D_falling_bubble.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8), "min={0:e} max={0:e}".format(
-            (expected.root.phi_t2[:]-actual.root.phi_t2[:]).min(),
-            (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
-        expected.close()
+        L2_norm = Norms.get_L2_norm(actual,actual.root.phi_t2)
+        np.testing.assert_almost_equal(L2_norm,fallingBubble2D_L2_norm_phi_baseline)
+
+        #assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8), "min={0:e} max={0:e}".format(
+        #    (expected.root.phi_t2[:]-actual.root.phi_t2[:]).min(),
+        #    (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
+        #expected.close()
         actual.close()
-        self.teardown_method(self)
 
     def test_3D_falling_bubble(self):
         # Set parameters for this test
@@ -140,13 +154,15 @@ class TestCLSVOF_with_RANS3PF(object):
                                                opts)
         ns.calculateSolution('3D_falling_bubble')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/multiphase_3D_falling_bubble.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        #expected_path = 'comparison_files/multiphase_3D_falling_bubble.h5'
+        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('multiphase_3D_falling_bubble.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8), "min={0:e} max={1:e}".format(
-            (expected.root.phi_t2[:]-actual.root.phi_t2[:]).min(),
-            (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
-        expected.close()
+        L2_norm = Norms.get_L2_norm(actual,actual.root.phi_t2)
+        np.testing.assert_almost_equal(L2_norm,fallingBubble3D_L2_norm_phi_baseline)
+
+        #assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8), "min={0:e} max={1:e}".format(
+        #    (expected.root.phi_t2[:]-actual.root.phi_t2[:]).min(),
+        #    (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
+        #expected.close()
         actual.close()        
-        self.teardown_method(self)
 
