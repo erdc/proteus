@@ -17,7 +17,7 @@ dependencies:
   - openblas
   - parmetis
   - petsc4py
-  - petsc =3.11
+  - petsc =3.12.*=*_3
   - scorec
   - superlu
   - superlu_dist
