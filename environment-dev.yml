@@ -13,11 +13,11 @@ dependencies:
   - h5py =*=*mpich*
   - metis
   - mpich
-  - numpy =1.14
+  - numpy =1.14.*
   - openblas
   - parmetis
   - petsc4py
-  - petsc =3.12.*=*_3
+  - petsc =3.12.*
   - scorec
   - superlu
   - superlu_dist
