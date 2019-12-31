@@ -30,7 +30,7 @@ def get_L2_norm(h5file,field):
 
     dummyMesh = getDummyMesh(IEN,nodeIDs)
 
-    elementQuadrature = Quadrature.SimplexGaussQuadrature(dummyMesh.dim, 2)
+    elementQuadrature = Quadrature.SimplexGaussQuadrature(dummyMesh.dim, 3)
     femSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(mesh=dummyMesh,nd=dummyMesh.dim)
 
     L2_norm_total = 0
@@ -49,13 +49,12 @@ def get_L2_norm(h5file,field):
         
         if(dummyMesh.dim==2): #remove column of zeros
             vertices = np.delete(vertices,2,1) 
-        #import pdb; pdb.set_trace()
         volumeMatrix = np.vstack([vertices.transpose(),rowOfOnes])
         volume = abs(np.linalg.det(volumeMatrix)/referenceVolumeFactor)
         localBasis= femSpace.getBasisValuesRef(np.array(elementQuadrature.points))
         #jacobian
         J = volume/(old_div(1.0,referenceVolumeFactor))
-        scalar = np.dot(field[dummyMesh.elementNodesArray[eID]],localBasis)
+        scalar =  np.matmul(field[dummyMesh.elementNodesArray[eID]].transpose(),localBasis.transpose())
         L2_norm = np.dot(np.square(scalar),np.array(elementQuadrature.weights))
         L2_norm = L2_norm*J
         L2_norm_total+=L2_norm
@@ -88,7 +87,7 @@ def get_L2_vectorNorm(h5file,field):
     for eID,ele in enumerate(IEN):
         vertices = nodeCoords[ele]
         if(dummyMesh.dim==2): #remove column of zeros
-            np.delete(vertices,2,1) 
+            vertices = np.delete(vertices,2,1) 
         volumeMatrix = np.vstack([vertices.transpose(),rowOfOnes])
         volume = abs(np.linalg.det(volumeMatrix)/referenceVolumeFactor)
         localBasis=femSpace.getBasisValuesRef(np.array(elementQuadrature.points))
