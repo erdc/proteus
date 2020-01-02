@@ -10,7 +10,9 @@ comm = Comm.get()
 Profiling.logLevel = 7
 Profiling.verbose = True
 import numpy as np
+from proteus.tests import Norms
 
+L2_norm_cylinder_u_baseline=0.223803857199534
 
 class Test_ibm():
 
@@ -29,13 +31,8 @@ class Test_ibm():
 
     def teardown_method(self, method):
         """ Tear down function """
-        FileList = ['mesh.ele',
-                    'mesh.edge',
-                    'mesh.node',
-                    'mesh.neigh',
-                    'mesh.face',
-                    'mesh.poly',
-                    ]
+        FileList = ['cylinder_ibm_T1_ibm_3D_rans2p'
+                   ]
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
@@ -93,10 +90,17 @@ class Test_ibm():
                                                opts)
         self.aux_names.append(ns.modelList[0].name)
         ns.calculateSolution(my_so.name)
+
+        actual = tables.open_file('cylinder_ibm_T1_ibm_3D_rans2p'+'.h5','r')
+        L2_norm_u = Norms.get_L2_norm(actual,actual.root.u_t2)
+        np.testing.assert_almost_equal(L2_norm_u,L2_norm_cylinder_u_baseline)
+        actual.close()
+
+        
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/' + self.compare_name + '.h5'
-        with tables.open_file(os.path.join(self._scriptdir, expected_path)) as expected, \
-                tables.open_file( my_so.name + '.h5') as actual:
-            assert np.allclose(expected.root.u_t2,
-                               actual.root.u_t2,
-                               atol=1e-10), "Max error={0:e}".format(np.absolute((expected.root.u_t2.read() - actual.root.u_t2.read())).max())
+        #expected_path = 'comparison_files/' + self.compare_name + '.h5'
+        #with tables.open_file(os.path.join(self._scriptdir, expected_path)) as expected, \
+        #        tables.open_file( my_so.name + '.h5') as actual:
+        #    assert np.allclose(expected.root.u_t2,
+        #                       actual.root.u_t2,
+        #                       atol=1e-10), "Max error={0:e}".format(np.absolute((expected.root.u_t2.read() - actual.root.u_t2.read())).max())

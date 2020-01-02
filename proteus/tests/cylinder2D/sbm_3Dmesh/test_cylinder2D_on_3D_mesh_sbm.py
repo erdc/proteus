@@ -13,6 +13,10 @@ Profiling.logLevel = 7
 Profiling.verbose = False
 import numpy as np
 
+from proteus.tests import Norms
+
+L2_norm_cylinder_u_baseline=0.267723275157835
+
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -30,13 +34,8 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
 
     def teardown_method(self, method):
         """ Tear down function """
-        FileList = ['mesh.ele',
-                    'mesh.edge',
-                    'mesh.node',
-                    'mesh.neigh',
-                    'mesh.face',
-                    'mesh.poly',
-                    ]
+        FileList = ['',
+                   ]
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
@@ -88,9 +87,9 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
                                                opts)
         ns.calculateSolution(my_so.name)
 
-        expected_path = 'comparison_files/' + self.compare_name + '.h5'
-        with tables.open_file(os.path.join(self._scriptdir, expected_path)) as expected, \
-                tables.open_file( my_so.name + '.h5') as actual:
-            assert np.allclose(expected.root.u_t2,
-                               actual.root.u_t2,
-                               atol=1e-10)
+        actual = tables.open_file('cylinder_sbm_mesh3D_T001_P1_sbm_3Dmesh'+'.h5','r')
+        L2_norm_u = Norms.get_L2_norm(actual,actual.root.u_t2)
+        #print("%.15f" % L2_norm_u); import sys; sys.exit()
+        np.testing.assert_almost_equal(L2_norm_u,L2_norm_cylinder_u_baseline)
+        actual.close()
+
