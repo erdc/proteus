@@ -82,7 +82,7 @@ else:
         #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
         domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshBucklingFlow"
-        domain.writePoly("meshBucklingFlow")
+        #domain.writePoly("meshBucklingFlow")
         #domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
         domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
         logEvent("""Mesh generated using: tetgen -%s %s""" % (domain.MeshOptions.triangleOptions, domain.polyfile + ".poly"))
