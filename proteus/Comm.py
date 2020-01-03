@@ -11,6 +11,11 @@ from builtins import object
 import ctypes
 import sys
 
+# scotch has been compiled with SCOTCH_PTHREAD
+# so MPI_Init() must be called with MPI_THREAD_MULTIPLE, or MPI_Init_thread() must be called.
+# at import time, mpi4py initializes the MPI execution environment calling MPI_Init_thread().
+# mpi4py must be imported before petsc4py otherwise petsc4py initializes MPI with MPI_Init().
+from mpi4py import MPI
 import petsc4py
 from .Profiling import logEvent
 
