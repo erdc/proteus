@@ -28,9 +28,15 @@ PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" ||
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python3 -c "import sys; print(sys.platform)")
+ifdef CONDA_PREFIX
+PROTEUS_ARCH ?= linux
 PROTEUS_PREFIX ?= ${CONDA_PREFIX}
+PROTEUS_PYTHON ?= python
+else
+PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python3
 PROTEUS_VERSION := $(shell ${VER_CMD})
+endif
 TEST_MARKER="' '"
 
 define show_info
@@ -102,6 +108,19 @@ distclean: clean
 	-rm -rf build proteus/elastoplastic/*.pyc proteus/elastoplastic/*.so proteus/elastoplastic/*.a
 	-rm -rf build proteus/mbd/*.pyc proteus/mbd/*.so proteus/mbd/*.a
 
+stack/hit/bin/hit:
+	@echo "Updating stack submodule"
+	git submodule update --init stack
+	@echo "Updating stack/hit submodule"
+	cd stack && git submodule update --init
+	@echo "Adding source cache if not done already"
+	-./stack/hit/bin/hit init-home
+	-./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
+
+stack:
+	@echo "Updating stack submodule"
+	git submodule update --init stack
+
 air-water-vv:
 	@echo "Updating air-water-vv submodule"
 	git submodule update --init air-water-vv
@@ -115,7 +134,26 @@ cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.tx
 	python3 stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
-${PROTEUS_PREFIX}/bin/proteus_env.sh:
+stack/default.yaml: stack/hit/bin/hit
+	@echo "Linking stack/default.yaml for this arch"
+	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
+
+# A hashstack profile will be rebuilt if Make detects any files in the stack 
+# directory newer than the profile artifact file.
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
+	@echo "************************"
+	@echo "Building dependencies..."
+	@echo "************************"
+
+	$(call show_info)
+
+	cd stack && ${PROTEUS}/stack/hit/bin/hit develop -j ${N} ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
+
+	@echo "************************"
+	@echo "Dependency build complete"
+	@echo "************************"
+
+${PROTEUS_PREFIX}/bin/proteus_env.sh: ${PROTEUS_PREFIX}/artifact.json
 	@echo "************************"
 	@echo "Installing proteus_env.sh"
 	@echo "************************"
@@ -149,7 +187,7 @@ install: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	$(call show_info)
 	$(call howto)
 
-develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh
+develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFIX}/artifact.json
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
 	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/cmake/* ${PROTEUS}/${PROTEUS_ARCH}/lib/cmake
 	@echo "************************"
@@ -169,6 +207,21 @@ develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh
 	@echo "Installing proteus version information..."
 	@echo "************************"
 	@echo "${PWD}" > ${PROTEUS_PREFIX}/proteus_version.txt
+	@echo "Proteus was built using the following configuration:"
+	$(call show_info)
+	$(call howto)
+
+develop-conda:
+	@echo "************************************"
+	@echo "Installing conda development version"
+	@echo "************************************"
+	$(call show_info)
+	${PROTEUS_DEVELOP_BUILD_CMD}
+	${PROTEUS_DEVELOP_CMD}
+	@echo "************************"
+	@echo "Development installation complete"
+	@echo "************************"
+	@echo ""
 	@echo "Proteus was built using the following configuration:"
 	$(call show_info)
 	$(call howto)
@@ -235,6 +288,24 @@ test: air-water-vv check
 	@echo "**************************************************************************"
 	@echo "Running basic test suite"
 	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+	@echo "Basic tests complete "
+	@echo "************************************"
+	# @echo "Running air-water-vv test set 1"
+	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
+	# @echo "************************************"
+	# @echo "Running air-water-vv test set 2"
+	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+
+test-conda: air-water-vv check
+	@echo "**************************************************"
+	@echo "Running git-lfs to get regression test data files."
+	-git lfs fetch
+	-git lfs checkout
+	@echo "If git-lfs failed to download data, then some tests will fail, and"
+	@echo "you should install git-lfs or try 'make lfs', passing all tests is needed"
+	@echo "**************************************************************************"
+	@echo "Running basic test suite"
+	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
 	# @echo "Running air-water-vv test set 1"
