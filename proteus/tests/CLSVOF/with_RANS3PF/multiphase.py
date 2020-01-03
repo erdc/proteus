@@ -231,10 +231,10 @@ else:
         #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
         if nd==2:
-            domain.writePoly("mesh2D")
-            domain.writePLY("mesh2D")
-            domain.writeAsymptote("mesh2D")
-            #domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh2D"
+            #domain.writePoly("mesh2D")
+            #domain.writePLY("mesh2D")
+            #domain.writeAsymptote("mesh2D")
+            domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh2D"
             triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
             #triangleOptions = "VApen"
         else:
