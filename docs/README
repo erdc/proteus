@@ -1,6 +1,6 @@
 # Proteus Documentation
 
-Accessible at https://erdc.github.io/proteus-doc
+Accessible at https://erdc.github.io/proteus
 
 ## Description
 
@@ -49,7 +49,7 @@ All files are in the `source/` directory:
 1. Clone repository as `proteus-website` one level below proteus 
 ```bash
 cd ${PROTEUS}/..
-git clone https://github.com/erdc/proteus-doc proteus-website
+git clone https://github.com/erdc/proteus proteus-website
 ```
 2. Switch to `gh-pages` branch
 ```bash
@@ -61,9 +61,9 @@ into it)
 ```bash
 git checkout -b username/gh-pages
 ```
-4. Generate documentation from proteus-doc folder
+4. Generate documentation from docs folder
 ```bash
-cd ${PROTEUS}/proteus-doc
+cd ${PROTEUS}/docs
 make html
 ```
 5. Commit changed or added files in proteus-website folder
