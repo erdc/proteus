@@ -6,11 +6,27 @@ rapidly developing computer models and numerical methods.
 
 # Installation
 
+The recommended way is the following:
+
 ```bash
 make develop
 make test
 ```
 https://github.com/erdc/proteus/wiki/How-to-Build-Proteus-Using-HashDist
+
+However, we are transitioning to a conda-based environment. Proteus can be installed with:
+
+```bash
+conda install proteus -c conda-forge
+```
+
+For a development installation, you want to install Proteus's dependencies and compile Proteus from source:
+
+```bash
+conda env create -f environment-dev.yml
+conda activate proteus-dev
+python setup.py install
+```
 
 # Developer Information
 
