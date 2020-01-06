@@ -19,13 +19,6 @@ from . import (ls_vortex_3d_p,
                ls_consrv_vortex_3d_n,
                ls_vortex_3d_so)
 
-from proteus.tests import Norms
-
-
-L2_norm_u_baseline=0.32286117059721 
-L2_norm_phid_baseline=0.3233715883969594 
-L2_norm_vof_baseline=0.2011088172141378
-
 class TestVortex3D(object):
 
     @classmethod
@@ -88,10 +81,21 @@ class TestVortex3D(object):
         self.aux_names.append(ls_vortex_3d_so.name)
         # COMPARE VS SAVED FILES #
         actual = tables.open_file(ls_vortex_3d_so.name+'.h5','r')
-        L2_norm_u = Norms.get_L2_norm(actual,actual.root.u_t80)
-        L2_norm_phid = Norms.get_L2_norm(actual,actual.root.phid_t80)
-        L2_norm_vof = Norms.get_L2_norm(actual,actual.root.vof_t80)
-        np.testing.assert_almost_equal(np.array([L2_norm_u,L2_norm_phid,L2_norm_vof]),[L2_norm_u_baseline, L2_norm_phid_baseline, L2_norm_vof_baseline])
+        expected_path = 'comparison_files/' + 'comparison_3D_u_t80.csv'
+        #write comparison file
+        #np.array(actual.root.u_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t80),decimal=10)
+
+        expected_path = 'comparison_files/' + 'comparison_3D_phid_t80.csv'
+        #write comparison file
+        #np.array(actual.root.phid_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phid_t80),decimal=10)
+
+        expected_path = 'comparison_files/' + 'comparison_3D_vof_t80.csv'
+        #write comparison file
+        #np.array(actual.root.vof_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.vof_t80),decimal=10)
+
         actual.close()
         del ns
         
