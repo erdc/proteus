@@ -13,12 +13,7 @@ Profiling.logLevel = 7
 Profiling.verbose = False
 import numpy as np
 
-from proteus.tests import Norms
-
-L2_norm_cylinder_u_baseline=0.267723275157835
-
 modulepath = os.path.dirname(os.path.abspath(__file__))
-
 
 class Test_sbm_cylinder2D_on_mesh3D(object):
 
@@ -34,7 +29,7 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
 
     def teardown_method(self, method):
         """ Tear down function """
-        FileList = ['',
+        FileList = ['cylinder_sbm_mesh3D_T001_P1_sbm_3Dmesh.h5', 'cylinder_sbm_mesh3D_T001_P1_sbm_3Dmesh.xmf',
                    ]
         for file in FileList:
             if os.path.isfile(file):
@@ -80,16 +75,23 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
             sList = my_so.sList
 
         my_so.name += "_sbm_mesh3D_"+self.compare_name #save data with different filename
-        ns = proteus.NumericalSolution.NS_base(my_so,
+        try:
+            ns = proteus.NumericalSolution.NS_base(my_so,
                                                pList,
                                                nList,
                                                sList,
                                                opts)
-        ns.calculateSolution(my_so.name)
+        except:
+            assert 0, "NS setup failed"
+        try:
+            ns.calculateSolution(my_so.name)
+        except:
+            assert 0, "NS calculation failed"
 
         actual = tables.open_file('cylinder_sbm_mesh3D_T001_P1_sbm_3Dmesh'+'.h5','r')
-        L2_norm_u = Norms.get_L2_norm(actual,actual.root.u_t2)
-        #print("%.15f" % L2_norm_u); import sys; sys.exit()
-        np.testing.assert_almost_equal(L2_norm_u,L2_norm_cylinder_u_baseline)
-        actual.close()
+        expected_path = 'comparison_files/' + 'comparison_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2),decimal=10)
 
+        actual.close()

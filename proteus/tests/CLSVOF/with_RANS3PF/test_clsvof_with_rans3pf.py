@@ -27,11 +27,6 @@ from . import (parameters,
                pressureInitial_p,
                pressureInitial_n)
 
-fallingBubble2D_L2_norm_phi_baseline = 0.8835532486567429
-fallingBubble3D_L2_norm_phi_baseline = 0.8872560371423814
-
-from proteus.tests import Norms
-
 class TestCLSVOF_with_RANS3PF(object):
 
     @classmethod
@@ -62,18 +57,14 @@ class TestCLSVOF_with_RANS3PF(object):
 
     def teardown_method(self,method):
         pass
-        #FileList = ['mesh.ele',
-        #            'mesh.edge',
-        #            'mesh.node',
-        #            'mesh.neigh',
-        #            'mesh.face',
-        #            'mesh.poly',
-        #            ]
-        #for file in FileList:
-        #    if os.path.isfile(file):
-        #        os.remove(file)
-        #    else:
-        #        pass
+        FileList = ['multiphase_2D_falling_bubble.h5','multiphase_2D_falling_bubble.xmf',
+                    'multiphase_3D_falling_bubble.h5','multiphase_3D_falling_bubble.xmf',
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
 
     def test_2D_falling_bubble(self):
         # Set parameters for this test
@@ -112,16 +103,11 @@ class TestCLSVOF_with_RANS3PF(object):
             assert 0, "Calculate solution failed" 
 
         # COMPARE VS SAVED FILES #
-        #expected_path = 'comparison_files/multiphase_2D_falling_bubble.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('multiphase_2D_falling_bubble.h5','r')
-        L2_norm = Norms.get_L2_norm(actual,actual.root.phi_t2)
-        np.testing.assert_almost_equal(L2_norm,fallingBubble2D_L2_norm_phi_baseline)
-
-        #assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8), "min={0:e} max={0:e}".format(
-        #    (expected.root.phi_t2[:]-actual.root.phi_t2[:]).min(),
-        #    (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
-        #expected.close()
+        expected_path = 'comparison_files/' + 'comparison_2D_phi_t2.csv'
+        #write comparison file
+        #np.array(actual.root.phi_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2),decimal=10)
         actual.close()
 
     def test_3D_falling_bubble(self):
@@ -154,15 +140,11 @@ class TestCLSVOF_with_RANS3PF(object):
                                                opts)
         ns.calculateSolution('3D_falling_bubble')
         # COMPARE VS SAVED FILES #
-        #expected_path = 'comparison_files/multiphase_3D_falling_bubble.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('multiphase_3D_falling_bubble.h5','r')
-        L2_norm = Norms.get_L2_norm(actual,actual.root.phi_t2)
-        np.testing.assert_almost_equal(L2_norm,fallingBubble3D_L2_norm_phi_baseline)
+        expected_path = 'comparison_files/' + 'comparison_3D_phi_t2.csv'
+        #write comparison file
+        #np.array(actual.root.phi_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2),decimal=10)
 
-        #assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-8), "min={0:e} max={1:e}".format(
-        #    (expected.root.phi_t2[:]-actual.root.phi_t2[:]).min(),
-        #    (expected.root.phi_t2[:]-actual.root.phi_t2[:]).max())
-        #expected.close()
         actual.close()        
 
