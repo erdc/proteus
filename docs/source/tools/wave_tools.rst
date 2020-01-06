@@ -102,7 +102,7 @@ If the relaxation zone method is used, then the class should be passed through t
    tank.setGenerationZones(x_n=True, waves=wave, dragAlpha=dragAlpha, smoothing = smoothing)
    
    
-Guidance for using the ``setUnsteadyTwoPhaseVelocityInlet`` and ``setGenerationZones`` functions are given in the `BoundaryConditions <https://erdc.github.io/proteus-doc/tools/boundary_conditions.html>`_ and `RelaxationZone <https://erdc.github.io/proteus-doc/tools/relaxation_zone.html>`_ sections of the documentation
+Guidance for using the ``setUnsteadyTwoPhaseVelocityInlet`` and ``setGenerationZones`` functions are given in the :doc:`BoundaryConditions <./boundary_conditions>` and :doc:`Spatial Tools <./spatial_tools>` sections of the documentation
 
 Simple examples of usage within the context of a 2D numerical tank can be found in `air-water-vv <https://github.com/erdc/air-water-vv/tree/master/2d/numericalTanks>`_
 
