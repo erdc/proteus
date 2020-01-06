@@ -49,6 +49,7 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 	rm -rf source/api
+	rm -rf source/capi
 
 html: source/api/modules.rst $(BUILDDIR)/capi/html/files.html
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)
@@ -56,7 +57,7 @@ html: source/api/modules.rst $(BUILDDIR)/capi/html/files.html
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)."
 
 source/api/modules.rst:
-	sphinx-apidoc --output-dir=source/api ../proteus "../proteus/tests" "../proteus/test_utils" "../proteus/config" --maxdepth=2 --separate --module-first
+	sphinx-apidoc --output-dir=source/api ../proteus "../**/*.so" "../proteus/tests" "../proteus/test_utils" "../proteus/config" --maxdepth=1 --separate --module-first --templatedir=source/_templates/apidoc
 
 $(BUILDDIR)/capi/html/files.html:
 	doxygen

@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install FORCE
+.PHONY: all check clean distclean docs install FORCE
 
 all: develop
 
@@ -241,7 +241,7 @@ check_simmetrix:
 
 
 #doc: install
-doc:
+docs:
 	@echo "************************************"
 	@echo "Generating documentation with Sphinx"
 	@echo "Be sure to first run"
@@ -249,8 +249,8 @@ doc:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
-	-${PROTEUS_ENV} pip3 install sphinx sphinx-bootstrap-theme
-	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
+	-${PROTEUS_ENV} pip3 install sphinx sphinx_rtd_theme breathe exhale
+	cd docs && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 	@echo "**********************************"
 	@echo "Trying to open the html at"
 	@echo "../proteus-website/index.html"
