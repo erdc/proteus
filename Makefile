@@ -249,7 +249,7 @@ doc:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
-	-${PROTEUS_ENV} pip3 install sphinx sphinx-bootstrap-theme
+	-${PROTEUS_ENV} pip3 install sphinx sphinx_rtd_theme breathe exhale
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 	@echo "**********************************"
 	@echo "Trying to open the html at"
