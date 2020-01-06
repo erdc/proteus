@@ -103,7 +103,7 @@ class TestRichards(object):
         actual = tables.open_file(so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_3D_displacement_t1.csv'
         #write comparison file
-        np.array(actual.root.displacement_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        #np.array(actual.root.displacement_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
         np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.displacement_t1).flatten(),decimal=10)
 
         actual.close()
