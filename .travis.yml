@@ -33,6 +33,7 @@ install:
   - conda info -a
   - conda env create -f environment-dev.yml
   - conda activate proteus-dev
+  - python setup.py build_ext
   - pip install -v -e .
 
 cache:
