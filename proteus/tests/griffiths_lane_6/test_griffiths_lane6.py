@@ -13,12 +13,17 @@ from __future__ import print_function
 from builtins import object
 from proteus.iproteus import *
 import os
+from past.utils import old_div
 import numpy as np
 import tables
 from . import re_gl_6_3d_p
 from . import re_gl_6_3d_n
 from . import sm_gl_6_3d_p
 from . import sm_gl_6_3d_n
+
+from proteus import Quadrature
+from proteus import MeshTools
+from proteus import FemTools
 
 class TestRichards(object):
 
@@ -37,8 +42,8 @@ class TestRichards(object):
         
     def teardown_method(self,method):
         filenames = []
-        #for aux_name in self.aux_names:
-        #    filenames.extend([aux_name+'.'+ext for ext in ['h5','xmf']])
+        for aux_name in self.aux_names:
+            filenames.extend([aux_name+'.'+ext for ext in ['h5','xmf']])
         filenames.append('proteus.log')
         for f in filenames:
             if os.path.exists(f):
@@ -48,19 +53,6 @@ class TestRichards(object):
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:
                 pass
-        FileList = ['gl_6_3d.ele',
-                    'gl_6_3d.edge',
-                    'gl_6_3d.node',
-                    'gl_6_3d.neigh',
-                    'gl_6_3d.face',
-                    'gl_6_3d.poly',
-                    ]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-            else:
-                pass
-
             
     def test_richards(self,use_strong_constraints=False):
         pList = [re_gl_6_3d_p]
@@ -78,16 +70,16 @@ class TestRichards(object):
         ns.calculateSolution(so.name)
         self.aux_names.append(so.name)
         # COMPARE VS SAVED FILES #
-        expected_path = so.name+'_expected.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file(so.name+'.h5','r')
-        assert np.allclose(expected.root.pressure_head_t1,
-                           actual.root.pressure_head_t1,
-                           atol=1e-10)
-        expected.close()
+        expected_path = 'comparison_files/' + 'comparison_3D_pressure_t1.csv'
+        #write comparison file
+        #np.array(actual.root.pressure_head_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.pressure_head_t1),decimal=10)
+
         actual.close()
+
+
         del ns
-        self.teardown_method(self)
         
     def test_elastoplastic(self,use_strong_constraints=False):
         pList = [sm_gl_6_3d_p]
@@ -101,20 +93,21 @@ class TestRichards(object):
         opts.verbose=True
         opts.profile=True
         opts.gatherArchive=True
-        ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
+        try:
+            ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
+        except:
+            assert 0, "Failed at NS_base"
         ns.calculateSolution(so.name)
         self.aux_names.append(so.name)
         # COMPARE VS SAVED FILES #
-        expected_path = so.name+'_expected.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file(so.name+'.h5','r')
-        assert np.allclose(expected.root.displacement_t1,
-                           actual.root.displacement_t1,
-                           atol=1e-10)
-        expected.close()
+        expected_path = 'comparison_files/' + 'comparison_3D_displacement_t1.csv'
+        #write comparison file
+        #np.array(actual.root.displacement_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.displacement_t1).flatten(),decimal=10)
+
         actual.close()
         del ns
-        self.teardown_method(self)
         
 if __name__ == '__main__':
     pass

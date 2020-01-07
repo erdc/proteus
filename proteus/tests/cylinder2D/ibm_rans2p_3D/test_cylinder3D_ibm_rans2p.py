@@ -11,7 +11,6 @@ Profiling.logLevel = 7
 Profiling.verbose = True
 import numpy as np
 
-
 class Test_ibm():
 
     @classmethod
@@ -29,13 +28,8 @@ class Test_ibm():
 
     def teardown_method(self, method):
         """ Tear down function """
-        FileList = ['mesh.ele',
-                    'mesh.edge',
-                    'mesh.node',
-                    'mesh.neigh',
-                    'mesh.face',
-                    'mesh.poly',
-                    ]
+        FileList = ['cylinder_ibm_T1_ibm_3D_rans2p.h5','cylinder_ibm_T1_ibm_3D_rans2p.xmf'
+                   ]
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
@@ -93,10 +87,9 @@ class Test_ibm():
                                                opts)
         self.aux_names.append(ns.modelList[0].name)
         ns.calculateSolution(my_so.name)
-        # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/' + self.compare_name + '.h5'
-        with tables.open_file(os.path.join(self._scriptdir, expected_path)) as expected, \
-                tables.open_file( my_so.name + '.h5') as actual:
-            assert np.allclose(expected.root.u_t2,
-                               actual.root.u_t2,
-                               atol=1e-10), "Max error={0:e}".format(np.absolute((expected.root.u_t2.read() - actual.root.u_t2.read())).max())
+
+        actual = tables.open_file('cylinder_ibm_T1_ibm_3D_rans2p'+'.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_u_t2.csv'
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2),decimal=10)
+        actual.close()
+

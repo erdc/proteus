@@ -24,12 +24,6 @@ class TestAddedMass3D(unittest.TestCase):
                     'record_rectangle1_Aij.csv',
                     'record_cuboid1.csv',
                     'record_cuboid1_Aij.csv',
-                    'mesh.ele',
-                    'mesh.edge',
-                    'mesh.node',
-                    'mesh.neig',
-                    'mesh.face',
-                    'mesh.poly',
                     'forceHistory_p.txt',
                     'forceHistory_v.txt',
                     'momentHistory.txt',
@@ -85,7 +79,7 @@ class TestAddedMass3D(unittest.TestCase):
         ns.calculateSolution('addedmass3D')
         Aij = am3D.body.Aij
 
-        # np.savetxt('Aij_sol3D.csv', Aij, delimiter=',')
+        #np.savetxt('Aij_sol3D.csv', Aij, delimiter=',')
         Aij_sol = np.genfromtxt(os.path.join(modulepath, 'Aij_sol3D.csv'), delimiter=',')
         npt.assert_almost_equal(Aij, Aij_sol, decimal=5)
         self.teardown_method(self)
