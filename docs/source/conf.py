@@ -50,8 +50,8 @@ extensions = [
 #    'sphinx.ext.viewcode',
     'sphinx.ext.linkcode',
     'sphinx.ext.napoleon',
-    'breathe',
-    'exhale',
+#    'breathe',
+#    'exhale',
 #    'IPython.sphinxext.ipython_console_highlighting',
 #    'IPython.sphinxext.ipython_directive',
 ]
@@ -490,8 +490,19 @@ breathe_default_project = "Proteus C++"
 
 import textwrap
 exhaleDoxygenStdin = textwrap.dedent('''
-INPUT      = ../../proteus
-FILE_PATTERNS = *.h
+INPUT                  = ../../proteus
+RECURSIVE              = YES
+# FILE_PATTERNS        = *.h *.cpp *.c
+FULL_PATH_NAMES        = YES
+BUILTIN_STL_SUPPORT    = YES
+EXTRACT_ALL            = YES
+CASE_SENSE_NAMES       = NO
+GENERATE_TODOLIST      = NO
+SOURCE_BROWSER         = YES
+USE_MATHJAX            = YES
+MATHJAX_RELPATH        = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
+MATHJAX_EXTENSIONS     = TeX-AMS-MML_HTMLorMML
+GENERATE_LATEX         = NO
 ''')
 
 exhale_args = {
@@ -499,13 +510,14 @@ exhale_args = {
     "containmentFolder":     "./capi",
     "rootFileName":          "cmodules.rst",
     "rootFileTitle":         "C/C++ API",
-    "doxygenStripFromPath":  "..",
+    "doxygenStripFromPath":  "../../proteus",
     # Suggested optional arguments
     "createTreeView":        True,
     "verboseBuild":          True,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
+    #"exhaleUseDoxyfile": True,
     "exhaleDoxygenStdin":    exhaleDoxygenStdin
 }
 # Tell sphinx what the primary language being documented is.
