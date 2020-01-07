@@ -7,6 +7,7 @@ from proteus.mprans import SpatialTools as st
 from proteus.mbd import CouplingFSI as fsi
 from proteus.TwoPhaseFlow import TwoPhaseFlowProblem as tpf
 import pychrono as chrono
+import os
 
 rho_0 = 1000.
 nu_0 = 1.004e-6
@@ -14,7 +15,7 @@ rho_1 = 1.205
 nu_1 = 1.500e-5
 sigma_01 = 0.0
 g = [0., -9.81]
-he = 0.2
+he = 2.
 water_level = 2.5
 
 # GEOMETRY
@@ -51,6 +52,8 @@ body.ChBody.SetBodyFixed(True)  # fixing body
 
 # OTHER PARAMS
 st.assembleDomain(domain)
+domain.polyfile=domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh2D"
+#domain.writePoly("mesh2D")
 
 #  ___       _ _   _       _    ____                _ _ _   _
 # |_ _|_ __ (_) |_(_) __ _| |  / ___|___  _ __   __| (_) |_(_) ___  _ __  ___
@@ -148,3 +151,4 @@ for s in system.subcomponents:
         for flag in body.boundaryFlags:
             flags_rigidbody[flag] = 1
 m.addedMass.p.CoefficientsOptions.flags_rigidbody = flags_rigidbody
+myTpFlowProblem.Parameters.mesh.genMesh=False
