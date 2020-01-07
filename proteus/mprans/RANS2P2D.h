@@ -2923,91 +2923,6 @@ namespace proteus
                                                   dmom_u_source,
                                                   dmom_v_source,
                                                   dmom_w_source);
-                //cek hack/todo move the particle updates until after the strong residual
-                if(nParticles > 0)
-                  updateSolidParticleTerms(NONCONSERVATIVE_FORM,
-                                           eN < nElements_owned,
-                                           particle_nitsche,
-                                           dV,
-                                           nParticles,
-                                           nQuadraturePoints_global,
-                                           &particle_signed_distances.data()[eN_k],
-                                           &particle_signed_distance_normals.data()[eN_k_3d],
-                                           &particle_velocities.data()[eN_k_3d],
-                                           particle_centroids,
-                                           use_ball_as_particle,
-                                           ball_center,
-                                           ball_radius,
-                                           ball_velocity,
-                                           ball_angular_velocity,
-                                           ball_center_acceleration,
-                                           ball_angular_acceleration,
-                                           ball_density,
-                                           porosity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
-                                           eps_rho,
-                                           eps_mu,
-                                           rho_0_in,
-                                           nu_0_in,
-                                           rho_1_in,
-                                           nu_1_in,
-                                           useVF,
-                                           vf.data()[eN_k],
-                                           phi.data()[eN_k],
-                                           x,
-                                           y,
-                                           z,
-                                           p,
-                                           u,
-                                           v,
-                                           w,
-                                           q_velocity_sge.data()[eN_k_nSpace+0],
-                                           q_velocity_sge.data()[eN_k_nSpace+1],
-                                           q_velocity_sge.data()[eN_k_nSpace+1],
-                                           particle_eps,
-                                           grad_u,
-                                           grad_v,
-                                           grad_w,
-                                           mass_source,
-                                           mom_u_source,
-                                           mom_v_source,
-                                           mom_w_source,
-                                           dmom_u_source,
-                                           dmom_v_source,
-                                           dmom_w_source,
-                                           mom_u_adv,
-                                           mom_v_adv,
-                                           mom_w_adv,
-                                           dmom_u_adv_u,
-                                           dmom_v_adv_v,
-                                           dmom_w_adv_w,
-                                           mom_u_ham,
-                                           dmom_u_ham_grad_u,
-                                           dmom_u_ham_grad_v,
-                                           dmom_u_ham_u,
-                                           dmom_u_ham_v,
-                                           dmom_u_ham_w,
-                                           mom_v_ham,
-                                           dmom_v_ham_grad_u,
-                                           dmom_v_ham_grad_v,
-                                           dmom_v_ham_u,
-                                           dmom_v_ham_v,
-                                           dmom_v_ham_w,
-                                           mom_w_ham,
-                                           dmom_w_ham_grad_w,
-                                           dmom_w_ham_u,
-                                           dmom_w_ham_v,
-                                           dmom_w_ham_w,
-                                           mass_ham,
-                                           dmass_ham_u,
-                                           dmass_ham_v,
-                                           dmass_ham_w,
-                                           &particle_netForces.data()[0],
-                                           &particle_netMoments.data()[0],
-                                           &particle_surfaceArea.data()[0],
-                                           use_pseudo_penalty);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3041,25 +2956,6 @@ namespace proteus
                                             mom_u_source,
                                             mom_v_source,
                                             mom_w_source);
-                  }
-                //
-                //save momentum for time history and velocity for subgrid error
-                //
-                //cek this needs to go with the particle term updates if moved--or check particle_velocities[...] array
-                if (element_active)
-                  {
-                    q_mom_u_acc.data()[eN_k] = mom_u_acc;
-                    q_mom_v_acc.data()[eN_k] = mom_v_acc;
-                    //subgrid error uses grid scale velocity
-                    q_mass_adv.data()[eN_k_nSpace+0] = u;
-                    q_mass_adv.data()[eN_k_nSpace+1] = v;
-                  }
-                else
-                  {
-                    q_mom_u_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+0];
-                    q_mom_v_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+1];
-                    q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[eN_k_3d+0];
-                    q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[eN_k_3d+1];
                   }
                 //
                 //moving mesh
@@ -3255,6 +3151,110 @@ namespace proteus
                 q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
                 q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
                 numDiffMax = std::fmax(q_numDiff_u[eN_k], numDiffMax);
+                //cek hack/todo move the particle updates until after the strong residual
+                if(nParticles > 0)
+                  updateSolidParticleTerms(NONCONSERVATIVE_FORM,
+                                           eN < nElements_owned,
+                                           particle_nitsche,
+                                           dV,
+                                           nParticles,
+                                           nQuadraturePoints_global,
+                                           &particle_signed_distances[eN_k],
+                                           &particle_signed_distance_normals[eN_k_3d],
+                                           &particle_velocities[eN_k_3d],
+                                           particle_centroids,
+                                           use_ball_as_particle,
+                                           ball_center,
+                                           ball_radius,
+                                           ball_velocity,
+                                           ball_angular_velocity,
+                                           ball_center_acceleration,
+                                           ball_angular_acceleration,
+                                           ball_density,
+                                           porosity,
+                                           particle_penalty_constant/h_phi,//penalty,
+                                           particle_alpha,
+                                           particle_beta,
+                                           eps_rho,
+                                           eps_mu,
+                                           rho_0_in,
+                                           nu_0_in,
+                                           rho_1_in,
+                                           nu_1_in,
+                                           useVF,
+                                           vf[eN_k],
+                                           phi[eN_k],
+                                           x,
+                                           y,
+                                           z,
+                                           p,
+                                           u,
+                                           v,
+                                           w,
+                                           q_velocity_sge[eN_k_nSpace+0],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           particle_eps,
+                                           grad_u,
+                                           grad_v,
+                                           grad_w,
+                                           mass_source,
+                                           mom_u_source,
+                                           mom_v_source,
+                                           mom_w_source,
+                                           dmom_u_source,
+                                           dmom_v_source,
+                                           dmom_w_source,
+                                           mom_u_adv,
+                                           mom_v_adv,
+                                           mom_w_adv,
+                                           dmom_u_adv_u,
+                                           dmom_v_adv_v,
+                                           dmom_w_adv_w,
+                                           mom_u_ham,
+                                           dmom_u_ham_grad_u,
+                                           dmom_u_ham_grad_v,
+                                           dmom_u_ham_u,
+                                           dmom_u_ham_v,
+                                           dmom_u_ham_w,
+                                           mom_v_ham,
+                                           dmom_v_ham_grad_u,
+                                           dmom_v_ham_grad_v,
+                                           dmom_v_ham_u,
+                                           dmom_v_ham_v,
+                                           dmom_v_ham_w,
+                                           mom_w_ham,
+                                           dmom_w_ham_grad_w,
+                                           dmom_w_ham_u,
+                                           dmom_w_ham_v,
+                                           dmom_w_ham_w,
+                                           mass_ham,
+                                           dmass_ham_u,
+                                           dmass_ham_v,
+                                           dmass_ham_w,
+                                           &particle_netForces[0],
+                                           &particle_netMoments[0],
+                                           &particle_surfaceArea[0],
+                                           use_pseudo_penalty);
+                //
+                //save momentum for time history and velocity for subgrid error
+                //
+                //cek this needs to go with the particle term updates if moved--or check particle_velocities[...] array
+                if (element_active)
+                  {
+                    q_mom_u_acc[eN_k] = mom_u_acc;
+                    q_mom_v_acc[eN_k] = mom_v_acc;
+                    //subgrid error uses grid scale velocity
+                    q_mass_adv[eN_k_nSpace+0] = u;
+                    q_mass_adv[eN_k_nSpace+1] = v;
+                  }
+                else
+                  {
+                    q_mom_u_acc[eN_k] = particle_velocities[eN_k_3d+0];
+                    q_mom_v_acc[eN_k] = particle_velocities[eN_k_3d+1];
+                    q_mass_adv[eN_k_nSpace+0] = particle_velocities[eN_k_3d+0];
+                    q_mass_adv[eN_k_nSpace+1] = particle_velocities[eN_k_3d+1];
+                  }
                 //
                 //update element residual
                 //
@@ -3677,10 +3677,8 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g.data()[eN_i]*3 + I];
               }//i
-            gf_s.calculate(element_phi_s, element_nodes, xb_ref,true);
-            //cek hack
-            //int icase=gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
-            int icase = gf.calculate(element_phi, element_nodes, xb_ref, -rho_1*g.data()[1], -rho_0*g.data()[1],true);
+            gf_s.calculate(element_phi_s, element_nodes, xb_ref.data(),true);
+            int icase = gf.calculate(element_phi, element_nodes, xb_ref.data(), -rho_1*g.data()[1], -rho_0*g.data()[1],true);
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
                 register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
@@ -5239,90 +5237,6 @@ namespace proteus
                                                   dmom_v_source,
                                                   dmom_w_source);
 
-                if(nParticles > 0)
-                  updateSolidParticleTerms(NONCONSERVATIVE_FORM,
-                                           eN < nElements_owned,
-                                           particle_nitsche,
-                                           dV,
-                                           nParticles,
-                                           nQuadraturePoints_global,
-                                           &particle_signed_distances[eN_k],
-                                           &particle_signed_distance_normals[eN_k_3d],
-                                           &particle_velocities[eN_k_3d],
-                                           particle_centroids,
-                                           use_ball_as_particle,
-                                           ball_center,
-                                           ball_radius,
-                                           ball_velocity,
-                                           ball_angular_velocity,
-                                           ball_center_acceleration,
-                                           ball_angular_acceleration,
-                                           ball_density,
-                                           porosity,
-                                           particle_penalty_constant/h_phi,//penalty,
-                                           particle_alpha,
-                                           particle_beta,
-                                           eps_rho,
-                                           eps_mu,
-                                           rho_0_in,
-                                           nu_0_in,
-                                           rho_1_in,
-                                           nu_1_in,
-                                           useVF,
-                                           vf[eN_k],
-                                           phi[eN_k],
-                                           x,
-                                           y,
-                                           z,
-                                           p,
-                                           u,
-                                           v,
-                                           w,
-                                           q_velocity_sge[eN_k_nSpace+0],
-                                           q_velocity_sge[eN_k_nSpace+1],
-                                           q_velocity_sge[eN_k_nSpace+1],
-                                           particle_eps,
-                                           grad_u,
-                                           grad_v,
-                                           grad_w,
-                                           mass_source,
-                                           mom_u_source,
-                                           mom_v_source,
-                                           mom_w_source,
-                                           dmom_u_source,
-                                           dmom_v_source,
-                                           dmom_w_source,
-                                           mom_u_adv,
-                                           mom_v_adv,
-                                           mom_w_adv,
-                                           dmom_u_adv_u,
-                                           dmom_v_adv_v,
-                                           dmom_w_adv_w,
-                                           mom_u_ham,
-                                           dmom_u_ham_grad_u,
-                                           dmom_u_ham_grad_v,
-                                           dmom_u_ham_u,
-                                           dmom_u_ham_v,
-                                           dmom_u_ham_w,
-                                           mom_v_ham,
-                                           dmom_v_ham_grad_u,
-                                           dmom_v_ham_grad_v,
-                                           dmom_v_ham_u,
-                                           dmom_v_ham_v,
-                                           dmom_v_ham_w,
-                                           mom_w_ham,
-                                           dmom_w_ham_grad_w,
-                                           dmom_w_ham_u,
-                                           dmom_w_ham_v,
-                                           dmom_w_ham_w,
-                                           mass_ham,
-                                           dmass_ham_u,
-                                           dmass_ham_v,
-                                           dmass_ham_w,
-                                           &particle_netForces[0],
-                                           &particle_netMoments[0],
-                                           &particle_surfaceArea[0],
-                                           use_pseudo_penalty);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -5582,6 +5496,90 @@ namespace proteus
                 dmom_v_adv_v[0] += dmom_u_acc_u*(useRBLES*subgridError_u);
                 dmom_v_adv_v[1] += dmom_u_acc_u*(useRBLES*subgridError_v);
 
+                if(nParticles > 0)
+                  updateSolidParticleTerms(NONCONSERVATIVE_FORM,
+                                           eN < nElements_owned,
+                                           particle_nitsche,
+                                           dV,
+                                           nParticles,
+                                           nQuadraturePoints_global,
+                                           &particle_signed_distances[eN_k],
+                                           &particle_signed_distance_normals[eN_k_3d],
+                                           &particle_velocities[eN_k_3d],
+                                           particle_centroids,
+                                           use_ball_as_particle,
+                                           ball_center,
+                                           ball_radius,
+                                           ball_velocity,
+                                           ball_angular_velocity,
+                                           ball_center_acceleration,
+                                           ball_angular_acceleration,
+                                           ball_density,
+                                           porosity,
+                                           particle_penalty_constant/h_phi,//penalty,
+                                           particle_alpha,
+                                           particle_beta,
+                                           eps_rho,
+                                           eps_mu,
+                                           rho_0_in,
+                                           nu_0_in,
+                                           rho_1_in,
+                                           nu_1_in,
+                                           useVF,
+                                           vf[eN_k],
+                                           phi[eN_k],
+                                           x,
+                                           y,
+                                           z,
+                                           p,
+                                           u,
+                                           v,
+                                           w,
+                                           q_velocity_sge[eN_k_nSpace+0],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           q_velocity_sge[eN_k_nSpace+1],
+                                           particle_eps,
+                                           grad_u,
+                                           grad_v,
+                                           grad_w,
+                                           mass_source,
+                                           mom_u_source,
+                                           mom_v_source,
+                                           mom_w_source,
+                                           dmom_u_source,
+                                           dmom_v_source,
+                                           dmom_w_source,
+                                           mom_u_adv,
+                                           mom_v_adv,
+                                           mom_w_adv,
+                                           dmom_u_adv_u,
+                                           dmom_v_adv_v,
+                                           dmom_w_adv_w,
+                                           mom_u_ham,
+                                           dmom_u_ham_grad_u,
+                                           dmom_u_ham_grad_v,
+                                           dmom_u_ham_u,
+                                           dmom_u_ham_v,
+                                           dmom_u_ham_w,
+                                           mom_v_ham,
+                                           dmom_v_ham_grad_u,
+                                           dmom_v_ham_grad_v,
+                                           dmom_v_ham_u,
+                                           dmom_v_ham_v,
+                                           dmom_v_ham_w,
+                                           mom_w_ham,
+                                           dmom_w_ham_grad_w,
+                                           dmom_w_ham_u,
+                                           dmom_w_ham_v,
+                                           dmom_w_ham_w,
+                                           mass_ham,
+                                           dmass_ham_u,
+                                           dmass_ham_v,
+                                           dmass_ham_w,
+                                           &particle_netForces[0],
+                                           &particle_netMoments[0],
+                                           &particle_surfaceArea[0],
+                                           use_pseudo_penalty);
                 //cek todo add RBLES terms consistent to residual modifications or ignore the partials w.r.t the additional RBLES terms
                 double pf=1.0;
                 if (useExact && icase == 0)
@@ -5742,11 +5740,11 @@ namespace proteus
             for (int eN_side=0;eN_side < 2; eN_side++)
               {
                 register int ebN = *it,
-                  eN  = elementBoundaryElementsArray[ebN*2+eN_side];
-                h_cutfem+=0.5*elementDiameter[eN];
+                  eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
+                h_cutfem+=0.5*elementDiameter.data()[eN];
                 for (int i=0;i<nDOF_test_element;i++)
                   {
-                    Dwp_Dn_jump[p_l2g[eN*nDOF_test_element+i]] = 0.0;
+                    Dwp_Dn_jump[p_l2g.data()[eN*nDOF_test_element+i]] = 0.0;
                   }
                 for (int i=0;i<nDOF_v_test_element;i++)
                   {
@@ -5759,17 +5757,17 @@ namespace proteus
                 for (int eN_side=0;eN_side < 2; eN_side++)
                   {
                     register int ebN = *it,
-                      eN  = elementBoundaryElementsArray[ebN*2+eN_side];
+                      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
                     for (int i=0;i<nDOF_test_element;i++)
-                      Dwp_Dn_jump[p_l2g[eN*nDOF_test_element+i]] = 0.0;
+                      Dwp_Dn_jump[p_l2g.data()[eN*nDOF_test_element+i]] = 0.0;
                     for (int i=0;i<nDOF_v_test_element;i++)
                       Dw_Dn_jump[vel_l2g.data()[eN*nDOF_v_test_element+i]] = 0.0;
                   }
                 for (int eN_side=0;eN_side < 2; eN_side++)
                   {
                     register int ebN = *it,
-                      eN  = elementBoundaryElementsArray[ebN*2+eN_side],
-                      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+eN_side],
+                      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side],
+                      ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+eN_side],
                       eN_nDOF_trial_element = eN*nDOF_trial_element,
                       eN_nDOF_v_trial_element = eN*nDOF_v_trial_element,
                       ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
@@ -5797,11 +5795,11 @@ namespace proteus
                                                         ebN_local,
                                                         kb,
                                                         ebN_local_kb,
-                                                        mesh_dof,
-                                                        mesh_l2g,
-                                                        mesh_trial_trace_ref,
-                                                        mesh_grad_trial_trace_ref,
-                                                        boundaryJac_ref,
+                                                        mesh_dof.data(),
+                                                        mesh_l2g.data(),
+                                                        mesh_trial_trace_ref.data(),
+                                                        mesh_grad_trial_trace_ref.data(),
+                                                        boundaryJac_ref.data(),
                                                         jac_int,
                                                         jacDet_int,
                                                         jacInv_int,
@@ -5816,24 +5814,24 @@ namespace proteus
                                                                 ebN_local,
                                                                 kb,
                                                                 ebN_local_kb,
-                                                                mesh_velocity_dof,
-                                                                mesh_l2g,
-                                                                mesh_trial_trace_ref,
+                                                                mesh_velocity_dof.data(),
+                                                                mesh_l2g.data(),
+                                                                mesh_trial_trace_ref.data(),
                                                                 xt_int,yt_int,zt_int,
                                                                 normal,
                                                                 boundaryJac,
                                                                 metricTensor,
                                                                 integralScaling);
-                    dS = metricTensorDetSqrt*dS_ref[kb];
+                    dS = metricTensorDetSqrt*dS_ref.data()[kb];
                     //compute shape and solution information
                     //shape
-                    ck.gradTrialFromRef(&p_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_int,p_grad_trial_trace);
-                    ck_v.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_v_trial_element],jacInv_int,vel_grad_trial_trace);
+                    ck.gradTrialFromRef(&p_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_int,p_grad_trial_trace);
+                    ck_v.gradTrialFromRef(&vel_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_v_trial_element],jacInv_int,vel_grad_trial_trace);
                     for (int i=0;i<nDOF_test_element;i++)
                       {
                         int eN_i = eN*nDOF_test_element + i;
                         for (int I=0;I<nSpace;I++)
-                          Dwp_Dn_jump[p_l2g[eN_i]] += p_grad_trial_trace[i*nSpace+I]*normal[I];
+                          Dwp_Dn_jump[p_l2g.data()[eN_i]] += p_grad_trial_trace[i*nSpace+I]*normal[I];
                       }
                     for (int i=0;i<nDOF_v_test_element;i++)
                       {
@@ -5845,13 +5843,13 @@ namespace proteus
                 for (int eN_side=0;eN_side < 2; eN_side++)
                   {
                     register int ebN = *it,
-                      eN  = elementBoundaryElementsArray[ebN*2+eN_side];
+                      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
                     for (int i=0;i<nDOF_test_element;i++)
                       {
                         register int eN_i = eN*nDOF_test_element+i;
                         for (int eN_side2=0;eN_side2 < 2; eN_side2++)
                           {
-                            register int eN2  = elementBoundaryElementsArray[ebN*2+eN_side2];
+                            register int eN2  = elementBoundaryElementsArray.data()[ebN*2+eN_side2];
                             for (int j=0;j<nDOF_test_element;j++)
                               {
                                 int eN_i_j = eN_i*nDOF_test_element + j;
@@ -5861,14 +5859,14 @@ namespace proteus
                                   eN_side2*nDOF_test_X_trial_element +  \
                                   i*nDOF_trial_element +                \
                                   j;
-                                std::pair<int,int> ij = std::make_pair(p_l2g[eN_i], p_l2g[eN2_j]);
+                                std::pair<int,int> ij = std::make_pair(p_l2g.data()[eN_i], p_l2g.data()[eN2_j]);
                                 if (p_p_nz.count(ij))
                                   {
-                                    assert(p_p_nz[ij] == csrRowIndeces_p_p[eN_i] + csrColumnOffsets_eb_p_p[ebN_i_j]);
+                                    assert(p_p_nz[ij] == csrRowIndeces_p_p.data()[eN_i] + csrColumnOffsets_eb_p_p.data()[ebN_i_j]);
                                     //std::cout<<"u_u_nz exists "<<u_u_nz[ij]<<'\t'<<csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]<<std::endl;
                                   }
                                 else
-                                  p_p_nz[ij] =  csrRowIndeces_p_p[eN_i] + csrColumnOffsets_eb_p_p[ebN_i_j];
+                                  p_p_nz[ij] =  csrRowIndeces_p_p.data()[eN_i] + csrColumnOffsets_eb_p_p.data()[ebN_i_j];
                               }
                           }
                       }
@@ -5877,7 +5875,7 @@ namespace proteus
                         register int eN_i = eN*nDOF_v_test_element+i;
                         for (int eN_side2=0;eN_side2 < 2; eN_side2++)
                           {
-                            register int eN2  = elementBoundaryElementsArray[ebN*2+eN_side2];
+                            register int eN2  = elementBoundaryElementsArray.data()[ebN*2+eN_side2];
                             for (int j=0;j<nDOF_v_test_element;j++)
                               {
                                 int eN_i_j = eN_i*nDOF_v_test_element + j;
@@ -5890,18 +5888,18 @@ namespace proteus
                                 std::pair<int,int> ij = std::make_pair(vel_l2g.data()[eN_i], vel_l2g.data()[eN2_j]);
                                 if (u_u_nz.count(ij))
                                   {
-                                    assert(u_u_nz[ij] == csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]);
+                                    assert(u_u_nz[ij] == csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]);
                                     //std::cout<<"u_u_nz exists "<<u_u_nz[ij]<<'\t'<<csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]<<std::endl;
                                   }
                                 else
-                                  u_u_nz[ij] =  csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j];
+                                  u_u_nz[ij] =  csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j];
                                 if (v_v_nz.count(ij))
                                   {
-                                    assert(v_v_nz[ij] == csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]);
+                                    assert(v_v_nz[ij] == csrRowIndeces_v_v.data()[eN_i] + csrColumnOffsets_eb_v_v.data()[ebN_i_j]);
                                     //std::cout<<"v_v_nz exists "<<v_v_nz[ij]<<'\t'<<csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]<<std::endl;
                                   }
                                 else
-                                  v_v_nz[ij] =  csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j];
+                                  v_v_nz[ij] =  csrRowIndeces_v_v.data()[eN_i] + csrColumnOffsets_eb_v_v.data()[ebN_i_j];
                               }
                           }
                       }
@@ -5914,7 +5912,7 @@ namespace proteus
                     double Dwp_Dn_jump_i = wi_it->second,
                       Dwp_Dn_jump_j = wj_it->second;
                     std::pair<int,int> ij = std::make_pair(i_global, j_global);
-                    globalJacobian[p_p_nz.at(ij)] += gamma_cutfem*h_cutfem*Dwp_Dn_jump_j*Dwp_Dn_jump_i*dS;
+                    globalJacobian.data()[p_p_nz.at(ij)] += gamma_cutfem*h_cutfem*Dwp_Dn_jump_j*Dwp_Dn_jump_i*dS;
                   }//i,j
                 for (std::map<int,double>::iterator wi_it=Dw_Dn_jump.begin(); wi_it!=Dw_Dn_jump.end(); ++wi_it)
                   for (std::map<int,double>::iterator wj_it=Dw_Dn_jump.begin(); wj_it!=Dw_Dn_jump.end(); ++wj_it)
@@ -5924,8 +5922,8 @@ namespace proteus
                     double Dw_Dn_jump_i = wi_it->second,
                       Dw_Dn_jump_j = wj_it->second;
                     std::pair<int,int> ij = std::make_pair(i_global, j_global);
-                    globalJacobian[u_u_nz.at(ij)] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
-                    globalJacobian[v_v_nz.at(ij)] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
+                    globalJacobian.data()[u_u_nz.at(ij)] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
+                    globalJacobian.data()[v_v_nz.at(ij)] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
                   }//i,j
               }//kb
           }//cutfem element boundaries
@@ -5954,10 +5952,10 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g.data()[eN_i]*3 + I];
               }//i
-            gf_s.calculate(element_phi_s, element_nodes, xb_ref,true);
+            gf_s.calculate(element_phi_s, element_nodes, xb_ref.data(),true);
             //cek hack
             //int icase=gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
-            int icase = gf.calculate(element_phi, element_nodes, xb_ref, -rho_1*g.data()[1], -rho_0*g.data()[1],true);
+            int icase = gf.calculate(element_phi, element_nodes, xb_ref.data(), -rho_1*g.data()[1], -rho_0*g.data()[1],true);
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
                 register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,

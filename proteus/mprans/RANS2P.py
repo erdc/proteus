@@ -1738,9 +1738,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = self.coefficients.ball_velocity[0][0]
             #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = self.coefficients.ball_velocity[0][1]
             #u[self.isActiveDOF==0.0] = 0.0
-            #self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]:self.offset[0]+self.stride[0]*self.u[0].dof.shape[0]:self.stride[0]]==1.0, self.u[0].dof,0.0)
-            #self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]:self.offset[1]+self.stride[1]*self.u[1].dof.shape[0]:self.stride[1]]==1.0, self.u[1].dof,0.0)
-            #self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]:self.offset[2]+self.stride[2]*self.u[2].dof.shape[0]:self.stride[2]]==1.0, self.u[2].dof,0.0)
+            self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]:self.offset[0]+self.stride[0]*self.u[0].dof.shape[0]:self.stride[0]]==1.0, self.u[0].dof,0.0)
+            self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]:self.offset[1]+self.stride[1]*self.u[1].dof.shape[0]:self.stride[1]]==1.0, self.u[1].dof,self.coefficients.ball_velocity[0][0])
+            self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]:self.offset[2]+self.stride[2]*self.u[2].dof.shape[0]:self.stride[2]]==1.0, self.u[2].dof,self.coefficients.ball_velocity[0][1])
             #tmp = u.copy()
             #check that inactive DOF can be set arbitrarily
             #u[:] = np.where(self.isActiveDOF==1.0,u,-1000.0)
