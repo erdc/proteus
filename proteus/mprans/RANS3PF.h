@@ -43,8 +43,8 @@ const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume cha
 
 namespace proteus
 {
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
   class cppRANS3PF_base
   {
@@ -608,8 +608,8 @@ namespace proteus
       const int nDOF_test_X_trial_element,
         nSpace2=9;
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf_s;
+      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
+      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf_s;
     cppRANS3PF():
       closure(150.0,
               0.0,
@@ -2511,8 +2511,8 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            gf_s.calculate(element_phi_s, element_nodes, x_ref);
-            gf.calculate(element_phi, element_nodes, x_ref);
+            gf_s.calculate(element_phi_s, element_nodes, x_ref, false);
+            gf.calculate(element_phi, element_nodes, x_ref, false);
             //
             //loop over quadrature points and compute integrands
             //
@@ -5261,8 +5261,8 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            gf_s.calculate(element_phi_s, element_nodes, x_ref);
-            gf.calculate(element_phi, element_nodes, x_ref);
+            gf_s.calculate(element_phi_s, element_nodes, x_ref, false);
+            gf.calculate(element_phi, element_nodes, x_ref, false);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
