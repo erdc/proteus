@@ -1,7 +1,7 @@
 .. _wave_tools:
 
 WaveTools
-************
+*********
 
 source: :py:mod:`proteus.WaveTools`
 
@@ -73,12 +73,14 @@ How to use in Proteus
 The wave tools module is loaded at the preample as in the case of the command line:
 
 .. code-block:: python
+
    from proteus import WaveTools as wt
    
  
 Then the target wave theory is set, by initializing the relevant class as follows
 
 .. code-block:: python
+
    wave = wt.MonochromaticWaves(period=1.,
                                  waveHeight=0.1,
                                  mwl=0.5,
