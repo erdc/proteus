@@ -12,7 +12,7 @@ from proteus import Context
 
 ct = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.04, "maximum size of edges"),
+    ("he",0.12, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure"),
@@ -21,7 +21,7 @@ ct = Context.Options([
 
 #  Discretization -- input options
 sedimentDynamics=False
-genMesh = True
+genMesh = False#True
 movingDomain = False
 applyRedistancing = True
 useOldPETSc = False
@@ -232,8 +232,6 @@ else:
         #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
         domain.writePoly("mesh")
-        domain.writePLY("mesh")
-        domain.writeAsymptote("mesh")
         #triangleOptions = "VApq30ena%8.8f" % ((he ** 2) / 2.0,)
         triangleOptions = "VApq30Dena"
 
