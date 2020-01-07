@@ -57,12 +57,20 @@ class TestSWEs(object):
 
     def compare_files(self,path,name):
         # COMPARE VS SAVED FILES #
-        expected_path = path+'/'+name+'.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file(name+'.h5','r')
-        assert np.allclose(expected.root.h_t2,actual.root.h_t2,atol=1e-10)
-        assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)
-        expected.close()
+        #assert np.allclose(expected.root.h_t2,actual.root.h_t2,atol=1e-10)
+        #assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-10)
+
+        expected_path = path + '/comparison_' + name + '_h_t2.csv'
+        #write comparison file
+        #np.array(actual.root.h_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t2).flatten(),decimal=10)
+
+        expected_path = path + '/comparison_' + name + '_velocity_t2.csv'
+        #write comparison file
+        #np.array(actual.root.velocity_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.velocity_t2).flatten(),decimal=10)
+
         actual.close()
 
     def test_dam_over_bumps(self):
