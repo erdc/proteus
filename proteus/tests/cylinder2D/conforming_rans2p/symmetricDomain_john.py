@@ -86,7 +86,8 @@ def symmetric2D(box=(1.0,0.41),
                                                   regions=regions0,
                                                   regionFlags=regionFlags0)
     section_name = "top_right"
-    domain0.writePoly(section_name)
+    domain0.polyfile=section_name
+    #domain0.writePoly(section_name)
     triangleOptions = "pAq30.0Dena%f" % (.5*DX**2)
     os.system("triangle " + section_name + ".poly -" + triangleOptions)
     nodes = open(section_name + ".1.node", 'r')

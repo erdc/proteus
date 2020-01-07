@@ -15,7 +15,7 @@ flow around a 2D cylinder  benchmark problem.
 
 opts = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.01, "maximum size of edges"),
+    ("he",0.2, "maximum size of edges"),
     ("backwardEuler",False,"use backward Euler or not"),
     ("onlySaveFinalSolution",False,"Only save the final solution")
 ], mutable=True)
@@ -73,10 +73,10 @@ except:
 domain = symmetric2D(box=(2.2,0.41),
                      L= 0.2,
                      H = 0.2,
-                     r = 0.05,
+                     r = 0.1,
                      C = (0.2,0.2),
                      DX = DX,
-                     refinement_length=0.5,
+                     refinement_length=1.0,
                      DX_coarse = DX)
 boundaryTags=domain.boundaryFlags
 
@@ -115,6 +115,7 @@ nu = 1.0e-3
 g = [0.0,0.0]
 
 triangleOptions="pAq30ena"#D=Delaunay gives bad results for this composite meshing approach
-genMesh=True
-domain.writePLY('cylinder2D')
-domain.writePoly('cylinder2D')
+genMesh=False#True
+#domain.writePLY('cylinder2D')
+#domain.writePoly('mesh_cylinder2D')
+domain.polyfile = 'mesh_cylinder2D'
