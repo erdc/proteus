@@ -936,12 +936,16 @@ def setup_given_extensions(extensions):
 def setup_extensions_in_sequential():
     setup_given_extensions(EXTENSIONS_TO_BUILD)
 
+def hello(number):
+    print("Hello Worker %d" % number)
+
 def setup_extensions_in_parallel():
     import multiprocessing, logging
     logger = multiprocessing.log_to_stderr()
     logger.setLevel(logging.INFO)
     multiprocessing.log_to_stderr()
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    pool.imap(hello, range(multiprocessing.cpu_count()))
     EXTENSIONS=[[e] for e in EXTENSIONS_TO_BUILD]
     pool.imap(setup_given_extensions, EXTENSIONS)
     pool.close()
