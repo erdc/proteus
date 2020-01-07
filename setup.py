@@ -629,6 +629,7 @@ EXTENSIONS_TO_BUILD = [
 ]
 
 def setup_given_extensions(extensions):
+    print("worker id %d " % os.getpid (), extensions)
     setup(name='proteus',
           version='1.7.1.dev0',
           classifiers=[
