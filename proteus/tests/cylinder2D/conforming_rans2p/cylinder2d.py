@@ -118,4 +118,5 @@ triangleOptions="pAq30ena"#D=Delaunay gives bad results for this composite meshi
 genMesh=False#True
 #domain.writePLY('cylinder2D')
 #domain.writePoly('mesh_cylinder2D')
-domain.polyfile = 'mesh_cylinder2D'
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh_cylinder2D"
+
