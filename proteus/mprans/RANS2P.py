@@ -227,7 +227,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  analyticalSolution=None):
         self.analyticalSolution=analyticalSolution
         self.useExact=useExact
-        self.use_pseudo_penalty = 0
         self.use_ball_as_particle = use_ball_as_particle
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
@@ -1724,7 +1723,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_penalty_constant,
                                       self.coefficients.phi_s,
                                       self.coefficients.phisField,
-                                      self.coefficients.use_pseudo_penalty,
                                       self.coefficients.useExact,
                                       self.isActiveDOF)
         #assert((self.isActiveDOF ==1.0).all())
@@ -1758,9 +1756,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             r*=self.isActiveDOF
             #print(r[np.argwhere(self.isActiveDOF==0.0)])
         except:
-            assert(False)
             assert((self.isActiveDOF == 1.0).all())
-            print("Skipped deactivation of solid phase nodes")
             pass
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
@@ -2034,7 +2030,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant,
-                                      self.coefficients.use_pseudo_penalty,
                                       self.coefficients.useExact,
                                       self.isActiveDOF)
         #assert((self.isActiveDOF ==1.0).all())
@@ -2044,7 +2039,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pp_hasConstantNullSpace = False
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
-            assert(false)
             for cj in range(self.nc):
                 for dofN in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys()):
                     global_dofN = self.offset[cj] + self.stride[cj] * dofN
@@ -2073,8 +2067,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.rowptr[global_dofN + 1]):
                 if(self.isActiveDOF[self.colind[i]] == 0.0):
                     #pass
-                    assert(self.nzval[i] == 0.0), ("row", global_dofN, "column", self.colind[i], "val", self.nzval[i],                                      self.offset[0], self.offset[1], self.offset[2], self.offset[3],
-                                      self.stride[0], self.stride[1], self.stride[2], self.stride[3])
+                    assert(self.nzval[i] == 0.0), ("row", global_dofN, "column", self.colind[i], "val", self.nzval[i],
+                                                   self.offset[0], self.offset[1], self.offset[2], self.offset[3],
+                                                   self.stride[0], self.stride[1], self.stride[2], self.stride[3])
 
                 
         logEvent("Jacobian ", level=10, data=jacobian)

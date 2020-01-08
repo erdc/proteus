@@ -213,7 +213,6 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double particle_penalty_constant,
                                double* phi_solid_nodes,
                                double* distance_to_solids,
-                               int use_pseudo_penalty,
                                bool useExact,
                                double* isActiveDOF)
         void calculateJacobian(double NONCONSERVATIVE_FORM,
@@ -414,7 +413,6 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
                                double particle_alpha,
                                double particle_beta,
                                double particle_penalty_constant,
-                               int use_pseudo_penalty,
                                bool useExact,
                                double* isActiveDOF)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
@@ -779,7 +777,6 @@ cdef class cRANS2P2D_base:
                           double particle_penalty_constant,
                           numpy.ndarray phi_solid_nodes,
                           numpy.ndarray distance_to_solids,
-                          int use_pseudo_penalty,
                           bool useExact,
                           numpy.ndarray isActiveDOF):
         self.thisptr.calculateResidual(NONCONSERVATIVE_FORM,
@@ -987,7 +984,6 @@ cdef class cRANS2P2D_base:
                                        particle_penalty_constant,
                                        < double * > phi_solid_nodes.data,
                                        < double * > distance_to_solids.data,
-                                       use_pseudo_penalty,
                                        useExact,
                                        < double * > isActiveDOF.data)
 
@@ -1190,7 +1186,6 @@ cdef class cRANS2P2D_base:
                           double particle_alpha,
                           double particle_beta,
                           double particle_penalty_constant,
-                          int use_pseudo_penalty,
                           bool useExact,
                           numpy.ndarray isActiveDOF):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
@@ -1393,7 +1388,6 @@ cdef class cRANS2P2D_base:
                                        particle_alpha,
                                        particle_beta,
                                        particle_penalty_constant,
-                                       use_pseudo_penalty,
                                        useExact,
                                        <double*> isActiveDOF.data)
 
