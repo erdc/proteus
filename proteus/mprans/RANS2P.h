@@ -230,7 +230,6 @@ namespace proteus
                                    double particle_penalty_constant,
                                    xt::pyarray<double>& phi_solid_nodes,
                                    xt::pyarray<double>& distance_to_solids,
-                                   const int use_pseudo_penalty,
                                    bool useExact,
                                    double* isActiveDOF) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
@@ -432,7 +431,6 @@ namespace proteus
                                    double particle_alpha,
                                    double particle_beta,
                                    double particle_penalty_constant,
-                                   const int use_pseudo_penalty,
                                    bool useExact,
                                    double* isActiveDOF) = 0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
@@ -627,7 +625,6 @@ namespace proteus
                                   const double grad_u_old[nSpace],
                                   const double grad_v_old[nSpace],
                                   const double grad_w_old[nSpace],
-                                  const int use_pseudo_penalty,
                                   const double& p,
                                   const double grad_p[nSpace],
                                   const double grad_u[nSpace],
@@ -1236,8 +1233,7 @@ namespace proteus
                                            double &dmass_ham_w,
                                            double *particle_netForces,
                                            double *particle_netMoments,
-                                           double *particle_surfaceArea,
-                                           const int use_pseudo_penalty)
+                                           double *particle_surfaceArea)
     {
       double C, rho, mu, nu, H_mu, ImH_mu, uc, duc_du, duc_dv, duc_dw, H_s, ImH_s, D_s, phi_s, u_s, v_s, w_s;
         double force_x, force_y, force_z, r_x, r_y, r_z, force_p_x, force_p_y, force_p_z, force_stress_x, force_stress_y, force_stress_z;
@@ -2615,7 +2611,6 @@ namespace proteus
                              double particle_penalty_constant,
                              xt::pyarray<double>& phi_solid_nodes,
                              xt::pyarray<double>& distance_to_solids,
-                             const int use_pseudo_penalty,
                              bool useExact,
                              double* isActiveDOF)
       {
@@ -2934,7 +2929,6 @@ namespace proteus
                                      grad_u_old,
                                      grad_v_old,
                                      grad_w_old,
-                                     use_pseudo_penalty,
                                      //
                                      p,
                                      grad_p,
@@ -3120,8 +3114,7 @@ namespace proteus
                                            dmass_ham_w,
                                            &particle_netForces.data()[0],
                                            &particle_netMoments.data()[0],
-                                           &particle_surfaceArea.data()[0],
-                                           use_pseudo_penalty);
+                                           &particle_surfaceArea.data()[0]);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -3244,23 +3237,6 @@ namespace proteus
                        dmom_w_acc_w,
                        mom_w_acc_t,
                        dmom_w_acc_w_t);
-                if(use_pseudo_penalty > 0 && phi_solid.data()[eN_k]<0.0)//Do not have to change Jacobian
-                {
-                  double distance,vx,vy,vz;
-                  int index_ball = get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),x,y,z,distance);
-                  get_velocity_to_ith_ball(nParticles,ball_center.data(),ball_radius.data(),ball_velocity.data(),ball_angular_velocity.data(),index_ball,x,y,z,vx,vy,vz);
-                  mom_u_acc_t = alphaBDF*(mom_u_acc - vx);
-                  mom_v_acc_t = alphaBDF*(mom_v_acc - vy);
-                  mom_w_acc_t = alphaBDF*(mom_w_acc - vz);
-                }else if(use_pseudo_penalty == -1 && phi_solid.data()[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
-                {
-                  mom_u_acc_t = 0.0;
-                  mom_v_acc_t = 0.0;
-                  mom_w_acc_t = 0.0;
-                  dmom_u_acc_u= 0.0;
-                  dmom_v_acc_v= 0.0;
-                  dmom_w_acc_w= 0.0;
-                }
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
                     mom_u_acc_t *= dmom_u_acc_u;
@@ -3815,7 +3791,6 @@ namespace proteus
                                      grad_u_old,
                                      grad_v_old,
                                      grad_w_old,
-                                     use_pseudo_penalty,
                                      p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -3912,7 +3887,6 @@ namespace proteus
                                      grad_u_old,
                                      grad_v_old,
                                      grad_w_old,
-                                     use_pseudo_penalty,
                                      bc_p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -4700,7 +4674,6 @@ namespace proteus
                              double particle_alpha,
                              double particle_beta,
                              double particle_penalty_constant,
-                             const int use_pseudo_penalty,
                              bool useExact,
                              double* isActiveDOF)
       {
@@ -5021,7 +4994,6 @@ namespace proteus
                                      grad_u_old,
                                      grad_v_old,
                                      grad_w_old,
-                                     use_pseudo_penalty,
                                      p,
                                      grad_p,
                                      grad_u,
@@ -5206,8 +5178,7 @@ namespace proteus
                                            dmass_ham_w,
                                            &particle_netForces[0],
                                            &particle_netMoments[0],
-                                           &particle_surfaceArea[0],
-                                           use_pseudo_penalty);
+                                           &particle_surfaceArea[0]);
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
@@ -5318,15 +5289,6 @@ namespace proteus
                        dmom_w_acc_w,
                        mom_w_acc_t,
                        dmom_w_acc_w_t);
-                if(use_pseudo_penalty == -1 && phi_solid.data()[eN_k]<0.0)//no derivative term inside the solid; Has to change Jacobian
-                {
-                  mom_u_acc_t = 0.0;
-                  mom_v_acc_t = 0.0;
-                  mom_w_acc_t = 0.0;
-                  dmom_u_acc_u = 0.0;
-                  dmom_v_acc_v = 0.0;
-                  dmom_w_acc_w = 0.0;
-                }
                 if (NONCONSERVATIVE_FORM > 0.0)
                   {
                     mom_u_acc_t *= dmom_u_acc_u;
@@ -6022,7 +5984,6 @@ namespace proteus
                                      grad_u_old,
                                      grad_v_old,
                                      grad_w_old,
-                                     use_pseudo_penalty,
                                      p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
@@ -6119,7 +6080,6 @@ namespace proteus
                                      grad_u_old,
                                      grad_v_old,
                                      grad_w_old,
-                                     use_pseudo_penalty,
                                      bc_p_ext,
                                      grad_p_ext,
                                      grad_u_ext,
