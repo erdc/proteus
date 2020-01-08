@@ -50,7 +50,7 @@ extensions = [
 #    'sphinx.ext.viewcode',
     'sphinx.ext.linkcode',
     'sphinx.ext.napoleon',
-#    'breathe',
+    'breathe',
 #    'exhale',
 #    'IPython.sphinxext.ipython_console_highlighting',
 #    'IPython.sphinxext.ipython_directive',
@@ -184,72 +184,6 @@ html_context = {
     "conf_py_path": "docs/source/", # Path in the checkout to the docs root
 }
 
-#html_theme_options = {'bootswatch_theme':'spacelab'}
-# html_theme_options = {
-#     # Navigation bar title. (Default: ``project`` value)
-#     'navbar_title': "proteus",
-
-#     # Tab name for entire site. (Default: "Site")
-#     'navbar_site_name': "Site",
-
-#     # Tab name for the current pages TOC. (Default: "Page")
-#     'navbar_pagenav_name': "Page",
-
-#     # A list of tuples containing pages or urls to link to.
-#     # Valid tuples should be in the following forms:
-#     #    (name, page)                 # a link to a page
-#     #    (name, "/aa/bb", 1)          # a link to an arbitrary relative url
-#     #    (name, "http://example.com", True) # arbitrary absolute url
-#     # Note the "1" or "True" value above as the third argument to indicate
-#     # an arbitrary url.
-#     # 'navbar_links': [
-#     #     ("Examples", "examples"),
-#     #     ("Link", "http://example.com", True),
-#     # ],
-#     'navbar_links': [("API","api/proteus"),
-#                      ("C/C++/Fortran","capi/html/hierarchy")],
-#     # Global TOC depth for "site" navbar tab. (Default: 1)
-#     # Switching to -1 shows all levels.
-#     'globaltoc_depth': 2,
-
-#     # Include hidden TOCs in Site navbar?
-#     #
-#     # Note: If this is "false", you cannot have mixed ``:hidden:`` and
-#     # non-hidden ``toctree`` directives in the same page, or else the build
-#     # will break.
-#     #
-#     # Values: "true" (default) or "false"
-#     'globaltoc_includehidden': "true",
-
-#     # HTML navbar class (Default: "navbar") to attach to <div> element.
-#     # For black navbar, do "navbar navbar-inverse"
-#     'navbar_class': "navbar",
-
-#     # Fix navigation bar to top of page?
-#     # Values: "true" (default) or "false"
-#     'navbar_fixed_top': "true",
-
-#     # Location of link to source.
-#     # Options are "nav" (default), "footer" or anything else to exclude.
-#     'source_link_position': "nav",
-
-#     # Bootswatch (http://bootswatch.com/) theme.
-#     #
-#     # Options are nothing (default) or the name of a valid theme such
-#     # as "amelia" or "cosmo".
-#     #
-#     # Example themes:
-#     # * flatly
-#     # * sandstone (v3 only)
-#     # * united
-#     # * yeti (v3 only)
-#     'bootswatch_theme': "spacelab",
-
-#     # Choose Bootstrap version.
-#     # Values: "3" (default) or "2" (in quotes)
-#     'bootstrap_version': "3",
-# }
-
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
@@ -324,7 +258,7 @@ html_show_copyright = True
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'Proteusdoc'
 
-intersphinx_mapping = {'python': ('http://docs.python.org/2/', None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/2/', None)}
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -484,44 +418,35 @@ graphviz_output_format = 'svg'
 mathjax_pth = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTM"
 
 breathe_projects = {
-    "Proteus C++": "./capi/xml"
+    "Proteus C++": "../build/capi/xml"
 }
 breathe_default_project = "Proteus C++"
 
-import textwrap
-exhaleDoxygenStdin = textwrap.dedent('''
-INPUT                  = ../../proteus
-RECURSIVE              = YES
-# FILE_PATTERNS        = *.h *.cpp *.c
-FULL_PATH_NAMES        = YES
-BUILTIN_STL_SUPPORT    = YES
-EXTRACT_ALL            = YES
-CASE_SENSE_NAMES       = NO
-GENERATE_TODOLIST      = NO
-SOURCE_BROWSER         = YES
-USE_MATHJAX            = YES
-MATHJAX_RELPATH        = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
-MATHJAX_EXTENSIONS     = TeX-AMS-MML_HTMLorMML
-GENERATE_LATEX         = NO
-''')
-
-exhale_args = {
-    # These arguments are required
-    "containmentFolder":     "./capi",
-    "rootFileName":          "cmodules.rst",
-    "rootFileTitle":         "C/C++ API",
-    "doxygenStripFromPath":  "../../proteus",
-    # Suggested optional arguments
-    "createTreeView":        True,
-    "verboseBuild":          True,
-    # TIP: if using the sphinx-bootstrap-theme, you need
-    # "treeViewIsBootstrap": True,
-    "exhaleExecutesDoxygen": True,
-    #"exhaleUseDoxyfile": True,
-    "exhaleDoxygenStdin":    exhaleDoxygenStdin
-}
-# Tell sphinx what the primary language being documented is.
-primary_domain = 'cpp'
-
-# Tell sphinx what the pygments highlight language should be.
-highlight_language = 'cpp'
+#import textwrap
+#exhaleDoxygenStdin = textwrap.dedent('''
+#INPUT                  = ../../proteus
+#RECURSIVE              = YES
+#FULL_PATH_NAMES        = YES
+#EXTRACT_ALL            = YES
+#GENERATE_HTML          = YES
+#GENERATE_XML           = YES
+#USE_MATHJAX            = YES
+#MATHJAX_RELPATH        = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
+#MATHJAX_EXTENSIONS     = TeX-AMS-MML_HTMLorMML
+#''')
+#
+#exhale_args = {
+#    # These arguments are required
+#    "containmentFolder":     "./capi",
+#    "rootFileName":          "cmodules.rst",
+#    "rootFileTitle":         "C/C++ API",
+#    "doxygenStripFromPath":  "../../proteus",
+#    # Suggested optional arguments
+#    "createTreeView":        True,
+#    "verboseBuild":          True,
+#    # TIP: if using the sphinx-bootstrap-theme, you need
+#    # "treeViewIsBootstrap": True,
+#    "exhaleExecutesDoxygen": True,
+#    #"exhaleUseDoxyfile": True,
+#    "exhaleDoxygenStdin":    exhaleDoxygenStdin
+#}
