@@ -103,7 +103,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Proteus'
-copyright = u'2017, The Proteus Team'
+copyright = u'2020, The Proteus Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -348,7 +348,7 @@ texinfo_documents = [
 epub_title = u'Proteus'
 epub_author = u'The Proteus Team'
 epub_publisher = u'The Proteus Team'
-epub_copyright = u'2015, The Proteus Team'
+epub_copyright = u'2020, The Proteus Team'
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = u'Proteus'
