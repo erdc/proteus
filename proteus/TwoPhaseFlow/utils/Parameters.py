@@ -325,9 +325,9 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.Closure_1_model = None
         copts.nParticles = 0
         copts.particle_epsFact = 3.0
-        copts.particle_alpha = 1000.0
-        copts.particle_beta = 1000.0
-        copts.particle_penalty_constant = 1000.0
+        copts.particle_alpha = 0.0
+        copts.particle_beta = 0.0
+        copts.particle_penalty_constant = 100.0
         copts.particle_nitsche = 1.0
         copts.particle_sdfList = None
         copts.use_ball_as_particle = 0
@@ -340,7 +340,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.ball_density = None
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
-        scopts.shockCapturingFactor = 0.9#shockCapturingFactor
+        scopts.shockCapturingFactor = shockCapturingFactor
         scopts.lag = True
         scopts._freeze()
         seopts = self.n.SubgridErrorOptions
@@ -361,7 +361,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
-        self.n.maxNonlinearIts = 50
+        self.n.maxNonlinearIts = 100
         self.n.maxLineSearches = 0
         self._freeze()
 
@@ -595,7 +595,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.epsFact_density = epsFact
         copts.forceStrongDirichlet = False
         copts.ns_sed_forceStrongDirichlet = False
-        copts.weak_bc_penalty_constant = 100.0
+        copts.weak_bc_penalty_constant = 10.0
         copts.useRBLES = 0
         copts.useVF = 0
         copts.PSTAB = 0
@@ -610,9 +610,9 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.USE_SUPG = False
         copts.nParticles = 0
         copts.particle_epsFact = 3.0
-        copts.particle_alpha = 1000.0
-        copts.particle_beta = 1000.0
-        copts.particle_penalty_constant = 1000.0
+        copts.particle_alpha = 0.0
+        copts.particle_beta = 0.0
+        copts.particle_penalty_constant = 10.0
         copts.particle_nitsche = 1.0
         copts.particle_sdfList = None
         copts.use_ball_as_particle = 0
