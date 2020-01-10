@@ -290,7 +290,7 @@ class OutputStepping:
         self.dt_output=dt_output
         self.nDTout = nDTout
         self.dt_fixed = dt_fixed
-        self.systemStepExact = False
+        self.systemStepExact = True
 
     def __getitem__(self, key):
         return self.__dict__[key]
