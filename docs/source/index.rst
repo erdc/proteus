@@ -289,8 +289,7 @@ Source Code Documentation
    :caption: General
    :name: sec-general
 
-   Python API <api/modules>
-   C/C++ API <capi/cmodules>
+   API docs <apicapi>
 
 .. toctree::
    :maxdepth: 1

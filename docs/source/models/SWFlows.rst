@@ -1,7 +1,7 @@
 .. _SWFlows:
 
 Shallow Water Flows
-*************
+*******************
 
 
 Description
