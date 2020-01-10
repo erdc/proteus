@@ -257,12 +257,30 @@ class NS_base(object):  # (HasTraits):
                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                     parallelPartitioningType=n.parallelPartitioningType)
                     else :
-                        mlMesh = MeshTools.MultilevelTetrahedralMesh(nnx, nny, nnz,
+                        if p.genMesh:
+                            mlMesh = MeshTools.MultilevelTetrahedralMesh(nnx, nny, nnz,
                                                                      p.domain.x[0], p.domain.x[1], p.domain.x[2],
                                                                      p.L[0], p.L[1], p.L[2],
                                                                      refinementLevels=n.nLevels,
                                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                      parallelPartitioningType=n.parallelPartitioningType)
+                        else:
+                            fileprefix = p.domain.polyfile
+                            nbase = 1
+                            mesh=MeshTools.TetrahedralMesh()
+                            logEvent("Generating coarse global mesh from Tetgen files")
+                            mesh.generateFromTetgenFiles(fileprefix,nbase,parallel = comm.size() > 1)
+
+                            mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
+                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                             parallelPartitioningType=n.parallelPartitioningType)
+
+                            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
+                            mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=n.parallelPartitioningType)
+
+
 
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
                 fileprefix = None
