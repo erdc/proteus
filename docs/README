@@ -33,39 +33,13 @@ make html
 ```
 
 The documentation can then be viewed in your favorite browser by opening
-`../../proteus-website/index.html`
+`./build/index.html`
 
 
 ## Edit or Add Files
 
-All files are in the `source/` directory:
+All source files are in the `source/` directory:
 - **Index file:** `source/index.rst`
 - **Models files:** `source/models/[...].rst`
 - **Tools files:** `source/tools/[...].rst`
 
-
-## Update .io site manually
-
-1. Clone repository as `proteus-website` one level below proteus 
-```bash
-cd ${PROTEUS}/..
-git clone https://github.com/erdc/proteus proteus-website
-```
-2. Switch to `gh-pages` branch
-```bash
-cd proteus-website
-git checkout gh-pages
-```
-3. Create new local branch from `gh-pages` (if it exists already, just checkout
-into it)
-```bash
-git checkout -b username/gh-pages
-```
-4. Generate documentation from docs folder
-```bash
-cd ${PROTEUS}/docs
-make html
-```
-5. Commit changed or added files in proteus-website folder
-6. Push changes to github and create pull request from `username/gh-pages` to
-`gh-pages`
