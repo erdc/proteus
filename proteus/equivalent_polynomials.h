@@ -14,11 +14,11 @@ namespace equivalent_polynomials
   public:
     Regularized(bool useExact=false)
     {}
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary)
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary, bool scale)
     {}
     inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, bool isBoundary)
     {
-      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0, isBoundary);
+      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0, isBoundary, false);
     }
     inline void set_quad(unsigned int q)
     {}
@@ -79,11 +79,11 @@ namespace equivalent_polynomials
       _set_Ainv<nSpace,nP>(Ainv);
     }
     
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary);
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary, bool scale);
 
     inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, bool isBoundary)
     {
-      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0, isBoundary);
+      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0, isBoundary, false);
     }
     
     inline void set_quad(unsigned int q)
@@ -422,7 +422,7 @@ namespace equivalent_polynomials
   }
 
   template<int nSpace, int nP, int nQ, int nEBQ>
-  inline int Simplex<nSpace,nP,nQ,nEBQ>::calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary)
+  inline int Simplex<nSpace,nP,nQ,nEBQ>::calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary, bool scale)
   {
     //initialize phi_dof_corrected -- correction can only be actually computed on cut cells
     for (unsigned int i=0; i < nN;i++)
@@ -462,15 +462,24 @@ namespace equivalent_polynomials
       }
     _calculate_cuts();//X_0, array of interface cuts on reference simplex
     _calculate_normal<nSpace>(phys_nodes_cut, level_set_normal);//normal to interface
-    //cek hack - 2D, pressure basis for discontinuous density
-    double jump_scale = level_set_normal[1]*(1.0-2.0*double(inside_out)),
-      m_average = 0.5*(ma + mb),
-      m_jump = 0.5*(mb - ma),
-      mb_scale = m_average + jump_scale*m_jump,//mb when jump_scale=1
-      ma_scale = m_average - jump_scale*m_jump;//ma when jump_scale=1
-    //std::cout<<inside_out<<'\t'<<level_set_normal[1]<<'\t'<<mb_scale<<'\t'<<mb<<'\t'<<ma_scale<<'\t'<<ma<<std::endl;
-    //    double mb_scale=mb, ma_scale=ma;
-    //cek hack end
+    double ma_scale,mb_scale;
+    if (scale)
+      {
+        //cek hack - 2D, pressure basis for discontinuous density
+        double jump_scale = level_set_normal[1]*(1.0-2.0*double(inside_out)),
+          m_average = 0.5*(ma + mb),
+          m_jump = 0.5*(mb - ma);
+        mb_scale = m_average + jump_scale*m_jump;//mb when jump_scale=1
+        ma_scale = m_average - jump_scale*m_jump;//ma when jump_scale=1
+        //    double mb_scale=mb, ma_scale=ma;
+        //cek hack end
+      }
+    else
+      {
+        ma_scale = ma;
+        mb_scale = mb;
+      }
+    //std::cout<<"eqp "<<inside_out<<'\t'<<level_set_normal[1]<<'\t'<<mb_scale<<'\t'<<mb<<'\t'<<ma_scale<<'\t'<<ma<<std::endl;
     if (inside_out)
       {
         if (nN==3)
@@ -588,13 +597,13 @@ namespace equivalent_polynomials
       useExact(useExact)
     {}
     
-    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary)
+    inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary, bool scale)
     {
       //hack for testing
       //return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb);
       //
       if(useExact)
-        return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb,isBoundary);
+        return exact.calculate(phi_dof, phi_nodes, xi_r, ma, mb,isBoundary,scale);
       else//for inexact just copy over local phi_dof
         {
           for (int i=0; i<exact.nN;i++)
@@ -605,7 +614,7 @@ namespace equivalent_polynomials
     
     inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, bool isBoundary)
     {
-      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0,isBoundary);
+      return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0,isBoundary, false);
     }
     
     inline void set_quad(unsigned int q)

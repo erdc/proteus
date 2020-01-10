@@ -317,7 +317,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             particle_epsFact = 3.,
         )
         scopts = self.n.ShockCapturingOptions
-        scopts.shockCapturingFactor = 0.9#shockCapturingFactor
+        scopts.shockCapturingFactor = shockCapturingFactor
         scopts.lag = True
         scopts._freeze()
         seopts = self.n.SubgridErrorOptions
@@ -339,7 +339,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
-        self.n.maxNonlinearIts = 50
+        self.n.maxNonlinearIts = 100
         self.n.maxLineSearches = 0
         self._freeze()
 
