@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = ../../proteus-website
+BUILDDIR      = build
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -49,14 +49,15 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 	rm -rf source/api
+	rm -rf source/capi
 
-html: source/api/modules.rst $(BUILDDIR)/capi/html/files.html
+html: $(BUILDDIR)/capi/html/files.html source/api/modules.rst
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)."
 
 source/api/modules.rst:
-	sphinx-apidoc --output-dir=source/api ../proteus "../proteus/tests" "../proteus/test_utils" "../proteus/config" --maxdepth=2 --separate --module-first
+	sphinx-apidoc --output-dir=source/api ../proteus "../**/*.so" "../proteus/tests" "../proteus/test_utils" "../proteus/config" --maxdepth=1 --separate --module-first --templatedir=source/_templates/apidoc
 
 $(BUILDDIR)/capi/html/files.html:
 	doxygen
