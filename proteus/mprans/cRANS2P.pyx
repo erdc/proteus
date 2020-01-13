@@ -210,6 +210,7 @@ cdef extern from "RANS2P.h" namespace "proteus":
                                double particle_alpha,
                                double particle_beta,
                                double particle_penalty_constant,
+                               double ghost_penalty_constant,
                                double* phi_solid_nodes,
                                double* distance_to_solids,
                                bool useExact,
@@ -411,6 +412,7 @@ cdef extern from "RANS2P.h" namespace "proteus":
                                double particle_alpha,
                                double particle_beta,
                                double particle_penalty_constant,
+                               double ghost_penalty_constant,
                                bool useExact,
                                double* isActiveDOF)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
@@ -772,6 +774,7 @@ cdef class cRANS2P_base:
                           double particle_alpha,
                           double particle_beta,
                           double particle_penalty_constant,
+                          double ghost_penalty_constant,
                           numpy.ndarray phi_solid_nodes,
                           numpy.ndarray distance_to_solids,
                           bool useExact,
@@ -978,6 +981,7 @@ cdef class cRANS2P_base:
                                        particle_alpha,
                                        particle_beta,
                                        particle_penalty_constant,
+                                       ghost_penalty_constant,
                                        < double * > phi_solid_nodes.data,
                                        < double * > distance_to_solids.data,
                                        useExact,
@@ -1181,6 +1185,7 @@ cdef class cRANS2P_base:
                           double particle_alpha,
                           double particle_beta,
                           double particle_penalty_constant,
+                          double ghost_penalty_constant,
                           bool useExact,
                           numpy.ndarray isActiveDOF):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
@@ -1382,6 +1387,7 @@ cdef class cRANS2P_base:
                                        particle_alpha,
                                        particle_beta,
                                        particle_penalty_constant,
+                                       ghost_penalty_constant,
                                        useExact,
                                        <double* > isActiveDOF.data)
 

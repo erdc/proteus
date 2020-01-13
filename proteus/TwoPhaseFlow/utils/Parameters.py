@@ -595,7 +595,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.epsFact_density = epsFact
         copts.forceStrongDirichlet = False
         copts.ns_sed_forceStrongDirichlet = False
-        copts.weak_bc_penalty_constant = 10.0
+        copts.weak_bc_penalty_constant = 100.0
         copts.useRBLES = 0
         copts.useVF = 0
         copts.PSTAB = 0
@@ -612,7 +612,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         copts.particle_epsFact = 3.0
         copts.particle_alpha = 0.0
         copts.particle_beta = 0.0
-        copts.particle_penalty_constant = 10.0
+        copts.particle_penalty_constant = 100.0
         copts.particle_nitsche = 1.0
         copts.particle_sdfList = None
         copts.use_ball_as_particle = 0

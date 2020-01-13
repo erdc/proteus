@@ -191,7 +191,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  killNonlinearDrag=False,
                  epsFact_solid=None,
                  eb_adjoint_sigma=1.0,
-                 eb_penalty_constant=10.0,
+                 eb_penalty_constant=100.0,
                  forceStrongDirichlet=False,
                  turbulenceClosureModel=0,  # 0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
@@ -219,7 +219,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_epsFact=3.0,
                  particle_alpha=1000.0,
                  particle_beta=1000.0,
-                 particle_penalty_constant=1000.0,
+                 particle_penalty_constant=100.0,
+                 ghost_penalty_constant=10.0,
                  particle_nitsche=1.0,
                  nullSpace='NoNullSpace',
                  useExact=False,
@@ -233,6 +234,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_alpha = particle_alpha
         self.particle_beta = particle_beta
         self.particle_penalty_constant = particle_penalty_constant
+        self.ghost_penalty_constant = ghost_penalty_constant
         self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
         self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
@@ -1556,6 +1558,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       # physics
                                       self.eb_adjoint_sigma,
                                       self.elementDiameter,  # mesh.elementDiametersArray,
+                                      self.mesh.elementBoundaryDiametersArray,
                                       self.mesh.nodeDiametersArray,
                                       self.stabilization.hFactor,
                                       self.mesh.nElements_global,
@@ -1727,6 +1730,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant,
+                                      self.coefficients.ghost_penalty_constant,
                                       self.coefficients.phi_s,
                                       self.coefficients.phisField,
                                       self.coefficients.useExact,
@@ -1868,6 +1872,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.u[0].femSpace.elementMaps.boundaryJacobians,
                                       self.eb_adjoint_sigma,
                                       self.elementDiameter,  # mesh.elementDiametersArray,
+                                      self.mesh.elementBoundaryDiametersArray,
                                       self.mesh.nodeDiametersArray,
                                       self.stabilization.hFactor,
                                       self.mesh.nElements_global,
@@ -2036,6 +2041,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
                                       self.coefficients.particle_penalty_constant,
+                                      self.coefficients.ghost_penalty_constant,
                                       self.coefficients.useExact,
                                       self.isActiveDOF)
         #assert((self.isActiveDOF ==1.0).all())
