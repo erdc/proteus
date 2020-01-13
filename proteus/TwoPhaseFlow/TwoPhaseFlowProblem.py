@@ -290,7 +290,7 @@ class OutputStepping:
         self.dt_output=dt_output
         self.nDTout = nDTout
         self.dt_fixed = dt_fixed
-        self.systemStepExact = True
+        self.systemStepExact = False
 
     def __getitem__(self, key):
         return self.__dict__[key]
@@ -381,7 +381,7 @@ default_rans2p_parameters = {'useMetrics': 1.0,
                              'ns_lag_shockCapturing': True,
                              'ns_lag_subgridError': True,
                              'timeDiscretization': 'vbdf',
-                             'timeOrder': 1}
+                             'timeOrder': 2}
 default_rans3p_parameters = {'useMetrics': 1.0,
                              'epsFact_viscosity': 1.5,
                              'epsFact_density': 1.5,
