@@ -11,5 +11,6 @@ dependencies:
   - cython
   - pillow
   - pip
+  - xtensor-python
   - pip:
     - recordtype
