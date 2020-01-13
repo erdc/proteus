@@ -6,7 +6,7 @@ rebuild docs and check docs
   cd .. 
   git clone https://github.com/erdc-cm/proteus proteus-website -b gh-pages
   cd proteus
-  make doc
+  make docs
 When you are  satisified with both the current proteus commit and the docs commit and push proteus, and tag the release through the github releases site. Then commit the proteus-website gh-pages branch to publish the documentation on proteustoolkit.org
 
 - Switch back to dev
