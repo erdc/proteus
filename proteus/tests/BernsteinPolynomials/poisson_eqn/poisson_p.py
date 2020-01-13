@@ -4,6 +4,7 @@ from builtins import object
 from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
+import os
 try:
     from .parameters_for_poisson import *
 except:
@@ -41,7 +42,7 @@ if ct.unstructured:
     triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
 else:
     domain = box
-    domain.polyfile="box"    
+    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"box"    
     
 nc = 1
 ##################
