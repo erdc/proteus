@@ -9,6 +9,7 @@ from proteus.mprans import CLSVOF
 import numpy as np
 import math
 from .parameters import *
+import os
 
 AUTOMATED_TEST=True
 
@@ -104,7 +105,7 @@ if unstructured:
     triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
 else:
     domain = box
-    meshname = "mesh_"+str(ct.test_case)
+    meshname = os.path.dirname(os.path.abspath(__file__))+"/"+"mesh_"+str(ct.test_case)
     #domain.writePoly(meshname)
     domain.polyfile = meshname
     genMesh=False
