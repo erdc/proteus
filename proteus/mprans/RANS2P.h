@@ -224,6 +224,7 @@ namespace proteus
                                    double particle_alpha,
                                    double particle_beta,
                                    double particle_penalty_constant,
+                                   double ghost_penalty_constant,
                                    double* phi_solid_nodes,
                                    double* distance_to_solids,
                                    bool useExact,
@@ -427,6 +428,7 @@ namespace proteus
                                    double particle_alpha,
                                    double particle_beta,
                                    double particle_penalty_constant,
+                                   double ghost_penalty_constant,
                                    bool useExact,
                                    double* isActiveDOF) = 0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
@@ -2605,6 +2607,7 @@ namespace proteus
                              double particle_alpha,
                              double particle_beta,
                              double particle_penalty_constant,
+                             double ghost_penalty_constant,
                              double* phi_solid_nodes,
                              double* distance_to_solids,
                              bool useExact,
@@ -4670,6 +4673,7 @@ namespace proteus
                              double particle_alpha,
                              double particle_beta,
                              double particle_penalty_constant,
+                             double ghost_penalty_constant,
                              bool useExact,
                              double* isActiveDOF)
       {
