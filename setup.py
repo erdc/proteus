@@ -43,6 +43,35 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
+class get_pybind_include(object):
+    """Helper class to determine the pybind11 include path
+
+    The purpose of this class is to postpone importing pybind11
+    until it is actually installed, so that the ``get_include()``
+    method can be invoked. """
+
+    def __init__(self, user=False):
+        self.user = user
+
+    def __str__(self):
+        import pybind11
+        return pybind11.get_include(self.user)
+
+
+class get_numpy_include(object):
+    """Helper class to determine the numpy include path
+
+    The purpose of this class is to postpone importing numpy
+    until it is actually installed, so that the ``get_include()``
+    method can be invoked. """
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        import numpy as np
+        return np.get_include()
+
 EXTENSIONS_TO_BUILD = [
     # Extension("MeshAdaptPUMI.MeshAdaptPUMI",
     #           sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
@@ -123,28 +152,44 @@ EXTENSIONS_TO_BUILD = [
                          PROTEUS_BLAS_LIB],
               extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
-    Extension("richards.cRichards",['proteus/richards/cRichards.pyx'],
-              depends=['proteus/richards/Richards.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(),'proteus']),
-    Extension("elastoplastic.cElastoPlastic",
-              ['proteus/elastoplastic/cElastoPlastic.pyx'],
-              define_macros=[('PROTEUS_LAPACK_H',
-                              PROTEUS_LAPACK_H),
-                             ('PROTEUS_LAPACK_INTEGER',
-                              PROTEUS_LAPACK_INTEGER),
-                             ('PROTEUS_BLAS_H',
-                              PROTEUS_BLAS_H)],
-              depends=['proteus/elastoplastic/ElastoPlastic.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              include_dirs=[numpy.get_include(),'proteus'],
-              library_dirs=[PROTEUS_LAPACK_LIB_DIR,
-                            PROTEUS_BLAS_LIB_DIR],
-              libraries=['m',PROTEUS_LAPACK_LIB,
-                         PROTEUS_BLAS_LIB],
-              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
-              extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
+    Extension(
+        'richards.cRichards',
+        ['proteus/richards/cRichards.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            str(get_pybind_include()),
+            str(get_pybind_include(user=True)),
+            str(get_numpy_include()),
+            os.path.join(sys.prefix, 'include'),
+            os.path.join(sys.prefix, 'Library', 'include'),
+            'proteus'
+        ],
+        language='c++'
+    ),
+    Extension(
+        'elastoplastic.cElastoPlastic',
+        ['proteus/elastoplastic/cElastoPlastic.cpp'],
+        define_macros=[('PROTEUS_LAPACK_H',
+                        PROTEUS_LAPACK_H),
+                       ('PROTEUS_LAPACK_INTEGER',
+                        PROTEUS_LAPACK_INTEGER),
+                       ('PROTEUS_BLAS_H',
+                        PROTEUS_BLAS_H)],
+        include_dirs=[
+            # Path to pybind11 headers
+            str(get_pybind_include()),
+            str(get_pybind_include(user=True)),
+            str(get_numpy_include()),
+            os.path.join(sys.prefix, 'include'),
+            os.path.join(sys.prefix, 'Library', 'include'),
+            'proteus'
+        ],
+        language='c++',
+        library_dirs=[PROTEUS_LAPACK_LIB_DIR,
+                      PROTEUS_BLAS_LIB_DIR],
+        libraries=['m',PROTEUS_LAPACK_LIB,
+                   PROTEUS_BLAS_LIB]
+    ),
     Extension("mprans.cRANS3PF",['proteus/mprans/cRANS3PF.pyx'],
               depends=['proteus/mprans/RANS3PF.h','proteus/mprans/RANS3PF2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
@@ -221,11 +266,21 @@ EXTENSIONS_TO_BUILD = [
               library_dirs=[PROTEUS_NCURSES_LIB_DIR,],
               libraries=['ncurses','stdc++','m'],
               extra_compile_args=["-std=c++11"]),
-    Extension("ADR",['proteus/ADR.pyx'],
-              depends=['proteus/ADR.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(),'proteus']),
+    Extension(
+        'ADR',
+        ['proteus/ADR.cpp'],
+        headers=['proteus/ADR.h'],
+        include_dirs=[
+            # Path to pybind11 headers
+            str(get_pybind_include()),
+            str(get_pybind_include(user=True)),
+            str(get_numpy_include()),
+            os.path.join(sys.prefix, 'include'),
+            os.path.join(sys.prefix, 'Library', 'include'),
+            '.'
+        ],
+        language='c++'
+    ),
     Extension("subsurfaceTransportFunctions",['proteus/subsurfaceTransportFunctions.pyx'],
               include_dirs=[numpy.get_include(),'proteus'],
               extra_compile_args=PROTEUS_OPT,

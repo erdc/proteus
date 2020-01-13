@@ -5,6 +5,10 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from .cElastoPlastic import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,

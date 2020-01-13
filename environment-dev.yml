@@ -41,4 +41,5 @@ dependencies:
   - ipyparallel
   - pillow
   - recordtype
+  - xtensor-python
   - git-lfs
