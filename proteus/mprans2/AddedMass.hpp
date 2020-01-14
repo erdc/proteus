@@ -10,7 +10,7 @@ namespace proteus
     {
     public:
     
-        virtual ~cppAddedMass_base(){}
+        virtual ~cppAddedMass_base() = default;
 
         virtual void calculateResidual(//element
                                        xt::pyarray<double> mesh_trial_ref,
