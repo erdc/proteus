@@ -1247,6 +1247,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
 
+        (rowptr, colind, globalJacobian) = jacobian.getCSRrepresentation()
         self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1287,7 +1288,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            globalJacobian,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
