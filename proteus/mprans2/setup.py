@@ -68,6 +68,21 @@ ext_modules = [
         ],
         language='c++'
     ),
+    Extension(
+        'cVOF3P',
+        ['VOF3P.cpp'],
+        depends=['VOF3P.hpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            get_pybind_include(),
+            get_pybind_include(user=True),
+            get_numpy_include(),
+            os.path.join(sys.prefix, 'include'),
+            os.path.join(sys.prefix, 'Library', 'include'),
+            '../'
+        ],
+        language='c++'
+    ),
 ]
 
 
