@@ -1,3 +1,4 @@
+#define FORCE_IMPORT_ARRAY
 #include "SedClosure.hpp"
 
 namespace py = pybind11;
@@ -5,6 +6,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(SedClosure, m)
 {
     using proteus::cppHsuSedStress2D; 
+
+    xt::import_numpy();
 
     py::class_<cppHsuSedStress2D>(m, "HsuSedStress2D")
         .def(py::init<double, double, double, double, double, double, double, double,

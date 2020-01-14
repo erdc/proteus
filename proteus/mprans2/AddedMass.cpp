@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iostream>
 
+#define FORCE_IMPORT_ARRAY
 #include "AddedMass.hpp"
 
 #include "CompKernel.h"
@@ -670,6 +671,8 @@ PYBIND11_MODULE(cAddedMass, m)
 {
     using proteus::cppAddedMass_base;
     using proteus::newAddedMass;
+
+    xt::import_numpy();
 
     py::class_<cppAddedMass_base>(m, "cppAddedMass_base")
         .def("calculateResidual", &cppAddedMass_base::calculateResidual)
