@@ -60,7 +60,12 @@ segments=[[0, 1],
           [4, 0]]
 domain = PlanarStraightLineGraphDomain(vertices=vertices,        
                                        segments=segments)
-domain.writePoly("tank2d")
+#domain.writePoly("tank2d")
+
+genMesh=False
+pathfile = os.path.dirname(os.path.abspath(__file__))+"/"+"tank2d"
+domain.polyfile= pathfile
+#domain.writePoly(domain.polyfile)
 
 ################
 ##### MESH #####
