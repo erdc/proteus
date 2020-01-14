@@ -1212,6 +1212,41 @@ class NS_base(object):  # (HasTraits):
         domain.PUMIMesh.transferFieldToPUMI("coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
+        #I want to compute the density and viscosity arrays here
+        #arrays are length = number of elements and will correspond to density at center of element
+        rho_transfer = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
+        nu_transfer = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
+        #get quadrature points at element centroid and evaluate at shape functions
+        from proteus import Quadrature
+        transferQpt = Quadrature.SimplexGaussQuadrature(p0.domain.nd,1)
+        qpt_centroid = numpy.asarray([transferQpt.points[0]])
+        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,p0.domain.nd)
+        materialSpace.getBasisValuesRef(qpt_centroid)
+        
+        #obtain the level-set or vof value at each element centroid
+        #pass through heaviside function to get material property
+        from proteus.ctransportCoefficients import smoothedHeaviside
+        
+        IEN = self.modelList[2].levelModelList[0].u[0].femSpace.dofMap.l2g
+        for (eID, dofs) in enumerate(IEN):
+            phi_val = 0.0
+            for idx in range(len(dofs)):
+                phi_val += materialSpace.psi[0][idx]*self.modelList[2].levelModelList[0].u[0].dof[dofs[idx]]
+            #rho_transfer[eID] = phi_val
+            
+            #heaviside
+            h_phi=0.0;
+            for idx in range(len(dofs)):
+                h_phi += (materialSpace.psi[0][idx])*(self.modelList[2].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
+            eps_rho = p0.ct.epsFact_density*h_phi
+            smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
+
+            rho_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.rho_0 + smoothed_phi_val*self.pList[0].ct.rho_1
+            nu_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.nu_0 + smoothed_phi_val*self.pList[0].ct.nu_1
+
+        self.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+        self.modelList[0].levelModelList[0].mesh.elementMaterial[:] = rho_transfer[:]
+
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
         #but needs to be returned to the original form if not actually adapting....be careful with the following statements, unsure if this doesn't break something else
@@ -1283,12 +1318,18 @@ class NS_base(object):  # (HasTraits):
         if(hasattr(self,"tn")):
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
-            deltaT = self.systemStepController.dt_system
+            #deltaT = self.systemStepController.dt_system 
+            deltaT=self.modelList[0].levelModelList[0].timeIntegration.dtLast
+            T_current = self.systemStepController.t_system_last
+            deltaT_next = self.systemStepController.dt_system 
         else:
             deltaT = 0
+            deltaT_next = 0.0
+            T_current = 0.0
 
         epsFact = epsFact_density
-        domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+        #domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+        domain.PUMIMesh.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,deltaT_next,T_current,epsFact)
 
         del rho, nu, g, epsFact
 
@@ -1423,6 +1464,8 @@ class NS_base(object):  # (HasTraits):
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
+              if(self.nSolveSteps <= 5): #the first few time steps are ignored for adaptivity
+                adaptMeshNow=False
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")

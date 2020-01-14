@@ -53,6 +53,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   numIter=NumIter;
   adaptMesh = AdaptMesh;
   nAdapt=0;
+  nTriggers=0;
   numAdaptSteps = NumAdaptSteps;
   nEstimate=0;
   if(PCU_Comm_Self()==0)
@@ -67,6 +68,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   vmsErrH1 = 0;
   errRho_reg = 0;
   errRel_reg = 0;
+  error_reference = 0;
   gmi_register_mesh();
   gmi_register_null();
   approximation_order = 2;
@@ -99,6 +101,7 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(vmsErrH1);
   freeField(errRho_reg);
   freeField(errRel_reg);
+  freeField(error_reference);
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
@@ -305,6 +308,14 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
 #endif
   return 0;
 } 
+static int countTotal(apf::Mesh* m, int dim)
+{
+  int total = apf::countOwned(m, dim);
+  PCU_Add_Ints(&total, 1);
+  return total;
+}
+
+#include "PyEmbeddedFunctions.h"
 
 int MeshAdaptPUMIDrvr::willErrorAdapt() 
 /**
@@ -322,6 +333,7 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
   //get current size field
   apf::Field* currentField;
 
+/*
   if(!size_iso) //if no previous size field
   {
     currentField = samSz::isoSize(m);
@@ -331,6 +343,10 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
     currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
     apf::copyData(currentField,size_iso);
   }
+*/
+  //currentField  = apf::createFieldOn(m, "currentField", apf::SCALAR);
+  //apf::copyData(currentField,size_iso);
+  currentField = samSz::isoSize(m);
 
   //get error-based size field
   getERMSizeField(total_error);
@@ -338,6 +354,7 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
   sizeFieldList.pop(); //remove this size field from the queue
 
 
+  apf::Field *errorTriggered = apf::createLagrangeField(m, "errorTriggered", apf::SCALAR, 1);
   //determine if desired mesh is contained in current mesh
   apf::MeshEntity* ent;
   apf::MeshIterator* it = m->begin(0);
@@ -345,24 +362,58 @@ int MeshAdaptPUMIDrvr::willErrorAdapt()
   {
     double h_current = apf::getScalar(currentField,ent,0);
     double h_needed = apf::getScalar(errorField,ent,0);
-    if(h_current>h_needed){
-      adaptFlag=1;        
+    if(h_current>h_needed*1.5){
+      adaptFlag+=1;        
+      apf::setScalar(errorTriggered,ent,0,h_current/h_needed*1.0);
       //apf::writeVtkFiles("willErrorAdapt", m);
       //std::cout<<"What is the ent? "<<localNumber(ent)<<std::endl;
       //std::exit(1);
-      break;
-      
-    }  
+      //break;
+    }
+    else
+      apf::setScalar(errorTriggered,ent,0,-1);
+
   }//end while
+  m->end(it);
+
+  //modify error field to be the ratio
+  it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+    double h_current = apf::getScalar(currentField,ent,0);
+    double h_needed = apf::getScalar(errorField,ent,0);
+    apf::setScalar(errorField,ent,0,h_current/h_needed*1.0);
+  }//end while
+  m->end(it);
 
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
   assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
 
-  apf::destroyField(currentField);
-  apf::destroyField(errorField);
+  if(assertFlag>0)
+  {
+    double totalNodes = countTotal(m,0);
+    double triggeredPercentage = assertFlag*100.0/totalNodes;
+    char buffer[50];
+    sprintf(buffer,"Need to error adapt %f%%",triggeredPercentage);
+    logEvent(buffer,3);
 
-  return adaptFlag;
+/*
+    if(nTriggers%10==0)
+    {
+        char namebuffer[50];
+        sprintf(namebuffer,"needErrorAdapt_%i",nTriggers);
+        apf::writeVtkFiles(namebuffer, m);
+    }
+*/
+    nTriggers++;
+  }
+
+  apf::destroyField(currentField);
+  //apf::destroyField(errorField);
+  apf::destroyField(errorTriggered);
+
+  return assertFlag;
 }
 
 
@@ -372,11 +423,20 @@ int MeshAdaptPUMIDrvr::willAdapt()
   int adaptFlag = 0;
   if(size_field_config == "combined" or size_field_config == "isotropic")
     adaptFlag += willInterfaceAdapt(); 
-  //if(size_field_config == "combined" or size_field_config == "VMS")
-  //  adaptFlag += willErrorAdapt();
+  if(size_field_config == "combined" or size_field_config == "VMS")
+    //adaptFlag += willErrorAdapt();
+    adaptFlag += willErrorAdapt_reference();
 
   if(adaptFlag > 0)
     adaptFlag = 1;
+
+  if(adaptFlag == 0)
+  {
+    //allocated in transfer fields... this is not a good way of doing things, but don't know how to pass a numpy array without having to allocate memory just yet
+    free(rho);
+    free(nu);
+  }
+
   return adaptFlag;
 }
 
@@ -518,8 +578,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     char namebuffer[50];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
-    sprintf(namebuffer,"beforeAnisotropicAdapt%i_.smb",nAdapt);
-    m->writeNative(namebuffer);
+    //sprintf(namebuffer,"beforeAnisotropicAdapt%i_.smb",nAdapt);
+    //m->writeNative(namebuffer);
   }
 
   if(size_field_config=="ERM"){

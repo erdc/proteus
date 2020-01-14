@@ -12,8 +12,7 @@ from proteus.mprans.cRANS2P import *
 from proteus.mprans.cRANS2P2D import *
 from proteus import Profiling
 from proteus import LinearAlgebraTools as LAT
-from proteus.Comm import (globalSum,
-                          globalMax)
+
 
 class SubgridError(proteus.SubgridError.SGE_base):
     """
@@ -142,6 +141,8 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
                                                                          globalMax(self.numDiff_last[2].max()),
                                                                          globalMax(self.numDiff_last[3].max())))
+
+
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
@@ -159,6 +160,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
+    from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
                  epsFact=1.5,
@@ -189,6 +191,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  dragBetaTypes=None,  # otherwise can use element constant values
                  porosityTypes=None,
                  killNonlinearDrag=False,
+                 waveFlag=None,
+                 waveHeight=0.01,
+                 waveCelerity=1.0,
+                 waveFrequency=1.0,
+                 waveNumber=2.0,
+                 waterDepth=0.5,
+                 Omega_s=[[0.45, 0.55], [0.2, 0.4], [0.0, 1.0]],
+                 epsFact_source=1.,
                  epsFact_solid=None,
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=10.0,
@@ -196,7 +206,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  turbulenceClosureModel=0,  # 0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
                  barycenters=None,
-                 NONCONSERVATIVE_FORM=1.0,
+                 NONCONSERVATIVE_FORM=0.0,
                  MOMENTUM_SGE=1.0,
                  PRESSURE_SGE=1.0,
                  VELOCITY_SGE=1.0,
@@ -293,6 +303,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.dragBetaTypes = dragBetaTypes
         self.porosityTypes = porosityTypes
         self.killNonlinearDrag = int(killNonlinearDrag)
+        self.waveFlag = waveFlag
+        self.waveHeight = waveHeight
+        self.waveCelerity = waveCelerity
+        self.waveFrequency = waveFrequency
+        self.waveNumber = waveNumber
+        self.waterDepth = waterDepth
+        self.Omega_s = Omega_s
+        self.epsFact_source = epsFact_source
         self.linearDragFactor = 1.0
         self.nonlinearDragFactor = 1.0
         self.nullSpace = nullSpace
@@ -441,7 +459,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.CLSVOF_model is not None: # use CLSVOF
             # LS part #
             self.q_phi = modelList[self.CLSVOF_model].q[('u', 0)]
-            self.phi_dof = modelList[self.CLSVOF_model].u[0].dof
             self.ebq_phi = None # Not used. What is this for?
             self.ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)]
             self.bc_ebqe_phi = modelList[self.CLSVOF_model].ebqe[('u', 0)] #Dirichlet BCs for level set. I don't have it since I impose 1 or -1. Therefore I attach the soln at boundary
@@ -456,7 +473,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else: # use NCLS-RDLS-VOF-MCorr instead
             if self.LS_model is not None:
                 self.q_phi = modelList[self.LS_model].q[('u', 0)]
-                self.phi_dof = modelList[self.LS_model].u[0].dof
                 if ('u', 0) in modelList[self.LS_model].ebq:
                     self.ebq_phi = modelList[self.LS_model].ebq[('u', 0)]
                 else:
@@ -472,7 +488,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
             else:
                 self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
-                self.phi_dof = -numpy.ones_like(self.model.u[0].dof)
                 self.ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.bc_ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
@@ -540,26 +555,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     he = self.elementDiameter[i]
                     self.ebqe_phi[i, j] = self.phaseFunction(pt)
                     self.ebqe_vf[i, j] = smoothedHeaviside(self.epsFact * he, self.phaseFunction(pt))
-        self.particle_signed_distances        = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1]),'d')
-        self.particle_signed_distance_normals = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
-        self.particle_velocities              = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
-        self.phisField                        = 1e10*numpy.ones((self.model.q['x'].shape[0],self.model.q['x'].shape[1]), 'd')
-        self.ebq_global_phi_s        = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1]),'d') * 1e10
-        self.ebq_global_grad_phi_s   = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
-        self.ebq_particle_velocity_s = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
-        self.p_old_dof = self.model.u[0].dof.copy()
-        self.u_old_dof = self.model.u[1].dof.copy()
-        self.v_old_dof = self.model.u[2].dof.copy()
-        self.w_old_dof = self.model.u[3].dof.copy()
 
     def initializeMesh(self, mesh):
-        
-        self.phi_s = numpy.ones(mesh.nodeArray.shape[0], 'd')*1e10#
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
         self.eps_viscosity = self.epsFact * mesh.h
         self.mesh = mesh
         self.elementMaterialTypes = mesh.elementMaterialTypes
+        self.eps_source = self.epsFact_source * mesh.h
         nBoundariesMax = int(globalMax(max(self.mesh.elementBoundaryMaterialTypes))) + 1
         self.wettedAreas = numpy.zeros((nBoundariesMax,), 'd')
         self.netForces_p = numpy.zeros((nBoundariesMax, 3), 'd')
@@ -570,15 +573,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         comm = Comm.get()
         import os
         if comm.isMaster():
-            self.timeHistory = open(os.path.join(proteus.Profiling.logDir, "timeHistory.txt"), "w")
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir, "wettedAreaHistory.txt"), "w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir, "forceHistory_v.txt"), "w")
             self.momentHistory = open(os.path.join(proteus.Profiling.logDir, "momentHistory.txt"), "w")
             if self.nParticles:
                 self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_forceHistory.txt"), "w")
-                self.particle_pforceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_pforceHistory.txt"), "w")
-                self.particle_vforceHistory = open(os.path.join(proteus.Profiling.logDir, "particle_vforceHistory.txt"), "w")
                 self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir, "particle_momentHistory.txt"), "w")
         self.comm = comm
     # initialize so it can run as single phase
@@ -703,13 +703,148 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def updateToMovingDomain(self, t, c):
         pass
 
+    def evaluateForcingTerms(self, t, c, mesh=None, mesh_trial_ref=None, mesh_l2g=None):
+        if 'x' in c and len(c['x'].shape) == 3:
+            if self.nd == 2:
+                c[('r', 0)].fill(0.0)
+                eps_source = self.eps_source
+                if self.waveFlag == 1:  # secondOrderStokes:
+                    waveFunctions.secondOrderStokesWave(c[('r', 0)].shape[0],
+                                                        c[('r', 0)].shape[1],
+                                                        self.waveHeight,
+                                                        self.waveCelerity,
+                                                        self.waveFrequency,
+                                                        self.waveNumber,
+                                                        self.waterDepth,
+                                                        self.Omega_s[0][0],
+                                                        self.Omega_s[0][1],
+                                                        self.Omega_s[1][0],
+                                                        self.Omega_s[1][1],
+                                                        eps_source,
+                                                        c['x'],
+                                                        c[('r', 0)],
+                                                        t)
+                elif self.waveFlag == 2:  # solitary wave
+                    waveFunctions.solitaryWave(c[('r', 0)].shape[0],
+                                               c[('r', 0)].shape[1],
+                                               self.waveHeight,
+                                               self.waveCelerity,
+                                               self.waveFrequency,
+                                               self.waterDepth,
+                                               self.Omega_s[0][0],
+                                               self.Omega_s[0][1],
+                                               self.Omega_s[1][0],
+                                               self.Omega_s[1][1],
+                                               eps_source,
+                                               c['x'],
+                                               c[('r', 0)],
+                                               t)
+
+                elif self.waveFlag == 0:
+                    waveFunctions.monochromaticWave(c[('r', 0)].shape[0],
+                                                    c[('r', 0)].shape[1],
+                                                    self.waveHeight,
+                                                    self.waveCelerity,
+                                                    self.waveFrequency,
+                                                    self.Omega_s[0][0],
+                                                    self.Omega_s[0][1],
+                                                    self.Omega_s[1][0],
+                                                    self.Omega_s[1][1],
+                                                    eps_source,
+                                                    c['x'],
+                                                    c[('r', 0)],
+                                                    t)
+
+                # mwf debug
+                if numpy.isnan(c[('r', 0)].any()):
+                    import pdb
+                    pdb.set_trace()
+            else:
+                c[('r', 0)].fill(0.0)
+                eps_source = self.eps_source
+                if self.waveFlag == 1:  # secondOrderStokes:
+                    waveFunctions.secondOrderStokesWave3d(c[('r', 0)].shape[0],
+                                                          c[('r', 0)].shape[1],
+                                                          self.waveHeight,
+                                                          self.waveCelerity,
+                                                          self.waveFrequency,
+                                                          self.waveNumber,
+                                                          self.waterDepth,
+                                                          self.Omega_s[0][0],
+                                                          self.Omega_s[0][1],
+                                                          self.Omega_s[1][0],
+                                                          self.Omega_s[1][1],
+                                                          self.Omega_s[2][0],
+                                                          self.Omega_s[2][1],
+                                                          eps_source,
+                                                          c['x'],
+                                                          c[('r', 0)],
+                                                          t)
+                elif self.waveFlag == 2:  # solitary wave
+                    waveFunctions.solitaryWave3d(c[('r', 0)].shape[0],
+                                                 c[('r', 0)].shape[1],
+                                                 self.waveHeight,
+                                                 self.waveCelerity,
+                                                 self.waveFrequency,
+                                                 self.waterDepth,
+                                                 self.Omega_s[0][0],
+                                                 self.Omega_s[0][1],
+                                                 self.Omega_s[1][0],
+                                                 self.Omega_s[1][1],
+                                                 self.Omega_s[2][0],
+                                                 self.Omega_s[2][1],
+                                                 eps_source,
+                                                 c['x'],
+                                                 c[('r', 0)],
+                                                 t)
+
+                elif self.waveFlag == 0:
+                    waveFunctions.monochromaticWave3d(c[('r', 0)].shape[0],
+                                                      c[('r', 0)].shape[1],
+                                                      self.waveHeight,
+                                                      self.waveCelerity,
+                                                      self.waveFrequency,
+                                                      self.Omega_s[0][0],
+                                                      self.Omega_s[0][1],
+                                                      self.Omega_s[1][0],
+                                                      self.Omega_s[1][1],
+                                                      self.Omega_s[2][0],
+                                                      self.Omega_s[2][1],
+                                                      eps_source,
+                                                      c['x'],
+                                                      c[('r', 0)],
+                                                      t)
+
+        else:
+            assert mesh is not None
+            assert mesh_trial_ref is not None
+            assert mesh_l2g is not None
+            # cek hack
+            pass
+        #            self.calculateWaveFunction3d_ref(mesh_trial_ref,
+        #                                     mesh.nodeArray,
+        #                                     mesh_l2g,
+        #                                     mesh.elementDiametersArray,
+        #                                     numpy.array(self.Omega_s[0]),
+        #                                     numpy.array(self.Omega_s[1]),
+        #                                     numpy.array(self.Omega_s[2]),
+        #                                     t,
+        #                                     self.waveFlag,
+        #                                     self.epsFact_source,
+        #                                     self.waveHeight,
+        #                                     self.waveCelerity,
+        #                                     self.waveFrequency,
+        #                                     self.waveNumber,
+        #                                     self.waterDepth,
+        #                                     c[('r',0)])
+
     def evaluate(self, t, c):
         pass
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
 
-        #calculating kinetic energy
+        #import pdb; pdb.set_trace()
         self.model.q['speed']=self.model.q['speed']*0.0; 
         for i in range(0,self.model.nSpace_global):
             self.model.q['speed'] += numpy.multiply(self.model.q[('velocity',0)][:,:,i],self.model.q[('velocity',0)][:,:,i]) 
@@ -717,7 +852,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         KE = Norms.scalarDomainIntegral(self.model.q['dV'],
                                         self.model.q['KE'],
                                         self.model.mesh.nElements_owned)
-        logEvent("Pre-step NS, Kinetic Energy = %.15e" % (KE), level=5)
+        logEvent("Pre-step NS, Kinetic Energy = %.15e" % (KE), level=0)
         #import pdb; pdb.set_trace()
         #self.model.q['PE'] = numpy.multiply(self.model.q['x'],self.model.coefficients.g)
         #self.model.q['PE'] = numpy.sum(self.model.q['PE'],2)
@@ -729,36 +864,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #logEvent("Pre-step NS, Potential Energy = %12.5e" % (PE), level=0)
         #logEvent("Pre-step NS, Total Energy = %12.5e" % (PE+KE), level=0)
 
-        #pass
-        if self.nParticles > 0 and self.use_ball_as_particle == 0:
-            self.phi_s[:] = 1e10
-            self.phisField[:] = 1e10
-            self.ebq_global_phi_s[:] = 1e10
-            self.ebq_global_grad_phi_s[:] = 1e10
-            self.ebq_particle_velocity_s[:] = 1e10
-
-            for i in range(self.nParticles):
-                vel = lambda x: self.particle_velocityList[i](t, x)
-                sdf = lambda x: self.particle_sdfList[i](t, x)
-
-                for j in range(self.mesh.nodeArray.shape[0]):
-                    sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
-                    if (sdf_at_node < self.phi_s[j]):
-                        self.phi_s[j] = sdf_at_node
-                for eN in range(self.model.q['x'].shape[0]):
-                    for k in range(self.model.q['x'].shape[1]):
-                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k] = sdf(self.model.q['x'][eN, k])
-                        self.particle_velocities[i, eN, k] = vel(self.model.q['x'][eN, k])
-                        if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
-                            self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
-                for ebN in range(self.model.ebq_global['x'].shape[0]):
-                    for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf_ebN_kb,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb])
-                        if ( sdf_ebN_kb < self.ebq_global_phi_s[ebN,kb]):
-                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
-                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
-                            self.ebq_particle_velocity_s[ebN,kb,:] = vel(self.model.ebq_global['x'][ebN,kb])
-
+        pass
         # if self.comm.isMaster():
         # print "wettedAreas"
         # print self.wettedAreas[:]
@@ -777,7 +883,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         KE = Norms.scalarDomainIntegral(self.model.q['dV'],
                                         self.model.q['KE'],
                                         self.model.mesh.nElements_owned)
-        logEvent("Post-step NS, Kinetic Energy = %.15e" % (KE), level=5)
+        logEvent("Post-step NS, Kinetic Energy = %.15e" % (KE), level=0)
         #import pdb; pdb.set_trace()
         #self.model.q['PE'] = numpy.multiply(self.model.q['x'],self.model.coefficients.g)
         #self.model.q['PE'] = numpy.sum(self.model.q['PE'],2)
@@ -789,16 +895,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #logEvent("Post-step NS, Potential Energy = %12.5e" % (PE), level=0)
         #logEvent("Post-step NS, Total Energy = %12.5e" % (PE+KE), level=0)
         if self.comm.isMaster():
-            # logEvent("wettedAreas\n"+
-            #          repr(self.wettedAreas[:]) +
-            #          "\nForces_p\n" +
-            #          repr(self.netForces_p[:,:]) +
-            #          "\nForces_v\n" +
-            #          repr(self.netForces_v[:,:]))
-            self.timeHistory.write("%21.16e\n" % (t,))
-            self.timeHistory.flush()
+            logEvent("wettedAreas\n"+
+                     `self.wettedAreas[:]` +
+                     "\nForces_p\n" +
+                     `self.netForces_p[:,:]` +
+                     "\nForces_v\n" +
+                     `self.netForces_v[:,:]`)
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
-            self.wettedAreaHistory.flush()
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
             self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_v[-1, :]))
@@ -808,12 +911,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if self.nParticles:
                 self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
                 self.particle_forceHistory.flush()
-                self.particle_pforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+self.nParticles, :]))
-                self.particle_pforceHistory.flush()
-                self.particle_vforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+2*self.nParticles, :]))
-                self.particle_vforceHistory.flush()
                 self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
                 self.particle_momentHistory.flush()
+
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
@@ -841,7 +941,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reactionLumping=False,
                  options=None,
                  name='RANS2P',
-                 reuse_trial_and_test_quadrature=False,
+                 reuse_trial_and_test_quadrature=True,
                  sd=True,
                  movingDomain=False):
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
@@ -870,6 +970,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi = phiDict
         self.dphi = {}
         self.matType = matType
+        self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
+        if self.reuse_test_trial_quadrature:
+            for ci in range(1, coefficients.nc):
+                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         # Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh  # assume the same mesh for  all components for now
         self.par_info = LinearAlgebraTools.ParInfo_petsc4py()
@@ -1296,14 +1400,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent(memory("TimeIntegration", "OneLevelTransport"), level=4)
         logEvent("Calculating numerical quadrature formulas", 2)
         self.calculateQuadrature()
-        if numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions:
-            interleave_DOF=True
-            for nDOF_trial_element_ci in self.nDOF_trial_element:
-                if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
-                    interleave_DOF=False
-        else:
-            interleave_DOF=False
-        self.setupFieldStrides(interleave_DOF)
+
+        self.setupFieldStrides()
         comm = Comm.get()
         self.comm = comm
         if comm.size() > 1:
@@ -1391,8 +1489,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter = self.mesh.elementDiametersArray
         if self.nSpace_global == 2:
             import copy
-            self.u[3] = self.u[2].copy()
-            self.u[3].name="w"
+            self.u[3] = copy.deepcopy(self.u[2])
             self.timeIntegration.m_tmp[3] = self.timeIntegration.m_tmp[2].copy()
             self.timeIntegration.beta_bdf[3] = self.timeIntegration.beta_bdf[2].copy()
             self.coefficients.sdInfo[(1, 3)] = (numpy.array([0, 1, 2], dtype='i'),
@@ -1417,19 +1514,41 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                          self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                          self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                          self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
-                                         self.u[1].femSpace.referenceFiniteElement.localFunctionSpace.dim,
-                                         self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                                          compKernelFlag)
         else:
+            import copy
+            self.u[4] = copy.deepcopy(self.u[3])
+            self.timeIntegration.m_tmp[4] = self.timeIntegration.m_tmp[3].copy()
+            self.timeIntegration.beta_bdf[4] = self.timeIntegration.beta_bdf[3].copy()
+            self.coefficients.sdInfo[(1, 4)] = (numpy.array([0, 1, 2, 3], dtype='i'),
+                                                numpy.array([0, 1, 2], dtype='i'))
+            self.coefficients.sdInfo[(2, 4)] = (numpy.array([0, 1, 2,3 ], dtype='i'),
+                                                numpy.array([0, 1], dtype='i'))
+            self.coefficients.sdInfo[(3, 4)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 0)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 1)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 2)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 3)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+            self.coefficients.sdInfo[(4, 4)] = (numpy.array([0, 1, 2,3], dtype='i'),
+                                                numpy.array([0, 1,2], dtype='i'))
+
+            self.offset.append(self.offset[3])
+            self.stride.append(self.stride[3])
+            self.numericalFlux.isDOFBoundary[4] = self.numericalFlux.isDOFBoundary[3].copy()
+            self.numericalFlux.ebqe[('u', 4)] = self.numericalFlux.ebqe[('u', 3)].copy()
+
             logEvent("calling  cRANS2P_base ctor")
             self.rans2p = cRANS2P_base(self.nSpace_global,
                                        self.nQuadraturePoints_element,
                                        self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                        self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                        self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
-                                       self.u[1].femSpace.referenceFiniteElement.localFunctionSpace.dim,
-                                       self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
         self.velocityErrorNodal = self.u[0].dof.copy()
@@ -1477,6 +1596,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         self.Ct_sge = 4.0
         self.Cd_sge = 36.0
+        # TODO how to request problem specific evaluations from coefficient class
+        if 'evaluateForcingTerms' in dir(self.coefficients):
+            self.coefficients.evaluateForcingTerms(self.timeIntegration.t, self.q, self.mesh,
+                                                   self.u[0].femSpace.elementMaps.psi, self.mesh.elementNodesArray)
         self.coefficients.wettedAreas[:] = 0.0
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
@@ -1507,7 +1630,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.mesh.nodeVelocityArray,
                                       self.MOVING_DOMAIN,
                                       self.mesh.elementNodesArray,
-                                      self.elementQuadraturePoints,
                                       self.elementQuadratureWeights[('u', 0)],
                                       self.u[0].femSpace.psi,
                                       self.u[0].femSpace.grad_psi,
@@ -1579,16 +1701,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.u[1].dof,
                                       self.u[2].dof,
                                       self.u[3].dof,
-                                      self.coefficients.p_old_dof,
-                                      self.coefficients.u_old_dof,
-                                      self.coefficients.v_old_dof,
-                                      self.coefficients.w_old_dof,
                                       self.coefficients.g,
                                       self.coefficients.useVF,
                                       self.q['rho'],
                                       self.coefficients.q_vf,
                                       self.coefficients.q_phi,
-                                      self.coefficients.phi_dof,
                                       self.coefficients.q_n,
                                       self.coefficients.q_kappa,
                                       self.timeIntegration.m_tmp[1],
@@ -1680,16 +1797,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
-                                      self.coefficients.ball_center_acceleration,
-                                      self.coefficients.ball_angular_acceleration,
-                                      self.coefficients.ball_density,
-                                      self.coefficients.particle_signed_distances,
-                                      self.coefficients.particle_signed_distance_normals,
-                                      self.coefficients.particle_velocities,
-                                      self.coefficients.particle_centroids,
-                                      self.coefficients.ebq_global_phi_s,
-                                      self.coefficients.ebq_global_grad_phi_s,
-                                      self.coefficients.ebq_particle_velocity_s,
                                       self.coefficients.nParticles,
                                       self.coefficients.particle_netForces,
                                       self.coefficients.particle_netMoments,
@@ -1699,30 +1806,43 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_epsFact,
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
-                                      self.coefficients.particle_penalty_constant,
-                                      self.coefficients.phi_s,
-                                      self.coefficients.phisField,
-                                      self.coefficients.use_pseudo_penalty,
-                                      self.coefficients.useExact)
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
-        
-        comm.Allreduce(self.coefficients.wettedAreas.copy(),self.coefficients.wettedAreas)
-        comm.Allreduce(self.coefficients.netForces_p.copy(),self.coefficients.netForces_p)
-        comm.Allreduce(self.coefficients.netForces_v.copy(),self.coefficients.netForces_v)
-        comm.Allreduce(self.coefficients.netMoments.copy(),self.coefficients.netMoments)
-        
-        comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
-        comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
-        comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),self.coefficients.particle_surfaceArea)
-        
+                                      self.coefficients.particle_penalty_constant)
+        from proteus.flcbdfWrappers import globalSum
+        for i in range(self.coefficients.netForces_p.shape[0]):
+            self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
+            for I in range(3):
+                self.coefficients.netForces_p[i, I] = globalSum(self.coefficients.netForces_p[i, I])
+                self.coefficients.netForces_v[i, I] = globalSum(self.coefficients.netForces_v[i, I])
+                self.coefficients.netMoments[i, I] = globalSum(self.coefficients.netMoments[i, I])
+                #cek hack, testing 6DOF motion
+                #self.coefficients.netForces_p[i,I] = 0.0
+                #self.coefficients.netForces_v[i,I] = 0.0
+                #self.coefficients.netMoments[i,I] = 0.0
+                #if I==0:
+                #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi))/4.0
+                #if I==1:
+                #    self.coefficients.netForces_p[i,I] = (125.0* math.pi**2 * 0.125*math.cos(self.timeIntegration.t*math.pi) + 125.0*9.81)/4.0
+                #if I==2:
+                #    self.coefficients.netMoments[i,I] = (4.05* math.pi**2 * (math.pi/4.0)*math.cos(self.timeIntegration.t*math.pi))/4.0
         for i in range(self.coefficients.nParticles):
+            for I in range(3):
+                self.coefficients.particle_netForces[i, I] = globalSum(
+                    self.coefficients.particle_netForces[i, I])
+                self.coefficients.particle_netForces[i+self.coefficients.nParticles, I] = globalSum(
+                    self.coefficients.particle_netForces[i+self.coefficients.nParticles, I])
+                self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I] = globalSum(
+                    self.coefficients.particle_netForces[i+2*self.coefficients.nParticles, I])
+                self.coefficients.particle_netMoments[i, I] = globalSum(
+                    self.coefficients.particle_netMoments[i, I])
+            self.coefficients.particle_surfaceArea[i] = globalSum(
+                self.coefficients.particle_surfaceArea[i])
             logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
             logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
             logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
             logEvent("particle i=" + repr(i)+ " stress force " + repr(self.coefficients.particle_netForces[i+self.coefficients.nParticles]))
             logEvent("particle i=" + repr(i)+ " pressure force " + repr(self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]))
 
+        
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
@@ -1781,7 +1901,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.mesh.nodeVelocityArray,
                                       self.MOVING_DOMAIN,
                                       self.mesh.elementNodesArray,
-                                      self.elementQuadraturePoints,
                                       self.elementQuadratureWeights[('u', 0)],
                                       self.u[0].femSpace.psi,
                                       self.u[0].femSpace.grad_psi,
@@ -1847,15 +1966,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.u[1].dof,
                                       self.u[2].dof,
                                       self.u[3].dof,
-                                      self.coefficients.p_old_dof,
-                                      self.coefficients.u_old_dof,
-                                      self.coefficients.v_old_dof,
-                                      self.coefficients.w_old_dof,
                                       self.coefficients.g,
                                       self.coefficients.useVF,
                                       self.coefficients.q_vf,
                                       self.coefficients.q_phi,
-                                      self.coefficients.phi_dof,
                                       self.coefficients.q_n,
                                       self.coefficients.q_kappa,
                                       self.timeIntegration.beta_bdf[1],
@@ -1955,27 +2069,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
                                       self.coefficients.ball_angular_velocity,
-                                      self.coefficients.ball_center_acceleration,
-                                      self.coefficients.ball_angular_acceleration,
-                                      self.coefficients.ball_density,
-                                      self.coefficients.particle_signed_distances,
-                                      self.coefficients.particle_signed_distance_normals,
-                                      self.coefficients.particle_velocities,
-                                      self.coefficients.particle_centroids,
-                                      self.coefficients.ebq_global_phi_s,
-                                      self.coefficients.ebq_global_grad_phi_s,
-                                      self.coefficients.ebq_particle_velocity_s,
-                                      self.coefficients.phi_s,
-                                      self.coefficients.phisField,
                                       self.coefficients.nParticles,
                                       self.mesh.nElements_owned,
                                       self.coefficients.particle_nitsche,
                                       self.coefficients.particle_epsFact,
                                       self.coefficients.particle_alpha,
                                       self.coefficients.particle_beta,
-                                      self.coefficients.particle_penalty_constant,
-                                      self.coefficients.use_pseudo_penalty,
-                                      self.coefficients.useExact)
+                                      self.coefficients.particle_penalty_constant)
         
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
