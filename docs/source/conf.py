@@ -14,7 +14,7 @@
 
 import sys
 import os
-import sphinx_bootstrap_theme
+# import sphinx_bootstrap_theme
 
 try:
     import proteus
@@ -33,7 +33,7 @@ except ImportError:
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
+# ones)
 extensions = [
 #    'matplotlib.sphinxext.mathmpl',
 #    'matplotlib.sphinxext.only_directives',
@@ -50,6 +50,8 @@ extensions = [
 #    'sphinx.ext.viewcode',
     'sphinx.ext.linkcode',
     'sphinx.ext.napoleon',
+    'breathe',
+#    'exhale',
 #    'IPython.sphinxext.ipython_console_highlighting',
 #    'IPython.sphinxext.ipython_directive',
 ]
@@ -64,6 +66,7 @@ autosummary_generate = True
 
 autodoc_docstring_signature = True
 
+
 #autodoc_mock_imports = True
 
 def linkcode_resolve(domain, info):
@@ -74,10 +77,13 @@ def linkcode_resolve(domain, info):
         return None
     filename = info['module'].replace('.', '/')
     suffix='py'
+    module_name = importlib.import_module(info['module']).__file__[:-3]
     module_suffix = importlib.import_module(info['module']).__file__[-2:]
     if module_suffix  == 'so':
-        suffix = 'pyx'
-    return "https://github.com/erdc-cm/proteus/tree/master/%s.%s" % (filename, suffix)
+        # change source only if it is not a "pure python" cython module
+        if not os.path.isfile(module_name+'.py'):
+            suffix = 'pyx'
+    return "https://github.com/erdc/proteus/tree/master/%s.%s" % (filename, suffix)
 
 autoclass_content = 'both'
 
@@ -97,7 +103,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Proteus'
-copyright = u'2017, The Proteus Team'
+copyright = u'2020, The Proteus Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -151,78 +157,35 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'bootstrap'#'sphinxdoc'
+html_theme = 'sphinx_rtd_theme'#'sphinxdoc'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {'bootswatch_theme':'spacelab'}
 html_theme_options = {
-    # Navigation bar title. (Default: ``project`` value)
-    'navbar_title': "proteus",
-
-    # Tab name for entire site. (Default: "Site")
-    'navbar_site_name': "Site",
-
-    # Tab name for the current pages TOC. (Default: "Page")
-    'navbar_pagenav_name': "Page",
-
-    # A list of tuples containing pages or urls to link to.
-    # Valid tuples should be in the following forms:
-    #    (name, page)                 # a link to a page
-    #    (name, "/aa/bb", 1)          # a link to an arbitrary relative url
-    #    (name, "http://example.com", True) # arbitrary absolute url
-    # Note the "1" or "True" value above as the third argument to indicate
-    # an arbitrary url.
-    # 'navbar_links': [
-    #     ("Examples", "examples"),
-    #     ("Link", "http://example.com", True),
-    # ],
-    'navbar_links': [("API","api/proteus"),
-                     ("C/C++/Fortran","capi/html/hierarchy")],
-    # Global TOC depth for "site" navbar tab. (Default: 1)
-    # Switching to -1 shows all levels.
-    'globaltoc_depth': 2,
-
-    # Include hidden TOCs in Site navbar?
-    #
-    # Note: If this is "false", you cannot have mixed ``:hidden:`` and
-    # non-hidden ``toctree`` directives in the same page, or else the build
-    # will break.
-    #
-    # Values: "true" (default) or "false"
-    'globaltoc_includehidden': "true",
-
-    # HTML navbar class (Default: "navbar") to attach to <div> element.
-    # For black navbar, do "navbar navbar-inverse"
-    'navbar_class': "navbar",
-
-    # Fix navigation bar to top of page?
-    # Values: "true" (default) or "false"
-    'navbar_fixed_top': "true",
-
-    # Location of link to source.
-    # Options are "nav" (default), "footer" or anything else to exclude.
-    'source_link_position': "nav",
-
-    # Bootswatch (http://bootswatch.com/) theme.
-    #
-    # Options are nothing (default) or the name of a valid theme such
-    # as "amelia" or "cosmo".
-    #
-    # Example themes:
-    # * flatly
-    # * sandstone (v3 only)
-    # * united
-    # * yeti (v3 only)
-    'bootswatch_theme': "spacelab",
-
-    # Choose Bootstrap version.
-    # Values: "3" (default) or "2" (in quotes)
-    'bootstrap_version': "3",
+    'canonical_url': '',
+    'analytics_id': '',
+    'logo_only': True,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': False,
+    # 'vcs_pageview_mode': '',
+    # Toc options
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 5,
+    'includehidden': True,
+    'titles_only': False
+}
+html_context = {
+    "display_github": True, # Integrate GitHub
+    "github_user": "erdc", # Username
+    "github_repo": "proteus", # Repo name
+    "github_version": "master", # Version
+    "conf_py_path": "docs/source/", # Path in the checkout to the docs root
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+# html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -233,7 +196,7 @@ html_short_title = u"Proteus"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = "corps_logo_cross_24.svg"
+html_logo = "_static/corps_logo_cross2.svg"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -260,7 +223,7 @@ html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
-html_sidebars = {'sidebar': ['localtoc.html', 'sourcelink.html', 'searchbox.html']}
+html_sidebars = {'**': ['globaltoc.html', 'sourcelink.html', 'searchbox.html']}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -295,7 +258,7 @@ html_show_copyright = True
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'Proteusdoc'
 
-intersphinx_mapping = {'python': ('http://docs.python.org/2/', None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/2/', None)}
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -385,7 +348,7 @@ texinfo_documents = [
 epub_title = u'Proteus'
 epub_author = u'The Proteus Team'
 epub_publisher = u'The Proteus Team'
-epub_copyright = u'2015, The Proteus Team'
+epub_copyright = u'2020, The Proteus Team'
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = u'Proteus'
@@ -453,3 +416,37 @@ todo_include_todos = False
 graphviz_output_format = 'svg'
 
 mathjax_pth = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTM"
+
+breathe_projects = {
+    "Proteus C++": "../build/capi/xml"
+}
+breathe_default_project = "Proteus C++"
+
+#import textwrap
+#exhaleDoxygenStdin = textwrap.dedent('''
+#INPUT                  = ../../proteus
+#RECURSIVE              = YES
+#FULL_PATH_NAMES        = YES
+#EXTRACT_ALL            = YES
+#GENERATE_HTML          = YES
+#GENERATE_XML           = YES
+#USE_MATHJAX            = YES
+#MATHJAX_RELPATH        = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"
+#MATHJAX_EXTENSIONS     = TeX-AMS-MML_HTMLorMML
+#''')
+#
+#exhale_args = {
+#    # These arguments are required
+#    "containmentFolder":     "./capi",
+#    "rootFileName":          "cmodules.rst",
+#    "rootFileTitle":         "C/C++ API",
+#    "doxygenStripFromPath":  "../../proteus",
+#    # Suggested optional arguments
+#    "createTreeView":        True,
+#    "verboseBuild":          True,
+#    # TIP: if using the sphinx-bootstrap-theme, you need
+#    # "treeViewIsBootstrap": True,
+#    "exhaleExecutesDoxygen": True,
+#    #"exhaleUseDoxyfile": True,
+#    "exhaleDoxygenStdin":    exhaleDoxygenStdin
+#}

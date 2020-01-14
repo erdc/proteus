@@ -1,3 +1,9 @@
+# Proteus Documentation
+
+Accessible at https://erdc.github.io/proteus
+
+## Description
+
 This is the root directory of the documentation. The documentation is
 built from reStructuredText and the python docstrings using sphinx. To
 build the html type 'make html' or see the Makefile for additional
@@ -10,3 +16,30 @@ the files. The scripts and test/problemDescriptions paths are thus
 appended in conf.py so that these modules, though not part of the
 proteus module, are accessible to python during the sphinx build
 process.
+
+## Build Proteus Documentation Locally
+
+Make sure dependencies specific to generation of the documentation are
+installed:
+
+```bash
+pip install sphinx sphinx_rtd_theme breathe exhale
+```
+
+Make sure that proteus is installed, then from this folder:
+
+```bash
+make html
+```
+
+The documentation can then be viewed in your favorite browser by opening
+`./build/index.html`
+
+
+## Edit or Add Files
+
+All source files are in the `source/` directory:
+- **Index file:** `source/index.rst`
+- **Models files:** `source/models/[...].rst`
+- **Tools files:** `source/tools/[...].rst`
+
