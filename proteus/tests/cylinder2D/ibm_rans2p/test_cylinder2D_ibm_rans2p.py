@@ -51,7 +51,6 @@ class Test_ibm():
     def test_ex2(self):
         self.compare_name = "T1_ibm_rans2p"
         self.example_setting("T=0.01 onlySaveFinalSolution=True")
-        self.teardown_method(self)
 
 
     def example_setting(self, pre_setting):
