@@ -53,6 +53,21 @@ ext_modules = [
         ],
         language='c++'
     ),
+    Extension(
+        'SedClosure',
+        ['SedClosure.cpp'],
+        depends=['SedClosure.hpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            get_pybind_include(),
+            get_pybind_include(user=True),
+            get_numpy_include(),
+            os.path.join(sys.prefix, 'include'),
+            os.path.join(sys.prefix, 'Library', 'include'),
+            '../'
+        ],
+        language='c++'
+    ),
 ]
 
 

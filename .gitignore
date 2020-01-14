@@ -36,6 +36,7 @@ proteus/subsurfaceTransportFunctions.c
 cygwin_bootstrap.done
 matlab_setup.done
 dist/
+tmp/
 
 # Generated files
 
