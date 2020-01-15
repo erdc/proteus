@@ -379,6 +379,7 @@ elif opts.TwoPhaseFlow:
     prob = None
     for contextObject in ct:
         if isinstance(contextObject,proteus.TwoPhaseFlow.TwoPhaseFlowProblem.TwoPhaseFlowProblem):
+            assert prob is None, 'More than one TwoPhaseFlowProblem object found'
             prob = contextObject
     assert prob is not None, "No TwoPhaseFlowProblem object found"
 
