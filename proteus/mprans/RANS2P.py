@@ -559,7 +559,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_signed_distance_normals = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
         self.particle_velocities              = 1e10*numpy.ones((self.nParticles,self.model.q['x'].shape[0],self.model.q['x'].shape[1], 3),'d')
         self.phisField                        = 1e10*numpy.ones((self.model.q['x'].shape[0],self.model.q['x'].shape[1]), 'd')
-        self.ebq_global_phi_s        = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1]),'d') * 1e10
+        self.ebqe_phi_s        = numpy.ones((self.model.ebqe['x'].shape[0],self.model.ebqe['x'].shape[1]),'d') * 1e10
         self.ebq_global_grad_phi_s   = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
         self.ebq_particle_velocity_s = numpy.ones((self.model.ebq_global['x'].shape[0],self.model.ebq_global['x'].shape[1],3),'d') * 1e10
         self.p_old_dof = self.model.u[0].dof.copy()
@@ -749,31 +749,27 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.nParticles > 0 and self.use_ball_as_particle == 0:
             self.phi_s[:] = 1e10
             self.phisField[:] = 1e10
-            self.ebq_global_phi_s[:] = 1e10
+            self.ebqe_phi_s[:] = 1e10
             self.ebq_global_grad_phi_s[:] = 1e10
             self.ebq_particle_velocity_s[:] = 1e10
-
             for i in range(self.nParticles):
                 vel = lambda x: self.particle_velocityList[i](t, x)
                 sdf = lambda x: self.particle_sdfList[i](t, x)
                 for j in range(self.mesh.nodeArray.shape[0]):
                     sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
-                    if (abs(sdf_at_node) < abs(self.phi_s[j])):
+                    if (sdf_at_node < self.phi_s[j]):
                         self.phi_s[j] = sdf_at_node
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k,:] = sdf(self.model.q['x'][eN, k])
                         self.particle_velocities[i, eN, k,:] = vel(self.model.q['x'][eN, k])
-                        if (abs(self.particle_signed_distances[i, eN, k]) < abs(self.phisField[eN, k])):
+                        if (self.particle_signed_distances[i, eN, k] < self.phisField[eN, k]):
                             self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
-                for ebN in range(self.model.ebq_global['x'].shape[0]):
-                    for kb in range(self.model.ebq_global['x'].shape[1]):
-                        sdf_ebN_kb,sdNormals = sdf(self.model.ebq_global['x'][ebN,kb])
-                        if ( sdf_ebN_kb < self.ebq_global_phi_s[ebN,kb]):
-                            self.ebq_global_phi_s[ebN,kb]=sdf_ebN_kb
-                            self.ebq_global_grad_phi_s[ebN,kb,:]=sdNormals
-                            self.ebq_particle_velocity_s[ebN,kb,:] = vel(self.model.ebq_global['x'][ebN,kb])
-
+                for ebNE in range(self.model.ebqe['x'].shape[0]):
+                    for kb in range(self.model.ebqe['x'].shape[1]):
+                        sdf_ebNE_kb,sdNormals = sdf(self.model.ebqe['x'][ebNE,kb])
+                        if (sdf_ebNE_kb < self.ebqe_phi_s[ebNE,kb]):
+                            self.ebqe_phi_s[ebNE,kb]=sdf_ebNE_kb
         # if self.comm.isMaster():
         # print "wettedAreas"
         # print self.wettedAreas[:]
@@ -1515,8 +1511,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         if self.MOVING_DOMAIN == 1.0:
                             self.u[cj].dof[dofN] += self.mesh.nodeVelocityArray[dofN, cj - 1]
         #print("ball velocity", self.coefficients.ball_velocity)
-        assert (self.u[0].femSpace.dofMap.l2g == self.l2g[0]['freeGlobal']).all()
-        assert (self.u[1].femSpace.dofMap.l2g == self.l2g[1]['freeGlobal']).all()
+        #assert (self.u[0].femSpace.dofMap.l2g == self.l2g[0]['freeGlobal']).all()
+        #assert (self.u[1].femSpace.dofMap.l2g == self.l2g[1]['freeGlobal']).all()
         self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
                                       self.coefficients.MOMENTUM_SGE,
                                       self.coefficients.PRESSURE_SGE,
@@ -1717,7 +1713,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_signed_distance_normals,
                                       self.coefficients.particle_velocities,
                                       self.coefficients.particle_centroids,
-                                      self.coefficients.ebq_global_phi_s,
+                                      self.coefficients.ebqe_phi_s,
                                       self.coefficients.ebq_global_grad_phi_s,
                                       self.coefficients.ebq_particle_velocity_s,
                                       self.coefficients.nParticles,
@@ -2029,7 +2025,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_signed_distance_normals,
                                       self.coefficients.particle_velocities,
                                       self.coefficients.particle_centroids,
-                                      self.coefficients.ebq_global_phi_s,
+                                      self.coefficients.ebqe_phi_s,
                                       self.coefficients.ebq_global_grad_phi_s,
                                       self.coefficients.ebq_particle_velocity_s,
                                       self.coefficients.phi_s,
@@ -2225,6 +2221,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.u[1].femSpace.psi_trace,
                                                  self.ebqe[('velocity', 0)],
                                                  self.ebq_global[('velocityAverage', 0)])
+            #assert((self.u[0].femSpace.dofMap.l2g == self.mesh.elementNodesArray).all())
             if self.movingDomain:
                 logEvent("Element Quadrature", level=3)
                 self.calculateElementQuadrature(domainMoved=True)
