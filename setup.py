@@ -43,6 +43,88 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
+class get_pybind_include(object):
+    """Helper class to determine the pybind11 include path
+    The purpose of this class is to postpone importing pybind11
+    until it is actually installed, so that the ``get_include()``
+    method can be invoked. """
+
+    def __init__(self, user=False):
+        self.user = user
+
+    def __str__(self):
+        import pybind11
+        return pybind11.get_include(self.user)
+
+
+class get_numpy_include(object):
+    """Helper class to determine the numpy include path
+    The purpose of this class is to postpone importing numpy
+    until it is actually installed, so that the ``get_include()``
+    method can be invoked. """
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        import numpy as np
+        return np.get_include()
+
+MPRANS2_EXTENSIONS = [
+    Extension('mprans2.cAddedMass', ['proteus/mprans2/AddedMass.cpp'],
+              depends=['proteus/mprans2/AddedMass.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              extra_compile_args=PROTEUS_OPT,
+              include_dirs=[
+                  # Path to pybind11 headers
+                  str(get_pybind_include()),
+                  str(get_pybind_include(user=True)),
+                  str(get_numpy_include()),
+                  os.path.join(sys.prefix, 'include'),
+                  os.path.join(sys.prefix, 'Library', 'include'),
+                  'proteus'
+              ]),
+    Extension('mprans2.SedClosure', ['proteus/mprans2/SedClosure.cpp'],
+              depends=['proteus/mprans2/SedClosure.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              extra_compile_args=PROTEUS_OPT,
+              include_dirs=[
+                  # Path to pybind11 headers
+                  str(get_pybind_include()),
+                  str(get_pybind_include(user=True)),
+                  str(get_numpy_include()),
+                  os.path.join(sys.prefix, 'include'),
+                  os.path.join(sys.prefix, 'Library', 'include'),
+                  'proteus'
+              ]),
+    Extension('mprans2.cVOF3P', ['proteus/mprans2/VOF3P.cpp'],
+              depends=['proteus/mprans2/VOF3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              extra_compile_args=PROTEUS_OPT,
+              include_dirs=[
+                  # Path to pybind11 headers
+                  get_pybind_include(),
+                  get_pybind_include(user=True),
+                  get_numpy_include(),
+                  os.path.join(sys.prefix, 'include'),
+                  os.path.join(sys.prefix, 'Library', 'include'),
+                  'proteus'
+              ]),
+    Extension('mprans2.cNCLS3P', ['proteus/mprans2/NCLS3P.cpp'],
+              depends=['proteus/mprans2/NCLS3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              extra_compile_args=PROTEUS_OPT,
+              include_dirs=[
+                  # Path to pybind11 headers
+                  str(get_pybind_include()),
+                  str(get_pybind_include(user=True)),
+                  str(get_numpy_include()),
+                  os.path.join(sys.prefix, 'include'),
+                  os.path.join(sys.prefix, 'Library', 'include'),
+                  'proteus'
+              ])
+]
+
 EXTENSIONS_TO_BUILD = [
     # Extension("MeshAdaptPUMI.MeshAdaptPUMI",
     #           sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
@@ -937,7 +1019,8 @@ def setup_given_extensions(extensions):
     )
 
 def setup_extensions_in_sequential():
-    setup_given_extensions(EXTENSIONS_TO_BUILD)
+    #setup_given_extensions(EXTENSIONS_TO_BUILD)
+    setup_given_extensions(MPRANS2_EXTENSIONS)
 
 def setup_extensions_in_parallel():
     import multiprocessing, logging

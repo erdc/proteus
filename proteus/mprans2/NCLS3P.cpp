@@ -1372,6 +1372,7 @@ namespace proteus
         }
     }
 }
+
 namespace py = pybind11;
 
 PYBIND11_MODULE(cNCLS3P, m)
