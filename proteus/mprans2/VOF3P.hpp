@@ -1,5 +1,5 @@
-#ifndef VOF3P_H
-#define VOF3P_H
+#ifndef VOF3P_HPP
+#define VOF3P_HPP
 
 #include "xtensor-python/pyarray.hpp"
 

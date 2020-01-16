@@ -1,5 +1,5 @@
-#ifndef ADDEDMASS_H
-#define ADDEDMASS_H
+#ifndef ADDEDMASS_HPP
+#define ADDEDMASS_HPP
 
 #include "xtensor-python/pyarray.hpp"
 
