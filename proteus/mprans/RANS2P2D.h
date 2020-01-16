@@ -15,7 +15,7 @@
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
-const double inertial_term=0.0;
+const double inertial_term=1.0;
 namespace proteus
 {
   template<int nSpace, int nP, int nQ, int nEBQ>
@@ -595,19 +595,7 @@ namespace proteus
         nDOF_v_test_X_v_trial_element(nDOF_v_test_element*nDOF_v_trial_element),
         ck(),
         ck_v()
-          {/*        std::cout<<"Constructing RANS2P2D<CompKernelTemplate<"
-                     <<0<<","
-                     <<0<<","
-                     <<0<<","
-                     <<0<<">,"*/
-            /*  <<nSpaceIn<<","
-                <<nQuadraturePoints_elementIn<<","
-                <<nDOF_mesh_trial_elementIn<<","
-                <<nDOF_trial_elementIn<<","
-                <<nDOF_test_elementIn<<","
-                <<nQuadraturePoints_elementBoundaryIn<<">());"*/
-            /*  <<std::endl<<std::flush; */
-          }
+          {}
 
       inline
         void evaluateCoefficients(const double NONCONSERVATIVE_FORM,
@@ -2674,7 +2662,8 @@ namespace proteus
                 //calculate pde coefficients at quadrature points
                 //
                 const double H_s = gf_s.H(particle_eps,phi_solid[eN_k]);
-                if ( H_s != 0.0)
+                const double D_s = gf_s.D(particle_eps,phi_solid[eN_k]);
+                if ( H_s != 0.0 || D_s != 0.0)
                   {
                     element_active=true;
                     elementIsActive[eN]=true;
@@ -2821,6 +2810,7 @@ namespace proteus
                 q_rho[eN_k] = rho;
                 //VRANS
                 mass_source = q_mass_source[eN_k];
+                assert(mass_source == 0.0);
                 //todo: decide if these should be lagged or not?
                 updateDarcyForchheimerTerms_Ergun(NONCONSERVATIVE_FORM,
                                                   /* linearDragFactor, */
@@ -3230,6 +3220,8 @@ namespace proteus
                       }
                     if (nParticles > 0)//solid boundary terms
                       {
+                        if (gf_s.D(0.,0.) == 0.0)
+                          assert(mass_source_s == 0.0);
                         elementResidual_p[i] += H_f*(ck.Reaction_weak(mass_source_s,p_test_dV[i]));
                       }
                   }
@@ -3270,7 +3262,10 @@ namespace proteus
                 numerical_viscosity[eN_k] = q_numDiff_u_last[eN_k] + MOMENTUM_SGE*VELOCITY_SGE*tau_v*(dmom_adv_star[0]*dmom_adv_star[0]+
                                                                                                       dmom_adv_star[1]*dmom_adv_star[1]);
                 if (!elementIsActive[eN])
-                  assert(std::fabs(gf_s.H(particle_eps,phi_solid[eN_k])) <= 1.0e-12);
+                  {
+                    assert(std::fabs(gf_s.H(particle_eps,phi_solid[eN_k])) == 0.0);
+                    assert(std::fabs(gf_s.D(particle_eps,phi_solid[eN_k])) == 0.0);
+                  }
               }//k
           }//fluid_phase
             for(int k=0;k<nQuadraturePoints_element;k++)
