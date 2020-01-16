@@ -220,6 +220,75 @@ Complete Examples
    SG.BC['Concrete0'].setFreeSlip()
    SG.BC['Inlet0'].setFreeSlip()
    SG.BC['Outlet0'].setFreeSlip()
+   
+3D with STL and Relaxation Zones
+--------------------------------
+
+.. code-block:: python
+
+   #See complete case in  https://github.com/erdc/air-water-vv/tree/master/3d/STLShape_Zones
+   from proteus import Domain
+   from proteus.mprans import SpatialTools as st
+   from proteus.Profiling import logEvent as log
+
+   domain = Domain.PiecewiseLinearComplexDomain()
+
+   SG=st.ShapeSTL(domain,'NWT.stl')
+   log("Boundary Tags are:" + str(SG.boundaryTags))
+
+   SG.regions=np.array([[-13., 2.5, 0.], [-3., 2.5, 0.], [9., 2.5, 0.]]
+   SG.regionFlags=np.array([1, 2, 3])
+
+   # All external boundaries are free-slip for simplicity.
+   SG.BC['Top0'].setFreeSlip()
+   SG.BC['Wall0'].setFreeSlip()
+   SG.BC['Bed0'].setFreeSlip()
+   SG.BC['Concrete0'].setFreeSlip()
+   SG.BC['Top_Gen'].setFreeSlip()
+   SG.BC['Bed_Gen'].setFreeSlip()
+   SG.BC['Wall_Gen'].setFreeSlip()
+   SG.BC['Top_Abs'].setFreeSlip()
+   SG.BC['Bed_Abs'].setFreeSlip()
+   SG.BC['Wall_Abs'].setFreeSlip()
+   
+   SG.BC['Inlet0'].setNonMaterial()
+   SG.BC['Outlet0'].setNonMaterial()
+   
+   SG.setGenerationZones(flags=1,
+                         epsFact_solid=2.,
+                         center=np.array([-13., 2.5, 0.]),
+                         orientation=np.array([1., 0., 0.]),
+                         waves=wave,
+                         dragAlpha=dragAlpha,
+                         vert_axis=1,
+                         smoothing=smoothing,
+                         )
+
+   SG.setAbsorptionZones(flags=3,
+                         epsFact_solid=4.,
+                         center=np.array([9., 2.5, 0.]),
+                         orientation=np.array([-1., 0., 0.]),
+                         dragAlpha=dragAlpha,
+                         vert_axis=1
+                         )
+
+
+   SG.BC['Inlet_Gen'].setUnsteadyTwoPhaseVelocityInlet(wave=wave,
+                                                       vert_axis=1,
+                                                       smoothing=3.*opts.he,
+                                                       orientation=np.array([-1.,0.,0.]),
+                                                       vof_air=1.,
+                                                       vof_water=0.)
+
+    SG.BC['Outlet_Abs'].setHydrostaticPressureOutletWithDepth(seaLevel= opts.mwl,
+                                                              rhoUp=opts.rho_1,
+                                                              rhoDown=opts.rho_0,
+                                                              g=opts.g,
+                                                              refLevel=xTop,
+                                                              smoothing=smoothing,
+                                                              orientation=np.array([1.,0.,0.]),
+                                                              vert_axis=1)
+
 
 Classes
 =======
@@ -383,7 +452,7 @@ When reading the block stl file, the ``ShapeSTL`` class will read also the stl b
 
 The user should be able to mesh a whole domain, as long as the STL files create a watertight domain. A simple example of setting up a 3D domain is given in the beginning of this section and the air-water-vv repository https://github.com/erdc/air-water-vv/blob/master/3d/STLShape/
  
-
+ShapeSTL also provides the capability to incorporate relaxation zones for wave genearation and absorption. The STL file must be generated with this in mind as additional definition of STL blocks is required. Internal blocks to designate the boundary of absorbtion zone and main tank are required. As these create a line intersection of at least three blocks, the user must take care to ensure the vertices are coincident in all three blocks. Each region is tagged, which allows the relaxation zone to be defined. A simple example of setting up a 3D domain with relaxation zones is given in the beginning of this section and the air-water-vv repository https://github.com/erdc/air-water-vv/blob/master/3d/STLShape_Zones/
 
 mprans specific
 ---------------
