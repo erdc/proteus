@@ -122,7 +122,32 @@ MPRANS2_EXTENSIONS = [
                   os.path.join(sys.prefix, 'include'),
                   os.path.join(sys.prefix, 'Library', 'include'),
                   'proteus'
-              ])
+              ]),
+    Extension('mprans2.cMCorr3P', ['proteus/mprans2/MCorr3P.cpp'],
+              depends=['proteus/mprans2/MCorr3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              extra_compile_args=PROTEUS_OPT,
+              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
+              define_macros=[('PROTEUS_LAPACK_H',
+                              PROTEUS_LAPACK_H),
+                             ('PROTEUS_LAPACK_INTEGER',
+                              PROTEUS_LAPACK_INTEGER),
+                             ('PROTEUS_BLAS_H',
+                              PROTEUS_BLAS_H)],
+              include_dirs=[
+                  # Path to pybind11 headers
+                  str(get_pybind_include()),
+                  str(get_pybind_include(user=True)),
+                  str(get_numpy_include()),
+                  os.path.join(sys.prefix, 'include'),
+                  os.path.join(sys.prefix, 'Library', 'include'),
+                  'proteus'
+              ],
+              library_dirs=[PROTEUS_LAPACK_LIB_DIR,
+                            PROTEUS_BLAS_LIB_DIR],
+              libraries=['m',PROTEUS_LAPACK_LIB,
+                         PROTEUS_BLAS_LIB],
+              )
 ]
 
 EXTENSIONS_TO_BUILD = [
