@@ -4,15 +4,6 @@ dist: xenial
 
 language: python
 
-env:
-  - TEST_PROFILE="proteus-conda"
-  - TEST_PROFILE="proteus-hashdist"
-  #- TEST_PROFILE="1st_set"
-  #- TEST_PROFILE="2nd_set"
-
-python:
-  - "3.7"
-
 addons:
   apt:
     packages:
@@ -22,20 +13,8 @@ addons:
     - python-lzma
     - python3
 
-install:
-  - if [[ "${TEST_PROFILE}" == "proteus-conda" ]]; then ./install-conda.sh; elif [[ "${TEST_PROFILE}" == "proteus-hashdist" ]]; then ./install-hashdist.sh; fi
-
 cache:
   - timeout: 1000
-
-script:
-  - export MPLBACKEND="AGG"
-  - if [[ "${TEST_PROFILE}" == proteus* ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
-
-  #- if [[ "${TEST_PROFILE}" == "1st_set" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
-
-  #- if [[ "${TEST_PROFILE}" == "2nd_set" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set; fi
-  - unset LD_LIBRARY_PATH #reset things so we don't break cache?
 
 notifications:
   email:
@@ -45,3 +24,14 @@ notifications:
 after_success:
   - conda install codecov
   - codecov
+
+jobs:
+  include:
+  - python: 2.7
+    env: TEST_PROFILE="proteus-hashdist"
+    install: ./install-hashdist.sh
+    script: ./test.sh
+  - python: 3.7
+    env: TEST_PROFILE="proteus-conda"
+    install: ./install-conda.sh
+    script: ./test.sh
