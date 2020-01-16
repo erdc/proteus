@@ -1,5 +1,5 @@
-#ifndef SEDCLOSURE_H
-#define SEDCLOSURE_H
+#ifndef SEDCLOSURE_HPP
+#define SEDCLOSURE_HPP
 
 #include <algorithm>
 #include <cmath>
