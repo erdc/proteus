@@ -5,7 +5,8 @@ dist: xenial
 language: python
 
 env:
-  - TEST_PROFILE="proteus"
+  - TEST_PROFILE="proteus-conda"
+  - TEST_PROFILE="proteus-hashdist"
   #- TEST_PROFILE="1st_set"
   #- TEST_PROFILE="2nd_set"
 
@@ -22,25 +23,15 @@ addons:
     - python3
 
 install:
-  - git lfs pull
-  - sudo apt-get update
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - source "$HOME/miniconda/etc/profile.d/conda.sh"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda info -a
-  - conda env create -f environment-dev.yml
-  - conda activate proteus-dev
-  - pip install -v -e .
+  - if [[ "${TEST_PROFILE}" == "proteus-conda" ]]; then ./install-conda.sh; fi
+  - if [[ "${TEST_PROFILE}" == "proteus-hashdist" ]]; then ./install-hashdist.sh; fi
 
 cache:
   - timeout: 1000
 
 script:
   - export MPLBACKEND="AGG"
-  - if [[ "${TEST_PROFILE}" == "proteus" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
+  - if [[ "${TEST_PROFILE}" == proteus* ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus; fi
 
   #- if [[ "${TEST_PROFILE}" == "1st_set" ]]; then PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set; fi
 
