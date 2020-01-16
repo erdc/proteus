@@ -246,6 +246,7 @@ cdef class ProtChBody:
       bool Aij_transform_local  # True for transforming global Aij to local
       bool useIBM
       double radiusIBM
+      object sdfIBM
       string hdfFileName
       double Aij_factor
       int[:] boundaryFlags
