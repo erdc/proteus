@@ -278,7 +278,7 @@ cdef class ProtChBody:
         """
         self.boundaryFlags = np.array(flags, 'i')
 
-    def setIBM(self, useIBM=True, radiusIBM=0.):
+    def setIBM(self, useIBM=True, radiusIBM=0., sdfIBM=None):
         """Sets IBM mode for retrieving fluid forces
 
         Parameters
@@ -287,9 +287,12 @@ cdef class ProtChBody:
             set if IBM should be used
         radiusIBM: double
             radius of the particle for IBM
+        radiusIBM: double
+            sdf relative to barycentre of body for IBM
         """
         self.useIBM = useIBM
         self.radiusIBM = radiusIBM
+        self.sdfIBM = sdfIBM
 
     def setWidth2D(self, width):
         """Sets width of 2D body (for forces and moments calculation)
@@ -829,23 +832,41 @@ cdef class ProtChBody:
             for flag in self.boundaryFlags:
                 am.barycenters[flag] = pyvec2array(self.ChBody.GetPos())
         self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
-        if self.useIBM and self.ProtChSystem.model is not None:
-            chpos = self.ChBody.GetPos()
-            chvel = self.ChBody.GetPos_dt()
-            chvel_ang = self.ChBody.GetWvel_loc()
-            c = self.ProtChSystem.model.levelModelList[-1].coefficients
-            for flag in self.boundaryFlags:
-                c.ball_radius[flag] = self.radiusIBM
-                c.ball_center[flag, 0] = chpos.x
-                c.ball_center[flag, 1] = chpos.y
-                c.ball_center[flag, 2] = chpos.z
-                c.ball_velocity[flag, 0] = chvel.x
-                c.ball_velocity[flag, 1] = chvel.y
-                c.ball_velocity[flag, 2] = chvel.z
-                c.ball_angular_velocity[flag, 0] = chvel_ang.x
-                c.ball_angular_velocity[flag, 1] = chvel_ang.y
-                c.ball_angular_velocity[flag, 2] = chvel_ang.z
+        self.updateIBM()
 
+    def updateIBM(self):
+        if self.useIBM and self.ProtChSystem.model is not None:
+            c = self.ProtChSystem.model.levelModelList[-1].coefficients
+            if c.use_ball_as_particle:
+                chpos = self.ChBody.GetPos()
+                chvel = self.ChBody.GetPos_dt()
+                chvel_ang = self.ChBody.GetWvel_loc()
+                for flag in self.boundaryFlags:
+                    c.ball_radius[flag] = self.radiusIBM
+                    c.ball_center[flag, 0] = chpos.x
+                    c.ball_center[flag, 1] = chpos.y
+                    c.ball_center[flag, 2] = chpos.z
+                    c.ball_velocity[flag, 0] = chvel.x
+                    c.ball_velocity[flag, 1] = chvel.y
+                    c.ball_velocity[flag, 2] = chvel.z
+                    c.ball_angular_velocity[flag, 0] = chvel_ang.x
+                    c.ball_angular_velocity[flag, 1] = chvel_ang.y
+                    c.ball_angular_velocity[flag, 2] = chvel_ang.z
+            else:
+                # only set it on initialization, then pass
+                if not self.ProtChSystem.initialised:
+                    for flag in self.boundaryFlags:
+                        c.particle_sdfList[flag] = self.getDynamicSDF
+                        c.particle_velocityList[flag] = lambda x, t: self.getVelocity()
+
+    def getDynamicSDF(self, t, x):
+        chpos = self.ChBody.GetPos()
+        relative_x = x-np.array([chpos.x, chpos.y, chpos.z])
+        return self.sdfIBM(t, relative_x)
+
+    def getVelocity(self):
+        chvel = self.ChBody.GetPos_dt()
+        return np.array([chvel.x, chvel.y, chvel.z])
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
@@ -932,7 +953,6 @@ cdef class ProtChBody:
         # set mass matrix with no added mass
         self.setAddedMass(np.zeros((6,6)))
         self.thisptr.calculate_init()
-        #
 
     def calculate(self):
         pass
@@ -1633,14 +1653,20 @@ cdef class ProtChSystem:
                     c.nParticles = self.nBodiesIBM
                 else:
                     assert c.nParticles == self.nBodiesIBM, 'number of RANS particles {nP} != number of IBM bodies {nB}'.format(nP=c.nParticles, nB=self.nBodiesIBM)
-                if c.ball_radius is None:
-                    c.ball_radius = np.zeros(self.nBodiesIBM, 'd')
-                if c.ball_center is None:
-                    c.ball_center = np.zeros((self.nBodiesIBM, 3), 'd')
-                if c.ball_velocity is None:
-                    c.ball_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
-                if c.ball_angular_velocity is None:
-                    c.ball_angular_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
+                if c.use_ball_as_particle:
+                    if c.ball_radius is None:
+                        c.ball_radius = np.zeros(self.nBodiesIBM, 'd')
+                    if c.ball_center is None:
+                        c.ball_center = np.zeros((self.nBodiesIBM, 3), 'd')
+                    if c.ball_velocity is None:
+                        c.ball_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
+                    if c.ball_angular_velocity is None:
+                        c.ball_angular_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
+                else:
+                    if c.particle_sdfList is None:
+                        c.particle_sdfList = [None for i in range(self.nBodiesIBM)]
+                    if c.particle_velocityList is None:
+                        c.particle_velocityList = [None for i in range(self.nBodiesIBM)]
             for s in self.subcomponents:
                 s.poststep()
             self.initialised = True
