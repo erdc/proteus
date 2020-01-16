@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 
 git lfs pull
 ./stack/hit/bin/hit init-home

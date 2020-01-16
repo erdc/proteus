@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 
 git lfs pull
 sudo apt-get update

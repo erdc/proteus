@@ -23,8 +23,7 @@ addons:
     - python3
 
 install:
-  - if [[ "${TEST_PROFILE}" == "proteus-conda" ]]; then ./install-conda.sh; fi
-  - if [[ "${TEST_PROFILE}" == "proteus-hashdist" ]]; then ./install-hashdist.sh; fi
+  - if [[ "${TEST_PROFILE}" == "proteus-conda" ]]; then ./install-conda.sh; elif [[ "${TEST_PROFILE}" == "proteus-hashdist" ]]; then ./install-hashdist.sh; fi
 
 cache:
   - timeout: 1000
