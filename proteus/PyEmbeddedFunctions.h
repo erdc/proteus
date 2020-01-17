@@ -33,7 +33,7 @@ int logEvent(char* logString,int logLevel)
     PyTuple_SetItem(pArgs, 1, pValue);
 */
     PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(logString));
-    PyTuple_SetItem(pArgs, 1, PyInt_FromLong(logLevel));
+    PyTuple_SetItem(pArgs, 1, PyLong_FromLong(logLevel));
 
     PyObject_CallObject(pFunc,pArgs);
     Py_DECREF(pFunc);

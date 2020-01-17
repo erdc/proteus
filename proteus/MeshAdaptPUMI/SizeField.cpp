@@ -77,7 +77,7 @@ int MeshAdaptPUMIDrvr::setSphereSizeField()
     apf::setScalar(size_iso,ent,0,sizeDesired);
   }
   m->end(it);
-  gradeMesh();
+  gradeMesh(1.5);
 }
 
 

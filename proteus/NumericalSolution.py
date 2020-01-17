@@ -1057,15 +1057,15 @@ class NS_base(object):  # (HasTraits):
             if coef.vectorComponents is not None:
               vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
               domain.PUMIMesh.transferFieldToProteus(
-                     coef.vectorName, vector)
+                     coef.vectorName.encode('utf-8'), vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
               domain.PUMIMesh.transferFieldToProteus(
-                     coef.vectorName+"_old", vector)
+                     coef.vectorName.encode('utf-8')+b"_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last[:] = vector[:,vci]
               domain.PUMIMesh.transferFieldToProteus(
-                     coef.vectorName+"_old_old", vector)
+                     coef.vectorName.encode('utf-8')+b"_old_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last_last[:] = vector[:,vci]
 
@@ -1075,13 +1075,13 @@ class NS_base(object):  # (HasTraits):
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                 domain.PUMIMesh.transferFieldToProteus(
-                    coef.variableNames[ci], scalar)
+                    coef.variableNames[ci].encode('utf-8'), scalar)
                 lm.u[ci].dof[:] = scalar[:,0]
                 domain.PUMIMesh.transferFieldToProteus(
-                    coef.variableNames[ci]+"_old", scalar)
+                    coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
                 lm.u[ci].dof_last[:] = scalar[:,0]
                 domain.PUMIMesh.transferFieldToProteus(
-                    coef.variableNames[ci]+"_old_old", scalar)
+                    coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
                 lm.u[ci].dof_last_last[:] = scalar[:,0]
 
                 del scalar
@@ -1189,8 +1189,8 @@ class NS_base(object):  # (HasTraits):
         self.comm.barrier()
 
     def PUMI_transferFields(self):
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+        p0 = self.pList[0].ct
+        n0 = self.nList[0].ct
 
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
@@ -1209,7 +1209,7 @@ class NS_base(object):  # (HasTraits):
             g      = p0.g
             epsFact_density = p0.epsFact_density
         logEvent("Copying coordinates to PUMI")
-        domain.PUMIMesh.transferFieldToPUMI("coordinates",
+        domain.PUMIMesh.transferFieldToPUMI(b"coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
         #I want to compute the density and viscosity arrays here
@@ -1238,7 +1238,7 @@ class NS_base(object):  # (HasTraits):
             h_phi=0.0;
             for idx in range(len(dofs)):
                 h_phi += (materialSpace.psi[0][idx])*(self.modelList[2].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
-            eps_rho = p0.ct.epsFact_density*h_phi
+            eps_rho = p0.epsFact_density*h_phi
             smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
 
             rho_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.rho_0 + smoothed_phi_val*self.pList[0].ct.rho_1
@@ -1270,17 +1270,17 @@ class NS_base(object):  # (HasTraits):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
 
               domain.PUMIMesh.transferFieldToPUMI(
-                  coef.vectorName, vector)
+                  coef.vectorName.encode('utf-8'), vector)
               #Transfer dof_last
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
               domain.PUMIMesh.transferFieldToPUMI(
-                     coef.vectorName+"_old", vector)
+                     coef.vectorName.encode('utf-8')+b"_old", vector)
               #Transfer dof_last_last
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
               p0.domain.PUMIMesh.transferFieldToPUMI(
-                     coef.vectorName+"_old_old", vector)
+                     coef.vectorName.encode('utf-8')+b"_old_old", vector)
 
               del vector
             for ci in range(coef.nc):
@@ -1289,16 +1289,16 @@ class NS_base(object):  # (HasTraits):
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                 scalar[:,0] = lm.u[ci].dof[:]
                 domain.PUMIMesh.transferFieldToPUMI(
-                    coef.variableNames[ci], scalar)
+                    coef.variableNames[ci].encode('utf-8'), scalar)
 
                 #Transfer dof_last
                 scalar[:,0] = lm.u[ci].dof_last[:]
                 domain.PUMIMesh.transferFieldToPUMI(
-                     coef.variableNames[ci]+"_old", scalar)
+                     coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
                 #Transfer dof_last_last
                 scalar[:,0] = lm.u[ci].dof_last_last[:]
                 p0.domain.PUMIMesh.transferFieldToPUMI(
-                     coef.variableNames[ci]+"_old_old", scalar)
+                     coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
 
                 del scalar
 
@@ -1459,7 +1459,7 @@ class NS_base(object):  # (HasTraits):
               if(domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
-            elif(sfConfig=="VMS" or sfConfig=="combined"):
+            elif(sfConfig==b"VMS" or sfConfig==b"combined"):
               errorTotal = p0.domain.PUMIMesh.get_VMS_error()
               if(p0.domain.PUMIMesh.willAdapt()):
                 adaptMeshNow=True
@@ -1469,7 +1469,7 @@ class NS_base(object):  # (HasTraits):
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
-            elif(sfConfig=='isotropic'):
+            elif(sfConfig==b'isotropic'):
               if(p0.domain.PUMIMesh.willInterfaceAdapt()):
                   adaptMeshNow=True
                   logEvent("Need to Adapt")
@@ -1500,7 +1500,7 @@ class NS_base(object):  # (HasTraits):
         return adaptMeshNow
 
 
-    def PUMI_adaptMesh(self,inputString=""):
+    def PUMI_adaptMesh(self,inputString=b""):
         """
         Uses a computed error field to construct a size field and adapts
         the mesh using SCOREC tools (a.k.a. MeshAdapt)
@@ -1844,16 +1844,15 @@ class NS_base(object):  # (HasTraits):
 
         if (hasattr(self.pList[0].domain, 'PUMIMesh') and
             self.pList[0].domain.PUMIMesh.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.size_field_config() == "combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == "isotropic") and
+            (self.pList[0].domain.PUMIMesh.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == b"isotropic") and
             self.so.useOneMesh and not self.opts.hotStart):
 
             self.PUMI_transferFields()
             logEvent("Initial Adapt before Solve")
-            self.PUMI_adaptMesh("interface")
-
+            self.PUMI_adaptMesh(b"interface")
             self.PUMI_transferFields()
             logEvent("Initial Adapt 2 before Solve")
-            self.PUMI_adaptMesh("interface")
+            self.PUMI_adaptMesh(b"interface")
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -2206,7 +2205,7 @@ class NS_base(object):  # (HasTraits):
 
         if(hasattr(self.pList[0].domain,"PUMIMesh")):
         #Transfer solution to PUMI mesh for output
-          self.pList[0].domain.PUMIMesh.transferFieldToPUMI("coordinates",
+          self.pList[0].domain.PUMIMesh.transferFieldToPUMI(b"coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
           for m in self.modelList:
@@ -2217,17 +2216,17 @@ class NS_base(object):  # (HasTraits):
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
                 self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
-                   coef.vectorName, vector)
+                   coef.vectorName.encode('utf-8'), vector)
                 #Transfer dof_last
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
                 self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
-                     coef.vectorName+"_old", vector)
+                     coef.vectorName.encode('utf-8')+b"_old", vector)
                 #Transfer dof_last_last
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
                 self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
-                     coef.vectorName+"_old_old", vector)
+                     coef.vectorName.encode('utf-8')+b"_old_old", vector)
                 del vector
 
               for ci in range(coef.nc):
@@ -2236,18 +2235,18 @@ class NS_base(object):  # (HasTraits):
                   scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                   scalar[:,0] = lm.u[ci].dof[:]
                   self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
-                      coef.variableNames[ci], scalar)
+                      coef.variableNames[ci].encode('utf-8'), scalar)
                   #Transfer dof_last
                   scalar[:,0] = lm.u[ci].dof_last[:]
                   self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
-                     coef.variableNames[ci]+"_old", scalar)
+                     coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
                   #Transfer dof_last_last
                   scalar[:,0] = lm.u[ci].dof_last_last[:]
                   self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
-                     coef.variableNames[ci]+"_old_old", scalar)
+                     coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
                   del scalar
 
-          self.pList[0].domain.PUMIMesh.writeMesh("finalMesh.smb")
+          self.pList[0].domain.PUMIMesh.writeMesh(b"finalMesh.smb")
           if((self.PUMIcheckpointer.frequency>0) ):
             self.modelListOld = self.modelList
             self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
