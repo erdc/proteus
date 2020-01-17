@@ -31,6 +31,7 @@ jobs:
     env: TEST_PROFILE="proteus-hashdist"
     install:
       - git lfs pull
+      - ./get_xtensor.sh
       - ./stack/hit/bin/hit init-home
       - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
       - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_16_04 --objects="build"

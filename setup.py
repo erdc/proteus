@@ -43,6 +43,18 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
+def get_xtensor_include():
+    return [str(get_pybind_include()),
+            str(get_pybind_include(user=True)),
+            str(get_numpy_include()),
+            os.path.join(sys.prefix, 'include'),
+            os.path.join(sys.prefix, 'Library', 'include'),
+            'proteus',
+            'proteus/xtensor/pybind11/include/pybind11',
+            'proteus/xtensor/xtensor-python/include/xtensor-python',
+            'proteus/xtensor/xtensor/include/xtensor',
+            'proteus/xtensor/xtl/include/xtl']
+
 class get_pybind_include(object):
     """Helper class to determine the pybind11 include path
 
@@ -155,15 +167,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'richards.cRichards',
         ['proteus/richards/cRichards.cpp'],
-        include_dirs=[
-            # Path to pybind11 headers
-            str(get_pybind_include()),
-            str(get_pybind_include(user=True)),
-            str(get_numpy_include()),
-            os.path.join(sys.prefix, 'include'),
-            os.path.join(sys.prefix, 'Library', 'include'),
-            'proteus'
-        ],
+        include_dirs=get_xtensor_include(),
         language='c++'
     ),
     Extension(
@@ -175,15 +179,7 @@ EXTENSIONS_TO_BUILD = [
                         PROTEUS_LAPACK_INTEGER),
                        ('PROTEUS_BLAS_H',
                         PROTEUS_BLAS_H)],
-        include_dirs=[
-            # Path to pybind11 headers
-            str(get_pybind_include()),
-            str(get_pybind_include(user=True)),
-            str(get_numpy_include()),
-            os.path.join(sys.prefix, 'include'),
-            os.path.join(sys.prefix, 'Library', 'include'),
-            'proteus'
-        ],
+        include_dirs=get_xtensor_include(),
         language='c++',
         library_dirs=[PROTEUS_LAPACK_LIB_DIR,
                       PROTEUS_BLAS_LIB_DIR],
@@ -270,15 +266,7 @@ EXTENSIONS_TO_BUILD = [
         'ADR',
         ['proteus/ADR.cpp'],
         headers=['proteus/ADR.h'],
-        include_dirs=[
-            # Path to pybind11 headers
-            str(get_pybind_include()),
-            str(get_pybind_include(user=True)),
-            str(get_numpy_include()),
-            os.path.join(sys.prefix, 'include'),
-            os.path.join(sys.prefix, 'Library', 'include'),
-            '.'
-        ],
+        include_dirs=get_xtensor_include(),
         language='c++'
     ),
     Extension("subsurfaceTransportFunctions",['proteus/subsurfaceTransportFunctions.pyx'],
