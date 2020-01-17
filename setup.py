@@ -50,10 +50,10 @@ def get_xtensor_include():
             os.path.join(sys.prefix, 'include'),
             os.path.join(sys.prefix, 'Library', 'include'),
             'proteus',
-            'proteus/xtensor/pybind11/include/pybind11',
-            'proteus/xtensor/xtensor-python/include/xtensor-python',
-            'proteus/xtensor/xtensor/include/xtensor',
-            'proteus/xtensor/xtl/include/xtl']
+            'proteus/xtensor/pybind11/include',
+            'proteus/xtensor/xtensor-python/include',
+            'proteus/xtensor/xtensor/include',
+            'proteus/xtensor/xtl/include']
 
 class get_pybind_include(object):
     """Helper class to determine the pybind11 include path
