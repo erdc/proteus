@@ -169,7 +169,7 @@ EXTENSIONS_TO_BUILD = [
         ['proteus/richards/cRichards.cpp'],
         include_dirs=get_xtensor_include(),
         language='c++',
-        extra_compile_args=PROTEUS_OPT,
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
     ),
     Extension(
         'elastoplastic.cElastoPlastic',
@@ -182,7 +182,7 @@ EXTENSIONS_TO_BUILD = [
                         PROTEUS_BLAS_H)],
         include_dirs=get_xtensor_include(),
         language='c++',
-        extra_compile_args=PROTEUS_OPT,
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         library_dirs=[PROTEUS_LAPACK_LIB_DIR,
                       PROTEUS_BLAS_LIB_DIR],
         libraries=['m',PROTEUS_LAPACK_LIB,
@@ -269,7 +269,7 @@ EXTENSIONS_TO_BUILD = [
         ['proteus/ADR.cpp'],
         headers=['proteus/ADR.h'],
         include_dirs=get_xtensor_include(),
-        extra_compile_args=PROTEUS_OPT,
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'
     ),
     Extension("subsurfaceTransportFunctions",['proteus/subsurfaceTransportFunctions.pyx'],
