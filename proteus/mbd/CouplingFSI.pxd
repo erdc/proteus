@@ -283,8 +283,6 @@ cdef class ProtChSystem:
         double chrono_dt
         bool build_kdtree
         bool dist_search
-        bool parallel_mode
-        int chrono_processor
         bool first_step
         string scheme  # coupling scheme
         string prediction  # force for prediction

@@ -797,18 +797,7 @@ cdef class ProtChBody:
         cdef ch.ChVector pos_last
         cdef double e0, e1, e2, e3, e0_last, e1_last, e2_last, e3_last
         cdef double posx, posy, posz, posx_last, posy_last, posz_last
-        if self.ProtChSystem.parallel_mode is True:
-            # need to broadcast values to all processors on the C++ side
-            # comm.Barrier()
-            self.rotq = comm.bcast(self.rotq,
-                                   self.ProtChSystem.chrono_processor)
-            self.rotq_last = comm.bcast(self.rotq_last,
-                                        self.ProtChSystem.chrono_processor)
-            self.position = comm.bcast(self.position,
-                                       self.ProtChSystem.chrono_processor)
-            self.position_last = comm.bcast(self.position_last,
-                                            self.ProtChSystem.chrono_processor)
-        if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
+        if comm.rank == 0 and self.ProtChSystem.record_values is True:
             self._recordValues()
             if self.thisptr.has_trimesh:
                 self._recordH5()
@@ -863,6 +852,10 @@ cdef class ProtChBody:
         chpos = self.ChBody.GetPos()
         relative_x = x-np.array([chpos.x, chpos.y, chpos.z])
         return self.sdfIBM(t, relative_x)
+
+    def getPosition(self):
+        chpos = self.ChBody.GetPos()
+        return np.array([chpos.x, chpos.y, chpos.z])
 
     def getVelocity(self):
         chvel = self.ChBody.GetPos_dt()
@@ -1083,34 +1076,6 @@ cdef class ProtChBody:
         self.M_applied_last = np.array(self.M_applied)
         self.F_Aij_last = np.array(self.F_Aij)
         self.M_Aij_last = np.array(self.M_Aij)
-        if self.ProtChSystem.parallel_mode is True:
-            comm = Comm.get().comm.tompi4py()
-            self.position_last = comm.bcast(self.position_last,
-                                            self.ProtChSystem.chrono_processor)
-            self.velocity_last = comm.bcast(self.velocity_last,
-                                            self.ProtChSystem.chrono_processor)
-            self.acceleration_last = comm.bcast(self.acceleration_last,
-                                                self.ProtChSystem.chrono_processor)
-            self.rotq_last = comm.bcast(self.rotq_last,
-                                        self.ProtChSystem.chrono_processor)
-            # self.rotm_last = comm.bcast(self.rotm_last,
-            #                             self.ProtChSystem.chrono_processor)
-            self.ang_velocity_last = comm.bcast(self.ang_velocity_last,
-                                                self.ProtChSystem.chrono_processor)
-            self.ang_acceleration_last = comm.bcast(self.ang_acceleration_last,
-                                                    self.ProtChSystem.chrono_processor)
-            self.ang_vel_norm_last = comm.bcast(self.ang_vel_norm_last,
-                                                self.ProtChSystem.chrono_processor)
-            self.F_prot_last = comm.bcast(self.F_prot_last,
-                                          self.ProtChSystem.chrono_processor)
-            self.M_prot_last = comm.bcast(self.M_prot_last,
-                                          self.ProtChSystem.chrono_processor)
-            self.F_applied_last = comm.bcast(self.F_applied_last,
-                                             self.ProtChSystem.chrono_processor)
-            self.M_applied_last = comm.bcast(self.M_applied_last,
-                                             self.ProtChSystem.chrono_processor)
-            self.F_Aij_last = comm.bcast(self.F_Aij_last,
-                                         self.ProtChSystem.chrono_processor)
 
     def getValues(self):
         """Get values (pos, vel, acc, etc.) from C++ to python
@@ -1140,16 +1105,6 @@ cdef class ProtChBody:
         self.M = np.array([self.thisptr.M.x(),
                            self.thisptr.M.y(),
                            self.thisptr.M.z()])
-        if self.ProtChSystem.parallel_mode is True:
-            comm = Comm.get().comm.tompi4py()
-            self.position = comm.bcast(self.position, self.ProtChSystem.chrono_processor)
-            self.velocity = comm.bcast(self.velocity, self.ProtChSystem.chrono_processor)
-            self.acceleration = comm.bcast(self.acceleration, self.ProtChSystem.chrono_processor)
-            self.rotq = comm.bcast(self.rotq, self.ProtChSystem.chrono_processor)
-            # self.rotm = comm.bcast(self.rotm, self.ProtChSystem.chrono_processor)
-            self.ang_velocity = comm.bcast(self.ang_velocity, self.ProtChSystem.chrono_processor)
-            self.ang_acceleration = comm.bcast(self.ang_acceleration, self.ProtChSystem.chrono_processor)
-            self.ang_vel_norm = comm.bcast(self.ang_vel_norm, self.ProtChSystem.chrono_processor)
 
 
     def setRecordValues(self, all_values=False, pos=False,
@@ -1453,15 +1408,6 @@ cdef class ProtChSystem:
         self.nd = nd
         self.build_kdtree = True
         self.dist_search = True
-        comm = Comm.get().comm.tompi4py()
-        if comm.Get_size() > 1:
-            parallel_mode = True
-            chrono_processor = 1
-        else:
-            parallel_mode = False
-            chrono_processor = 0
-        self.parallel_mode = parallel_mode
-        self.chrono_processor = chrono_processor
         self.min_nb_steps = 1  # minimum number of chrono substeps
         self.proteus_dt = 1.
         self.first_step = True  # just to know if first step
@@ -1552,12 +1498,12 @@ cdef class ProtChSystem:
         self.step_nb += 1
         # self.thisptr.system.setChTime()
         comm = Comm.get().comm.tompi4py()
-        t = comm.bcast(self.ChSystem.GetChTime(), self.chrono_processor)
+        t = self.ChSystem.GetChTime()
         Profiling.logEvent('Solving Chrono system from t='
                         +str(t)
                         +' with dt='+str(self.dt)
                         +'('+str(nb_steps)+' substeps)')
-        if comm.rank == self.chrono_processor and dt > 0:
+        if dt > 0:
             if self.update_substeps is False:
                 self.thisptr.step(<double> self.dt, nb_steps)
             else:
@@ -1569,7 +1515,7 @@ cdef class ProtChSystem:
                         if type(s) is ProtChMoorings:
                             # update forces keeping same fluid vel/acc
                             s.updateForces()
-        t = comm.bcast(self.ChSystem.GetChTime(), self.chrono_processor)
+        t = self.ChSystem.GetChTime()
         Profiling.logEvent('Solved Chrono system to t='+str(t))
         if self.scheme == "ISS":
             Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
@@ -2427,7 +2373,7 @@ cdef class ProtChMoorings:
         if self.initialized is False:
             self.initialized = True
         comm = Comm.get().comm.tompi4py()
-        if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
+        if comm.rank == 0 and self.ProtChSystem.record_values is True:
             self._recordValues()
             self._recordH5()
             self._recordXML()
@@ -2841,10 +2787,6 @@ cdef class ProtChMoorings:
             x = vec.x()
             y = vec.y()
             z = vec.z()
-            if self.ProtChSystem.parallel_mode is True:
-                x = comm.bcast(x, self.ProtChSystem.chrono_processor)
-                y = comm.bcast(y, self.ProtChSystem.chrono_processor)
-                z = comm.bcast(z, self.ProtChSystem.chrono_processor)
             coords = np.array([x, y, z])
             vel_arr = np.zeros(3)
             if mesh_search is True:
