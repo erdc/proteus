@@ -1034,11 +1034,11 @@ namespace proteus
     {
         double C, rho, mu, nu, H_mu, ImH_mu, uc, duc_du, duc_dv, duc_dw, H_s, ImH_s, D_s, phi_s, u_s, v_s, w_s;
         double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
-        double phi_s_normal[2]={0.0};
-        double fluid_outward_normal[2];
-        double vel[2]={0.0};
-        double acceleration[2]={0.0};
-        double center[2];
+        double phi_s_normal[2]={0.0,0.0};
+        double fluid_outward_normal[2]={0.0,0.0};
+        double vel[2]={0.0,0.0};
+        double acceleration[2]={0.0,0.0};
+        double center[2]={0.0,0.0};
         H_mu = (1.0 - useVF) * gf.H(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         ImH_mu = (1.0 - useVF) * gf.ImH(eps_mu, phi) + useVF * (1.0-fmin(1.0, fmax(0.0, vf)));
         nu = nu_0 * ImH_mu + nu_1 * H_mu;
@@ -1062,8 +1062,7 @@ namespace proteus
                                              ball_center_acceleration,ball_angular_acceleration,
                                              i,x,y,z,
                                              acceleration[0],acceleration[1]);
-                assert(std::fabs(1.0-std::sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1])) < 1.0e-8);
-                           
+                assert(std::fabs(1.0-std::sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1])) < 1.0e-8);                
               }
             else
               {
@@ -1076,6 +1075,21 @@ namespace proteus
                 center[1] = particle_centroids[3*i+1];
                 assert(std::fabs(1.0-std::sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1])) < 1.0e-8);
               }
+            /* if (fabs(vel[0] - particle_velocities[i * sd_offset * 3 + 0])> 1.0e-12) */
+            /*   std::cout<<"vel[0] "<<vel[0]<<'\t'<<particle_velocities[3*i+0]<<std::endl; */
+            /* if(fabs(vel[1] - particle_velocities[i * sd_offset * 3 + 1])> 1.0e-12) */
+            /*   std::cout<<"vel[1] "<<vel[1]<<'\t'<<particle_velocities[3*i+1]<<std::endl; */
+            /* if(fabs(center[0] - particle_centroids[3*i+0])> 1.0e-12) */
+            /*   std::cout<<"center[0] "<<center[0]<<'\t'<<particle_centroids[3*i+0]<<std::endl; */
+            /* if(fabs(center[1] - particle_centroids[3*i+1])> 1.0e-12) */
+            /*   std::cout<<"center[1] "<<center[1]<<'\t'<<particle_centroids[3*i+1]<<std::endl; */
+            /* if(fabs(phi_s - particle_signed_distances[i * sd_offset]) > 1.0e-12) */
+            /*   std::cout<<"phi_s "<<phi_s<<'\t'<<particle_signed_distances[i * sd_offset]<<std::endl; */
+            /* if(fabs(phi_s_normal[0] - particle_signed_distance_normals[i * sd_offset * 3 + 0]) > 1.0e-12) */
+            /*   std::cout<<"phi_s_normal[0] "<<phi_s_normal[0]<<'\t'<<particle_signed_distance_normals[i * sd_offset*3 + 0]<<std::endl; */
+            /* if(fabs(phi_s_normal[1] - particle_signed_distance_normals[i * sd_offset * 3 + 1]) > 1.0e-12) */
+            /*   std::cout<<"phi_s_normal[1] "<<phi_s_normal[1]<<'\t'<<particle_signed_distance_normals[i * sd_offset*3 + 1]<<std::endl; */
+            
             fluid_outward_normal[0] = -phi_s_normal[0];
             fluid_outward_normal[1] = -phi_s_normal[1];
             u_s = vel[0];
@@ -2177,6 +2191,10 @@ namespace proteus
           p_L2=0.0, u_L2=0.0, v_L2=0.0,
           p_Linfty=0.0, u_Linfty=0.0, v_Linfty=0.0;
         double globalConservationError=0.0;
+        std::cout<<"Ball Info: center "<<ball_center[0]<<'\t'<<ball_center[1]<<std::endl
+                 <<"Ball Info: radius "<<ball_radius[0]<<std::endl
+                 <<"Ball Info: velocity "<<ball_velocity[0]<<'\t'<<ball_velocity[1]<<'\t'<<ball_velocity[2]<<std::endl
+                 <<"Ball Info: angular "<<ball_angular_velocity[0]<<ball_angular_velocity[1]<<ball_angular_velocity[2]<<std::endl;
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -2250,11 +2268,8 @@ namespace proteus
                       cutfem_boundaries.insert(ebN);
                   }
               }
-            //int icase = gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1,false);
-            //int icase = gf.calculate(element_phi, element_nodes, x_ref, 1.0/(-rho_0*g[1]), 1.0/(-rho_1*g[1]),false);
 #ifdef IFEM
             int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref, -rho_1*g[1], -rho_0*g[1],false,true);
-            //int icase = gf.calculate(element_phi, element_nodes, x_ref, rho_0*nu_0, rho_1*nu_1,false,false);
             int icase = gf.calculate(element_phi, element_nodes, x_ref, rho_1*nu_1, rho_0*nu_0,false,false);
 #else
             int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref, 1.,1.,false,false);
@@ -2648,7 +2663,6 @@ namespace proteus
 
                 if (use_ball_as_particle == 1)
                   {
-
                     get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance_to_solids[eN_k]);
                   }
                 else
@@ -2680,7 +2694,7 @@ namespace proteus
                 /* q_u_3[eN_k] = 0.0; */
                 
                 double rho,nu;
-                if (useExact)
+                if (gf.useExact)
                   {
                     if (icase == 0)
                       {
@@ -3162,7 +3176,7 @@ namespace proteus
                 mesh_vel[0] = xt;
                 mesh_vel[1] = yt;
                 double H_f=1.0;
-                if (useExact && icase == 0)
+                if (gf.useExact && icase == 0)
                   {
                     if (fluid_phase == 0)
                       H_f = gf.ImH(0.,0.);
@@ -3335,6 +3349,7 @@ namespace proteus
               {
                 std::map<int,double> Dwp_Dn_jump, Dw_Dn_jump;
                 register double gamma_cutfem=ghost_penalty_constant,gamma_cutfem_p=ghost_penalty_constant,h_cutfem=elementBoundaryDiameter[*it];
+                gamma_cutfem_p /= fmax(rho_0,rho_1)*fmin(fmax(alphaBDF,1.0),1000.0);
                 if (NONCONSERVATIVE_FORM)
                   gamma_cutfem*=fmin(rho_0*nu_0,rho_1*nu_1);
                 else
@@ -3470,7 +3485,6 @@ namespace proteus
         //ebNE is the Exterior element boundary INdex
         //ebN is the element boundary INdex
         //eN is the element index
-        //gf_s.useExact = false;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray[ebNE],
@@ -3526,9 +3540,11 @@ namespace proteus
                 xb_ref_calc[3*kb+2] = z;
               }
             int icase_s = gf_s.calculate(element_phi_s, element_nodes, xb_ref_calc, true);
-            //cek hack
-            //int icase=gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
-            int icase = gf.calculate(element_phi, element_nodes, xb_ref, -rho_1*g[1], -rho_0*g[1],true,false);
+#ifdef IFEM
+            int icase = gf.calculate(element_phi, element_nodes, xb_ref, -rho_1*g[1], -rho_0*g[1],true,true);
+#else
+            int icase = gf.calculate(element_phi, element_nodes, xb_ref, 1.0,1.0,true,false);
+#endif
             //cek todo needs modification for twophase flow ibm
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
@@ -4600,11 +4616,8 @@ namespace proteus
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
               }//i
             int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref, false);
-            //cek hack
-            //int icase=gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
 #ifdef IFEM
             int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref, -rho_1*g[1], -rho_0*g[1],false,true);
-            //int icase = gf.calculate(element_phi, element_nodes, x_ref, rho_0*nu_0, rho_1*nu_1,false,false);
             int icase = gf.calculate(element_phi, element_nodes, x_ref, rho_1*nu_1, rho_0*nu_0,false,false);
 #else
             int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref, 1.,1.,false,false);
@@ -4991,7 +5004,7 @@ namespace proteus
                 const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
                 const double H_s = gf_s.H(particle_eps, phi_solid[eN_k]);
                 double rho,nu;
-                if (useExact)
+                if (gf.useExact)
                   {
                     if (icase == 0)
                       {
@@ -5480,7 +5493,7 @@ namespace proteus
                                            &particle_surfaceArea[0]);
                 //cek todo add RBLES terms consistent to residual modifications or ignore the partials w.r.t the additional RBLES terms
                 double H_f=1.0;
-                if (useExact && icase == 0)
+                if (gf.useExact && icase == 0)
                   {
                     if (fluid_phase == 0)
                       H_f = gf.ImH(0.,0.);
@@ -5658,6 +5671,7 @@ namespace proteus
             std::map<int,double> Dwp_Dn_jump,Dw_Dn_jump;
             std::map<std::pair<int, int>, int> p_p_nz, u_u_nz, v_v_nz;
             register double gamma_cutfem=ghost_penalty_constant,gamma_cutfem_p=ghost_penalty_constant,h_cutfem=elementBoundaryDiameter[*it];
+            gamma_cutfem_p /= fmax(rho_0,rho_1)*fmin(fmax(alphaBDF,1.0),1000.0);
             if (NONCONSERVATIVE_FORM)
               gamma_cutfem*=fmin(rho_0*nu_0,rho_1*nu_1);
             else
@@ -5838,7 +5852,6 @@ namespace proteus
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
-        //gf_s.useExact = true;
         double boundaryLength=0.0;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
@@ -5880,9 +5893,11 @@ namespace proteus
                 xb_ref_calc[3*kb+2] = z;
               }
             int icase_s = gf_s.calculate(element_phi_s, element_nodes, xb_ref_calc,true);
-            //cek hack
-            //int icase=gf.calculate(element_phi, element_nodes, x_ref, 1.0,1.0);//rho_0*nu_0, rho_1*nu_1);
-            int icase = gf.calculate(element_phi, element_nodes, xb_ref, -rho_1*g[1], -rho_0*g[1],true,false);
+#ifdef IFEM
+            int icase = gf.calculate(element_phi, element_nodes, xb_ref, rho_1*nu_1, rho_0*nu_0,true,false);
+#else
+            int icase = gf.calculate(element_phi, element_nodes, xb_ref, 1.0,1.0,true, false);
+#endif
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
                 register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
@@ -6118,7 +6133,6 @@ namespace proteus
                 ck.gradFromDOF(p_old_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_old);
                 ck_v.gradFromDOF(u_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_old);
                 ck_v.gradFromDOF(v_old_dof,&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_old);
-
                 ck.valFromDOF(phi_solid_nodes,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],phi_s_ext);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_test_element;j++)

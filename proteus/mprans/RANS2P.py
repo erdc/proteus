@@ -220,7 +220,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_alpha=1000.0,
                  particle_beta=1000.0,
                  particle_penalty_constant=100.0,
-                 ghost_penalty_constant=10.0,
+                 ghost_penalty_constant=0.1,
                  particle_nitsche=1.0,
                  nullSpace='NoNullSpace',
                  useExact=False,
@@ -486,10 +486,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.ebq_n = None
                 self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
             else:
-                self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
-                self.phi_dof = 10.0 * numpy.ones_like(self.model.u[0].dof)
-                self.ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
-                self.bc_ebqe_phi = 10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
+                self.q_phi = -10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
+                self.phi_dof = -10.0 * numpy.ones_like(self.model.u[0].dof)
+                self.ebqe_phi = -10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
+                self.bc_ebqe_phi = -10.0 * numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
                 self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
                 self.ebqe_n = numpy.ones(self.model.ebqe[('velocity', 0)].shape, 'd')
             if self.VF_model is not None:
@@ -566,7 +566,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.u_old_dof = self.model.u[1].dof.copy()
         self.v_old_dof = self.model.u[2].dof.copy()
         self.w_old_dof = self.model.u[3].dof.copy()
-        self.preStep(0.0)
 
     def initializeMesh(self, mesh):
         
@@ -744,8 +743,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         #logEvent("Pre-step NS, Potential Energy = %12.5e" % (PE), level=0)
         #logEvent("Pre-step NS, Total Energy = %12.5e" % (PE+KE), level=0)
-
         #pass
+        #if self.nParticles > 0:#cek hack--use both and self.use_ball_as_particle == 0:
         if self.nParticles > 0 and self.use_ball_as_particle == 0:
             self.phi_s[:] = 1e10
             self.phisField[:] = 1e10
