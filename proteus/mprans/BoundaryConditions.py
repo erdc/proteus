@@ -404,9 +404,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
             self.hz_dirichlet.uOfXT = get_DBC_h(2)
 
     def setChMoveMesh(self, body):
-        self.hx_dirichlet.uOfXT = lambda x, t: body.hx(x, t)
-        self.hy_dirichlet.uOfXT = lambda x, t: body.hy(x, t)
-        self.hz_dirichlet.uOfXT = lambda x, t: body.hz(x, t)
+        self.hx_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): body.hx(x, t)
+        self.hy_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): body.hy(x, t)
+        self.hz_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): body.hz(x, t)
 
     def setTurbulentDirichlet(self, kVal, dissipationVal):
         """
@@ -469,8 +469,8 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.setNoSlip()
         self.BC_type = "Wall function"
         self.dissipation_diffusive.resetBC()
-        self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
-        self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
+        self.k_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): wf.get_k_dirichlet(x, t, n)
+        self.dissipation_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): wf.get_dissipation_dirichlet(x, t ,n)
         """
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
         self.vof_advective.setConstantBC(0.)
@@ -512,9 +512,9 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.body_python_rot_matrix = rot_matrix
         self.body_python_last_pos = last_pos
         self.body_python_h = h
-        self.hx_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hx(x, t)
-        self.hy_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hy(x, t)
-        self.hz_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hz(x, t)
+        self.hx_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_MoveMesh_hx(x, t)
+        self.hy_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_MoveMesh_hy(x, t)
+        self.hz_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_MoveMesh_hz(x, t)
 
     def __cpp_MoveMesh_h(self, x, t):
         cython.declare(x_0=cython.double[3])
@@ -576,15 +576,17 @@ class BC_RANS(BoundaryConditions.BC_Base):
         assert b_or is not None, "ERROR: Boundary orientation for Unsteady flow inlet is not defined"
         self.waves = __cppClass_WavesCharacteristics(waves=wave, vert_axis=vert_axis, b_or=b_or,
                                                      wind_speed=wind_speed, smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
-        self.u_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
-        self.v_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
-        self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
-        self.phi_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_phi_dirichlet(x, t)
-        self.vof_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
-        self.p_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
-        self.pInc_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+
+        self.u_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
+        self.v_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
+        self.w_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
+        self.phi_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_phi_dirichlet(x, t)
+        self.vof_dirichlet.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
+        self.p_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+        self.pInc_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+
         self.pInc_diffusive.setConstantBC(0.0)
-        self.pInit_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)#setConstantBC(0.0)
+        self.pInit_advective.uOfXT = lambda x, t, n=np.zeros(3,): self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)#setConstantBC(0.0)
         self.vos_dirichlet.setConstantBC(0.0)
         self.us_dirichlet.setConstantBC(0.0)
         self.vs_dirichlet.setConstantBC(0.0)
@@ -950,6 +952,7 @@ class RelaxationZone:
         self.orientation = orientation
         if vert_axis is None:
             vert_axis = self.Shape.Domain.nd - 1
+        self.vert_axis = vert_axis
         if waves is not None:
             self.waves = __cppClass_WavesCharacteristics(waves=waves, wind_speed=wind_speed, vert_axis=vert_axis,
                                                          smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
@@ -1215,7 +1218,7 @@ class WallFunctions(AuxiliaryVariables.AV_base):
     class instance acting as a wall.
     """
 
-    def __init__(self, turbModel, kWall, b_or, Y, Yplus, U0, nu=1.004e-6, Cmu=0.09, K=0.41, B=5.57):
+    def __init__(self, turbModel, kWall, Y, Yplus, U0, nu=1.004e-6, Cmu=0.09, K=0.41, B=5.57):
         """
         Sets turbulent boundaries for wall treatment.
         Calculation made on nodes outside the viscous sublayer and based
@@ -1248,7 +1251,6 @@ class WallFunctions(AuxiliaryVariables.AV_base):
             roughness coefficient for walls.
         """
         self.turbModel = turbModel
-        self._b_or = b_or
         self.Y = Y
         self.Yplus = Yplus
         self.U0 = U0
@@ -1256,10 +1258,6 @@ class WallFunctions(AuxiliaryVariables.AV_base):
         self.Cmu = Cmu
         self.K = K
         self.B = B
-        #_b_or is positive when points outward the domain
-        b0, b1, b2 = self._b_or
-        # normal unit vector is positive when points inward the domain
-        self.nV = old_div((-self._b_or), np.sqrt(np.sum([b0**2, b1**2, b2**2])))
         # initialise variables
         self.Ubound = np.zeros(3)
         self.kappa = 1e-10
@@ -1421,27 +1419,27 @@ class WallFunctions(AuxiliaryVariables.AV_base):
             u = v = w = None
         return u, v, w
 
-    def setYplusNormalDirection(self, x, t, relax=1.0):
+    def setYplusNormalDirection(self, x, t,n, relax=1.0):
         """
         Return the point at y+ distance in normal
         direction from the boundary.
         """
         # near wall point
-        nP = (relax * self.Y * (self.nV)) + x
+        nP = (relax * self.Y * (-n)) + x
         return nP
 
-    def extractVelocity(self, x, t):
+    def extractVelocity(self, x, t, n):
         """
         Extraction of the velocity at y+ distance from the boundary.
         """
-        coords = self.setYplusNormalDirection(x, t)
+        coords = self.setYplusNormalDirection(x, t, n)
         xi, element, rank = self.findElementContainingCoords(coords)
         if rank is not None:
             u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
         else:
             relax = 0.5
             while rank is None:
-                coords_relax = self.setYplusNormalDirection(x, t, relax)
+                coords_relax = self.setYplusNormalDirection(x, t, n ,relax)
                 xi, element, rank = self.findElementContainingCoords(coords_relax)
                 relax *= 0.5
             # just use the element containing the boundary quadrature point to interpolate to the y+ point
@@ -1451,7 +1449,7 @@ class WallFunctions(AuxiliaryVariables.AV_base):
         self.xi, self.element, self.rank = xi, element, rank
         return u, v, w
 
-    def tangentialVelocity(self, x, t, uInit=None):
+    def tangentialVelocity(self, x, t, n, uInit=None):
         """
         Given the velocity, calculates its
         tangential component to the wall.
@@ -1465,10 +1463,10 @@ class WallFunctions(AuxiliaryVariables.AV_base):
         if uInit is True or self.model is None:
             u0, u1, u2 = self.U0
         else:
-            u0, u1, u2 = self.extractVelocity(x, t)
+            u0, u1, u2 = self.extractVelocity(x, t, n)
         self.meanV = np.array([u0, u1, u2])
         # projection of u vector over an ortoganal plane to b_or
-        self.tanU = self.meanV - self.meanV * (self.nV**2)
+        self.tanU = self.meanV - self.meanV * (n**2)
         # tangential unit vector
         self.tV = old_div(self.tanU,np.sqrt(np.sum(self.tanU**2)))
 
@@ -1502,48 +1500,48 @@ class WallFunctions(AuxiliaryVariables.AV_base):
             # Linear approximation for velocity at the wall (using the gradU of the logLaw)
             self.uDir = self.tanU - (self.gradU * self.Y)
 
-    def get_u_dirichlet(self, x, t):
+    def get_u_dirichlet(self, x, t, n):
         if t > 0.:
             uInit = False
         else:
             uInit = True
-        self.tangentialVelocity(x, t, uInit)
+        self.tangentialVelocity(x, t, n, uInit)
         self.getVariables(x, t)
         return self.uDir[0]
 
-    def get_v_dirichlet(self, x, t):
+    def get_v_dirichlet(self, x, t, n):
         if t > 0.:
             uInit = False
         else:
             uInit = True
-        self.tangentialVelocity(x, t, uInit)
+        self.tangentialVelocity(x, t, n, uInit)
         self.getVariables(x, t)
         return self.uDir[1]
 
-    def get_w_dirichlet(self, x, t):
+    def get_w_dirichlet(self, x, t, n):
         if t > 0.:
             uInit = False
         else:
             uInit = True
-        self.tangentialVelocity(x, t, uInit)
+        self.tangentialVelocity(x, t, n, uInit)
         self.getVariables(x, t)
         return self.uDir[2]
 
-    def get_k_dirichlet(self, x, t):
+    def get_k_dirichlet(self, x, t, n):
         if t > 0.:
             uInit = False
         else:
             uInit = True
-        self.tangentialVelocity(x, t, uInit)
+        self.tangentialVelocity(x, t,n, uInit)
         self.getVariables(x, t)
         return self.kappa
 
-    def get_dissipation_dirichlet(self, x, t):
+    def get_dissipation_dirichlet(self, x, t, n):
         if t > 0.:
             uInit = False
         else:
             uInit = True
-        self.tangentialVelocity(x, t, uInit)
+        self.tangentialVelocity(x, t, n, uInit)
         self.getVariables(x, t)
         d = 0.
         if self.turbModel == 'ke':
@@ -1552,32 +1550,32 @@ class WallFunctions(AuxiliaryVariables.AV_base):
             d = old_div(np.sqrt(self.kappa), (self.K * self.Y * (self.Cmu**0.25)))
         return d
 
-    def get_u_diffusive(self, x, t):
+    def get_u_diffusive(self, x, t, n):
         if t > 0.:
             uInit = False
         else:
             uInit = True
-        self.tangentialVelocity(x, t, uInit)
+        self.tangentialVelocity(x, t, n, uInit)
         self.getVariables(x, t)
         gradU = self.gradU[0]
         return gradU
 
-    def get_v_diffusive(self, x, t):
+    def get_v_diffusive(self, x, t, n ):
         if t > 0.:
             uInit = False
         else:
             uInit = True
-        self.tangentialVelocity(x, t, uInit)
+        self.tangentialVelocity(x, t, n, uInit)
         self.getVariables(x, t)
         gradU = self.gradU[1]
         return gradU
 
-    def get_w_diffusive(self, x, t):
+    def get_w_diffusive(self, x, t, n):
         if t > 0.:
             uInit = False
         else:
             uInit = True
-        self.tangentialVelocity(x, t, uInit)
+        self.tangentialVelocity(x, t, n, uInit)
         self.getVariables(x, t)
         gradU = self.gradU[2]
         return gradU
@@ -1589,14 +1587,13 @@ class kWall(AuxiliaryVariables.AV_base):
     class instance acting as a wall for the k variable.
     """
 
-    def __init__(self, Y, Yplus, b_or, nu=1.004e-6, Cmu=0.09):
+    def __init__(self, Y, Yplus, nu=1.004e-6, Cmu=0.09):
         """
         Sets turbulent boundaries for wall treatment.
         """
         self.kappa = 1e-10
         self.Y = Y
         self.Yplus = Yplus
-        self._b_or = b_or
         self.nu = nu
         self.model = None
         self.Cmu = Cmu

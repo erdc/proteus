@@ -1,0 +1,17 @@
+mesh2D.ply filter=lfs diff=lfs merge=lfs -text
+mesh3D.asy filter=lfs diff=lfs merge=lfs -text
+mesh3D_boundaryLegend.asy filter=lfs diff=lfs merge=lfs -text
+mesh3D.edge filter=lfs diff=lfs merge=lfs -text
+mesh3D.node filter=lfs diff=lfs merge=lfs -text
+mesh2D.edge filter=lfs diff=lfs merge=lfs -text
+mesh2D.node filter=lfs diff=lfs merge=lfs -text
+mesh3D.neigh filter=lfs diff=lfs merge=lfs -text
+mesh3D.ply filter=lfs diff=lfs merge=lfs -text
+mesh3D.poly filter=lfs diff=lfs merge=lfs -text
+mesh2D.1.neigh filter=lfs diff=lfs merge=lfs -text
+mesh2D.1.poly filter=lfs diff=lfs merge=lfs -text
+mesh3D.ele filter=lfs diff=lfs merge=lfs -text
+mesh3D.face filter=lfs diff=lfs merge=lfs -text
+mesh2D.asy filter=lfs diff=lfs merge=lfs -text
+mesh2D.ele filter=lfs diff=lfs merge=lfs -text
+mesh2D.poly filter=lfs diff=lfs merge=lfs -text

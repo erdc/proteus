@@ -3,16 +3,16 @@ from __future__ import absolute_import
 from __future__ import division
 from builtins import range
 from past.utils import old_div
-import os
 from proteus import *
 from proteus.default_p import *
 from proteus.elastoplastic import ElastoPlastic
+import os
 """
 Soil mechanics model for problem 6.3 in Smith and Griffiths
 """
 nd=3
 from .griffiths_lane_6 import *
-genMesh=True
+genMesh=False#True
 he = 4.0
 #he*=0.5
 #he*=0.5
@@ -21,10 +21,12 @@ he = 4.0
 #he*=0.5
 domain = gl_6_3d(width=he)
 boundaryFlags = domain.boundaryFlags
-domain.regionConstraints = [old_div((he**3),6.0)]
-domain.writePoly("gl_6_3d")
-domain.writePLY("gl_6_3d")
-triangleOptions="VApq1.15q15feena"
+#domain.regionConstraints = [old_div((he**3),6.0)]
+domain.regionConstraints = [128.0]
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"gl_6_3d"
+#domain.writePoly("gl_6_3d")
+#domain.writePLY("gl_6_3d")
+triangleOptions="VApfeen"
 
 #mechanical properties
 SRF = 1.0#65#15
@@ -106,7 +108,7 @@ analyticalSolution = None
 #coefficients = LinearElasticitySF(E=317986,nu=0.31,g=g,nd=nd)#stokes_2D_tube_p.Stokes2D()
 #coefficients = ElasticPlasticSF(modelType_block=smFlags,modelParams_block=smTypes,g=g,rhow=rhow,pa=pa,nd=nd)
 LevelModelType = ElastoPlastic.LevelModel
-usePorePressure=True#False
+usePorePressure=False
 if usePorePressure:
     coefficients = ElastoPlastic.Coefficients(modelType_block=smFlags,modelParams_block=smTypes,
                                               g=g,rhow=rhow,pa=pa,nd=nd,SRF=SRF_init,

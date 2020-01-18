@@ -166,17 +166,13 @@ namespace proteus
       for  (int k=0;k<nQuadraturePoints_element;k++)
         {
           //compute indeces and declare local storage
-          register int eN_k = eN*nQuadraturePoints_element+k,
-            eN_k_nSpace = eN_k*nSpace;
-            //eN_nDOF_trial_element = eN*nDOF_trial_element;
+          register int eN_k = eN*nQuadraturePoints_element+k;
           register double u=0.0,grad_u[nSpace],
             a=0.0,
-            f[nSpace],
             jac[nSpace*nSpace],
             jacDet,
             jacInv[nSpace*nSpace],
             u_grad_trial[nDOF_trial_element*nSpace],
-            u_test_dV[nDOF_trial_element],
             u_grad_test_dV[nDOF_test_element*nSpace],
             dV,x,y,z,
             G[nSpace*nSpace],G_dd_G,tr_G;
@@ -205,7 +201,6 @@ namespace proteus
           //precalculate test function products with integration weights
           for (int j=0;j<nDOF_trial_element;j++)
             {
-              u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
               for (int I=0;I<nSpace;I++)
                 {
                   u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -271,12 +266,11 @@ namespace proteus
         {
           for  (int k=0;k<nQuadraturePoints_element;k++)
             {
-              register int eN_k = eN*nQuadraturePoints_element+k;
               register double
                 jac[nSpace*nSpace],
                 jacDet,
                 jacInv[nSpace*nSpace],
-                dV,x,y,z;
+                x,y,z;
               ck.calculateMapping_element(eN,
                                           k,
                                           mesh_dof,
@@ -287,8 +281,6 @@ namespace proteus
                                           jacDet,
                                           jacInv,
                                           x,y,z);
-              //get the physical integration weight
-              dV = fabs(jacDet)*dV_ref[k];
             }
         }
       //
@@ -372,16 +364,11 @@ namespace proteus
             }//i
           for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
             {
-              register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
-                ebNE_kb_nSpace = ebNE_kb*nSpace,
-                ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+              register int ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                 ebN_local_kb_nSpace = ebN_local_kb*nSpace;
               register double penalty=0.0,
                 u_ext=0.0,
-                bc_u_ext=0.0,
-                adv_flux_ext=0.0,
                 diff_flux_ext=0.0,
-                a_ext,
                 jac_ext[nSpace*nSpace],
                 jacDet_ext,
                 jacInv_ext[nSpace*nSpace],
@@ -391,7 +378,6 @@ namespace proteus
                 dS,
                 u_test_dS[nDOF_test_element],
                 u_grad_trial_trace[nDOF_trial_element*nSpace],
-                u_grad_test_dS[nDOF_test_element*nSpace],
                 normal[nSpace],x_ext,y_ext,z_ext=0.0,
                 G[nSpace*nSpace],G_dd_G,tr_G;
               //
@@ -430,8 +416,6 @@ namespace proteus
               for (int j=0;j<nDOF_trial_element;j++)
                 {
                   u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
-                  for (int I=0;I<nSpace;I++)
-                    u_grad_test_dS[j*nSpace+I] = u_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
                 }
               //
               //calculate the numerical fluxes
@@ -560,21 +544,17 @@ namespace proteus
           }
       for  (int k=0;k<nQuadraturePoints_element;k++)
         {
-          int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
-            eN_k_nSpace = eN_k*nSpace;
-            //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
+          int eN_k = eN*nQuadraturePoints_element+k; //index to a scalar at a quadrature point
 
           //declare local storage
           register double u=0.0,
             grad_u[nSpace],
-            f[nSpace],
             a=0.0,
             jac[nSpace*nSpace],
             jacDet,
             jacInv[nSpace*nSpace],
             u_grad_trial[nDOF_trial_element*nSpace],
             dV,
-            u_test_dV[nDOF_test_element],
             u_grad_test_dV[nDOF_test_element*nSpace],
             x,y,z,
             G[nSpace*nSpace],G_dd_G,tr_G;
@@ -603,7 +583,6 @@ namespace proteus
           //precalculate test function products with integration weights
           for (int j=0;j<nDOF_trial_element;j++)
             {
-              u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
               for (int I=0;I<nSpace;I++)
                 {
                   u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin

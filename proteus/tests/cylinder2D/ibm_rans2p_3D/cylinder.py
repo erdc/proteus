@@ -5,6 +5,7 @@ from proteus.default_n import *
 from proteus.Profiling import logEvent
 
 from proteus import Context
+import os
 
 #===============================================================================
 # Context
@@ -40,7 +41,7 @@ USE_SBM=ct.use_sbm
 #===============================================================================
 Refinement = ct.Refinement
 sedimentDynamics=False
-genMesh = True
+genMesh = False#True
 movingDomain = False
 applyRedistancing = True
 useOldPETSc = False
@@ -149,7 +150,7 @@ structured = False
 L = [1.5, 0.41, 0.01]
 he = L[0]/(2**Refinement)
 
-he = 0.01
+he = 0.04
 L[2] = 2*he
 
 import my_domain
@@ -162,9 +163,10 @@ domain,boundaryTags = my_domain.get_pseudo_3D_cylinder_box_domain(L=L,
                                                                  x2=(0.2-0.06,0.2-0.06),x3=(0.2+0.3,0.2+0.06),
                                                                  )
 
-domain.writePoly("mesh")
-domain.writePLY("mesh")
-domain.writeAsymptote("mesh")
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshCylinder"
+#domain.writePoly("meshCylinder")
+#domain.writePLY("mesh")
+#domain.writeAsymptote("mesh")
 #triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
 #triangleOptions = "KVApq10Dena"
 triangleOptions="KVApq1.35q12feena"

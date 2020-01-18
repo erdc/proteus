@@ -132,6 +132,7 @@ cdef class RelaxationZone:
         double dragBeta
         double porosity
         double epsFact_solid
+        double vert_axis	
         double[:] center
         double[:] orientation
     cpdef void calculate_init(self)
