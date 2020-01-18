@@ -1,1 +1,7 @@
 ./comparison_files/T1_ibm_3D_rans2p.h5 filter=lfs diff=lfs merge=lfs -text
+meshCylinder.edge filter=lfs diff=lfs merge=lfs -text
+meshCylinder.ele filter=lfs diff=lfs merge=lfs -text
+meshCylinder.face filter=lfs diff=lfs merge=lfs -text
+meshCylinder.neigh filter=lfs diff=lfs merge=lfs -text
+meshCylinder.node filter=lfs diff=lfs merge=lfs -text
+meshCylinder.poly filter=lfs diff=lfs merge=lfs -text
