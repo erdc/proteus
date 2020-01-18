@@ -1182,8 +1182,15 @@ namespace proteus
                 //upwinded advective flux
                 if ((fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s) < 0.0)
                   {
-                    mom_u_source += D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
-                    mom_v_source += D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
+                    mom_u_source += D_s*u_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
+                    mom_v_source += D_s*v_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
+                  }
+                else
+                  {
+                    mom_u_source += D_s*u*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
+                    dmom_u_source[0] += D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
+                    mom_v_source += D_s*v*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
+                    dmom_v_source[1] += D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
                   }
 
                 //viscous flux
