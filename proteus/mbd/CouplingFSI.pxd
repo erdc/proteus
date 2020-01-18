@@ -216,7 +216,6 @@ cdef class ProtChBody:
       np.ndarray acceleration
       np.ndarray acceleration_last
       np.ndarray velocity
-      np.ndarray velocity_fluid
       np.ndarray velocity_last
       np.ndarray ang_acceleration_last
       np.ndarray ang_acceleration
@@ -295,7 +294,7 @@ cdef class ProtChSystem:
         object model_addedmass
         ProtChAddedMass ProtChAddedMass
         int tCount
-        bool initialised
+        bool initialized
         bool update_substeps
         int nBodiesIBM
 
