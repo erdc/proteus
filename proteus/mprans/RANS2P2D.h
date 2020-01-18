@@ -1,3 +1,4 @@
+
 #ifndef RANS2P2D_H
 #define RANS2P2D_H
 #include <valarray>
@@ -2271,7 +2272,7 @@ namespace proteus
                     //internal and actually a cut edge
                     //if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
                     //  cutfem_boundaries.insert(ebN);
-                    if (elementBoundaryElementsArray[ebN*2+1] != -1)
+                    if (elementBoundaryElementsArray[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned))
                       cutfem_boundaries.insert(ebN);
                   }
               }
@@ -5881,7 +5882,6 @@ namespace proteus
         //
         //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
         //
-        double boundaryLength=0.0;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
             register int ebN = exteriorElementBoundariesArray[ebNE],
@@ -6634,7 +6634,6 @@ namespace proteus
                 //update the global Jacobian from the flux Jacobian
                 //
                 const double H_s = gf_s.H(particle_eps, ebqe_phi_s[ebNE_kb]);
-                boundaryLength += H_s*dS;
                 if (elementIsActive[eN])
                   {
                 for (int i=0;i<nDOF_test_element;i++)
@@ -6723,7 +6722,6 @@ namespace proteus
                   }
               }//kb
           }//ebNE
-        std::cout<<"boundary length "<<boundaryLength<<std::endl;
       }//computeJacobian
         
       void calculateVelocityAverage(int nExteriorElementBoundaries_global,
