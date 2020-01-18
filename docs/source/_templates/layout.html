@@ -1,0 +1,29 @@
+{% extends "!layout.html" %}
+  {% block footer %} {{ super() }}
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+   /* .wy-side-nav-search, .wy-nav-top { */
+    .wy-side-nav-search {
+        background: #F0F0F0;
+    }
+   .wy-side-nav-search > div.version {
+       color: rgba(0,0,0,.5);
+   }
+   /* .wy-side-nav-search img { */
+   /* max-width: 200%; */
+   /* } */
+   .wy-side-nav-search>a img.logo {
+       width: 150px;
+       /* width: 200px; */
+   }
+
+
+
+    /* Sidebar */
+   /* .wy-nav-side { */
+   /* background: #ff0000; */
+   /* } */
+  </style>
+
+{% endblock %}
