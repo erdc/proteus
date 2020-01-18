@@ -52,7 +52,13 @@ domain = RectangularDomain(L=L)
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
 bt['back'] = bt['top']
-domain.writePoly("tank2d")
+#domain.writePoly("tank2d")
+genMesh=False
+
+pathfile = os.path.dirname(os.path.abspath(__file__))+"/"+"tank2d"
+domain.polyfile= pathfile
+#domain.writePoly(domain.polyfile)
+
 
 ################
 ##### MESH #####
