@@ -10,6 +10,7 @@ for key, value in cfg_vars.items():
         cfg_vars[key] = cfg_vars[key].replace("-O2", "")
         cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "-UNDEBUG")
         cfg_vars[key] = cfg_vars[key].replace(" -g ", "  ")#linux-gnu gotcha
+
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
 

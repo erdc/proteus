@@ -6,13 +6,14 @@ from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.richards import Richards
+import os
 
 nd=3
 try:
     from .griffiths_lane_6 import *
 except:
     from griffiths_lane_6 import *
-genMesh=True
+genMesh=False#True
 he = 4.0
 #he*=0.5
 #he*=0.5
@@ -21,10 +22,12 @@ he = 4.0
 #he*=0.5
 domain = gl_6_3d(width=he)
 boundaryFlags = domain.boundaryFlags
-domain.regionConstraints = [old_div((he**3),6.0)]
-domain.writePoly("gl_6_3d")
-domain.writePLY("gl_6_3d")
-triangleOptions="VApq1.15q15feena"
+#domain.regionConstraints = [old_div((he**3),6.0)]
+domain.regionConstraints = [128.0]
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"gl_6_3d"
+#domain.writePoly("gl_6_3d")
+#domain.writePLY("gl_6_3d")
+triangleOptions="VApfeen"
 dimensionless_gravity  = numpy.array([0.0,
                                       0.0,
                                       -1.0])
