@@ -87,7 +87,6 @@ cdef class ProtChBody:
         self.acceleration = np.zeros(3)
         self.acceleration_last = np.zeros(3)
         self.velocity = np.zeros(3)
-        self.velocity_fluid = np.zeros(3)
         self.velocity_last = np.zeros(3)
         self.ang_velocity = np.zeros(3)
         self.position = np.zeros(3)
@@ -820,33 +819,30 @@ cdef class ProtChBody:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
             for flag in self.boundaryFlags:
                 am.barycenters[flag] = pyvec2array(self.ChBody.GetPos())
-        self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
-        self.updateIBM()
+        if self.useIBM and self.ProtChSystem.model is not None:
+            self.updateIBM()
 
     def updateIBM(self):
-        if self.useIBM and self.ProtChSystem.model is not None:
-            c = self.ProtChSystem.model.levelModelList[-1].coefficients
-            if c.use_ball_as_particle:
-                chpos = self.ChBody.GetPos()
-                chvel = self.ChBody.GetPos_dt()
-                chvel_ang = self.ChBody.GetWvel_loc()
-                for flag in self.boundaryFlags:
-                    c.ball_radius[flag] = self.radiusIBM
-                    c.ball_center[flag, 0] = chpos.x
-                    c.ball_center[flag, 1] = chpos.y
-                    c.ball_center[flag, 2] = chpos.z
-                    c.ball_velocity[flag, 0] = chvel.x
-                    c.ball_velocity[flag, 1] = chvel.y
-                    c.ball_velocity[flag, 2] = chvel.z
-                    c.ball_angular_velocity[flag, 0] = chvel_ang.x
-                    c.ball_angular_velocity[flag, 1] = chvel_ang.y
-                    c.ball_angular_velocity[flag, 2] = chvel_ang.z
-            else:
-                # only set it on initialization, then pass
-                if not self.ProtChSystem.initialised:
-                    for flag in self.boundaryFlags:
-                        c.particle_sdfList[flag] = self.getDynamicSDF
-                        c.particle_velocityList[flag] = lambda x, t: self.getVelocity()
+        c = self.ProtChSystem.model.levelModelList[-1].coefficients
+        if c.use_ball_as_particle:
+            chpos = self.ChBody.GetPos()
+            chvel = self.ChBody.GetPos_dt()
+            chvel_ang = self.ChBody.GetWvel_loc()
+            for flag in self.boundaryFlags:
+                c.ball_radius[flag] = self.radiusIBM
+                c.ball_center[flag, 0] = chpos.x
+                c.ball_center[flag, 1] = chpos.y
+                c.ball_center[flag, 2] = chpos.z
+                c.ball_velocity[flag, 0] = chvel.x
+                c.ball_velocity[flag, 1] = chvel.y
+                c.ball_velocity[flag, 2] = chvel.z
+                c.ball_angular_velocity[flag, 0] = chvel_ang.x
+                c.ball_angular_velocity[flag, 1] = chvel_ang.y
+                c.ball_angular_velocity[flag, 2] = chvel_ang.z
+        else:
+            for flag in self.boundaryFlags:
+                c.particle_sdfList[flag] = self.getDynamicSDF
+                c.particle_velocityList[flag] = lambda x, t: self.getVelocity()
 
     def getDynamicSDF(self, t, x):
         chpos = self.ChBody.GetPos()
@@ -1425,7 +1421,7 @@ cdef class ProtChSystem:
         self.chrono_dt = 1.
         self.ProtChAddedMass = ProtChAddedMass(self)
         self.tCount = 0
-        self.initialised = False
+        self.initialized = False
         self.update_substeps = False
 
     def setTimeStep(self, double dt):
@@ -1581,43 +1577,43 @@ cdef class ProtChSystem:
                 self.femSpace_velocity = self.u[1].femSpace
                 self.femSpace_pressure = self.u[0].femSpace
                 self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
-        if not self.initialised:
+        if not self.initialized:
             self.nBodiesIBM = 0  # will be incremented by bodies calculate_init()
-            Profiling.logEvent("Starting init"+str(self.next_sample))
-            self.directory = bytes(Profiling.logDir+str("/"),'utf-8')
-            self.thisptr.setDirectory(self.directory)
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
             self.ChSystem.SetupInitial()
             Profiling.logEvent("Finished init"+str(self.next_sample))
-            if self.nBodiesIBM > 0:
-                assert self.model is not None, 'IBM set to be used in bodies but model is not attached. Attach rans model BEFORE calling calculate_init() on chrono system'
-                c = self.model.levelModelList[-1].coefficients
-                # set it only if it was not set manually before
-                if not c.nParticles:
-                    c.nParticles = self.nBodiesIBM
-                else:
-                    assert c.nParticles == self.nBodiesIBM, 'number of RANS particles {nP} != number of IBM bodies {nB}'.format(nP=c.nParticles, nB=self.nBodiesIBM)
-                if c.use_ball_as_particle:
-                    if c.ball_radius is None:
-                        c.ball_radius = np.zeros(self.nBodiesIBM, 'd')
-                    if c.ball_center is None:
-                        c.ball_center = np.zeros((self.nBodiesIBM, 3), 'd')
-                    if c.ball_velocity is None:
-                        c.ball_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
-                    if c.ball_angular_velocity is None:
-                        c.ball_angular_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
-                else:
-                    if c.particle_sdfList is None:
-                        c.particle_sdfList = [None for i in range(self.nBodiesIBM)]
-                    if c.particle_velocityList is None:
-                        c.particle_velocityList = [None for i in range(self.nBodiesIBM)]
-            for s in self.subcomponents:
-                s.poststep()
-            self.initialised = True
+            self.initialized = True
         else:
-            Profiling.logEvent("Warning: Chrono system was already initialised")
+            Profiling.logEvent("Warning: Chrono system was already initialized")
+        Profiling.logEvent("Starting init"+str(self.next_sample))
+        self.directory = bytes(Profiling.logDir+str("/"),'utf-8')
+        self.thisptr.setDirectory(self.directory)
+        if self.nBodiesIBM > 0:
+            assert self.model is not None, 'IBM set to be used in bodies but model is not attached. Attach rans model BEFORE calling calculate_init() on chrono system'
+            c = self.model.levelModelList[-1].coefficients
+            # set it only if it was not set manually before
+            if not c.nParticles:
+                c.nParticles = self.nBodiesIBM
+            else:
+                assert c.nParticles == self.nBodiesIBM, 'number of RANS particles {nP} != number of IBM bodies {nB}'.format(nP=c.nParticles, nB=self.nBodiesIBM)
+            if c.use_ball_as_particle:
+                if c.ball_radius is None:
+                    c.ball_radius = np.zeros(self.nBodiesIBM, 'd')
+                if c.ball_center is None:
+                    c.ball_center = np.zeros((self.nBodiesIBM, 3), 'd')
+                if c.ball_velocity is None:
+                    c.ball_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
+                if c.ball_angular_velocity is None:
+                    c.ball_angular_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
+            else:
+                if c.particle_sdfList is None:
+                    c.particle_sdfList = [None for i in range(self.nBodiesIBM)]
+                if c.particle_velocityList is None:
+                    c.particle_velocityList = [None for i in range(self.nBodiesIBM)]
+        for s in self.subcomponents:
+            s.poststep()
 
     def setTimestepperType(self, string tstype, bool verbose=False):
         """Change timestepper (default: Euler)
