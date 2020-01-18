@@ -605,6 +605,31 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.u_old_dof = self.model.u[1].dof.copy()
         self.v_old_dof = self.model.u[2].dof.copy()
         self.w_old_dof = self.model.u[3].dof.copy()
+        if self.nParticles > 0 and self.use_ball_as_particle == 0:
+            self.phi_s[:] = 1e10
+            self.phisField[:] = 1e10
+            self.ebqe_phi_s[:] = 1e10
+            self.ebq_global_grad_phi_s[:] = 1e10
+            self.ebq_particle_velocity_s[:] = 1e10
+            t=0.0
+            for i in range(self.nParticles):
+                vel = lambda x: self.particle_velocityList[i](t, x)
+                sdf = lambda x: self.particle_sdfList[i](t, x)
+                for j in range(self.mesh.nodeArray.shape[0]):
+                    sdf_at_node, sdNormals = sdf(self.mesh.nodeArray[j, :])
+                    if (sdf_at_node < self.phi_s[j]):
+                        self.phi_s[j] = sdf_at_node
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.particle_signed_distances[i, eN, k], self.particle_signed_distance_normals[i, eN, k,:] = sdf(self.model.q['x'][eN, k])
+                        self.particle_velocities[i, eN, k,:] = vel(self.model.q['x'][eN, k])
+                        if (self.particle_signed_distances[i, eN, k] < self.phisField[eN, k]):
+                            self.phisField[eN, k] = self.particle_signed_distances[i, eN, k]
+                for ebNE in range(self.model.ebqe['x'].shape[0]):
+                    for kb in range(self.model.ebqe['x'].shape[1]):
+                        sdf_ebNE_kb,sdNormals = sdf(self.model.ebqe['x'][ebNE,kb])
+                        if (sdf_ebNE_kb < self.ebqe_phi_s[ebNE,kb]):
+                            self.ebqe_phi_s[ebNE,kb]=sdf_ebNE_kb
 
     def initializeMesh(self, mesh):
         
@@ -857,10 +882,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if self.nParticles:
                 self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
                 self.particle_forceHistory.flush()
-                self.particle_pforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+self.nParticles, :]))
-                self.particle_pforceHistory.flush()
-                self.particle_vforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+2*self.nParticles, :]))
+                self.particle_vforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+self.nParticles, :]))
                 self.particle_vforceHistory.flush()
+                self.particle_pforceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0+2*self.nParticles, :]))
+                self.particle_pforceHistory.flush()
                 self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
                 self.particle_momentHistory.flush()
 
