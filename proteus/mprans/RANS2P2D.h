@@ -3349,11 +3349,22 @@ namespace proteus
               {
                 std::map<int,double> Dwp_Dn_jump, Dw_Dn_jump;
                 register double gamma_cutfem=ghost_penalty_constant,gamma_cutfem_p=ghost_penalty_constant,h_cutfem=elementBoundaryDiameter[*it];
-                gamma_cutfem_p /= fmax(rho_0,rho_1)*fmin(fmax(alphaBDF,1.0),1000.0);
+                int eN_nDOF_v_trial_element  = elementBoundaryElementsArray[(*it)*2+0]*nDOF_v_trial_element;
+                //See Massing Schott Wall 2018
+                //cek todo modify for two-fluids: rho_0 != rho_1
+                double norm_v=0.0;
+                for (int i=0;i<nDOF_v_trial_element;i++)//MSW18 is just on face, but this is easier
+                  {
+                    double u=u_old_dof[vel_l2g[eN_nDOF_v_trial_element+i]],
+                      v=v_old_dof[vel_l2g[eN_nDOF_v_trial_element+i]];
+                    norm_v=fmax(norm_v,sqrt(u*u+v*v));
+                  }
+                double gamma_v_dim = rho_0*(nu_0 + norm_v*h_cutfem + alphaBDF*h_cutfem*h_cutfem);
+                gamma_cutfem_p *= h_cutfem*h_cutfem/gamma_v_dim;
                 if (NONCONSERVATIVE_FORM)
-                  gamma_cutfem*=fmin(rho_0*nu_0,rho_1*nu_1);
+                  gamma_cutfem*=gamma_v_dim;
                 else
-                  gamma_cutfem*=fmin(nu_0,nu_1);
+                  gamma_cutfem*=(gamma_v_dim/rho_0);
                 for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                   {
                     register double Dp_Dn_jump=0.0, Du_Dn_jump=0.0, Dv_Dn_jump=0.0,dS;
@@ -5671,11 +5682,22 @@ namespace proteus
             std::map<int,double> Dwp_Dn_jump,Dw_Dn_jump;
             std::map<std::pair<int, int>, int> p_p_nz, u_u_nz, v_v_nz;
             register double gamma_cutfem=ghost_penalty_constant,gamma_cutfem_p=ghost_penalty_constant,h_cutfem=elementBoundaryDiameter[*it];
-            gamma_cutfem_p /= fmax(rho_0,rho_1)*fmin(fmax(alphaBDF,1.0),1000.0);
+            int eN_nDOF_v_trial_element  = elementBoundaryElementsArray[(*it)*2+0]*nDOF_v_trial_element;
+            //See Massing Schott Wall 2018
+            //cek todo modify for two-fluids: rho_0 != rho_1
+            double norm_v=0.0;
+            for (int i=0;i<nDOF_v_trial_element;i++)//MSW18 is just on face, but this is easier
+              {
+                double u=u_old_dof[vel_l2g[eN_nDOF_v_trial_element+i]],
+                  v=v_old_dof[vel_l2g[eN_nDOF_v_trial_element+i]];
+                norm_v=fmax(norm_v,sqrt(u*u+v*v));
+              }
+            double gamma_v_dim = rho_0*(nu_0 + norm_v*h_cutfem + alphaBDF*h_cutfem*h_cutfem);
+            gamma_cutfem_p *= h_cutfem*h_cutfem/gamma_v_dim;
             if (NONCONSERVATIVE_FORM)
-              gamma_cutfem*=fmin(rho_0*nu_0,rho_1*nu_1);
+              gamma_cutfem*=gamma_v_dim;
             else
-              gamma_cutfem*=fmin(nu_0,nu_1);
+              gamma_cutfem*=(gamma_v_dim/rho_0);
             for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
                 register double Dp_Dn_jump=0.0, Du_Dn_jump=0.0, Dv_Dn_jump=0.0,dS;
