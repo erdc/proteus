@@ -203,7 +203,7 @@ class ShapeRANS(Shape):
         self._attachAuxiliaryVariable('kWallFunction', auxvar)
 
     def setAbsorptionZones(self, flags, epsFact_solid, center, orientation,
-                           dragAlpha, dragBeta=0.,
+                           dragAlpha, vert_axis=None,dragBeta=0.,
                            porosity=1.):
         """
         Sets a region (given the local flag) to an absorption zone
@@ -220,6 +220,9 @@ class ShapeRANS(Shape):
             Coordinates of the center of the absorption zone.
         orientation: array_like
             Orientation vector pointing TOWARDS incoming waves.
+        vert_axis: Optional[int]
+            index of vertical position vector (x:0, y:1, z:2), must always be
+            aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
         dragBeta: Optional[float]
             Relaxation zone coefficient.
         porosity: Optional[float]
@@ -249,10 +252,11 @@ class ShapeRANS(Shape):
                                                  epsFact_solid=epsFact_solid[i],
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
-                                                 porosity=porosity[i])
+                                                 porosity=porosity[i],
+                                                 vert_axis=vert_axis)
 
     def setGenerationZones(self, flags, epsFact_solid, center, orientation,
-                           waves, dragAlpha,
+                           waves, dragAlpha,vert_axis=None,
                            wind_speed=(0., 0., 0.), dragBeta=0.,
                            porosity=1., smoothing=0.):
         """
@@ -272,6 +276,9 @@ class ShapeRANS(Shape):
             Class instance of wave generated from proteus.WaveTools.
         dragAlpha: Optional[float]
             Relaxation zone coefficient.
+        vert_axis: Optional[int]
+            index of vertical position vector (x:0, y:1, z:2), must always be
+            aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
         wind_speed: Optional[array_like]
             Speed of wind in generation zone (default is (0., 0., 0.))
         dragBeta: Optional[float]
@@ -305,7 +312,8 @@ class ShapeRANS(Shape):
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i],
-                                                 smoothing=smoothing[i])
+                                                 smoothing=smoothing[i],
+                                                 vert_axis=vert_axis)
 
     def setPorousZones(self, flags, dragAlpha, dragBeta,
                        porosity):
