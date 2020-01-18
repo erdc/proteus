@@ -632,9 +632,6 @@ class NS_base(object):  # (HasTraits):
                                                                        analyticalSolution=p.analyticalSolution))
                 model.simTools = self.simOutputList[-1]
                 self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
-                logEvent("Auxiliary variable calculate_init for model %s" % (model.name,))
-                for av in self.auxiliaryVariables[model.name]:
-                    av.calculate_init()
         else:
             for p,n,s,model,index in zip(pList,nList,sList,self.modelList,list(range(len(pList)))):
                 self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
@@ -644,6 +641,10 @@ class NS_base(object):  # (HasTraits):
         for avList in list(self.auxiliaryVariables.values()):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
+        for model in self.modelList:
+            logEvent("Auxiliary variable calculate_init for model %s" % (model.name,))
+            for av in self.auxiliaryVariables[model.name]:
+                av.calculate_init()
         logEvent(Profiling.memory("NumericalSolution memory",className='NumericalSolution',memSaved=memBase))
         if so.tnList is None:
             logEvent("Building tnList from model = "+pList[0].name+" nDTout = "+repr(nList[0].nDTout))
