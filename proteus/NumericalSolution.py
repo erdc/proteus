@@ -376,7 +376,7 @@ class NS_base(object):  # (HasTraits):
                 if comm.size() > 1 and n.conservativeFlux != None:
                     sys.exit("ERROR: Element based partitions don't have a functioning conservative flux calculation. Set conservativeFlux to None in twp_navier_stokes")
                 #attach the checkpointer
-                self.PUMIcheckpointer = Checkpoint.Checkpointer(self,p.domain.checkpointFrequency) 
+                self.PUMIcheckpointer = Checkpoint.Checkpointer(self,p.domain.checkpointFrequency)
                 #ibaned: PUMI conversion #1
                 if p.domain.nd == 3:
                   mesh = MeshTools.TetrahedralMesh()
@@ -641,6 +641,10 @@ class NS_base(object):  # (HasTraits):
         for avList in list(self.auxiliaryVariables.values()):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
+        for model in self.modelList:
+            logEvent("Auxiliary variable calculate_init for model %s" % (model.name,))
+            for av in self.auxiliaryVariables[model.name]:
+                av.calculate_init()
         logEvent(Profiling.memory("NumericalSolution memory",className='NumericalSolution',memSaved=memBase))
         if so.tnList is None:
             logEvent("Building tnList from model = "+pList[0].name+" nDTout = "+repr(nList[0].nDTout))
@@ -840,7 +844,7 @@ class NS_base(object):  # (HasTraits):
         #shock capturing depends on m_tmp or m_last (if lagged). m_tmp is modified by mass-correction and is pushed into m_last during updateTimeHistory().
         #This leads to a situation where m_last comes from the mass-corrected solutions so post-step is needed to get this behavior.
         #If adapt is called after the first time-step, then skip the post-step for the old solution
-        if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 ) 
+        if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 )
           or self.opts.hotStart):
 
             for idx in [3,4]:
@@ -1092,7 +1096,7 @@ class NS_base(object):  # (HasTraits):
                 if p.initialConditions is not None:
                     logEvent("Setting initial conditions for "+p.name)
                     m.setInitialConditions(p.initialConditions,self.tnList[0])
- 
+
 
         #Attach models and do sample residual calculation. The results are usually irrelevant.
         #What's important right now is to re-establish the relationships between data structures.
@@ -1131,7 +1135,7 @@ class NS_base(object):  # (HasTraits):
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
 
-        #this sets the timeIntegration time, which might be unnecessary for restart 
+        #this sets the timeIntegration time, which might be unnecessary for restart
         if(self.opts.hotStart):
           self.systemStepController.stepSequence=[(self.systemStepController.t_system,m) for m in self.systemStepController.modelList]
         else:
@@ -1153,7 +1157,7 @@ class NS_base(object):  # (HasTraits):
             #      index,
             #      #self.systemStepController.t_system_last+1.0e-6)
             #      self.systemStepController.t_system)
-  
+
             #This logic won't account for if final step doesn't match frequency or if adapt isn't being called
             if((self.PUMIcheckpointer.frequency>0) and ( (domain.PUMIMesh.nAdapt()!=0) and (domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency==0 ) or self.systemStepController.t_system_last==self.tnList[-1])):
 
@@ -1192,7 +1196,7 @@ class NS_base(object):  # (HasTraits):
 
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
-        #but needs to be returned to the original form if not actually adapting....be careful with the following statements, unsure if this doesn't break something else 
+        #but needs to be returned to the original form if not actually adapting....be careful with the following statements, unsure if this doesn't break something else
         import copy
         for m in self.modelList:
             for lm in m.levelModelList:
@@ -1250,18 +1254,18 @@ class NS_base(object):  # (HasTraits):
         del scalar
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
-        
+
         rho = numpy.array([rho_0,
                            rho_1])
         nu = numpy.array([nu_0,
                           nu_1])
         g = numpy.asarray(g)
-        
+
         #This condition is to account for adapting before the simulation started
         if(hasattr(self,"tn")):
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
-            deltaT = self.systemStepController.dt_system 
+            deltaT = self.systemStepController.dt_system
         else:
             deltaT = 0
 
@@ -1416,7 +1420,7 @@ class NS_base(object):  # (HasTraits):
               if(minQual**(1./3.)<0.25):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
-              
+
               if (self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
                 sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
                 domain.PUMIMesh.updateSphereCoordinates(sphereCoords)
@@ -1431,7 +1435,7 @@ class NS_base(object):  # (HasTraits):
                 for m in self.modelList:
                     for lm in m.levelModelList:
                         lm.u[0].dof[:]=lm.u_store[0].dof
-                
+
         return adaptMeshNow
 
 
@@ -1471,7 +1475,7 @@ class NS_base(object):  # (HasTraits):
 
         sfConfig = domain.PUMIMesh.size_field_config()
         if(hasattr(self,"nSolveSteps")):
-          logEvent("h-adapt mesh by calling AdaptPUMIMesh at step %s" % self.nSolveSteps)        
+          logEvent("h-adapt mesh by calling AdaptPUMIMesh at step %s" % self.nSolveSteps)
         if(sfConfig=="pseudo"):
             logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
         else:
@@ -1501,7 +1505,7 @@ class NS_base(object):  # (HasTraits):
                              domain.regList,
                              parallel = self.comm.size() > 1,
                              dim = domain.nd)
-  
+
         self.PUMI_reallocate(mesh)
         self.PUMI2Proteus(domain)
       ##chitak end Adapt
@@ -1526,7 +1530,7 @@ class NS_base(object):  # (HasTraits):
         sys.exit("Need to specify checkpointInfo file in inputs")
       else:
         self.PUMIcheckpointer.DecodeModel(self.pList[0].domain.checkpointInfo)
-      
+
       self.PUMI_reallocate(mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
       self.PUMI2Proteus(self.pList[0].domain)
 
@@ -1607,7 +1611,7 @@ class NS_base(object):  # (HasTraits):
                 #if not isinstance(p.domain,Domain.PUMIDomain):
 
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
-                    for cj in range(lm.coefficients.nc): 
+                    for cj in range(lm.coefficients.nc):
 
                         if not isinstance(self.pList[0].domain,Domain.PUMIDomain):
                           lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
@@ -1768,10 +1772,6 @@ class NS_base(object):  # (HasTraits):
             logEvent("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
         self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
-        for m in self.modelList:
-            logEvent("Auxiliary variable calculations for model %s" % (m.name,))
-            for av in self.auxiliaryVariables[m.name]:
-                av.calculate_init()
         logEvent("Starting time stepping",level=0)
         systemStepFailed=False
         stepFailed=False
@@ -1789,7 +1789,7 @@ class NS_base(object):  # (HasTraits):
             self.PUMI_transferFields()
             logEvent("Initial Adapt before Solve")
             self.PUMI_adaptMesh("interface")
- 
+
             self.PUMI_transferFields()
             logEvent("Initial Adapt 2 before Solve")
             self.PUMI_adaptMesh("interface")
@@ -1835,7 +1835,7 @@ class NS_base(object):  # (HasTraits):
                         lm.u[ci].dof_last[:] = lm.u[ci].dof
                         lm.u[ci].dof[:] = lm.u_store[ci].dof
 
-        #### If PUMI and hotstarting then decode info and proceed with restart #### 
+        #### If PUMI and hotstarting then decode info and proceed with restart ####
         #### This has to be done after the dof histories are saved because DOF histories are already present on the mesh ####
 
         if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
@@ -1845,8 +1845,8 @@ class NS_base(object):  # (HasTraits):
           f.close()
           if(previousInfo["checkpoint_status"]=="endsystem"):
             self.hotstartWithPUMI()
-            self.opts.hotStart = False 
-            #Need to clean mesh for output again      
+            self.opts.hotStart = False
+            #Need to clean mesh for output again
             self.pList[0].domain.PUMIMesh.cleanMesh()
         ####
 
@@ -1881,12 +1881,12 @@ class NS_base(object):  # (HasTraits):
 
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
-      
+
 
                     if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
                       self.hotstartWithPUMI()
-                      self.opts.hotStart = False 
-                      #Need to clean mesh for output again      
+                      self.opts.hotStart = False
+                      #Need to clean mesh for output again
                       self.pList[0].domain.PUMIMesh.cleanMesh()
 
                     #This should be the only place dofs are saved otherwise there might be a double-shift for last_last
@@ -1940,7 +1940,7 @@ class NS_base(object):  # (HasTraits):
                                 logEvent("Model substep t=%12.5e for model %s" % (self.tSubstep,model.name),level=3)
                                 #TODO: model.stepController.substeps doesn't seem to be updated after a solver failure unless model.stepController.stepExact is true
                                 logEvent("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
-                
+
 
 
                                 model.stepController.setInitialGuess(model.uList,model.rList)
@@ -2037,7 +2037,7 @@ class NS_base(object):  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                  
+
                 #can only handle PUMIDomain's for now
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
