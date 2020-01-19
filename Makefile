@@ -271,8 +271,9 @@ docs:
 	@echo "make install"
 	@echo "************************************"
 
-	-${PROTEUS_ENV} pip install sphinx sphinx-bootstrap-theme
-	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
+	-${PROTEUS_ENV} pip install sphinx sphinx_rtd_theme breathe exhale
+	cd docs && ${PROTEUS_ENV} PROTEUS=${PWD} make html
+
 	@echo "**********************************"
 	@echo "Trying to open the html at"
 	@echo "../proteus-website/index.html"
