@@ -3,6 +3,7 @@ from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus import Domain
+import os
 try:
     from . import stokesDrivenCavity_2d
 except:
@@ -34,8 +35,10 @@ L = [2,2]
 
 if (numeric_scheme != "C0Q1C0Q1" and numeric_scheme != "THQuads"):
     rdomain = Domain.RectangularDomain(x=x0[:2],L=L[:2],name="rdomain")
-    polyfile="rdomain"
-    rdomain.writePoly(polyfile)
+    polyfile=os.path.dirname(os.path.abspath(__file__))+"/../"+"rdomain"
+    rdomain.polyfile = polyfile
+    #rdomain.writePoly(polyfile)
+    genMesh=False
 
 ##################################################
 

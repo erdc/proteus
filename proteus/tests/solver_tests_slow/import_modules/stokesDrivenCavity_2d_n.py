@@ -64,7 +64,7 @@ else:
     elementQuadrature = SimplexGaussQuadrature(nd,4)
     elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
     # if unstructured would need triangleOptions flag to be set
-    he = 0.01
+    he = 0.05
     triangleOptions = "VApq30Dena%8.8f" % he
     
 #####################################################
