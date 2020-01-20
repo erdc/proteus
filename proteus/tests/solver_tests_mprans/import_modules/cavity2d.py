@@ -9,7 +9,7 @@ from proteus.default_so import *
 from proteus import Context
 
 opts=Context.Options([
-    ("he",0.05,"max element diameter"),
+    ("he",0.2,"max element diameter"),
     ("schur_solver", 'two_phase_PCD', "preconditioner type"),
     ])
 
@@ -108,12 +108,12 @@ else:
                                                       regionFlags=regionFlags)
         #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
-        domain.writePoly("mesh")
-        domain.writePLY("mesh")
-        domain.writeAsymptote("mesh")
+        #domain.writePoly("mesh")
+        #domain.writePLY("mesh")
+        #domain.writeAsymptote("mesh")
         triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
-        logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
+        #logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
 
 
@@ -154,9 +154,12 @@ g = [0.0,0.0]
 if structured is False:
     triangleOptions= "pAq30.0Dena%f" % (.5*DX**2)  #% (0.5*(DX)**2,)
     print(triangleOptions)
-    genMesh=True
-    domain.writePLY('cavity2D')
-    domain.writePoly('cavity2D')
+    #genMesh=True
+    #domain.writePLY('cavity2D')
+    #domain.writePoly('cavity2D')
+    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/../"+"cavity2D"
+    genMesh=False
+
 
 ns_forceStrongDirichlet = True
 if useMetrics:

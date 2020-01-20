@@ -2,8 +2,12 @@ from __future__ import print_function
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .parameters_for_poisson import *
-from .poisson_p import *
+try:
+    from .parameters_for_poisson import *
+    from .poisson_p import *
+except:
+    from parameters_for_poisson import *
+    from poisson_p import *
 
 parallel = False
 #0 there is no special treatment for time derivative

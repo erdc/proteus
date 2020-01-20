@@ -17,11 +17,16 @@ class TestSWFlow(object):
         os.system("PYTHONPATH={0} parun --SWEs solitary.py".format(self._scriptdir))
 
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/solitary.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        #expected_path = 'comparison_files/solitary.h5'
+        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('solitary.h5','r')
-        assert np.allclose(expected.root.h_t3,actual.root.h_t3,atol=1e-10)
-        expected.close()
+        #assert np.allclose(expected.root.h_t3,actual.root.h_t3,atol=1e-10)
+        #expected.close()
+
+        expected_path = 'comparison_files/' + 'comparison_' + 'solitary' + '_h_t3.csv'
+        #write comparison file
+        #np.array(actual.root.h_t3).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t3).flatten(),decimal=10)
         actual.close()
 
     def test_parab1D(self):
@@ -29,11 +34,13 @@ class TestSWFlow(object):
         os.system("PYTHONPATH={0} parun -v  --SWEs parab1D.py".format(self._scriptdir))
 
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/parab1D.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('parab1D.h5','r')
-        assert np.allclose(expected.root.h_t11,actual.root.h_t11,atol=1e-10)
-        expected.close()
+        expected_path = 'comparison_files/' + 'comparison_' + 'parab1D' + '_h_t11.csv'
+        #write comparison file
+        #np.array(actual.root.h_t11).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t11).flatten(),decimal=10)
+
+
         actual.close()
 
     def test_dam3Bumps(self):
@@ -41,9 +48,9 @@ class TestSWFlow(object):
         os.system("PYTHONPATH={0} parun -v  --SWEs dam3Bumps.py".format(self._scriptdir))
 
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/dam3Bumps.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file('dam3Bumps.h5','r')
-        assert np.allclose(expected.root.h_t4,actual.root.h_t4,atol=1e-10)
-        expected.close()
+        expected_path = 'comparison_files/' + 'comparison_' + 'dam3Bumps' + '_h_t4.csv'
+        #write comparison file
+        #np.array(actual.root.h_t4).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t4).flatten(),decimal=10)
         actual.close()
