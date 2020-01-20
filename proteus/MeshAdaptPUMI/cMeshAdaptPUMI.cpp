@@ -100,6 +100,7 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
  * Destructor for MeshAdaptPUMIDrvr
  */
 {
+/*
   freeField(err_reg);
   freeField(vmsErrH1);
   freeField(errRho_reg);
@@ -108,6 +109,8 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
+*/
+/*
   if(isReconstructed){
     free(modelVertexMaterial);
     free(modelBoundaryMaterial);
@@ -116,6 +119,7 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
     //gmi_destroy(m->getModel());
     //apf::destroyMesh(m);
   }
+*/
   PCU_Comm_Free();
 #ifdef PROTEUS_USE_SIMMETRIX
   SimModel_stop();
