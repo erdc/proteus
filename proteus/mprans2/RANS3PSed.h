@@ -1650,7 +1650,7 @@ namespace proteus
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
-                elementResidual_p_save[eN_i]=0.0;
+                elementResidual_p_save.data()[eN_i]=0.0;
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
                 elementResidual_w[i]=0.0;
@@ -2230,7 +2230,7 @@ namespace proteus
               { 
                 register int eN_i=eN*nDOF_test_element+i;
 
-                /* elementResidual_p_save[eN_i] +=  elementResidual_p.data()[i]; */
+                /* elementResidual_p_save.data()[eN_i] +=  elementResidual_p.data()[i]; */
                 /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
                 /* globalResidual.data()[offset_p+stride_p*p_l2g.data()[eN_i]]+=elementResidual_p.data()[i]; */
                 globalResidual.data()[offset_u+stride_u*vel_l2g.data()[eN_i]]+=elementResidual_u[i];
@@ -3030,7 +3030,7 @@ namespace proteus
               {
                 int eN_i = eN*nDOF_test_element+i;
               
-                /* elementResidual_p_save[eN_i] +=  elementResidual_p.data()[i]; */
+                /* elementResidual_p_save.data()[eN_i] +=  elementResidual_p.data()[i]; */
                 /* mesh_volume_conservation_weak += elementResidual_mesh[i];               */
                 /* globalResidual.data()[offset_p+stride_p*p_l2g.data()[eN_i]]+=elementResidual_p.data()[i]; */
                 globalResidual.data()[offset_u+stride_u*vel_l2g.data()[eN_i]]+=elementResidual_u[i];
