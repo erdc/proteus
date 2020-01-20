@@ -240,6 +240,7 @@ namespace proteus
                                    int* isDiffusiveFluxBoundary_u,
                                    int* isDiffusiveFluxBoundary_v,
                                    int* isDiffusiveFluxBoundary_w,
+				   int* isOutflowBC,
                                    double* ebqe_bc_p_ext,
                                    double* ebqe_bc_flux_mass_ext,
                                    double* ebqe_bc_flux_mom_u_adv_ext,
@@ -479,6 +480,7 @@ namespace proteus
                                    int *isDiffusiveFluxBoundary_u,
                                    int *isDiffusiveFluxBoundary_v,
                                    int *isDiffusiveFluxBoundary_w,
+				   int* isOutflowBC,
                                    double *ebqe_bc_p_ext,
                                    double *ebqe_bc_flux_mass_ext,
                                    double *ebqe_bc_flux_mom_u_adv_ext,
@@ -2247,6 +2249,7 @@ namespace proteus
                              int* isDiffusiveFluxBoundary_u,
                              int* isDiffusiveFluxBoundary_v,
                              int* isDiffusiveFluxBoundary_w,
+			     int* isOutflowBC,
                              double* ebqe_bc_p_ext,
                              double* ebqe_bc_flux_mass_ext,
                              double* ebqe_bc_flux_mom_u_adv_ext,
@@ -4926,30 +4929,32 @@ namespace proteus
                     /* elementResidual_p[i] -= DM*ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]),p_test_dS[i]); */
                     /* globalConservationError += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]); */
                     elementResidual_u[i] +=
-		      (INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[0] : 0.) +
-                      ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
-                      ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
-                      ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
-                      ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
-                                                                 isDiffusiveFluxBoundary_u[ebNE_kb],
-                                                                 eb_adjoint_sigma,
-                                                                 u_ext,
-                                                                 bc_u_ext,
-                                                                 normal,
-                                                                 sdInfo_u_u_rowptr,
-                                                                 sdInfo_u_u_colind,
-                                                                 mom_uu_diff_ten_ext,
-                                                                 &vel_grad_test_dS[i*nSpace])+
-                      ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_v[ebNE_kb],
-                                                                 isDiffusiveFluxBoundary_u[ebNE_kb],
-                                                                 eb_adjoint_sigma,
-                                                                 v_ext,
-                                                                 bc_v_ext,
-                                                                 normal,
-                                                                 sdInfo_u_v_rowptr,
-                                                                 sdInfo_u_v_colind,
-                                                                 mom_uv_diff_ten_ext,
-                                                                 &vel_grad_test_dS[i*nSpace]);//+
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+		      ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+		      ((INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[0] : 0.) +
+		       ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
+		       ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
+		       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
+								  isDiffusiveFluxBoundary_u[ebNE_kb],
+								  eb_adjoint_sigma,
+								  u_ext,
+								  bc_u_ext,
+								  normal,
+								  sdInfo_u_u_rowptr,
+								  sdInfo_u_u_colind,
+								  mom_uu_diff_ten_ext,
+								  &vel_grad_test_dS[i*nSpace])+
+		       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_v[ebNE_kb],
+								  isDiffusiveFluxBoundary_u[ebNE_kb],
+								  eb_adjoint_sigma,
+								  v_ext,
+								  bc_v_ext,
+								  normal,
+								  sdInfo_u_v_rowptr,
+								  sdInfo_u_v_colind,
+								  mom_uv_diff_ten_ext,
+								  &vel_grad_test_dS[i*nSpace]));//+
                     /* ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_w[ebNE_kb], */
                     /*                                         isDiffusiveFluxBoundary_u[ebNE_kb], */
                     /*                                         eb_adjoint_sigma, */
@@ -4961,30 +4966,32 @@ namespace proteus
                     /*                                         mom_uw_diff_ten_ext, */
                     /*                                         &vel_grad_test_dS[i*nSpace]); */
                     elementResidual_v[i] +=
-		      (INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[1] : 0.) +
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
 		      ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
-                      ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
-                      ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+
-                      ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
-                                                                 isDiffusiveFluxBoundary_v[ebNE_kb],
-                                                                 eb_adjoint_sigma,
-                                                                 u_ext,
-                                                                 bc_u_ext,
-                                                                 normal,
-                                                                 sdInfo_v_u_rowptr,
-                                                                 sdInfo_v_u_colind,
-                                                                 mom_vu_diff_ten_ext,
-                                                                 &vel_grad_test_dS[i*nSpace])+
-                      ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_v[ebNE_kb],
-                                                                 isDiffusiveFluxBoundary_v[ebNE_kb],
-                                                                 eb_adjoint_sigma,
-                                                                 v_ext,
-                                                                 bc_v_ext,
-                                                                 normal,
-                                                                 sdInfo_v_v_rowptr,
-                                                                 sdInfo_v_v_colind,
-                                                                 mom_vv_diff_ten_ext,
-                                                                 &vel_grad_test_dS[i*nSpace]);//+
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+		      ((INT_BY_PARTS_PRESSURE==1 ? p_ext*vel_test_dS[i]*normal[1] : 0.) +
+		       ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
+		       ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+      
+		       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
+								  isDiffusiveFluxBoundary_v[ebNE_kb],
+								  eb_adjoint_sigma,
+								  u_ext,
+								  bc_u_ext,
+								  normal,
+								  sdInfo_v_u_rowptr,
+								  sdInfo_v_u_colind,
+								  mom_vu_diff_ten_ext,
+								  &vel_grad_test_dS[i*nSpace])+
+		       ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_v[ebNE_kb],
+								  isDiffusiveFluxBoundary_v[ebNE_kb],
+								  eb_adjoint_sigma,
+								  v_ext,
+								  bc_v_ext,
+								  normal,
+								  sdInfo_v_v_rowptr,
+								  sdInfo_v_v_colind,
+								  mom_vv_diff_ten_ext,
+								  &vel_grad_test_dS[i*nSpace]));//+
                     /* ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_w[ebNE_kb], */
                     /*                                         isDiffusiveFluxBoundary_v[ebNE_kb], */
                     /*                                         eb_adjoint_sigma, */
@@ -5204,6 +5211,7 @@ namespace proteus
                              int* isDiffusiveFluxBoundary_u,
                              int* isDiffusiveFluxBoundary_v,
                              int* isDiffusiveFluxBoundary_w,
+			     int* isOutflowBC,
                              double* ebqe_bc_p_ext,
                              double* ebqe_bc_flux_mass_ext,
                              double* ebqe_bc_flux_mom_u_adv_ext,
@@ -7132,31 +7140,35 @@ namespace proteus
 
                     /* fluxJacobian_u_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]); */
                     fluxJacobian_u_u[j] =
-                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_u_u_rowptr,
-                                                             sdInfo_u_u_colind,
-                                                             isDOFBoundary_u[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_u[ebNE_kb],
-                                                             normal,
-                                                             mom_uu_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+		      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+		      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+							     ebqe_phi_ext[ebNE_kb],
+							     sdInfo_u_u_rowptr,
+							     sdInfo_u_u_colind,
+							     isDOFBoundary_u[ebNE_kb],
+							     isDiffusiveFluxBoundary_u[ebNE_kb],
+							     normal,
+							     mom_uu_diff_ten_ext,
+							     vel_trial_trace_ref[ebN_local_kb_j],
+							     &vel_grad_trial_trace[j_nSpace],
+							     penalty);//ebqe_penalty_ext[ebNE_kb]);
                     fluxJacobian_u_v[j]=
-                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_u_v_rowptr,
-                                                             sdInfo_u_v_colind,
-                                                             isDOFBoundary_v[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_v[ebNE_kb],
-                                                             normal,
-                                                             mom_uv_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+		      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+		       ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+							      ebqe_phi_ext[ebNE_kb],
+							      sdInfo_u_v_rowptr,
+							      sdInfo_u_v_colind,
+							      isDOFBoundary_v[ebNE_kb],
+							      isDiffusiveFluxBoundary_v[ebNE_kb],
+							      normal,
+							      mom_uv_diff_ten_ext,
+							      vel_trial_trace_ref[ebN_local_kb_j],
+							      &vel_grad_trial_trace[j_nSpace],
+							      penalty);//ebqe_penalty_ext[ebNE_kb]);
                     /*fluxJacobian_u_w[j]=
                       ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j])+*/
                     /*   ExteriorNumericalDiffusiveFluxJacobian(eps_rho, */
@@ -7173,31 +7185,35 @@ namespace proteus
 
                     /* fluxJacobian_v_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]); */
                     fluxJacobian_v_u[j]=
-                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_v_u_rowptr,
-                                                             sdInfo_v_u_colind,
-                                                             isDOFBoundary_u[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_u[ebNE_kb],
-                                                             normal,
-                                                             mom_vu_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+		      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+		       ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+							      ebqe_phi_ext[ebNE_kb],
+							      sdInfo_v_u_rowptr,
+							      sdInfo_v_u_colind,
+							      isDOFBoundary_u[ebNE_kb],
+							      isDiffusiveFluxBoundary_u[ebNE_kb],
+							      normal,
+							      mom_vu_diff_ten_ext,
+							      vel_trial_trace_ref[ebN_local_kb_j],
+							      &vel_grad_trial_trace[j_nSpace],
+							      penalty);//ebqe_penalty_ext[ebNE_kb]);
                     fluxJacobian_v_v[j]=
-                      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
-                      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
-                                                             ebqe_phi_ext[ebNE_kb],
-                                                             sdInfo_v_v_rowptr,
-                                                             sdInfo_v_v_colind,
-                                                             isDOFBoundary_v[ebNE_kb],
-                                                             isDiffusiveFluxBoundary_v[ebNE_kb],
-                                                             normal,
-                                                             mom_vv_diff_ten_ext,
-                                                             vel_trial_trace_ref[ebN_local_kb_j],
-                                                             &vel_grad_trial_trace[j_nSpace],
-                                                             penalty);//ebqe_penalty_ext[ebNE_kb]);
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+		      ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+		      (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+		      ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+							     ebqe_phi_ext[ebNE_kb],
+							     sdInfo_v_v_rowptr,
+							     sdInfo_v_v_colind,
+							     isDOFBoundary_v[ebNE_kb],
+							     isDiffusiveFluxBoundary_v[ebNE_kb],
+							     normal,
+							     mom_vv_diff_ten_ext,
+							     vel_trial_trace_ref[ebN_local_kb_j],
+							     &vel_grad_trial_trace[j_nSpace],
+							     penalty);//ebqe_penalty_ext[ebNE_kb]);
                     /* fluxJacobian_v_w[j]=
                        ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]) + */
                     /*   ExteriorNumericalDiffusiveFluxJacobian(eps_rho, */
@@ -7266,8 +7282,11 @@ namespace proteus
                         /* globalJacobian[csrRowIndeces_p_w[eN_i] + csrColumnOffsets_eb_p_w[ebN_i_j]] += fluxJacobian_p_w[j]*p_test_dS[i]; */
 
                         /* globalJacobian[csrRowIndeces_u_p[eN_i] + csrColumnOffsets_eb_u_p[ebN_i_j]] += fluxJacobian_u_p[j]*vel_test_dS[i]; */
-                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*vel_test_dS[i]+
-                          ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u[ebNE_kb],
+                        globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+			  (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+			  fluxJacobian_u_u[j]*vel_test_dS[i]+
+                          (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+			  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u[ebNE_kb],
                                                                              isDiffusiveFluxBoundary_u[ebNE_kb],
                                                                              eb_adjoint_sigma,
                                                                              vel_trial_trace_ref[ebN_local_kb_j],
@@ -7276,8 +7295,11 @@ namespace proteus
                                                                              sdInfo_u_u_colind,
                                                                              mom_uu_diff_ten_ext,
                                                                              &vel_grad_test_dS[i*nSpace]);
-                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] += fluxJacobian_u_v[j]*vel_test_dS[i]+
-                          ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v[ebNE_kb],
+                        globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] +=
+			  (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+			  fluxJacobian_u_v[j]*vel_test_dS[i]+
+                          (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+			  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v[ebNE_kb],
                                                                              isDiffusiveFluxBoundary_u[ebNE_kb],
                                                                              eb_adjoint_sigma,
                                                                              vel_trial_trace_ref[ebN_local_kb_j],
@@ -7298,8 +7320,11 @@ namespace proteus
                         /*                                                         &vel_grad_test_dS[i*nSpace]); */
 
                         /* globalJacobian[csrRowIndeces_v_p[eN_i] + csrColumnOffsets_eb_v_p[ebN_i_j]] += fluxJacobian_v_p[j]*vel_test_dS[i]; */
-                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] += fluxJacobian_v_u[j]*vel_test_dS[i]+
-                          ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u[ebNE_kb],
+                        globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] +=
+			  (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+			  fluxJacobian_v_u[j]*vel_test_dS[i]+
+                          (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+			  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u[ebNE_kb],
                                                                              isDiffusiveFluxBoundary_v[ebNE_kb],
                                                                              eb_adjoint_sigma,
                                                                              vel_trial_trace_ref[ebN_local_kb_j],
@@ -7308,8 +7333,11 @@ namespace proteus
                                                                              sdInfo_v_u_colind,
                                                                              mom_vu_diff_ten_ext,
                                                                              &vel_grad_test_dS[i*nSpace]);
-                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += fluxJacobian_v_v[j]*vel_test_dS[i]+
-                          ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v[ebNE_kb],
+                        globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] +=
+			  (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)* 
+			  fluxJacobian_v_v[j]*vel_test_dS[i]+
+                          (isOutflowBC[ebNE_kb] == 1 ? 0. : 1.)*
+			  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v[ebNE_kb],
                                                                              isDiffusiveFluxBoundary_v[ebNE_kb],
                                                                              eb_adjoint_sigma,
                                                                              vel_trial_trace_ref[ebN_local_kb_j],

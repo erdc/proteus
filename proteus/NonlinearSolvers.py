@@ -797,6 +797,8 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.computeResidual(u,r,b)
         self.F.check_positivity_water_height=True
 
+        assert self.F.u[0].dof.min() > self.F.hEps or self.F.u[0].dof.min()==0, ("Negative water height at EOSolver: ", self.F.u[0].dof.min())
+        
 class ExplicitLumpedMassMatrix(Newton):
     """
      This is a fake solver meant to be used with optimized code

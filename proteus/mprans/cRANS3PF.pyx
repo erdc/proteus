@@ -157,6 +157,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                int * isDiffusiveFluxBoundary_u,
                                int * isDiffusiveFluxBoundary_v,
                                int * isDiffusiveFluxBoundary_w,
+                               int * isOutflowBC,
                                double * ebqe_bc_p_ext,
                                double * ebqe_bc_flux_mass_ext,
                                double * ebqe_bc_flux_mom_u_adv_ext,
@@ -393,6 +394,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                int * isDiffusiveFluxBoundary_u,
                                int * isDiffusiveFluxBoundary_v,
                                int * isDiffusiveFluxBoundary_w,
+                               int * isOutflowBC,
                                double * ebqe_bc_p_ext,
                                double * ebqe_bc_flux_mass_ext,
                                double * ebqe_bc_flux_mom_u_adv_ext,
@@ -727,6 +729,7 @@ cdef class RANS3PF:
                           numpy.ndarray isDiffusiveFluxBoundary_u,
                           numpy.ndarray isDiffusiveFluxBoundary_v,
                           numpy.ndarray isDiffusiveFluxBoundary_w,
+                          numpy.ndarray isOutflowBC,
                           numpy.ndarray ebqe_bc_p_ext,
                           numpy.ndarray ebqe_bc_flux_mass_ext,
                           numpy.ndarray ebqe_bc_flux_mom_u_adv_ext,
@@ -762,24 +765,7 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_rho,
                           numpy.ndarray q_nu,
                           numpy.ndarray ebqe_nu,
-                          int nParticles,
-                          double particle_epsFact,
-                          double particle_alpha,
-                          double particle_beta,
-                          double particle_penalty_constant,
-                          numpy.ndarray particle_signed_distances,
-                          numpy.ndarray particle_signed_distance_normals,
-                          numpy.ndarray particle_velocities,
-                          numpy.ndarray particle_centroids,
-                          numpy.ndarray particle_netForces,
-                          numpy.ndarray particle_netMoments,
-                          numpy.ndarray particle_surfaceArea,
-                          double particle_nitsche,
-                          int use_ball_as_particle,
-                          numpy.ndarray ball_center,
-                          numpy.ndarray ball_radius,
-                          numpy.ndarray ball_velocity,
-                          numpy.ndarray ball_angular_velocity,
+                          particles,
                           numpy.ndarray phisError,
                           numpy.ndarray phisErrorNodal,
                           int USE_SUPG,
@@ -814,6 +800,24 @@ cdef class RANS3PF:
                           numpy.ndarray colind_1D,
                           numpy.ndarray isBoundary_1D,
                           int INT_BY_PARTS_PRESSURE):
+        cdef int nParticles = particles[0]
+        cdef double particle_epsFact = particles[1]
+        cdef double particle_alpha = particles[2]
+        cdef double particle_beta = particles[3]
+        cdef double particle_penalty_constant = particles[4]
+        cdef numpy.ndarray particle_signed_distances = particles[5]
+        cdef numpy.ndarray particle_signed_distance_normals = particles[6]
+        cdef numpy.ndarray particle_velocities = particles[7]
+        cdef numpy.ndarray particle_centroids = particles[8]
+        cdef numpy.ndarray particle_netForces = particles[9]
+        cdef numpy.ndarray particle_netMoments = particles[10]
+        cdef numpy.ndarray particle_surfaceArea = particles[11]
+        cdef double particle_nitsche = particles[12]
+        cdef int use_ball_as_particle = particles[13]
+        cdef numpy.ndarray ball_center = particles[14]
+        cdef numpy.ndarray ball_radius = particles[15]
+        cdef numpy.ndarray ball_velocity = particles[16]
+        cdef numpy.ndarray ball_angular_velocity = particles[17]        
         cdef numpy.ndarray uStar_dof = uStar[0]
         cdef numpy.ndarray vStar_dof = uStar[1]
         cdef numpy.ndarray wStar_dof = uStar[2]
@@ -967,6 +971,7 @@ cdef class RANS3PF:
                                        < int * > isDiffusiveFluxBoundary_u.data,
                                        < int * > isDiffusiveFluxBoundary_v.data,
                                        < int * > isDiffusiveFluxBoundary_w.data,
+                                       < int * > isOutflowBC.data,
                                        < double * > ebqe_bc_p_ext.data,
                                        < double * > ebqe_bc_flux_mass_ext.data,
                                        < double * > ebqe_bc_flux_mom_u_adv_ext.data,
@@ -1203,6 +1208,7 @@ cdef class RANS3PF:
                           numpy.ndarray isDiffusiveFluxBoundary_u,
                           numpy.ndarray isDiffusiveFluxBoundary_v,
                           numpy.ndarray isDiffusiveFluxBoundary_w,
+                          numpy.ndarray isOutflowBC,
                           numpy.ndarray ebqe_bc_p_ext,
                           numpy.ndarray ebqe_bc_flux_mass_ext,
                           numpy.ndarray ebqe_bc_flux_mom_u_adv_ext,
@@ -1411,6 +1417,7 @@ cdef class RANS3PF:
                                         < int * > isDiffusiveFluxBoundary_u.data,
                                         < int * > isDiffusiveFluxBoundary_v.data,
                                         < int * > isDiffusiveFluxBoundary_w.data,
+                                        < int * > isOutflowBC.data,
                                         < double * > ebqe_bc_p_ext.data,
                                         < double * > ebqe_bc_flux_mass_ext.data,
                                         < double * > ebqe_bc_flux_mom_u_adv_ext.data,
@@ -1707,6 +1714,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                int * isDiffusiveFluxBoundary_u,
                                int * isDiffusiveFluxBoundary_v,
                                int * isDiffusiveFluxBoundary_w,
+                               int * isOutflowBC,
                                double * ebqe_bc_p_ext,
                                double * ebqe_bc_flux_mass_ext,
                                double * ebqe_bc_flux_mom_u_adv_ext,
@@ -1943,6 +1951,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                int * isDiffusiveFluxBoundary_u,
                                int * isDiffusiveFluxBoundary_v,
                                int * isDiffusiveFluxBoundary_w,
+                               int * isOutflowBC,
                                double * ebqe_bc_p_ext,
                                double * ebqe_bc_flux_mass_ext,
                                double * ebqe_bc_flux_mom_u_adv_ext,
@@ -2276,6 +2285,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray isDiffusiveFluxBoundary_u,
                           numpy.ndarray isDiffusiveFluxBoundary_v,
                           numpy.ndarray isDiffusiveFluxBoundary_w,
+                          numpy.ndarray isOutflowBC,
                           numpy.ndarray ebqe_bc_p_ext,
                           numpy.ndarray ebqe_bc_flux_mass_ext,
                           numpy.ndarray ebqe_bc_flux_mom_u_adv_ext,
@@ -2311,24 +2321,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray ebqe_rho,
                           numpy.ndarray q_nu,
                           numpy.ndarray ebqe_nu,
-                          int nParticles,
-                          double particle_epsFact,
-                          double particle_alpha,
-                          double particle_beta,
-                          double particle_penalty_constant,
-                          numpy.ndarray particle_signed_distances,
-                          numpy.ndarray particle_signed_distance_normals,
-                          numpy.ndarray particle_velocities,
-                          numpy.ndarray particle_centroids,
-                          numpy.ndarray particle_netForces,
-                          numpy.ndarray particle_netMoments,
-                          numpy.ndarray particle_surfaceArea,
-                          double particle_nitsche,
-                          int use_ball_as_particle,
-                          numpy.ndarray ball_center,
-                          numpy.ndarray ball_radius,
-                          numpy.ndarray ball_velocity,
-                          numpy.ndarray ball_angular_velocity,
+                          particles,
                           numpy.ndarray phisError,
                           numpy.ndarray phisErrorNodal,
                           int USE_SUPG,
@@ -2363,6 +2356,25 @@ cdef class RANS3PF2D:
                           numpy.ndarray colind_1D,
                           numpy.ndarray isBoundary_1D,
                           int INT_BY_PARTS_PRESSURE):
+        cdef int nParticles = particles[0]
+        cdef double particle_epsFact = particles[1]
+        cdef double particle_alpha = particles[2]
+        cdef double particle_beta = particles[3]
+        cdef double particle_penalty_constant = particles[4]
+        cdef numpy.ndarray particle_signed_distances = particles[5]
+        cdef numpy.ndarray particle_signed_distance_normals = particles[6]
+        cdef numpy.ndarray particle_velocities = particles[7]
+        cdef numpy.ndarray particle_centroids = particles[8]
+        cdef numpy.ndarray particle_netForces = particles[9]
+        cdef numpy.ndarray particle_netMoments = particles[10]
+        cdef numpy.ndarray particle_surfaceArea = particles[11]
+        cdef double particle_nitsche = particles[12]
+        cdef int use_ball_as_particle = particles[13]
+        cdef numpy.ndarray ball_center = particles[14]
+        cdef numpy.ndarray ball_radius = particles[15]
+        cdef numpy.ndarray ball_velocity = particles[16]
+        cdef numpy.ndarray ball_angular_velocity = particles[17]
+        
         cdef numpy.ndarray uStar_dof = uStar[0]
         cdef numpy.ndarray vStar_dof = uStar[1]
         cdef numpy.ndarray wStar_dof = uStar[2]
@@ -2516,6 +2528,7 @@ cdef class RANS3PF2D:
                                        < int * > isDiffusiveFluxBoundary_u.data,
                                        < int * > isDiffusiveFluxBoundary_v.data,
                                        < int * > isDiffusiveFluxBoundary_w.data,
+                                       < int * > isOutflowBC.data,
                                        < double * > ebqe_bc_p_ext.data,
                                        < double * > ebqe_bc_flux_mass_ext.data,
                                        < double * > ebqe_bc_flux_mom_u_adv_ext.data,
@@ -2752,6 +2765,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray isDiffusiveFluxBoundary_u,
                           numpy.ndarray isDiffusiveFluxBoundary_v,
                           numpy.ndarray isDiffusiveFluxBoundary_w,
+                          numpy.ndarray isOutflowBC,
                           numpy.ndarray ebqe_bc_p_ext,
                           numpy.ndarray ebqe_bc_flux_mass_ext,
                           numpy.ndarray ebqe_bc_flux_mom_u_adv_ext,
@@ -2960,6 +2974,7 @@ cdef class RANS3PF2D:
                                         < int * > isDiffusiveFluxBoundary_u.data,
                                         < int * > isDiffusiveFluxBoundary_v.data,
                                         < int * > isDiffusiveFluxBoundary_w.data,
+                                        < int * > isOutflowBC.data,
                                         < double * > ebqe_bc_p_ext.data,
                                         < double * > ebqe_bc_flux_mass_ext.data,
                                         < double * > ebqe_bc_flux_mom_u_adv_ext.data,

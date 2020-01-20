@@ -226,8 +226,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_radius=None,
                  ball_velocity=None,
                  ball_angular_velocity=None,
-                 particles=None
+                 particles=None,
+                 outflowBCs=None
                  ):
+        self.outflowBCs=outflowBCs        
         self.outputQuantDOFs=outputQuantDOFs
         self.INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE
         self.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
@@ -609,6 +611,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_n = None # Not used. What is this for?
             self.ebqe_n = modelList[self.CLSVOF_model].ebqe[('grad(u)', 0)]
             # VOF part #
+            self.vofDOFs = modelList[self.CLSVOF_model].vofDOFs
             self.q_vf = modelList[self.CLSVOF_model].q[('H(u)', 0)]
             self.ebq_vf = None# Not used. What is this for?
             self.ebqe_vf = modelList[self.CLSVOF_model].ebqe[('H(u)', 0)]
@@ -1583,6 +1586,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
+        self.ebqe['outflowBCs'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
         #self.ebqe[ #mql: I think these two are not needed. All the info is interleaved insided the "0"-th component
         #    ('velocity',
         #     1)] = numpy.zeros(
@@ -2442,6 +2448,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
             self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
             self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
+            self.ebqe['outflowBCs'],
             self.pressureModel.numericalFlux.ebqe[('u', 0)],
             self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
@@ -2477,24 +2484,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_rho,
             self.coefficients.q_nu,
             self.coefficients.ebqe_nu,
-            self.coefficients.nParticles,
-            self.coefficients.particle_epsFact,
-            self.coefficients.particle_alpha,
-            self.coefficients.particle_beta,
-            self.coefficients.particle_penalty_constant,
-            self.coefficients.particle_signed_distances,
-            self.coefficients.particle_signed_distance_normals,
-            self.coefficients.particle_velocities,
-            self.coefficients.particle_centroids,
-            self.coefficients.particle_netForces,
-            self.coefficients.particle_netMoments,
-            self.coefficients.particle_surfaceArea,
-            self.coefficients.particle_nitsche,
-            self.coefficients.use_ball_as_particle,
-            self.coefficients.ball_center,
-            self.coefficients.ball_radius,
-            self.coefficients.ball_velocity,
-            self.coefficients.ball_angular_velocity,
+            [self.coefficients.nParticles, #pack arguments related to the particles
+             self.coefficients.particle_epsFact,
+             self.coefficients.particle_alpha,
+             self.coefficients.particle_beta,
+             self.coefficients.particle_penalty_constant,
+             self.coefficients.particle_signed_distances,
+             self.coefficients.particle_signed_distance_normals,
+             self.coefficients.particle_velocities,
+             self.coefficients.particle_centroids,
+             self.coefficients.particle_netForces,
+             self.coefficients.particle_netMoments,
+             self.coefficients.particle_surfaceArea,
+             self.coefficients.particle_nitsche,
+             self.coefficients.use_ball_as_particle,
+             self.coefficients.ball_center,
+             self.coefficients.ball_radius,
+             self.coefficients.ball_velocity,
+             self.coefficients.ball_angular_velocity],
             self.q['phisError'],
             self.phisErrorNodal,
             self.coefficients.USE_SUPG,
@@ -2784,6 +2791,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
             self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
             self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
+            self.ebqe['outflowBCs'],
             self.pressureModel.numericalFlux.ebqe[('u', 0)],
             self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
@@ -3018,6 +3026,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             log("initializing coefficients ebqe")
             self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(
                 self.timeIntegration.t, self.ebqe)
+        #
+        #mql: compute outflow BCs
+        if self.coefficients.outflowBCs is not None:
+            for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
+                ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
+                materialFlag = self.mesh.elementBoundaryMaterialTypes[ebN]
+                for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
+                    x = self.ebqe['x'][ebNE,k]
+                    outflowBCs = self.coefficients.outflowBCs(x,materialFlag)
+                    if outflowBCs is None:
+                        self.ebqe['outflowBCs'][ebNE,k] = 0.0
+                    else:
+                        self.ebqe['outflowBCs'][ebNE,k] = outflowBCs
+                    #
+                #
+            #
+        #
         log("done with ebqe")
 
     def estimate_mt(self):

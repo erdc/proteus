@@ -195,9 +195,9 @@ class Coefficients(TC_base):
             else:
                 for i in range(self.fluidModel.q[('velocity', 0)].shape[-1]):
                     self.fluidModel.q[('velocity', 0)][..., i] -= old_div(self.model.q[('grad(u)', 0)][..., i], (self.rho_f_min * alphaBDF))
-                    self.fluidModel.ebqe[('velocity', 0)][..., i] += (self.model.ebqe[('advectiveFlux', 0)] +
+                    self.fluidModel.ebqe[('velocity', 0)][..., i] += (0*self.model.ebqe[('advectiveFlux', 0)] +
                                                                       self.model.ebqe[('diffusiveFlux', 0, 0)] -
-                                                                      self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
+                                                                      0*self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
                     self.fluidModel.coefficients.q_velocity_solid[..., i] -= old_div(self.model.q[('grad(u)', 0)][..., i], (self.rho_s_min * alphaBDF))
                     self.fluidModel.coefficients.ebqe_velocity_solid[..., i] -= old_div(self.model.ebqe[('grad(u)', 0)][..., i], (self.rho_s_min * alphaBDF))
                 self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity', 0)]

@@ -37,7 +37,8 @@ LevelModelType = Pres.LevelModel
 coefficients=Pres.Coefficients(modelIndex=PRESSURE_model,
                                fluidModelIndex=V_model,
                                pressureIncrementModelIndex=PINC_model,
-                               useRotationalForm=False)
+                               useRotationalForm=False,
+                               special_pressure_DBC=('special_pressure_DBC' in boundaryConditions))
 name = "pressure"
 
 # **************************************** #
@@ -48,5 +49,8 @@ initialConditions = {0: initialConditions['pressure']}
 # ***************************************** #    
 # ********** BOUNDARY CONDITIONS ********** #
 # ***************************************** #
-dirichletConditions = {0: boundaryConditions['pressure_DBC']} 
+dirichletConditions = {0: boundaryConditions['pressure_DBC']}
 advectiveFluxBoundaryConditions = {0: boundaryConditions['pressure_AFBC']}
+
+if 'special_pressure_DBC' in boundaryConditions:
+    dirichletConditions = {0: boundaryConditions['special_pressure_DBC']}

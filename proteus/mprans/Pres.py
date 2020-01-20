@@ -49,7 +49,8 @@ class Coefficients(TC_base):
                  modelIndex=None,
                  fluidModelIndex=None,
                  pressureIncrementModelIndex=None,
-                 useRotationalForm=False):
+                 useRotationalForm=False,
+                 special_pressure_DBC=False):
         """Construct a coefficients object
 
         :param pressureIncrementModelIndex: The index into the model list
@@ -59,6 +60,7 @@ class Coefficients(TC_base):
                          variableNames=['p'],
                          reaction={0: {0: 'linear'}},  # = p - p_last - phi
                          advection={0: {0: 'constant'}})  # div  (\mu velocity)
+        self.special_pressure_DBC=special_pressure_DBC
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
         self.pressureIncrementModelIndex = pressureIncrementModelIndex
@@ -621,7 +623,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # set strong Dirichlet conditions
         for dofN, g in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items()):
             # load the BC valu        # Load the unknowns into the finite element dof
-            u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
+            if self.coefficients.special_pressure_DBC:
+                # special BCs are wrt x and vof instead of x and t
+                vof = self.coefficients.fluidModel.coefficients.vofDOFs[dofN]
+                #if (self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN][0]==0):
+                #    print (self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN][1],g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], 100))
+                #    input("wait")
+                u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], vof)
+            else:
+                u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
+            #
+        #
         self.setUnknowns(u)
 
         if self.coefficients.pressureIncrementModelIndex is not None:
@@ -668,8 +680,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
         for dofN, g in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items()):
-            r[self.offset[0] + self.stride[0] * dofN] = self.u[0].dof[dofN] - \
-                g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
+            if self.coefficients.special_pressure_DBC:
+                # special BCs are wrt x and vof instead of x and t
+                vof = self.coefficients.fluidModel.coefficients.vofDOFs[dofN]
+                r[self.offset[0] + self.stride[0] * dofN] = (self.u[0].dof[dofN] - 
+                                                             g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], vof))
+            else:
+                r[self.offset[0] + self.stride[0] * dofN] = (self.u[0].dof[dofN] - 
+                                                             g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t))
         log("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
 

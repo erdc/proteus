@@ -24,6 +24,7 @@ class TwoPhaseFlowProblem:
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
+                 outflowBCs=None,
                  # FORCE FIELD FOR NAVIER STOKES #
                  forceTerms=None,
                  # AUXILIARY VARIABLES #
@@ -70,6 +71,7 @@ class TwoPhaseFlowProblem:
         self.triangleFlag=triangleFlag
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
+        self.outflowBCs=outflowBCs
         self.useSuperlu = useSuperlu
         self.fastArchive = fastArchive
 
