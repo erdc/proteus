@@ -84,7 +84,7 @@ else:
         g = [0.0, -9.8]
     
 # ----- Discretization -- input options ----- #
-genMesh = True
+genMesh = False#True
 movingDomain = False
 applyRedistancing = True
 useOldPETSc = False
@@ -182,14 +182,15 @@ else:
     boundaries = ['bottom', 'right', 'top', 'left', 'front', 'back']
     boundaryTags = dict([(key, i + 1) for (i, key) in enumerate(boundaries)])
     if structured:
-        nnx = 4 * Refinement**2 + 1
+        nnx = 5#4 * Refinement**2 + 1
         if nd==2:
             nny = 2*nnx
         else:
             nny = nnx
-            nnz = 2*nnx
+            nnz = nnx#2*nnx
         triangleFlag=1
         domain = Domain.RectangularDomain(L)
+        domain.polyfile = os.path.dirname(os.path.abspath(__file__))+"/"+"mesh3D"
         he = old_div(L[0],(nnx - 1))
     else:
         if nd==2:

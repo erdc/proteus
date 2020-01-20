@@ -14,7 +14,7 @@ ct=Context.Options([
     ("level_set_function",1,"0: distance function, 1: saturated distance function"),
     ("T",0.1,"Final time"),
     ("nDTout",1,"Number of time steps to archive"),
-    ("refinement",3,"Level of refinement"),
+    ("refinement",0,"Level of refinement"),
     ("unstructured",False,"Use unstructured mesh. Set to false for periodic BCs"),
     # Choice of numerical method #
     ("STABILIZATION_TYPE",1,"0: SUPG, 1: EV, 2: smoothness based indicator"),
