@@ -84,6 +84,52 @@ class get_numpy_include(object):
         import numpy as np
         return np.get_include()
 
+MPRANS2_EXTENSIONS = [
+    Extension('mprans2.cAddedMass', ['proteus/mprans2/AddedMass.cpp'],
+              depends=['proteus/mprans2/AddedMass.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
+    Extension('mprans2.SedClosure', ['proteus/mprans2/SedClosure.cpp'],
+              depends=['proteus/mprans2/SedClosure.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
+    Extension('mprans2.cVOF3P', ['proteus/mprans2/VOF3P.cpp'],
+              depends=['proteus/mprans2/VOF3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
+    Extension('mprans2.cNCLS3P', ['proteus/mprans2/NCLS3P.cpp'],
+              depends=['proteus/mprans2/NCLS3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
+    Extension('mprans2.cMCorr3P', ['proteus/mprans2/MCorr3P.cpp'],
+              depends=['proteus/mprans2/MCorr3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
+              define_macros=[('PROTEUS_LAPACK_H',
+                              PROTEUS_LAPACK_H),
+                             ('PROTEUS_LAPACK_INTEGER',
+                              PROTEUS_LAPACK_INTEGER),
+                             ('PROTEUS_BLAS_H',
+                              PROTEUS_BLAS_H)],
+              library_dirs=[PROTEUS_LAPACK_LIB_DIR,
+                            PROTEUS_BLAS_LIB_DIR],
+              libraries=['m',PROTEUS_LAPACK_LIB,
+                         PROTEUS_BLAS_LIB],
+              ),
+    Extension(
+        'mprans2.RANS3PSed',
+        ['proteus/mprans2/RANS3PSed.cpp'],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++')
+]
+
 EXTENSIONS_TO_BUILD = [
     # Extension("MeshAdaptPUMI.MeshAdaptPUMI",
     #           sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
@@ -193,11 +239,6 @@ EXTENSIONS_TO_BUILD = [
               language='c++',
               extra_compile_args=PROTEUS_OPT+["-std=c++11","-mavx"],
               include_dirs=[numpy.get_include(),'proteus']),
-    Extension("mprans.cRANS3PSed",['proteus/mprans/cRANS3PSed.pyx'],
-              depends=['proteus/mprans/RANS3PSed.h','proteus/mprans/RANS3PSed2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(),'proteus']),
     Extension("Isosurface",['proteus/Isosurface.pyx'],
               language='c',
               extra_compile_args=PROTEUS_OPT,
@@ -267,7 +308,6 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'ADR',
         ['proteus/ADR.cpp'],
-        headers=['proteus/ADR.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'
@@ -983,7 +1023,8 @@ def setup_given_extensions(extensions):
     )
 
 def setup_extensions_in_sequential():
-    setup_given_extensions(EXTENSIONS_TO_BUILD)
+    #setup_given_extensions(EXTENSIONS_TO_BUILD)
+    setup_given_extensions(MPRANS2_EXTENSIONS)
 
 def setup_extensions_in_parallel():
     import multiprocessing, logging
