@@ -121,13 +121,7 @@ MPRANS2_EXTENSIONS = [
                             PROTEUS_BLAS_LIB_DIR],
               libraries=['m',PROTEUS_LAPACK_LIB,
                          PROTEUS_BLAS_LIB],
-              ),
-    Extension(
-        'mprans2.RANS3PSed',
-        ['proteus/mprans2/RANS3PSed.cpp'],
-        include_dirs=get_xtensor_include(),
-        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
-        language='c++')
+              )
 ]
 
 EXTENSIONS_TO_BUILD = [
@@ -210,6 +204,12 @@ EXTENSIONS_TO_BUILD = [
                          PROTEUS_BLAS_LIB],
               extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
+    Extension(
+        'mprans.RANS3PSed',
+        ['proteus/mprans/RANS3PSed.cpp'],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++'),
     Extension(
         'richards.cRichards',
         ['proteus/richards/cRichards.cpp'],
