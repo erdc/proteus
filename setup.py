@@ -88,59 +88,28 @@ MPRANS2_EXTENSIONS = [
     Extension('mprans2.cAddedMass', ['proteus/mprans2/AddedMass.cpp'],
               depends=['proteus/mprans2/AddedMass.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[
-                  # Path to pybind11 headers
-                  str(get_pybind_include()),
-                  str(get_pybind_include(user=True)),
-                  str(get_numpy_include()),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ]),
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
     Extension('mprans2.SedClosure', ['proteus/mprans2/SedClosure.cpp'],
               depends=['proteus/mprans2/SedClosure.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[
-                  # Path to pybind11 headers
-                  str(get_pybind_include()),
-                  str(get_pybind_include(user=True)),
-                  str(get_numpy_include()),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ]),
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
     Extension('mprans2.cVOF3P', ['proteus/mprans2/VOF3P.cpp'],
               depends=['proteus/mprans2/VOF3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[
-                  # Path to pybind11 headers
-                  get_pybind_include(),
-                  get_pybind_include(user=True),
-                  get_numpy_include(),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ]),
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
     Extension('mprans2.cNCLS3P', ['proteus/mprans2/NCLS3P.cpp'],
               depends=['proteus/mprans2/NCLS3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[
-                  # Path to pybind11 headers
-                  str(get_pybind_include()),
-                  str(get_pybind_include(user=True)),
-                  str(get_numpy_include()),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ]),
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
     Extension('mprans2.cMCorr3P', ['proteus/mprans2/MCorr3P.cpp'],
               depends=['proteus/mprans2/MCorr3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14'],
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
               define_macros=[('PROTEUS_LAPACK_H',
                               PROTEUS_LAPACK_H),
@@ -148,20 +117,17 @@ MPRANS2_EXTENSIONS = [
                               PROTEUS_LAPACK_INTEGER),
                              ('PROTEUS_BLAS_H',
                               PROTEUS_BLAS_H)],
-              include_dirs=[
-                  # Path to pybind11 headers
-                  str(get_pybind_include()),
-                  str(get_pybind_include(user=True)),
-                  str(get_numpy_include()),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ],
               library_dirs=[PROTEUS_LAPACK_LIB_DIR,
                             PROTEUS_BLAS_LIB_DIR],
               libraries=['m',PROTEUS_LAPACK_LIB,
                          PROTEUS_BLAS_LIB],
-              )
+              ),
+    Extension(
+        'mprans2.RANS3PSed',
+        ['proteus/mprans2/RANS3PSed.cpp'],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++')
 ]
 
 EXTENSIONS_TO_BUILD = [
@@ -850,6 +816,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.cylinder2D.sbm_3Dmesh',
                       'proteus.tests.HotStart_3P',
                       'proteus.tests.AddedMass',
+                      'proteus.tests.FSI',
                       'proteus.tests.MoveMeshMonitor',
                       'proteus.tests.wave_tests',
           ],
@@ -1041,6 +1008,8 @@ def setup_given_extensions(extensions):
                         'proteus/tests/HotStart_3P/comparison_files/T01P2_hotstart.h5']),
                       (os.path.join(proteus_install_path,'tests','AddedMass'),
                        ['proteus/tests/AddedMass/petsc.options.superlu_dist']),
+                      (os.path.join(proteus_install_path,'tests','FSI'),
+                       ['proteus/tests/FSI/petsc.options.superlu_dist']),
                       (os.path.join(proteus_install_path,'tests','MoveMeshMonitor'),
                        ['proteus/tests/MoveMeshMonitor/petsc.options.asm',
                         'proteus/tests/MoveMeshMonitor/nodesResult.csv']),
