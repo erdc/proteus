@@ -1023,8 +1023,8 @@ def setup_given_extensions(extensions):
     )
 
 def setup_extensions_in_sequential():
-    #setup_given_extensions(EXTENSIONS_TO_BUILD)
-    setup_given_extensions(MPRANS2_EXTENSIONS)
+    setup_given_extensions(EXTENSIONS_TO_BUILD)
+    #setup_given_extensions(MPRANS2_EXTENSIONS)
 
 def setup_extensions_in_parallel():
     import multiprocessing, logging
