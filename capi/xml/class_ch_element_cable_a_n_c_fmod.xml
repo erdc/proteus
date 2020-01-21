@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_ch_element_cable_a_n_c_fmod" kind="class" language="C++" prot="public">
+    <compoundname>ChElementCableANCFmod</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">ChElementCableANCF</basecompoundref>
+    <includes refid="_prot_ch_moorings_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h</includes>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_ch_element_cable_a_n_c_fmod_1a4fafd9cf4baf5d04e3cda2fdcdc56676" prot="private" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void ChElementCableANCFmod::SetupInitial</definition>
+        <argsstring>(ChSystem *system) override</argsstring>
+        <name>SetupInitial</name>
+        <param>
+          <type>ChSystem *</type>
+          <declname>system</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="38" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="38" bodyend="55"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>ChElementCableANCFmod</label>
+        <link refid="class_ch_element_cable_a_n_c_fmod"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ChElementCableANCF</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>ChElementCableANCFmod</label>
+        <link refid="class_ch_element_cable_a_n_c_fmod"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ChElementCableANCF</label>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="37" column="54" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="37" bodyend="56"/>
+    <listofallmembers>
+      <member refid="class_ch_element_cable_a_n_c_fmod_1a4fafd9cf4baf5d04e3cda2fdcdc56676" prot="private" virt="virtual"><scope>ChElementCableANCFmod</scope><name>SetupInitial</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

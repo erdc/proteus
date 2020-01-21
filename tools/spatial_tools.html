@@ -1,0 +1,772 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SpatialTools &mdash; Proteus 1.7.2 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="TwoPhaseFlow" href="two_phase_flow.html" />
+    <link rel="prev" title="BoundaryConditions" href="boundary_conditions.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/corps_logo_cross2.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apicapi.html">API docs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tools</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="boundary_conditions.html">BoundaryConditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="boundary_conditions.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="boundary_conditions.html#import">Import</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SpatialTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#import">Import</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#choosing-the-domain">Choosing the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#assembling-the-domain">Assembling the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#boundaryconditions-with-spatialtools">BoundaryConditions with SpatialTools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linking-it-to-p-py-files">Linking it to _p.py files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#complete-examples">Complete Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#d">2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">3D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#d-with-stl">3D with STL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#base-classes">Base classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#customshape">CustomShape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rectangle">Rectangle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#circle">Circle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuboid">Cuboid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cylinder">Cylinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sphere">Sphere</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#shapestl">ShapeSTL</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#mprans-specific">mprans specific</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tank2d">Tank2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tank3d">Tank3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tankwithobstacle2d">TankWithObstacle2D</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="two_phase_flow.html">TwoPhaseFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wave_tools.html">WaveTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="wave_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wave_tools.html#import-in-command-line">Import in command line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wave_tools.html#list-of-wave-theories">List of wave theories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wave_tools.html#how-to-use-in-proteus">How to use in Proteus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wave_tools.html#how-to-use-as-stand-alone-tool">How to use as stand-alone tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Models</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../models/body_dynamics.html">Body Dynamics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchsystem">ProtChSystem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchbody">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmesh">ProtChMesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmoorings">ProtChMoorings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchaddedmass">ProtChAddedMass</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#postprocessing-tools">Postprocessing Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id4">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id5">ProtChMoorings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/free_surface.html">Free Surface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#vof-ncls">VOF - NCLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#clsvof">CLSVOF</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_adaptivity.html">Mesh Adaptivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_motion.html">Mesh Motion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/navier_stokes.html">Navier-Stokes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#two-phase">Two-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#three-phase">Three-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#dealing-with-moving-domains">Dealing with Moving Domains</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#moving-ale-mesh">Moving (ALE) Mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#immersed-boundaries">Immersed Boundaries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/SWFlows.html">Shallow Water Flows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#shallow-water-equations">Shallow Water equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#modified-green-naghdi-equations">Modified Green-Naghdi equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#running-the-tests">Running the tests</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Proteus</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>SpatialTools</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/erdc/proteus/blob/masterdocs/source/tools/spatial_tools.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="spatialtools">
+<span id="spatial-tools"></span><h1>SpatialTools<a class="headerlink" href="#spatialtools" title="Permalink to this headline">¶</a></h1>
+<p>source: <a class="reference internal" href="../api/proteus.SpatialTools.html#module-proteus.SpatialTools" title="proteus.SpatialTools"><code class="xref py py-mod docutils literal notranslate"><span class="pre">proteus.SpatialTools</span></code></a> and
+<a class="reference internal" href="../api/proteus.mprans.SpatialTools.html#module-proteus.mprans.SpatialTools" title="proteus.mprans.SpatialTools"><code class="xref py py-mod docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools</span></code></a></p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Using spatial tools</p>
+<ol class="arabic simple">
+<li><p>Create a domain from <a class="reference internal" href="../api/proteus.Domain.html#module-proteus.Domain" title="proteus.Domain"><code class="xref py py-mod docutils literal notranslate"><span class="pre">proteus.Domain</span></code></a>.</p></li>
+<li><p>Create geometries that will be part of this domain from
+<a class="reference internal" href="../api/proteus.SpatialTools.html#module-proteus.SpatialTools" title="proteus.SpatialTools"><code class="xref py py-mod docutils literal notranslate"><span class="pre">proteus.SpatialTools</span></code></a> or <a class="reference internal" href="../api/proteus.mprans.SpatialTools.html#module-proteus.mprans.SpatialTools" title="proteus.mprans.SpatialTools"><code class="xref py py-mod docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools</span></code></a>.</p></li>
+<li><p>Assemble domain with <a class="reference internal" href="../api/proteus.SpatialTools.html#proteus.SpatialTools.assembleDomain" title="proteus.SpatialTools.assembleDomain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">proteus.SpatialTools.assembleDomain()</span></code></a> or <a class="reference internal" href="../api/proteus.mprans.SpatialTools.html#proteus.mprans.SpatialTools.assembleDomain" title="proteus.mprans.SpatialTools.assembleDomain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.assembleDomain()</span></code></a>.</p></li>
+</ol>
+<div class="section" id="import">
+<h3>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h3>
+<p>The base <cite>SpatialTools</cite> module can be imported as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">SpatialTools</span> <span class="k">as</span> <span class="n">st</span>
+</pre></div>
+</div>
+<p>The <cite>mprans</cite> version of <cite>SpatialTools</cite>, adding functionality specific to
+multi-phase flows, can be imported as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus.mprans</span> <span class="kn">import</span> <span class="n">SpatialTools</span> <span class="k">as</span> <span class="n">st</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="choosing-the-domain">
+<h3>Choosing the domain<a class="headerlink" href="#choosing-the-domain" title="Permalink to this headline">¶</a></h3>
+<p>The domain class instance is what will hold all geometrical information once it
+is assembled, and must be passed as an argument to all shapes created from
+SpatialTools. Usually, the following class types are used from
+<cite>proteus.Domain</cite>:</p>
+<ul class="simple">
+<li><p>2D: <code class="docutils literal notranslate"><span class="pre">PlanarStraightLineGraphDomain</span></code></p></li>
+<li><p>3D: <code class="docutils literal notranslate"><span class="pre">PiecewiseLinearComplexDomain</span></code></p></li>
+</ul>
+<p>Those classes should be instantiated with no argument, e.g.:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">Domain</span>
+<span class="n">domain</span> <span class="o">=</span> <span class="n">Domain</span><span class="o">.</span><span class="n">PlanarStraightLineGraphDomain</span><span class="p">()</span><span class="o">.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="assembling-the-domain">
+<h3>Assembling the domain<a class="headerlink" href="#assembling-the-domain" title="Permalink to this headline">¶</a></h3>
+<p>A very important final step not to forget is to assemble the domain once
+all the desired geometries have been defined, so that the <code class="docutils literal notranslate"><span class="pre">Domain</span></code> instance
+from <cite>proteus.Domain</cite> holds all the relevant geometrical information necessary
+for running the simulation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">st</span><span class="o">.</span><span class="n">assembleDomain</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="boundaryconditions-with-spatialtools">
+<h3>BoundaryConditions with SpatialTools<a class="headerlink" href="#boundaryconditions-with-spatialtools" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h4>Usage<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p>The mprans version of SpatialTools also associate geometry boundaries with
+<cite>BoundaryCondition</cite> instances from mprans.BoundaryConditions. These
+<cite>BoundaryCondition</cite> instances are easily accessible through a dictionary with
+predefined names, e.g. for a <cite>Rectangle</cite> shape instance named <cite>my_rectangle</cite>,
+<code class="docutils literal notranslate"><span class="pre">my_rectangle.BC['x-']</span></code> is for accessing the boundary conditions of the left
+segment, <code class="docutils literal notranslate"><span class="pre">'x+'</span></code> for the right, <code class="docutils literal notranslate"><span class="pre">'y+'</span></code> for the top, and <code class="docutils literal notranslate"><span class="pre">'y-'</span></code> for the
+bottom.</p>
+<p>Refer to <a class="reference internal" href="boundary_conditions.html"><span class="doc">BoundaryConditions</span></a> documentation for
+more information about the BoundaryConditions module.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The boundary conditions associated with the geometry do not have to be
+modified/set before assembling the domain, but removing/adding boundary
+conditions to a geometry on top of the predefined ones must be done before.</p>
+</div>
+</div>
+<div class="section" id="linking-it-to-p-py-files">
+<h4>Linking it to _p.py files<a class="headerlink" href="#linking-it-to-p-py-files" title="Permalink to this headline">¶</a></h4>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This does not apply to the <cite>TwoPhaseFlow</cite> module, which takes care of
+setting this automatically.</p>
+</div>
+<p>Linking the boundary conditions to the physical options _p.py files is done the following way (here for <cite>RANS2P</cite> boundary condition dictionnaries):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dirichletConditions</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">p_dirichlet</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">,</span>
+                       <span class="mi">1</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">u_dirichlet</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">,</span>
+                       <span class="mi">2</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">v_dirichlet</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">,</span>
+                       <span class="mi">3</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">w_dirichlet</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">}</span>
+
+<span class="n">advectiveFluxBoundaryConditions</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">p_advective</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">,</span>
+                                   <span class="mi">1</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">u_advective</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">,</span>
+                                   <span class="mi">2</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">v_advective</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">,</span>
+                                   <span class="mi">2</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">w_advective</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">}</span>
+
+<span class="n">diffusiveFluxBoundaryConditions</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:{},</span>
+                                   <span class="mi">1</span><span class="p">:{</span><span class="mi">1</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">u_diffusive</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">},</span>
+                                   <span class="mi">2</span><span class="p">:{</span><span class="mi">2</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">v_diffusive</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">},</span>
+                                   <span class="mi">3</span><span class="p">:{</span><span class="mi">3</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">bc</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span><span class="o">.</span><span class="n">w_diffusive</span><span class="o">.</span><span class="n">uOfXT</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>This is always the same in the _p files, as long as it is pointing to the right
+boundary conditions (e.g. p_dirichlet for pressure dirichlet). The boundary
+conditions themselves can and should be manipulated externally (not from the
+_p.py file), such as in the file where the geometries are first defined.</p>
+</div>
+</div>
+</div>
+<div class="section" id="complete-examples">
+<h2>Complete Examples<a class="headerlink" href="#complete-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="d">
+<h3>2D<a class="headerlink" href="#d" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">Domain</span>
+<span class="kn">from</span> <span class="nn">proteus.mprans</span> <span class="kn">import</span> <span class="n">SpatialTools</span> <span class="k">as</span> <span class="n">st</span>
+
+<span class="n">domain</span> <span class="o">=</span> <span class="n">Domain</span><span class="o">.</span><span class="n">PlanarStraightLineGraphDomain</span><span class="p">()</span>
+
+<span class="n">my_tank</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Tank2D</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                    <span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="mf">10.</span><span class="p">,</span><span class="mf">5.</span><span class="p">])</span>
+
+<span class="n">my_rectangle</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                            <span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">]</span>
+                            <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">2.5</span><span class="p">],</span>
+                            <span class="n">barycenter</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">2.5</span><span class="p">])</span>
+<span class="n">my_rectangle</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">rot</span><span class="o">=</span><span class="mf">3.14</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">my_rectangle</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">trans</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">])</span>
+
+<span class="n">st</span><span class="o">.</span><span class="n">assembleDomain</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
+
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">u_dirichlet</span><span class="o">.</span><span class="n">uOfXT</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">x</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">p_dirichlet</span><span class="o">.</span><span class="n">uOfXT</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.1</span><span class="o">*</span><span class="n">x</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setAtmosphere</span><span class="p">()</span>
+
+<span class="n">my_rectangle</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+<span class="n">my_rectangle</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+<span class="n">my_rectangle</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+<span class="n">my_rectangle</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id2">
+<h3>3D<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">Domain</span>
+<span class="kn">from</span> <span class="nn">proteus.mprans</span> <span class="kn">import</span> <span class="n">SpatialTools</span> <span class="k">as</span> <span class="n">st</span>
+
+<span class="n">domain</span> <span class="o">=</span> <span class="n">Domain</span><span class="o">.</span><span class="n">PiecewiseLinearComplexDomain</span><span class="p">()</span>
+
+<span class="n">my_tank</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Tank3D</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                    <span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="mf">10.</span><span class="p">,</span><span class="mf">10.</span><span class="p">,</span><span class="mf">5.</span><span class="p">])</span>
+
+<span class="n">my_cylinder</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Cylinder</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                          <span class="n">radius</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+                          <span class="n">height</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span>
+                          <span class="n">nPoints</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                          <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">5.</span><span class="p">,</span><span class="mf">2.5</span><span class="p">],</span>
+                          <span class="n">barycenter</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">5.</span><span class="p">,</span><span class="mf">2.5</span><span class="p">])</span>
+<span class="n">my_cylinder</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">rot</span><span class="o">=</span><span class="mf">3.14</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span>
+                   <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">],</span>
+                   <span class="n">pivot</span><span class="o">=</span><span class="n">my_cylinder</span><span class="o">.</span><span class="n">barycenter</span><span class="p">)</span>
+<span class="n">my_cylinder</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">trans</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">])</span>
+
+<span class="n">st</span><span class="o">.</span><span class="n">assembleDomain</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
+
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">u_dirichlet</span><span class="o">.</span><span class="n">uOfXT</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">x</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">p_dirichlet</span><span class="o">.</span><span class="n">uOfXT</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.1</span><span class="o">*</span><span class="n">x</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;z-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;z+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+
+<span class="n">my_cylinder</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+<span class="n">my_cylinder</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+<span class="n">my_cylinder</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+<span class="n">my_cylinder</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="d-with-stl">
+<h3>3D with STL<a class="headerlink" href="#d-with-stl" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#See complete case in  https://github.com/erdc/air-water-vv/tree/master/3d/STLShape</span>
+<span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">Domain</span>
+<span class="kn">from</span> <span class="nn">proteus.mprans</span> <span class="kn">import</span> <span class="n">SpatialTools</span> <span class="k">as</span> <span class="n">st</span>
+<span class="kn">from</span> <span class="nn">proteus.Profiling</span> <span class="kn">import</span> <span class="n">logEvent</span> <span class="k">as</span> <span class="n">log</span>
+
+<span class="n">domain</span> <span class="o">=</span> <span class="n">Domain</span><span class="o">.</span><span class="n">PiecewiseLinearComplexDomain</span><span class="p">()</span>
+
+<span class="n">SG</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">ShapeSTL</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span><span class="s1">&#39;Blocks.stl&#39;</span><span class="p">)</span>
+<span class="n">log</span><span class="p">(</span><span class="s2">&quot;Boundary Tags are:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">SG</span><span class="o">.</span><span class="n">boundaryTags</span><span class="p">))</span>
+
+
+<span class="c1"># All boundaries are free-slip for simplicity.</span>
+<span class="c1">#See https://github.com/erdc/air-water-vv/tree/master/3d/STLShape for more advanced BC&#39;s</span>
+<span class="n">SG</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;Top0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">SG</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;Wall0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">SG</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;Bed0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">SG</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;Concrete0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">SG</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;Inlet0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">SG</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;Outlet0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="base-classes">
+<h3>Base classes<a class="headerlink" href="#base-classes" title="Permalink to this headline">¶</a></h3>
+<p>The following classes are accessible with an import from <cite>proteus.SpatialTools</cite>
+and/or <cite>proteus.mprans.SpatialTools</cite>. Importing them from the mprans module
+adds functionality such as the possibility to set multi-phase flow boundary
+conditions and relaxation zones.</p>
+<p>This is the same procedure as creating a <cite>Domain</cite> from scratch, with the added
+benefit of being able to add more shapes to the domain as separate instances
+and easy access to boundary conditions.</p>
+<div class="section" id="customshape">
+<h4>CustomShape<a class="headerlink" href="#customshape" title="Permalink to this headline">¶</a></h4>
+<p>The most flexible type of shape, where everything is defined by the user. Any
+geometry can be created with this. The minimum arguments necessary for setting
+a custom geometry in 2D are: <code class="docutils literal notranslate"><span class="pre">domain</span></code>, <code class="docutils literal notranslate"><span class="pre">boundaryTags</span></code>, <code class="docutils literal notranslate"><span class="pre">vertices</span></code>,
+<code class="docutils literal notranslate"><span class="pre">vertexFlags</span></code>, <code class="docutils literal notranslate"><span class="pre">segments</span></code>, and <code class="docutils literal notranslate"><span class="pre">segmentFlags</span></code>. In 3D, the necessary
+arguments are: <code class="docutils literal notranslate"><span class="pre">domain</span></code>, <code class="docutils literal notranslate"><span class="pre">boundaryTags</span></code>, <code class="docutils literal notranslate"><span class="pre">vertices</span></code>, <code class="docutils literal notranslate"><span class="pre">vertexFlags</span></code>,
+<code class="docutils literal notranslate"><span class="pre">facets</span></code>, and <code class="docutils literal notranslate"><span class="pre">facetFlags</span></code>. For additional arguments, please refer to the
+source code in <cite>proteus.SpatialTools</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">boundaryTags</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;my_tag1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s1">&#39;my_tag2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s1">&#39;my_tag3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+<span class="n">vertices</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">]]</span>
+<span class="n">vertexFlags</span> <span class="o">=</span> <span class="p">[</span><span class="n">boundaryTags</span><span class="p">[</span><span class="s1">&#39;my_tag1&#39;</span><span class="p">],</span>
+               <span class="n">boundaryTags</span><span class="p">[</span><span class="s1">&#39;my_tag1&#39;</span><span class="p">],</span>
+               <span class="n">boundaryTags</span><span class="p">[</span><span class="s1">&#39;my_tag2&#39;</span><span class="p">],</span>
+               <span class="n">boundaryTags</span><span class="p">[</span><span class="s1">&#39;my_tag2&#39;</span><span class="p">]]</span>
+<span class="n">segments</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="c1"># flags can also be set from numbers included in the boundaryTags dictionary</span>
+<span class="n">segmentFlags</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="n">my_customshape</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">CustomShape</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                                <span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="p">,</span>
+                                <span class="n">vertexFlags</span><span class="o">=</span><span class="n">vertexFlags</span><span class="p">,</span>
+                                <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+                                <span class="n">segmentFlags</span><span class="o">=</span><span class="n">segmentFlags</span><span class="p">,</span>
+                                <span class="n">boundaryTags</span><span class="o">=</span><span class="n">boundaryTags</span><span class="p">)</span>
+<span class="n">my_customshape</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;my_tag1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNoSlip</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rectangle">
+<h4>Rectangle<a class="headerlink" href="#rectangle" title="Permalink to this headline">¶</a></h4>
+<p>A simple rectangular shape.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_rectangle</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                            <span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="mf">10.</span><span class="p">,</span><span class="mf">2.</span><span class="p">],</span>
+                            <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">1.</span><span class="p">],</span>
+                            <span class="n">barycenter</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">1.</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="circle">
+<h4>Circle<a class="headerlink" href="#circle" title="Permalink to this headline">¶</a></h4>
+<p>A simple circular shape.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_circle</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                      <span class="n">radius</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span>
+                      <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">5.</span><span class="p">],</span>
+                      <span class="n">barycenter</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">5.</span><span class="p">],</span>
+                      <span class="n">nPoints</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cuboid">
+<h4>Cuboid<a class="headerlink" href="#cuboid" title="Permalink to this headline">¶</a></h4>
+<p>A simple cuboidal shape.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_cuboid</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Cuboid</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                      <span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="mf">10.</span><span class="p">,</span><span class="mf">10.</span><span class="p">,</span><span class="mf">2.</span><span class="p">],</span>
+                      <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">5.</span><span class="p">],</span>
+                      <span class="n">barycenter</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">5.</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cylinder">
+<h4>Cylinder<a class="headerlink" href="#cylinder" title="Permalink to this headline">¶</a></h4>
+<p>A simple cylindrical shape.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_cylinder</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                        <span class="n">radius</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span>
+                        <span class="n">height</span><span class="o">=</span><span class="mf">10.</span>
+                        <span class="n">nPoints</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                        <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">5.</span><span class="p">,</span><span class="mf">7.5</span><span class="p">],</span>
+                        <span class="n">barycenter</span><span class="o">=</span><span class="p">[</span><span class="mf">5.</span><span class="p">,</span><span class="mf">5.</span><span class="p">,</span><span class="mf">7.5</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sphere">
+<h4>Sphere<a class="headerlink" href="#sphere" title="Permalink to this headline">¶</a></h4>
+<p>A simple spherical shape.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_sphere</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                      <span class="n">radius</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span>
+                      <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mf">2.</span><span class="p">,</span><span class="mf">2.</span><span class="p">],</span>
+                      <span class="n">barycenter</span><span class="o">=</span><span class="p">[</span><span class="mf">2.</span><span class="p">,</span><span class="mf">2.</span><span class="p">],</span>
+                      <span class="n">nSectors</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="shapestl">
+<h4>ShapeSTL<a class="headerlink" href="#shapestl" title="Permalink to this headline">¶</a></h4>
+<p>For importing STL geometries. It needs a <cite>.stl</cite> ASCII file, and does not
+currently work with binary files. The STL geometry is converted in a Proteus
+readable format, automatically creating vertices and facets, and a single
+boundary tag/flag for the whole STL geometry.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_stl</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">ShapeSTL</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                     <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;path/to/my/file.stl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function has the capability of reading multi-block stl ASCII files. Multiblock files can be created by concatenating multiple STL files containing a single geometry block into one file. You can do this quickly in a bash shell as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat file_1.stl file_2.stl file_3.stl &gt; block.stl
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>solid block0
+...
+facet normal ni nj nk
+   outer loop
+     vertex v1x v1y v1z
+     vertex v2x v2y v2z
+     vertex v3x v3y v3z
+     endloop
+endfacet
+...
+endsolid
+solid block1
+...
+endsolid
+...
+solid blockFinal
+...
+endsolid
+</pre></div>
+</div>
+<p>When reading the block stl file, the <code class="docutils literal notranslate"><span class="pre">ShapeSTL</span></code> class will read also the stl blocks and, in addition to vertices and facets, tags for boundaryTags, vertices and facets will be assigned. The names of boundaries are given according to the naming of the blocks. E.g. block0 will form boundary block0 etc.</p>
+<p>The user should be able to mesh a whole domain, as long as the STL files create a watertight domain. A simple example of setting up a 3D domain is given in the beginning of this section and the air-water-vv repository <a class="reference external" href="https://github.com/erdc/air-water-vv/blob/master/3d/STLShape/">https://github.com/erdc/air-water-vv/blob/master/3d/STLShape/</a></p>
+</div>
+</div>
+<div class="section" id="mprans-specific">
+<h3>mprans specific<a class="headerlink" href="#mprans-specific" title="Permalink to this headline">¶</a></h3>
+<p>The following classes are for use with multi-phase flow and can only be
+imported from <cite>proteus.mprans.SpatialTools</cite>.</p>
+<div class="section" id="tank2d">
+<h4>Tank2D<a class="headerlink" href="#tank2d" title="Permalink to this headline">¶</a></h4>
+<p>The <cite>Tank2D</cite> class can be used to create a rectangular tank. This class allows
+for “sponge layers”, or “relaxation zones” that are usually used for wave
+absorption or wave generation to get rid of reflected waves in the domain. The
+lower left corner of the tank is at the origin <cite>[0.,0.]</cite> when created (but it
+can still be translated later on), and sponge layers extend outwards of the
+numerical tank. A <cite>Tank2D</cite> of dimensions [10.,2.] and sponge layers of
+length 3. on both sides will have a total domain size of [16,2], spanning
+from x=-3 to x=13.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_tank</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Tank2D</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                    <span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="mf">10.</span><span class="p">,</span><span class="mf">2.</span><span class="p">])</span>
+<span class="c1"># make sponge layers</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">setSponge</span><span class="p">(</span><span class="n">x_n</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">x_p</span><span class="o">=</span><span class="mf">3.</span><span class="p">)</span>
+<span class="c1"># set absorption zone (x_p -&gt; x+)</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">setAbsorptionZones</span><span class="p">(</span><span class="n">dragAlpha</span><span class="o">=</span><span class="mf">1.e6</span><span class="p">,</span>
+                           <span class="n">x_p</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># set generation zone</span>
+<span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">WaveTools</span> <span class="k">as</span> <span class="n">wt</span> <span class="p">(</span><span class="n">x_n</span> <span class="o">-&gt;</span> <span class="n">x</span><span class="o">-</span><span class="p">)</span>
+<span class="n">my_wave</span> <span class="o">=</span> <span class="n">wt</span><span class="o">.</span><span class="n">MonochromaticWave</span><span class="p">()</span>
+<span class="n">he</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">setGenerationZones</span><span class="p">(</span><span class="n">dragAlpha</span><span class="o">=</span><span class="mf">1.e6</span><span class="p">,</span>
+                           <span class="n">smoothing</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">he</span><span class="p">,</span>
+                           <span class="n">wave</span><span class="o">=</span><span class="n">wave</span><span class="p">,</span>
+                           <span class="n">x_n</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># set boundary conditions</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setAtmosphere</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setUnsteadyTwoPhaseVelocityInlet</span><span class="p">(</span><span class="n">wave</span><span class="o">=</span><span class="n">my_wave</span>
+                                                  <span class="n">smoothing</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">he</span><span class="p">)</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;sponge&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNonMaterial</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><cite>Tank2D</cite> instances should not be rotated as this can lead to problems with
+relaxation zones and boundary conditions.</p>
+</div>
+</div>
+<div class="section" id="tank3d">
+<h4>Tank3D<a class="headerlink" href="#tank3d" title="Permalink to this headline">¶</a></h4>
+<p>Very similar to the <cite>Tank3D</cite>, it is a cuboid for 3D domains with the
+possibility of adding sponge layers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_tank</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">Tank2D</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
+                    <span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="mf">10.</span><span class="p">,</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">])</span>
+<span class="c1"># make sponge layers</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">setSponge</span><span class="p">(</span><span class="n">x_n</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">x_p</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">y_p</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">y_n</span><span class="o">=</span><span class="mf">3.</span><span class="p">)</span>
+<span class="c1"># set absorption zones</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">setAbsorptionZones</span><span class="p">(</span><span class="n">dragAlpha</span><span class="o">=</span><span class="mf">1.e6</span><span class="p">,</span>
+                           <span class="n">x_p</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">y_p</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">y_n</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># set generation zone</span>
+<span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">WaveTools</span> <span class="k">as</span> <span class="n">wt</span> <span class="p">(</span><span class="n">x_n</span> <span class="o">-&gt;</span> <span class="n">x</span><span class="o">-</span><span class="p">)</span>
+<span class="n">my_wave</span> <span class="o">=</span> <span class="n">wt</span><span class="o">.</span><span class="n">MonochromaticWave</span><span class="p">()</span>
+<span class="n">he</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">setGenerationZones</span><span class="p">(</span><span class="n">dragAlpha</span><span class="o">=</span><span class="mf">1.e6</span><span class="p">,</span>
+                           <span class="n">smoothing</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">he</span><span class="p">,</span>
+                           <span class="n">wave</span><span class="o">=</span><span class="n">wave</span><span class="p">,</span>
+                           <span class="n">x_n</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># set boundary conditions</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;z+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setAtmosphere</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;z-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;y-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x+&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setFreeSlip</span><span class="p">()</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setUnsteadyTwoPhaseVelocityInlet</span><span class="p">(</span><span class="n">wave</span><span class="o">=</span><span class="n">my_wave</span>
+                                                  <span class="n">smoothing</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">he</span><span class="p">)</span>
+<span class="n">my_tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;sponge&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setNonMaterial</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><cite>Tank3D</cite> instances should not be rotated as this can lead to problems with
+relaxation zones and boundary conditions.</p>
+</div>
+</div>
+<div class="section" id="tankwithobstacle2d">
+<h4>TankWithObstacle2D<a class="headerlink" href="#tankwithobstacle2d" title="Permalink to this headline">¶</a></h4>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="two_phase_flow.html" class="btn btn-neutral float-right" title="TwoPhaseFlow" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="boundary_conditions.html" class="btn btn-neutral float-left" title="BoundaryConditions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, The Proteus Team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+   /* .wy-side-nav-search, .wy-nav-top { */
+    .wy-side-nav-search {
+        background: #F0F0F0;
+    }
+   .wy-side-nav-search > div.version {
+       color: rgba(0,0,0,.5);
+   }
+   /* .wy-side-nav-search img { */
+   /* max-width: 200%; */
+   /* } */
+   .wy-side-nav-search>a img.logo {
+       width: 150px;
+       /* width: 200px; */
+   }
+
+
+
+    /* Sidebar */
+   /* .wy-nav-side { */
+   /* background: #ff0000; */
+   /* } */
+  </style>
+
+
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_array_ref2_d" kind="class" language="C++" prot="public">
+    <compoundname>ArrayRef2D</compoundname>
+    <includes refid="_array_ref_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h</includes>
+    <templateparamlist>
+      <param>
+        <type>class <ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref></type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_array_ref2_d_1a79acf00f283835d03e4ff4ac2aac5c6c" prot="private" static="no" mutable="no">
+        <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> *</type>
+        <definition>T* ArrayRef2D&lt; T &gt;::values</definition>
+        <argsstring></argsstring>
+        <name>values</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="17" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_array_ref2_d_1ab2bf700a1fe2a8be7dbf1c49f5f807a6" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int ArrayRef2D&lt; T &gt;::dimension1</definition>
+        <argsstring></argsstring>
+        <name>dimension1</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="18" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="18" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_array_ref2_d_1a92a9c38f40759d514ab1da3dc4877a1a" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int ArrayRef2D&lt; T &gt;::dimension2</definition>
+        <argsstring></argsstring>
+        <name>dimension2</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="19" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_array_ref2_d_1a76b8c18f023693b79f203250d4ea4c3a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ArrayRef2D&lt; T &gt;::ArrayRef2D</definition>
+        <argsstring>(T *vals, int dim1, int dim2)</argsstring>
+        <name>ArrayRef2D</name>
+        <param>
+          <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> *</type>
+          <declname>vals</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim1</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim2</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="22" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="22" bodyend="22"/>
+      </memberdef>
+      <memberdef kind="function" id="class_array_ref2_d_1af661ae9b711d37a7af59ab166192c6af" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ArrayRef2D&lt; T &gt;::ArrayRef2D</definition>
+        <argsstring>(T *vals, int dim2)</argsstring>
+        <name>ArrayRef2D</name>
+        <param>
+          <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> *</type>
+          <declname>vals</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim2</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="23" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="23" bodyend="23"/>
+      </memberdef>
+      <memberdef kind="function" id="class_array_ref2_d_1ac777967e59b2eba8d46600f3c04c10aa" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> *</type>
+        <definition>T* ArrayRef2D&lt; T &gt;::operator[]</definition>
+        <argsstring>(int i)</argsstring>
+        <name>operator[]</name>
+        <param>
+          <type>int</type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="24" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="24" bodyend="24"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="16" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="15" bodyend="25"/>
+    <listofallmembers>
+      <member refid="class_array_ref2_d_1a76b8c18f023693b79f203250d4ea4c3a" prot="public" virt="non-virtual"><scope>ArrayRef2D</scope><name>ArrayRef2D</name></member>
+      <member refid="class_array_ref2_d_1af661ae9b711d37a7af59ab166192c6af" prot="public" virt="non-virtual"><scope>ArrayRef2D</scope><name>ArrayRef2D</name></member>
+      <member refid="class_array_ref2_d_1ab2bf700a1fe2a8be7dbf1c49f5f807a6" prot="private" virt="non-virtual"><scope>ArrayRef2D</scope><name>dimension1</name></member>
+      <member refid="class_array_ref2_d_1a92a9c38f40759d514ab1da3dc4877a1a" prot="private" virt="non-virtual"><scope>ArrayRef2D</scope><name>dimension2</name></member>
+      <member refid="class_array_ref2_d_1ac777967e59b2eba8d46600f3c04c10aa" prot="public" virt="non-virtual"><scope>ArrayRef2D</scope><name>operator[]</name></member>
+      <member refid="class_array_ref2_d_1a79acf00f283835d03e4ff4ac2aac5c6c" prot="private" virt="non-virtual"><scope>ArrayRef2D</scope><name>values</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

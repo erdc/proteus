@@ -1,0 +1,507 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_parallel_mesh_converter_8cpp" kind="file" language="C++">
+    <compoundname>ParallelMeshConverter.cpp</compoundname>
+    <includes local="no">algorithm</includes>
+    <includes local="no">mpi.h</includes>
+    <includes local="no">PCU.h</includes>
+    <includes local="no">sstream</includes>
+    <includes refid="_mesh_adapt_p_u_m_i_8h" local="yes">MeshAdaptPUMI.h</includes>
+    <includes refid="mesh_8h" local="yes">mesh.h</includes>
+    <includes refid="_dump_mesh_8h" local="yes">DumpMesh.h</includes>
+    <includes local="no">cstring</includes>
+    <incdepgraph>
+      <node id="11">
+        <label>list</label>
+      </node>
+      <node id="13">
+        <label>iomanip</label>
+      </node>
+      <node id="20">
+        <label>queue</label>
+      </node>
+      <node id="16">
+        <label>cmath</label>
+      </node>
+      <node id="15">
+        <label>cassert</label>
+      </node>
+      <node id="10">
+        <label>map</label>
+      </node>
+      <node id="14">
+        <label>fstream</label>
+      </node>
+      <node id="4">
+        <label>PCU.h</label>
+      </node>
+      <node id="22">
+        <label>cstdio</label>
+      </node>
+      <node id="9">
+        <label>vector</label>
+      </node>
+      <node id="5">
+        <label>sstream</label>
+      </node>
+      <node id="19">
+        <label>apfNumbering.h</label>
+      </node>
+      <node id="17">
+        <label>apf.h</label>
+      </node>
+      <node id="1">
+        <label>ParallelMeshConverter.cpp</label>
+        <link refid="_parallel_mesh_converter_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+      </node>
+      <node id="12">
+        <label>iostream</label>
+      </node>
+      <node id="18">
+        <label>apfMesh2.h</label>
+      </node>
+      <node id="3">
+        <label>mpi.h</label>
+      </node>
+      <node id="6">
+        <label>MeshAdaptPUMI.h</label>
+        <link refid="_mesh_adapt_p_u_m_i_8h"/>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="8">
+        <label>set</label>
+      </node>
+      <node id="7">
+        <label>mesh.h</label>
+        <link refid="mesh_8h"/>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>algorithm</label>
+      </node>
+      <node id="23">
+        <label>cstring</label>
+      </node>
+      <node id="21">
+        <label>DumpMesh.h</label>
+        <link refid="_dump_mesh_8h"/>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="_parallel_mesh_converter_8cpp_1aeda877142ca1dcbf191305594d24269d" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int DEFAULT_ELEMENT_MATERIAL</definition>
+        <argsstring></argsstring>
+        <name>DEFAULT_ELEMENT_MATERIAL</name>
+        <initializer>=0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" line="11" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="11" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="_parallel_mesh_converter_8cpp_1ac5eb1896979304d2cb81a648238fc653" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int DEFAULT_NODE_MATERIAL</definition>
+        <argsstring></argsstring>
+        <name>DEFAULT_NODE_MATERIAL</name>
+        <initializer>=-1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" line="12" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="12" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="_parallel_mesh_converter_8cpp_1ad35607ea8a680ffaf21a6a635c89cfe5" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int INTERIOR_NODE_MATERIAL</definition>
+        <argsstring></argsstring>
+        <name>INTERIOR_NODE_MATERIAL</name>
+        <initializer>=0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" line="13" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="_parallel_mesh_converter_8cpp_1a8d3678ad75d9c618bf644fe028adef39" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int EXTERIOR_NODE_MATERIAL</definition>
+        <argsstring></argsstring>
+        <name>EXTERIOR_NODE_MATERIAL</name>
+        <initializer>=1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" line="14" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="14" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="_parallel_mesh_converter_8cpp_1a69c2eeb926c4caa012dd05cfc225af24" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int INTERIOR_ELEMENT_BOUNDARY_MATERIAL</definition>
+        <argsstring></argsstring>
+        <name>INTERIOR_ELEMENT_BOUNDARY_MATERIAL</name>
+        <initializer>=0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" line="15" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="15" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="_parallel_mesh_converter_8cpp_1aec3cd3b92573b27832f6c9d2d97f93cf" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int EXTERIOR_ELEMENT_BOUNDARY_MATERIAL</definition>
+        <argsstring></argsstring>
+        <name>EXTERIOR_ELEMENT_BOUNDARY_MATERIAL</name>
+        <initializer>=1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" line="16" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="16" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_parallel_mesh_converter_8cpp_1a2c5be8bd233e44a6e724e343c4bb7463" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>static int countTotal</definition>
+        <argsstring>(apf::Mesh *m, int dim)</argsstring>
+        <name>countTotal</name>
+        <param>
+          <type>apf::Mesh *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" line="18" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="18" bodyend="23"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;algorithm&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;mpi.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;PCU.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;sstream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="_mesh_adapt_p_u_m_i_8h" kindref="compound">MeshAdaptPUMI.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="mesh_8h" kindref="compound">mesh.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="_dump_mesh_8h" kindref="compound">DumpMesh.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight></codeline>
+<codeline lineno="11" refid="_parallel_mesh_converter_8cpp_1aeda877142ca1dcbf191305594d24269d" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_parallel_mesh_converter_8cpp_1aeda877142ca1dcbf191305594d24269d" kindref="member">DEFAULT_ELEMENT_MATERIAL</ref>=0;</highlight></codeline>
+<codeline lineno="12" refid="_parallel_mesh_converter_8cpp_1ac5eb1896979304d2cb81a648238fc653" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_parallel_mesh_converter_8cpp_1ac5eb1896979304d2cb81a648238fc653" kindref="member">DEFAULT_NODE_MATERIAL</ref>=-1;</highlight></codeline>
+<codeline lineno="13" refid="_parallel_mesh_converter_8cpp_1ad35607ea8a680ffaf21a6a635c89cfe5" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_parallel_mesh_converter_8cpp_1ad35607ea8a680ffaf21a6a635c89cfe5" kindref="member">INTERIOR_NODE_MATERIAL</ref>=0;</highlight></codeline>
+<codeline lineno="14" refid="_parallel_mesh_converter_8cpp_1a8d3678ad75d9c618bf644fe028adef39" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_parallel_mesh_converter_8cpp_1a8d3678ad75d9c618bf644fe028adef39" kindref="member">EXTERIOR_NODE_MATERIAL</ref>=1;</highlight></codeline>
+<codeline lineno="15" refid="_parallel_mesh_converter_8cpp_1a69c2eeb926c4caa012dd05cfc225af24" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_parallel_mesh_converter_8cpp_1a69c2eeb926c4caa012dd05cfc225af24" kindref="member">INTERIOR_ELEMENT_BOUNDARY_MATERIAL</ref>=0;</highlight></codeline>
+<codeline lineno="16" refid="_parallel_mesh_converter_8cpp_1aec3cd3b92573b27832f6c9d2d97f93cf" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_parallel_mesh_converter_8cpp_1aec3cd3b92573b27832f6c9d2d97f93cf" kindref="member">EXTERIOR_ELEMENT_BOUNDARY_MATERIAL</ref>=1;</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>countTotal(apf::Mesh*<sp/>m,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>dim)</highlight></codeline>
+<codeline lineno="19"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>total<sp/>=<sp/>apf::countOwned(m,<sp/>dim);</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/>PCU_Add_Ints(&amp;total,<sp/>1);</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>total;</highlight></codeline>
+<codeline lineno="23"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25" refid="class_mesh_adapt_p_u_m_i_drvr_1a5b5e7afd61f0a959963eb27ad9fcf685" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a5b5e7afd61f0a959963eb27ad9fcf685" kindref="member">MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh,<sp/><ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>subdomain_mesh)</highlight></codeline>
+<codeline lineno="26"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref><sp/>=<sp/>&amp;subdomain_mesh;</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1ga509a95e0124b5fdd0a7cd09574cb5e30" kindref="member">initializeMesh</ref>(subdomain_mesh);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!PCU_Comm_Self())</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Constructing<sp/>parallel<sp/>proteus<sp/>mesh\n&quot;</highlight><highlight class="normal">;<sp/></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>dim<sp/>=<sp/>m-&gt;getDimension();</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numGlobElem<sp/>=<sp/>countTotal(m,<sp/>dim);</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref><sp/>=<sp/>numGlobElem;</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numLocElem<sp/>=<sp/>m-&gt;count(dim);</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref><sp/>=<sp/>numLocElem;</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numGlobNodes<sp/>=<sp/>countTotal(m,<sp/>0);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref><sp/>=<sp/>numGlobNodes;</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numLocNodes<sp/>=<sp/>m-&gt;count(0);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref><sp/>=<sp/>numLocNodes;</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numGlobFaces<sp/>=<sp/>countTotal(m,<sp/>2);</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numLocFaces<sp/>=<sp/>m-&gt;count(2);</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numGlobEdges<sp/>=<sp/>countTotal(m,<sp/>1);</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref><sp/>=<sp/>numGlobEdges;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numLocEdges<sp/>=<sp/>m-&gt;count(1);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref><sp/>=<sp/>numLocEdges;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==3){<sp/></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref><sp/>=<sp/>numGlobFaces;</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref><sp/>=<sp/>numLocFaces;</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//nNodes_element<sp/>for<sp/>now<sp/>is<sp/>constant<sp/>for<sp/>the<sp/>entire<sp/>mesh,<sp/>Ask<sp/>proteus<sp/>about<sp/>using<sp/>mixed<sp/>meshes</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//therefore<sp/>currently<sp/>this<sp/>code<sp/>only<sp/>supports<sp/>tet<sp/>meshes</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" kindref="member">nNodes_element</ref><sp/>=<sp/>4;<sp/></highlight><highlight class="comment">//hardcode:<sp/>for<sp/>tets,<sp/>number<sp/>of<sp/>nodes<sp/>per<sp/>element</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a23828f68c8378cc9cba4f12da8efab1c" kindref="member">nNodes_elementBoundary</ref><sp/>=<sp/>3;<sp/></highlight><highlight class="comment">//hardcode:<sp/>for<sp/>tets,<sp/>looks<sp/>like<sp/>number<sp/>of<sp/>nodes<sp/>of<sp/>a<sp/>face</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a8bef0eb2839ee8e5e520471073ccc893" kindref="member">nElementBoundaries_element</ref><sp/>=<sp/>4;<sp/></highlight><highlight class="comment">//hardcode:<sp/>for<sp/>tets,<sp/>looks<sp/>like<sp/>number<sp/>of<sp/>faces/element</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==2){</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref><sp/>=<sp/>numGlobEdges;</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref><sp/>=<sp/>numLocEdges;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" kindref="member">nNodes_element</ref><sp/>=<sp/>3;<sp/></highlight><highlight class="comment">//hardcode:<sp/>for<sp/>tets,<sp/>number<sp/>of<sp/>nodes<sp/>per<sp/>element</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a23828f68c8378cc9cba4f12da8efab1c" kindref="member">nNodes_elementBoundary</ref><sp/>=<sp/>2;<sp/></highlight><highlight class="comment">//hardcode:<sp/>for<sp/>tets,<sp/>looks<sp/>like<sp/>number<sp/>of<sp/>nodes<sp/>of<sp/>a<sp/>face</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a8bef0eb2839ee8e5e520471073ccc893" kindref="member">nElementBoundaries_element</ref><sp/>=<sp/>3;<sp/></highlight><highlight class="comment">//hardcode:<sp/>for<sp/>tets,<sp/>looks<sp/>like<sp/>number<sp/>of<sp/>faces/element</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>MESH_INFO</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>PCU_Comm_Peers();<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(i<sp/>==<sp/>PCU_Comm_Self())<sp/>{</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;*******Local<sp/>Proteus<sp/>Mesh<sp/>Stats*********\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Rank:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>comm_rank<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:<sp/>Number<sp/>of<sp/>elements<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Rank:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>comm_rank<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:<sp/>Number<sp/>of<sp/>nodes<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Rank:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>comm_rank<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:<sp/>Number<sp/>of<sp/>boundaries<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Rank:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>comm_rank<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:<sp/>Number<sp/>of<sp/>edges<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;*****************************************\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/>PCU_Barrier();</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(comm_rank==0)<sp/>{</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;*******Global<sp/>Proteus<sp/>Mesh<sp/>Stats*********\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:<sp/>Number<sp/>of<sp/>elements<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>mesh.<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:<sp/>Number<sp/>of<sp/>nodes<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>mesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:<sp/>Number<sp/>of<sp/>boundaries<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>mesh.<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;:<sp/>Number<sp/>of<sp/>edges<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>mesh.<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cerr<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;*****************************************\n&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/>constructGlobalNumbering(mesh);</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a31a9734e50e16e7aff9bf7dded15eebb" kindref="member">numberLocally</ref>();</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/>constructNodes(*mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>);</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/>constructElements(*mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>);</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/>constructBoundaries(*mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>);</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/>constructEdges(*mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>);</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/>constructMaterialArrays(*mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>);</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/>constructGlobalStructures(mesh);<sp/></highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Turn<sp/>on<sp/>only<sp/>for<sp/>debugging</highlight></codeline>
+<codeline lineno="105"><highlight class="comment"><sp/><sp/>std::stringstream<sp/>ss;</highlight></codeline>
+<codeline lineno="106"><highlight class="comment"><sp/><sp/>ss<sp/>&lt;&lt;<sp/>&quot;ToProteus_t&quot;<sp/>&lt;&lt;<sp/>nAdapt&lt;&lt;&quot;.smb&quot;;</highlight></codeline>
+<codeline lineno="107"><highlight class="comment"><sp/><sp/>std::string<sp/>s<sp/>=<sp/>ss.str();</highlight></codeline>
+<codeline lineno="108"><highlight class="comment"><sp/><sp/>m-&gt;writeNative(s.c_str());</highlight></codeline>
+<codeline lineno="109"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0;</highlight></codeline>
+<codeline lineno="111"><highlight class="normal">}<sp/></highlight></codeline>
+<codeline lineno="112"><highlight class="normal"></highlight></codeline>
+<codeline lineno="113"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cstring&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="114"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>MeshAdaptPUMIDrvr::constructGlobalNumbering(<ref refid="struct_mesh" kindref="compound">Mesh</ref><sp/>&amp;mesh)</highlight></codeline>
+<codeline lineno="115"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>N^2<sp/>data<sp/>structures<sp/>and<sp/>algorithms<sp/>are<sp/>terrible<sp/>for<sp/>scalability.</highlight></codeline>
+<codeline lineno="117"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>Going<sp/>along<sp/>because<sp/>Proteus<sp/>is<sp/>structured<sp/>this<sp/>way.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a6d8c1e8a3743ccf2b9ac61d79d2aed42" kindref="member">elementOffsets_subdomain_owned</ref><sp/>=<sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">[comm_size+1];</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a5806b14e322aa308b7b2332137195d0e" kindref="member">elementBoundaryOffsets_subdomain_owned</ref><sp/>=<sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">[comm_size+1];</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1aad6fb618bfc1b53f688723ae41b0ce3f" kindref="member">edgeOffsets_subdomain_owned</ref><sp/>=<sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">[comm_size+1];</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a9c5445d99949e9311ff67a900cf40a3a" kindref="member">nodeOffsets_subdomain_owned</ref><sp/>=<sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">[comm_size+1];</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"></highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(m-&gt;getDimension()==3){</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>dim<sp/>=<sp/>0;<sp/>dim<sp/>&lt;=<sp/>m-&gt;getDimension();<sp/>++dim)<sp/>{</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"></highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nLocalOwned<sp/>=<sp/>apf::countOwned(m,<sp/>dim);</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>localOffset<sp/>=<sp/>nLocalOwned;</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>PCU_Exscan_Ints(&amp;localOffset,<sp/>1);</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>allOffsets;</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==3){</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a6d8c1e8a3743ccf2b9ac61d79d2aed42" kindref="member">elementOffsets_subdomain_owned</ref>;</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==2){</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a5806b14e322aa308b7b2332137195d0e" kindref="member">elementBoundaryOffsets_subdomain_owned</ref>;</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==1){</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets<sp/>=<sp/>mesh.<ref refid="struct_mesh_1aad6fb618bfc1b53f688723ae41b0ce3f" kindref="member">edgeOffsets_subdomain_owned</ref>;</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==0){</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a9c5445d99949e9311ff67a900cf40a3a" kindref="member">nodeOffsets_subdomain_owned</ref>;</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"></highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>one<sp/>of<sp/>the<sp/>many<sp/>reasons<sp/>N^2<sp/>algorithms<sp/>are<sp/>bad<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>MPI_Allgather(&amp;localOffset,<sp/>1,<sp/>MPI_INT,</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets,<sp/>1,<sp/>MPI_INT,<sp/>MPI_COMM_WORLD);</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets[PCU_Comm_Peers()]<sp/>=<sp/>countTotal(m,<sp/>dim);</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::stringstream<sp/>ss;</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>ss<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;proteus_global_&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>ss<sp/>&lt;&lt;<sp/>dim;</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::string<sp/>name<sp/>=<sp/>ss.str();</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>this<sp/>algorithm<sp/>does<sp/>global<sp/>numbering<sp/>properly,</highlight></codeline>
+<codeline lineno="154"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>without<sp/>O(#procs)<sp/>runtime<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>global[dim]<sp/>=<sp/>apf::makeGlobal(apf::numberOwnedDimension(m,<sp/>name.c_str(),<sp/>dim));</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>apf::synchronize(global[dim]);</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/></highlight><highlight class="comment">//loop<sp/>on<sp/>entity<sp/>dimensions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(m-&gt;getDimension()==2){</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>dim<sp/>=<sp/>0;<sp/>dim<sp/>&lt;=<sp/>m-&gt;getDimension();<sp/>++dim)<sp/>{</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"></highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nLocalOwned<sp/>=<sp/>apf::countOwned(m,<sp/>dim);</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>localOffset<sp/>=<sp/>nLocalOwned;</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>PCU_Exscan_Ints(&amp;localOffset,<sp/>1);</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"></highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>allOffsets;</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==2){</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a6d8c1e8a3743ccf2b9ac61d79d2aed42" kindref="member">elementOffsets_subdomain_owned</ref>;</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==1){</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a5806b14e322aa308b7b2332137195d0e" kindref="member">elementBoundaryOffsets_subdomain_owned</ref>;</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(dim==0){</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a9c5445d99949e9311ff67a900cf40a3a" kindref="member">nodeOffsets_subdomain_owned</ref>;</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="176"><highlight class="normal"></highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>one<sp/>of<sp/>the<sp/>many<sp/>reasons<sp/>N^2<sp/>algorithms<sp/>are<sp/>bad<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="178"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>MPI_Allgather(&amp;localOffset,<sp/>1,<sp/>MPI_INT,</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets,<sp/>1,<sp/>MPI_INT,<sp/>MPI_COMM_WORLD);</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>allOffsets[PCU_Comm_Peers()]<sp/>=<sp/>countTotal(m,<sp/>dim);</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::stringstream<sp/>ss;</highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>ss<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;proteus_global_&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="183"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>ss<sp/>&lt;&lt;<sp/>dim;</highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::string<sp/>name<sp/>=<sp/>ss.str();</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>this<sp/>algorithm<sp/>does<sp/>global<sp/>numbering<sp/>properly,</highlight></codeline>
+<codeline lineno="186"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>without<sp/>O(#procs)<sp/>runtime<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="187"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>global[dim]<sp/>=<sp/>apf::makeGlobal(apf::numberOwnedDimension(m,<sp/>name.c_str(),<sp/>dim));</highlight></codeline>
+<codeline lineno="188"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>apf::synchronize(global[dim]);</highlight></codeline>
+<codeline lineno="189"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/></highlight><highlight class="comment">//loop<sp/>on<sp/>entity<sp/>dimensions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="190"><highlight class="normal"><sp/><sp/><sp/><sp/>std::memcpy(mesh.<ref refid="struct_mesh_1aad6fb618bfc1b53f688723ae41b0ce3f" kindref="member">edgeOffsets_subdomain_owned</ref>,mesh.<ref refid="struct_mesh_1a5806b14e322aa308b7b2332137195d0e" kindref="member">elementBoundaryOffsets_subdomain_owned</ref>,</highlight><highlight class="keyword">sizeof</highlight><highlight class="normal">(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">)*(comm_size+1));</highlight></codeline>
+<codeline lineno="191"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="192"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0;<sp/></highlight></codeline>
+<codeline lineno="193"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="194"><highlight class="normal"></highlight></codeline>
+<codeline lineno="195"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>MeshAdaptPUMIDrvr::constructGlobalStructures(<ref refid="struct_mesh" kindref="compound">Mesh</ref><sp/>&amp;mesh)</highlight></codeline>
+<codeline lineno="196"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="197"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a9a62f7c5208b688193ad82dfb8cc3b4c" kindref="member">elementNumbering_subdomain2global</ref><sp/>=<sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">[mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>];</highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a18cf197b92cbab062e2a294849766cf1" kindref="member">elementBoundaryNumbering_subdomain2global</ref><sp/>=<sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">[mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>];</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a26d2763692e6a60ebdd57fe5b985c569" kindref="member">nodeNumbering_subdomain2global</ref><sp/>=<sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">[mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>];</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/>mesh.<ref refid="struct_mesh_1a087e6d20726837e45bd1caaf1f4bd404" kindref="member">edgeNumbering_subdomain2global</ref><sp/>=<sp/></highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">[mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref>];</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(m-&gt;getDimension()==3){</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>d<sp/>=<sp/>0;<sp/>d<sp/>&lt;=<sp/>m-&gt;getDimension();<sp/>++d)<sp/>{</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>temp_subdomain2global;</highlight></codeline>
+<codeline lineno="205"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(d==3)<sp/>temp_subdomain2global<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a9a62f7c5208b688193ad82dfb8cc3b4c" kindref="member">elementNumbering_subdomain2global</ref>;</highlight></codeline>
+<codeline lineno="206"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(d==2)<sp/>temp_subdomain2global<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a18cf197b92cbab062e2a294849766cf1" kindref="member">elementBoundaryNumbering_subdomain2global</ref>;</highlight></codeline>
+<codeline lineno="207"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(d==1)<sp/>temp_subdomain2global<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a087e6d20726837e45bd1caaf1f4bd404" kindref="member">edgeNumbering_subdomain2global</ref>;</highlight></codeline>
+<codeline lineno="208"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(d==0)<sp/>temp_subdomain2global<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a26d2763692e6a60ebdd57fe5b985c569" kindref="member">nodeNumbering_subdomain2global</ref>;</highlight></codeline>
+<codeline lineno="209"><highlight class="normal"></highlight></codeline>
+<codeline lineno="210"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>apf::MeshIterator*<sp/>it<sp/>=<sp/>m-&gt;begin(d);</highlight></codeline>
+<codeline lineno="211"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>apf::MeshEntity*<sp/>e;</highlight></codeline>
+<codeline lineno="212"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">while</highlight><highlight class="normal"><sp/>((e<sp/>=<sp/>m-&gt;iterate(it)))<sp/>{</highlight></codeline>
+<codeline lineno="213"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a56dab4675d73f26b9decdc7ed6353aa8" kindref="member">localNumber</ref>(e);</highlight></codeline>
+<codeline lineno="214"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/>temp_subdomain2global[i]<sp/>=<sp/>apf::getNumber(global[d],<sp/>apf::Node(e,<sp/>0));</highlight></codeline>
+<codeline lineno="215"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="216"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>m-&gt;end(it);</highlight></codeline>
+<codeline lineno="217"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>apf::destroyGlobalNumbering(global[d]);</highlight></codeline>
+<codeline lineno="218"><highlight class="normal"><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="219"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="220"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(m-&gt;getDimension()==2){</highlight></codeline>
+<codeline lineno="221"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>d<sp/>=<sp/>0;<sp/>d<sp/>&lt;=<sp/>m-&gt;getDimension();<sp/>++d)<sp/>{</highlight></codeline>
+<codeline lineno="222"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>temp_subdomain2global;</highlight></codeline>
+<codeline lineno="223"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>temp_subdomain2global2;<sp/></highlight><highlight class="comment">//just<sp/>for<sp/>the<sp/>edge<sp/>and<sp/>element<sp/>boundary<sp/>array<sp/>overlap</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="224"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(d==2)<sp/>temp_subdomain2global<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a9a62f7c5208b688193ad82dfb8cc3b4c" kindref="member">elementNumbering_subdomain2global</ref>;</highlight></codeline>
+<codeline lineno="225"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(d==1)<sp/>temp_subdomain2global<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a18cf197b92cbab062e2a294849766cf1" kindref="member">elementBoundaryNumbering_subdomain2global</ref>;</highlight></codeline>
+<codeline lineno="226"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(d==0)<sp/>temp_subdomain2global<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a26d2763692e6a60ebdd57fe5b985c569" kindref="member">nodeNumbering_subdomain2global</ref>;</highlight></codeline>
+<codeline lineno="227"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>apf::MeshIterator*<sp/>it<sp/>=<sp/>m-&gt;begin(d);</highlight></codeline>
+<codeline lineno="228"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>apf::MeshEntity*<sp/>e;</highlight></codeline>
+<codeline lineno="229"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">while</highlight><highlight class="normal"><sp/>((e<sp/>=<sp/>m-&gt;iterate(it)))<sp/>{</highlight></codeline>
+<codeline lineno="230"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a56dab4675d73f26b9decdc7ed6353aa8" kindref="member">localNumber</ref>(e);</highlight></codeline>
+<codeline lineno="231"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/>temp_subdomain2global[i]<sp/>=<sp/>apf::getNumber(global[d],<sp/>apf::Node(e,<sp/>0));</highlight></codeline>
+<codeline lineno="232"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="233"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>m-&gt;end(it);</highlight></codeline>
+<codeline lineno="234"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>apf::destroyGlobalNumbering(global[d]);</highlight></codeline>
+<codeline lineno="235"><highlight class="normal"><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="236"><highlight class="normal"><sp/><sp/><sp/>std::memcpy(mesh.<ref refid="struct_mesh_1a087e6d20726837e45bd1caaf1f4bd404" kindref="member">edgeNumbering_subdomain2global</ref>,mesh.<ref refid="struct_mesh_1a18cf197b92cbab062e2a294849766cf1" kindref="member">elementBoundaryNumbering_subdomain2global</ref>,</highlight><highlight class="keyword">sizeof</highlight><highlight class="normal">(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">)*(mesh.<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>));</highlight></codeline>
+<codeline lineno="237"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="238"><highlight class="normal"></highlight></codeline>
+<codeline lineno="239"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0;</highlight></codeline>
+<codeline lineno="240"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="241"><highlight class="normal"></highlight></codeline>
+<codeline lineno="242" refid="class_mesh_adapt_p_u_m_i_drvr_1a2f375f8c93ed5b48495fa0d689171c95" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a2f375f8c93ed5b48495fa0d689171c95" kindref="member">MeshAdaptPUMIDrvr::dumpMesh</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh)</highlight></codeline>
+<codeline lineno="243"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/>std::stringstream<sp/>ss;</highlight></codeline>
+<codeline lineno="245"><highlight class="normal"><sp/><sp/>ss<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;dan_debug_&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>PCU_Comm_Self()<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;.txt&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="246"><highlight class="normal"><sp/><sp/>std::string<sp/><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref><sp/>=<sp/>ss.str();</highlight></codeline>
+<codeline lineno="247"><highlight class="normal"><sp/><sp/>FILE*<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref><sp/>=<sp/>fopen(<ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>.c_str(),<sp/></highlight><highlight class="stringliteral">&quot;w&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"><sp/><sp/><ref refid="_dump_mesh_8cpp_1a8760eb83717b084421a80e0eb9ed2852" kindref="member">dump_proteus_mesh</ref>(&amp;mesh,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="249"><highlight class="normal"><sp/><sp/>fclose(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="250"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0;</highlight></codeline>
+<codeline lineno="251"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="252"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp"/>
+  </compounddef>
+</doxygen>

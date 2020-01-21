@@ -1,0 +1,413 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_dump_mesh_8cpp" kind="file" language="C++">
+    <compoundname>DumpMesh.cpp</compoundname>
+    <includes refid="_dump_mesh_8h" local="yes">DumpMesh.h</includes>
+    <includes local="no">PCU.h</includes>
+    <incdepgraph>
+      <node id="8">
+        <label>list</label>
+      </node>
+      <node id="10">
+        <label>iomanip</label>
+      </node>
+      <node id="13">
+        <label>cmath</label>
+      </node>
+      <node id="12">
+        <label>cassert</label>
+      </node>
+      <node id="7">
+        <label>map</label>
+      </node>
+      <node id="11">
+        <label>fstream</label>
+      </node>
+      <node id="1">
+        <label>DumpMesh.cpp</label>
+        <link refid="_dump_mesh_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="15">
+        <label>PCU.h</label>
+      </node>
+      <node id="14">
+        <label>cstdio</label>
+      </node>
+      <node id="5">
+        <label>vector</label>
+      </node>
+      <node id="9">
+        <label>iostream</label>
+      </node>
+      <node id="4">
+        <label>set</label>
+      </node>
+      <node id="6">
+        <label>algorithm</label>
+      </node>
+      <node id="3">
+        <label>mesh.h</label>
+        <link refid="mesh_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>DumpMesh.h</label>
+        <link refid="_dump_mesh_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_dump_mesh_8cpp_1a4817cc8908143dd21012814792be5747" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void print_int_2d</definition>
+        <argsstring>(int *a, int h, int w, FILE *f)</argsstring>
+        <name>print_int_2d</name>
+        <param>
+          <type>int *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>h</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>w</declname>
+        </param>
+        <param>
+          <type>FILE *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" line="9" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" bodystart="9" bodyend="16"/>
+      </memberdef>
+      <memberdef kind="function" id="_dump_mesh_8cpp_1af954dba017d73b047900cddf57784725" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void print_double_2d</definition>
+        <argsstring>(double *a, int h, int w, FILE *f)</argsstring>
+        <name>print_double_2d</name>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>h</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>w</declname>
+        </param>
+        <param>
+          <type>FILE *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" line="18" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" bodystart="18" bodyend="25"/>
+      </memberdef>
+      <memberdef kind="function" id="_dump_mesh_8cpp_1ab259a7a0ba0afbcd0b1b71017319ed47" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void dump_proteus_mesh_header</definition>
+        <argsstring>(Mesh *m, FILE *f)</argsstring>
+        <name>dump_proteus_mesh_header</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>FILE *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" line="27" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" bodystart="27" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="_dump_mesh_8cpp_1a5189459fb7fd754d33fe62c3f2b8ed8b" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void dump_proteus_subdomain</definition>
+        <argsstring>(Mesh *m, FILE *f)</argsstring>
+        <name>dump_proteus_subdomain</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>FILE *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" line="44" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" bodystart="44" bodyend="131"/>
+      </memberdef>
+      <memberdef kind="function" id="_dump_mesh_8cpp_1acae6d1379c621e347cf9252d0208fc4a" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void dump_proteus_parallel_arrays</definition>
+        <argsstring>(Mesh *m, FILE *f)</argsstring>
+        <name>dump_proteus_parallel_arrays</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>FILE *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" line="133" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" bodystart="133" bodyend="161"/>
+      </memberdef>
+      <memberdef kind="function" id="_dump_mesh_8cpp_1a8760eb83717b084421a80e0eb9ed2852" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void dump_proteus_mesh</definition>
+        <argsstring>(Mesh *m, FILE *f)</argsstring>
+        <name>dump_proteus_mesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>FILE *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" line="163" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp" bodystart="163" bodyend="176"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&quot;<ref refid="_dump_mesh_8h" kindref="compound">DumpMesh.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;PCU.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>see<sp/>flcbdfWrappersModule.cpp:</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/><sp/><sp/>flcbdfWrappersConvertPUMIPartitionToPython</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"><sp/><sp/><sp/>and<sp/>cmeshToolsModule.cpp:</highlight></codeline>
+<codeline lineno="7"><highlight class="comment"><sp/><sp/><sp/>cmeshToolsBuildPythonMeshInterface<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>print_int_2d(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>a,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>h,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>,<sp/>FILE*<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>)</highlight></codeline>
+<codeline lineno="10"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>h;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>j<sp/>=<sp/>0;<sp/>j<sp/>&lt;<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>;<sp/>++j)</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d<sp/>&quot;</highlight><highlight class="normal">,<sp/>a[i<sp/>*<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref><sp/>+<sp/>j]);</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="16"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>print_double_2d(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>a,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>h,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>,<sp/>FILE*<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>)</highlight></codeline>
+<codeline lineno="19"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>h;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>j<sp/>=<sp/>0;<sp/>j<sp/>&lt;<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>;<sp/>++j)</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%f<sp/>&quot;</highlight><highlight class="normal">,<sp/>a[i<sp/>*<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref><sp/>+<sp/>j]);</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="25"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>dump_proteus_mesh_header(<ref refid="struct_mesh" kindref="compound">Mesh</ref>*<sp/>m,<sp/>FILE*<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>)</highlight></codeline>
+<codeline lineno="28"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nElements_global<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>);</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nNodes_global<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>);</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nNodes_element<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" kindref="member">nNodes_element</ref>);</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nNodes_elementBoundary<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a23828f68c8378cc9cba4f12da8efab1c" kindref="member">nNodes_elementBoundary</ref>);</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nElementBoundaries_element<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a8bef0eb2839ee8e5e520471073ccc893" kindref="member">nElementBoundaries_element</ref>);</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nElementBoundaries_global<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>);</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nInteriorElementBoundaries_global<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>m-&gt;<ref refid="struct_mesh_1ac4c81e5919b922684341f2e9f4fe1054" kindref="member">nInteriorElementBoundaries_global</ref>);</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nExteriorElementBoundaries_global<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>m-&gt;<ref refid="struct_mesh_1a82b53fc6597fe4f29edddeb858bd716d" kindref="member">nExteriorElementBoundaries_global</ref>);</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;max_nElements_node<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a6f5879bf09d44edbad753f9f39616bf7" kindref="member">max_nElements_node</ref>);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nEdges_global<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref>);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;max_nNodeNeighbors_node<sp/>=<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1aa4f5f67da601632a68e00c0aea778c14" kindref="member">max_nNodeNeighbors_node</ref>);</highlight></codeline>
+<codeline lineno="42"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>dump_proteus_subdomain(<ref refid="struct_mesh" kindref="compound">Mesh</ref>*<sp/>m,<sp/>FILE*<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>)</highlight></codeline>
+<codeline lineno="45"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/>dump_proteus_mesh_header(m,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementNodesArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/>print_int_2d(m-&gt;<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref>,<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>,</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m-&gt;<ref refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" kindref="member">nNodes_element</ref>,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeElementOffsets:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!m-&gt;<ref refid="struct_mesh_1a50cba320e431088d67f5567d80308a05" kindref="member">nodeElementOffsets</ref>)</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;<sp/>NULL\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;=<sp/>m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a50cba320e431088d67f5567d80308a05" kindref="member">nodeElementOffsets</ref>[i]);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>total<sp/>=<sp/>m-&gt;<ref refid="struct_mesh_1a50cba320e431088d67f5567d80308a05" kindref="member">nodeElementOffsets</ref>[m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>];</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/>assert(total<sp/>==<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref><sp/>*<sp/>m-&gt;<ref refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" kindref="member">nNodes_element</ref>);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeElementsArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>total;<sp/>++i)</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a60c946aca5fb10c00847f2595024f645" kindref="member">nodeElementsArray</ref>[i]);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementNeighborsArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/>print_int_2d(m-&gt;<ref refid="struct_mesh_1a7dc84c8761e788b972cadef8126c3714" kindref="member">elementNeighborsArray</ref>,<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>,</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m-&gt;<ref refid="struct_mesh_1a8bef0eb2839ee8e5e520471073ccc893" kindref="member">nElementBoundaries_element</ref>,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBoundariesArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/>print_int_2d(m-&gt;<ref refid="struct_mesh_1ac7e8f6ef5efc37bb959e4811f1d19f0d" kindref="member">elementBoundariesArray</ref>,<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>,</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m-&gt;<ref refid="struct_mesh_1a8bef0eb2839ee8e5e520471073ccc893" kindref="member">nElementBoundaries_element</ref>,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBoundaryNodesArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/>print_int_2d(m-&gt;<ref refid="struct_mesh_1a005d4b8e1dde115eea69745da68ce51e" kindref="member">elementBoundaryNodesArray</ref>,<sp/>m-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>,</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m-&gt;<ref refid="struct_mesh_1a23828f68c8378cc9cba4f12da8efab1c" kindref="member">nNodes_elementBoundary</ref>,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBoundaryElementsArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/>print_int_2d(m-&gt;<ref refid="struct_mesh_1a42b5669b961653b62ad86094940ff599" kindref="member">elementBoundaryElementsArray</ref>,<sp/>m-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>,</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>2,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBoundaryLocalElementBoundariesArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/>print_int_2d(m-&gt;<ref refid="struct_mesh_1a80fee2f34a4f1ce046b8d238ca6eb44d" kindref="member">elementBoundaryLocalElementBoundariesArray</ref>,</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>,<sp/>2,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;interiorElementBoundariesArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1ac4c81e5919b922684341f2e9f4fe1054" kindref="member">nInteriorElementBoundaries_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1ada24a4a97b51d0796ef5d7041a538baa" kindref="member">interiorElementBoundariesArray</ref>[i]);</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;exteriorElementBoundariesArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1a82b53fc6597fe4f29edddeb858bd716d" kindref="member">nExteriorElementBoundaries_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a80b82e649bdf89cfb40a4d63128dfe8f" kindref="member">exteriorElementBoundariesArray</ref>[i]);</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;edgeNodesArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/>print_int_2d(m-&gt;<ref refid="struct_mesh_1aabe8196d403a4e08ab8ae82add6c95ad" kindref="member">edgeNodesArray</ref>,<sp/>m-&gt;<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref>,<sp/>2,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeStarOffsets:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!m-&gt;<ref refid="struct_mesh_1a0d6da5259c422d0a0e7725f7f4194fd4" kindref="member">nodeStarOffsets</ref>)</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;<sp/>NULL\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;=<sp/>m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a0d6da5259c422d0a0e7725f7f4194fd4" kindref="member">nodeStarOffsets</ref>[i]);</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>total<sp/>=<sp/>m-&gt;<ref refid="struct_mesh_1a0d6da5259c422d0a0e7725f7f4194fd4" kindref="member">nodeStarOffsets</ref>[m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>];</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/>assert(total<sp/>==<sp/>m-&gt;<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref><sp/>*<sp/>2);</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeStarArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>total;<sp/>++i)</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a74dac6068c1cd0a5224d70dff687541f" kindref="member">nodeStarArray</ref>[i]);</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementMaterialTypes:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1aa7d0c5c7194c72ae5673282fd26f80e6" kindref="member">elementMaterialTypes</ref>[i]);</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBoundaryMaterialTypes:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a9d8f135ebe113d6c9d1ef60e2ea56cb1" kindref="member">elementBoundaryMaterialTypes</ref>[i]);</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeMaterialTypes:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1ae91c6279fa8161e18e52543079aa8cf6" kindref="member">nodeMaterialTypes</ref>[i]);</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/>print_double_2d(m-&gt;<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>,<sp/>m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>,<sp/>3,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementDiametersArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a33db44f726dd430707fd7c93d1a5c592" kindref="member">elementDiametersArray</ref>[i]);</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementInnerDiametersArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1abf9b852488d1bcee92c20efddced5ca4" kindref="member">elementInnerDiametersArray</ref>[i]);</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBoundaryDiametersArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a7ce07e95c74c63e9548357c54492dec7" kindref="member">elementBoundaryDiametersArray</ref>[i]);</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBarycentersArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/>print_double_2d(m-&gt;<ref refid="struct_mesh_1ab31abbfccc0c4d695624f2123dd97bbc" kindref="member">elementBarycentersArray</ref>,<sp/>m-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>,<sp/>3,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/>print_double_2d(m-&gt;<ref refid="struct_mesh_1a0ba00ec42c4dd93a3cffe5052d4b7edd" kindref="member">elementBoundaryBarycentersArray</ref>,</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>m-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>,<sp/>3,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeDiametersArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1ae390b049ea87b78184f8d094869949cb" kindref="member">nodeDiametersArray</ref>[i]);</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeSupportArray:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a6052bace6fa51aa24de5835ef0fb7e17" kindref="member">nodeSupportArray</ref>[i]);</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;h<sp/>=<sp/>%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1afe5d77b8a3696af225b8a9fa627bac39" kindref="member">h</ref>);</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;hMin<sp/>=<sp/>%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1ad6461ab438d3ec71a40cd15799213346" kindref="member">hMin</ref>);</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;sigmaMax<sp/>=<sp/>%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a75885c0e7c16f82e7747a58bc5277a56" kindref="member">sigmaMax</ref>);</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;volume<sp/>=<sp/>%f\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a77b3cbcd0ac8b21666b5319f36376ab1" kindref="member">volume</ref>);</highlight></codeline>
+<codeline lineno="131"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"></highlight></codeline>
+<codeline lineno="133"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>dump_proteus_parallel_arrays(<ref refid="struct_mesh" kindref="compound">Mesh</ref>*<sp/>m,<sp/>FILE*<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>)</highlight></codeline>
+<codeline lineno="134"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>size<sp/>=<sp/>PCU_Comm_Peers();</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementOffsets_subdomain_owned:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;=<sp/>size;<sp/>++i)</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a6d8c1e8a3743ccf2b9ac61d79d2aed42" kindref="member">elementOffsets_subdomain_owned</ref>[i]);</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementNumbering_subdomain2global:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a9a62f7c5208b688193ad82dfb8cc3b4c" kindref="member">elementNumbering_subdomain2global</ref>[i]);</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeOffsets_subdomain_owned:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;=<sp/>size;<sp/>++i)</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a9c5445d99949e9311ff67a900cf40a3a" kindref="member">nodeOffsets_subdomain_owned</ref>[i]);</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;nodeNumbering_subdomain2global:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a26d2763692e6a60ebdd57fe5b985c569" kindref="member">nodeNumbering_subdomain2global</ref>[i]);</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBoundaryOffsets_subdomain_owned:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;=<sp/>size;<sp/>++i)</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a5806b14e322aa308b7b2332137195d0e" kindref="member">elementBoundaryOffsets_subdomain_owned</ref>[i]);</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;elementBoundaryNumbering_subdomain2global:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a18cf197b92cbab062e2a294849766cf1" kindref="member">elementBoundaryNumbering_subdomain2global</ref>[i]);</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;edgeOffsets_subdomain_owned:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;=<sp/>size;<sp/>++i)</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1aad6fb618bfc1b53f688723ae41b0ce3f" kindref="member">edgeOffsets_subdomain_owned</ref>[i]);</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;edgeNumbering_subdomain2global:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m-&gt;<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>-&gt;<ref refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" kindref="member">nEdges_global</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;%d\n&quot;</highlight><highlight class="normal">,<sp/>m-&gt;<ref refid="struct_mesh_1a087e6d20726837e45bd1caaf1f4bd404" kindref="member">edgeNumbering_subdomain2global</ref>[i]);</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"></highlight></codeline>
+<codeline lineno="161"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="162"><highlight class="normal"></highlight></codeline>
+<codeline lineno="163" refid="_dump_mesh_8h_1a8760eb83717b084421a80e0eb9ed2852" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_dump_mesh_8cpp_1a8760eb83717b084421a80e0eb9ed2852" kindref="member">dump_proteus_mesh</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>*<sp/>m,<sp/>FILE*<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>)</highlight></codeline>
+<codeline lineno="164"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/>fprintf(stderr,</highlight><highlight class="stringliteral">&quot;%d<sp/>dumping<sp/>mesh<sp/>file\n&quot;</highlight><highlight class="normal">,<sp/>PCU_Comm_Self());</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(PCU_Comm_Peers()<sp/>&gt;<sp/>1)<sp/>{</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;PARALLEL<sp/>HEADER\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/>dump_proteus_mesh_header(m,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;PARALLEL<sp/>ARRAYS\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/><sp/><sp/>dump_proteus_parallel_arrays(m,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="stringliteral">&quot;SUBDOMAIN\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><sp/><sp/>dump_proteus_subdomain(m-&gt;<ref refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" kindref="member">subdomainp</ref>,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><sp/><sp/>}<sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/><sp/><sp/>dump_proteus_subdomain(m,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="176"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/DumpMesh.cpp"/>
+  </compounddef>
+</doxygen>

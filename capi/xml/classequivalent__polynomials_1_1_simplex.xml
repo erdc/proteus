@@ -1,0 +1,610 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classequivalent__polynomials_1_1_simplex" kind="class" language="C++" prot="public">
+    <compoundname>equivalent_polynomials::Simplex</compoundname>
+    <includes refid="equivalent__polynomials_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>nSpace</declname>
+        <defname>nSpace</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nP</declname>
+        <defname>nP</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQ</declname>
+        <defname>nQ</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a21e9e73030e298b11e432d12f124e5bf" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::inside_out</definition>
+        <argsstring></argsstring>
+        <name>inside_out</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="92" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="91" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a1590faab8814133502a762e1568dabb9" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::phi_dof_corrected[nN]</definition>
+        <argsstring>[nN]</argsstring>
+        <name>phi_dof_corrected</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="94" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="94" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a6e9d51f0772e81aff14e1cdf2467cb3e" prot="public" static="yes" mutable="no">
+        <type>const unsigned int</type>
+        <definition>const unsigned int equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::nN</definition>
+        <argsstring></argsstring>
+        <name>nN</name>
+        <initializer>=nSpace+1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="93" column="31" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="93" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1ac272c1b248d1fc35ef419073b43792c0" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_H_q</definition>
+        <argsstring></argsstring>
+        <name>_H_q</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="96" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="96" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a84df5ae78265154ca77cadf69a057341" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_ImH_q</definition>
+        <argsstring></argsstring>
+        <name>_ImH_q</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="96" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="96" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a7e47c0262f5af3b2c3547ffe3083a929" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_D_q</definition>
+        <argsstring></argsstring>
+        <name>_D_q</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="96" column="24" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="96" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a1165cd37e0c11b35200194279e5eb595" prot="private" static="no" mutable="no">
+        <type>unsigned int</type>
+        <definition>unsigned int equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::root_node</definition>
+        <argsstring></argsstring>
+        <name>root_node</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="97" column="18" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="97" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1acaa59f074663e65708757952b3bcb2ae" prot="private" static="no" mutable="no">
+        <type>unsigned int</type>
+        <definition>unsigned int equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::permutation[nN]</definition>
+        <argsstring>[nN]</argsstring>
+        <name>permutation</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="97" column="28" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="97" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1ad28ea9c066985dac7f8ebc12aecf0aed" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::phi[nN]</definition>
+        <argsstring>[nN]</argsstring>
+        <name>phi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="98" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="98" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a565f167cc93a3df64c8b9ee7ca7125b3" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::nodes[nN *3]</definition>
+        <argsstring>[nN *3]</argsstring>
+        <name>nodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="98" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="98" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1ada8d434661d4eaaf835c487148ad159d" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::Jac[nSpace *nSpace]</definition>
+        <argsstring>[nSpace *nSpace]</argsstring>
+        <name>Jac</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="99" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="99" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1aeba370536d0d4e3e492a77b6bf66bb57" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::inv_Jac[nSpace *nSpace]</definition>
+        <argsstring>[nSpace *nSpace]</argsstring>
+        <name>inv_Jac</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="99" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="99" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1ac91c7f78d88e56dcc0bb5857fb97d20b" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::level_set_normal[nSpace]</definition>
+        <argsstring>[nSpace]</argsstring>
+        <name>level_set_normal</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="100" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="100" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1ae1cefbf8dc332659bb3398ebd1e628d5" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::X_0[nSpace]</definition>
+        <argsstring>[nSpace]</argsstring>
+        <name>X_0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="100" column="29" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="100" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a0a73df7ce9997dc7caaf3aa7155fbe5f" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::phys_nodes_cut[(nN-1) *3]</definition>
+        <argsstring>[(nN-1) *3]</argsstring>
+        <name>phys_nodes_cut</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="100" column="33" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="100" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1afc1b213b1a0ad9222074486f77efe17b" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::Ainv[nDOF *nDOF]</definition>
+        <argsstring>[nDOF *nDOF]</argsstring>
+        <name>Ainv</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="102" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="102" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a885f69acea808eca5ae3fbdec2e8d2e4" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::C_H[nDOF]</definition>
+        <argsstring>[nDOF]</argsstring>
+        <name>C_H</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="103" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="103" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1aa6c0cd9e5c8b7ae453ec9dde86039168" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::C_ImH[nDOF]</definition>
+        <argsstring>[nDOF]</argsstring>
+        <name>C_ImH</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="103" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="103" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a35e959cc1bd773371b4d1d21acc2d610" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::C_D[nDOF]</definition>
+        <argsstring>[nDOF]</argsstring>
+        <name>C_D</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="103" column="22" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="103" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a855f54f3aeb3ea0f71c9ddab0c642b7e" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_H[nQ]</definition>
+        <argsstring>[nQ]</argsstring>
+        <name>_H</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="108" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1ab2854ff18b34f90693e83dc6dd18b541" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_ImH[nQ]</definition>
+        <argsstring>[nQ]</argsstring>
+        <name>_ImH</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="108" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1a96dc3262dbd52b5c3bb7b29538527d0d" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_D[nQ]</definition>
+        <argsstring>[nQ]</argsstring>
+        <name>_D</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="108" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_simplex_1adc05a3e01c96c8cef4af852eecc94765" prot="private" static="yes" mutable="no">
+        <type>const unsigned int</type>
+        <definition>const unsigned int equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::nDOF</definition>
+        <argsstring></argsstring>
+        <name>nDOF</name>
+        <initializer>=((nSpace-1)/2)*(nSpace-2)*(nP+1)*(nP+2)*(nP+3)/6 + (nSpace-1)*(3-nSpace)*(nP+1)*(nP+2)/2 + (2-nSpace)*((3-nSpace)/2)*(nP+1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="101" column="31" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="101" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a2659f1856e48bd0b2818449a38d664a8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::Simplex</definition>
+        <argsstring>(bool useExact=true)</argsstring>
+        <name>Simplex</name>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+          <defval>true</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="54" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="54" bodyend="65"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a778a7f7e46f175377c7e8a9260253071" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::calculate</definition>
+        <argsstring>(const double *phi_dof, const double *phi_nodes, const double *xi_r)</argsstring>
+        <name>calculate</name>
+        <param>
+          <type>const double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>phi_nodes</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>xi_r</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="67" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="301" bodyend="367"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a22fd54eb338d886b7e76d6bb767b2303" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::set_quad</definition>
+        <argsstring>(unsigned int q)</argsstring>
+        <name>set_quad</name>
+        <param>
+          <type>unsigned int</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="69" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="69" bodyend="84"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a65aa01715f490cb985f1843af6b5f234" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double *</type>
+        <definition>double* equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::get_H</definition>
+        <argsstring>()</argsstring>
+        <name>get_H</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="86" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="86" bodyend="86"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1ab381cac4d48d0262b73238dfc3832dc2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double *</type>
+        <definition>double* equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::get_ImH</definition>
+        <argsstring>()</argsstring>
+        <name>get_ImH</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="87" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="87" bodyend="87"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1ac3c31b15106540ea91bbd9d862557129" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double *</type>
+        <definition>double* equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::get_D</definition>
+        <argsstring>()</argsstring>
+        <name>get_D</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="88" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="88" bodyend="88"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1affb7ce79e096acc34e958f55f7bea5d6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::H</definition>
+        <argsstring>(double eps, double phi)</argsstring>
+        <name>H</name>
+        <param>
+          <type>double</type>
+          <declname>eps</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>phi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="89" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="89" bodyend="89"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a0aae18c0b5c896eaad3070fc9a469710" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::ImH</definition>
+        <argsstring>(double eps, double phi)</argsstring>
+        <name>ImH</name>
+        <param>
+          <type>double</type>
+          <declname>eps</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>phi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="90" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="90" bodyend="90"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a6fccf7e04577aa7a2d3e7b7af9d1474e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::D</definition>
+        <argsstring>(double eps, double phi)</argsstring>
+        <name>D</name>
+        <param>
+          <type>double</type>
+          <declname>eps</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>phi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="91" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="91" bodyend="91"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a7b2a10d3294577d50e08d7690477105e" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_calculate_permutation</definition>
+        <argsstring>(const double *phi_dof, const double *phi_nodes)</argsstring>
+        <name>_calculate_permutation</name>
+        <param>
+          <type>const double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>phi_nodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="104" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="143" bodyend="246"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a5d984cd844d4a4b015a8465d912bae19" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_calculate_cuts</definition>
+        <argsstring>()</argsstring>
+        <name>_calculate_cuts</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="105" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="249" bodyend="273"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a0ef654f85e38c58f185962fff00d68ca" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_calculate_C</definition>
+        <argsstring>()</argsstring>
+        <name>_calculate_C</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="106" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="112" bodyend="140"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_simplex_1a2817e0c14c42181cdcd921091196b231" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void equivalent_polynomials::Simplex&lt; nSpace, nP, nQ &gt;::_correct_phi</definition>
+        <argsstring>(const double *phi_dof, const double *phi_nodes)</argsstring>
+        <name>_correct_phi</name>
+        <param>
+          <type>const double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>phi_nodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="107" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="276" bodyend="298"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="52" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="51" bodyend="109"/>
+    <listofallmembers>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a0ef654f85e38c58f185962fff00d68ca" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_calculate_C</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a5d984cd844d4a4b015a8465d912bae19" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_calculate_cuts</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a7b2a10d3294577d50e08d7690477105e" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_calculate_permutation</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a2817e0c14c42181cdcd921091196b231" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_correct_phi</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a96dc3262dbd52b5c3bb7b29538527d0d" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_D</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a7e47c0262f5af3b2c3547ffe3083a929" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_D_q</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a855f54f3aeb3ea0f71c9ddab0c642b7e" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_H</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1ac272c1b248d1fc35ef419073b43792c0" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_H_q</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1ab2854ff18b34f90693e83dc6dd18b541" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_ImH</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a84df5ae78265154ca77cadf69a057341" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>_ImH_q</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1afc1b213b1a0ad9222074486f77efe17b" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>Ainv</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a35e959cc1bd773371b4d1d21acc2d610" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>C_D</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a885f69acea808eca5ae3fbdec2e8d2e4" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>C_H</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1aa6c0cd9e5c8b7ae453ec9dde86039168" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>C_ImH</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a778a7f7e46f175377c7e8a9260253071" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>calculate</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a6fccf7e04577aa7a2d3e7b7af9d1474e" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>D</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1ac3c31b15106540ea91bbd9d862557129" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>get_D</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a65aa01715f490cb985f1843af6b5f234" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>get_H</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1ab381cac4d48d0262b73238dfc3832dc2" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>get_ImH</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1affb7ce79e096acc34e958f55f7bea5d6" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>H</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a0aae18c0b5c896eaad3070fc9a469710" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>ImH</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a21e9e73030e298b11e432d12f124e5bf" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>inside_out</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1aeba370536d0d4e3e492a77b6bf66bb57" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>inv_Jac</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1ada8d434661d4eaaf835c487148ad159d" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>Jac</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1ac91c7f78d88e56dcc0bb5857fb97d20b" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>level_set_normal</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1adc05a3e01c96c8cef4af852eecc94765" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>nDOF</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a6e9d51f0772e81aff14e1cdf2467cb3e" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>nN</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a565f167cc93a3df64c8b9ee7ca7125b3" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>nodes</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1acaa59f074663e65708757952b3bcb2ae" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>permutation</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1ad28ea9c066985dac7f8ebc12aecf0aed" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>phi</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a1590faab8814133502a762e1568dabb9" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>phi_dof_corrected</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a0a73df7ce9997dc7caaf3aa7155fbe5f" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>phys_nodes_cut</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a1165cd37e0c11b35200194279e5eb595" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>root_node</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a22fd54eb338d886b7e76d6bb767b2303" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>set_quad</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1a2659f1856e48bd0b2818449a38d664a8" prot="public" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>Simplex</name></member>
+      <member refid="classequivalent__polynomials_1_1_simplex_1ae1cefbf8dc332659bb3398ebd1e628d5" prot="private" virt="non-virtual"><scope>equivalent_polynomials::Simplex</scope><name>X_0</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

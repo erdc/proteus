@@ -1,7 +1,0 @@
-proteus.genca module
-====================
-
-.. automodule:: proteus.genca
-    :members:
-    :undoc-members:
-    :show-inheritance:

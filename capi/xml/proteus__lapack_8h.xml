@@ -1,0 +1,323 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="proteus__lapack_8h" kind="file" language="C++">
+    <compoundname>proteus_lapack.h</compoundname>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="proteus__lapack_8h_1a1632a08853bf62fb9c229b8738f6470d" prot="public" static="no">
+        <name>__CLPK_integer</name>
+        <initializer>int</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" line="20" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="proteus__lapack_8h_1a1551da1b1192068cc91efe42fa54ea95" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int dgetrf_</definition>
+        <argsstring>(int *m, int *n, double *a, int *lda, int *ipiv, int *info)</argsstring>
+        <name>dgetrf_</name>
+        <param>
+          <type>int *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>lda</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>ipiv</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>info</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" line="9" column="12" declfile="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" declline="9" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="proteus__lapack_8h_1aec4e9097ae14f785b8e716f2f3be6c12" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int dgetrs_</definition>
+        <argsstring>(char *trans, int *n, int *nrhs, double *a, int *lda, int *ipiv, double *b, int *ldb, int *info)</argsstring>
+        <name>dgetrs_</name>
+        <param>
+          <type>char *</type>
+          <declname>trans</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>nrhs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>lda</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>ipiv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>ldb</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>info</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" line="10" column="12" declfile="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" declline="10" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="proteus__lapack_8h_1af3c6249a0ca58bd145263b0c95c5292d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int dgetc2_</definition>
+        <argsstring>(int *n, double *a, int *lda, int *ipiv, int *jpiv, int *info)</argsstring>
+        <name>dgetc2_</name>
+        <param>
+          <type>int *</type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>lda</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>ipiv</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>jpiv</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>info</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" line="11" column="12" declfile="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" declline="11" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="proteus__lapack_8h_1a2e02301fad4a237d9184ce2470ed454a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int dgesc2_</definition>
+        <argsstring>(int *n, double *a, int *lda, double *rhs, int *ipiv, int *jpiv, double *scale)</argsstring>
+        <name>dgesc2_</name>
+        <param>
+          <type>int *</type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>lda</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rhs</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>ipiv</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>jpiv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>scale</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" line="12" column="12" declfile="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" declline="12" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="proteus__lapack_8h_1acf4971bebb7923471eb609ac7f66c9be" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int dgeev_</definition>
+        <argsstring>(char *jobvl, char *jobvr, int *n, double *a, int *lda, double *wr, double *wi, double *vl, int *ldvl, double *vr, int *ldvr, double *work, int *lwork, int *info)</argsstring>
+        <name>dgeev_</name>
+        <param>
+          <type>char *</type>
+          <declname>jobvl</declname>
+        </param>
+        <param>
+          <type>char *</type>
+          <declname>jobvr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>lda</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>wr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>wi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vl</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>ldvl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>ldvr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>work</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>lwork</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>info</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" line="13" column="12" declfile="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" declline="13" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="proteus__lapack_8h_1a8afd1d360c220c6d9d82db685dec7650" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int dgetri_</definition>
+        <argsstring>(int *N, double *A, int *LDA, int *IPIV, double *WORK, int *LWORK, int *INFO)</argsstring>
+        <name>dgetri_</name>
+        <param>
+          <type>int *</type>
+          <declname>N</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>LDA</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>IPIV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>WORK</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>LWORK</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>INFO</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" line="14" column="12" declfile="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h" declline="14" declcolumn="12"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>PYADH_LAPACK_PROTO_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PYADH_LAPACK_PROTO_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="proteus__lapack_8h_1a1551da1b1192068cc91efe42fa54ea95" kindref="member">dgetrf_</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*m,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*lda,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*ipiv,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*info);</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="proteus__lapack_8h_1aec4e9097ae14f785b8e716f2f3be6c12" kindref="member">dgetrs_</ref>(</highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*trans,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*nrhs,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*lda,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*ipiv,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*b,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*ldb,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*info);</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="proteus__lapack_8h_1af3c6249a0ca58bd145263b0c95c5292d" kindref="member">dgetc2_</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*lda,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*ipiv,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*jpiv,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*info);</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="proteus__lapack_8h_1a2e02301fad4a237d9184ce2470ed454a" kindref="member">dgesc2_</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*lda,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>rhs,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*ipiv,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*jpiv,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>scale);</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="proteus__lapack_8h_1acf4971bebb7923471eb609ac7f66c9be" kindref="member">dgeev_</ref>(</highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>jobvl,<sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>jobvr,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>a,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>lda,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>wr,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>wi,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>vl,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>ldvl,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>vr,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>ldvr,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>work,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>lwork,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>info);</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="proteus__lapack_8h_1a8afd1d360c220c6d9d82db685dec7650" kindref="member">dgetri_</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>N,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>A,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>LDA,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>IPIV,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>WORK,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>LWORK,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>INFO<sp/>);</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20" refid="proteus__lapack_8h_1a1632a08853bf62fb9c229b8738f6470d" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>__CLPK_integer<sp/>int</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/proteus_lapack.h"/>
+  </compounddef>
+</doxygen>

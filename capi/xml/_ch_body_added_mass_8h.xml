@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_ch_body_added_mass_8h" kind="file" language="C++">
+    <compoundname>ChBodyAddedMass.h</compoundname>
+    <includes local="yes">chrono/physics/ChBody.h</includes>
+    <includes refid="_ch_variables_body_added_mass_8h" local="yes">ChVariablesBodyAddedMass.h</includes>
+    <includedby refid="_ch_body_added_mass_8cpp" local="yes">ChBodyAddedMass.cpp</includedby>
+    <incdepgraph>
+      <node id="3">
+        <label>ChVariablesBodyAddedMass.h</label>
+        <link refid="_ch_variables_body_added_mass_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>chrono/physics/ChBody.h</label>
+      </node>
+      <node id="1">
+        <label>ChBodyAddedMass.h</label>
+        <link refid="_ch_body_added_mass_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>chrono/solver/ChVariablesBodyOwnMass.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="2">
+        <label>ChBodyAddedMass.cpp</label>
+        <link refid="_ch_body_added_mass_8cpp"/>
+      </node>
+      <node id="1">
+        <label>ChBodyAddedMass.h</label>
+        <link refid="_ch_body_added_mass_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classchrono_1_1_ch_body_added_mass" prot="public">chrono::ChBodyAddedMass</innerclass>
+    <innernamespace refid="namespacechrono">chrono</innernamespace>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_ch_body_added_mass_8h_1a3088e8415772ee855c07453beda528c2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classchrono_1_1_ch_body_added_mass" kindref="compound">chrono::ChBodyAddedMass</ref> *</type>
+        <definition>chrono::ChBodyAddedMass* newChBodyAddedMass</definition>
+        <argsstring>()</argsstring>
+        <name>newChBodyAddedMass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChBodyAddedMass.h" line="98" column="26" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChBodyAddedMass.cpp" bodystart="201" bodyend="204" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChBodyAddedMass.h" declline="98" declcolumn="26"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>CHBODYADDEDMASS_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CHBODYADDEDMASS_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;chrono/physics/ChBody.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="_ch_variables_body_added_mass_8h" kindref="compound">ChVariablesBodyAddedMass.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacechrono" kindref="compound">chrono</ref><sp/>{</highlight></codeline>
+<codeline lineno="8" refid="classchrono_1_1_ch_body_added_mass" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classchrono_1_1_ch_body_added_mass" kindref="compound">ChBodyAddedMass</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/>ChBody<sp/>{</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="10" refid="classchrono_1_1_ch_body_added_mass_1af7486941756f0f71d7e6934d0453354a" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classchrono_1_1_ch_variables_body_added_mass" kindref="compound">ChVariablesBodyAddedMass</ref><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1af7486941756f0f71d7e6934d0453354a" kindref="member">variables</ref>;</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a34a22e401cf6b4af0f88971784de7b6a" kindref="member">ChBodyAddedMass</ref>();</highlight></codeline>
+<codeline lineno="13" refid="classchrono_1_1_ch_body_added_mass_1a4d370279cede29b0cec53fb8408f1693" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a4d370279cede29b0cec53fb8408f1693" kindref="member">~ChBodyAddedMass</ref>()<sp/>{}</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a16f82cf925e661c4fba3623bb5c31371" kindref="member">SetMass</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>newmass);</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1ab5f30b2d7871b769a08e38b5973b4153" kindref="member">SetInertia</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>ChMatrix33&lt;&gt;&amp;<sp/>iner);</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1af064a4a16c6442794da47915ed4c902a" kindref="member">SetInertiaXX</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>ChVector&lt;&gt;&amp;<sp/>iner);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a09607fe374532e6b5a97ccf6a86fb2c1" kindref="member">SetInertiaXY</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>ChVector&lt;&gt;&amp;<sp/>iner);</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>ChVector&lt;&gt;<sp/>GetInertiaXX();<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>ChVector&lt;&gt;<sp/>GetInertiaXY();<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>double<sp/>GetMass()<sp/>{<sp/>return<sp/>variables.GetBodyMass();<sp/>};<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>const<sp/>ChMatrix33&lt;&gt;&amp;<sp/>GetInertia()<sp/>{<sp/>return<sp/>variables.GetBodyInertia();<sp/>}<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a2a8c94d13713b3fede4184c44393933c" kindref="member">SetMfullmass</ref>(ChMatrixDynamic&lt;&gt;<sp/>Mfullmass_in);</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1adcc36656d22b11d2976f78363a5f88b5" kindref="member">SetInvMfullmass</ref>(ChMatrixDynamic&lt;&gt;<sp/>inv_Mfullmass_in);</highlight></codeline>
+<codeline lineno="24" refid="classchrono_1_1_ch_body_added_mass_1ae3262f0105ef5451b43f90d2b6b5a1c7" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>ChVariables&amp;<sp/><ref refid="classchrono_1_1_ch_body_added_mass_1ae3262f0105ef5451b43f90d2b6b5a1c7" kindref="member">Variables</ref>()</highlight><highlight class="keyword"><sp/>override<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1af7486941756f0f71d7e6934d0453354a" kindref="member">variables</ref>;<sp/>}<sp/></highlight></codeline>
+<codeline lineno="25" refid="classchrono_1_1_ch_body_added_mass_1a062555181ad57b7c634ddfc059d34015" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>ChVariablesBodyOwnMass&amp;<sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a062555181ad57b7c634ddfc059d34015" kindref="member">VariablesBody</ref>()</highlight><highlight class="keyword"><sp/>override<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1af7486941756f0f71d7e6934d0453354a" kindref="member">variables</ref>;<sp/>}</highlight></codeline>
+<codeline lineno="26" refid="classchrono_1_1_ch_body_added_mass_1a2b3db3694a3cffba56bf7407debb6eb8" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classchrono_1_1_ch_variables_body_added_mass" kindref="compound">ChVariablesBodyAddedMass</ref>&amp;<sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a2b3db3694a3cffba56bf7407debb6eb8" kindref="member">VariablesBodyAddedMass</ref>()<sp/>{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1af7486941756f0f71d7e6934d0453354a" kindref="member">variables</ref>;<sp/>}</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>STATE<sp/>FUNCTIONS</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>(override/implement<sp/>interfaces<sp/>for<sp/>global<sp/>state<sp/>vectors,<sp/>see<sp/>ChPhysicsItem<sp/>for<sp/>comments.)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a4e48df3df41ef1e9a4b9930411ca8122" kindref="member">IntToDescriptor</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>off_v,</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>ChStateDelta&amp;<sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>ChVectorDynamic&lt;&gt;&amp;<sp/><ref refid="_headers_8h_1ac8e838e6f10957014cfbeb426045ceea" kindref="member">R</ref>,</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>off_L,</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>ChVectorDynamic&lt;&gt;&amp;<sp/><ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>,</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>ChVectorDynamic&lt;&gt;&amp;<sp/>Qc)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a0b8691fcdfa1de9658219c4a47aa7017" kindref="member">IntFromDescriptor</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>off_v,</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ChStateDelta&amp;<sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>off_L,</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ChVectorDynamic&lt;&gt;&amp;<sp/><ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1adffba2c2dd0b3d562cb2ed29e877b1d7" kindref="member">IntLoadResidual_F</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>off,<sp/>ChVectorDynamic&lt;&gt;&amp;<sp/><ref refid="_headers_8h_1ac8e838e6f10957014cfbeb426045ceea" kindref="member">R</ref>,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a2e6430f29889de1f73dfb7cc41b9c8fb" kindref="member">IntLoadResidual_Mv</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>off,</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ChVectorDynamic&lt;&gt;&amp;<sp/><ref refid="_headers_8h_1ac8e838e6f10957014cfbeb426045ceea" kindref="member">R</ref>,</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>ChVectorDynamic&lt;&gt;&amp;<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>,</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>SOLVER<sp/>FUNCTIONS</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Override/implement<sp/>solver<sp/>system<sp/>functions<sp/>of<sp/>ChPhysicsItem</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>(to<sp/>assemble/manage<sp/>data<sp/>for<sp/>system<sp/>solver)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1aaf3ff4c1a7735074cec691fde0d6a87b" kindref="member">VariablesFbReset</ref>()<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a255e3f972cf76fadcf68effcb69b5676" kindref="member">VariablesFbLoadForces</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>factor<sp/>=<sp/>1)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a9ac1b48fa93f4c54dc7ea5d2638f33e2" kindref="member">VariablesQbLoadSpeed</ref>()<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a2bc5cfb833abab5bdc7c1204d6231c62" kindref="member">VariablesFbIncrementMq</ref>()<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a411c363975eade48316927a33b26528f" kindref="member">VariablesQbSetSpeed</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>step<sp/>=<sp/>0)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1aedf137bf3351a163a50cc602dae4e267" kindref="member">VariablesQbIncrementPosition</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>step)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classchrono_1_1_ch_body_added_mass_1a0025a4f168b01c98e06ac64331f18082" kindref="member">InjectVariables</ref>(ChSystemDescriptor&amp;<sp/>mdescriptor)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal">}<sp/><sp/></highlight><highlight class="comment">//<sp/>end<sp/>namespace<sp/>chrono</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><ref refid="classchrono_1_1_ch_body_added_mass" kindref="compound">chrono::ChBodyAddedMass</ref><sp/>*<sp/><ref refid="_ch_body_added_mass_8h_1a3088e8415772ee855c07453beda528c2" kindref="member">newChBodyAddedMass</ref>();</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="101"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChBodyAddedMass.h"/>
+  </compounddef>
+</doxygen>

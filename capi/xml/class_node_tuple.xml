@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_node_tuple" kind="class" language="C++" prot="public">
+    <compoundname>NodeTuple</compoundname>
+    <includes refid="mesh_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mesh.h</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>nNodes</declname>
+        <defname>nNodes</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_node_tuple_1a98190f7d23c18d48b64d61112ffed25a" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int NodeTuple&lt; nNodes &gt;::nodes[nNodes]</definition>
+        <argsstring>[nNodes]</argsstring>
+        <name>nodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="426" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="426" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_node_tuple_1a0a76cdad7456130cb26e1fa8b53b5b9a" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int NodeTuple&lt; nNodes &gt;::nodes_unsorted[nNodes]</definition>
+        <argsstring>[nNodes]</argsstring>
+        <name>nodes_unsorted</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="427" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="427" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_node_tuple_1a3d054282fa666881d75a2c4d9920453f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>NodeTuple&lt; nNodes &gt;::NodeTuple</definition>
+        <argsstring>(const int *nodesIn)</argsstring>
+        <name>NodeTuple</name>
+        <param>
+          <type>const int *</type>
+          <declname>nodesIn</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="400" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="400" bodyend="417"/>
+      </memberdef>
+      <memberdef kind="function" id="class_node_tuple_1ab3179c2de3d5e1db0b8e6144a0f150bc" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>NodeTuple&lt; nNodes &gt;::NodeTuple</definition>
+        <argsstring>(const NodeTuple&lt; nNodes &gt; &amp;nt)</argsstring>
+        <name>NodeTuple</name>
+        <param>
+          <type>const <ref refid="class_node_tuple" kindref="compound">NodeTuple</ref>&lt; nNodes &gt; &amp;</type>
+          <declname>nt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="418" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="418" bodyend="425"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="398" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="397" bodyend="428"/>
+    <listofallmembers>
+      <member refid="class_node_tuple_1a98190f7d23c18d48b64d61112ffed25a" prot="public" virt="non-virtual"><scope>NodeTuple</scope><name>nodes</name></member>
+      <member refid="class_node_tuple_1a0a76cdad7456130cb26e1fa8b53b5b9a" prot="public" virt="non-virtual"><scope>NodeTuple</scope><name>nodes_unsorted</name></member>
+      <member refid="class_node_tuple_1a3d054282fa666881d75a2c4d9920453f" prot="public" virt="non-virtual"><scope>NodeTuple</scope><name>NodeTuple</name></member>
+      <member refid="class_node_tuple_1ab3179c2de3d5e1db0b8e6144a0f150bc" prot="public" virt="non-virtual"><scope>NodeTuple</scope><name>NodeTuple</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,2311 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_mesh_adapt_p_u_m_i_drvr" kind="class" language="C++" prot="public">
+    <compoundname>MeshAdaptPUMIDrvr</compoundname>
+    <includes refid="_mesh_adapt_p_u_m_i_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h</includes>
+      <sectiondef kind="user-defined">
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1afc0d6c608b186d83a19f5af99855d3f4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr</definition>
+        <argsstring>(double, double, double, int, int, int, const char *, const char *, const char *, double, double, int, double, double)</argsstring>
+        <name>MeshAdaptPUMIDrvr</name>
+        <param>
+          <type>double</type>
+          <defname>Hmax</defname>
+        </param>
+        <param>
+          <type>double</type>
+          <defname>Hmin</defname>
+        </param>
+        <param>
+          <type>double</type>
+          <defname>HPhi</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>AdaptMesh</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>NumIter</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>NumAdaptSteps</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>sfConfig</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>maType</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>logType</defname>
+        </param>
+        <param>
+          <type>double</type>
+          <defname>targetError</defname>
+        </param>
+        <param>
+          <type>double</type>
+          <defname>targetElementCount</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>reconstructedFlag</defname>
+        </param>
+        <param>
+          <type>double</type>
+          <defname>maxAspectRatio</defname>
+        </param>
+        <param>
+          <type>double</type>
+          <defname>gradingFact</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><ref refid="class_mesh_adapt_p_u_m_i_drvr" kindref="compound">MeshAdaptPUMIDrvr</ref> is the highest level class that handles the interface between Proteus and the PUMI libraries See <ref refid="_mesh_adapt_p_u_m_i_8h" kindref="compound">MeshAdaptPUMI.h</ref> for the list of class variables/functions/objects This is the constructor for the class </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="21" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="36" bodyend="91"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a8463481f0a201a57bc92f4ccee58c09d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr</definition>
+        <argsstring>()</argsstring>
+        <name>~MeshAdaptPUMIDrvr</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Destructor for <ref refid="class_mesh_adapt_p_u_m_i_drvr" kindref="compound">MeshAdaptPUMIDrvr</ref> </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="22" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="93" bodyend="118"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a1d628142283d46bedcf08f1e937cd9fa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::loadModelAndMesh</definition>
+        <argsstring>(const char *modelFile, const char *meshFile)</argsstring>
+        <name>loadModelAndMesh</name>
+        <param>
+          <type>const char *</type>
+          <declname>modelFile</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>meshFile</declname>
+        </param>
+        <briefdescription>
+<para>Load the mesh and model for SCOREC libraries. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>The default filetypes are .dmg (model) and .smb (mesh), but can support GMSH meshes (.msh) and Simmetrix models (.smd) and meshes (.sms) GMSH models are not used and .null filenames and passed instead. Each of the the GMSH and Simmetrix filetypes can be converted into a SCOREC filetype via tools in scorec Diffusive flux boundary conditions are supported with Simmetrix models and can be passed into the error estimator </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="24" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="135" bodyend="155"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a02359f723bbcd3006c1f97a7e7bf4393" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::loadMeshForAnalytic</definition>
+        <argsstring>(const char *meshFile, double *boxDim, double *sphereCenter, double radius)</argsstring>
+        <name>loadMeshForAnalytic</name>
+        <param>
+          <type>const char *</type>
+          <declname>meshFile</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boxDim</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>sphereCenter</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>radius</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="25" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="157" bodyend="176"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a54d9717041c36487816585eb2cfcdb3b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::willAdapt</definition>
+        <argsstring>()</argsstring>
+        <name>willAdapt</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="57" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="369" bodyend="381"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a686685b789dec852110157660d50a088" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::willErrorAdapt</definition>
+        <argsstring>()</argsstring>
+        <name>willErrorAdapt</name>
+        <briefdescription>
+<para>Looks at the estimated error and determines if mesh adaptation is necessary. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Function used to define whether a mesh needs to be adapted based on the error estimator The return value is a flag indicating whether the mesh will not (0) or will be (1) adapted The THRESHOLD will be set to the error estimate after the wind-up step, but is currently 0 Assertion is set to ensure that all ranks in a parallel execution will enter the adapt stage </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="58" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="309" bodyend="366"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a463d0271aeee1bd4a1bf36636fafb647" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::willInterfaceAdapt</definition>
+        <argsstring>()</argsstring>
+        <name>willInterfaceAdapt</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="59" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="384" bodyend="438"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1ab0cfeba615d840e3f32c9d6ac295a890" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::adaptPUMIMesh</definition>
+        <argsstring>(const char *input)</argsstring>
+        <name>adaptPUMIMesh</name>
+        <param>
+          <type>const char *</type>
+          <declname>input</declname>
+          <defname>inputString</defname>
+        </param>
+        <briefdescription>
+<para>Function used to trigger adaptation. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><ref refid="struct_inputs" kindref="compound">Inputs</ref> are the type of size-field that is desired: &quot;interface&quot; refers to explicitly adapting to the current interface position based on the level-set field &quot;ERM&quot; refers to the error-residual method and using error estimates to determine how a mesh should be adapted Within ERM, there is an isotropic and anisotropic configuration. The anisotropic configuration requires more development. &quot;Isotropic&quot; refers to a uniform refinement based on a global hmin size and is primarily used for testing Predictive load balancers Zoltan and ParMA are used in combination for before, during, and after adapt with a preset tolerance of imbalance The nAdapt counter is iterated to track how many times a mesh is adapted </para>
+        </detaileddescription>
+        <inbodydescription>
+<para>Adapt the mesh</para>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="60" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="442" bodyend="635"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a127c1258e9a3fabb98c9d2a64fd03161" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::getMinimumQuality</definition>
+        <argsstring>()</argsstring>
+        <name>getMinimumQuality</name>
+        <briefdescription>
+<para>Function used to get the worst element quality in the mesh. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Measures the quality via SCOREC library; returns the minimum quality Meant to be used to trigger adaptation, but has not been implemented yet </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="75" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="637" bodyend="654"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1ac9ee3fb3ccad97e4a7b2ecf33fad6dd0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::getTotalMass</definition>
+        <argsstring>()</argsstring>
+        <name>getTotalMass</name>
+        <briefdescription>
+<para>Function to track total mass of the domain. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Returns total mass across all ranks </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="76" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="656" bodyend="689"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1afdc27e39d259578ab1089275f76e77c6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::getSimmetrixBC</definition>
+        <argsstring>()</argsstring>
+        <name>getSimmetrixBC</name>
+        <briefdescription>
+<para>Function used to read in diffusive flux BC from Simmetrix Model. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Simmetrix BCs set via the GUI are read-in through the Simmetrix API. The values are stored as apf tags on the mesh. BCs are not currently supported with any other type of model. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="106" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="180" bodyend="307"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="user-defined">
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a6ddc38c5a78f366b34d764813812ed41" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::getMPvalue</definition>
+        <argsstring>(double field_val, double val_0, double val_1)</argsstring>
+        <name>getMPvalue</name>
+        <param>
+          <type>double</type>
+          <declname>field_val</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>val_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>val_1</declname>
+        </param>
+        <briefdescription>
+<para>Function primarily used to get the VOF-weighted average of physical properties at a given point. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Due to the potential multi-phase nature of the problem, material properties at quadrature points are weighted averages of the different phases.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>field_val</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>VOF value </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>val_0</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>value of property for one phase </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>val_1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>value of property for second phase </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="79" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp" bodystart="35" bodyend="48"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a772b6ae5b0b80b1f5c4dc270f1cb99b0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>apf::Field *</type>
+        <definition>apf::Field * MeshAdaptPUMIDrvr::getViscosityField</definition>
+        <argsstring>(apf::Field *voff)</argsstring>
+        <name>getViscosityField</name>
+        <param>
+          <type>apf::Field *</type>
+          <declname>voff</declname>
+        </param>
+        <briefdescription>
+<para>Function used to derive a viscosity field from a VOF field. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>For convenience, derive a viscosity field using the <ref refid="class_mesh_adapt_p_u_m_i_drvr_1a6ddc38c5a78f366b34d764813812ed41" kindref="member">getMPvalue()</ref> function. <parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>voff</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the VOF field. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="80" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp" bodystart="579" bodyend="598"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1aecaf9a2b99e00685fec6694d29b6a533" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::get_local_error</definition>
+        <argsstring>(double &amp;total_error)</argsstring>
+        <name>get_local_error</name>
+        <param>
+          <type>double &amp;</type>
+          <declname>total_error</declname>
+        </param>
+        <briefdescription>
+<para>This function aims to compute error at each element via an Element Residual Method. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>See Oden, J. Tinsley, Weihan Wu, and Mark Ainsworth. &quot;An a posteriori error estimate for finite element approximations of the Navier-Stokes equations.&quot; Computer Methods in Applied Mechanics and Engineering 111.1 (1994): 185-202. Effectively, the method involves projecting the weak residual onto a higher order space. Boundary condition considerations are discussed in Ainsworth, Mark, and J. Tinsley Oden. A posteriori error estimation in finite element analysis. Vol. 37. John Wiley &amp; Sons, 2011. The function loops through each element and solves the local problem. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="103" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp" bodystart="664" bodyend="966"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a15ef6e40927fdbc9af43fa535b563679" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::computeDiffusiveFlux</definition>
+        <argsstring>(apf::Mesh *m, apf::Field *voff, apf::Field *visc, apf::Field *pref, apf::Field *velf)</argsstring>
+        <name>computeDiffusiveFlux</name>
+        <param>
+          <type>apf::Mesh *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>apf::Field *</type>
+          <declname>voff</declname>
+        </param>
+        <param>
+          <type>apf::Field *</type>
+          <declname>visc</declname>
+        </param>
+        <param>
+          <type>apf::Field *</type>
+          <declname>pref</declname>
+        </param>
+        <param>
+          <type>apf::Field *</type>
+          <declname>velf</declname>
+        </param>
+        <briefdescription>
+<para>Function used to compute the diffusive flux at interelement boundaries and stores the values as tags at the boundaries. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Based on the mesh database, each face has a default orientation that is outward normal to a given element. The flux has a different value depending on the element. The value from the default element is stored in the first slot of the tag and the other value is stored in the second slot Special considerations are made for global domain boundaries if boundary conditions exist and for parallel communications <ref refid="struct_inputs" kindref="compound">Inputs</ref>: <parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>m</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the mesh </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>voff</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the volume of fluid field </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>visc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the field of viscosity </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>pref</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the pressure field </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>velf</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the velocity field </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="104" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp" bodystart="297" bodyend="492"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1ac75ad718d0165cb56ebe96df87083268" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::getBoundaryFlux</definition>
+        <argsstring>(apf::Mesh *m, apf::MeshEntity *ent, double *endflux)</argsstring>
+        <name>getBoundaryFlux</name>
+        <param>
+          <type>apf::Mesh *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>apf::MeshEntity *</type>
+          <declname>ent</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>endflux</declname>
+        </param>
+        <briefdescription>
+<para>This function reads in the stored tags and computes the boundary flux according to the RHS formulation. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>m</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the input mesh </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>ent</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is an input element (tetrahedron) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>endflux</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the output boundary flux used in the RHS </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="105" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp" bodystart="494" bodyend="577"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a0decaa7be27e9d9899a16de5839cf750" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::removeBCData</definition>
+        <argsstring>()</argsstring>
+        <name>removeBCData</name>
+        <briefdescription>
+<para>Function used to remove the BC tags that were created during the <ref refid="class_mesh_adapt_p_u_m_i_drvr_1a15ef6e40927fdbc9af43fa535b563679" kindref="member">computeDiffusiveFlux()</ref> function. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>This is the simple way of avoiding errors from creating the same tags the next time the error estimator is called The function just cycles through all of the faces and removes the apf tags. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="107" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp" bodystart="626" bodyend="662"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="user-defined">
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1ac167218f32db834c739e89e6cfed2560" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::transferFieldToPUMI</definition>
+        <argsstring>(const char *name, double const *inArray, int nVar, int nN)</argsstring>
+        <name>transferFieldToPUMI</name>
+        <param>
+          <type>const char *</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>double const *</type>
+          <declname>inArray</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nVar</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nN</declname>
+        </param>
+        <briefdescription>
+<para>Convert Proteus fields to something PUMI can understand. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Copies the Proteus field associated with an array into an apf field associated with &quot;name&quot;</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the desired name associated with the apf field </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>inArray</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the Proteus field</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The remainder of the parameters might be irrelevant. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="50" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshFields.cpp" bodystart="40" bodyend="84"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a171dedf702dd8c87f1aaf8fc8b32d7d5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::transferFieldToProteus</definition>
+        <argsstring>(const char *name, double *outArray, int nVar, int nN)</argsstring>
+        <name>transferFieldToProteus</name>
+        <param>
+          <type>const char *</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>outArray</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nVar</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nN</declname>
+        </param>
+        <briefdescription>
+<para>Convert PUMI fields to something Proteus can understand. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Copies the PUMI apf field with name into an outArray.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the desired name associated with the apf field </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>outArray</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the Proteus field that will be output</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The remainder of the parameters might be irrelevant. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="51" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshFields.cpp" bodystart="86" bodyend="117"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a8858e270790faf4702fdfffd67b0faf4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::transferPropertiesToPUMI</definition>
+        <argsstring>(double *rho_p, double *nu_p, double *g_p, double deltaT, double interfaceBandSize)</argsstring>
+        <name>transferPropertiesToPUMI</name>
+        <param>
+          <type>double *</type>
+          <declname>rho_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nu_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>g_p</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>deltaT</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>interfaceBandSize</declname>
+        </param>
+        <briefdescription>
+<para>Transfer material properties to the MeshAdaptPUMI class. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>There are three material properties that the error estimator requires:</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>rho_p</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the density </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nu_p</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the kinematic viscosity </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>g_p</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the gravitational field (a 3-vector) </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="52" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshFields.cpp" bodystart="119" bodyend="143"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a38ceb431664b1dd373ff0941c53c9bcb" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::freeField</definition>
+        <argsstring>(apf::Field *&amp;f)</argsstring>
+        <name>freeField</name>
+        <param>
+          <type>apf::Field *&amp;</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Destroy field to avoid memory leak. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Every field needs to eventually be destroyed. Returns nothing. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="171" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshFields.cpp" bodystart="13" bodyend="24"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1ac357c0a4fcad9c99a784c8e92850c633" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::freeNumbering</definition>
+        <argsstring>(apf::Numbering *&amp;n)</argsstring>
+        <name>freeNumbering</name>
+        <param>
+          <type>apf::Numbering *&amp;</type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+<para>Destroy numbering to avoid memory leak. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Every numbering needs to eventually be destroyed. Returns nothing </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="172" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshFields.cpp" bodystart="26" bodyend="38"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ab7268c72a11923e639065b10f75062f6" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::numSegments</definition>
+        <argsstring></argsstring>
+        <name>numSegments</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="43" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="43" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1aa5906a0f076e0ad1de1c61c905c85b20" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* MeshAdaptPUMIDrvr::edgeList</definition>
+        <argsstring></argsstring>
+        <name>edgeList</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="44" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ab42d754f517e0886d5749038df914452" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* MeshAdaptPUMIDrvr::faceList</definition>
+        <argsstring></argsstring>
+        <name>faceList</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="45" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a7a39e1cdd603aa22b54acd6c83fb0eb0" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* MeshAdaptPUMIDrvr::meshVertex2Model</definition>
+        <argsstring></argsstring>
+        <name>meshVertex2Model</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="46" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a036919258d2820160b6b5f3699321aac" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * MeshAdaptPUMIDrvr::meshEdge2Model</definition>
+        <argsstring></argsstring>
+        <name>meshEdge2Model</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="46" column="24" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a5837c7464bf0703abf955e31334bb823" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * MeshAdaptPUMIDrvr::meshBoundary2Model</definition>
+        <argsstring></argsstring>
+        <name>meshBoundary2Model</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="46" column="39" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a06e0b5795826df209fabcd78f30a3ccd" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::numModelEntities[4]</definition>
+        <argsstring>[4]</argsstring>
+        <name>numModelEntities</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="47" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a55f731fc27f23d9560fb4778b7f1741e" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::hmax</definition>
+        <argsstring></argsstring>
+        <name>hmax</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="86" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="86" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1aa8f0f76c30250e076414981543f84802" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::hmin</definition>
+        <argsstring></argsstring>
+        <name>hmin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="86" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="86" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1afa0c1053cfda5b41ea3eb9dafcf021c7" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::hPhi</definition>
+        <argsstring></argsstring>
+        <name>hPhi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="86" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="86" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a10079fecbff8a243a52cc7160db07548" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::numIter</definition>
+        <argsstring></argsstring>
+        <name>numIter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="87" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="87" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a4a202881ec4b2aa283d34e81d45d1404" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::nAdapt</definition>
+        <argsstring></argsstring>
+        <name>nAdapt</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="88" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="88" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a457dfc5023eff43c9a56bfbefd2f0a5f" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::nEstimate</definition>
+        <argsstring></argsstring>
+        <name>nEstimate</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="89" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="89" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ab670020f8485275221bf5fa0b8872cad" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::nsd</definition>
+        <argsstring></argsstring>
+        <name>nsd</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="90" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="90" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1aae6c68a4a0140f3d2eca1472e10b61d1" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::maxAspect</definition>
+        <argsstring></argsstring>
+        <name>maxAspect</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="91" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="91" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a39b6a3862d3fa543b38f408cf3af8697" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::adaptMesh</definition>
+        <argsstring></argsstring>
+        <name>adaptMesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="92" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="92" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a696a6f4c51c5138c70e21efa594c7b1d" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::numAdaptSteps</definition>
+        <argsstring></argsstring>
+        <name>numAdaptSteps</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="93" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="93" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1aa3eddefb9c31b31e2b8c91cdd01ea40a" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::N_interface_band</definition>
+        <argsstring></argsstring>
+        <name>N_interface_band</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="94" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="94" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a2f88d2f12514c80986566d79c9af97cb" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::gradingFactor</definition>
+        <argsstring></argsstring>
+        <name>gradingFactor</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="95" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="95" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a048c01a777fa7d2f953a8f32621f16ce" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string MeshAdaptPUMIDrvr::size_field_config</definition>
+        <argsstring></argsstring>
+        <name>size_field_config</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="98" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="98" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1aeffc8a7d92b18589fb364e0a25166b9c" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string MeshAdaptPUMIDrvr::adapt_type_config</definition>
+        <argsstring></argsstring>
+        <name>adapt_type_config</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="99" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="99" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1aa97e3f5ebb00ff6620349fa6b3357a36" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string MeshAdaptPUMIDrvr::logging_config</definition>
+        <argsstring></argsstring>
+        <name>logging_config</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="100" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="100" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a9461bcec67009452ea6e7b1c56ec4318" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* MeshAdaptPUMIDrvr::modelFileName</definition>
+        <argsstring></argsstring>
+        <name>modelFileName</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="108" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1af5a56ca2477894338859d52298b28350" prot="public" static="no" mutable="no">
+        <type>apf::MeshTag *</type>
+        <definition>apf::MeshTag* MeshAdaptPUMIDrvr::BCtag</definition>
+        <argsstring></argsstring>
+        <name>BCtag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="114" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="114" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ac91430db54e1c581c67fd0ff6a0e7069" prot="public" static="no" mutable="no">
+        <type>apf::MeshTag *</type>
+        <definition>apf::MeshTag* MeshAdaptPUMIDrvr::DBCtag[4]</definition>
+        <argsstring>[4]</argsstring>
+        <name>DBCtag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="115" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="115" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ad72438ac9f7cb57018dc98271ac6bffa" prot="public" static="no" mutable="no">
+        <type>apf::MeshTag *</type>
+        <definition>apf::MeshTag* MeshAdaptPUMIDrvr::fluxtag[4]</definition>
+        <argsstring>[4]</argsstring>
+        <name>fluxtag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="116" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="116" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a4babcf12405cab5dcd7af2b85395586d" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* MeshAdaptPUMIDrvr::exteriorGlobaltoLocalElementBoundariesArray</definition>
+        <argsstring></argsstring>
+        <name>exteriorGlobaltoLocalElementBoundariesArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="118" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="118" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1acc45546f4adbd6a6c18c82c432e5dd0e" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::approximation_order</definition>
+        <argsstring></argsstring>
+        <name>approximation_order</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="121" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="121" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a1e4333322f04b1b4e0d9b787611d6cce" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::integration_order</definition>
+        <argsstring></argsstring>
+        <name>integration_order</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="122" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="122" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ab54472c23a4ce06ed9e253d8249f7907" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::num_quadrature</definition>
+        <argsstring></argsstring>
+        <name>num_quadrature</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="123" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="123" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a152df6bb677176ca2e91b84d49fc64f2" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::num_quadrature_boundary</definition>
+        <argsstring></argsstring>
+        <name>num_quadrature_boundary</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="124" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="124" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1afa325a32876160388cba8f8fe81e0ce0" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::total_error</definition>
+        <argsstring></argsstring>
+        <name>total_error</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="125" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="125" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ae4697439db655efc3b37b9f5953c7f53" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::errRho_max</definition>
+        <argsstring></argsstring>
+        <name>errRho_max</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="126" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="126" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ac334de5a67ca2e2dbd26fbe7b10a3d55" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::rel_err_total</definition>
+        <argsstring></argsstring>
+        <name>rel_err_total</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="127" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="127" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a82c29efd9d3cf097e81daba5b9cdcba9" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::isReconstructed</definition>
+        <argsstring></argsstring>
+        <name>isReconstructed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="130" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="130" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ab30bca7c0adb1965e12d6196b2673d42" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::initialReconstructed</definition>
+        <argsstring></argsstring>
+        <name>initialReconstructed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="131" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="131" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a09d644b4b8b529f7540bffc5ef25c8db" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* MeshAdaptPUMIDrvr::modelVertexMaterial</definition>
+        <argsstring></argsstring>
+        <name>modelVertexMaterial</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="132" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="132" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ac14021e0c882dff8ec6331cc05661ccf" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* MeshAdaptPUMIDrvr::modelBoundaryMaterial</definition>
+        <argsstring></argsstring>
+        <name>modelBoundaryMaterial</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="133" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="133" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a84f27a11492a2a1f3582345bad013a37" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* MeshAdaptPUMIDrvr::modelRegionMaterial</definition>
+        <argsstring></argsstring>
+        <name>modelRegionMaterial</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="134" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="134" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1aff8d734eb2cfc1d53e338e91f69d2aa9" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::numModelOffsets[4]</definition>
+        <argsstring>[4]</argsstring>
+        <name>numModelOffsets</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="135" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="135" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1afee9fc62fa74e070a316e1ecb8d4a560" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::numModelTotals[4]</definition>
+        <argsstring>[4]</argsstring>
+        <name>numModelTotals</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="136" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="136" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ace08b54ec27515539e214850d8244290" prot="private" static="no" mutable="no">
+        <type>apf::Mesh2 *</type>
+        <definition>apf::Mesh2* MeshAdaptPUMIDrvr::m</definition>
+        <argsstring></argsstring>
+        <name>m</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="139" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a7e40b981b3665da71561da7989c50250" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::comm_size</definition>
+        <argsstring></argsstring>
+        <name>comm_size</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="140" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="140" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ae44c03c459217e5717402a92a1aadc52" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::comm_rank</definition>
+        <argsstring></argsstring>
+        <name>comm_rank</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="140" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="140" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1aac6b58ff2a9c55194d014306b2ea614e" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::rho[2]</definition>
+        <argsstring>[2]</argsstring>
+        <name>rho</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="142" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="142" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ab2d806be0bdd6a06babd017a7d6fdc31" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::nu[2]</definition>
+        <argsstring>[2]</argsstring>
+        <name>nu</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="142" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="142" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a275d0d3a23141b3df378f504e0cc7cd9" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::g[3]</definition>
+        <argsstring>[3]</argsstring>
+        <name>g</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="143" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="143" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ad64d7c9cb738bb55e733ca0717a7d7f4" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::delta_T</definition>
+        <argsstring></argsstring>
+        <name>delta_T</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="144" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="144" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ace4afc729d5e79eebab9ae1807a25d96" prot="private" static="no" mutable="no">
+        <type>apf::MeshTag *</type>
+        <definition>apf::MeshTag* MeshAdaptPUMIDrvr::diffFlux</definition>
+        <argsstring></argsstring>
+        <name>diffFlux</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="145" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="145" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a61274cc3fb1751a265ae1541e0ae2db2" prot="private" static="no" mutable="no">
+        <type>apf::GlobalNumbering *</type>
+        <definition>apf::GlobalNumbering* MeshAdaptPUMIDrvr::global[4]</definition>
+        <argsstring>[4]</argsstring>
+        <name>global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="146" column="24" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="146" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ae48907074c9434562b2e54a8c019b2f2" prot="private" static="no" mutable="no">
+        <type>apf::Numbering *</type>
+        <definition>apf::Numbering* MeshAdaptPUMIDrvr::local[4]</definition>
+        <argsstring>[4]</argsstring>
+        <name>local</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="147" column="18" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="147" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a0f79240afbab7a66713873c0e8de1f11" prot="private" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* MeshAdaptPUMIDrvr::err_reg</definition>
+        <argsstring></argsstring>
+        <name>err_reg</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="148" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="148" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a2a4651fb3f2ba08a0c7c42d32f58738a" prot="private" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* MeshAdaptPUMIDrvr::vmsErrH1</definition>
+        <argsstring></argsstring>
+        <name>vmsErrH1</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="149" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="149" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a1e93bf4930c654d8b806f9f63eb4ad42" prot="private" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* MeshAdaptPUMIDrvr::errRho_reg</definition>
+        <argsstring></argsstring>
+        <name>errRho_reg</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="150" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="150" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a91feb0886168b74d756cf0b81d8b1aa7" prot="private" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* MeshAdaptPUMIDrvr::errRel_reg</definition>
+        <argsstring></argsstring>
+        <name>errRel_reg</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="151" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="151" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a6fa05ce8450b851af763a914e8f0cd5a" prot="private" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* MeshAdaptPUMIDrvr::size_iso</definition>
+        <argsstring></argsstring>
+        <name>size_iso</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="153" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="153" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a8e16fc2fe07def0df36a523aad7a36bc" prot="private" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* MeshAdaptPUMIDrvr::size_scale</definition>
+        <argsstring></argsstring>
+        <name>size_scale</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="155" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="155" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a239f21cc54cd7cd23ab9d072fe94bf3f" prot="private" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* MeshAdaptPUMIDrvr::size_frame</definition>
+        <argsstring></argsstring>
+        <name>size_frame</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="156" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="156" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ab102b891f8104547a8d965a273407433" prot="private" static="no" mutable="no">
+        <type>std::queue&lt; apf::Field * &gt;</type>
+        <definition>std::queue&lt;apf::Field*&gt; MeshAdaptPUMIDrvr::sizeFieldList</definition>
+        <argsstring></argsstring>
+        <name>sizeFieldList</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="159" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="159" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1abd2da53bf6d61743e31cbe691386c06a" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool MeshAdaptPUMIDrvr::has_gBC</definition>
+        <argsstring></argsstring>
+        <name>has_gBC</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="179" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="179" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a9fe5eb98961175aa979f4294a4c291ec" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::target_error</definition>
+        <argsstring></argsstring>
+        <name>target_error</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="180" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="180" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a405aea78026966c74ff266123979c035" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::target_element_count</definition>
+        <argsstring></argsstring>
+        <name>target_element_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="181" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="181" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1ae3c2430e6e9cb643e2187497011fb075" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::domainVolume</definition>
+        <argsstring></argsstring>
+        <name>domainVolume</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="182" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="182" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_mesh_adapt_p_u_m_i_drvr_1a67c7648e42c12dc0f302e462a53d2aa6" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double MeshAdaptPUMIDrvr::THRESHOLD</definition>
+        <argsstring></argsstring>
+        <name>THRESHOLD</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="183" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="183" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a9da337ea66002132204fbffc63533543" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::writeMesh</definition>
+        <argsstring>(const char *meshFile)</argsstring>
+        <name>writeMesh</name>
+        <param>
+          <type>const char *</type>
+          <declname>meshFile</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="26" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="694" bodyend="698"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a809118b93e0865561177cf1dae2c1df1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::cleanMesh</definition>
+        <argsstring>()</argsstring>
+        <name>cleanMesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="27" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="702" bodyend="774"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a0bd25b35ad7754632353d43aa3094df4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::reconstructFromProteus</definition>
+        <argsstring>(Mesh &amp;mesh, Mesh &amp;globalMesh, int hasModel)</argsstring>
+        <name>reconstructFromProteus</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>globalMesh</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>hasModel</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="30" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="873" bodyend="1333"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a10be3b196fb7563006c0185b0495e6e4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::reconstructFromProteus2</definition>
+        <argsstring>(Mesh &amp;mesh, int *isModelVert, int *bFaces)</argsstring>
+        <name>reconstructFromProteus2</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isModelVert</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>bFaces</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="31" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="1335" bodyend="1410"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1ab11169fd7e5b9a69fd2525b7d62ef9ed" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructFromSerialPUMIMesh</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructFromSerialPUMIMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="32" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="47" bodyend="93"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a5b5e7afd61f0a959963eb27ad9fcf685" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh</definition>
+        <argsstring>(Mesh &amp;mesh, Mesh &amp;subdomain_mesh)</argsstring>
+        <name>constructFromParallelPUMIMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>subdomain_mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="33" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="25" bodyend="111"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a0174b9ea01dc47a497c832a8c46014d0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::updateMaterialArrays</definition>
+        <argsstring>(Mesh &amp;mesh, int dim, int bdryID, int GeomTag)</argsstring>
+        <name>updateMaterialArrays</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>bdryID</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>GeomTag</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="34" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="400" bodyend="433"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a4b337a4235b1e8e2ea3568700d9ddb91" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::updateMaterialArrays</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>updateMaterialArrays</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="35" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="440" bodyend="507"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a3fca50c59c93e805f6f17a0158a5185b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::updateMaterialArrays2</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>updateMaterialArrays2</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="36" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="509" bodyend="624"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a31a9734e50e16e7aff9bf7dded15eebb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::numberLocally</definition>
+        <argsstring>()</argsstring>
+        <name>numberLocally</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="37" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="95" bodyend="103"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a56dab4675d73f26b9decdc7ed6353aa8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::localNumber</definition>
+        <argsstring>(apf::MeshEntity *e)</argsstring>
+        <name>localNumber</name>
+        <param>
+          <type>apf::MeshEntity *</type>
+          <declname>e</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="38" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="105" bodyend="108"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a2f375f8c93ed5b48495fa0d689171c95" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::dumpMesh</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>dumpMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="39" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="242" bodyend="251"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a2314044d8a34d2f5872d93da1931898f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::transferModelInfo</definition>
+        <argsstring>(int *numGeomEntities, int *edges, int *faces, int *mVertex2Model, int *mEdgeVertex2Model, int *mBoundary2Model, int nMaxSegments)</argsstring>
+        <name>transferModelInfo</name>
+        <param>
+          <type>int *</type>
+          <declname>numGeomEntities</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>edges</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>faces</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mVertex2Model</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mEdgeVertex2Model</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mBoundary2Model</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nMaxSegments</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="42" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="856" bodyend="868"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a32a3b6ff131f4a36de1c2b2ec9321f78" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::setSphereSizeField</definition>
+        <argsstring>()</argsstring>
+        <name>setSphereSizeField</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="61" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="61" bodyend="81"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1aac549fb381e88d63fc1743b461adb337" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::calculateSizeField</definition>
+        <argsstring>(double L_band)</argsstring>
+        <name>calculateSizeField</name>
+        <param>
+          <type>double</type>
+          <declname>L_band</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="62" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="84" bodyend="159"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a97c4181cef84b47cd827c0f9214e4903" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::predictiveInterfacePropagation</definition>
+        <argsstring>()</argsstring>
+        <name>predictiveInterfacePropagation</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="63" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="294" bodyend="517"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a7341569125c3eed5cafc6a9aa8524195" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::calculateAnisoSizeField</definition>
+        <argsstring>()</argsstring>
+        <name>calculateAnisoSizeField</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="65" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1053" bodyend="1076"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1aa48e918a44e6c7e99cd8c88ee7478437" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::testIsotropicSizeField</definition>
+        <argsstring>()</argsstring>
+        <name>testIsotropicSizeField</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="66" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1461" bodyend="1474"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a557aeb21cd38eb22d9bcef5acd865ff6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::getERMSizeField</definition>
+        <argsstring>(double err_total)</argsstring>
+        <name>getERMSizeField</name>
+        <param>
+          <type>double</type>
+          <declname>err_total</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="67" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1196" bodyend="1459"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a1bb6d304aa4d38c9f32125b1036f2098" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::gradeMesh</definition>
+        <argsstring>()</argsstring>
+        <name>gradeMesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="68" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1624" bodyend="1760"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1accc0b587f26e40fcd26adad679d69ba2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>gmi_model *</type>
+        <definition>gmi_model * MeshAdaptPUMIDrvr::createSphereInBox</definition>
+        <argsstring>(double *boxDim, double *sphereCenter, double radius)</argsstring>
+        <name>createSphereInBox</name>
+        <param>
+          <type>double *</type>
+          <declname>boxDim</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>sphereCenter</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>radius</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="71" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="602" bodyend="686"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1af4c92859fd582354dd93f418e28524a6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::updateSphereCoordinates</definition>
+        <argsstring>(double *sphereCenter)</argsstring>
+        <name>updateSphereCoordinates</name>
+        <param>
+          <type>double *</type>
+          <declname>sphereCenter</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="72" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="690" bodyend="695"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1abdd208d69c0c93a8deee54d46f5926ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::set_nAdapt</definition>
+        <argsstring>(int numberAdapt)</argsstring>
+        <name>set_nAdapt</name>
+        <param>
+          <type>int</type>
+          <declname>numberAdapt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="83" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp" bodystart="776" bodyend="780"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a9aadede4097af6ffdc77d3eea775d5ff" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::get_VMS_error</definition>
+        <argsstring>(double &amp;total_error_out)</argsstring>
+        <name>get_VMS_error</name>
+        <param>
+          <type>double &amp;</type>
+          <declname>total_error_out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="111" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/VMS.cpp" bodystart="70" bodyend="346"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a3a280a01fce1d78d49e307ece6053ee8" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::isotropicIntersect</definition>
+        <argsstring>()</argsstring>
+        <name>isotropicIntersect</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="160" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="519" bodyend="545"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a30983748c02153a58508322ec0116335" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructGlobalNumbering</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructGlobalNumbering</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="162" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="114" bodyend="193"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1ad1042716678bbbf6db8c44f0bdac5117" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructGlobalStructures</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructGlobalStructures</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="163" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp" bodystart="195" bodyend="240"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a546a48d4f54687a4cec3f044990cc105" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructElements</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElements</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="165" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="126" bodyend="142"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a1e74ad50a8c94ae46bd81e5ab6bd427e" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructNodes</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructNodes</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="166" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="110" bodyend="124"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1ae92f785d6ce387dd5aa3c3092f4ad3e1" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructBoundaries</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructBoundaries</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="167" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="176" bodyend="276"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1abc61f4e95f824f5fae43ca8b012110e4" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructEdges</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructEdges</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="168" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="330" bodyend="347"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a20cefeeff0b83a3922e690cb701359ab" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int MeshAdaptPUMIDrvr::constructMaterialArrays</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructMaterialArrays</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="169" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="369" bodyend="392"/>
+      </memberdef>
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1aae7240d3879598b073a0dc982ba2d57d" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::volumeAverageToEntity</definition>
+        <argsstring>(apf::Field *ef, apf::Field *vf, apf::MeshEntity *ent)</argsstring>
+        <name>volumeAverageToEntity</name>
+        <param>
+          <type>apf::Field *</type>
+          <declname>ef</declname>
+        </param>
+        <param>
+          <type>apf::Field *</type>
+          <declname>vf</declname>
+        </param>
+        <param>
+          <type>apf::MeshEntity *</type>
+          <declname>ent</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="176" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="586" bodyend="614"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="class_mesh_adapt_p_u_m_i_drvr_1a3029f0b2389db52d171a95234c2635de" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MeshAdaptPUMIDrvr::averageToEntity</definition>
+        <argsstring>(apf::Field *ef, apf::Field *vf, apf::MeshEntity *ent)</argsstring>
+        <name>averageToEntity</name>
+        <param>
+          <type>apf::Field *</type>
+          <declname>ef</declname>
+        </param>
+        <param>
+          <type>apf::Field *</type>
+          <declname>vf</declname>
+        </param>
+        <param>
+          <type>apf::MeshEntity *</type>
+          <declname>ent</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="174" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="548" bodyend="567"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Class that handles the interface between SCOREC tools and Proteus. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="3">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="1">
+        <label>MeshAdaptPUMIDrvr</label>
+        <link refid="class_mesh_adapt_p_u_m_i_drvr"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>logging_config</edgelabel>
+          <edgelabel>adapt_type_config</edgelabel>
+          <edgelabel>size_field_config</edgelabel>
+        </childnode>
+      </node>
+      <node id="2">
+        <label>std::string</label>
+        <childnode refid="3" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" line="18" column="24" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h" bodystart="18" bodyend="184"/>
+    <listofallmembers>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aeffc8a7d92b18589fb364e0a25166b9c" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>adapt_type_config</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a39b6a3862d3fa543b38f408cf3af8697" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>adaptMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab0cfeba615d840e3f32c9d6ac295a890" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>adaptPUMIMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1acc45546f4adbd6a6c18c82c432e5dd0e" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>approximation_order</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a3029f0b2389db52d171a95234c2635de" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>averageToEntity</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1af5a56ca2477894338859d52298b28350" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>BCtag</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a7341569125c3eed5cafc6a9aa8524195" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>calculateAnisoSizeField</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aac549fb381e88d63fc1743b461adb337" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>calculateSizeField</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a809118b93e0865561177cf1dae2c1df1" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>cleanMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ae44c03c459217e5717402a92a1aadc52" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>comm_rank</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a7e40b981b3665da71561da7989c50250" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>comm_size</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a15ef6e40927fdbc9af43fa535b563679" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>computeDiffusiveFlux</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ae92f785d6ce387dd5aa3c3092f4ad3e1" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructBoundaries</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1abc61f4e95f824f5fae43ca8b012110e4" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructEdges</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a546a48d4f54687a4cec3f044990cc105" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructElements</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a5b5e7afd61f0a959963eb27ad9fcf685" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructFromParallelPUMIMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab11169fd7e5b9a69fd2525b7d62ef9ed" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructFromSerialPUMIMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a30983748c02153a58508322ec0116335" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructGlobalNumbering</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ad1042716678bbbf6db8c44f0bdac5117" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructGlobalStructures</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a20cefeeff0b83a3922e690cb701359ab" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructMaterialArrays</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a1e74ad50a8c94ae46bd81e5ab6bd427e" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>constructNodes</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1accc0b587f26e40fcd26adad679d69ba2" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>createSphereInBox</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ac91430db54e1c581c67fd0ff6a0e7069" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>DBCtag</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ad64d7c9cb738bb55e733ca0717a7d7f4" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>delta_T</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ace4afc729d5e79eebab9ae1807a25d96" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>diffFlux</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ae3c2430e6e9cb643e2187497011fb075" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>domainVolume</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a2f375f8c93ed5b48495fa0d689171c95" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>dumpMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aa5906a0f076e0ad1de1c61c905c85b20" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>edgeList</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a0f79240afbab7a66713873c0e8de1f11" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>err_reg</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a91feb0886168b74d756cf0b81d8b1aa7" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>errRel_reg</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ae4697439db655efc3b37b9f5953c7f53" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>errRho_max</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a1e93bf4930c654d8b806f9f63eb4ad42" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>errRho_reg</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a4babcf12405cab5dcd7af2b85395586d" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>exteriorGlobaltoLocalElementBoundariesArray</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab42d754f517e0886d5749038df914452" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>faceList</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ad72438ac9f7cb57018dc98271ac6bffa" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>fluxtag</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a38ceb431664b1dd373ff0941c53c9bcb" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>freeField</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ac357c0a4fcad9c99a784c8e92850c633" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>freeNumbering</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a275d0d3a23141b3df378f504e0cc7cd9" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>g</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aecaf9a2b99e00685fec6694d29b6a533" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>get_local_error</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a9aadede4097af6ffdc77d3eea775d5ff" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>get_VMS_error</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ac75ad718d0165cb56ebe96df87083268" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>getBoundaryFlux</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a557aeb21cd38eb22d9bcef5acd865ff6" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>getERMSizeField</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a127c1258e9a3fabb98c9d2a64fd03161" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>getMinimumQuality</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a6ddc38c5a78f366b34d764813812ed41" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>getMPvalue</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1afdc27e39d259578ab1089275f76e77c6" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>getSimmetrixBC</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ac9ee3fb3ccad97e4a7b2ecf33fad6dd0" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>getTotalMass</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a772b6ae5b0b80b1f5c4dc270f1cb99b0" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>getViscosityField</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a61274cc3fb1751a265ae1541e0ae2db2" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>global</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a1bb6d304aa4d38c9f32125b1036f2098" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>gradeMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a2f88d2f12514c80986566d79c9af97cb" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>gradingFactor</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1abd2da53bf6d61743e31cbe691386c06a" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>has_gBC</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a55f731fc27f23d9560fb4778b7f1741e" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>hmax</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aa8f0f76c30250e076414981543f84802" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>hmin</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1afa0c1053cfda5b41ea3eb9dafcf021c7" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>hPhi</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab30bca7c0adb1965e12d6196b2673d42" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>initialReconstructed</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a1e4333322f04b1b4e0d9b787611d6cce" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>integration_order</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a3a280a01fce1d78d49e307ece6053ee8" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>isotropicIntersect</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a82c29efd9d3cf097e81daba5b9cdcba9" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>isReconstructed</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a02359f723bbcd3006c1f97a7e7bf4393" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>loadMeshForAnalytic</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a1d628142283d46bedcf08f1e937cd9fa" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>loadModelAndMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ae48907074c9434562b2e54a8c019b2f2" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>local</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a56dab4675d73f26b9decdc7ed6353aa8" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>localNumber</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aa97e3f5ebb00ff6620349fa6b3357a36" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>logging_config</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ace08b54ec27515539e214850d8244290" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>m</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aae6c68a4a0140f3d2eca1472e10b61d1" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>maxAspect</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1afc0d6c608b186d83a19f5af99855d3f4" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>MeshAdaptPUMIDrvr</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a5837c7464bf0703abf955e31334bb823" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>meshBoundary2Model</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a036919258d2820160b6b5f3699321aac" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>meshEdge2Model</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a7a39e1cdd603aa22b54acd6c83fb0eb0" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>meshVertex2Model</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ac14021e0c882dff8ec6331cc05661ccf" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>modelBoundaryMaterial</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a9461bcec67009452ea6e7b1c56ec4318" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>modelFileName</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a84f27a11492a2a1f3582345bad013a37" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>modelRegionMaterial</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a09d644b4b8b529f7540bffc5ef25c8db" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>modelVertexMaterial</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aa3eddefb9c31b31e2b8c91cdd01ea40a" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>N_interface_band</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a4a202881ec4b2aa283d34e81d45d1404" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>nAdapt</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a457dfc5023eff43c9a56bfbefd2f0a5f" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>nEstimate</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab670020f8485275221bf5fa0b8872cad" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>nsd</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab2d806be0bdd6a06babd017a7d6fdc31" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>nu</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab54472c23a4ce06ed9e253d8249f7907" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>num_quadrature</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a152df6bb677176ca2e91b84d49fc64f2" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>num_quadrature_boundary</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a696a6f4c51c5138c70e21efa594c7b1d" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>numAdaptSteps</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a31a9734e50e16e7aff9bf7dded15eebb" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>numberLocally</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a10079fecbff8a243a52cc7160db07548" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>numIter</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a06e0b5795826df209fabcd78f30a3ccd" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>numModelEntities</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aff8d734eb2cfc1d53e338e91f69d2aa9" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>numModelOffsets</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1afee9fc62fa74e070a316e1ecb8d4a560" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>numModelTotals</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab7268c72a11923e639065b10f75062f6" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>numSegments</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a97c4181cef84b47cd827c0f9214e4903" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>predictiveInterfacePropagation</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a0bd25b35ad7754632353d43aa3094df4" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>reconstructFromProteus</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a10be3b196fb7563006c0185b0495e6e4" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>reconstructFromProteus2</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ac334de5a67ca2e2dbd26fbe7b10a3d55" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>rel_err_total</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a0decaa7be27e9d9899a16de5839cf750" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>removeBCData</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aac6b58ff2a9c55194d014306b2ea614e" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>rho</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1abdd208d69c0c93a8deee54d46f5926ee" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>set_nAdapt</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a32a3b6ff131f4a36de1c2b2ec9321f78" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>setSphereSizeField</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a048c01a777fa7d2f953a8f32621f16ce" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>size_field_config</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a239f21cc54cd7cd23ab9d072fe94bf3f" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>size_frame</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a6fa05ce8450b851af763a914e8f0cd5a" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>size_iso</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a8e16fc2fe07def0df36a523aad7a36bc" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>size_scale</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ab102b891f8104547a8d965a273407433" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>sizeFieldList</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a405aea78026966c74ff266123979c035" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>target_element_count</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a9fe5eb98961175aa979f4294a4c291ec" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>target_error</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aa48e918a44e6c7e99cd8c88ee7478437" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>testIsotropicSizeField</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a67c7648e42c12dc0f302e462a53d2aa6" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>THRESHOLD</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1afa325a32876160388cba8f8fe81e0ce0" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>total_error</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a171dedf702dd8c87f1aaf8fc8b32d7d5" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>transferFieldToProteus</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1ac167218f32db834c739e89e6cfed2560" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>transferFieldToPUMI</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a2314044d8a34d2f5872d93da1931898f" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>transferModelInfo</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a8858e270790faf4702fdfffd67b0faf4" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>transferPropertiesToPUMI</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a0174b9ea01dc47a497c832a8c46014d0" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>updateMaterialArrays</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a4b337a4235b1e8e2ea3568700d9ddb91" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>updateMaterialArrays</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a3fca50c59c93e805f6f17a0158a5185b" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>updateMaterialArrays2</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1af4c92859fd582354dd93f418e28524a6" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>updateSphereCoordinates</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a2a4651fb3f2ba08a0c7c42d32f58738a" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>vmsErrH1</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1aae7240d3879598b073a0dc982ba2d57d" prot="private" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>volumeAverageToEntity</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a54d9717041c36487816585eb2cfcdb3b" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>willAdapt</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a686685b789dec852110157660d50a088" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>willErrorAdapt</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a463d0271aeee1bd4a1bf36636fafb647" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>willInterfaceAdapt</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a9da337ea66002132204fbffc63533543" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>writeMesh</name></member>
+      <member refid="class_mesh_adapt_p_u_m_i_drvr_1a8463481f0a201a57bc92f4ccee58c09d" prot="public" virt="non-virtual"><scope>MeshAdaptPUMIDrvr</scope><name>~MeshAdaptPUMIDrvr</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

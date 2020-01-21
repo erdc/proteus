@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_node" kind="class" language="C++" prot="public">
+    <compoundname>Node</compoundname>
+    <includes refid="mesh_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mesh.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_node_1af9a13a246e6032d3c8c52aa8fb92e426" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Node::nN</definition>
+        <argsstring></argsstring>
+        <name>nN</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="446" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="446" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_node_1a1082fca4b71cc3cc02d78c35108f9059" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Node::x</definition>
+        <argsstring></argsstring>
+        <name>x</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="447" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="447" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_node_1a441d3c5ba86597f4c391408d9fe6d242" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Node::y</definition>
+        <argsstring></argsstring>
+        <name>y</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="447" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="447" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_node_1a8797bf8ce04cc01920b7fa33f1792a36" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Node::z</definition>
+        <argsstring></argsstring>
+        <name>z</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="447" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="447" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_node_1a634d962b5b31079d131cf747da8b5475" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Node::flag</definition>
+        <argsstring></argsstring>
+        <name>flag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="448" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="448" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="444" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="443" bodyend="449"/>
+    <listofallmembers>
+      <member refid="class_node_1a634d962b5b31079d131cf747da8b5475" prot="public" virt="non-virtual"><scope>Node</scope><name>flag</name></member>
+      <member refid="class_node_1af9a13a246e6032d3c8c52aa8fb92e426" prot="public" virt="non-virtual"><scope>Node</scope><name>nN</name></member>
+      <member refid="class_node_1a1082fca4b71cc3cc02d78c35108f9059" prot="public" virt="non-virtual"><scope>Node</scope><name>x</name></member>
+      <member refid="class_node_1a441d3c5ba86597f4c391408d9fe6d242" prot="public" virt="non-virtual"><scope>Node</scope><name>y</name></member>
+      <member refid="class_node_1a8797bf8ce04cc01920b7fa33f1792a36" prot="public" virt="non-virtual"><scope>Node</scope><name>z</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

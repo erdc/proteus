@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="structedge_walker_info" kind="struct" language="C++" prot="public">
+    <compoundname>edgeWalkerInfo</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structedge_walker_info_1a1cdf22d045a254f9fd313f6a809bfc22" prot="public" static="no" mutable="no">
+        <type>apf::MeshEntity *</type>
+        <definition>apf::MeshEntity* edgeWalkerInfo::vertex</definition>
+        <argsstring></argsstring>
+        <name>vertex</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="178" column="21" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="178" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structedge_walker_info_1aae448ebcbc894370cb76032a2020b1d5" prot="public" static="no" mutable="no">
+        <type>apf::Vector3</type>
+        <definition>apf::Vector3 edgeWalkerInfo::actualPosition</definition>
+        <argsstring></argsstring>
+        <name>actualPosition</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="179" column="18" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="179" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structedge_walker_info_1a2ef5f8d3ab1da8c37858792c8306a182" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double edgeWalkerInfo::direction</definition>
+        <argsstring></argsstring>
+        <name>direction</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="180" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="180" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structedge_walker_info_1af2fe83c0ad5c85880ac386fd19a5876d" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double edgeWalkerInfo::L_local</definition>
+        <argsstring></argsstring>
+        <name>L_local</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="181" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="181" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structedge_walker_info_1a93cb2ec34a2d5dabf885cda2eb6e3c20" prot="public" static="no" mutable="no">
+        <type>apf::MeshTag *</type>
+        <definition>apf::MeshTag* edgeWalkerInfo::trackerTag</definition>
+        <argsstring></argsstring>
+        <name>trackerTag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="182" column="18" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="182" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structedge_walker_info_1ae86dc8f300a8b2f088aa0f303609fe68" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int edgeWalkerInfo::edgeID</definition>
+        <argsstring></argsstring>
+        <name>edgeID</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="184" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="184" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structedge_walker_info_1a6ffc55eee22b989004f0f39f6b275e73" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int edgeWalkerInfo::initialRank</definition>
+        <argsstring></argsstring>
+        <name>initialRank</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="185" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="185" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="177" column="21" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="177" bodyend="186"/>
+    <listofallmembers>
+      <member refid="structedge_walker_info_1aae448ebcbc894370cb76032a2020b1d5" prot="public" virt="non-virtual"><scope>edgeWalkerInfo</scope><name>actualPosition</name></member>
+      <member refid="structedge_walker_info_1a2ef5f8d3ab1da8c37858792c8306a182" prot="public" virt="non-virtual"><scope>edgeWalkerInfo</scope><name>direction</name></member>
+      <member refid="structedge_walker_info_1ae86dc8f300a8b2f088aa0f303609fe68" prot="public" virt="non-virtual"><scope>edgeWalkerInfo</scope><name>edgeID</name></member>
+      <member refid="structedge_walker_info_1a6ffc55eee22b989004f0f39f6b275e73" prot="public" virt="non-virtual"><scope>edgeWalkerInfo</scope><name>initialRank</name></member>
+      <member refid="structedge_walker_info_1af2fe83c0ad5c85880ac386fd19a5876d" prot="public" virt="non-virtual"><scope>edgeWalkerInfo</scope><name>L_local</name></member>
+      <member refid="structedge_walker_info_1a93cb2ec34a2d5dabf885cda2eb6e3c20" prot="public" virt="non-virtual"><scope>edgeWalkerInfo</scope><name>trackerTag</name></member>
+      <member refid="structedge_walker_info_1a1cdf22d045a254f9fd313f6a809bfc22" prot="public" virt="non-virtual"><scope>edgeWalkerInfo</scope><name>vertex</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

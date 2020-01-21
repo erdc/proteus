@@ -1,0 +1,152 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_real_gas_density" kind="class" language="C++" prot="public">
+    <compoundname>RealGasDensity</compoundname>
+    <basecompoundref refid="class_density_relation" prot="public" virt="non-virtual">DensityRelation</basecompoundref>
+    <includes refid="density_relations_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_real_gas_density_1a26fef4f4bc52ac26a73a199bfad7e042" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double RealGasDensity::psi_0</definition>
+        <argsstring></argsstring>
+        <name>psi_0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="110" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="110" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_real_gas_density_1a0d4fc613764d27e18c467a38e574e297" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double RealGasDensity::oneOverZRT</definition>
+        <argsstring></argsstring>
+        <name>oneOverZRT</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="110" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="110" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_real_gas_density_1a6187424f46be97ab277254888e4fda2d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>RealGasDensity::RealGasDensity</definition>
+        <argsstring>(const double *rwork)</argsstring>
+        <name>RealGasDensity</name>
+        <param>
+          <type>const double *</type>
+          <declname>rwork</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="111" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="111" bodyend="114"/>
+      </memberdef>
+      <memberdef kind="function" id="class_real_gas_density_1a71a46a3c66724984a1accb70d33f401e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void RealGasDensity::calc</definition>
+        <argsstring>(const double &amp;psi)</argsstring>
+        <name>calc</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>psi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="115" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="115" bodyend="119"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>The density of a real gas.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">psi</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The pressure head (not used) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The reference pressure head, <formula id="91">$ \psi_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The constant, <formula id="95">$ 1/ZRT $</formula>, where <formula id="96">$ Z $</formula> is the real gas constant, <formula id="61">$ R $</formula> is the ideal gas constant, and <formula id="97">$ T $</formula> is the temperature. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">rho</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The density </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">drho</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The derivative of density with respect to pressure head</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="98">\[ \rho &amp;= (\psi - \psi_0)/ZRT \]</formula> </para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>DensityRelation</label>
+        <link refid="class_density_relation"/>
+      </node>
+      <node id="1">
+        <label>RealGasDensity</label>
+        <link refid="class_real_gas_density"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>DensityRelation</label>
+        <link refid="class_density_relation"/>
+      </node>
+      <node id="1">
+        <label>RealGasDensity</label>
+        <link refid="class_real_gas_density"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="108" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="107" bodyend="120"/>
+    <listofallmembers>
+      <member refid="class_real_gas_density_1a71a46a3c66724984a1accb70d33f401e" prot="public" virt="non-virtual"><scope>RealGasDensity</scope><name>calc</name></member>
+      <member refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" prot="public" virt="non-virtual"><scope>RealGasDensity</scope><name>drho</name></member>
+      <member refid="class_real_gas_density_1a0d4fc613764d27e18c467a38e574e297" prot="public" virt="non-virtual"><scope>RealGasDensity</scope><name>oneOverZRT</name></member>
+      <member refid="class_real_gas_density_1a26fef4f4bc52ac26a73a199bfad7e042" prot="public" virt="non-virtual"><scope>RealGasDensity</scope><name>psi_0</name></member>
+      <member refid="class_real_gas_density_1a6187424f46be97ab277254888e4fda2d" prot="public" virt="non-virtual"><scope>RealGasDensity</scope><name>RealGasDensity</name></member>
+      <member refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" prot="public" virt="non-virtual"><scope>RealGasDensity</scope><name>rho</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

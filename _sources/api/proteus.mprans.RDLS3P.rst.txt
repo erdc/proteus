@@ -1,7 +1,0 @@
-proteus.mprans.RDLS3P module
-============================
-
-.. automodule:: proteus.mprans.RDLS3P
-    :members:
-    :undoc-members:
-    :show-inheritance:

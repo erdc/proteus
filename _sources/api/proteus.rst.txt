@@ -10,6 +10,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 1
 
    proteus.MeshAdaptPUMI
    proteus.SWFlow
@@ -24,6 +25,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 1
 
    proteus.ADR
    proteus.AnalysisTools
@@ -97,4 +99,3 @@ Submodules
    proteus.iproteus
    proteus.subsurfaceTransportFunctions
    proteus.superluWrappers
-   proteus.version

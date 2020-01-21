@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_fe87453fcfc0d512029001dc42c43d5c" kind="dir">
+    <compoundname>proteus</compoundname>
+    <innerdir refid="dir_591be1182c36d7c6046c6c2d080171aa">elastoplastic</innerdir>
+    <innerdir refid="dir_0ae8da52083aa8f213af5135c04f5361">fenton</innerdir>
+    <innerdir refid="dir_ea3432ea93a6efa34a30a2b3cde6d4da">mbd</innerdir>
+    <innerdir refid="dir_70196c58804081ed305e7f84907058fe">MeshAdaptPUMI</innerdir>
+    <innerdir refid="dir_7345f39f9a430cfefb4e585cf0572b86">mprans</innerdir>
+    <innerdir refid="dir_2d358b3fcfe6338dfb6a80f977916040">richards</innerdir>
+    <innerdir refid="dir_3eaf0bddf7912aa14d398587e5887f8b">tests</innerdir>
+    <innerfile refid="_a_d_r_8cpp">ADR.cpp</innerfile>
+    <innerfile refid="_a_d_r_8h">ADR.h</innerfile>
+    <innerfile refid="analytical_solutions_8c">analyticalSolutions.c</innerfile>
+    <innerfile refid="analytical_solutions_8h">analyticalSolutions.h</innerfile>
+    <innerfile refid="_array_ref_8h">ArrayRef.h</innerfile>
+    <innerfile refid="_boundary_conditions_8c">BoundaryConditions.c</innerfile>
+    <innerfile refid="_boundary_conditions_8cpp">BoundaryConditions.cpp</innerfile>
+    <innerfile refid="canalytical_solutions_8c">canalyticalSolutions.c</innerfile>
+    <innerfile refid="cfem_integrals_8c">cfemIntegrals.c</innerfile>
+    <innerfile refid="clapack_8c">clapack.c</innerfile>
+    <innerfile refid="cmesh_tools_8cpp">cmeshTools.cpp</innerfile>
+    <innerfile refid="cnumerical_flux_8c">cnumericalFlux.c</innerfile>
+    <innerfile refid="_comp_kernel_8h">CompKernel.h</innerfile>
+    <innerfile refid="cpartitioning_8cpp">cpartitioning.cpp</innerfile>
+    <innerfile refid="cpostprocessing_8c">cpostprocessing.c</innerfile>
+    <innerfile refid="cpsk_relations_8cpp">cpskRelations.cpp</innerfile>
+    <innerfile refid="cshock_capturing_8c">cshockCapturing.c</innerfile>
+    <innerfile refid="csmoothers_8c">csmoothers.c</innerfile>
+    <innerfile refid="csparsity_8cpp">csparsity.cpp</innerfile>
+    <innerfile refid="csubgrid_error_8c">csubgridError.c</innerfile>
+    <innerfile refid="c_subsurface_transport_coefficients_8cpp">cSubsurfaceTransportCoefficients.cpp</innerfile>
+    <innerfile refid="ctime_integration_8c">ctimeIntegration.c</innerfile>
+    <innerfile refid="ctransport_coefficients_8c">ctransportCoefficients.c</innerfile>
+    <innerfile refid="c_twophase_darcy_coefficients_8cpp">cTwophaseDarcyCoefficients.cpp</innerfile>
+    <innerfile refid="density_relations_8h">densityRelations.h</innerfile>
+    <innerfile refid="_domain_8cpp">Domain.cpp</innerfile>
+    <innerfile refid="_domain_8h">Domain.h</innerfile>
+    <innerfile refid="equivalent__polynomials_8cpp">equivalent_polynomials.cpp</innerfile>
+    <innerfile refid="equivalent__polynomials_8h">equivalent_polynomials.h</innerfile>
+    <innerfile refid="equivalent__polynomials__coefficients_8h">equivalent_polynomials_coefficients.h</innerfile>
+    <innerfile refid="equivalent__polynomials__utils_8h">equivalent_polynomials_utils.h</innerfile>
+    <innerfile refid="fem_integrals_8c">femIntegrals.c</innerfile>
+    <innerfile refid="fem_integrals_8h">femIntegrals.h</innerfile>
+    <innerfile refid="flcbdf_wrappers_8cpp">flcbdfWrappers.cpp</innerfile>
+    <innerfile refid="_isosurface_8c">Isosurface.c</innerfile>
+    <innerfile refid="mesh_8cpp">mesh.cpp</innerfile>
+    <innerfile refid="mesh_8h">mesh.h</innerfile>
+    <innerfile refid="meshio_8cpp">meshio.cpp</innerfile>
+    <innerfile refid="meshio_8h">meshio.h</innerfile>
+    <innerfile refid="_mixed_model_factory_8h">MixedModelFactory.h</innerfile>
+    <innerfile refid="_model_factory_8h">ModelFactory.h</innerfile>
+    <innerfile refid="numerical_flux_8c">numericalFlux.c</innerfile>
+    <innerfile refid="numerical_flux_8h">numericalFlux.h</innerfile>
+    <innerfile refid="_n_u_r_b_sshapes_8f">NURBSshapes.f</innerfile>
+    <innerfile refid="partitioning_8cpp">partitioning.cpp</innerfile>
+    <innerfile refid="partitioning_8h">partitioning.h</innerfile>
+    <innerfile refid="postprocessing_8c">postprocessing.c</innerfile>
+    <innerfile refid="postprocessing_8h">postprocessing.h</innerfile>
+    <innerfile refid="proteus__blas_8h">proteus_blas.h</innerfile>
+    <innerfile refid="proteus__lapack_8h">proteus_lapack.h</innerfile>
+    <innerfile refid="proteus__superlu_8h">proteus_superlu.h</innerfile>
+    <innerfile refid="psk_relations_8h">pskRelations.h</innerfile>
+    <innerfile refid="_py_embedded_functions_8h">PyEmbeddedFunctions.h</innerfile>
+    <innerfile refid="shock_capturing_8c">shockCapturing.c</innerfile>
+    <innerfile refid="shock_capturing_8h">shockCapturing.h</innerfile>
+    <innerfile refid="smoothers_8c">smoothers.c</innerfile>
+    <innerfile refid="smoothers_8h">smoothers.h</innerfile>
+    <innerfile refid="sparsity_8cpp">sparsity.cpp</innerfile>
+    <innerfile refid="sparsity_8h">sparsity.h</innerfile>
+    <innerfile refid="subgrid_error_8c">subgridError.c</innerfile>
+    <innerfile refid="subgrid_error_8h">subgridError.h</innerfile>
+    <innerfile refid="_subsurface_transport_coefficients_8cpp">SubsurfaceTransportCoefficients.cpp</innerfile>
+    <innerfile refid="_subsurface_transport_coefficients_8h">SubsurfaceTransportCoefficients.h</innerfile>
+    <innerfile refid="subsurface_transport_functions_8c">subsurfaceTransportFunctions.c</innerfile>
+    <innerfile refid="superlu_wrappers_8c">superluWrappers.c</innerfile>
+    <innerfile refid="time_integration_8c">timeIntegration.c</innerfile>
+    <innerfile refid="time_integration_8h">timeIntegration.h</innerfile>
+    <innerfile refid="transport_coefficients_8c">transportCoefficients.c</innerfile>
+    <innerfile refid="transport_coefficients_8h">transportCoefficients.h</innerfile>
+    <innerfile refid="twophase_darcy_coefficients_8h">twophaseDarcyCoefficients.h</innerfile>
+    <innerfile refid="wave_functions_8c">waveFunctions.c</innerfile>
+    <innerfile refid="_wave_tools_8cpp">WaveTools.cpp</innerfile>
+    <innerfile refid="_wave_tools_8h">WaveTools.h</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/"/>
+  </compounddef>
+</doxygen>

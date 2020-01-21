@@ -1,0 +1,1469 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classproteus_1_1cpp_hsu_sed_stress" kind="class" language="C++" prot="public">
+    <compoundname>proteus::cppHsuSedStress</compoundname>
+    <includes refid="_sed_closure_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>nSpace</declname>
+        <defname>nSpace</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1ae771a2f9ff8d1c9dcfdaebad1ef953c2" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::aDarcy_</definition>
+        <argsstring></argsstring>
+        <name>aDarcy_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="679" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="679" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1aeafe89f3c5beb814edd8bcc784000f7b" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::betaForch_</definition>
+        <argsstring></argsstring>
+        <name>betaForch_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="680" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="680" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a51aab86ff789ec3c042baa1dcdade474" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::grain_</definition>
+        <argsstring></argsstring>
+        <name>grain_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="681" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="681" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a55f2ef0c3e5e276548ae6e013fb22dcf" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::packFraction_</definition>
+        <argsstring></argsstring>
+        <name>packFraction_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="682" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="682" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a931f52d3e76aeda6f10db10092ff2726" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::packMargin_</definition>
+        <argsstring></argsstring>
+        <name>packMargin_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="683" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="683" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a8d28107b126a8e8d8e151375d448ad5b" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::frFraction_</definition>
+        <argsstring></argsstring>
+        <name>frFraction_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="684" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="684" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a2d93dc9105637b6fbdb62d1ff5e2b62b" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::maxFraction_</definition>
+        <argsstring></argsstring>
+        <name>maxFraction_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="685" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="685" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a3a41b35384fb306672aefa5be2af3a93" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::sigmaC_</definition>
+        <argsstring></argsstring>
+        <name>sigmaC_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="686" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="686" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1abdce1f6470ab69f24475b540579f6fea" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::C3e_</definition>
+        <argsstring></argsstring>
+        <name>C3e_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="687" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="687" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1ad89a75964bee316df977fed198b1ada0" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::C4e_</definition>
+        <argsstring></argsstring>
+        <name>C4e_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="688" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="688" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a857423e667d913e74074dae40c352dd6" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::eR_</definition>
+        <argsstring></argsstring>
+        <name>eR_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="689" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="689" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a1c3608989450828f4cdf8a1ebe501c6d" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::fContact_</definition>
+        <argsstring></argsstring>
+        <name>fContact_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="690" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="690" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a13aff994caf29c05dc734f1e39369115" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::mContact_</definition>
+        <argsstring></argsstring>
+        <name>mContact_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="691" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="691" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1abba2fab312c239f49bd759d378c41bbb" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::nContact_</definition>
+        <argsstring></argsstring>
+        <name>nContact_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="692" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="692" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1aa9f23dda0b78d962752e9e9b3cb7a7ec" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::angFriction_</definition>
+        <argsstring></argsstring>
+        <name>angFriction_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="693" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="693" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1ab9bcda64d491498219bdf32f21eb2f48" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::small_</definition>
+        <argsstring></argsstring>
+        <name>small_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="694" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="694" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1adc9e4f2c2aadfa1f8bae00c9413b5b67" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::notSoLarge_</definition>
+        <argsstring></argsstring>
+        <name>notSoLarge_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="695" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="695" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1ac0a5922204ff6b4996d19507ddae00b6" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::large_</definition>
+        <argsstring></argsstring>
+        <name>large_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="696" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="696" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a70990b3eac11d82c3986246929dc52b8" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::vos_limiter_</definition>
+        <argsstring></argsstring>
+        <name>vos_limiter_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="697" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="697" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_hsu_sed_stress_1a3fecee907f597c66423e840db994f139" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::mu_fr_limiter_</definition>
+        <argsstring></argsstring>
+        <name>mu_fr_limiter_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="698" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="698" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1af00a36372c63b832620d79a3ea9fc352" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>proteus::cppHsuSedStress&lt; nSpace &gt;::cppHsuSedStress</definition>
+        <argsstring>(double aDarcy, double betaForch, double grain, double packFraction, double packMargin, double maxFraction, double frFraction, double sigmaC, double C3e, double C4e, double eR, double fContact, double mContact, double nContact, double angFriction, double vos_limiter, double mu_fr_limiter)</argsstring>
+        <name>cppHsuSedStress</name>
+        <param>
+          <type>double</type>
+          <declname>aDarcy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>betaForch</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>grain</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>packFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>packMargin</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>maxFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>frFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sigmaC</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C3e</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C4e</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>eR</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>fContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>mContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>angFriction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>vos_limiter</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>mu_fr_limiter</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="12" column="2" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="12" bodyend="55"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a253be1e3aef2a189b0b114efbc9c0655" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::betaCoeff</definition>
+        <argsstring>(double sedF, double rhoFluid, double uFluid[nSpace], double uSolid[nSpace], double nu)</argsstring>
+        <name>betaCoeff</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="57" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="57" bodyend="99"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1ae58bfea01138a784058b6f40925b8fec" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::gs0</definition>
+        <argsstring>(double sedF)</argsstring>
+        <name>gs0</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="101" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="101" bodyend="117"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1ad1f3388cf552b00e4765732382da30e3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::deps_sed_deps</definition>
+        <argsstring>(double sedF, double rhoFluid, double rhoSolid, double uFluid[nSpace], double uSolid[nSpace], double gradC[nSpace], double nu, double theta_n, double kappa_n, double epsilon_n, double nuT_n, double g[nSpace])</argsstring>
+        <name>deps_sed_deps</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>gradC</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>kappa_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsilon_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nuT_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>g</declname>
+          <array>[nSpace]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="119" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="119" bodyend="156"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1abda8a1b1044223e9eda7695d43901a9f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::kappa_sed1</definition>
+        <argsstring>(double sedF, double rhoFluid, double rhoSolid, double uFluid[nSpace], double uSolid[nSpace], double gradC[nSpace], double nu, double theta_n, double kappa_n, double epsilon_n, double nuT_n, double g[nSpace])</argsstring>
+        <name>kappa_sed1</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>gradC</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>kappa_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsilon_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nuT_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>g</declname>
+          <array>[nSpace]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="159" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="159" bodyend="197"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1aae7468d87e086792824dcc1c728e2f63" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::dkappa_sed1_dk</definition>
+        <argsstring>(double sedF, double rhoFluid, double rhoSolid, double uFluid[nSpace], double uSolid[nSpace], double gradC[nSpace], double nu, double theta_n, double kappa_n, double epsilon_n, double nuT_n)</argsstring>
+        <name>dkappa_sed1_dk</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>gradC</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>kappa_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsilon_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nuT_n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="198" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="198" bodyend="224"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a12646787f736e7c71cb84401db07bcc5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::psc</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta)</argsstring>
+        <name>psc</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="228" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="228" bodyend="237"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a146e5117ee20ce1121e83e122ab71ac9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::psc_term</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta_np1, double du_dx, double dv_dy, double dw_dz)</argsstring>
+        <name>psc_term</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_np1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="239" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="239" bodyend="249"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a61260d98f20e684c48a645d75057cf0a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::dpsc_term_dtheta</definition>
+        <argsstring>(double sedF, double rhoSolid, double du_dx, double dv_dy, double dw_dz)</argsstring>
+        <name>dpsc_term_dtheta</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="251" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="251" bodyend="263"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1ada2e498d032394502b157b4fd06bf82a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::mu_sc</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta)</argsstring>
+        <name>mu_sc</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="266" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="266" bodyend="280"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1ad122a8836e431653158b8c235960a597" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::l_sc</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta_n)</argsstring>
+        <name>l_sc</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="282" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="282" bodyend="295"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a20966173a3b6be30ae0c1326cfc0b2a9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::tausc_term_theta</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta_n, double du_dx, double du_dy, double du_dz, double dv_dx, double dv_dy, double dv_dz, double dw_dx, double dw_dy, double dw_dz)</argsstring>
+        <name>tausc_term_theta</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="304" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="304" bodyend="341"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1afec6cf7081d58a646eda5db3998a2114" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::gamma_s</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta_n, double theta_np1, double du_dx, double dv_dy, double dw_dz)</argsstring>
+        <name>gamma_s</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_np1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="343" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="343" bodyend="359"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1ae52a6a882e66dafa684423eb6b72172b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::dgamma_s_dtheta</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta_n, double du_dx, double dv_dy, double dw_dz)</argsstring>
+        <name>dgamma_s_dtheta</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta_n</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="360" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="360" bodyend="375"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a802e8024a6d67c40fc1b8e5e9793adc9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::jint1</definition>
+        <argsstring>(double sedF, double rhoFluid, double rhoSolid, double uFluid[nSpace], double uSolid[nSpace], double kappa, double epsilon, double theta, double nu)</argsstring>
+        <name>jint1</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>kappa</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsilon</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="376" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="376" bodyend="401"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1ab1df27c33ca456f8c7217e1298ca0a27" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::jint2</definition>
+        <argsstring>(double sedF, double rhoFluid, double rhoSolid, double uFluid[nSpace], double uSolid[nSpace], double theta, double nu)</argsstring>
+        <name>jint2</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="402" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="402" bodyend="416"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a50b0427203e184fee575641d1f2bed47" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::djint2_dtheta</definition>
+        <argsstring>(double sedF, double rhoFluid, double rhoSolid, double uFluid[nSpace], double uSolid[nSpace], double nu)</argsstring>
+        <name>djint2_dtheta</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="418" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="418" bodyend="431"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a2577a0f2359811ac8a9a2f2f303c2cbc" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::k_diff</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta)</argsstring>
+        <name>k_diff</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="433" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="433" bodyend="447"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a9621e2999678f1eecbcafec0e28e223a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::p_friction</definition>
+        <argsstring>(double sedF)</argsstring>
+        <name>p_friction</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="449" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="449" bodyend="461"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1accfc23ce49b0b588fc1104786d8d2bb8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::gradp_friction</definition>
+        <argsstring>(double sedF)</argsstring>
+        <name>gradp_friction</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="464" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="464" bodyend="480"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1aecad8a41536628999334b49323472e02" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::mu_fr</definition>
+        <argsstring>(double sedF, double du_dx, double du_dy, double du_dz, double dv_dx, double dv_dy, double dv_dz, double dw_dx, double dw_dy, double dw_dz)</argsstring>
+        <name>mu_fr</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="481" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="481" bodyend="526"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a8756f2717db05237916a6b277069e9b7" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::cppHsuSedStress&lt; nSpace &gt;::mIntFluid</definition>
+        <argsstring>(double *mint2, double sedF, double rhoFluid, double uFluid_n[nSpace], double uSolid_n[nSpace], double uFluid_np1[nSpace], double nu, double nuT, double gradc[nSpace])</argsstring>
+        <name>mIntFluid</name>
+        <param>
+          <type>double *</type>
+          <declname>mint2</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid_np1</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nuT</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>gradc</declname>
+          <array>[nSpace]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="566" column="18" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="566" bodyend="583"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a39d36fc0cbfbae8acd99d12a98ecd123" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::cppHsuSedStress&lt; nSpace &gt;::mIntSolid</definition>
+        <argsstring>(double *mint2, double sedF, double rhoFluid, double uFluid_n[nSpace], double uSolid_n[nSpace], double uSolid_np1[nSpace], double nu, double nuT, double gradc[nSpace])</argsstring>
+        <name>mIntSolid</name>
+        <param>
+          <type>double *</type>
+          <declname>mint2</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid_np1</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nuT</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>gradc</declname>
+          <array>[nSpace]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="585" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="585" bodyend="602"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1ad365552e58bd642407d6ebda1c7ee338" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::cppHsuSedStress&lt; nSpace &gt;::mIntgradC</definition>
+        <argsstring>(double *mint2, double sedF, double rhoFluid, double uFluid_n[nSpace], double uSolid_n[nSpace], double nu, double nuT, double gradc[nSpace])</argsstring>
+        <name>mIntgradC</name>
+        <param>
+          <type>double *</type>
+          <declname>mint2</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nuT</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>gradc</declname>
+          <array>[nSpace]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="603" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="603" bodyend="620"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a6cd8a2ee9481dec9d3a3361435a59040" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::dmInt_duFluid</definition>
+        <argsstring>(double sedF, double rhoFluid, double uFluid_n[nSpace], double uSolid_n[nSpace], double nu)</argsstring>
+        <name>dmInt_duFluid</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="624" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="625" bodyend="635"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a27fe48c4143a5cb76d83ee14949bc56a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::dmInt_duSolid</definition>
+        <argsstring>(double sedF, double rhoFluid, double uFluid_n[nSpace], double uSolid_n[nSpace], double nu)</argsstring>
+        <name>dmInt_duSolid</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoFluid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uFluid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSolid_n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="638" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="639" bodyend="649"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_hsu_sed_stress_1a0c7291ee62d0991a73cef9bf9e520ee3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::cppHsuSedStress&lt; nSpace &gt;::p_s</definition>
+        <argsstring>(double sedF, double rhoSolid, double theta, double du_dx, double du_dy, double du_dz, double dv_dx, double dv_dy, double dv_dz, double dw_dx, double dw_dy, double dw_dz)</argsstring>
+        <name>p_s</name>
+        <param>
+          <type>double</type>
+          <declname>sedF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rhoSolid</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>du_dz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dv_dz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dw_dz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="651" column="22" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="651" bodyend="672"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" line="10" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/SedClosure.h" bodystart="9" bodyend="700"/>
+    <listofallmembers>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ae771a2f9ff8d1c9dcfdaebad1ef953c2" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>aDarcy_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1aa9f23dda0b78d962752e9e9b3cb7a7ec" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>angFriction_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a253be1e3aef2a189b0b114efbc9c0655" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>betaCoeff</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1aeafe89f3c5beb814edd8bcc784000f7b" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>betaForch_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1abdce1f6470ab69f24475b540579f6fea" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>C3e_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ad89a75964bee316df977fed198b1ada0" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>C4e_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1af00a36372c63b832620d79a3ea9fc352" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>cppHsuSedStress</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ad1f3388cf552b00e4765732382da30e3" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>deps_sed_deps</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ae52a6a882e66dafa684423eb6b72172b" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>dgamma_s_dtheta</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a50b0427203e184fee575641d1f2bed47" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>djint2_dtheta</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1aae7468d87e086792824dcc1c728e2f63" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>dkappa_sed1_dk</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a6cd8a2ee9481dec9d3a3361435a59040" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>dmInt_duFluid</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a27fe48c4143a5cb76d83ee14949bc56a" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>dmInt_duSolid</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a61260d98f20e684c48a645d75057cf0a" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>dpsc_term_dtheta</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a857423e667d913e74074dae40c352dd6" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>eR_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a1c3608989450828f4cdf8a1ebe501c6d" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>fContact_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a8d28107b126a8e8d8e151375d448ad5b" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>frFraction_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1afec6cf7081d58a646eda5db3998a2114" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>gamma_s</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1accfc23ce49b0b588fc1104786d8d2bb8" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>gradp_friction</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a51aab86ff789ec3c042baa1dcdade474" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>grain_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ae58bfea01138a784058b6f40925b8fec" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>gs0</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a802e8024a6d67c40fc1b8e5e9793adc9" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>jint1</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ab1df27c33ca456f8c7217e1298ca0a27" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>jint2</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a2577a0f2359811ac8a9a2f2f303c2cbc" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>k_diff</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1abda8a1b1044223e9eda7695d43901a9f" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>kappa_sed1</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ad122a8836e431653158b8c235960a597" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>l_sc</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ac0a5922204ff6b4996d19507ddae00b6" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>large_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a2d93dc9105637b6fbdb62d1ff5e2b62b" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>maxFraction_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a13aff994caf29c05dc734f1e39369115" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>mContact_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a8756f2717db05237916a6b277069e9b7" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>mIntFluid</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ad365552e58bd642407d6ebda1c7ee338" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>mIntgradC</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a39d36fc0cbfbae8acd99d12a98ecd123" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>mIntSolid</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1aecad8a41536628999334b49323472e02" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>mu_fr</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a3fecee907f597c66423e840db994f139" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>mu_fr_limiter_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ada2e498d032394502b157b4fd06bf82a" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>mu_sc</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1abba2fab312c239f49bd759d378c41bbb" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>nContact_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1adc9e4f2c2aadfa1f8bae00c9413b5b67" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>notSoLarge_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a9621e2999678f1eecbcafec0e28e223a" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>p_friction</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a0c7291ee62d0991a73cef9bf9e520ee3" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>p_s</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a55f2ef0c3e5e276548ae6e013fb22dcf" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>packFraction_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a931f52d3e76aeda6f10db10092ff2726" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>packMargin_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a12646787f736e7c71cb84401db07bcc5" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>psc</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a146e5117ee20ce1121e83e122ab71ac9" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>psc_term</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a3a41b35384fb306672aefa5be2af3a93" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>sigmaC_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1ab9bcda64d491498219bdf32f21eb2f48" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>small_</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a20966173a3b6be30ae0c1326cfc0b2a9" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>tausc_term_theta</name></member>
+      <member refid="classproteus_1_1cpp_hsu_sed_stress_1a70990b3eac11d82c3986246929dc52b8" prot="public" virt="non-virtual"><scope>proteus::cppHsuSedStress</scope><name>vos_limiter_</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,338 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_mesh_adapt_p_u_m_i_8h" kind="file" language="C++">
+    <compoundname>MeshAdaptPUMI.h</compoundname>
+    <includes refid="mesh_8h" local="yes">mesh.h</includes>
+    <includes local="no">apf.h</includes>
+    <includes local="no">apfMesh2.h</includes>
+    <includes local="no">apfNumbering.h</includes>
+    <includes local="no">queue</includes>
+    <includedby refid="c_mesh_adapt_p_u_m_i_8cpp" local="yes">cMeshAdaptPUMI.cpp</includedby>
+    <includedby refid="create_analytic_geometry_8cpp" local="yes">createAnalyticGeometry.cpp</includedby>
+    <includedby refid="_error_residual_method_8cpp" local="yes">ErrorResidualMethod.cpp</includedby>
+    <includedby refid="_mesh_converter_8cpp" local="yes">MeshConverter.cpp</includedby>
+    <includedby refid="_mesh_fields_8cpp" local="yes">MeshFields.cpp</includedby>
+    <includedby refid="_parallel_mesh_converter_8cpp" local="yes">ParallelMeshConverter.cpp</includedby>
+    <includedby refid="_size_field_8cpp" local="yes">SizeField.cpp</includedby>
+    <includedby refid="_v_m_s_8cpp" local="yes">VMS.cpp</includedby>
+    <incdepgraph>
+      <node id="7">
+        <label>list</label>
+      </node>
+      <node id="9">
+        <label>iomanip</label>
+      </node>
+      <node id="16">
+        <label>queue</label>
+      </node>
+      <node id="12">
+        <label>cmath</label>
+      </node>
+      <node id="11">
+        <label>cassert</label>
+      </node>
+      <node id="6">
+        <label>map</label>
+      </node>
+      <node id="10">
+        <label>fstream</label>
+      </node>
+      <node id="4">
+        <label>vector</label>
+      </node>
+      <node id="15">
+        <label>apfNumbering.h</label>
+      </node>
+      <node id="13">
+        <label>apf.h</label>
+      </node>
+      <node id="8">
+        <label>iostream</label>
+      </node>
+      <node id="14">
+        <label>apfMesh2.h</label>
+      </node>
+      <node id="1">
+        <label>MeshAdaptPUMI.h</label>
+        <link refid="_mesh_adapt_p_u_m_i_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>set</label>
+      </node>
+      <node id="5">
+        <label>algorithm</label>
+      </node>
+      <node id="2">
+        <label>mesh.h</label>
+        <link refid="mesh_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="9">
+        <label>VMS.cpp</label>
+        <link refid="_v_m_s_8cpp"/>
+      </node>
+      <node id="2">
+        <label>cMeshAdaptPUMI.cpp</label>
+        <link refid="c_mesh_adapt_p_u_m_i_8cpp"/>
+      </node>
+      <node id="5">
+        <label>MeshConverter.cpp</label>
+        <link refid="_mesh_converter_8cpp"/>
+      </node>
+      <node id="4">
+        <label>ErrorResidualMethod.cpp</label>
+        <link refid="_error_residual_method_8cpp"/>
+      </node>
+      <node id="7">
+        <label>ParallelMeshConverter.cpp</label>
+        <link refid="_parallel_mesh_converter_8cpp"/>
+      </node>
+      <node id="1">
+        <label>MeshAdaptPUMI.h</label>
+        <link refid="_mesh_adapt_p_u_m_i_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>MeshFields.cpp</label>
+        <link refid="_mesh_fields_8cpp"/>
+      </node>
+      <node id="8">
+        <label>SizeField.cpp</label>
+        <link refid="_size_field_8cpp"/>
+      </node>
+      <node id="3">
+        <label>createAnalyticGeometry.cpp</label>
+        <link refid="create_analytic_geometry_8cpp"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="class_mesh_adapt_p_u_m_i_drvr" prot="public">MeshAdaptPUMIDrvr</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&quot;<ref refid="mesh_8h" kindref="compound">mesh.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;apf.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;apfMesh2.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;apfNumbering.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;queue&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight></codeline>
+<codeline lineno="18" refid="class_mesh_adapt_p_u_m_i_drvr" refkind="compound"><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_mesh_adapt_p_u_m_i_drvr" kindref="compound">MeshAdaptPUMIDrvr</ref>{</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1afc0d6c608b186d83a19f5af99855d3f4" kindref="member">MeshAdaptPUMIDrvr</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*,</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">);<sp/></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a8463481f0a201a57bc92f4ccee58c09d" kindref="member">~MeshAdaptPUMIDrvr</ref>();</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a1d628142283d46bedcf08f1e937cd9fa" kindref="member">loadModelAndMesh</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>modelFile,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>meshFile);<sp/></highlight><highlight class="comment">//load<sp/>the<sp/>model<sp/>and<sp/>mesh</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a02359f723bbcd3006c1f97a7e7bf4393" kindref="member">loadMeshForAnalytic</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>meshFile,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>boxDim,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>sphereCenter,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>radius);<sp/></highlight><highlight class="comment">//mesh<sp/>and<sp/>construct<sp/>analytic<sp/>geometry</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a9da337ea66002132204fbffc63533543" kindref="member">writeMesh</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>meshFile);</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a809118b93e0865561177cf1dae2c1df1" kindref="member">cleanMesh</ref>();</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Functions<sp/>to<sp/>construct<sp/>proteus<sp/>mesh<sp/>data<sp/>structures</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a0bd25b35ad7754632353d43aa3094df4" kindref="member">reconstructFromProteus</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh,<sp/><ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>globalMesh,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>hasModel);</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a10be3b196fb7563006c0185b0495e6e4" kindref="member">reconstructFromProteus2</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>isModelVert,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>bFaces);</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ab11169fd7e5b9a69fd2525b7d62ef9ed" kindref="member">constructFromSerialPUMIMesh</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a5b5e7afd61f0a959963eb27ad9fcf685" kindref="member">constructFromParallelPUMIMesh</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh,<sp/><ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>subdomain_mesh);</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a0174b9ea01dc47a497c832a8c46014d0" kindref="member">updateMaterialArrays</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>dim,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>bdryID,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>GeomTag);</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a0174b9ea01dc47a497c832a8c46014d0" kindref="member">updateMaterialArrays</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a3fca50c59c93e805f6f17a0158a5185b" kindref="member">updateMaterialArrays2</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a31a9734e50e16e7aff9bf7dded15eebb" kindref="member">numberLocally</ref>();</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a56dab4675d73f26b9decdc7ed6353aa8" kindref="member">localNumber</ref>(apf::MeshEntity*<sp/>e);</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a2f375f8c93ed5b48495fa0d689171c95" kindref="member">dumpMesh</ref>(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Functions<sp/>used<sp/>to<sp/>transfer<sp/>proteus<sp/>model<sp/>data<sp/>structures</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a2314044d8a34d2f5872d93da1931898f" kindref="member">transferModelInfo</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*numGeomEntities,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*edges,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*faces,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*mVertex2Model,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*mEdgeVertex2Model,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*mBoundary2Model,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nMaxSegments);</highlight></codeline>
+<codeline lineno="43" refid="class_mesh_adapt_p_u_m_i_drvr_1ab7268c72a11923e639065b10f75062f6" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ab7268c72a11923e639065b10f75062f6" kindref="member">numSegments</ref>;</highlight></codeline>
+<codeline lineno="44" refid="class_mesh_adapt_p_u_m_i_drvr_1aa5906a0f076e0ad1de1c61c905c85b20" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aa5906a0f076e0ad1de1c61c905c85b20" kindref="member">edgeList</ref>;</highlight></codeline>
+<codeline lineno="45" refid="class_mesh_adapt_p_u_m_i_drvr_1ab42d754f517e0886d5749038df914452" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ab42d754f517e0886d5749038df914452" kindref="member">faceList</ref>;</highlight></codeline>
+<codeline lineno="46" refid="class_mesh_adapt_p_u_m_i_drvr_1a7a39e1cdd603aa22b54acd6c83fb0eb0" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a7a39e1cdd603aa22b54acd6c83fb0eb0" kindref="member">meshVertex2Model</ref>,<sp/>*<ref refid="class_mesh_adapt_p_u_m_i_drvr_1a036919258d2820160b6b5f3699321aac" kindref="member">meshEdge2Model</ref>,<sp/>*<ref refid="class_mesh_adapt_p_u_m_i_drvr_1a5837c7464bf0703abf955e31334bb823" kindref="member">meshBoundary2Model</ref>;</highlight></codeline>
+<codeline lineno="47" refid="class_mesh_adapt_p_u_m_i_drvr_1a06e0b5795826df209fabcd78f30a3ccd" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a06e0b5795826df209fabcd78f30a3ccd" kindref="member">numModelEntities</ref>[4];</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Functions<sp/>used<sp/>to<sp/>transfer<sp/>information<sp/>between<sp/>PUMI<sp/>and<sp/>proteus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ac167218f32db834c739e89e6cfed2560" kindref="member">transferFieldToPUMI</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>name,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">*<sp/>inArray,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nVar,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nN);</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a171dedf702dd8c87f1aaf8fc8b32d7d5" kindref="member">transferFieldToProteus</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>name,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>outArray,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nVar,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nN);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a8858e270790faf4702fdfffd67b0faf4" kindref="member">transferPropertiesToPUMI</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>rho_p,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>nu_p,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>g_p,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>deltaT,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>interfaceBandSize);</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//int<sp/>transferBCtagsToProteus(int*<sp/>tagArray,<sp/>int<sp/>idx,<sp/>int*<sp/>ebN,<sp/>int*<sp/>eN_global,<sp/>double*<sp/>fluxBC);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//int<sp/>transferBCsToProteus();</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//MeshAdapt<sp/>functions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a54d9717041c36487816585eb2cfcdb3b" kindref="member">willAdapt</ref>();</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a686685b789dec852110157660d50a088" kindref="member">willErrorAdapt</ref>();</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a463d0271aeee1bd4a1bf36636fafb647" kindref="member">willInterfaceAdapt</ref>();</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ab0cfeba615d840e3f32c9d6ac295a890" kindref="member">adaptPUMIMesh</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>input);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a32a3b6ff131f4a36de1c2b2ec9321f78" kindref="member">setSphereSizeField</ref>();</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aac549fb381e88d63fc1743b461adb337" kindref="member">calculateSizeField</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>L_band);</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a97c4181cef84b47cd827c0f9214e4903" kindref="member">predictiveInterfacePropagation</ref>();</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a7341569125c3eed5cafc6a9aa8524195" kindref="member">calculateAnisoSizeField</ref>();</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aa48e918a44e6c7e99cd8c88ee7478437" kindref="member">testIsotropicSizeField</ref>();</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a557aeb21cd38eb22d9bcef5acd865ff6" kindref="member">getERMSizeField</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>err_total);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a1bb6d304aa4d38c9f32125b1036f2098" kindref="member">gradeMesh</ref>();</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//analytic<sp/>geometry</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/>gmi_model*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1accc0b587f26e40fcd26adad679d69ba2" kindref="member">createSphereInBox</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>boxDim,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*sphereCenter,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>radius);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1af4c92859fd582354dd93f418e28524a6" kindref="member">updateSphereCoordinates</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*sphereCenter);</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Quality<sp/>Check<sp/>Functions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a127c1258e9a3fabb98c9d2a64fd03161" kindref="member">getMinimumQuality</ref>();</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ac9ee3fb3ccad97e4a7b2ecf33fad6dd0" kindref="member">getTotalMass</ref>();</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Functions<sp/>that<sp/>help<sp/>facilitate<sp/>computations</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a6ddc38c5a78f366b34d764813812ed41" kindref="member">getMPvalue</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>field_val,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>val_0,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>val_1);<sp/></highlight><highlight class="comment">//get<sp/>the<sp/>multiphase<sp/>value<sp/>of<sp/>physical<sp/>properties</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/>apf::Field*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a772b6ae5b0b80b1f5c4dc270f1cb99b0" kindref="member">getViscosityField</ref>(apf::Field*<sp/>voff);<sp/></highlight><highlight class="comment">//derive<sp/>a<sp/>field<sp/>of<sp/>viscosity<sp/>based<sp/>on<sp/>VOF<sp/>field</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//needed<sp/>for<sp/>checkpointing/restart</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1abdd208d69c0c93a8deee54d46f5926ee" kindref="member">set_nAdapt</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numberAdapt);</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Public<sp/>Variables</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="86" refid="class_mesh_adapt_p_u_m_i_drvr_1afa0c1053cfda5b41ea3eb9dafcf021c7" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a55f731fc27f23d9560fb4778b7f1741e" kindref="member">hmax</ref>,<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aa8f0f76c30250e076414981543f84802" kindref="member">hmin</ref>,<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1afa0c1053cfda5b41ea3eb9dafcf021c7" kindref="member">hPhi</ref>;<sp/></highlight><highlight class="comment">//bounds<sp/>on<sp/>mesh<sp/>size</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="87" refid="class_mesh_adapt_p_u_m_i_drvr_1a10079fecbff8a243a52cc7160db07548" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a10079fecbff8a243a52cc7160db07548" kindref="member">numIter</ref>;<sp/></highlight><highlight class="comment">//number<sp/>of<sp/>iterations<sp/>for<sp/>MeshAdapt</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="88" refid="class_mesh_adapt_p_u_m_i_drvr_1a4a202881ec4b2aa283d34e81d45d1404" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a4a202881ec4b2aa283d34e81d45d1404" kindref="member">nAdapt</ref>;<sp/></highlight><highlight class="comment">//counter<sp/>for<sp/>number<sp/>of<sp/>adapt<sp/>steps</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="89" refid="class_mesh_adapt_p_u_m_i_drvr_1a457dfc5023eff43c9a56bfbefd2f0a5f" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a457dfc5023eff43c9a56bfbefd2f0a5f" kindref="member">nEstimate</ref>;<sp/></highlight><highlight class="comment">//counter<sp/>for<sp/>number<sp/>of<sp/>error<sp/>estimator<sp/>calls</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="90" refid="class_mesh_adapt_p_u_m_i_drvr_1ab670020f8485275221bf5fa0b8872cad" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ab670020f8485275221bf5fa0b8872cad" kindref="member">nsd</ref>;<sp/></highlight><highlight class="comment">//number<sp/>of<sp/>spatial<sp/>dimensions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="91" refid="class_mesh_adapt_p_u_m_i_drvr_1aae6c68a4a0140f3d2eca1472e10b61d1" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aae6c68a4a0140f3d2eca1472e10b61d1" kindref="member">maxAspect</ref>;<sp/></highlight><highlight class="comment">//maximum<sp/>aspect<sp/>ratio</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="92" refid="class_mesh_adapt_p_u_m_i_drvr_1a39b6a3862d3fa543b38f408cf3af8697" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a39b6a3862d3fa543b38f408cf3af8697" kindref="member">adaptMesh</ref>;<sp/></highlight><highlight class="comment">//is<sp/>adaptivity<sp/>turned<sp/>on?</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="93" refid="class_mesh_adapt_p_u_m_i_drvr_1a696a6f4c51c5138c70e21efa594c7b1d" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a696a6f4c51c5138c70e21efa594c7b1d" kindref="member">numAdaptSteps</ref>;<sp/></highlight><highlight class="comment">//Number<sp/>adaptivity</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="94" refid="class_mesh_adapt_p_u_m_i_drvr_1aa3eddefb9c31b31e2b8c91cdd01ea40a" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aa3eddefb9c31b31e2b8c91cdd01ea40a" kindref="member">N_interface_band</ref>;<sp/></highlight><highlight class="comment">//number<sp/>of<sp/>elements<sp/>in<sp/>half-band<sp/>around<sp/>interface</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="95" refid="class_mesh_adapt_p_u_m_i_drvr_1a2f88d2f12514c80986566d79c9af97cb" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a2f88d2f12514c80986566d79c9af97cb" kindref="member">gradingFactor</ref>;</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"></highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//User<sp/>Inputs</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="98" refid="class_mesh_adapt_p_u_m_i_drvr_1a048c01a777fa7d2f953a8f32621f16ce" refkind="member"><highlight class="normal"><sp/><sp/>std::string<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a048c01a777fa7d2f953a8f32621f16ce" kindref="member">size_field_config</ref>;<sp/></highlight><highlight class="comment">//What<sp/>type<sp/>of<sp/>size<sp/>field:<sp/>interface,<sp/>ERM,<sp/>isotropic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="99" refid="class_mesh_adapt_p_u_m_i_drvr_1aeffc8a7d92b18589fb364e0a25166b9c" refkind="member"><highlight class="normal"><sp/><sp/>std::string<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aeffc8a7d92b18589fb364e0a25166b9c" kindref="member">adapt_type_config</ref>;<sp/></highlight><highlight class="comment">//What<sp/>type<sp/>of<sp/>adapt<sp/>for<sp/>ERM:<sp/>isotropic<sp/>or<sp/>anisotropic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="100" refid="class_mesh_adapt_p_u_m_i_drvr_1aa97e3f5ebb00ff6620349fa6b3357a36" refkind="member"><highlight class="normal"><sp/><sp/>std::string<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aa97e3f5ebb00ff6620349fa6b3357a36" kindref="member">logging_config</ref>;<sp/></highlight><highlight class="comment">//<sp/>Logging<sp/>on<sp/>or<sp/>off</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="101"><highlight class="normal"></highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Element<sp/>Residual<sp/>Method</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aecaf9a2b99e00685fec6694d29b6a533" kindref="member">get_local_error</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1afa325a32876160388cba8f8fe81e0ce0" kindref="member">total_error</ref>);</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a15ef6e40927fdbc9af43fa535b563679" kindref="member">computeDiffusiveFlux</ref>(apf::Mesh*m,apf::Field*<sp/>voff,<sp/>apf::Field*<sp/>visc,apf::Field*<sp/>pref,<sp/>apf::Field*<sp/>velf);</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ac75ad718d0165cb56ebe96df87083268" kindref="member">getBoundaryFlux</ref>(apf::Mesh*<sp/>m,<sp/>apf::MeshEntity*<sp/>ent,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<sp/>endflux);</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1afdc27e39d259578ab1089275f76e77c6" kindref="member">getSimmetrixBC</ref>();</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a0decaa7be27e9d9899a16de5839cf750" kindref="member">removeBCData</ref>();</highlight></codeline>
+<codeline lineno="108" refid="class_mesh_adapt_p_u_m_i_drvr_1a9461bcec67009452ea6e7b1c56ec4318" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a9461bcec67009452ea6e7b1c56ec4318" kindref="member">modelFileName</ref>;<sp/></highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//VMS</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a9aadede4097af6ffdc77d3eea775d5ff" kindref="member">get_VMS_error</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/>total_error_out);</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//tags<sp/>used<sp/>to<sp/>identify<sp/>types<sp/>of<sp/>BC</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="114" refid="class_mesh_adapt_p_u_m_i_drvr_1af5a56ca2477894338859d52298b28350" refkind="member"><highlight class="normal"><sp/><sp/>apf::MeshTag*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1af5a56ca2477894338859d52298b28350" kindref="member">BCtag</ref>;</highlight></codeline>
+<codeline lineno="115" refid="class_mesh_adapt_p_u_m_i_drvr_1ac91430db54e1c581c67fd0ff6a0e7069" refkind="member"><highlight class="normal"><sp/><sp/>apf::MeshTag*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ac91430db54e1c581c67fd0ff6a0e7069" kindref="member">DBCtag</ref>[4];</highlight></codeline>
+<codeline lineno="116" refid="class_mesh_adapt_p_u_m_i_drvr_1ad72438ac9f7cb57018dc98271ac6bffa" refkind="member"><highlight class="normal"><sp/><sp/>apf::MeshTag*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ad72438ac9f7cb57018dc98271ac6bffa" kindref="member">fluxtag</ref>[4];</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"></highlight></codeline>
+<codeline lineno="118" refid="class_mesh_adapt_p_u_m_i_drvr_1a4babcf12405cab5dcd7af2b85395586d" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*<ref refid="class_mesh_adapt_p_u_m_i_drvr_1a4babcf12405cab5dcd7af2b85395586d" kindref="member">exteriorGlobaltoLocalElementBoundariesArray</ref>;</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Approximation/Integration<sp/>order</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="121" refid="class_mesh_adapt_p_u_m_i_drvr_1acc45546f4adbd6a6c18c82c432e5dd0e" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1acc45546f4adbd6a6c18c82c432e5dd0e" kindref="member">approximation_order</ref>;<sp/></highlight><highlight class="comment">//what<sp/>order<sp/>polynomial<sp/>(hierarchic<sp/>is<sp/>2nd<sp/>order)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="122" refid="class_mesh_adapt_p_u_m_i_drvr_1a1e4333322f04b1b4e0d9b787611d6cce" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a1e4333322f04b1b4e0d9b787611d6cce" kindref="member">integration_order</ref>;<sp/></highlight><highlight class="comment">//determines<sp/>number<sp/>of<sp/>integration<sp/>points</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="123" refid="class_mesh_adapt_p_u_m_i_drvr_1ab54472c23a4ce06ed9e253d8249f7907" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ab54472c23a4ce06ed9e253d8249f7907" kindref="member">num_quadrature</ref>;<sp/></highlight></codeline>
+<codeline lineno="124" refid="class_mesh_adapt_p_u_m_i_drvr_1a152df6bb677176ca2e91b84d49fc64f2" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a152df6bb677176ca2e91b84d49fc64f2" kindref="member">num_quadrature_boundary</ref>;</highlight></codeline>
+<codeline lineno="125" refid="class_mesh_adapt_p_u_m_i_drvr_1afa325a32876160388cba8f8fe81e0ce0" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1afa325a32876160388cba8f8fe81e0ce0" kindref="member">total_error</ref>;</highlight></codeline>
+<codeline lineno="126" refid="class_mesh_adapt_p_u_m_i_drvr_1ae4697439db655efc3b37b9f5953c7f53" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ae4697439db655efc3b37b9f5953c7f53" kindref="member">errRho_max</ref>;</highlight></codeline>
+<codeline lineno="127" refid="class_mesh_adapt_p_u_m_i_drvr_1ac334de5a67ca2e2dbd26fbe7b10a3d55" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ac334de5a67ca2e2dbd26fbe7b10a3d55" kindref="member">rel_err_total</ref>;</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"></highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//Mesh<sp/>Reconstruction</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="130" refid="class_mesh_adapt_p_u_m_i_drvr_1a82c29efd9d3cf097e81daba5b9cdcba9" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a82c29efd9d3cf097e81daba5b9cdcba9" kindref="member">isReconstructed</ref>;</highlight></codeline>
+<codeline lineno="131" refid="class_mesh_adapt_p_u_m_i_drvr_1ab30bca7c0adb1965e12d6196b2673d42" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ab30bca7c0adb1965e12d6196b2673d42" kindref="member">initialReconstructed</ref>;</highlight></codeline>
+<codeline lineno="132" refid="class_mesh_adapt_p_u_m_i_drvr_1a09d644b4b8b529f7540bffc5ef25c8db" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a09d644b4b8b529f7540bffc5ef25c8db" kindref="member">modelVertexMaterial</ref>;<sp/></highlight></codeline>
+<codeline lineno="133" refid="class_mesh_adapt_p_u_m_i_drvr_1ac14021e0c882dff8ec6331cc05661ccf" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1ac14021e0c882dff8ec6331cc05661ccf" kindref="member">modelBoundaryMaterial</ref>;</highlight></codeline>
+<codeline lineno="134" refid="class_mesh_adapt_p_u_m_i_drvr_1a84f27a11492a2a1f3582345bad013a37" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1a84f27a11492a2a1f3582345bad013a37" kindref="member">modelRegionMaterial</ref>;</highlight></codeline>
+<codeline lineno="135" refid="class_mesh_adapt_p_u_m_i_drvr_1aff8d734eb2cfc1d53e338e91f69d2aa9" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1aff8d734eb2cfc1d53e338e91f69d2aa9" kindref="member">numModelOffsets</ref>[4];</highlight></codeline>
+<codeline lineno="136" refid="class_mesh_adapt_p_u_m_i_drvr_1afee9fc62fa74e070a316e1ecb8d4a560" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_mesh_adapt_p_u_m_i_drvr_1afee9fc62fa74e070a316e1ecb8d4a560" kindref="member">numModelTotals</ref>[4];</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"></highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">private</highlight><highlight class="normal">:<sp/></highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/>apf::Mesh2*<sp/>m;</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>comm_size,<sp/>comm_rank;</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"></highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>rho[2],<sp/>nu[2];</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>g[3];</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>delta_T;</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/>apf::MeshTag*<sp/>diffFlux;</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/>apf::GlobalNumbering*<sp/>global[4];</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/>apf::Numbering*<sp/>local[4];</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/>apf::Field*<sp/>err_reg;<sp/></highlight><highlight class="comment">//error<sp/>field<sp/>from<sp/>ERM</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/>apf::Field*<sp/>vmsErrH1;<sp/></highlight><highlight class="comment">//error<sp/>field<sp/>for<sp/>VMS</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/>apf::Field*<sp/>errRho_reg;<sp/></highlight><highlight class="comment">//error-density<sp/>field<sp/>from<sp/>ERM</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/>apf::Field*<sp/>errRel_reg;<sp/></highlight><highlight class="comment">//relative<sp/>error<sp/>field<sp/>from<sp/>ERM</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>this<sp/>field<sp/>stores<sp/>isotropic<sp/>size<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/>apf::Field*<sp/>size_iso;</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>these<sp/>fields<sp/>store<sp/>anisotropic<sp/>size<sp/>and<sp/>metric<sp/>tensor<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/>apf::Field*<sp/>size_scale;</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/>apf::Field*<sp/>size_frame;</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//queue<sp/>for<sp/>size<sp/>fields</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/>std::queue&lt;apf::Field*&gt;<sp/>sizeFieldList;</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>isotropicIntersect();</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"></highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>constructGlobalNumbering(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>constructGlobalStructures(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"></highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>constructElements(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>constructNodes(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>constructBoundaries(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>constructEdges(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>constructMaterialArrays(<ref refid="struct_mesh" kindref="compound">Mesh</ref>&amp;<sp/>mesh);</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"></highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>freeField(apf::Field*&amp;<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>);</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>freeNumbering(apf::Numbering*&amp;<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"></highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>averageToEntity(apf::Field*<sp/>ef,<sp/>apf::Field*<sp/>vf,</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>apf::MeshEntity*<sp/>ent);</highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>volumeAverageToEntity(apf::Field*<sp/>ef,<sp/>apf::Field*<sp/>vf,</highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>apf::MeshEntity*<sp/>ent);</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"></highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>has_gBC;<sp/></highlight><highlight class="comment">//boolean<sp/>for<sp/>having<sp/>global<sp/>boundary<sp/>conditions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>target_error;<sp/></highlight><highlight class="comment">//computed<sp/>from<sp/>get_local_error()</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>target_element_count;<sp/></highlight><highlight class="comment">//How<sp/>many<sp/>elements<sp/>in<sp/>the<sp/>mesh<sp/>are<sp/>desired?</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>domainVolume;<sp/></highlight><highlight class="comment">//Volume<sp/>of<sp/>the<sp/>domain</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="183"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>THRESHOLD;<sp/></highlight><highlight class="comment">//threshold<sp/>of<sp/>error<sp/>before<sp/>adapt</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="184"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"></highlight></codeline>
+<codeline lineno="186"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshAdaptPUMI.h"/>
+  </compounddef>
+</doxygen>

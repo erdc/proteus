@@ -1,0 +1,693 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_planar_straight_line_graph_domain" kind="class" language="C++" prot="public">
+    <compoundname>PlanarStraightLineGraphDomain</compoundname>
+    <basecompoundref refid="class_d__base" prot="public" virt="non-virtual">D_base</basecompoundref>
+    <includes refid="_domain_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/Domain.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1afa1ab77c5903b908184509374ff994e7" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &gt;</type>
+        <definition>vector&lt;vector&lt;double&gt; &gt; PlanarStraightLineGraphDomain::vertices</definition>
+        <argsstring></argsstring>
+        <name>vertices</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="48" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1aca4121f4cdbed19270354a0d4927c0fe" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &gt;</type>
+        <definition>vector&lt; vector&lt;int&gt; &gt; PlanarStraightLineGraphDomain::segments</definition>
+        <argsstring></argsstring>
+        <name>segments</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="49" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="49" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1abeebc6859b66999e1429a1116ef59488" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &gt;</type>
+        <definition>vector&lt; vector&lt;double&gt; &gt; PlanarStraightLineGraphDomain::holes</definition>
+        <argsstring></argsstring>
+        <name>holes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="50" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a7da2ddbc0845f245d7385ff15afb4d45" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; PlanarStraightLineGraphDomain::regions</definition>
+        <argsstring></argsstring>
+        <name>regions</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="51" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a711545f2c14e047f09c354a2b4039b10" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::nVertices</definition>
+        <argsstring></argsstring>
+        <name>nVertices</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="52" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="52" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1ace13ea969889a9e975ab4e510385430f" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::nVertexAttributes</definition>
+        <argsstring></argsstring>
+        <name>nVertexAttributes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="53" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1ac80b5f6be106ecc59c7fc792ce021b90" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::vertexAttributes</definition>
+        <argsstring></argsstring>
+        <name>vertexAttributes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="54" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1aebe274fabccb24a19f4b4c90ea914a6c" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::vertexFlags</definition>
+        <argsstring></argsstring>
+        <name>vertexFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="55" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a33bad7c15a20c0a1b01aebd15436e846" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::segmentFlags</definition>
+        <argsstring></argsstring>
+        <name>segmentFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="56" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1aa6b118db3120344b9e1ac5c9db479a18" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::regionFlags</definition>
+        <argsstring></argsstring>
+        <name>regionFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="57" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a5d99bfaf32a7755f5ef94d64b705799b" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; PlanarStraightLineGraphDomain::v</definition>
+        <argsstring></argsstring>
+        <name>v</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="58" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1aa6b4ed856986381cb740e25d732b913c" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::vN</definition>
+        <argsstring></argsstring>
+        <name>vN</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="59" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a079dbf06e3a800ac34d3d2369776204a" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::sN</definition>
+        <argsstring></argsstring>
+        <name>sN</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="60" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a0908c528d6e40a2454c564dd43919b68" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::s</definition>
+        <argsstring></argsstring>
+        <name>s</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="61" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a0bd0802dcefe8718e1557c4976fb733d" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::sFlags</definition>
+        <argsstring></argsstring>
+        <name>sFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="62" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a77d478355dc2a6815df95521e5e4eeb4" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::hN</definition>
+        <argsstring></argsstring>
+        <name>hN</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="63" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a2e593be8a12ac39b4a42409663305bfb" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; PlanarStraightLineGraphDomain::h</definition>
+        <argsstring></argsstring>
+        <name>h</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="64" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a4e8bebffee626ae0c2e2ffd309a474b3" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PlanarStraightLineGraphDomain::rN</definition>
+        <argsstring></argsstring>
+        <name>rN</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="65" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="65" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a1a6f7d3cfbf63de65dcb8a5cffb4cca1" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; PlanarStraightLineGraphDomain::r</definition>
+        <argsstring></argsstring>
+        <name>r</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="66" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="66" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a2cfb694ad9edc008afd67750fc64ca64" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; string &gt;</type>
+        <definition>vector&lt;string&gt; PlanarStraightLineGraphDomain::line</definition>
+        <argsstring></argsstring>
+        <name>line</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="67" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a71735fcd98ec7475fcb23ecc2726054c" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PlanarStraightLineGraphDomain::xMax</definition>
+        <argsstring></argsstring>
+        <name>xMax</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="68" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a1ac3888a27011c8ae299a4115c2a1eb0" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PlanarStraightLineGraphDomain::xMin</definition>
+        <argsstring></argsstring>
+        <name>xMin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="68" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1adcbf04db6caf9dc70f7087bc9ae9aa91" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PlanarStraightLineGraphDomain::yMax</definition>
+        <argsstring></argsstring>
+        <name>yMax</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="69" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a2b1356bcb0aaaeb872f7b380d247c8aa" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PlanarStraightLineGraphDomain::yMin</definition>
+        <argsstring></argsstring>
+        <name>yMin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="69" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1ae4b847abe941cca263a4128f790260b0" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PlanarStraightLineGraphDomain::sMax</definition>
+        <argsstring></argsstring>
+        <name>sMax</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="70" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1a30761dc9cd484997096a7d62bb21eb65" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PlanarStraightLineGraphDomain::sMin</definition>
+        <argsstring></argsstring>
+        <name>sMin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="70" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1aa1dcbebc9a9b151dd3c6a64f1f664bd6" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PlanarStraightLineGraphDomain::hasVertexFlags</definition>
+        <argsstring></argsstring>
+        <name>hasVertexFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="71" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_planar_straight_line_graph_domain_1aee432b3fac8522813a5133a2c9468f5a" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PlanarStraightLineGraphDomain::hasSegmentFlags</definition>
+        <argsstring></argsstring>
+        <name>hasSegmentFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="72" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_planar_straight_line_graph_domain_1a6155b1ed2eab340d14cc14aa8736f325" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>PlanarStraightLineGraphDomain::PlanarStraightLineGraphDomain</definition>
+        <argsstring>(int dimIn=2, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>PlanarStraightLineGraphDomain</name>
+        <param>
+          <type>int</type>
+          <declname>dimIn</declname>
+          <defval>2</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="39" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="209" bodyend="212"/>
+      </memberdef>
+      <memberdef kind="function" id="class_planar_straight_line_graph_domain_1a188258f8ef0030339a3f9392f5167b9c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>PlanarStraightLineGraphDomain::PlanarStraightLineGraphDomain</definition>
+        <argsstring>(const vector&lt; vector&lt; double &gt; &gt; &amp;verticesIn, const vector&lt; vector&lt; int &gt; &gt; &amp;segmentsIn, const vector&lt; vector&lt; double &gt; &gt; &amp;holesIn, const vector&lt; double &gt; &amp;regionsIn, const vector&lt; int &gt; &amp;vertexFlagsIn, const vector&lt; int &gt; &amp;segmentFlagsIn, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>PlanarStraightLineGraphDomain</name>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &gt; &amp;</type>
+          <declname>verticesIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &gt; &amp;</type>
+          <declname>segmentsIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &gt; &amp;</type>
+          <declname>holesIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &amp;</type>
+          <declname>regionsIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &amp;</type>
+          <declname>vertexFlagsIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &amp;</type>
+          <declname>segmentFlagsIn</declname>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="40" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="214" bodyend="223"/>
+      </memberdef>
+      <memberdef kind="function" id="class_planar_straight_line_graph_domain_1a5c5a16298a196fd0a9f6bbd8f5292cb0" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>PlanarStraightLineGraphDomain::~PlanarStraightLineGraphDomain</definition>
+        <argsstring>()</argsstring>
+        <name>~PlanarStraightLineGraphDomain</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="41" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="225" bodyend="226"/>
+      </memberdef>
+      <memberdef kind="function" id="class_planar_straight_line_graph_domain_1a1eb4881579d2723f8721ad6cd67e00f9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void PlanarStraightLineGraphDomain::getSegmentPartition</definition>
+        <argsstring>(vector&lt; int &gt; &amp;s)</argsstring>
+        <name>getSegmentPartition</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="43" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="341" bodyend="356"/>
+      </memberdef>
+      <memberdef kind="function" id="class_planar_straight_line_graph_domain_1a67b34cbe3715956e7e82c28c25f61744" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void PlanarStraightLineGraphDomain::getBoundingBox</definition>
+        <argsstring>(vector&lt; double &gt; &amp;v)</argsstring>
+        <name>getBoundingBox</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &amp;</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="44" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="358" bodyend="381"/>
+      </memberdef>
+      <memberdef kind="function" id="class_planar_straight_line_graph_domain_1a2a686d32ff72284faf0f9afc63d1356e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void PlanarStraightLineGraphDomain::readPoly</definition>
+        <argsstring>(const char *filename)</argsstring>
+        <name>readPoly</name>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="45" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="384" bodyend="404"/>
+      </memberdef>
+      <memberdef kind="function" id="class_planar_straight_line_graph_domain_1ad6ade6af7f073be5ea77c3829053d400" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void PlanarStraightLineGraphDomain::writePoly</definition>
+        <argsstring>(const char *filename)</argsstring>
+        <name>writePoly</name>
+        <reimplements refid="class_d__base_1ab9a1c2adbd1d283a75b96eddfe4880f1">writePoly</reimplements>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="46" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="227" bodyend="297"/>
+      </memberdef>
+      <memberdef kind="function" id="class_planar_straight_line_graph_domain_1a336dd9b54fd9fcf4f6b67ec104f7c735" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void PlanarStraightLineGraphDomain::writeAsymptote</definition>
+        <argsstring>(const char *filename)</argsstring>
+        <name>writeAsymptote</name>
+        <reimplements refid="class_d__base_1a06516a66bdf9e56bc1278e1626b59e95">writeAsymptote</reimplements>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="47" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="299" bodyend="339"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>PlanarStraightLineGraphDomain</label>
+        <link refid="class_planar_straight_line_graph_domain"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>D_base</label>
+        <link refid="class_d__base"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="5">
+        <label>std::vector&lt; double &gt;</label>
+      </node>
+      <node id="9">
+        <label>std::vector&lt; string &gt;</label>
+        <childnode refid="3" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="4">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="6">
+        <label>std::vector&lt; vector&lt; int &gt; &gt;</label>
+        <childnode refid="7" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="8">
+        <label>std::vector&lt; vector&lt; double &gt; &gt;</label>
+        <childnode refid="5" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="1">
+        <label>PlanarStraightLineGraphDomain</label>
+        <link refid="class_planar_straight_line_graph_domain"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+        <childnode refid="6" relation="usage">
+          <edgelabel>segments</edgelabel>
+        </childnode>
+        <childnode refid="8" relation="usage">
+          <edgelabel>holes</edgelabel>
+          <edgelabel>vertices</edgelabel>
+        </childnode>
+        <childnode refid="9" relation="usage">
+          <edgelabel>line</edgelabel>
+        </childnode>
+        <childnode refid="7" relation="usage">
+          <edgelabel>vertexFlags</edgelabel>
+          <edgelabel>nVertices</edgelabel>
+          <edgelabel>segmentFlags</edgelabel>
+          <edgelabel>sFlags</edgelabel>
+          <edgelabel>hN</edgelabel>
+          <edgelabel>vN</edgelabel>
+          <edgelabel>regionFlags</edgelabel>
+          <edgelabel>vertexAttributes</edgelabel>
+          <edgelabel>s</edgelabel>
+          <edgelabel>sN</edgelabel>
+          <edgelabel>...</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>regions</edgelabel>
+          <edgelabel>h</edgelabel>
+          <edgelabel>r</edgelabel>
+          <edgelabel>v</edgelabel>
+        </childnode>
+      </node>
+      <node id="2">
+        <label>D_base</label>
+        <link refid="class_d__base"/>
+        <childnode refid="3" relation="usage">
+          <edgelabel>units</edgelabel>
+          <edgelabel>name</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>x</edgelabel>
+          <edgelabel>L</edgelabel>
+        </childnode>
+      </node>
+      <node id="7">
+        <label>std::vector&lt; int &gt;</label>
+      </node>
+      <node id="3">
+        <label>std::string</label>
+        <childnode refid="4" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="37" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="36" bodyend="73"/>
+    <listofallmembers>
+      <member refid="class_d__base_1a0a6e52d303b6eebaec25bc94e01a33cf" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>D_base</name></member>
+      <member refid="class_d__base_1a630e203b1b2e5a330787cee20e1f75a5" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>dim</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a67b34cbe3715956e7e82c28c25f61744" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>getBoundingBox</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a1eb4881579d2723f8721ad6cd67e00f9" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>getSegmentPartition</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a2e593be8a12ac39b4a42409663305bfb" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>h</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1aee432b3fac8522813a5133a2c9468f5a" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>hasSegmentFlags</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1aa1dcbebc9a9b151dd3c6a64f1f664bd6" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>hasVertexFlags</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a77d478355dc2a6815df95521e5e4eeb4" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>hN</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1abeebc6859b66999e1429a1116ef59488" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>holes</name></member>
+      <member refid="class_d__base_1a3a982a9943f929ffff437be69fcdebd7" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>L</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a2cfb694ad9edc008afd67750fc64ca64" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>line</name></member>
+      <member refid="class_d__base_1ab4f698f5c7311cec0e5c90698d88af9f" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>name</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1ace13ea969889a9e975ab4e510385430f" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>nVertexAttributes</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a711545f2c14e047f09c354a2b4039b10" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>nVertices</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a6155b1ed2eab340d14cc14aa8736f325" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>PlanarStraightLineGraphDomain</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a188258f8ef0030339a3f9392f5167b9c" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>PlanarStraightLineGraphDomain</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a1a6f7d3cfbf63de65dcb8a5cffb4cca1" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>r</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a2a686d32ff72284faf0f9afc63d1356e" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>readPoly</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1aa6b118db3120344b9e1ac5c9db479a18" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>regionFlags</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a7da2ddbc0845f245d7385ff15afb4d45" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>regions</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a4e8bebffee626ae0c2e2ffd309a474b3" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>rN</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a0908c528d6e40a2454c564dd43919b68" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>s</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a33bad7c15a20c0a1b01aebd15436e846" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>segmentFlags</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1aca4121f4cdbed19270354a0d4927c0fe" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>segments</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a0bd0802dcefe8718e1557c4976fb733d" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>sFlags</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1ae4b847abe941cca263a4128f790260b0" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>sMax</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a30761dc9cd484997096a7d62bb21eb65" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>sMin</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a079dbf06e3a800ac34d3d2369776204a" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>sN</name></member>
+      <member refid="class_d__base_1a21b5f51f4c8d2a66cef73931474a95e3" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>units</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a5d99bfaf32a7755f5ef94d64b705799b" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>v</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1ac80b5f6be106ecc59c7fc792ce021b90" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>vertexAttributes</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1aebe274fabccb24a19f4b4c90ea914a6c" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>vertexFlags</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1afa1ab77c5903b908184509374ff994e7" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>vertices</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1aa6b4ed856986381cb740e25d732b913c" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>vN</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a336dd9b54fd9fcf4f6b67ec104f7c735" prot="public" virt="virtual"><scope>PlanarStraightLineGraphDomain</scope><name>writeAsymptote</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1ad6ade6af7f073be5ea77c3829053d400" prot="public" virt="virtual"><scope>PlanarStraightLineGraphDomain</scope><name>writePoly</name></member>
+      <member refid="class_d__base_1a3b73f494635dabeb3e85355d24f8bd1d" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>x</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a71735fcd98ec7475fcb23ecc2726054c" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>xMax</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a1ac3888a27011c8ae299a4115c2a1eb0" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>xMin</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1adcbf04db6caf9dc70f7087bc9ae9aa91" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>yMax</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a2b1356bcb0aaaeb872f7b380d247c8aa" prot="public" virt="non-virtual"><scope>PlanarStraightLineGraphDomain</scope><name>yMin</name></member>
+      <member refid="class_planar_straight_line_graph_domain_1a5c5a16298a196fd0a9f6bbd8f5292cb0" prot="public" virt="virtual"><scope>PlanarStraightLineGraphDomain</scope><name>~PlanarStraightLineGraphDomain</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

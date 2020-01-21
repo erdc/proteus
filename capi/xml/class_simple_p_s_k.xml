@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_simple_p_s_k" kind="class" language="C++" prot="public">
+    <compoundname>SimplePSK</compoundname>
+    <basecompoundref refid="class_psk_relation" prot="public" virt="non-virtual">PskRelation</basecompoundref>
+    <includes refid="psk_relations_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_simple_p_s_k_1aca2ee22ed2e9953a3b812adeb4bd2b59" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>SimplePSK::SimplePSK</definition>
+        <argsstring>(const double *rwork, const int *iwork=0)</argsstring>
+        <name>SimplePSK</name>
+        <param>
+          <type>const double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>iwork</declname>
+          <defval>0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="108" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="108" bodyend="110"/>
+      </memberdef>
+      <memberdef kind="function" id="class_simple_p_s_k_1aa909fda2702dabaa48dffdf9ea3e2d4c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void SimplePSK::calc</definition>
+        <argsstring>(const double &amp;Sw)</argsstring>
+        <name>calc</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Sw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="112" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="112" bodyend="124"/>
+      </memberdef>
+      <memberdef kind="function" id="class_simple_p_s_k_1ab409ad90130fdb7fd3f31cf2994ec386" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void SimplePSK::calc_from_psic</definition>
+        <argsstring>(const double &amp;psicIn)</argsstring>
+        <name>calc_from_psic</name>
+        <reimplements refid="class_psk_relation_1ac0d106cc145713dcaac8af85a5747ccb">calc_from_psic</reimplements>
+        <param>
+          <type>const double &amp;</type>
+          <declname>psicIn</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="126" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="126" bodyend="139"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>SimplePSK</label>
+        <link refid="class_simple_p_s_k"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>PskRelation</label>
+        <link refid="class_psk_relation"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>SimplePSK</label>
+        <link refid="class_simple_p_s_k"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>PskRelation</label>
+        <link refid="class_psk_relation"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="106" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="105" bodyend="140"/>
+    <listofallmembers>
+      <member refid="class_simple_p_s_k_1aa909fda2702dabaa48dffdf9ea3e2d4c" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>calc</name></member>
+      <member refid="class_simple_p_s_k_1ab409ad90130fdb7fd3f31cf2994ec386" prot="public" virt="virtual"><scope>SimplePSK</scope><name>calc_from_psic</name></member>
+      <member refid="class_psk_relation_1acd429c272ae68decd203c71acc945b4b" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>calc_Se</name></member>
+      <member refid="class_psk_relation_1af02b9bc46a0aa0e5c835c068303fc4e9" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>dkrn</name></member>
+      <member refid="class_psk_relation_1a23dee4b92bcd95d0f4c740a45507cda3" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>dkrw</name></member>
+      <member refid="class_psk_relation_1ac0fb939909427791167f7e9fdb875bd4" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>dpsic</name></member>
+      <member refid="class_psk_relation_1a4a8163ffde6cbffc32090d68c35841e7" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>dSe_dpsic</name></member>
+      <member refid="class_psk_relation_1a5e6a67004a600bd0c90e569c6e6e2076" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>dSe_dSw</name></member>
+      <member refid="class_psk_relation_1a6a0f012cf857ae0d2ce028f1a8f895f4" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>krn</name></member>
+      <member refid="class_psk_relation_1a707ca7b7fd867bf7385ef2f79ac5bb96" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>krw</name></member>
+      <member refid="class_psk_relation_1af617caae6303510b061b80be4d3a2091" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>psic</name></member>
+      <member refid="class_psk_relation_1a46f5861789f5ca2f5e853beaf718f41f" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>PskRelation</name></member>
+      <member refid="class_psk_relation_1ae315c6c80c12e4f3adec2f8078a57581" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>PskRelation</name></member>
+      <member refid="class_psk_relation_1ad52b5314994defb4cc76ee7d618125d5" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>Se</name></member>
+      <member refid="class_psk_relation_1a30b1846138c6cf1e5d343d19e00ffa8a" prot="public" virt="virtual"><scope>SimplePSK</scope><name>setParams</name></member>
+      <member refid="class_psk_relation_1aaaa9abaee3f4652981a42ef3936c79d1" prot="public" virt="virtual"><scope>SimplePSK</scope><name>setTolerances</name></member>
+      <member refid="class_simple_p_s_k_1aca2ee22ed2e9953a3b812adeb4bd2b59" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>SimplePSK</name></member>
+      <member refid="class_psk_relation_1aa525a6f18f699a45d64aa30da1983c06" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>Sw_max</name></member>
+      <member refid="class_psk_relation_1a6fa349ba17507d00269038a6dbbcd2b9" prot="public" virt="non-virtual"><scope>SimplePSK</scope><name>Sw_min</name></member>
+      <member refid="class_psk_relation_1a88724ddafea3a55efbbb43c8ad73df3e" prot="public" virt="virtual"><scope>SimplePSK</scope><name>~PskRelation</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

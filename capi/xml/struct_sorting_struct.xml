@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="struct_sorting_struct" kind="struct" language="C++" prot="public">
+    <compoundname>SortingStruct</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_sorting_struct_1a0324d98f69ab74ba52afb06ea3871fc2" prot="public" static="no" mutable="no">
+        <type>apf::Vector3</type>
+        <definition>apf::Vector3 SortingStruct::v</definition>
+        <argsstring></argsstring>
+        <name>v</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="923" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="923" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_sorting_struct_1afcd66ea92c8342093ede149911d37475" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double SortingStruct::wm</definition>
+        <argsstring></argsstring>
+        <name>wm</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="924" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="924" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="struct_sorting_struct_1a2afefe49aaa8c498610393b5caa5c2bb" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool SortingStruct::operator&lt;</definition>
+        <argsstring>(const SortingStruct &amp;other) const</argsstring>
+        <name>operator&lt;</name>
+        <param>
+          <type>const <ref refid="struct_sorting_struct" kindref="compound">SortingStruct</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="925" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="925" bodyend="928"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="922" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="921" bodyend="929"/>
+    <listofallmembers>
+      <member refid="struct_sorting_struct_1a2afefe49aaa8c498610393b5caa5c2bb" prot="public" virt="non-virtual"><scope>SortingStruct</scope><name>operator&lt;</name></member>
+      <member refid="struct_sorting_struct_1a0324d98f69ab74ba52afb06ea3871fc2" prot="public" virt="non-virtual"><scope>SortingStruct</scope><name>v</name></member>
+      <member refid="struct_sorting_struct_1afcd66ea92c8342093ede149911d37475" prot="public" virt="non-virtual"><scope>SortingStruct</scope><name>wm</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

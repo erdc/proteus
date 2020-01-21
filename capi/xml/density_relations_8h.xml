@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="density_relations_8h" kind="file" language="C++">
+    <compoundname>densityRelations.h</compoundname>
+    <includedby refid="psk_relations_8h" local="yes">pskRelations.h</includedby>
+    <includedby refid="_subsurface_transport_coefficients_8cpp" local="yes">SubsurfaceTransportCoefficients.cpp</includedby>
+    <includedby refid="twophase_darcy_coefficients_8h" local="yes">twophaseDarcyCoefficients.h</includedby>
+    <invincdepgraph>
+      <node id="2">
+        <label>pskRelations.h</label>
+        <link refid="psk_relations_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>twophaseDarcyCoefficients.h</label>
+        <link refid="twophase_darcy_coefficients_8h"/>
+      </node>
+      <node id="3">
+        <label>SubsurfaceTransportCoefficients.cpp</label>
+        <link refid="_subsurface_transport_coefficients_8cpp"/>
+      </node>
+      <node id="1">
+        <label>densityRelations.h</label>
+        <link refid="density_relations_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="class_density_relation" prot="public">DensityRelation</innerclass>
+    <innerclass refid="class_constant_density" prot="public">ConstantDensity</innerclass>
+    <innerclass refid="class_linear_density" prot="public">LinearDensity</innerclass>
+    <innerclass refid="class_exponential_density" prot="public">ExponentialDensity</innerclass>
+    <innerclass refid="class_real_gas_density" prot="public">RealGasDensity</innerclass>
+    <innerclass refid="class_ideal_gas_density" prot="public">IdealGasDensity</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>DENSITYRELATIONS_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DENSITYRELATIONS_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20" refid="class_density_relation" refkind="compound"><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_density_relation" kindref="compound">DensityRelation</ref></highlight></codeline>
+<codeline lineno="21"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="23" refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" kindref="member">rho</ref>,<ref refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" kindref="member">drho</ref>;</highlight></codeline>
+<codeline lineno="24"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26" refid="class_constant_density" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_constant_density" kindref="compound">ConstantDensity</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="class_density_relation" kindref="compound">DensityRelation</ref></highlight></codeline>
+<codeline lineno="27"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="29" refid="class_constant_density_1a6bf639915d8375e418d2178193f86fce" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_constant_density_1a6bf639915d8375e418d2178193f86fce" kindref="member">rho_0</ref>;</highlight></codeline>
+<codeline lineno="30" refid="class_constant_density_1af12041e95c637078bd91f5bebd021f58" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/><ref refid="class_constant_density_1af12041e95c637078bd91f5bebd021f58" kindref="member">ConstantDensity</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>rwork):</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_constant_density_1a6bf639915d8375e418d2178193f86fce" kindref="member">rho_0</ref>(rwork[0])</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/>{</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" kindref="member">rho</ref>=<ref refid="class_constant_density_1a6bf639915d8375e418d2178193f86fce" kindref="member">rho_0</ref>;</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" kindref="member">drho</ref>=0.0;</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="36" refid="class_constant_density_1af70c76a1802f02fc01e4e01ccf95ad33" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_constant_density_1af70c76a1802f02fc01e4e01ccf95ad33" kindref="member">calc</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>)</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/>{</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" kindref="member">rho</ref>=<ref refid="class_constant_density_1a6bf639915d8375e418d2178193f86fce" kindref="member">rho_0</ref>;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" kindref="member">drho</ref>=0.0;</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="41"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight></codeline>
+<codeline lineno="55" refid="class_linear_density" refkind="compound"><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_linear_density" kindref="compound">LinearDensity</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="class_density_relation" kindref="compound">DensityRelation</ref></highlight></codeline>
+<codeline lineno="56"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="58" refid="class_linear_density_1ad666832b4c410166badbf798e1ae373c" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_linear_density_1ad666832b4c410166badbf798e1ae373c" kindref="member">rho_0</ref>,<ref refid="class_linear_density_1ab47a88818b51d29ae26a202654db699b" kindref="member">psi_0</ref>,<ref refid="class_linear_density_1a18132e0252d744a4c75783d438245856" kindref="member">beta</ref>;</highlight></codeline>
+<codeline lineno="59" refid="class_linear_density_1a119ac6bd3272575a67a4541f8622d0c2" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/><ref refid="class_linear_density_1a119ac6bd3272575a67a4541f8622d0c2" kindref="member">LinearDensity</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>rwork):</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_linear_density_1ad666832b4c410166badbf798e1ae373c" kindref="member">rho_0</ref>(rwork[0]),</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_linear_density_1ab47a88818b51d29ae26a202654db699b" kindref="member">psi_0</ref>(rwork[1]),</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_linear_density_1a18132e0252d744a4c75783d438245856" kindref="member">beta</ref>(rwork[2])</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/>{}</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="65" refid="class_linear_density_1a3b2b0275fbb136c34dcf53d26eee8bc2" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_linear_density_1a3b2b0275fbb136c34dcf53d26eee8bc2" kindref="member">calc</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>)</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/>{</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" kindref="member">rho</ref><sp/>=<sp/><ref refid="class_linear_density_1ad666832b4c410166badbf798e1ae373c" kindref="member">rho_0</ref>*(1.0+<ref refid="class_linear_density_1a18132e0252d744a4c75783d438245856" kindref="member">beta</ref>*(<ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref><sp/>-<sp/><ref refid="class_linear_density_1ab47a88818b51d29ae26a202654db699b" kindref="member">psi_0</ref>));</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" kindref="member">drho</ref><sp/>=<sp/><ref refid="class_linear_density_1a18132e0252d744a4c75783d438245856" kindref="member">beta</ref>*<ref refid="class_linear_density_1ad666832b4c410166badbf798e1ae373c" kindref="member">rho_0</ref>;</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="70"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"></highlight></codeline>
+<codeline lineno="84" refid="class_exponential_density" refkind="compound"><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_exponential_density" kindref="compound">ExponentialDensity</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="class_linear_density" kindref="compound">LinearDensity</ref></highlight></codeline>
+<codeline lineno="85"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="87" refid="class_exponential_density_1aaa5dd647d9754905fa904134a4127bde" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/><ref refid="class_exponential_density_1aaa5dd647d9754905fa904134a4127bde" kindref="member">ExponentialDensity</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>rwork):</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_linear_density" kindref="compound">LinearDensity</ref>(rwork)</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/>{}</highlight></codeline>
+<codeline lineno="90" refid="class_exponential_density_1a48e13ef87e12d1edc36c5166ffeadcf1" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_exponential_density_1a48e13ef87e12d1edc36c5166ffeadcf1" kindref="member">calc</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>)</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/>{</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" kindref="member">rho</ref><sp/>=<sp/><ref refid="class_linear_density_1ad666832b4c410166badbf798e1ae373c" kindref="member">rho_0</ref>*exp(<ref refid="class_linear_density_1a18132e0252d744a4c75783d438245856" kindref="member">beta</ref>*(<ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>-<ref refid="class_linear_density_1ab47a88818b51d29ae26a202654db699b" kindref="member">psi_0</ref>));</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" kindref="member">drho</ref><sp/>=<sp/><ref refid="class_linear_density_1a18132e0252d744a4c75783d438245856" kindref="member">beta</ref>*<ref refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" kindref="member">rho</ref>;</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="95"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"></highlight></codeline>
+<codeline lineno="107" refid="class_real_gas_density" refkind="compound"><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_real_gas_density" kindref="compound">RealGasDensity</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="class_density_relation" kindref="compound">DensityRelation</ref></highlight></codeline>
+<codeline lineno="108"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="110" refid="class_real_gas_density_1a26fef4f4bc52ac26a73a199bfad7e042" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_real_gas_density_1a26fef4f4bc52ac26a73a199bfad7e042" kindref="member">psi_0</ref>,<ref refid="class_real_gas_density_1a0d4fc613764d27e18c467a38e574e297" kindref="member">oneOverZRT</ref>;</highlight></codeline>
+<codeline lineno="111" refid="class_real_gas_density_1a6187424f46be97ab277254888e4fda2d" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/><ref refid="class_real_gas_density_1a6187424f46be97ab277254888e4fda2d" kindref="member">RealGasDensity</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*rwork):</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_real_gas_density_1a26fef4f4bc52ac26a73a199bfad7e042" kindref="member">psi_0</ref>(rwork[0]),</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_real_gas_density_1a0d4fc613764d27e18c467a38e574e297" kindref="member">oneOverZRT</ref>(rwork[1])</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/>{}</highlight></codeline>
+<codeline lineno="115" refid="class_real_gas_density_1a71a46a3c66724984a1accb70d33f401e" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_real_gas_density_1a71a46a3c66724984a1accb70d33f401e" kindref="member">calc</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>)</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/>{</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" kindref="member">rho</ref><sp/>=<sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>*<ref refid="class_real_gas_density_1a0d4fc613764d27e18c467a38e574e297" kindref="member">oneOverZRT</ref>;</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" kindref="member">drho</ref><sp/>=<sp/><ref refid="class_real_gas_density_1a0d4fc613764d27e18c467a38e574e297" kindref="member">oneOverZRT</ref>;</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="120"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight></codeline>
+<codeline lineno="136" refid="class_ideal_gas_density" refkind="compound"><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_ideal_gas_density" kindref="compound">IdealGasDensity</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="class_density_relation" kindref="compound">DensityRelation</ref></highlight></codeline>
+<codeline lineno="137"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="139" refid="class_ideal_gas_density_1a359c0e2cc51249a2e453a1d5287cc139" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_ideal_gas_density_1ab8ce3493ce96c01b1792984bd6426bf2" kindref="member">T</ref>,<ref refid="class_ideal_gas_density_1a0085d0bd334865d3229cc7a25ea009b7" kindref="member">W</ref>,<ref refid="class_ideal_gas_density_1a44456d29ff7c2fecc9017a7d2eeca726" kindref="member">R</ref>,<ref refid="class_ideal_gas_density_1a47e671c6389fae661f1882cf4c786a5a" kindref="member">convFactor</ref>,<ref refid="class_ideal_gas_density_1a359c0e2cc51249a2e453a1d5287cc139" kindref="member">WoverRT</ref>,<ref refid="class_ideal_gas_density_1a6eab2724f7e47cc2683811754d518186" kindref="member">rho0</ref>,<ref refid="class_ideal_gas_density_1ad95845a442f5407bdd856d3bd56b38f1" kindref="member">psi0</ref>;</highlight></codeline>
+<codeline lineno="140" refid="class_ideal_gas_density_1ad589d1f58137cab0d69a53406c138634" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/><ref refid="class_ideal_gas_density_1ad589d1f58137cab0d69a53406c138634" kindref="member">IdealGasDensity</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*rwork):</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_ideal_gas_density_1ab8ce3493ce96c01b1792984bd6426bf2" kindref="member">T</ref>(rwork[0]),</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_ideal_gas_density_1a0085d0bd334865d3229cc7a25ea009b7" kindref="member">W</ref>(rwork[1]),</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_ideal_gas_density_1a44456d29ff7c2fecc9017a7d2eeca726" kindref="member">R</ref>(rwork[2]),</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_ideal_gas_density_1a47e671c6389fae661f1882cf4c786a5a" kindref="member">convFactor</ref>(rwork[3]),</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_ideal_gas_density_1a6eab2724f7e47cc2683811754d518186" kindref="member">rho0</ref>(rwork[4]),</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_ideal_gas_density_1ad95845a442f5407bdd856d3bd56b38f1" kindref="member">psi0</ref>(rwork[5])</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="class_ideal_gas_density_1a359c0e2cc51249a2e453a1d5287cc139" kindref="member">WoverRT</ref><sp/>=<sp/><ref refid="class_ideal_gas_density_1a47e671c6389fae661f1882cf4c786a5a" kindref="member">convFactor</ref>*<ref refid="class_ideal_gas_density_1a0085d0bd334865d3229cc7a25ea009b7" kindref="member">W</ref>/(<ref refid="class_ideal_gas_density_1a44456d29ff7c2fecc9017a7d2eeca726" kindref="member">R</ref>*<ref refid="class_ideal_gas_density_1ab8ce3493ce96c01b1792984bd6426bf2" kindref="member">T</ref>);</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="150" refid="class_ideal_gas_density_1a103f2ada0bc20cac8329094fb5d9d353" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_ideal_gas_density_1a103f2ada0bc20cac8329094fb5d9d353" kindref="member">calc</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>)</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/>{</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" kindref="member">rho</ref><sp/>=<sp/><ref refid="class_ideal_gas_density_1a6eab2724f7e47cc2683811754d518186" kindref="member">rho0</ref><sp/>+<sp/>(<ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>-<ref refid="class_ideal_gas_density_1ad95845a442f5407bdd856d3bd56b38f1" kindref="member">psi0</ref>)*<ref refid="class_ideal_gas_density_1a359c0e2cc51249a2e453a1d5287cc139" kindref="member">WoverRT</ref>;</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" kindref="member">drho</ref><sp/>=<sp/><ref refid="class_ideal_gas_density_1a359c0e2cc51249a2e453a1d5287cc139" kindref="member">WoverRT</ref>;</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="155"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"></highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight></codeline>
+<codeline lineno="159"><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h"/>
+  </compounddef>
+</doxygen>

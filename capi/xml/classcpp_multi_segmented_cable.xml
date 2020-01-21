@@ -1,0 +1,1049 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classcpp_multi_segmented_cable" kind="class" language="C++" prot="public">
+    <compoundname>cppMultiSegmentedCable</compoundname>
+    <includes refid="_prot_ch_moorings_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a9094f4f5a73a7c791a3972e096b511ca" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChSystem &gt;</type>
+        <definition>std::shared_ptr&lt;ChSystem&gt; cppMultiSegmentedCable::system</definition>
+        <argsstring></argsstring>
+        <name>system</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="185" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="185" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a9f8c8812633e7b27948c7536d7dd04b3" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string cppMultiSegmentedCable::beam_type</definition>
+        <argsstring></argsstring>
+        <name>beam_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="186" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="186" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a706ba1763052fa547db27323fa11fe67" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChMaterialSurfaceSMC &gt;</type>
+        <definition>std::shared_ptr&lt;ChMaterialSurfaceSMC&gt; cppMultiSegmentedCable::mysurfmaterial</definition>
+        <argsstring></argsstring>
+        <name>mysurfmaterial</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="187" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="187" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1acda4f06824cb7b1e3bb1fa135af7da5a" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChMesh &gt;</type>
+        <definition>std::shared_ptr&lt;ChMesh&gt; cppMultiSegmentedCable::mesh</definition>
+        <argsstring></argsstring>
+        <name>mesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="188" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="188" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a4af517712014b5681a7eb7f67f7ebea2" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChBody &gt;</type>
+        <definition>std::shared_ptr&lt;ChBody&gt; cppMultiSegmentedCable::fairleadd</definition>
+        <argsstring></argsstring>
+        <name>fairleadd</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="189" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="189" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a7963d1e04163d5cca0bc4d121c7b90d6" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChLinkPointFrame &gt;</type>
+        <definition>std::shared_ptr&lt;ChLinkPointFrame&gt; cppMultiSegmentedCable::fairlead2</definition>
+        <argsstring></argsstring>
+        <name>fairlead2</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="190" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="190" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a083481688ca290d75ecffa6e3d59224d" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt;</type>
+        <definition>std::vector&lt;int&gt; cppMultiSegmentedCable::nb_nodes</definition>
+        <argsstring></argsstring>
+        <name>nb_nodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="191" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="191" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a21ee36eba5d2eea198d108eac5355c05" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt;</type>
+        <definition>std::vector&lt;int&gt; cppMultiSegmentedCable::nb_elems</definition>
+        <argsstring></argsstring>
+        <name>nb_elems</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="192" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="192" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1acd3c58a3d1eda0bdd8014cc93c7db1f4" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppMultiSegmentedCable::mvecs</definition>
+        <argsstring></argsstring>
+        <name>mvecs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="193" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="193" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a467c928fe7ad9f88d08b0ee16b28c8e5" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; <ref refid="classcpp_cable" kindref="compound">cppCable</ref> &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;cppCable&gt; &gt; cppMultiSegmentedCable::cables</definition>
+        <argsstring></argsstring>
+        <name>cables</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="194" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="194" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a436e1388f8332121f6ed72bd155082f4" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChMaterialSurfaceSMC &gt;</type>
+        <definition>std::shared_ptr&lt;ChMaterialSurfaceSMC&gt; cppMultiSegmentedCable::contact_material</definition>
+        <argsstring></argsstring>
+        <name>contact_material</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="195" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="195" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a82abbfa5fa23fd87d22c8d48d76ce6c6" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppMultiSegmentedCable::d</definition>
+        <argsstring></argsstring>
+        <name>d</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="196" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="196" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a13be6356c25ae9b0ef8689bcf0cd9f76" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppMultiSegmentedCable::rho</definition>
+        <argsstring></argsstring>
+        <name>rho</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="197" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="197" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a279b4b6ded4e72affd7c5d5f90f75ed4" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppMultiSegmentedCable::E</definition>
+        <argsstring></argsstring>
+        <name>E</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="198" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="198" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1ac103627bf74950ad2996bad470b692e4" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppMultiSegmentedCable::length</definition>
+        <argsstring></argsstring>
+        <name>length</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="199" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="199" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a4c3c6be121d718378bbf039e2332cb5e" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChNodeFEAxyzD &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChNodeFEAxyzD&gt; &gt; cppMultiSegmentedCable::nodes</definition>
+        <argsstring></argsstring>
+        <name>nodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="200" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="200" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a9e700c0352587492af7221e4d3e8e889" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChNodeFEAxyzDD &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChNodeFEAxyzDD&gt; &gt; cppMultiSegmentedCable::nodesDD</definition>
+        <argsstring></argsstring>
+        <name>nodesDD</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="201" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="201" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a28a4c60a8593bcb2b756226ed6a8bb47" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChNodeFEAxyzrot &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChNodeFEAxyzrot&gt; &gt; cppMultiSegmentedCable::nodesRot</definition>
+        <argsstring></argsstring>
+        <name>nodesRot</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="202" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="202" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a2e296f5381f530355a71d2a885044919" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppMultiSegmentedCable::fluid_velocity</definition>
+        <argsstring></argsstring>
+        <name>fluid_velocity</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="203" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="203" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1aef790051badf9c2d1e2cc2a0927e73d7" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppMultiSegmentedCable::fluid_acceleration</definition>
+        <argsstring></argsstring>
+        <name>fluid_acceleration</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="204" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="204" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1abc1e203de57f5f0c3b4069861684c2e6" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppMultiSegmentedCable::fluid_density</definition>
+        <argsstring></argsstring>
+        <name>fluid_density</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="205" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="205" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a8991a0e8c10c79bd81cf3adb2cbeeaa0" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChElementCableANCF &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChElementCableANCF&gt; &gt; cppMultiSegmentedCable::elemsCableANCF</definition>
+        <argsstring></argsstring>
+        <name>elemsCableANCF</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="206" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="206" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1af91744a7dca6c98edd86513aee560803" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChElementBeamEuler &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChElementBeamEuler&gt; &gt; cppMultiSegmentedCable::elemsBeamEuler</definition>
+        <argsstring></argsstring>
+        <name>elemsBeamEuler</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="207" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="207" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1ae312974cb11fca274a3d42982323820d" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChLinkBase &gt;</type>
+        <definition>std::shared_ptr&lt;ChLinkBase&gt; cppMultiSegmentedCable::constraint_front</definition>
+        <argsstring></argsstring>
+        <name>constraint_front</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="208" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="208" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a68f25bece1742c7e7263733561f7b4af" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChLinkBase &gt;</type>
+        <definition>std::shared_ptr&lt;ChLinkBase&gt; cppMultiSegmentedCable::constraint_back</definition>
+        <argsstring></argsstring>
+        <name>constraint_back</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="209" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="209" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a015774de41a0b2890af46939dfc2fb90" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChVector&lt;double&gt; &gt; &gt; cppMultiSegmentedCable::forces_drag</definition>
+        <argsstring></argsstring>
+        <name>forces_drag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="210" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="210" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a28c8ac48f3845529353c16e52d29e2bb" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChVector&lt;double&gt; &gt; &gt; cppMultiSegmentedCable::forces_addedmass</definition>
+        <argsstring></argsstring>
+        <name>forces_addedmass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="211" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="211" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1ab2b73cdecf662497024dc879e839ab0c" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChBody &gt;</type>
+        <definition>std::shared_ptr&lt;ChBody&gt; cppMultiSegmentedCable::body_back</definition>
+        <argsstring></argsstring>
+        <name>body_back</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="212" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="212" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a3177a183e9fbfc4871a16f37c576321f" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChBody &gt;</type>
+        <definition>std::shared_ptr&lt;ChBody&gt; cppMultiSegmentedCable::body_front</definition>
+        <argsstring></argsstring>
+        <name>body_front</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="213" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="213" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1ae42d565e7ac874815f0b9a133b175ffb" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int cppMultiSegmentedCable::nb_nodes_tot</definition>
+        <argsstring></argsstring>
+        <name>nb_nodes_tot</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="214" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="214" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1ae6cd845f12eda1d6dc4a9d51648c631d" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int cppMultiSegmentedCable::nb_elems_tot</definition>
+        <argsstring></argsstring>
+        <name>nb_elems_tot</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="215" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="215" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1af201a963fc430bc1af30a8846e2236e8" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool cppMultiSegmentedCable::nodes_built</definition>
+        <argsstring></argsstring>
+        <name>nodes_built</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="216" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="216" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a22d67a83519a46ac4aca2c14d00700ec" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool cppMultiSegmentedCable::elems_built</definition>
+        <argsstring></argsstring>
+        <name>elems_built</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="217" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="217" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_multi_segmented_cable_1a15b59debf5423e977015fe8b2f3df409" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool cppMultiSegmentedCable::nodes_chlink</definition>
+        <argsstring></argsstring>
+        <name>nodes_chlink</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="218" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="218" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a1cf6a36708343042a0f546133edae8b8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>cppMultiSegmentedCable::cppMultiSegmentedCable</definition>
+        <argsstring>(std::shared_ptr&lt; ChSystem &gt; system, std::shared_ptr&lt; ChMesh &gt; mesh, std::vector&lt; double &gt; length, std::vector&lt; int &gt; nb_nodes, std::vector&lt; double &gt; d, std::vector&lt; double &gt; rho, std::vector&lt; double &gt; E, std::string beam_type)</argsstring>
+        <name>cppMultiSegmentedCable</name>
+        <param>
+          <type>std::shared_ptr&lt; ChSystem &gt;</type>
+          <declname>system</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; ChMesh &gt;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>length</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt;</type>
+          <declname>nb_nodes</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>d</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>E</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>beam_type</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="219" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="247" bodyend="283"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a37dfbff705d81b363089450631e21bfd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::setFluidVelocityAtNodes</definition>
+        <argsstring>(std::vector&lt; ChVector&lt;&gt;&gt; vel)</argsstring>
+        <name>setFluidVelocityAtNodes</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt;&gt;</type>
+          <declname>vel</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="227" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="415" bodyend="431"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a29263d0a62538e0200d93835d6199835" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::setFluidAccelerationAtNodes</definition>
+        <argsstring>(std::vector&lt; ChVector&lt;&gt;&gt; vel)</argsstring>
+        <name>setFluidAccelerationAtNodes</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt;&gt;</type>
+          <declname>vel</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="228" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="397" bodyend="413"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1aee9fd24463a3659e0996e053db8ee616" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::setFluidDensityAtNodes</definition>
+        <argsstring>(std::vector&lt; double &gt; dens)</argsstring>
+        <name>setFluidDensityAtNodes</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>dens</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="229" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="433" bodyend="449"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1ae633d9fa08df16a5611af5479a4cc824" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::updateDragForces</definition>
+        <argsstring>()</argsstring>
+        <name>updateDragForces</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="230" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="452" bodyend="456"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1ac3ab78a56671b180a6b51893de9a68bb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::updateAddedMassForces</definition>
+        <argsstring>()</argsstring>
+        <name>updateAddedMassForces</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="231" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="458" bodyend="462"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a52cf40f401a6adf81575a302b4076bda" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::applyForces</definition>
+        <argsstring>()</argsstring>
+        <name>applyForces</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="232" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="464" bodyend="468"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a5671ccf8f4b66ab9c0ccfc842f575d3d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt;</type>
+        <definition>std::vector&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt; cppMultiSegmentedCable::getNodalPositions</definition>
+        <argsstring>()</argsstring>
+        <name>getNodalPositions</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="233" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="490" bodyend="501"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a79acfa2d67db5e8169edc49e9d4bdd39" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::buildNodes</definition>
+        <argsstring>()</argsstring>
+        <name>buildNodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="234" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="285" bodyend="310"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1ae9e8b1e70721d11eb0473d0dbf2e7d3f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::buildElements</definition>
+        <argsstring>()</argsstring>
+        <name>buildElements</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="235" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="312" bodyend="338"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1afdfb3cb861ad20d920d194544937cc7e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::buildCable</definition>
+        <argsstring>()</argsstring>
+        <name>buildCable</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="236" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="340" bodyend="395"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a01447f3ea13ed2806e4a9df073c55dad" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::getForceFairlead</definition>
+        <argsstring>()</argsstring>
+        <name>getForceFairlead</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="237" column="8"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a89adba46a5ca149d17d2d8ddf6cb9c82" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::attachBackNodeToBody</definition>
+        <argsstring>(std::shared_ptr&lt; ChBody &gt; body)</argsstring>
+        <name>attachBackNodeToBody</name>
+        <param>
+          <type>std::shared_ptr&lt; ChBody &gt;</type>
+          <declname>body</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="239" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="503" bodyend="518"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a1aeb95036a2d6c2adddef0b961414504" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::attachFrontNodeToBody</definition>
+        <argsstring>(std::shared_ptr&lt; ChBody &gt; body)</argsstring>
+        <name>attachFrontNodeToBody</name>
+        <param>
+          <type>std::shared_ptr&lt; ChBody &gt;</type>
+          <declname>body</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="240" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="520" bodyend="535"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1ab8be84156e7966aaa132bb071d6a5560" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::setContactMaterial</definition>
+        <argsstring>(std::shared_ptr&lt; ChMaterialSurfaceSMC &gt; material)</argsstring>
+        <name>setContactMaterial</name>
+        <param>
+          <type>std::shared_ptr&lt; ChMaterialSurfaceSMC &gt;</type>
+          <declname>material</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="241" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="537" bodyend="539"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a4a2ed6675232463eefc3029cda3ba322" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppMultiSegmentedCable::buildNodesCloud</definition>
+        <argsstring>()</argsstring>
+        <name>buildNodesCloud</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="242" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="541" bodyend="552"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_multi_segmented_cable_1a3e6ce0cc8c2a24a93e969cdfecf65196" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>ChVector</type>
+        <definition>ChVector cppMultiSegmentedCable::getTensionElement</definition>
+        <argsstring>(int i, double eta)</argsstring>
+        <name>getTensionElement</name>
+        <param>
+          <type>int</type>
+          <declname>i</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>eta</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="243" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="470" bodyend="488"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="3">
+        <label>std::shared_ptr&lt; ChVector&lt; double &gt; &gt;</label>
+      </node>
+      <node id="20">
+        <label>std::shared_ptr&lt; ChBeamSectionAdvanced &gt;</label>
+      </node>
+      <node id="7">
+        <label>std::shared_ptr&lt; ChBeamSectionCable &gt;</label>
+      </node>
+      <node id="28">
+        <label>std::vector&lt; double &gt;</label>
+      </node>
+      <node id="27">
+        <label>std::shared_ptr&lt; ChNodeFEAxyzrot &gt;</label>
+      </node>
+      <node id="16">
+        <label>std::vector&lt; std::shared_ptr&lt; ChLoad&lt; MyLoaderTriangular &gt; &gt; &gt;</label>
+        <childnode refid="17" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="10">
+        <label>std::shared_ptr&lt; ChNodeFEAxyzDD &gt;</label>
+      </node>
+      <node id="12">
+        <label>std::vector&lt; std::shared_ptr&lt; ChElementBeamEuler &gt; &gt;</label>
+        <childnode refid="13" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="29">
+        <label>std::shared_ptr&lt; ChMaterialSurfaceSMC &gt;</label>
+      </node>
+      <node id="26">
+        <label>std::vector&lt; std::shared_ptr&lt; ChNodeFEAxyzrot &gt; &gt;</label>
+        <childnode refid="27" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="22">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="24">
+        <label>std::vector&lt; std::shared_ptr&lt; ChElementCableANCF &gt; &gt;</label>
+        <childnode refid="25" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="8">
+        <label>std::shared_ptr&lt; ChSystem &gt;</label>
+      </node>
+      <node id="31">
+        <label>std::shared_ptr&lt; ChLinkBase &gt;</label>
+      </node>
+      <node id="2">
+        <label>std::vector&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt;</label>
+        <childnode refid="3" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="32">
+        <label>std::shared_ptr&lt; ChLinkPointFrame &gt;</label>
+      </node>
+      <node id="13">
+        <label>std::shared_ptr&lt; ChElementBeamEuler &gt;</label>
+      </node>
+      <node id="9">
+        <label>std::vector&lt; std::shared_ptr&lt; ChNodeFEAxyzDD &gt; &gt;</label>
+        <childnode refid="10" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="4">
+        <label>std::vector&lt; std::shared_ptr&lt; cppCable &gt; &gt;</label>
+        <childnode refid="5" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="19">
+        <label>std::shared_ptr&lt; ChLoad&lt; ChLoaderGravity &gt; &gt;</label>
+      </node>
+      <node id="18">
+        <label>std::vector&lt; std::shared_ptr&lt; ChLoad&lt; ChLoaderGravity &gt; &gt; &gt;</label>
+        <childnode refid="19" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="1">
+        <label>cppMultiSegmentedCable</label>
+        <link refid="classcpp_multi_segmented_cable"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>forces_drag</edgelabel>
+          <edgelabel>forces_addedmass</edgelabel>
+        </childnode>
+        <childnode refid="4" relation="usage">
+          <edgelabel>cables</edgelabel>
+        </childnode>
+        <childnode refid="8" relation="usage">
+          <edgelabel>system</edgelabel>
+        </childnode>
+        <childnode refid="9" relation="usage">
+          <edgelabel>nodesDD</edgelabel>
+        </childnode>
+        <childnode refid="11" relation="usage">
+          <edgelabel>mesh</edgelabel>
+        </childnode>
+        <childnode refid="12" relation="usage">
+          <edgelabel>elemsBeamEuler</edgelabel>
+        </childnode>
+        <childnode refid="29" relation="usage">
+          <edgelabel>mysurfmaterial</edgelabel>
+          <edgelabel>contact_material</edgelabel>
+        </childnode>
+        <childnode refid="14" relation="usage">
+          <edgelabel>nodes</edgelabel>
+        </childnode>
+        <childnode refid="23" relation="usage">
+          <edgelabel>fluid_acceleration</edgelabel>
+          <edgelabel>fluid_velocity</edgelabel>
+          <edgelabel>mvecs</edgelabel>
+        </childnode>
+        <childnode refid="21" relation="usage">
+          <edgelabel>beam_type</edgelabel>
+        </childnode>
+        <childnode refid="30" relation="usage">
+          <edgelabel>nb_nodes</edgelabel>
+          <edgelabel>nb_elems</edgelabel>
+        </childnode>
+        <childnode refid="31" relation="usage">
+          <edgelabel>constraint_front</edgelabel>
+          <edgelabel>constraint_back</edgelabel>
+        </childnode>
+        <childnode refid="24" relation="usage">
+          <edgelabel>elemsCableANCF</edgelabel>
+        </childnode>
+        <childnode refid="32" relation="usage">
+          <edgelabel>fairlead2</edgelabel>
+        </childnode>
+        <childnode refid="33" relation="usage">
+          <edgelabel>body_back</edgelabel>
+          <edgelabel>body_front</edgelabel>
+          <edgelabel>fairleadd</edgelabel>
+        </childnode>
+        <childnode refid="26" relation="usage">
+          <edgelabel>nodesRot</edgelabel>
+        </childnode>
+        <childnode refid="28" relation="usage">
+          <edgelabel>E</edgelabel>
+          <edgelabel>rho</edgelabel>
+          <edgelabel>length</edgelabel>
+          <edgelabel>d</edgelabel>
+          <edgelabel>fluid_density</edgelabel>
+        </childnode>
+      </node>
+      <node id="23">
+        <label>std::vector&lt; ChVector&lt;&gt; &gt;</label>
+      </node>
+      <node id="6">
+        <label>cppCable</label>
+        <link refid="classcpp_cable"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>forces_drag</edgelabel>
+          <edgelabel>forces_addedmass</edgelabel>
+        </childnode>
+        <childnode refid="7" relation="usage">
+          <edgelabel>msection_cable</edgelabel>
+        </childnode>
+        <childnode refid="8" relation="usage">
+          <edgelabel>system</edgelabel>
+        </childnode>
+        <childnode refid="9" relation="usage">
+          <edgelabel>nodesDD</edgelabel>
+        </childnode>
+        <childnode refid="11" relation="usage">
+          <edgelabel>mesh</edgelabel>
+        </childnode>
+        <childnode refid="12" relation="usage">
+          <edgelabel>elemsBeamEuler</edgelabel>
+        </childnode>
+        <childnode refid="14" relation="usage">
+          <edgelabel>nodes</edgelabel>
+        </childnode>
+        <childnode refid="16" relation="usage">
+          <edgelabel>elems_loads_triangular</edgelabel>
+        </childnode>
+        <childnode refid="18" relation="usage">
+          <edgelabel>elems_loads_volumetric</edgelabel>
+        </childnode>
+        <childnode refid="20" relation="usage">
+          <edgelabel>msection_advanced</edgelabel>
+        </childnode>
+        <childnode refid="21" relation="usage">
+          <edgelabel>beam_type</edgelabel>
+        </childnode>
+        <childnode refid="23" relation="usage">
+          <edgelabel>fluid_acceleration</edgelabel>
+          <edgelabel>mvecs_tangents</edgelabel>
+          <edgelabel>fluid_velocity</edgelabel>
+          <edgelabel>mvecs</edgelabel>
+          <edgelabel>mvecs_middle</edgelabel>
+          <edgelabel>mdirs</edgelabel>
+        </childnode>
+        <childnode refid="24" relation="usage">
+          <edgelabel>elems_cable</edgelabel>
+          <edgelabel>elemsCableANCF</edgelabel>
+        </childnode>
+        <childnode refid="26" relation="usage">
+          <edgelabel>nodesRot</edgelabel>
+        </childnode>
+        <childnode refid="28" relation="usage">
+          <edgelabel>nodes_density</edgelabel>
+          <edgelabel>elems_length</edgelabel>
+          <edgelabel>length_per_elem</edgelabel>
+          <edgelabel>fluid_density</edgelabel>
+        </childnode>
+      </node>
+      <node id="33">
+        <label>std::shared_ptr&lt; ChBody &gt;</label>
+      </node>
+      <node id="11">
+        <label>std::shared_ptr&lt; ChMesh &gt;</label>
+      </node>
+      <node id="15">
+        <label>std::shared_ptr&lt; ChNodeFEAxyzD &gt;</label>
+      </node>
+      <node id="25">
+        <label>std::shared_ptr&lt; ChElementCableANCF &gt;</label>
+      </node>
+      <node id="30">
+        <label>std::vector&lt; int &gt;</label>
+      </node>
+      <node id="17">
+        <label>std::shared_ptr&lt; ChLoad&lt; MyLoaderTriangular &gt; &gt;</label>
+      </node>
+      <node id="14">
+        <label>std::vector&lt; std::shared_ptr&lt; ChNodeFEAxyzD &gt; &gt;</label>
+        <childnode refid="15" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="21">
+        <label>std::string</label>
+        <childnode refid="22" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>std::shared_ptr&lt; cppCable &gt;</label>
+        <childnode refid="6" relation="usage">
+          <edgelabel>ptr</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="183" column="29" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="183" bodyend="244"/>
+    <listofallmembers>
+      <member refid="classcpp_multi_segmented_cable_1a52cf40f401a6adf81575a302b4076bda" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>applyForces</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a89adba46a5ca149d17d2d8ddf6cb9c82" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>attachBackNodeToBody</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a1aeb95036a2d6c2adddef0b961414504" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>attachFrontNodeToBody</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a9f8c8812633e7b27948c7536d7dd04b3" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>beam_type</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ab2b73cdecf662497024dc879e839ab0c" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>body_back</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a3177a183e9fbfc4871a16f37c576321f" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>body_front</name></member>
+      <member refid="classcpp_multi_segmented_cable_1afdfb3cb861ad20d920d194544937cc7e" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>buildCable</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ae9e8b1e70721d11eb0473d0dbf2e7d3f" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>buildElements</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a79acfa2d67db5e8169edc49e9d4bdd39" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>buildNodes</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a4a2ed6675232463eefc3029cda3ba322" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>buildNodesCloud</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a467c928fe7ad9f88d08b0ee16b28c8e5" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>cables</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a68f25bece1742c7e7263733561f7b4af" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>constraint_back</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ae312974cb11fca274a3d42982323820d" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>constraint_front</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a436e1388f8332121f6ed72bd155082f4" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>contact_material</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a1cf6a36708343042a0f546133edae8b8" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>cppMultiSegmentedCable</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a82abbfa5fa23fd87d22c8d48d76ce6c6" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>d</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a279b4b6ded4e72affd7c5d5f90f75ed4" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>E</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a22d67a83519a46ac4aca2c14d00700ec" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>elems_built</name></member>
+      <member refid="classcpp_multi_segmented_cable_1af91744a7dca6c98edd86513aee560803" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>elemsBeamEuler</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a8991a0e8c10c79bd81cf3adb2cbeeaa0" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>elemsCableANCF</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a7963d1e04163d5cca0bc4d121c7b90d6" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>fairlead2</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a4af517712014b5681a7eb7f67f7ebea2" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>fairleadd</name></member>
+      <member refid="classcpp_multi_segmented_cable_1aef790051badf9c2d1e2cc2a0927e73d7" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>fluid_acceleration</name></member>
+      <member refid="classcpp_multi_segmented_cable_1abc1e203de57f5f0c3b4069861684c2e6" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>fluid_density</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a2e296f5381f530355a71d2a885044919" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>fluid_velocity</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a28c8ac48f3845529353c16e52d29e2bb" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>forces_addedmass</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a015774de41a0b2890af46939dfc2fb90" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>forces_drag</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a01447f3ea13ed2806e4a9df073c55dad" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>getForceFairlead</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a5671ccf8f4b66ab9c0ccfc842f575d3d" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>getNodalPositions</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a3e6ce0cc8c2a24a93e969cdfecf65196" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>getTensionElement</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ac103627bf74950ad2996bad470b692e4" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>length</name></member>
+      <member refid="classcpp_multi_segmented_cable_1acda4f06824cb7b1e3bb1fa135af7da5a" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>mesh</name></member>
+      <member refid="classcpp_multi_segmented_cable_1acd3c58a3d1eda0bdd8014cc93c7db1f4" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>mvecs</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a706ba1763052fa547db27323fa11fe67" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>mysurfmaterial</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a21ee36eba5d2eea198d108eac5355c05" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nb_elems</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ae6cd845f12eda1d6dc4a9d51648c631d" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nb_elems_tot</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a083481688ca290d75ecffa6e3d59224d" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nb_nodes</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ae42d565e7ac874815f0b9a133b175ffb" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nb_nodes_tot</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a4c3c6be121d718378bbf039e2332cb5e" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nodes</name></member>
+      <member refid="classcpp_multi_segmented_cable_1af201a963fc430bc1af30a8846e2236e8" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nodes_built</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a15b59debf5423e977015fe8b2f3df409" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nodes_chlink</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a9e700c0352587492af7221e4d3e8e889" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nodesDD</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a28a4c60a8593bcb2b756226ed6a8bb47" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>nodesRot</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a13be6356c25ae9b0ef8689bcf0cd9f76" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>rho</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ab8be84156e7966aaa132bb071d6a5560" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>setContactMaterial</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a29263d0a62538e0200d93835d6199835" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>setFluidAccelerationAtNodes</name></member>
+      <member refid="classcpp_multi_segmented_cable_1aee9fd24463a3659e0996e053db8ee616" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>setFluidDensityAtNodes</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a37dfbff705d81b363089450631e21bfd" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>setFluidVelocityAtNodes</name></member>
+      <member refid="classcpp_multi_segmented_cable_1a9094f4f5a73a7c791a3972e096b511ca" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>system</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ac3ab78a56671b180a6b51893de9a68bb" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>updateAddedMassForces</name></member>
+      <member refid="classcpp_multi_segmented_cable_1ae633d9fa08df16a5611af5479a4cc824" prot="public" virt="non-virtual"><scope>cppMultiSegmentedCable</scope><name>updateDragForces</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

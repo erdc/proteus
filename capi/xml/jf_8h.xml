@@ -1,0 +1,829 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="jf_8h" kind="file" language="C++">
+    <compoundname>jf.h</compoundname>
+    <includes local="no">math.h</includes>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">conio.h</includes>
+    <includes local="no">stdlib.h</includes>
+    <includes local="no">string.h</includes>
+    <incdepgraph>
+      <node id="5">
+        <label>stdlib.h</label>
+      </node>
+      <node id="4">
+        <label>conio.h</label>
+      </node>
+      <node id="6">
+        <label>string.h</label>
+      </node>
+      <node id="1">
+        <label>jf.h</label>
+        <link refid="jf_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>math.h</label>
+      </node>
+      <node id="3">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="jf_8h_1a9382b15380bf4f6adaafd94f1c78991a" prot="public" static="no">
+        <name>ANSI</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="2" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="2" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a4ae508a8d305b460df210d2a0c2a5574" prot="public" static="no">
+        <name>D</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>printf(&quot; &quot;#x&quot;:%&quot;#y, x)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="9" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="9" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1aca8e760d9a3b42aea53b27b77a8063bd" prot="public" static="no">
+        <name>Diag</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>if(diagon==&apos;y&apos;) {fprintf(diag,&quot;\n&quot; #x&quot;\t%&quot;#y&quot;\t&quot;, x); fflush(diag);}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="10" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="10" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a79a216ce90fb93dffda7cc8eff149e2e" prot="public" static="no">
+        <name>Diag_Maple</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>fprintf(diag,&quot;\n\# &quot;#x&quot; = %&quot;#y&quot;;&quot;, x);</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="11" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="11" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a0ba7ea6f8f923405f971e6288ba483fa" prot="public" static="no">
+        <name>For</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <param><defname>z</defname></param>
+        <initializer>for((x)=(y);(x)&lt;=(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>);(x)++)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="12" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="12" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1ae9cc0218e3d4fc195253999ebcd6c89f" prot="public" static="no">
+        <name>Write</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <param><defname>z</defname></param>
+        <initializer>fprintf(out,&quot;\n&quot; #x&quot; %&quot;#<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>&quot; &quot;,y)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="14" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="14" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a665602667543592b4547008b72a9631b" prot="public" static="no">
+        <name>print</name>
+        <param><defname>y</defname></param>
+        <param><defname>z</defname></param>
+        <initializer><ref refid="jf_8h_1ae9cc0218e3d4fc195253999ebcd6c89f" kindref="member">Write</ref>( ,y,<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="15" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="15" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" prot="public" static="no">
+        <name>nl</name>
+        <param><defname>x</defname></param>
+        <initializer>fprintf((x),&quot;\n&quot;)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="17" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1aa7925060b3dec2f91a492a96d399dbe7" prot="public" static="no">
+        <name>Heading</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>fprintf((x),&quot;\n\n&quot; #y &quot;\n&quot;)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="18" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="18" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a0e8f37798f356d214d24b093af742078" prot="public" static="no">
+        <name>Asterisks</name>
+        <param><defname>x</defname></param>
+        <initializer><ref refid="jf_8h_1a0ba7ea6f8f923405f971e6288ba483fa" kindref="member">For</ref>(i,0,72)fprintf(x,&quot;*&quot;)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="20" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a63f410abde93141c9013b7d3f3971738" prot="public" static="no">
+        <name>c</name>
+        <param><defname>i</defname></param>
+        <initializer>putchar(i)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="21" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="21" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a903054ae14c61b1d440291818185c51c" prot="public" static="no">
+        <name>w</name>
+        <param><defname>x</defname></param>
+        <initializer>fprintf(results,#x)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="22" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="22" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a8ed7b83d132a542e57a2b1b6cac74aad" prot="public" static="no">
+        <name>pf</name>
+        <param><defname>x</defname></param>
+        <initializer>printf(&quot;%8.5g&quot;,x)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="23" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1ab0701802d11479a6ce440168aadb64ee" prot="public" static="no">
+        <name>pd</name>
+        <param><defname>x</defname></param>
+        <initializer>printf(&quot;%ld&quot;,x)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="24" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1aef2ba1325e2079c9f337e29cd2d32e42" prot="public" static="no">
+        <name>Readtext</name>
+        <param><defname>stream</defname></param>
+        <param><defname>x</defname></param>
+        <initializer>fgets(x,400,stream); x[strlen(x)-1] = &apos;\0&apos;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="26" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1afa1bd0bee0104130e080df12e48530a6" prot="public" static="no">
+        <name>Readtab</name>
+        <param><defname>x</defname></param>
+        <initializer>fscanf(in,&quot;%[^\t]%*<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>&quot;,x);</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="27" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a62f51fe2ffd96f75285d1da18e1ce809" prot="public" static="no">
+        <name>Skip</name>
+        <param><defname>stream</defname></param>
+        <initializer>fgets(dummy,400,stream)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="29" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a8766245173341b79a3660aae671a9a1a" prot="public" static="no">
+        <name>Read</name>
+        <param><defname>stream</defname></param>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>{fscanf(stream,&quot;%&quot;#y, &amp;x);<ref refid="jf_8h_1a62f51fe2ffd96f75285d1da18e1ce809" kindref="member">Skip</ref>(stream);}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="30" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a314a162db9200b2cf06c4d9596236f6e" prot="public" static="no">
+        <name>endfile</name>
+        <param><defname>x</defname></param>
+        <initializer>if(feof(x)) break</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="32" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a32eb30766e35fbe01fb8bb99869efe99" prot="public" static="no">
+        <name>pause</name>
+        <param><defname>x</defname></param>
+        <initializer>{printf(&quot;\nPaused: &quot; x); fgetchar();}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="34" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1ac2bbd6d630a06a980d9a92ddb9a49928" prot="public" static="no">
+        <name>IN</name>
+        <initializer>fscanf(in,</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="36" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1aec78e7a9e90a406a56f859ee456e8eae" prot="public" static="no">
+        <name>OUT</name>
+        <initializer>fprintf(out,</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="37" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1ad2390c07b2f83f490ae971a3fdc0c18b" prot="public" static="no">
+        <name>DIAG</name>
+        <initializer>fprintf(diag,</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="38" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a7de8a5ba14702b7bf2f6558903b1d3fb" prot="public" static="no">
+        <name>SCREEN</name>
+        <initializer>fprintf(stdout,</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="39" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1ab6a332ee63b38040c79035210d9d4388" prot="public" static="no">
+        <name>RESULTS</name>
+        <initializer>fprintf(results,</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="40" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a29fd18bed01c4d836c7ebfe73a125c3f" prot="public" static="no">
+        <name>END</name>
+        <initializer>);</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="42" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="42" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a217f160a6a4ec785ca13c65f1789350a" prot="public" static="no">
+        <name>sign</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>(fabs(x) * fabs(y)/y)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="44" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a22a217169c2d5eb475dca6470b67b98b" prot="public" static="no">
+        <name>Sign</name>
+        <param><defname>x</defname></param>
+        <initializer>(x &gt; 0. ? 1. : -1.)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="45" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1afa85674f034d00d641e579588a123444" prot="public" static="no">
+        <name>iff</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>if(strcmp(x,#y)==0)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="47" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a59b7f5ca5a9ab9b824b4bbb84932ffe9" prot="public" static="no">
+        <name>Screenfull</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>if((x) % ((y)+1) == (y)) <ref refid="jf_8h_1a32eb30766e35fbe01fb8bb99869efe99" kindref="member">pause</ref></initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="48" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a1daf785e3f68d293c7caa1c756d5cb74" prot="public" static="no">
+        <name>pi</name>
+        <initializer>3.14159265358979324</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="50" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1a7ee9b0300024a84770cae07dab6c13de" prot="public" static="no">
+        <name>twopi</name>
+        <initializer>6.2831853071795864769</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="51" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1affe776513b24d84b39af8ab0930fef7f" prot="public" static="no">
+        <name>max</name>
+        <param><defname>a</defname></param>
+        <param><defname>b</defname></param>
+        <initializer>(((a) &gt; (b)) ? (a) : (b))</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="70" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="jf_8h_1ac6afabdc09a49a433ee19d8a9486056d" prot="public" static="no">
+        <name>min</name>
+        <param><defname>a</defname></param>
+        <param><defname>b</defname></param>
+        <initializer>(((a) &lt; (b)) ? (a) : (b))</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="71" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="jf_8h_1ab9bc575e27ee8457ba5d091795ebec7b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int *</type>
+        <definition>int* ivector</definition>
+        <argsstring>(long, long)</argsstring>
+        <name>ivector</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="53" column="5"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1a3f645d89159feb42be03ee5376bbca5a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int **</type>
+        <definition>int ** imatrix</definition>
+        <argsstring>(long, long, long, long)</argsstring>
+        <name>imatrix</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="53" column="14" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="53" declcolumn="14"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1ae23a0d6d877c7c5229bf751cc492e68d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>char *</type>
+        <definition>char * cvector</definition>
+        <argsstring>(long, long)</argsstring>
+        <name>cvector</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="54" column="6" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="63" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1ac72a6897cd20ce6ce4037d9c0b766c2a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>char **</type>
+        <definition>char ** cmatrix</definition>
+        <argsstring>(long, long, long, long)</argsstring>
+        <name>cmatrix</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="54" column="15" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="54" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>float *</type>
+        <definition>float* vector</definition>
+        <argsstring>(long, long)</argsstring>
+        <name>vector</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="58" column="6" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="58" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1a54fcb3c713c2cbe6a3b6d926c160cda9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>float **</type>
+        <definition>float** matrix</definition>
+        <argsstring>(long, long, long, long)</argsstring>
+        <name>matrix</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="59" column="7" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="59" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1a8a6ca5ee81abe6eeb5fd60d65eff6252" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>unsigned long *</type>
+        <definition>unsigned long* lvector</definition>
+        <argsstring>(long, long)</argsstring>
+        <name>lvector</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="60" column="15" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="60" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1ac11333a76682708c45d14ddc96e6e87a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double *</type>
+        <definition>double* dvector</definition>
+        <argsstring>(long, long)</argsstring>
+        <name>dvector</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="62" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="7" bodyend="14" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="62" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1ab23b5f7c992e00e3c86fa07da3d6dbaa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double **</type>
+        <definition>double** dmatrix</definition>
+        <argsstring>(long, long, long, long)</argsstring>
+        <name>dmatrix</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="64" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="16" bodyend="36" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="64" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1a11d41dd27e19e57da553427da53e2d08" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_ivector</definition>
+        <argsstring>(int *, long, long)</argsstring>
+        <name>free_ivector</name>
+        <param>
+          <type>int *</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="65" column="6" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="65" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1a0b6c4a598bce503def87e7ed7427ded8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_dvector</definition>
+        <argsstring>(double *, long, long)</argsstring>
+        <name>free_dvector</name>
+        <param>
+          <type>double *</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="66" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="38" bodyend="42" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="66" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1a03baec40a67aa702d3b78f95df4baf71" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_lvector</definition>
+        <argsstring>(unsigned long *, long, long)</argsstring>
+        <name>free_lvector</name>
+        <param>
+          <type>unsigned long *</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="67" column="6" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="67" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="jf_8h_1a4b2fa0a1a95473a82c3a16acd549f6af" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_dmatrix</definition>
+        <argsstring>(double **, long, long, long, long)</argsstring>
+        <name>free_dmatrix</name>
+        <param>
+          <type>double **</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" line="68" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="44" bodyend="49" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h" declline="68" declcolumn="6"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">//<sp/>This<sp/>is<sp/>C:/JF/Software/Cpp/Include/jf.h</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2" refid="jf_8h_1a9382b15380bf4f6adaafd94f1c78991a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ANSI</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;conio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;string.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9" refid="jf_8h_1a4ae508a8d305b460df210d2a0c2a5574" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>D(x,y)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(&quot;<sp/>&quot;#x&quot;:%&quot;#y,<sp/>x)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10" refid="jf_8h_1aca8e760d9a3b42aea53b27b77a8063bd" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Diag(x,y)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>if(diagon==&apos;y&apos;)<sp/>{fprintf(diag,&quot;\n&quot;<sp/>#x&quot;\t%&quot;#y&quot;\t&quot;,<sp/>x);<sp/>fflush(diag);}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11" refid="jf_8h_1a79a216ce90fb93dffda7cc8eff149e2e" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Diag_Maple(x,y)<sp/>fprintf(diag,&quot;\n\#<sp/>&quot;#x&quot;<sp/>=<sp/>%&quot;#y&quot;;&quot;,<sp/>x);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12" refid="jf_8h_1a0ba7ea6f8f923405f971e6288ba483fa" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>For(x,y,z)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>for((x)=(y);(x)&lt;=(z);(x)++)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight></codeline>
+<codeline lineno="14" refid="jf_8h_1ae9cc0218e3d4fc195253999ebcd6c89f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Write(x,y,z)<sp/><sp/><sp/><sp/>fprintf(out,&quot;\n&quot;<sp/>#x&quot;<sp/>%&quot;#z&quot;<sp/>&quot;,y)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15" refid="jf_8h_1a665602667543592b4547008b72a9631b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>print(y,z)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Write(<sp/>,y,z)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17" refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>nl(x)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf((x),&quot;\n&quot;)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18" refid="jf_8h_1aa7925060b3dec2f91a492a96d399dbe7" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Heading(x,y)<sp/><sp/><sp/><sp/>fprintf((x),&quot;\n\n&quot;<sp/>#y<sp/>&quot;\n&quot;)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20" refid="jf_8h_1a0e8f37798f356d214d24b093af742078" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Asterisks(x)<sp/><sp/><sp/><sp/>For(i,0,72)fprintf(x,&quot;*&quot;)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21" refid="jf_8h_1a63f410abde93141c9013b7d3f3971738" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>c(i)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>putchar(i)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22" refid="jf_8h_1a903054ae14c61b1d440291818185c51c" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>w(x)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(results,#x)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23" refid="jf_8h_1a8ed7b83d132a542e57a2b1b6cac74aad" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>pf(x)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(&quot;%8.5g&quot;,x)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24" refid="jf_8h_1ab0701802d11479a6ce440168aadb64ee" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>pd(x)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(&quot;%ld&quot;,x)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26" refid="jf_8h_1aef2ba1325e2079c9f337e29cd2d32e42" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Readtext(stream,x)<sp/><sp/><sp/><sp/><sp/><sp/>fgets(x,400,stream);<sp/>x[strlen(x)-1]<sp/>=<sp/>&apos;\0&apos;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27" refid="jf_8h_1afa1bd0bee0104130e080df12e48530a6" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Readtab(x)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fscanf(in,&quot;%[^\t]%*c&quot;,x);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight></codeline>
+<codeline lineno="29" refid="jf_8h_1a62f51fe2ffd96f75285d1da18e1ce809" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Skip(stream)<sp/><sp/><sp/><sp/>fgets(dummy,400,stream)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30" refid="jf_8h_1a8766245173341b79a3660aae671a9a1a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Read(stream,x,y)<sp/>{fscanf(stream,&quot;%&quot;#y,<sp/>&amp;x);Skip(stream);}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32" refid="jf_8h_1a314a162db9200b2cf06c4d9596236f6e" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>endfile(x)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>if(feof(x))<sp/>break</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+<codeline lineno="34" refid="jf_8h_1a32eb30766e35fbe01fb8bb99869efe99" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>pause(x)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{printf(&quot;\nPaused:<sp/>&quot;<sp/>x);<sp/>fgetchar();}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36" refid="jf_8h_1ac2bbd6d630a06a980d9a92ddb9a49928" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IN<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fscanf(in,</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37" refid="jf_8h_1aec78e7a9e90a406a56f859ee456e8eae" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>OUT<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(out,</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38" refid="jf_8h_1ad2390c07b2f83f490ae971a3fdc0c18b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DIAG<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(diag,</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="39" refid="jf_8h_1a7de8a5ba14702b7bf2f6558903b1d3fb" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCREEN<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(stdout,</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40" refid="jf_8h_1ab6a332ee63b38040c79035210d9d4388" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>RESULTS<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(results,</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight></codeline>
+<codeline lineno="42" refid="jf_8h_1a29fd18bed01c4d836c7ebfe73a125c3f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>END<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44" refid="jf_8h_1a217f160a6a4ec785ca13c65f1789350a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>sign(x,y)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(fabs(x)<sp/>*<sp/>fabs(y)/y)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45" refid="jf_8h_1a22a217169c2d5eb475dca6470b67b98b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Sign(x)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(x<sp/>&gt;<sp/>0.<sp/>?<sp/>1.<sp/>:<sp/>-1.)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight></codeline>
+<codeline lineno="47" refid="jf_8h_1afa85674f034d00d641e579588a123444" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>iff(x,y)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>if(strcmp(x,#y)==0)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="48" refid="jf_8h_1a59b7f5ca5a9ab9b824b4bbb84932ffe9" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Screenfull(x,y)<sp/>if((x)<sp/>%<sp/>((y)+1)<sp/>==<sp/>(y))<sp/>pause</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight></codeline>
+<codeline lineno="50" refid="jf_8h_1a1daf785e3f68d293c7caa1c756d5cb74" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>pi<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>3.14159265358979324</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="51" refid="jf_8h_1a7ee9b0300024a84770cae07dab6c13de" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>twopi<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>6.2831853071795864769</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*<ref refid="jf_8h_1ab9bc575e27ee8457ba5d091795ebec7b" kindref="member">ivector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">),<sp/>**<ref refid="jf_8h_1a3f645d89159feb42be03ee5376bbca5a" kindref="member">imatrix</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*<ref refid="jf_8h_1ae23a0d6d877c7c5229bf751cc492e68d" kindref="member">cvector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">),<sp/>**<ref refid="jf_8h_1ac72a6897cd20ce6ce4037d9c0b766c2a" kindref="member">cmatrix</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight><highlight class="comment">//complex&lt;double&gt;<sp/>*complex_vector(long,<sp/>long);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*<ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>**<ref refid="jf_8h_1a54fcb3c713c2cbe6a3b6d926c160cda9" kindref="member">matrix</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>*<ref refid="jf_8h_1a8a6ca5ee81abe6eeb5fd60d65eff6252" kindref="member">lvector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="jf_8h_1ac11333a76682708c45d14ddc96e6e87a" kindref="member">dvector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*<ref refid="jf_8h_1ae23a0d6d877c7c5229bf751cc492e68d" kindref="member">cvector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**<ref refid="jf_8h_1ab23b5f7c992e00e3c86fa07da3d6dbaa" kindref="member">dmatrix</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a11d41dd27e19e57da553427da53e2d08" kindref="member">free_ivector</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a0b6c4a598bce503def87e7ed7427ded8" kindref="member">free_dvector</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a03baec40a67aa702d3b78f95df4baf71" kindref="member">free_lvector</ref>(</highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>*,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a4b2fa0a1a95473a82c3a16acd549f6af" kindref="member">free_dmatrix</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight></codeline>
+<codeline lineno="70" refid="jf_8h_1affe776513b24d84b39af8ab0930fef7f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>max(a,b)<sp/><sp/><sp/><sp/>(((a)<sp/>&gt;<sp/>(b))<sp/>?<sp/>(a)<sp/>:<sp/>(b))</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="71" refid="jf_8h_1ac6afabdc09a49a433ee19d8a9486056d" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>min(a,b)<sp/><sp/><sp/><sp/>(((a)<sp/>&lt;<sp/>(b))<sp/>?<sp/>(a)<sp/>:<sp/>(b))</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/jf.h"/>
+  </compounddef>
+</doxygen>

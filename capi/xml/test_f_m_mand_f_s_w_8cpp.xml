@@ -1,0 +1,201 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="test_f_m_mand_f_s_w_8cpp" kind="file" language="C++">
+    <compoundname>testFMMandFSW.cpp</compoundname>
+    <includes local="no">iostream</includes>
+    <includes local="no">algorithm</includes>
+    <includes local="no">vector</includes>
+    <includes local="no">valarray</includes>
+    <includes local="no">map</includes>
+    <includes local="yes">FMMandFSW.h</includes>
+    <incdepgraph>
+      <node id="5">
+        <label>valarray</label>
+      </node>
+      <node id="6">
+        <label>map</label>
+      </node>
+      <node id="7">
+        <label>FMMandFSW.h</label>
+      </node>
+      <node id="4">
+        <label>vector</label>
+      </node>
+      <node id="1">
+        <label>testFMMandFSW.cpp</label>
+        <link refid="test_f_m_mand_f_s_w_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>iostream</label>
+      </node>
+      <node id="3">
+        <label>algorithm</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="test_f_m_mand_f_s_w_8cpp_1af2d8f5c7beb781a847dc0f33fbdca44b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double pos</definition>
+        <argsstring>(double a)</argsstring>
+        <name>pos</name>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/tests/testFMMandFSW.cpp" line="8" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/tests/testFMMandFSW.cpp" bodystart="8" bodyend="9"/>
+      </memberdef>
+      <memberdef kind="function" id="test_f_m_mand_f_s_w_8cpp_1ac3677d4f31619f3d83c4eced0661202d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double neg</definition>
+        <argsstring>(double a)</argsstring>
+        <name>neg</name>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/tests/testFMMandFSW.cpp" line="10" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/tests/testFMMandFSW.cpp" bodystart="10" bodyend="11"/>
+      </memberdef>
+      <memberdef kind="function" id="test_f_m_mand_f_s_w_8cpp_1ae66f6b31b5ad750f1fe042a706a4e3d4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int main</definition>
+        <argsstring>()</argsstring>
+        <name>main</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/tests/testFMMandFSW.cpp" line="13" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/tests/testFMMandFSW.cpp" bodystart="13" bodyend="97"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;iostream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;algorithm&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;valarray&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;map&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;FMMandFSW.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight></codeline>
+<codeline lineno="8" refid="test_f_m_mand_f_s_w_8cpp_1af2d8f5c7beb781a847dc0f33fbdca44b" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="test_f_m_mand_f_s_w_8cpp_1af2d8f5c7beb781a847dc0f33fbdca44b" kindref="member">pos</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>a)</highlight></codeline>
+<codeline lineno="9"><highlight class="normal">{</highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>std::max&lt;double&gt;(a,0.0);}</highlight></codeline>
+<codeline lineno="10" refid="test_f_m_mand_f_s_w_8cpp_1ac3677d4f31619f3d83c4eced0661202d" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="test_f_m_mand_f_s_w_8cpp_1ac3677d4f31619f3d83c4eced0661202d" kindref="member">neg</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>a)</highlight></codeline>
+<codeline lineno="11"><highlight class="normal">{</highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>std::min&lt;double&gt;(a,0.0);}</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13" refid="test_f_m_mand_f_s_w_8cpp_1ae66f6b31b5ad750f1fe042a706a4e3d4" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="test_f_m_mand_f_s_w_8cpp_1ae66f6b31b5ad750f1fe042a706a4e3d4" kindref="member">main</ref>()</highlight></codeline>
+<codeline lineno="14"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">std;</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nx<sp/>=<sp/>11;</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>Lx<sp/>=<sp/>1.0;<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>dx<sp/>=<sp/>Lx/(nx-1);</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><ref refid="struct_mesh" kindref="compound">Mesh</ref><sp/>mesh;</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;creating<sp/>mesh<sp/>nx=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;nx&lt;&lt;</highlight><highlight class="stringliteral">&quot;<sp/>Lx=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;Lx&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1ga509a95e0124b5fdd0a7cd09574cb5e30" kindref="member">initializeMesh</ref>(mesh);</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1gabc239fca1803721a81b882c99fc8a817" kindref="member">edgeMeshElements</ref>(nx,mesh);</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1ga2dcef8d6600302d66dcc2a7261e5e506" kindref="member">regularEdgeMeshNodes</ref>(nx,Lx,mesh);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1ga0ca99f07f47c3775a54c126aa5b1cace" kindref="member">constructElementBoundaryElementsArray_edge</ref>(mesh);</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;creating<sp/>FMMEikonalSolver1d<sp/>...<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/>FMMEikonalSolver1d<sp/>fmm(&amp;mesh);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//try<sp/>redistancing<sp/>from<sp/>1d<sp/>circle</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>xc<sp/>=<sp/>0.5;<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>radius<sp/>=<sp/>0.1;</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/>std::valarray&lt;double&gt;<sp/>phi0(nx),<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>(nx);</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nN<sp/>=<sp/>0;<sp/>nN<sp/>&lt;<sp/>mesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;<sp/>nN++)</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>x<sp/>=<sp/>mesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>[nN*3+0];<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>d2<sp/>=<sp/>(x-xc)*(x-xc)<sp/>-<sp/>radius*radius;</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>phi0[nN]<sp/>=<sp/>d2;</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;phi0<sp/>:&quot;</highlight><highlight class="normal">&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nN<sp/>=<sp/>0;<sp/>nN<sp/>&lt;<sp/>mesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;<sp/>nN++)</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;x=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;mesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>[nN*3+0]&lt;&lt;</highlight><highlight class="stringliteral">&quot;<sp/>phi[&quot;</highlight><highlight class="normal">&lt;&lt;nN&lt;&lt;</highlight><highlight class="stringliteral">&quot;]<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;phi0[nN]&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>zeroTol=1.0e-4;<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>trialTol<sp/>=<sp/>1.0e-1;<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>verbose<sp/>=<sp/>10;</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;&quot;initializingKnownPointsUsingMagnitude<sp/><sp/>...&quot;&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>fmm.initializeKnownPointsUsingMagnitude(&amp;phi0[0],&amp;T[0],zeroTol,verbose);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;&quot;Known=<sp/>&quot;&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::copy(fmm.Known.begin(),fmm.Known.end(),std::ostream_iterator&lt;int&gt;(std::cout,&quot;<sp/>,<sp/>&quot;));</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;&quot;T=<sp/>&quot;&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::copy(&amp;T[0],&amp;T[0]+nx,std::ostream_iterator&lt;double&gt;(std::cout,&quot;<sp/>,<sp/>&quot;));</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;&quot;initializingKnownPointsUsingFront<sp/><sp/>...&quot;&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>fmm.initializeKnownPointsUsingFrontIntersection(&amp;phi0[0],&amp;T[0],zeroTol,verbose);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;&quot;Known=<sp/>&quot;&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::copy(fmm.Known.begin(),fmm.Known.end(),std::ostream_iterator&lt;int&gt;(std::cout,&quot;<sp/>,<sp/>&quot;));</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;&quot;T=<sp/>&quot;&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::copy(&amp;T[0],&amp;T[0]+nx,std::ostream_iterator&lt;double&gt;(std::cout,&quot;<sp/>,<sp/>&quot;));</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//typedef<sp/>double<sp/>(*PF)(double);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//PF<sp/>pf<sp/>=<sp/>pos;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/>std::valarray&lt;double&gt;<sp/>phi0p<sp/>=<sp/>phi0.apply(<ref refid="test_f_m_mand_f_s_w_8cpp_1af2d8f5c7beb781a847dc0f33fbdca44b" kindref="member">pos</ref>);</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//pf<sp/><sp/><sp/><sp/>=<sp/>neg;<sp/></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/>std::valarray&lt;double&gt;<sp/>phi0m<sp/>=<sp/>phi0.apply(<ref refid="test_f_m_mand_f_s_w_8cpp_1ac3677d4f31619f3d83c4eced0661202d" kindref="member">neg</ref>);</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/>std::valarray&lt;double&gt;<sp/>Tp(<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>);</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/>std::valarray&lt;double&gt;<sp/>Tm(<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>);</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/>std::valarray&lt;double&gt;<sp/>nodalSpeeds(1.0,nx);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"></highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/>fmm.solve(&amp;phi0p[0],&amp;nodalSpeeds[0],&amp;Tp[0],zeroTol,trialTol,verbose);</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;phi0p=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/>std::copy(&amp;phi0p[0],&amp;phi0p[0]+nx,std::ostream_iterator&lt;double&gt;(std::cout,</highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>&quot;</highlight><highlight class="normal">));</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Tp=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/>std::copy(&amp;Tp[0],&amp;Tp[0]+nx,std::ostream_iterator&lt;double&gt;(std::cout,</highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>&quot;</highlight><highlight class="normal">));</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/>fmm.solve(&amp;phi0m[0],&amp;nodalSpeeds[0],&amp;Tm[0],zeroTol,trialTol,verbose);</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;phi0m=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/>std::copy(&amp;phi0m[0],&amp;phi0m[0]+nx,std::ostream_iterator&lt;double&gt;(std::cout,</highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>&quot;</highlight><highlight class="normal">));</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Tm=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/>std::copy(&amp;Tm[0],&amp;Tm[0]+nx,std::ostream_iterator&lt;double&gt;(std::cout,</highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>&quot;</highlight><highlight class="normal">));</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"></highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref><sp/>=<sp/>Tp<sp/>-<sp/>Tm;</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;T=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/>std::copy(&amp;<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>[0],&amp;<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>[0]+nx,std::ostream_iterator&lt;double&gt;(std::cout,</highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>&quot;</highlight><highlight class="normal">));</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/>std::cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;cleaning<sp/>up&quot;</highlight><highlight class="normal">&lt;&lt;std::endl;</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1ga137e5d0abd63a35938eb82b9f6cc4a62" kindref="member">deleteMesh</ref>(mesh);</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0;</highlight></codeline>
+<codeline lineno="97"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/tests/testFMMandFSW.cpp"/>
+  </compounddef>
+</doxygen>

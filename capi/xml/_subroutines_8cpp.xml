@@ -1,0 +1,453 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_subroutines_8cpp" kind="file" language="C++">
+    <compoundname>Subroutines.cpp</compoundname>
+    <includes local="no">math.h</includes>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">string.h</includes>
+    <includes local="yes">ncurses/curses.h</includes>
+    <includes refid="_headers_8h" local="yes">Headers.h</includes>
+    <incdepgraph>
+      <node id="1">
+        <label>Subroutines.cpp</label>
+        <link refid="_subroutines_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>ncurses/curses.h</label>
+      </node>
+      <node id="4">
+        <label>string.h</label>
+      </node>
+      <node id="2">
+        <label>math.h</label>
+      </node>
+      <node id="6">
+        <label>Headers.h</label>
+        <link refid="_headers_8h"/>
+      </node>
+      <node id="3">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="_subroutines_8cpp_1afa85674f034d00d641e579588a123444" prot="public" static="no">
+        <name>iff</name>
+        <param><defname>x</defname></param>
+        <param><defname>y</defname></param>
+        <initializer>if(strcmp(x,#y)==0)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="9" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" bodystart="9" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" prot="public" static="no">
+        <name>pi</name>
+        <initializer>3.14159265358979324</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="10" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" bodystart="10" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_subroutines_8cpp_1a91adff1610bdf681555a8f2e330dc963" prot="public" static="no">
+        <name>Int</name>
+        <initializer>extern int</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="12" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" bodystart="12" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_subroutines_8cpp_1ab255c8e32d555c305816584a4578d1b3" prot="public" static="no">
+        <name>Double</name>
+        <initializer>extern double</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="13" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" prot="public" static="no" mutable="no">
+        <type>char</type>
+        <definition>char Case[]</definition>
+        <argsstring>[]</argsstring>
+        <name>Case</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="20" column="12" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" declline="20" declcolumn="12"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_subroutines_8cpp_1ac11333a76682708c45d14ddc96e6e87a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double *</type>
+        <definition>double* dvector</definition>
+        <argsstring>(long, long)</argsstring>
+        <name>dvector</name>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="15" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="7" bodyend="14" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" declline="15" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="_subroutines_8cpp_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double **</type>
+        <definition>double** dmatrix</definition>
+        <argsstring>(long nrl, long nrh, long ncl, long nch)</argsstring>
+        <name>dmatrix</name>
+        <param>
+          <type>long</type>
+          <declname>nrl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrh</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>ncl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nch</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="16" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="16" bodyend="36" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" declline="16" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="_subroutines_8cpp_1a0b6c4a598bce503def87e7ed7427ded8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_dvector</definition>
+        <argsstring>(double *, long, long)</argsstring>
+        <name>free_dvector</name>
+        <param>
+          <type>double *</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <param>
+          <type>long</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="17" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="38" bodyend="42" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" declline="17" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="_subroutines_8cpp_1a04fbc9bc53e6303830eb4338bc1f3259" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_dmatrix</definition>
+        <argsstring>(double **m, long nrl, long nrh, long ncl, long nch)</argsstring>
+        <name>free_dmatrix</name>
+        <param>
+          <type>double **</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrh</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>ncl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nch</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="18" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="44" bodyend="49" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" declline="18" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="_subroutines_8cpp_1a02fd73d861ef2e4aabb38c0c9ff82947" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void init</definition>
+        <argsstring>()</argsstring>
+        <name>init</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="28" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" bodystart="28" bodyend="79"/>
+      </memberdef>
+      <memberdef kind="function" id="_subroutines_8cpp_1a3a4df61e8042a6db49940932d5a13828" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double Eqns</definition>
+        <argsstring>(double *rhs)</argsstring>
+        <name>Eqns</name>
+        <param>
+          <type>double *</type>
+          <declname>rhs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="83" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" bodystart="83" bodyend="133"/>
+      </memberdef>
+      <memberdef kind="function" id="_subroutines_8cpp_1ac1a0c20c2332d40bc8f5a2d2fa0923eb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double Newton</definition>
+        <argsstring>(int count)</argsstring>
+        <name>Newton</name>
+        <param>
+          <type>int</type>
+          <declname>count</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" line="139" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp" bodystart="139" bodyend="187"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>SUBROUTINES<sp/>FOR<sp/>FOURIER<sp/>APPROXIMATION<sp/>METHOD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ncurses/curses.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9" refid="_subroutines_8cpp_1afa85674f034d00d641e579588a123444" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>iff(x,y)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>if(strcmp(x,#y)==0)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10" refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>pi<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>3.14159265358979324</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight></codeline>
+<codeline lineno="12" refid="_subroutines_8cpp_1a91adff1610bdf681555a8f2e330dc963" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Int<sp/><sp/><sp/><sp/><sp/>extern<sp/>int</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13" refid="_subroutines_8cpp_1ab255c8e32d555c305816584a4578d1b3" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Double<sp/><sp/>extern<sp/>double</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_subroutines_8cpp_1ac11333a76682708c45d14ddc96e6e87a" kindref="member">dvector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**<ref refid="_subroutines_8cpp_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" kindref="member">dmatrix</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrh,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>ncl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nch);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="_subroutines_8cpp_1a0b6c4a598bce503def87e7ed7427ded8" kindref="member">free_dvector</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="_subroutines_8cpp_1a04fbc9bc53e6303830eb4338bc1f3259" kindref="member">free_dmatrix</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**m,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrh,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>ncl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nch);</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>[];</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="_headers_8h" kindref="compound">Headers.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="comment">//<sp/>**************************************************</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="comment">//<sp/>CALCULATE<sp/>INITIAL<sp/>SOLUTION<sp/>FROM<sp/>LINEAR<sp/>WAVE<sp/>THEORY</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="comment">//<sp/>**************************************************</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28" refid="_subroutines_8cpp_1a02fd73d861ef2e4aabb38c0c9ff82947" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_subroutines_8cpp_1a02fd73d861ef2e4aabb38c0c9ff82947" kindref="member">init</ref>()</highlight></codeline>
+<codeline lineno="29"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>a,<sp/>b,<sp/>t;</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><ref refid="_subroutines_8cpp_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(<ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>,Period)</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>a=4.*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>*<ref refid="_headers_8h_1a4dbff2664c02385f0a9a62cc755b7b3c" kindref="member">height</ref>/<ref refid="_headers_8h_1a37996e8bc08a8ba963041be8c1cd22ce" kindref="member">Hoverd</ref>;</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>b=a/sqrt(tanh(a));</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>t=tanh(b);</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]=b+(a-b*t)/(t+b*(1.-t*t));</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]=2.*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>*<ref refid="_headers_8h_1a4dbff2664c02385f0a9a62cc755b7b3c" kindref="member">height</ref>/<ref refid="_headers_8h_1a37996e8bc08a8ba963041be8c1cd22ce" kindref="member">Hoverd</ref>;</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]*<ref refid="_headers_8h_1a37996e8bc08a8ba963041be8c1cd22ce" kindref="member">Hoverd</ref>;</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]=sqrt(tanh(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]));</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[3]=2.*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4];</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a172a20466bb3dd9379bb2143bfbeb1e4" kindref="member">Current_criterion</ref>==1)</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5]=<ref refid="_headers_8h_1afa66c5e494f9798d09025ed1f9ae090b" kindref="member">Current</ref>*sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]);</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[6]=0.;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[6]=<ref refid="_headers_8h_1afa66c5e494f9798d09025ed1f9ae090b" kindref="member">Current</ref>*sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]);</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5]=0.;</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4];</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8]=0.;</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[9]=0.5*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7];</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref>[0]=1.;</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><ref refid="_headers_8h_1a995bb1509a6943811fef5e852eb5b454" kindref="member">sina</ref>[0]=0.;</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[10]=0.5*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2];</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(<sp/>i=1<sp/>;<sp/>i&lt;=<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref>[i]=cos(i*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>/<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref>[i+<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>]=cos((i+<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>)*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>/<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a995bb1509a6943811fef5e852eb5b454" kindref="member">sina</ref>[i]=sin(i*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>/<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a995bb1509a6943811fef5e852eb5b454" kindref="member">sina</ref>[i+<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>]=sin((i+<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>)*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>/<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+i+10]=0.;</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i+10]=0.5*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]*<ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref>[i];</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+11]=0.5*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7];</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"></highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(<sp/>i=1<sp/>;<sp/>i&lt;=9<sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>[i][1]<sp/>=<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i];</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(<sp/>i=10<sp/>;<sp/>i&lt;=<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>[i][1]<sp/>=<sp/>0.;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"></highlight><highlight class="keywordflow">return</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="79"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>EVALUATION<sp/>OF<sp/>EQUATIONS.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"></highlight></codeline>
+<codeline lineno="83" refid="_subroutines_8cpp_1a3a4df61e8042a6db49940932d5a13828" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_subroutines_8cpp_1a3a4df61e8042a6db49940932d5a13828" kindref="member">Eqns</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*rhs)</highlight></codeline>
+<codeline lineno="84"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i,<sp/>j,<sp/>m,<sp/>it,<sp/>nm;</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>,<sp/>e,<sp/><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>,<sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>,<sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>;</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal">rhs[1]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]*<ref refid="_headers_8h_1a37996e8bc08a8ba963041be8c1cd22ce" kindref="member">Hoverd</ref>;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><ref refid="_subroutines_8cpp_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(<ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>,Wavelength)</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rhs[2]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]-2.*<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>*<ref refid="_headers_8h_1a4dbff2664c02385f0a9a62cc755b7b3c" kindref="member">height</ref>;</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rhs[2]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]-<ref refid="_headers_8h_1a4dbff2664c02385f0a9a62cc755b7b3c" kindref="member">height</ref>*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[3]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[3];</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal">rhs[3]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[3]-<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>-<ref refid="_subroutines_8cpp_1a1daf785e3f68d293c7caa1c756d5cb74" kindref="member">pi</ref>;</highlight></codeline>
+<codeline lineno="96"><highlight class="normal">rhs[4]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5]+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4];</highlight></codeline>
+<codeline lineno="97"><highlight class="normal">rhs[5]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[6]+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4];</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal">rhs[5]=rhs[5]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8]/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1];</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i=1;<sp/>i&lt;=<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1ae62d0b7e5a1af6ff6d6257554340d2d1" kindref="member">coeff</ref>[i]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+i+10];</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1ac39fb431d54fa94a455bbdf2e4d91fff" kindref="member">Tanh</ref>[i]<sp/>=<sp/>tanh(i*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]);</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="105"><highlight class="normal">it=6;</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a172a20466bb3dd9379bb2143bfbeb1e4" kindref="member">Current_criterion</ref>==1)it=5;</highlight></codeline>
+<codeline lineno="107"><highlight class="normal">rhs[6]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[it]-<ref refid="_headers_8h_1afa66c5e494f9798d09025ed1f9ae090b" kindref="member">Current</ref>*sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]);<sp/></highlight><highlight class="comment">//<sp/>Correction<sp/>made<sp/>20.5.2013,<sp/>z[2]<sp/>changed<sp/>to<sp/>z[1]</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal">rhs[7]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[10]+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+10];</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i=1<sp/>;<sp/>i&lt;=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>-1<sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rhs[7]=rhs[7]+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[10+i]+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[10+i];</highlight></codeline>
+<codeline lineno="111"><highlight class="normal">rhs[8]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[10]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+10]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2];</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>m=0<sp/>;<sp/>m<sp/>&lt;=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>m++<sp/>)</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>=0.;</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>=0.;</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>=0.;</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(j=1<sp/>;<sp/>j<sp/>&lt;=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>j++<sp/>)</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>nm<sp/>=<sp/>(m*j)<sp/>%<sp/>(<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>e=exp(j*(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[10+m]));</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>=0.5*(e-1./e);</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>=0.5*(e+1./e);</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>=<ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>+<ref refid="_headers_8h_1ae62d0b7e5a1af6ff6d6257554340d2d1" kindref="member">coeff</ref>[j]*(<ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>+<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>*<ref refid="_headers_8h_1ac39fb431d54fa94a455bbdf2e4d91fff" kindref="member">Tanh</ref>[j])*<ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref>[nm];</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>=<ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>+j*<ref refid="_headers_8h_1ae62d0b7e5a1af6ff6d6257554340d2d1" kindref="member">coeff</ref>[j]*(<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>+<ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>*<ref refid="_headers_8h_1ac39fb431d54fa94a455bbdf2e4d91fff" kindref="member">Tanh</ref>[j])*<ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref>[nm];</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>=<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>+j*<ref refid="_headers_8h_1ae62d0b7e5a1af6ff6d6257554340d2d1" kindref="member">coeff</ref>[j]*(<ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>+<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>*<ref refid="_headers_8h_1ac39fb431d54fa94a455bbdf2e4d91fff" kindref="member">Tanh</ref>[j])*<ref refid="_headers_8h_1a995bb1509a6943811fef5e852eb5b454" kindref="member">sina</ref>[nm];</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rhs[m+9]=<ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[m+10];</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rhs[<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+m+10]=0.5*(pow((-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]+<ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>),2.)+<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>)+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[m+10]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[9];</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"></highlight></codeline>
+<codeline lineno="131"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(j=1,<sp/><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>=0.<sp/>;<sp/>j<sp/>&lt;=<sp/><ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>j++<sp/>)<sp/><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref><sp/>+=<sp/>rhs[j]*rhs[j];</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>;</highlight></codeline>
+<codeline lineno="133"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"></highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight><highlight class="comment">//<sp/>**************************************************</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>SET<sp/>UP<sp/>JACOBIAN<sp/>MATRIX<sp/>AND<sp/>SOLVE<sp/>MATRIX<sp/>EQUATION</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="137"><highlight class="normal"></highlight><highlight class="comment">//<sp/>**************************************************</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="138"><highlight class="normal"></highlight></codeline>
+<codeline lineno="139" refid="_subroutines_8cpp_1ac1a0c20c2332d40bc8f5a2d2fa0923eb" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_subroutines_8cpp_1ac1a0c20c2332d40bc8f5a2d2fa0923eb" kindref="member">Newton</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>count)</highlight></codeline>
+<codeline lineno="140"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><sp/>**a,<sp/>*rhs,<sp/>*x;</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><sp/>h,<sp/><ref refid="_headers_8h_1a4236a05d5d04839f0af91439cb8820b8" kindref="member">sum</ref>;</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_fourier_8cpp_1ac0c206292f12496c35914959487fec95" kindref="member">Solve</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"></highlight></codeline>
+<codeline lineno="145"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i,<sp/>j;</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"></highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><ref refid="_subroutines_8cpp_1a3a4df61e8042a6db49940932d5a13828" kindref="member">Eqns</ref>(<ref refid="_headers_8h_1a117c4e9cde832599b9e0767f35e2cb27" kindref="member">rhs1</ref>);</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"></highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(count&gt;=1)</highlight></codeline>
+<codeline lineno="150"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="151"><highlight class="normal">++count;</highlight></codeline>
+<codeline lineno="152"><highlight class="normal">rhs=<ref refid="_subroutines_8cpp_1ac11333a76682708c45d14ddc96e6e87a" kindref="member">dvector</ref>(1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="153"><highlight class="normal">x=<ref refid="_subroutines_8cpp_1ac11333a76682708c45d14ddc96e6e87a" kindref="member">dvector</ref>(1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="154"><highlight class="normal">a=<ref refid="_subroutines_8cpp_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" kindref="member">dmatrix</ref>(1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="155"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"></highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1<sp/>;<sp/>i&lt;=<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>h=0.01*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i];</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(fabs(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i])<sp/>&lt;<sp/>1.e-4)<sp/>h<sp/>=<sp/>1.e-5;</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i]+h;</highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_subroutines_8cpp_1a3a4df61e8042a6db49940932d5a13828" kindref="member">Eqns</ref>(<ref refid="_headers_8h_1af3345be82f6601fd459019c6d75b1f29" kindref="member">rhs2</ref>);</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i]-h;</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rhs[i]<sp/>=<sp/>-<ref refid="_headers_8h_1a117c4e9cde832599b9e0767f35e2cb27" kindref="member">rhs1</ref>[i];</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>j=1<sp/>;<sp/>j&lt;=<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>j++<sp/>)</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>a[j][i]<sp/>=<sp/>(<ref refid="_headers_8h_1af3345be82f6601fd459019c6d75b1f29" kindref="member">rhs2</ref>[j]<sp/>-<sp/><ref refid="_headers_8h_1a117c4e9cde832599b9e0767f35e2cb27" kindref="member">rhs1</ref>[j])/h;</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"></highlight></codeline>
+<codeline lineno="169"><highlight class="normal"></highlight><highlight class="comment">//<sp/>**************************************************</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="170"><highlight class="normal"></highlight><highlight class="comment">//<sp/>SOLVE<sp/>MATRIX<sp/>EQUATION</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="171"><highlight class="normal"></highlight><highlight class="comment">//<sp/>**************************************************</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="172"><highlight class="normal"></highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><ref refid="_fourier_8cpp_1ac0c206292f12496c35914959487fec95" kindref="member">Solve</ref>(a,<sp/>rhs,<sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">)<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,<sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">)<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,<sp/>x,<sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">)<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,<sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">)<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"></highlight></codeline>
+<codeline lineno="175"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1<sp/>;<sp/>i&lt;=<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i]<sp/>+=<sp/>x[i];</highlight></codeline>
+<codeline lineno="177"><highlight class="normal"></highlight></codeline>
+<codeline lineno="178"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/><ref refid="_headers_8h_1a4236a05d5d04839f0af91439cb8820b8" kindref="member">sum</ref><sp/>=<sp/>0.,<sp/>i=10<sp/>;<sp/>i&lt;=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+10<sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a4236a05d5d04839f0af91439cb8820b8" kindref="member">sum</ref><sp/>+=<sp/>fabs(x[i]);</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><ref refid="_headers_8h_1a4236a05d5d04839f0af91439cb8820b8" kindref="member">sum</ref><sp/>/=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>;</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"></highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><ref refid="_subroutines_8cpp_1a0b6c4a598bce503def87e7ed7427ded8" kindref="member">free_dvector</ref>(rhs,1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="183"><highlight class="normal"><ref refid="_subroutines_8cpp_1a0b6c4a598bce503def87e7ed7427ded8" kindref="member">free_dvector</ref>(x,1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><ref refid="_subroutines_8cpp_1a04fbc9bc53e6303830eb4338bc1f3259" kindref="member">free_dmatrix</ref>(a,1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"></highlight></codeline>
+<codeline lineno="186"><highlight class="normal"></highlight><highlight class="keywordflow">return</highlight><highlight class="normal">(<ref refid="_headers_8h_1a4236a05d5d04839f0af91439cb8820b8" kindref="member">sum</ref>);</highlight></codeline>
+<codeline lineno="187"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="188"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Subroutines.cpp"/>
+  </compounddef>
+</doxygen>

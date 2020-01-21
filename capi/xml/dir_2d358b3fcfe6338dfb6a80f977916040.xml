@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_2d358b3fcfe6338dfb6a80f977916040" kind="dir">
+    <compoundname>richards</compoundname>
+    <innerfile refid="c_richards_8cpp">cRichards.cpp</innerfile>
+    <innerfile refid="_richards_8h">Richards.h</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/"/>
+  </compounddef>
+</doxygen>

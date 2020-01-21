@@ -1,0 +1,428 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_comp_kernel_space_mapping" kind="class" language="C++" prot="public">
+    <compoundname>CompKernelSpaceMapping</compoundname>
+    <includes refid="_comp_kernel_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>NSPACE</declname>
+        <defname>NSPACE</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>NDOF_MESH_TRIAL_ELEMENT</declname>
+        <defname>NDOF_MESH_TRIAL_ELEMENT</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_comp_kernel_space_mapping_1a064ec6f451743642404752c120a4fc96" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernelSpaceMapping&lt; NSPACE, NDOF_MESH_TRIAL_ELEMENT &gt;::calculateMapping_element</definition>
+        <argsstring>(const int eN, const int k, double *mesh_dof, int *mesh_l2g, double *mesh_trial_ref, double *mesh_grad_trial_ref, double *jac, double &amp;jacDet, double *jacInv, double &amp;x, double &amp;y, double &amp;z)</argsstring>
+        <name>calculateMapping_element</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jac</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>jacDet</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>z</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="79" column="15"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_space_mapping_1a6a49247721194aba826787fa0e28bd5a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernelSpaceMapping&lt; NSPACE, NDOF_MESH_TRIAL_ELEMENT &gt;::calculateH_element</definition>
+        <argsstring>(const int eN, const int k, double *h_dof, int *mesh_l2g, double *mesh_trial_ref, double &amp;h)</argsstring>
+        <name>calculateH_element</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>h_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>h</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="91" column="15"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_space_mapping_1a61c036cce5b91e67e18e39cdfe032105" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernelSpaceMapping&lt; NSPACE, NDOF_MESH_TRIAL_ELEMENT &gt;::calculateMappingVelocity_element</definition>
+        <argsstring>(const int eN, const int k, double *mesh_velocity_dof, int *mesh_l2g, double *mesh_trial_ref, double &amp;xt, double &amp;yt, double &amp;zt)</argsstring>
+        <name>calculateMappingVelocity_element</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>xt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>yt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>zt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="97" column="15"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_space_mapping_1a9dc9996d8b0b6a6274cdcebbb189ae48" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernelSpaceMapping&lt; NSPACE, NDOF_MESH_TRIAL_ELEMENT &gt;::calculateMapping_elementBoundary</definition>
+        <argsstring>(const int eN, const int ebN_local, const int kb, const int ebN_local_kb, double *mesh_dof, int *mesh_l2g, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *boundaryJac_ref, double *jac, double &amp;jacDet, double *jacInv, double *boundaryJac, double *metricTensor, double &amp;metricTensorDetSqrt, double *normal_ref, double *normal, double &amp;x, double &amp;y, double &amp;z)</argsstring>
+        <name>calculateMapping_elementBoundary</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>kb</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local_kb</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jac</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>jacDet</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>metricTensor</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>metricTensorDetSqrt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>z</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="105" column="15"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_space_mapping_1a619567ebea0bebcbdcb3adc3fcee93b7" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernelSpaceMapping&lt; NSPACE, NDOF_MESH_TRIAL_ELEMENT &gt;::calculateMappingVelocity_elementBoundary</definition>
+        <argsstring>(const int eN, const int ebN_local, const int kb, const int ebN_local_kb, double *mesh_velocity_dof, int *mesh_l2g, double *mesh_trial_trace_ref, double &amp;xt, double &amp;yt, double &amp;zt, double *normal, double *boundaryJac, double *metricTensor, double &amp;metricTensorDetSqrt)</argsstring>
+        <name>calculateMappingVelocity_elementBoundary</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>kb</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local_kb</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>xt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>yt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>zt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>metricTensor</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>metricTensorDetSqrt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="125" column="15"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_space_mapping_1a1edeac2e61230079d9163007e69411c1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernelSpaceMapping&lt; NSPACE, NDOF_MESH_TRIAL_ELEMENT &gt;::valFromDOF</definition>
+        <argsstring>(const double *dof, const int *l2g_element, const double *trial_ref, double &amp;val)</argsstring>
+        <name>valFromDOF</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>l2g_element</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>trial_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="139" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="139" bodyend="144"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_space_mapping_1aa24d4bfcf8646665e27035d1caa6e6df" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernelSpaceMapping&lt; NSPACE, NDOF_MESH_TRIAL_ELEMENT &gt;::gradFromDOF</definition>
+        <argsstring>(const double *dof, const int *l2g_element, const double *grad_trial, double *grad)</argsstring>
+        <name>gradFromDOF</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>l2g_element</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>grad_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="146" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="146" bodyend="153"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_space_mapping_1a98882239eebf27d4d5613b9cd431ec33" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernelSpaceMapping&lt; NSPACE, NDOF_MESH_TRIAL_ELEMENT &gt;::hessFromDOF</definition>
+        <argsstring>(const double *dof, const int *l2g_element, const double *hess_trial, double *hess)</argsstring>
+        <name>hessFromDOF</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>l2g_element</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>hess_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>hess</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="155" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="155" bodyend="165"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="77" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="76" bodyend="166"/>
+    <listofallmembers>
+      <member refid="class_comp_kernel_space_mapping_1a6a49247721194aba826787fa0e28bd5a" prot="public" virt="non-virtual"><scope>CompKernelSpaceMapping</scope><name>calculateH_element</name></member>
+      <member refid="class_comp_kernel_space_mapping_1a064ec6f451743642404752c120a4fc96" prot="public" virt="non-virtual"><scope>CompKernelSpaceMapping</scope><name>calculateMapping_element</name></member>
+      <member refid="class_comp_kernel_space_mapping_1a9dc9996d8b0b6a6274cdcebbb189ae48" prot="public" virt="non-virtual"><scope>CompKernelSpaceMapping</scope><name>calculateMapping_elementBoundary</name></member>
+      <member refid="class_comp_kernel_space_mapping_1a61c036cce5b91e67e18e39cdfe032105" prot="public" virt="non-virtual"><scope>CompKernelSpaceMapping</scope><name>calculateMappingVelocity_element</name></member>
+      <member refid="class_comp_kernel_space_mapping_1a619567ebea0bebcbdcb3adc3fcee93b7" prot="public" virt="non-virtual"><scope>CompKernelSpaceMapping</scope><name>calculateMappingVelocity_elementBoundary</name></member>
+      <member refid="class_comp_kernel_space_mapping_1aa24d4bfcf8646665e27035d1caa6e6df" prot="public" virt="non-virtual"><scope>CompKernelSpaceMapping</scope><name>gradFromDOF</name></member>
+      <member refid="class_comp_kernel_space_mapping_1a98882239eebf27d4d5613b9cd431ec33" prot="public" virt="non-virtual"><scope>CompKernelSpaceMapping</scope><name>hessFromDOF</name></member>
+      <member refid="class_comp_kernel_space_mapping_1a1edeac2e61230079d9163007e69411c1" prot="public" virt="non-virtual"><scope>CompKernelSpaceMapping</scope><name>valFromDOF</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

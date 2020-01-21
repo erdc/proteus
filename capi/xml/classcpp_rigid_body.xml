@@ -1,0 +1,1034 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classcpp_rigid_body" kind="class" language="C++" prot="public">
+    <compoundname>cppRigidBody</compoundname>
+    <includes refid="_prot_ch_body_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classcpp_rigid_body_1ab991aaf16be72c26d0cdf66c38092154" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::free_x</definition>
+        <argsstring></argsstring>
+        <name>free_x</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="33" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a5f7fa6b8e7b271419dee09edffc2f23f" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::free_r</definition>
+        <argsstring></argsstring>
+        <name>free_r</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="34" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1ac2be55a640018981488e42bc645c70aa" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::pos</definition>
+        <argsstring></argsstring>
+        <name>pos</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="35" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a09af5bee58f2f705d057c8ce5c849cce" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::pos_last</definition>
+        <argsstring></argsstring>
+        <name>pos_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="36" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a837566013260aa3baca48687c8189d6a" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::pos0</definition>
+        <argsstring></argsstring>
+        <name>pos0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="37" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a3dfe113b36160edecb2476625d96e0c1" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppRigidBody::trimesh_pos</definition>
+        <argsstring></argsstring>
+        <name>trimesh_pos</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="38" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a7dac61a7dfb570c4de279a14de7be178" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppRigidBody::trimesh_pos_last</definition>
+        <argsstring></argsstring>
+        <name>trimesh_pos_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="39" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a2842108eddb95d34795227a2ed59519d" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppRigidBody::trimesh_pos0</definition>
+        <argsstring></argsstring>
+        <name>trimesh_pos0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="40" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a1856ccbb4d93f07df8fec295483d7b72" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::pos0_trimesh</definition>
+        <argsstring></argsstring>
+        <name>pos0_trimesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="41" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a3a886b70b800d878d6b935b4f3c904ac" prot="public" static="no" mutable="no">
+        <type>ChQuaternion</type>
+        <definition>ChQuaternion cppRigidBody::rotq0_trimesh</definition>
+        <argsstring></argsstring>
+        <name>rotq0_trimesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="42" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="42" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1aedc937a0352a702319bf6c4ef95ff46c" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::vel</definition>
+        <argsstring></argsstring>
+        <name>vel</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="43" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="43" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1aa591ef008a770fe481ab9c2a469ef48e" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::vel_last</definition>
+        <argsstring></argsstring>
+        <name>vel_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="44" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a09e23ca3341c3fc1729739747224f591" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::acc</definition>
+        <argsstring></argsstring>
+        <name>acc</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="45" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a53a302b730a63aab8be843d617c611e9" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::acc_last</definition>
+        <argsstring></argsstring>
+        <name>acc_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="46" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a68915b0dc951adba7029fd4b6ce17a7a" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::angvel</definition>
+        <argsstring></argsstring>
+        <name>angvel</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="47" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1afd21586e46bc23bf7358d0d334f4a1da" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::angvel_last</definition>
+        <argsstring></argsstring>
+        <name>angvel_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="48" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1ae19b9f041a1d9344fac15c3f1f2fa9f8" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::angacc</definition>
+        <argsstring></argsstring>
+        <name>angacc</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="49" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="49" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a8001c2fde7a7dd40a01cbabdd99db045" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::angacc_last</definition>
+        <argsstring></argsstring>
+        <name>angacc_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="50" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a9b041171d3560abc6909372d2c60e10d" prot="public" static="no" mutable="no">
+        <type>ChMatrix33&lt; double &gt;</type>
+        <definition>ChMatrix33&lt;double&gt; cppRigidBody::rotm</definition>
+        <argsstring></argsstring>
+        <name>rotm</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="51" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a0ae80b4489191f508cf11522d2552146" prot="public" static="no" mutable="no">
+        <type>ChMatrix33&lt; double &gt;</type>
+        <definition>ChMatrix33&lt;double&gt; cppRigidBody::rotm_last</definition>
+        <argsstring></argsstring>
+        <name>rotm_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="52" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="52" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a2a291e85928eef30e0c4745f5770d9ba" prot="public" static="no" mutable="no">
+        <type>ChQuaternion&lt; double &gt;</type>
+        <definition>ChQuaternion&lt;double&gt; cppRigidBody::rotq</definition>
+        <argsstring></argsstring>
+        <name>rotq</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="53" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a8fb42075d9492e6464b559844930fec0" prot="public" static="no" mutable="no">
+        <type>ChQuaternion&lt; double &gt;</type>
+        <definition>ChQuaternion&lt;double&gt; cppRigidBody::rotq_last</definition>
+        <argsstring></argsstring>
+        <name>rotq_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="54" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a045646f672d53476810e741a0a57f34e" prot="public" static="no" mutable="no">
+        <type>ChQuaternion&lt; double &gt;</type>
+        <definition>ChQuaternion&lt;double&gt; cppRigidBody::rotq0</definition>
+        <argsstring></argsstring>
+        <name>rotq0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="55" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a2605ffb5b01b3bbc84dcaaf817ab1423" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::F</definition>
+        <argsstring></argsstring>
+        <name>F</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="56" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a5be8d10002c675676e2134d613f8da57" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::F_last</definition>
+        <argsstring></argsstring>
+        <name>F_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="57" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1aaff464665e862e49c350a018fa36a5d6" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::M</definition>
+        <argsstring></argsstring>
+        <name>M</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="58" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a8e4f2abc5a5ed0483580ac5ef0d92105" prot="public" static="no" mutable="no">
+        <type>ChVector</type>
+        <definition>ChVector cppRigidBody::M_last</definition>
+        <argsstring></argsstring>
+        <name>M_last</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="59" column="4" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a53b30c5ea8ba54de74ec387f990cd562" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChLinkLockLock &gt;</type>
+        <definition>std::shared_ptr&lt;ChLinkLockLock&gt; cppRigidBody::lock_motion</definition>
+        <argsstring></argsstring>
+        <name>lock_motion</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="60" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1aefd86b8ba8a74db0f3c220fbb1c6c6eb" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppRigidBody::lock_motion_t_max</definition>
+        <argsstring></argsstring>
+        <name>lock_motion_t_max</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="61" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a08ceb9ad768a47644407c50e54788f61" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppRigidBody::mass</definition>
+        <argsstring></argsstring>
+        <name>mass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="62" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1aaceb4aec58cb42db0365c07b3a1c845b" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppRigidBody::mooring_restlength</definition>
+        <argsstring></argsstring>
+        <name>mooring_restlength</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="63" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a4b8a2695619c380aa594d0f4fb5279e3" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChLinkSpring &gt;</type>
+        <definition>std::shared_ptr&lt;ChLinkSpring&gt; cppRigidBody::spring</definition>
+        <argsstring></argsstring>
+        <name>spring</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="64" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a7d4a5c3597da582571dfade82bc0f259" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double* cppRigidBody::inertia</definition>
+        <argsstring></argsstring>
+        <name>inertia</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="66" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="66" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1aa2387f035ce58dfd08a8a230fd8b53ad" prot="public" static="no" mutable="no">
+        <type>shared_ptr&lt; ChTriangleMeshConnected &gt;</type>
+        <definition>shared_ptr&lt;ChTriangleMeshConnected&gt; cppRigidBody::trimesh</definition>
+        <argsstring></argsstring>
+        <name>trimesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="67" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1ad5e5b33021dd0e79b5060e85ccdb35c6" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool cppRigidBody::has_trimesh</definition>
+        <argsstring></argsstring>
+        <name>has_trimesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="68" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a24ee83f5f5f119571fb74ed889b84b9f" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChBody &gt;</type>
+        <definition>std::shared_ptr&lt;ChBody&gt; cppRigidBody::body</definition>
+        <argsstring></argsstring>
+        <name>body</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="69" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_rigid_body_1a922bde7607ffdee427472aec08853022" prot="public" static="no" mutable="no">
+        <type><ref refid="classcpp_system" kindref="compound">cppSystem</ref> *</type>
+        <definition>cppSystem* cppRigidBody::system</definition>
+        <argsstring></argsstring>
+        <name>system</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="70" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classcpp_rigid_body_1abec9e4306993bc6716eae85cb06862b2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>cppRigidBody::cppRigidBody</definition>
+        <argsstring>(cppSystem *system)</argsstring>
+        <name>cppRigidBody</name>
+        <param>
+          <type><ref refid="classcpp_system" kindref="compound">cppSystem</ref> *</type>
+          <declname>system</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="71" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="169" bodyend="186"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1adf6c29d168ade6fba62db5c78b9c132b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>ChVector&lt; double &gt;</type>
+        <definition>ChVector&lt; double &gt; cppRigidBody::hxyz</definition>
+        <argsstring>(double *x, double t)</argsstring>
+        <name>hxyz</name>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="72" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="205" bodyend="212"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a2017406e34e55e3145c0fa864e07391d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double cppRigidBody::hx</definition>
+        <argsstring>(double *x, double t)</argsstring>
+        <name>hx</name>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="73" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="220" bodyend="226"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1ab2ad84ac36212ad053d5f27c969965a8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double cppRigidBody::hy</definition>
+        <argsstring>(double *x, double t)</argsstring>
+        <name>hy</name>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="74" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="228" bodyend="234"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1ade1a06d7bb41f0fe8bdd426509a548b5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double cppRigidBody::hz</definition>
+        <argsstring>(double *x, double t)</argsstring>
+        <name>hz</name>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="75" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="236" bodyend="242"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a833d8e7621989a514652dcfbf8963005" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::calculate_init</definition>
+        <argsstring>()</argsstring>
+        <name>calculate_init</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="76" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="244" bodyend="260"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a2cb5af2199b290dcd33ccd80a1f4eb9f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::prestep</definition>
+        <argsstring>(double *force, double *torque)</argsstring>
+        <name>prestep</name>
+        <param>
+          <type>double *</type>
+          <declname>force</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>torque</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="77" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="262" bodyend="302"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a88b005aa95f66094a69afa07f9414807" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::poststep</definition>
+        <argsstring>()</argsstring>
+        <name>poststep</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="78" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="306" bodyend="323"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a560c27f7f0833f224edb43c5cf8168ca" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::setConstraints</definition>
+        <argsstring>(double *free_x, double *free_y)</argsstring>
+        <name>setConstraints</name>
+        <param>
+          <type>double *</type>
+          <declname>free_x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>free_y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="79" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="422" bodyend="425"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a4155f2db09a74603833c94c2c9b3c594" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::addSpring</definition>
+        <argsstring>(double stiffness, double damping, double *fairlead, double *anchor, double rest_length)</argsstring>
+        <name>addSpring</name>
+        <param>
+          <type>double</type>
+          <declname>stiffness</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>damping</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>fairlead</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>anchor</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rest_length</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="80" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="427" bodyend="449"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a85295e629e1abf16f3b91e64a4d698de" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::addPrismaticLinksWithSpring</definition>
+        <argsstring>(double *pris1, double *pris2, double stiffness, double damping, double rest_length)</argsstring>
+        <name>addPrismaticLinksWithSpring</name>
+        <param>
+          <type>double *</type>
+          <declname>pris1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pris2</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>stiffness</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>damping</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rest_length</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="85" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="465" bodyend="522"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1aaf82bbfc1a4cb766b74fb25f5b3d27e0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::addPrismaticLinkX</definition>
+        <argsstring>(double *pris1)</argsstring>
+        <name>addPrismaticLinkX</name>
+        <param>
+          <type>double *</type>
+          <declname>pris1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="90" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="451" bodyend="463"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a5d3b1aea1bedc5ca21acd92b0f68dd0e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::setName</definition>
+        <argsstring>(std::string name)</argsstring>
+        <name>setName</name>
+        <param>
+          <type>std::string</type>
+          <declname>name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="91" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="524" bodyend="526"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a6a3dd7200c1544fd53ac9fe452739009" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::setPrescribedMotionPoly</definition>
+        <argsstring>(double coeff1)</argsstring>
+        <name>setPrescribedMotionPoly</name>
+        <param>
+          <type>double</type>
+          <declname>coeff1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="92" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="391" bodyend="404"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1ad21d1121e0427203d80cded65faf7c1d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::setPrescribedMotionSine</definition>
+        <argsstring>(double a, double f)</argsstring>
+        <name>setPrescribedMotionSine</name>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="93" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="407" bodyend="420"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a68b8614f1ebb21b7b938a6f2508e00af" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::setPrescribedMotionCustom</definition>
+        <argsstring>(std::vector&lt; double &gt; t, std::vector&lt; double &gt; x, std::vector&lt; double &gt; y, std::vector&lt; double &gt; z, std::vector&lt; double &gt; ang, std::vector&lt; double &gt; ang2, std::vector&lt; double &gt; ang3, double t_max)</argsstring>
+        <name>setPrescribedMotionCustom</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>ang</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>ang2</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>ang3</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t_max</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="94" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="325" bodyend="389"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a35633e3ad5f0cad6910852dd3392dc3b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::getTriangleMeshSDF</definition>
+        <argsstring>(ChVector&lt;&gt; pos_node, double *dist_n)</argsstring>
+        <name>getTriangleMeshSDF</name>
+        <param>
+          <type>ChVector&lt;&gt;</type>
+          <declname>pos_node</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dist_n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="98" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="528" bodyend="554"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a60b18da0ecae4b50b542aab4eeb52911" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::getTriangleMeshVel</definition>
+        <argsstring>(double *x, double dt, double *vel)</argsstring>
+        <name>getTriangleMeshVel</name>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="100" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="556" bodyend="580"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_rigid_body_1a8fab301b680ec2c0dcc34f1bf272ef92" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppRigidBody::updateTriangleMeshVisualisationPos</definition>
+        <argsstring>()</argsstring>
+        <name>updateTriangleMeshVisualisationPos</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="103" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="192" bodyend="203"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="11">
+        <label>std::shared_ptr&lt; ChTriangleMeshConnected &gt;</label>
+      </node>
+      <node id="10">
+        <label>std::shared_ptr&lt; ChLinkLockLock &gt;</label>
+      </node>
+      <node id="2">
+        <label>cppSystem</label>
+        <link refid="classcpp_system"/>
+        <childnode refid="3" relation="usage">
+          <edgelabel>system</edgelabel>
+        </childnode>
+        <childnode refid="4" relation="usage">
+          <edgelabel>directory</edgelabel>
+        </childnode>
+        <childnode refid="6" relation="usage">
+          <edgelabel>systemSMC</edgelabel>
+        </childnode>
+      </node>
+      <node id="6">
+        <label>std::shared_ptr&lt; ChSystemSMC &gt;</label>
+      </node>
+      <node id="5">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="3">
+        <label>std::shared_ptr&lt; ChSystem &gt;</label>
+      </node>
+      <node id="7">
+        <label>std::shared_ptr&lt; ChLinkSpring &gt;</label>
+      </node>
+      <node id="8">
+        <label>std::vector&lt; ChVector&lt;&gt; &gt;</label>
+      </node>
+      <node id="9">
+        <label>std::shared_ptr&lt; ChBody &gt;</label>
+      </node>
+      <node id="1">
+        <label>cppRigidBody</label>
+        <link refid="classcpp_rigid_body"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>system</edgelabel>
+        </childnode>
+        <childnode refid="7" relation="usage">
+          <edgelabel>spring</edgelabel>
+        </childnode>
+        <childnode refid="8" relation="usage">
+          <edgelabel>trimesh_pos_last</edgelabel>
+          <edgelabel>trimesh_pos0</edgelabel>
+          <edgelabel>trimesh_pos</edgelabel>
+        </childnode>
+        <childnode refid="9" relation="usage">
+          <edgelabel>body</edgelabel>
+        </childnode>
+        <childnode refid="10" relation="usage">
+          <edgelabel>lock_motion</edgelabel>
+        </childnode>
+        <childnode refid="11" relation="usage">
+          <edgelabel>trimesh</edgelabel>
+        </childnode>
+      </node>
+      <node id="4">
+        <label>std::string</label>
+        <childnode refid="5" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="31" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="31" bodyend="104"/>
+    <listofallmembers>
+      <member refid="classcpp_rigid_body_1a09e23ca3341c3fc1729739747224f591" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>acc</name></member>
+      <member refid="classcpp_rigid_body_1a53a302b730a63aab8be843d617c611e9" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>acc_last</name></member>
+      <member refid="classcpp_rigid_body_1a85295e629e1abf16f3b91e64a4d698de" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>addPrismaticLinksWithSpring</name></member>
+      <member refid="classcpp_rigid_body_1aaf82bbfc1a4cb766b74fb25f5b3d27e0" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>addPrismaticLinkX</name></member>
+      <member refid="classcpp_rigid_body_1a4155f2db09a74603833c94c2c9b3c594" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>addSpring</name></member>
+      <member refid="classcpp_rigid_body_1ae19b9f041a1d9344fac15c3f1f2fa9f8" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>angacc</name></member>
+      <member refid="classcpp_rigid_body_1a8001c2fde7a7dd40a01cbabdd99db045" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>angacc_last</name></member>
+      <member refid="classcpp_rigid_body_1a68915b0dc951adba7029fd4b6ce17a7a" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>angvel</name></member>
+      <member refid="classcpp_rigid_body_1afd21586e46bc23bf7358d0d334f4a1da" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>angvel_last</name></member>
+      <member refid="classcpp_rigid_body_1a24ee83f5f5f119571fb74ed889b84b9f" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>body</name></member>
+      <member refid="classcpp_rigid_body_1a833d8e7621989a514652dcfbf8963005" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>calculate_init</name></member>
+      <member refid="classcpp_rigid_body_1abec9e4306993bc6716eae85cb06862b2" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>cppRigidBody</name></member>
+      <member refid="classcpp_rigid_body_1a2605ffb5b01b3bbc84dcaaf817ab1423" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>F</name></member>
+      <member refid="classcpp_rigid_body_1a5be8d10002c675676e2134d613f8da57" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>F_last</name></member>
+      <member refid="classcpp_rigid_body_1a5f7fa6b8e7b271419dee09edffc2f23f" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>free_r</name></member>
+      <member refid="classcpp_rigid_body_1ab991aaf16be72c26d0cdf66c38092154" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>free_x</name></member>
+      <member refid="classcpp_rigid_body_1a35633e3ad5f0cad6910852dd3392dc3b" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>getTriangleMeshSDF</name></member>
+      <member refid="classcpp_rigid_body_1a60b18da0ecae4b50b542aab4eeb52911" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>getTriangleMeshVel</name></member>
+      <member refid="classcpp_rigid_body_1ad5e5b33021dd0e79b5060e85ccdb35c6" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>has_trimesh</name></member>
+      <member refid="classcpp_rigid_body_1a2017406e34e55e3145c0fa864e07391d" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>hx</name></member>
+      <member refid="classcpp_rigid_body_1adf6c29d168ade6fba62db5c78b9c132b" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>hxyz</name></member>
+      <member refid="classcpp_rigid_body_1ab2ad84ac36212ad053d5f27c969965a8" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>hy</name></member>
+      <member refid="classcpp_rigid_body_1ade1a06d7bb41f0fe8bdd426509a548b5" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>hz</name></member>
+      <member refid="classcpp_rigid_body_1a7d4a5c3597da582571dfade82bc0f259" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>inertia</name></member>
+      <member refid="classcpp_rigid_body_1a53b30c5ea8ba54de74ec387f990cd562" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>lock_motion</name></member>
+      <member refid="classcpp_rigid_body_1aefd86b8ba8a74db0f3c220fbb1c6c6eb" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>lock_motion_t_max</name></member>
+      <member refid="classcpp_rigid_body_1aaff464665e862e49c350a018fa36a5d6" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>M</name></member>
+      <member refid="classcpp_rigid_body_1a8e4f2abc5a5ed0483580ac5ef0d92105" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>M_last</name></member>
+      <member refid="classcpp_rigid_body_1a08ceb9ad768a47644407c50e54788f61" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>mass</name></member>
+      <member refid="classcpp_rigid_body_1aaceb4aec58cb42db0365c07b3a1c845b" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>mooring_restlength</name></member>
+      <member refid="classcpp_rigid_body_1ac2be55a640018981488e42bc645c70aa" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>pos</name></member>
+      <member refid="classcpp_rigid_body_1a837566013260aa3baca48687c8189d6a" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>pos0</name></member>
+      <member refid="classcpp_rigid_body_1a1856ccbb4d93f07df8fec295483d7b72" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>pos0_trimesh</name></member>
+      <member refid="classcpp_rigid_body_1a09af5bee58f2f705d057c8ce5c849cce" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>pos_last</name></member>
+      <member refid="classcpp_rigid_body_1a88b005aa95f66094a69afa07f9414807" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>poststep</name></member>
+      <member refid="classcpp_rigid_body_1a2cb5af2199b290dcd33ccd80a1f4eb9f" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>prestep</name></member>
+      <member refid="classcpp_rigid_body_1a9b041171d3560abc6909372d2c60e10d" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>rotm</name></member>
+      <member refid="classcpp_rigid_body_1a0ae80b4489191f508cf11522d2552146" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>rotm_last</name></member>
+      <member refid="classcpp_rigid_body_1a2a291e85928eef30e0c4745f5770d9ba" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>rotq</name></member>
+      <member refid="classcpp_rigid_body_1a045646f672d53476810e741a0a57f34e" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>rotq0</name></member>
+      <member refid="classcpp_rigid_body_1a3a886b70b800d878d6b935b4f3c904ac" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>rotq0_trimesh</name></member>
+      <member refid="classcpp_rigid_body_1a8fb42075d9492e6464b559844930fec0" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>rotq_last</name></member>
+      <member refid="classcpp_rigid_body_1a560c27f7f0833f224edb43c5cf8168ca" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>setConstraints</name></member>
+      <member refid="classcpp_rigid_body_1a5d3b1aea1bedc5ca21acd92b0f68dd0e" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>setName</name></member>
+      <member refid="classcpp_rigid_body_1a68b8614f1ebb21b7b938a6f2508e00af" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>setPrescribedMotionCustom</name></member>
+      <member refid="classcpp_rigid_body_1a6a3dd7200c1544fd53ac9fe452739009" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>setPrescribedMotionPoly</name></member>
+      <member refid="classcpp_rigid_body_1ad21d1121e0427203d80cded65faf7c1d" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>setPrescribedMotionSine</name></member>
+      <member refid="classcpp_rigid_body_1a4b8a2695619c380aa594d0f4fb5279e3" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>spring</name></member>
+      <member refid="classcpp_rigid_body_1a922bde7607ffdee427472aec08853022" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>system</name></member>
+      <member refid="classcpp_rigid_body_1aa2387f035ce58dfd08a8a230fd8b53ad" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>trimesh</name></member>
+      <member refid="classcpp_rigid_body_1a3dfe113b36160edecb2476625d96e0c1" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>trimesh_pos</name></member>
+      <member refid="classcpp_rigid_body_1a2842108eddb95d34795227a2ed59519d" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>trimesh_pos0</name></member>
+      <member refid="classcpp_rigid_body_1a7dac61a7dfb570c4de279a14de7be178" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>trimesh_pos_last</name></member>
+      <member refid="classcpp_rigid_body_1a8fab301b680ec2c0dcc34f1bf272ef92" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>updateTriangleMeshVisualisationPos</name></member>
+      <member refid="classcpp_rigid_body_1aedc937a0352a702319bf6c4ef95ff46c" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>vel</name></member>
+      <member refid="classcpp_rigid_body_1aa591ef008a770fe481ab9c2a469ef48e" prot="public" virt="non-virtual"><scope>cppRigidBody</scope><name>vel_last</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

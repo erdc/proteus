@@ -1,7 +1,0 @@
-proteus.TriangleTools module
-============================
-
-.. automodule:: proteus.TriangleTools
-    :members:
-    :undoc-members:
-    :show-inheritance:

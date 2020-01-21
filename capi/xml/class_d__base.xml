@@ -1,0 +1,211 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_d__base" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>D_base</compoundname>
+    <derivedcompoundref refid="class_piecewise_linear_complex_domain" prot="public" virt="non-virtual">PiecewiseLinearComplexDomain</derivedcompoundref>
+    <derivedcompoundref refid="class_planar_straight_line_graph_domain" prot="public" virt="non-virtual">PlanarStraightLineGraphDomain</derivedcompoundref>
+    <derivedcompoundref refid="class_rectangular_domain" prot="public" virt="non-virtual">RectangularDomain</derivedcompoundref>
+    <includes refid="_domain_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/Domain.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_d__base_1a630e203b1b2e5a330787cee20e1f75a5" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int D_base::dim</definition>
+        <argsstring></argsstring>
+        <name>dim</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="17" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_d__base_1ab4f698f5c7311cec0e5c90698d88af9f" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string D_base::name</definition>
+        <argsstring></argsstring>
+        <name>name</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="18" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="18" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_d__base_1a21b5f51f4c8d2a66cef73931474a95e3" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string D_base::units</definition>
+        <argsstring></argsstring>
+        <name>units</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="19" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_d__base_1a3b73f494635dabeb3e85355d24f8bd1d" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; D_base::x</definition>
+        <argsstring></argsstring>
+        <name>x</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="20" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_d__base_1a3a982a9943f929ffff437be69fcdebd7" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; D_base::L</definition>
+        <argsstring></argsstring>
+        <name>L</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="21" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="21" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_d__base_1a0a6e52d303b6eebaec25bc94e01a33cf" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>D_base::D_base</definition>
+        <argsstring>(int dimIn=3, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>D_base</name>
+        <param>
+          <type>int</type>
+          <declname>dimIn</declname>
+          <defval>3</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="13" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="13" bodyend="17"/>
+      </memberdef>
+      <memberdef kind="function" id="class_d__base_1a06516a66bdf9e56bc1278e1626b59e95" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void D_base::writeAsymptote</definition>
+        <argsstring>(const char *filename)=0</argsstring>
+        <name>writeAsymptote</name>
+        <reimplementedby refid="class_rectangular_domain_1a6a74661d619ed83d9a31bddb2276f61a">writeAsymptote</reimplementedby>
+        <reimplementedby refid="class_planar_straight_line_graph_domain_1a336dd9b54fd9fcf4f6b67ec104f7c735">writeAsymptote</reimplementedby>
+        <reimplementedby refid="class_piecewise_linear_complex_domain_1a9a63082fbb5a9e994a3c5a29d1b66f23">writeAsymptote</reimplementedby>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="14" column="16"/>
+      </memberdef>
+      <memberdef kind="function" id="class_d__base_1ab9a1c2adbd1d283a75b96eddfe4880f1" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void D_base::writePoly</definition>
+        <argsstring>(const char *filename)=0</argsstring>
+        <name>writePoly</name>
+        <reimplementedby refid="class_rectangular_domain_1a4c29ada05ce8c5168e5f3261cf0ad6d0">writePoly</reimplementedby>
+        <reimplementedby refid="class_planar_straight_line_graph_domain_1ad6ade6af7f073be5ea77c3829053d400">writePoly</reimplementedby>
+        <reimplementedby refid="class_piecewise_linear_complex_domain_1a482100cccb2fbbd2b20627ea903240ac">writePoly</reimplementedby>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="15" column="16"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="4">
+        <label>RectangularDomain</label>
+        <link refid="class_rectangular_domain"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>PiecewiseLinearComplexDomain</label>
+        <link refid="class_piecewise_linear_complex_domain"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>PlanarStraightLineGraphDomain</label>
+        <link refid="class_planar_straight_line_graph_domain"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>D_base</label>
+        <link refid="class_d__base"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="4">
+        <label>std::vector&lt; double &gt;</label>
+      </node>
+      <node id="3">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="1">
+        <label>D_base</label>
+        <link refid="class_d__base"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>units</edgelabel>
+          <edgelabel>name</edgelabel>
+        </childnode>
+        <childnode refid="4" relation="usage">
+          <edgelabel>x</edgelabel>
+          <edgelabel>L</edgelabel>
+        </childnode>
+      </node>
+      <node id="2">
+        <label>std::string</label>
+        <childnode refid="3" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="11" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="10" bodyend="22"/>
+    <listofallmembers>
+      <member refid="class_d__base_1a0a6e52d303b6eebaec25bc94e01a33cf" prot="public" virt="non-virtual"><scope>D_base</scope><name>D_base</name></member>
+      <member refid="class_d__base_1a630e203b1b2e5a330787cee20e1f75a5" prot="public" virt="non-virtual"><scope>D_base</scope><name>dim</name></member>
+      <member refid="class_d__base_1a3a982a9943f929ffff437be69fcdebd7" prot="public" virt="non-virtual"><scope>D_base</scope><name>L</name></member>
+      <member refid="class_d__base_1ab4f698f5c7311cec0e5c90698d88af9f" prot="public" virt="non-virtual"><scope>D_base</scope><name>name</name></member>
+      <member refid="class_d__base_1a21b5f51f4c8d2a66cef73931474a95e3" prot="public" virt="non-virtual"><scope>D_base</scope><name>units</name></member>
+      <member refid="class_d__base_1a06516a66bdf9e56bc1278e1626b59e95" prot="public" virt="pure-virtual"><scope>D_base</scope><name>writeAsymptote</name></member>
+      <member refid="class_d__base_1ab9a1c2adbd1d283a75b96eddfe4880f1" prot="public" virt="pure-virtual"><scope>D_base</scope><name>writePoly</name></member>
+      <member refid="class_d__base_1a3b73f494635dabeb3e85355d24f8bd1d" prot="public" virt="non-virtual"><scope>D_base</scope><name>x</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

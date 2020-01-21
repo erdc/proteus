@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_ea00e9b50a0f6d637a9dd4ed40825cbc" kind="dir">
+    <compoundname>PROTEUS</compoundname>
+    <innerdir refid="dir_d23a82edd4ac0940d9425868b4e8e61c">proteus2</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,443 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_piecewise_linear_complex_domain" kind="class" language="C++" prot="public">
+    <compoundname>PiecewiseLinearComplexDomain</compoundname>
+    <basecompoundref refid="class_d__base" prot="public" virt="non-virtual">D_base</basecompoundref>
+    <includes refid="_domain_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/Domain.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1af144e683d2e4a1b035dd00be1132f00a" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &gt; &gt;</type>
+        <definition>vector&lt; vector &lt; vector &lt;double&gt; &gt; &gt; PiecewiseLinearComplexDomain::vertices</definition>
+        <argsstring></argsstring>
+        <name>vertices</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="111" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="111" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1acfff7c9b64b08a4f8bf7022e7385877f" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &gt; &gt;</type>
+        <definition>vector&lt; vector &lt; vector &lt;int&gt; &gt; &gt; PiecewiseLinearComplexDomain::facets</definition>
+        <argsstring></argsstring>
+        <name>facets</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="112" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="112" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1a12f7c63510e769bb5ebef9b1f3e6a15e" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; PiecewiseLinearComplexDomain::regions</definition>
+        <argsstring></argsstring>
+        <name>regions</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="113" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="113" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1af2689fc32983e0720d9d939ed409b34e" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; PiecewiseLinearComplexDomain::holes</definition>
+        <argsstring></argsstring>
+        <name>holes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="114" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="114" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1a28f697160ec723c3d432636f4c7d24b0" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PiecewiseLinearComplexDomain::facetHoles</definition>
+        <argsstring></argsstring>
+        <name>facetHoles</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="115" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="115" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1abe647a6f33bbe4f24fac4f55c694559d" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PiecewiseLinearComplexDomain::vertexFlags</definition>
+        <argsstring></argsstring>
+        <name>vertexFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="116" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="116" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1ae304c12c229d9226ddee04c88a8594c8" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PiecewiseLinearComplexDomain::facetFlags</definition>
+        <argsstring></argsstring>
+        <name>facetFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="117" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="117" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1a3448db1e3a5bfd45863ac870c97def15" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PiecewiseLinearComplexDomain::hasVertexFlags</definition>
+        <argsstring></argsstring>
+        <name>hasVertexFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="118" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="118" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1ae2fd5f04b9b4cd1c0cc65bb1bf4c341f" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PiecewiseLinearComplexDomain::hasFacetFlags</definition>
+        <argsstring></argsstring>
+        <name>hasFacetFlags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="119" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="119" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1ae64b365a952bb4fc71c59574646f2c8a" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PiecewiseLinearComplexDomain::vN</definition>
+        <argsstring></argsstring>
+        <name>vN</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="120" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="120" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1a1b84412c47183b461e9894d7b5be2e04" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt;</type>
+        <definition>vector&lt;double&gt; PiecewiseLinearComplexDomain::v</definition>
+        <argsstring></argsstring>
+        <name>v</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="121" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="121" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1aad554b194fbe43c550254ef033e726fb" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PiecewiseLinearComplexDomain::f</definition>
+        <argsstring></argsstring>
+        <name>f</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="122" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="122" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_piecewise_linear_complex_domain_1a76e06620b0b43c720da6434e1da58119" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt;</type>
+        <definition>vector&lt;int&gt; PiecewiseLinearComplexDomain::fN</definition>
+        <argsstring></argsstring>
+        <name>fN</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="123" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="123" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_piecewise_linear_complex_domain_1a110b3a9f85eb6921102a47d9155a10c8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>PiecewiseLinearComplexDomain::PiecewiseLinearComplexDomain</definition>
+        <argsstring>(int dimIn=3, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>PiecewiseLinearComplexDomain</name>
+        <param>
+          <type>int</type>
+          <declname>dimIn</declname>
+          <defval>3</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="104" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="437" bodyend="439"/>
+      </memberdef>
+      <memberdef kind="function" id="class_piecewise_linear_complex_domain_1a24e6fd3b1c07c01298fe8edcd553b3f1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>PiecewiseLinearComplexDomain::PiecewiseLinearComplexDomain</definition>
+        <argsstring>(const vector&lt; vector&lt; vector&lt; double &gt; &gt; &gt; &amp;verticesIn, const vector&lt; vector&lt; vector&lt; vector&lt; int &gt; &gt; &gt; &gt; &amp;facetsIn, const vector&lt; vector&lt; double &gt; &gt; &amp;holesIn, const vector&lt; double &gt; &amp;regionsIn, const vector&lt; int &gt; &amp;vertexFlagsIn, const vector&lt; int &gt; &amp;facetFlagsIn, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>PiecewiseLinearComplexDomain</name>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &gt; &gt; &amp;</type>
+          <declname>verticesIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &gt; &gt; &gt; &amp;</type>
+          <declname>facetsIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &gt; &amp;</type>
+          <declname>holesIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &amp;</type>
+          <declname>regionsIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &amp;</type>
+          <declname>vertexFlagsIn</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; int &gt; &amp;</type>
+          <declname>facetFlagsIn</declname>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="105" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="441" bodyend="449"/>
+      </memberdef>
+      <memberdef kind="function" id="class_piecewise_linear_complex_domain_1ac8b366c480bc3e2a288887ea1f1c898d" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>PiecewiseLinearComplexDomain::~PiecewiseLinearComplexDomain</definition>
+        <argsstring>()</argsstring>
+        <name>~PiecewiseLinearComplexDomain</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="106" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="450" bodyend="451"/>
+      </memberdef>
+      <memberdef kind="function" id="class_piecewise_linear_complex_domain_1a5d32497c8556dc9c9fc5e5f2da208f21" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void PiecewiseLinearComplexDomain::getBoundingBox</definition>
+        <argsstring>(vector&lt; double &gt; &amp;v)</argsstring>
+        <name>getBoundingBox</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">vector</ref>&lt; double &gt; &amp;</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="107" column="8"/>
+      </memberdef>
+      <memberdef kind="function" id="class_piecewise_linear_complex_domain_1a2e7840adbb44dae2c9d822fb19bc8008" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void PiecewiseLinearComplexDomain::readPoly</definition>
+        <argsstring>(const char *filename)</argsstring>
+        <name>readPoly</name>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="108" column="8"/>
+      </memberdef>
+      <memberdef kind="function" id="class_piecewise_linear_complex_domain_1a482100cccb2fbbd2b20627ea903240ac" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void PiecewiseLinearComplexDomain::writePoly</definition>
+        <argsstring>(const char *filename)</argsstring>
+        <name>writePoly</name>
+        <reimplements refid="class_d__base_1ab9a1c2adbd1d283a75b96eddfe4880f1">writePoly</reimplements>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="109" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="512" bodyend="597"/>
+      </memberdef>
+      <memberdef kind="function" id="class_piecewise_linear_complex_domain_1a9a63082fbb5a9e994a3c5a29d1b66f23" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void PiecewiseLinearComplexDomain::writeAsymptote</definition>
+        <argsstring>(const char *filename)</argsstring>
+        <name>writeAsymptote</name>
+        <reimplements refid="class_d__base_1a06516a66bdf9e56bc1278e1626b59e95">writeAsymptote</reimplements>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="110" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="453" bodyend="509"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>PiecewiseLinearComplexDomain</label>
+        <link refid="class_piecewise_linear_complex_domain"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>D_base</label>
+        <link refid="class_d__base"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="5">
+        <label>std::vector&lt; double &gt;</label>
+      </node>
+      <node id="6">
+        <label>std::vector&lt; vector&lt; vector&lt; double &gt; &gt; &gt;</label>
+      </node>
+      <node id="7">
+        <label>std::vector&lt; vector&lt; vector&lt; int &gt; &gt; &gt;</label>
+      </node>
+      <node id="4">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="1">
+        <label>PiecewiseLinearComplexDomain</label>
+        <link refid="class_piecewise_linear_complex_domain"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+        <childnode refid="6" relation="usage">
+          <edgelabel>vertices</edgelabel>
+        </childnode>
+        <childnode refid="7" relation="usage">
+          <edgelabel>facets</edgelabel>
+        </childnode>
+        <childnode refid="8" relation="usage">
+          <edgelabel>f</edgelabel>
+          <edgelabel>vertexFlags</edgelabel>
+          <edgelabel>facetHoles</edgelabel>
+          <edgelabel>fN</edgelabel>
+          <edgelabel>vN</edgelabel>
+          <edgelabel>facetFlags</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>regions</edgelabel>
+          <edgelabel>holes</edgelabel>
+          <edgelabel>v</edgelabel>
+        </childnode>
+      </node>
+      <node id="2">
+        <label>D_base</label>
+        <link refid="class_d__base"/>
+        <childnode refid="3" relation="usage">
+          <edgelabel>units</edgelabel>
+          <edgelabel>name</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>x</edgelabel>
+          <edgelabel>L</edgelabel>
+        </childnode>
+      </node>
+      <node id="8">
+        <label>std::vector&lt; int &gt;</label>
+      </node>
+      <node id="3">
+        <label>std::string</label>
+        <childnode refid="4" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="102" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="101" bodyend="125"/>
+    <listofallmembers>
+      <member refid="class_d__base_1a0a6e52d303b6eebaec25bc94e01a33cf" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>D_base</name></member>
+      <member refid="class_d__base_1a630e203b1b2e5a330787cee20e1f75a5" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>dim</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1aad554b194fbe43c550254ef033e726fb" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>f</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1ae304c12c229d9226ddee04c88a8594c8" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>facetFlags</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a28f697160ec723c3d432636f4c7d24b0" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>facetHoles</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1acfff7c9b64b08a4f8bf7022e7385877f" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>facets</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a76e06620b0b43c720da6434e1da58119" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>fN</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a5d32497c8556dc9c9fc5e5f2da208f21" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>getBoundingBox</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1ae2fd5f04b9b4cd1c0cc65bb1bf4c341f" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>hasFacetFlags</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a3448db1e3a5bfd45863ac870c97def15" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>hasVertexFlags</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1af2689fc32983e0720d9d939ed409b34e" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>holes</name></member>
+      <member refid="class_d__base_1a3a982a9943f929ffff437be69fcdebd7" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>L</name></member>
+      <member refid="class_d__base_1ab4f698f5c7311cec0e5c90698d88af9f" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>name</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a110b3a9f85eb6921102a47d9155a10c8" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>PiecewiseLinearComplexDomain</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a24e6fd3b1c07c01298fe8edcd553b3f1" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>PiecewiseLinearComplexDomain</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a2e7840adbb44dae2c9d822fb19bc8008" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>readPoly</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a12f7c63510e769bb5ebef9b1f3e6a15e" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>regions</name></member>
+      <member refid="class_d__base_1a21b5f51f4c8d2a66cef73931474a95e3" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>units</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a1b84412c47183b461e9894d7b5be2e04" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>v</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1abe647a6f33bbe4f24fac4f55c694559d" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>vertexFlags</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1af144e683d2e4a1b035dd00be1132f00a" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>vertices</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1ae64b365a952bb4fc71c59574646f2c8a" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>vN</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a9a63082fbb5a9e994a3c5a29d1b66f23" prot="public" virt="virtual"><scope>PiecewiseLinearComplexDomain</scope><name>writeAsymptote</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1a482100cccb2fbbd2b20627ea903240ac" prot="public" virt="virtual"><scope>PiecewiseLinearComplexDomain</scope><name>writePoly</name></member>
+      <member refid="class_d__base_1a3b73f494635dabeb3e85355d24f8bd1d" prot="public" virt="non-virtual"><scope>PiecewiseLinearComplexDomain</scope><name>x</name></member>
+      <member refid="class_piecewise_linear_complex_domain_1ac8b366c480bc3e2a288887ea1f1c898d" prot="public" virt="virtual"><scope>PiecewiseLinearComplexDomain</scope><name>~PiecewiseLinearComplexDomain</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

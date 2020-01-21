@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_ea3432ea93a6efa34a30a2b3cde6d4da" kind="dir">
+    <compoundname>mbd</compoundname>
+    <innerfile refid="_ch_body_added_mass_8cpp">ChBodyAddedMass.cpp</innerfile>
+    <innerfile refid="_ch_body_added_mass_8h">ChBodyAddedMass.h</innerfile>
+    <innerfile refid="_ch_rigid_body_8cpp">ChRigidBody.cpp</innerfile>
+    <innerfile refid="_ch_variables_body_added_mass_8cpp">ChVariablesBodyAddedMass.cpp</innerfile>
+    <innerfile refid="_ch_variables_body_added_mass_8h">ChVariablesBodyAddedMass.h</innerfile>
+    <innerfile refid="_coupling_f_s_i_8cpp">CouplingFSI.cpp</innerfile>
+    <innerfile refid="_prot_ch_body_8h">ProtChBody.h</innerfile>
+    <innerfile refid="_prot_ch_moorings_8h">ProtChMoorings.h</innerfile>
+    <innerfile refid="py_chrono_core_8cpp">pyChronoCore.cpp</innerfile>
+    <innerfile refid="swigpyobject_8h">swigpyobject.h</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/"/>
+  </compounddef>
+</doxygen>

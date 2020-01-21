@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_ch_element_beam_eulermod" kind="class" language="C++" prot="public">
+    <compoundname>ChElementBeamEulermod</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">ChElementBeamEuler</basecompoundref>
+    <includes refid="_prot_ch_moorings_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h</includes>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_ch_element_beam_eulermod_1a8fd4ee99ca6f4876a701cd2c29564c34" prot="private" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void ChElementBeamEulermod::SetupInitial</definition>
+        <argsstring>(ChSystem *system) override</argsstring>
+        <name>SetupInitial</name>
+        <param>
+          <type>ChSystem *</type>
+          <declname>system</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="59" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="59" bodyend="74"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>ChElementBeamEulermod</label>
+        <link refid="class_ch_element_beam_eulermod"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ChElementBeamEuler</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>ChElementBeamEulermod</label>
+        <link refid="class_ch_element_beam_eulermod"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ChElementBeamEuler</label>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="58" column="54" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="58" bodyend="75"/>
+    <listofallmembers>
+      <member refid="class_ch_element_beam_eulermod_1a8fd4ee99ca6f4876a701cd2c29564c34" prot="private" virt="virtual"><scope>ChElementBeamEulermod</scope><name>SetupInitial</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

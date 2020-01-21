@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_3eaf0bddf7912aa14d398587e5887f8b" kind="dir">
+    <compoundname>tests</compoundname>
+    <innerdir refid="dir_fcc1f69c8d1d066b84f9f93ec88f3e5c">sandbox</innerdir>
+    <innerfile refid="flop_test_8c">flopTest.c</innerfile>
+    <innerfile refid="test_f_m_mand_f_s_w_8cpp">testFMMandFSW.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/tests/"/>
+  </compounddef>
+</doxygen>

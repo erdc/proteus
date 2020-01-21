@@ -1,0 +1,5615 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="group__analytical_solutions" kind="group">
+    <compoundname>analyticalSolutions</compoundname>
+    <title>analyticalSolutions</title>
+      <sectiondef kind="user-defined">
+      <memberdef kind="function" id="group__analytical_solutions_1gacbb37fa8c089b28b5218683ae436b6c8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int PlaneCouetteFlow_u</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>PlaneCouetteFlow_u</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Couette Flow between two parallel plates. One moving relative to the other with constant seperation (width). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>velocity of moving plate in the x-dir, <formula id="0">$ vx $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>width between plates, <formula id="1">$ h $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-axis offset, <formula id="2">$ xs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>y-axis offset, <formula id="3">$ ys $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>z-axis offset, <formula id="4">$ zs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+x-momentum equation <formula id="5">\[ \nabla^2 u_x = 0 \]</formula> <formula id="6">\[ u(y) = \frac{vx}{h} * y\]</formula> <formula id="7">\[ u(0) = 0 \]</formula> <formula id="8">\[ u(h) = vx \]</formula></para>
+<para>Axis of origin: at bottom plate<linebreak/>
+</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" line="36" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="36" bodyend="67" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="18" declcolumn="12"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="group__analytical_solutions_1ga952eac791b596a61bba0a133a3bb439f" prot="public" static="yes" mutable="no">
+        <type>const double</type>
+        <definition>const double PI</definition>
+        <argsstring></argsstring>
+        <name>PI</name>
+        <initializer>= 3.1415926535897932384</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="16" column="21" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" bodystart="16" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group__analytical_solutions_1gab484c73a106361cb6632ecbe3faecac2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int diffusionSin1D</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>diffusionSin1D</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Sinusoidal 1D diffusion. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>angular frequency, <formula id="9">$ \omega_x $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="10">\[ -\Delta u = f \]</formula> <formula id="11">\[ f = -(2 \pi \omega_x)^2 \sin(2 \pi \omega_x x) \]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="26" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="84" bodyend="95" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="26" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga1b38a52b042805d73ce6ef2f874847d2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int diffusionSin2D</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>diffusionSin2D</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Sinusoidal 2D diffusion. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-component angular frequency, <formula id="9">$ \omega_x $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>iwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>y-component angular frequency, <formula id="12">$ \omega_y $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="10">\[ -\Delta u = f \]</formula> <formula id="13">\[ f = -(2\pi\omega_x)^2\sin(2 \pi \omega_x x) -(2 \pi \omega_y)^2\sin(2 \pi \omega_y y)\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="34" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="111" bodyend="124" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="34" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga3c6987c2dde325822225b36cb656da85" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int diffusionSin3D</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>diffusionSin3D</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Sinusoidal 3D diffusion. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-component angular frequency, <formula id="9">$ \omega_x $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>iwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>y-component angular frequency, <formula id="12">$ \omega_y $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>iwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>z-component angular frequency, <formula id="14">$ \omega_z $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="10">\[ -\Delta u = f \]</formula> <formula id="15">\[ f = -(2\pi\omega_x)^2\sin(2\pi\omega_x x) -(2\pi\omega_y)^2\sin(2\pi\omega_y y)-(2\pi\omega_z)^2sin(2 \pi \omega_z z)\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="42" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="141" bodyend="156" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="42" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gaa27bf92c0e02031ac21a621a9d00c149" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int diffusionSin1D_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u, double *r)</argsstring>
+        <name>diffusionSin1D_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Sinusoidal 1D diffusion (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-component angular frequency, <formula id="9">$ \omega_x $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="16">\[ -\Delta u = -r \]</formula> <formula id="17">\[ r = (2 \pi \omega_x)^2 \sin(2 \pi \omega_x x) \]</formula> <linebreak/>
+</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="50" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="172" bodyend="183" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="50" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gaa17304f96b3abd685522b6cdf25bb128" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int diffusionSin2D_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u, double *r)</argsstring>
+        <name>diffusionSin2D_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Sinusoidal 2D diffusion (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-component angular frequency, <formula id="18">$ omega_x $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>iwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>y-component angular frequency, <formula id="19">$ omega_y $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="20">\[-\Delta u = -r \]</formula> <formula id="21">\[r= (2\pi\omega_x)^2\sin(2 \pi \omega_x x)+(2 \pi \omega_y)^2\sin(2 \pi \omega_y y)\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="59" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="200" bodyend="213" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="59" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga6383b3aa517f7583783f5f73b372ff0e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int diffusionSin3D_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u, double *r)</argsstring>
+        <name>diffusionSin3D_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Sinusoidal 3D diffusion (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-component angular frequency, <formula id="18">$ omega_x $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>iwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>y-component angular frequency, <formula id="19">$ omega_y $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>iwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>z-component angular frequency, <formula id="22">$ omega_z $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="20">\[-\Delta u = -r \]</formula> <formula id="23">\[r=(2\pi\omega_x)^2\sin(2\pi\omega_x x) +(2\pi\omega_y)^2\sin(2\pi\omega_y y)+(2\pi\omega_z)^2sin(2 \pi \omega_z z)\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="68" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="231" bodyend="246" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="68" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga8400a5a823e80620da7f2e071659561c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearAD_DiracIC</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *u)</argsstring>
+        <name>LinearAD_DiracIC</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Linear Advective Diffusion Dirac Initial Condition. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The exact solution of</para>
+<para><formula id="30">\[ u_t + \nabla \cdot (b u - a \nabla u) = 0\]</formula></para>
+<para>on an infinite domain with dirac initial data</para>
+<para><formula id="31">\[u_0 = \int u_0 \delta(x - x_0)\]</formula></para>
+<para>also returns advective, diffusive, and total flux</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="77" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="273" bodyend="312" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="77" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gae9af8e2affdb06660ab67e1e6f438980" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearAD_DiracIC_advectiveVelocity</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *f)</argsstring>
+        <name>LinearAD_DiracIC_advectiveVelocity</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Linear Advective Diffusion Dirac Initial Condition(advective velocity) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array, vector</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The exact solution of</para>
+<para><formula id="30">\[ u_t + \nabla \cdot (b u - a \nabla u) = 0\]</formula></para>
+<para>on an infinite domain with dirac initial data</para>
+<para><formula id="31">\[u_0 = \int u_0 \delta(x - x_0)\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="85" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="337" bodyend="356" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="85" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga08bde89e03ea8c28bdbe10e878b2e89e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearAD_DiracIC_diffusiveVelocity</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *f)</argsstring>
+        <name>LinearAD_DiracIC_diffusiveVelocity</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Linear Advective Diffusion Dirac Initial Condition(diffusive velocity) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array, vector</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The exact solution of</para>
+<para><formula id="30">\[ u_t + \nabla \cdot (b u - a \nabla u) = 0\]</formula></para>
+<para>on an infinite domain with dirac initial data</para>
+<para><formula id="31">\[u_0 = \int u_0 \delta(x - x_0)\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="93" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="381" bodyend="396" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="93" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga2bf9013d22891c618d00964e512d78ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearAD_DiracIC_du</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *f)</argsstring>
+        <name>LinearAD_DiracIC_du</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Linear Advective Diffusion Dirac Initial Condition (du) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array, vector</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The exact solution of</para>
+<para><formula id="30">\[ u_t + \nabla \cdot (b u - a \nabla u) = 0\]</formula></para>
+<para>on an infinite domain with dirac initial data</para>
+<para><formula id="31">\[u_0 = \int u_0 \delta(x - x_0)\]</formula></para>
+<para>also returns advective, diffusive, and total flux</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="101" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="423" bodyend="445" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="101" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gab0132ce276c7d9ec0da6288fc9e27973" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearAD_DiracIC_totalVelocity</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *f)</argsstring>
+        <name>LinearAD_DiracIC_totalVelocity</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Linear Advective Diffusion Dirac Initial Condition(total velocity) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array, vector</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The exact solution of</para>
+<para><formula id="30">\[ u_t + \nabla \cdot (b u - a \nabla u) = 0\]</formula></para>
+<para>on an infinite domain with dirac initial data</para>
+<para><formula id="31">\[u_0 = \int u_0 \delta(x - x_0)\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="109" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="471" bodyend="489" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="109" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gaa3f08cf4fd7c6aa74dcc25d34127b2d2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearAD_SteadyState</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u)</argsstring>
+        <name>LinearAD_SteadyState</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Linear Advection-Diffusion Steady State. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="32">$ b $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="33">\[(bu - au_x)_x = 0\]</formula> <formula id="34">\[ u(0) = 1\]</formula> <formula id="35">\[ u(1) = 0\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="117" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="508" bodyend="540" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="117" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gae06e06a09b9ad151004d3e438337fcc8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Decay_DiracIC</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *u)</argsstring>
+        <name>LinearADR_Decay_DiracIC</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Decay Dirac Initial Condition. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[10]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The exact solution of <verbatim>\f[ u_t + \nabla \cdot(bu - a \nabla u) + cu= 0 \f]
+
+on an infinite domain with Dirac initial data.
+Also returns the fluxes (by inheritance).
+</verbatim></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="125" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="566" bodyend="587" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="125" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga80051bda689b13a352183a668d0401f6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Decay_DiracIC_dr</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *u, double *dr)</argsstring>
+        <name>LinearADR_Decay_DiracIC_dr</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Decay Dirac Initial Condition (dr) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[10]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The exact solution of <verbatim>\f[ u_t + \nabla \cdot(bu - a \nabla u) + cu= 0 \f]
+
+on an infinite domain with Dirac initial data.
+Also returns the fluxes (by inheritance).
+</verbatim></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="133" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="613" bodyend="626" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="133" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gaa978bb8023e2279d21d97ac0e57593bf" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Decay_DiracIC_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *u, double *r)</argsstring>
+        <name>LinearADR_Decay_DiracIC_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Decay Dirac Initial Condition (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[10]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The exact solution of <verbatim>\f[ u_t + \nabla \cdot(bu - a \nabla u) + cu= 0 \f]
+
+on an infinite domain with Dirac initial data.
+Also returns the fluxes (by inheritance).
+</verbatim></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="142" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="652" bodyend="665" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="142" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga2ba8debc8c33446da363d88503a1ac34" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Sine</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>LinearADR_Sine</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Sine function. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="37">$ \omega[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="38">$ \omega_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+An exact solution and source term for</para>
+<para><formula id="39">\[ \nabla \cdot (\vec b u - \ddot a \nabla u) + c u + d = 0 \]</formula></para>
+<para>where</para>
+<para><formula id="40">\[ u(x) = sin(\vec \omega \cdot \vec x + \omega_0) = sin(Ax - b)\]</formula> <formula id="41">\[r(u,x) = - ((\ddot a \vec \omega) \cdot \vec \omega) u - (\vec b \cdot \vec \omega) cos(Ax - b)\]</formula> <formula id="42">\[ = c u + D cos(Ax - b) \]</formula> <formula id="43">\[ = cu + d \]</formula></para>
+<para>also returns the advective, diffusive, and total velocity at a point.</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="151" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="691" bodyend="720" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="151" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gad870808ac02dfa561b11f39da536762a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Sine_advectiveVelocity</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *f)</argsstring>
+        <name>LinearADR_Sine_advectiveVelocity</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Sine function (advective velocity) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="37">$ \omega[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="38">$ \omega_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4:6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:15]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="44">$ a[0:3,0:3] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[16]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array (vector)</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+An exact solution and source term for</para>
+<para><formula id="39">\[ \nabla \cdot (\vec b u - \ddot a \nabla u) + c u + d = 0 \]</formula></para>
+<para>where</para>
+<para><formula id="40">\[ u(x) = sin(\vec \omega \cdot \vec x + \omega_0) = sin(Ax - b)\]</formula> <formula id="41">\[r(u,x) = - ((\ddot a \vec \omega) \cdot \vec \omega) u - (\vec b \cdot \vec \omega) cos(Ax - b)\]</formula> <formula id="42">\[ = c u + D cos(Ax - b) \]</formula> <formula id="43">\[ = cu + d \]</formula></para>
+<para>returns the advective velocity at a point.</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="159" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="749" bodyend="772" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="159" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga42d6d124e2b7c4e4f4448ffedaf7768e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Sine_diffusiveVelocity</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *f)</argsstring>
+        <name>LinearADR_Sine_diffusiveVelocity</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Sine function (diffusive velocity) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="37">$ \omega[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="38">$ \omega_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4:6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:15]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="44">$ a[0:3,0:3] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[16]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array (vector)</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+An exact solution and source term for</para>
+<para><formula id="39">\[ \nabla \cdot (\vec b u - \ddot a \nabla u) + c u + d = 0 \]</formula></para>
+<para>where</para>
+<para><formula id="40">\[ u(x) = sin(\vec \omega \cdot \vec x + \omega_0) = sin(Ax - b)\]</formula> <formula id="41">\[r(u,x) = - ((\ddot a \vec \omega) \cdot \vec \omega) u - (\vec b \cdot \vec \omega) cos(Ax - b)\]</formula> <formula id="42">\[ = c u + D cos(Ax - b) \]</formula> <formula id="43">\[ = cu + d \]</formula></para>
+<para>returns the diffusive velocity at a point.</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="167" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="802" bodyend="821" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="167" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga278c31c293ef7480b10494c33737972a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Sine_dr</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u, double *dr)</argsstring>
+        <name>LinearADR_Sine_dr</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Sine function (dr) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="37">$ \omega[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="38">$ \omega_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4:6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:15]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="44">$ a[0:3,0:3] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[16]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+An exact solution and source term for</para>
+<para><formula id="39">\[ \nabla \cdot (\vec b u - \ddot a \nabla u) + c u + d = 0 \]</formula></para>
+<para>where</para>
+<para><formula id="45">\[ u(x) = sin[\vec \omega \cdot \vec x + \omega_0) ] = sin(Ax - b) \f \f[r(u,x) = - ((\ddot a \vec \omega) \cdot \vec \omega) u - (\vec b \cdot \vec \omega) cos(Ax - b)\]</formula> <formula id="42">\[ = c u + D cos(Ax - b) \]</formula> <formula id="43">\[ = cu + d \]</formula></para>
+<para>also returns the advective, diffusive, and total velocity at a point.</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="175" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="851" bodyend="864" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="175" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga23eee10efbdf6cc68c3fb689e7627154" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Sine_du</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *f)</argsstring>
+        <name>LinearADR_Sine_du</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Sine function (du) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="37">$ \omega[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="38">$ \omega_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array (vector)</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+An exact solution and source term for</para>
+<para><formula id="39">\[ \nabla \cdot (\vec b u - \ddot a \nabla u) + c u + d = 0 \]</formula></para>
+<para>where</para>
+<para><formula id="40">\[ u(x) = sin(\vec \omega \cdot \vec x + \omega_0) = sin(Ax - b)\]</formula> <formula id="41">\[r(u,x) = - ((\ddot a \vec \omega) \cdot \vec \omega) u - (\vec b \cdot \vec \omega) cos(Ax - b)\]</formula> <formula id="42">\[ = c u + D cos(Ax - b) \]</formula> <formula id="43">\[ = cu + d \]</formula></para>
+<para>also returns the advective, diffusive, and total velocity at a point.</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="184" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="890" bodyend="907" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="184" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gaf2882702e4addac01e556348fe0f78ae" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Sine_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u, double *r)</argsstring>
+        <name>LinearADR_Sine_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Sine function (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="37">$ \omega[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="38">$ \omega_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4:6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:15]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="44">$ a[0:3,0:3] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[16]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+An exact solution and source term for</para>
+<para><formula id="39">\[ \nabla \cdot (\vec b u - \ddot a \nabla u) + c u + d = 0 \]</formula></para>
+<para>where</para>
+<para><formula id="40">\[ u(x) = sin(\vec \omega \cdot \vec x + \omega_0) = sin(Ax - b)\]</formula> <formula id="41">\[r(u,x) = - ((\ddot a \vec \omega) \cdot \vec \omega) u - (\vec b \cdot \vec \omega) cos(Ax - b)\]</formula> <formula id="42">\[ = c u + D cos(Ax - b) \]</formula> <formula id="43">\[ = cu + d \]</formula></para>
+<para>also returns the advective, diffusive, and total velocity at a point.</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="192" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="938" bodyend="968" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="192" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga0b796cae20f7733dafd782b9cc2c79a4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int LinearADR_Sine_totalVelocity</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *f)</argsstring>
+        <name>LinearADR_Sine_totalVelocity</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Linear Avection Diffusion Reaction Sine function (total velocity) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="37">$ \omega[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="38">$ \omega_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4:6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:15]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="44">$ a[0:3,0:3] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[16]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array (vector)</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+An exact solution and source term for</para>
+<para><formula id="39">\[ \nabla \cdot (\vec b u - \ddot a \nabla u) + c u + d = 0 \]</formula></para>
+<para>where</para>
+<para><formula id="40">\[ u(x) = sin(\vec \omega \cdot \vec x + \omega_0) = sin(Ax - b)\]</formula> <formula id="41">\[r(u,x) = - ((\ddot a \vec \omega) \cdot \vec \omega) u - (\vec b \cdot \vec \omega) cos(Ax - b)\]</formula> <formula id="42">\[ = c u + D cos(Ax - b) \]</formula> <formula id="43">\[ = cu + d \]</formula></para>
+<para>returns the total velocity at a point.</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="201" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="997" bodyend="1015" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="201" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga1a762a7a4c98ddf4ae6785c522604eab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int NonlinearAD_SteadyState</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u)</argsstring>
+        <name>NonlinearAD_SteadyState</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Nonlinear Advection-Diffusion Steady State. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="46">$ q $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="47">$ r $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="32">$ b $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="48">\[(bu^q - a(u^r)_x)_x = 0\]</formula> <formula id="34">\[ u(0) = 1\]</formula> <formula id="35">\[ u(1) = 0\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="209" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1036" bodyend="1136" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="209" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga25b05765337d0a0a8a2d3030f50de065" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int NonlinearADR_Decay_DiracIC</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *u)</argsstring>
+        <name>NonlinearADR_Decay_DiracIC</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Non Linear Avection Diffusion Reaction Decay Dirac Initial Condition. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[10]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[11]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="49">$ d $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The approximate analytical solution of <verbatim>\f[ u_t + \nabla \cdot(bu - a \nabla u) + cu^d= 0 \f]
+
+on an infinite domain with Dirac initial data.
+Also returns the fluxes (by inheritance).
+</verbatim></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="217" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1164" bodyend="1189" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="217" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gac024a80be0164d41344ffb14734ff7dc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int NonlinearADR_Decay_DiracIC_dr</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *u, double *dr)</argsstring>
+        <name>NonlinearADR_Decay_DiracIC_dr</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <briefdescription>
+<para>Non Linear Avection Diffusion Reaction Decay Dirac Initial Condition (dr) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[10]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[11]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="49">$ d $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The approximate analytical solution of <verbatim>\f[ u_t + \nabla \cdot(bu - a \nabla u) + cu^d= 0 \f]
+
+on an infinite domain with Dirac initial data.
+Also returns the fluxes (by inheritance).
+</verbatim></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="225" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1216" bodyend="1229" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="225" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gacf4734cee6510fb40f6038e864c26f2d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int NonlinearADR_Decay_DiracIC_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *u, double *r)</argsstring>
+        <name>NonlinearADR_Decay_DiracIC_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Non Linear Avection Diffusion Reaction Decay Dirac Initial Condition (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0:2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="24">$ b[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="25">$ n $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="27">$ tStart $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="28">$ u_0 $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7:9]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="29">$ x_0[0:2] $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[10]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="36">$ c $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[11]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="49">$ d $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The approximate analytical solution of <verbatim>\f[ u_t + \nabla \cdot(bu - a \nabla u) + cu^d= 0 \f]
+
+on an infinite domain with Dirac initial data.
+Also returns the fluxes (by inheritance).
+</verbatim></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="234" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1257" bodyend="1270" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="234" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga13ce042045a861bce7a66c85b00d55bf" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int NonlinearDAE</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double T, double *x, double *u)</argsstring>
+        <name>NonlinearDAE</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Nonlinear Differential-algebraic equations. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="50">$ p $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="51">\[u_t = - a*max(u,0)^p\]</formula> <formula id="52">\[u(0) = 1\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="243" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1287" bodyend="1314" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="243" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga1105d43771fb984ad11d749fdfbd6230" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int NonlinearDAE_f</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *f)</argsstring>
+        <name>NonlinearDAE_f</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+<para>Nonlinear Differential-algebraic equations. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="26">$ a $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="50">$ p $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>f</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array, vector</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="51">\[u_t = - a*max(u,0)^p\]</formula> <formula id="52">\[u(0) = 1\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="251" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1330" bodyend="1350" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="251" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga0e9ee485059c83d19aa4fe36c19a27a6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int PlanePoiseuilleFlow_u</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>PlanePoiseuilleFlow_u</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Poiseuille Flow between two parallel fixed plates with constant seperation (width). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>width between the plates, <formula id="1">$ h $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>viscosity of fluid, <formula id="53">$ \mu $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the pressure gradient, <formula id="54">$ \nabla p $</formula> (neg) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the rate of flow per unit width, <formula id="46">$ q $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-axis offset, <formula id="2">$ xs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>y-axis offset, <formula id="3">$ ys $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>z-axis offset, <formula id="4">$ zs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+x-momentum equation <formula id="55">\[ (\nabla p + \mu \nabla^2 u)_x = 0 \]</formula> <formula id="56">\[ u(y) = 4 u_{max} y (\frac{h-y}{h^2}) \]</formula> <formula id="57">\[ u(0) = u(h) = 0 \]</formula> <formula id="58">\[ u(h/2) = u_{max} \]</formula> <formula id="59">\[u_{max} = \frac{-\nabla p}{8 \mu} h^2 = \frac{3}{2} \frac{q}{h} \]</formula></para>
+<para><formula id="60">$ u_{max} $</formula> = maximum velocity at the centerline<linebreak/>
+Axis of origin: at bottom plate<linebreak/>
+ <simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="259" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1380" bodyend="1435" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="259" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gae1ffca305a0d97599df6073a2a372120" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int PoiseuillePipeFlow</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>PoiseuillePipeFlow</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Poiseuille Flow through a circular pipe. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>radius of pipe, <formula id="61">$ R $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>viscosity of fluid, <formula id="53">$ \mu $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the pressure gradient, <formula id="54">$ \nabla p $</formula> (neg) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the rate of flow, <formula id="62">$ Q $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-axis offset, <formula id="2">$ xs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>y-axis offset, <formula id="3">$ ys $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>z-axis offset, <formula id="4">$ zs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+x-momentum equation <formula id="55">\[ (\nabla p + \mu \nabla^2 u)_x = 0 \]</formula> <formula id="63">\[ u(r) = u_{max} (1 - \frac{r^2}{R^2}) \]</formula> <formula id="64">\[ u(0) = u_{max} \]</formula> <formula id="65">\[ u(R) = 0 \]</formula> <formula id="66">\[ u_{max} = -\nabla p \frac{R^2}{4 \mu}= \frac{2Q}{\pi R^2}\]</formula></para>
+<para><formula id="60">$ u_{max} $</formula> = maximum velocity at the centerline<linebreak/>
+Axis of origin: at center of pipe<linebreak/>
+</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="267" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1466" bodyend="1527" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="267" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga1f21552251a084499afd8dcb0e8514e9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int PoiseuillePipeFlow_P</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>PoiseuillePipeFlow_P</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Poiseuille Flow through a circular pipe. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>radius of pipe, <formula id="61">$ R $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>viscosity of fluid, <formula id="53">$ \mu $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the pressure gradient, <formula id="54">$ \nabla p $</formula> (neg) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the rate of flow, <formula id="62">$ Q $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the length of pipe, <formula id="67">$ L $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>x-axis offset, <formula id="2">$ xs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>y-axis offset, <formula id="3">$ ys $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>z-axis offset, <formula id="4">$ zs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="68">\[ p - p_0 = -\nabla p L(1-x)\]</formula></para>
+<para><formula id="69">$ p_0 =p(L)$</formula> = 0, the atmospheric pressure at the outflow<linebreak/>
+Axis of origin: at center of pipe<linebreak/>
+</para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="275" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1554" bodyend="1601" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="275" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga45a73975e83f31d1fb02cd1704355a2c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int poissonsEquationExp1D</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u)</argsstring>
+        <name>poissonsEquationExp1D</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Poisson Exponential Equation 1D. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="70">$ K $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="71">\[-u_{xx} - f = 0\]</formula> <formula id="72">\[u = K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2}\]</formula> <formula id="73">\[f = -K \{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ [x(1-x)z(1-z)][4y^3 - 4y^2 + 6y - 2]+ [x(1-x)y(1-y)][4z^3 - 4z^2 + 6z - 2]\}e^{x^2 + y^2 + z^2}\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="283" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1620" bodyend="1641" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="283" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga0e86c52c97b48886d082a09ea6c2a1d8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int poissonsEquationExp2D</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u)</argsstring>
+        <name>poissonsEquationExp2D</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Poisson Exponential Equation 2D. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="70">$ K $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="71">\[-u_{xx} - f = 0\]</formula> <formula id="72">\[u = K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2}\]</formula> <formula id="73">\[f = -K \{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ [x(1-x)z(1-z)][4y^3 - 4y^2 + 6y - 2]+ [x(1-x)y(1-y)][4z^3 - 4z^2 + 6z - 2]\}e^{x^2 + y^2 + z^2}\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="291" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1659" bodyend="1672" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="291" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gaf73fac4860037252bacde0429873fb3e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int poissonsEquationExp3D</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u)</argsstring>
+        <name>poissonsEquationExp3D</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Poisson Exponential Equation 3D. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="70">$ K $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="71">\[-u_{xx} - f = 0\]</formula> <formula id="72">\[u = K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2}\]</formula> <formula id="73">\[f = -K \{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ [x(1-x)z(1-z)][4y^3 - 4y^2 + 6y - 2]+ [x(1-x)y(1-y)][4z^3 - 4z^2 + 6z - 2]\}e^{x^2 + y^2 + z^2}\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="299" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1690" bodyend="1705" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="299" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gacb0c2f9c88b790c4f884c8ba9ec3ff32" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int poissonsEquationExp3D_dr</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u, double *dr)</argsstring>
+        <name>poissonsEquationExp3D_dr</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <briefdescription>
+<para>Poisson Exponential Equation 3D (dr) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="70">$ K $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="71">\[-u_{xx} - f = 0\]</formula> <formula id="72">\[u = K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2}\]</formula> <formula id="73">\[f = -K \{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ [x(1-x)z(1-z)][4y^3 - 4y^2 + 6y - 2]+ [x(1-x)y(1-y)][4z^3 - 4z^2 + 6z - 2]\}e^{x^2 + y^2 + z^2}\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="307" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1724" bodyend="1734" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="307" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gaf09c73242819668a535dc86ecc3e1750" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int poissonsEquationExp1D_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u, double *r)</argsstring>
+        <name>poissonsEquationExp1D_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Poisson Exponential Equation 1D (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="70">$ K $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="71">\[-u_{xx} - f = 0\]</formula> <formula id="72">\[u = K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2}\]</formula> <formula id="73">\[f = -K \{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ [x(1-x)z(1-z)][4y^3 - 4y^2 + 6y - 2]+ [x(1-x)y(1-y)][4z^3 - 4z^2 + 6z - 2]\}e^{x^2 + y^2 + z^2}\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="316" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1754" bodyend="1768" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="316" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga10d607685c5f6e55574d0267512c62ff" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int poissonsEquationExp2D_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u, double *r)</argsstring>
+        <name>poissonsEquationExp2D_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Poisson Exponential Equation 2D (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="70">$ K $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="71">\[-u_{xx} - f = 0\]</formula> <formula id="72">\[u = K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2}\]</formula> <formula id="73">\[f = -K \{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ [x(1-x)z(1-z)][4y^3 - 4y^2 + 6y - 2]+ [x(1-x)y(1-y)][4z^3 - 4z^2 + 6z - 2]\}e^{x^2 + y^2 + z^2}\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="325" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1787" bodyend="1803" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="325" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga163c483ea13b49f7bdf6c0576b19abf3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int poissonsEquationExp3D_r</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *X, double *u, double *r)</argsstring>
+        <name>poissonsEquationExp3D_r</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+<para>Poisson Exponential Equation 3D (reaction) </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><formula id="70">$ K $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>r</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="71">\[-u_{xx} - f = 0\]</formula> <formula id="72">\[u = K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2}\]</formula> <formula id="73">\[f = -K \{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ [x(1-x)z(1-z)][4y^3 - 4y^2 + 6y - 2]+ [x(1-x)y(1-y)][4z^3 - 4z^2 + 6z - 2]\}e^{x^2 + y^2 + z^2}\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="334" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1822" bodyend="1840" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="334" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gabc8dd4f4ae09d1d37622d03bed77b57a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int STflowSphere_P</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>STflowSphere_P</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Stokes Flow around moving Sphere. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s x-component of velocity, <formula id="0">$ vx $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s y-component of velocity, <formula id="74">$ vy $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s z-component of velocity, <formula id="75">$ vz $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s radius, <formula id="76">$ rs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center x-component, <formula id="2">$ xs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center y-component, <formula id="3">$ ys $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center z-component, <formula id="4">$ zs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>viscosity of fluid, <formula id="77">$ mu $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="78">\[ \nabla p = \mu \nabla^2 u \]</formula></para>
+<para><formula id="79">\[ p = \frac{(-3 * rs * \mu \| \vec v\| cos\theta)}{2r^2}\]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="343" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1864" bodyend="1899" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="343" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gac2213f564eccefdc13bf3cb6341bf4d4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int STflowSphere_Vx</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>STflowSphere_Vx</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Stokes Flow around moving Sphere. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s x-component of velocity, <formula id="0">$ vx $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s y-component of velocity, <formula id="74">$ vy $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s z-component of velocity, <formula id="75">$ vz $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s radius, <formula id="76">$ rs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center x-component, <formula id="2">$ xs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center y-component, <formula id="3">$ ys $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center z-component, <formula id="4">$ zs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>viscosity of fluid, <formula id="77">$ mu $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="78">\[ \nabla p = \mu \nabla^2 u \]</formula> <formula id="80">\[ v^r = \|\vec v \| cos\theta(1-\frac{3rs}{2r} + \frac{rs^3}{2r^3})\]</formula> <formula id="81">\[ v^\theta = -\|\vec v \| sin\theta(1-\frac{3rs}{4r} - \frac{rs^3}{4r^3})\]</formula> <formula id="82">\[v^r(r&gt;rs) = 0\]</formula> <formula id="83">\[v^\theta(r&gt;rs) = 0\]</formula> <formula id="84">\[e^R = \frac{\vec x}{\|\vec x \|} ; \{ x_x = x - xs;x_y = y-ys; x_z = z-zs\} \]</formula> <formula id="85">\[e^\theta = (e^R - \frac{\vec v}{\|\vec v \|}) - [(e^R - \frac{\vec v}{\|\vec v \|}) \cdot e^R]e^R\]</formula></para>
+<para><formula id="86">\[u_x = v^r e^R_x + v^\theta e^\theta_x \]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="351" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1929" bodyend="1961" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="351" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga6e0ebc1cdd80f43414eb0d84101ae598" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int STflowSphere_Vy</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>STflowSphere_Vy</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Stokes Flow around moving Sphere. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s x-component of velocity, <formula id="0">$ vx $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s y-component of velocity, <formula id="74">$ vy $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s z-component of velocity, <formula id="75">$ vz $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s radius, <formula id="76">$ rs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center x-component, <formula id="2">$ xs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center y-component, <formula id="3">$ ys $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center z-component, <formula id="4">$ zs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>viscosity of fluid, <formula id="77">$ mu $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="78">\[ \nabla p = \mu \nabla^2 u \]</formula> <formula id="80">\[ v^r = \|\vec v \| cos\theta(1-\frac{3rs}{2r} + \frac{rs^3}{2r^3})\]</formula> <formula id="81">\[ v^\theta = -\|\vec v \| sin\theta(1-\frac{3rs}{4r} - \frac{rs^3}{4r^3})\]</formula> <formula id="82">\[v^r(r&gt;rs) = 0\]</formula> <formula id="83">\[v^\theta(r&gt;rs) = 0\]</formula> <formula id="84">\[e^R = \frac{\vec x}{\|\vec x \|} ; \{ x_x = x - xs;x_y = y-ys; x_z = z-zs\} \]</formula> <formula id="85">\[e^\theta = (e^R - \frac{\vec v}{\|\vec v \|}) - [(e^R - \frac{\vec v}{\|\vec v \|}) \cdot e^R]e^R\]</formula></para>
+<para><formula id="87">\[u_y = v^r e^R_y + v^\theta e^\theta_y \]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="359" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="1992" bodyend="2025" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="359" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga602389ac4b4ddb220b670ff9c16d7f61" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int STflowSphere_Vz</definition>
+        <argsstring>(int *iwork, double *rwork, int nPoints, double t, double *x, double *u)</argsstring>
+        <name>STflowSphere_Vz</name>
+        <param>
+          <type>int *</type>
+          <declname>iwork</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nPoints</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <briefdescription>
+<para>Stokes Flow around moving Sphere. <linebreak/>
+ </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>iwork</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s x-component of velocity, <formula id="0">$ vx $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s y-component of velocity, <formula id="74">$ vy $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s z-component of velocity, <formula id="75">$ vz $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s radius, <formula id="76">$ rs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center x-component, <formula id="2">$ xs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center y-component, <formula id="3">$ ys $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[6]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Sphere&apos;s center z-component, <formula id="4">$ zs $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rwork[7]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>viscosity of fluid, <formula id="77">$ mu $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>nPoints</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>- total number of points </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>NOT USED </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input array </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>u</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>output array</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="78">\[ \nabla p = \mu \nabla^2 u \]</formula> <formula id="80">\[ v^r = \|\vec v \| cos\theta(1-\frac{3rs}{2r} + \frac{rs^3}{2r^3})\]</formula> <formula id="81">\[ v^\theta = -\|\vec v \| sin\theta(1-\frac{3rs}{4r} - \frac{rs^3}{4r^3})\]</formula> <formula id="82">\[v^r(r&gt;rs) = 0\]</formula> <formula id="83">\[v^\theta(r&gt;rs) = 0\]</formula> <formula id="84">\[e^R = \frac{\vec x}{\|\vec x \|} ; \{ x_x = x - xs;x_y = y-ys; x_z = z-zs\} \]</formula> <formula id="85">\[e^\theta = (e^R - \frac{\vec v}{\|\vec v \|}) - [(e^R - \frac{\vec v}{\|\vec v \|}) \cdot e^R]e^R\]</formula></para>
+<para><formula id="88">\[u_z = v^r e^R_z + v^\theta e^\theta_z \]</formula></para>
+<para><simplesect kind="return"><para>status code </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="367" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="2055" bodyend="2088" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="367" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gae103bacd0ce284b66771dc3d06420616" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void coords</definition>
+        <argsstring>(double vx, double vy, double vz, double xS, double yS, double zS, double *x, double *r, double *theta, double *norm_v, double *eR, double *eTHETA)</argsstring>
+        <name>coords</name>
+        <param>
+          <type>double</type>
+          <declname>vx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>vy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>vz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>xS</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>yS</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>zS</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>theta</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>norm_v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>eR</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>eTHETA</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="375" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="2093" bodyend="2161" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="375" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gac0d5ac1b71bf68c8383846ab25b5b2fa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void vel</definition>
+        <argsstring>(double rS, double norm_v, double r, double theta, double *vR, double *vTHETA)</argsstring>
+        <name>vel</name>
+        <param>
+          <type>double</type>
+          <declname>rS</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>norm_v</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>r</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>theta</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vR</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vTHETA</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="389" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="2163" bodyend="2175" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="389" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1gaa5dbc4bd7b917ccdf247a0cf5d1a0596" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double uOfX_df</definition>
+        <argsstring>(double nlC, double lu)</argsstring>
+        <name>uOfX_df</name>
+        <param>
+          <type>double</type>
+          <declname>nlC</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>lu</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="397" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="2177" bodyend="2180" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="397" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga78fd0f02221f2c8a663f3cb772326a1c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double uOfX_f</definition>
+        <argsstring>(double a, double b, double nlC, double nlD, double x, double lu)</argsstring>
+        <name>uOfX_f</name>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nlC</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nlD</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>lu</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="401" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="2181" bodyend="2184" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="401" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga5f01b1fc0e3cb358aa6411861cedc62c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double f</definition>
+        <argsstring>(double C, double b, double a, int q, int r)</argsstring>
+        <name>f</name>
+        <param>
+          <type>double</type>
+          <declname>C</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="409" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="2185" bodyend="2208" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="409" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double df</definition>
+        <argsstring>(double C, double b, double a, int q, int r)</argsstring>
+        <name>df</name>
+        <param>
+          <type>double</type>
+          <declname>C</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="416" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.c" bodystart="2209" bodyend="2234" declfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" declline="416" declcolumn="15"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="group__analytical_solutions_1gaffe776513b24d84b39af8ab0930fef7f" prot="public" static="no">
+        <name>max</name>
+        <param><defname>a</defname></param>
+        <param><defname>b</defname></param>
+        <initializer>(((a)&gt;(b))?(a):(b))</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" line="14" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/analyticalSolutions.h" bodystart="14" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>A C library of analytical solutions to differential equations for use in verification. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

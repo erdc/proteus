@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_constant_density" kind="class" language="C++" prot="public">
+    <compoundname>ConstantDensity</compoundname>
+    <basecompoundref refid="class_density_relation" prot="public" virt="non-virtual">DensityRelation</basecompoundref>
+    <includes refid="density_relations_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_constant_density_1a6bf639915d8375e418d2178193f86fce" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double ConstantDensity::rho_0</definition>
+        <argsstring></argsstring>
+        <name>rho_0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="29" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_constant_density_1af12041e95c637078bd91f5bebd021f58" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ConstantDensity::ConstantDensity</definition>
+        <argsstring>(const double *rwork)</argsstring>
+        <name>ConstantDensity</name>
+        <param>
+          <type>const double *</type>
+          <declname>rwork</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="30" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="30" bodyend="35"/>
+      </memberdef>
+      <memberdef kind="function" id="class_constant_density_1af70c76a1802f02fc01e4e01ccf95ad33" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void ConstantDensity::calc</definition>
+        <argsstring>(const double &amp;psi)</argsstring>
+        <name>calc</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>psi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="36" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="36" bodyend="40"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>DensityRelation</label>
+        <link refid="class_density_relation"/>
+      </node>
+      <node id="1">
+        <label>ConstantDensity</label>
+        <link refid="class_constant_density"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>DensityRelation</label>
+        <link refid="class_density_relation"/>
+      </node>
+      <node id="1">
+        <label>ConstantDensity</label>
+        <link refid="class_constant_density"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="27" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="26" bodyend="41"/>
+    <listofallmembers>
+      <member refid="class_constant_density_1af70c76a1802f02fc01e4e01ccf95ad33" prot="public" virt="non-virtual"><scope>ConstantDensity</scope><name>calc</name></member>
+      <member refid="class_constant_density_1af12041e95c637078bd91f5bebd021f58" prot="public" virt="non-virtual"><scope>ConstantDensity</scope><name>ConstantDensity</name></member>
+      <member refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" prot="public" virt="non-virtual"><scope>ConstantDensity</scope><name>drho</name></member>
+      <member refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" prot="public" virt="non-virtual"><scope>ConstantDensity</scope><name>rho</name></member>
+      <member refid="class_constant_density_1a6bf639915d8375e418d2178193f86fce" prot="public" virt="non-virtual"><scope>ConstantDensity</scope><name>rho_0</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

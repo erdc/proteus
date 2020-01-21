@@ -1,0 +1,342 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classchrono_1_1_ch_variables_body_added_mass" kind="class" language="C++" prot="public">
+    <compoundname>chrono::ChVariablesBodyAddedMass</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">ChVariablesBodyOwnMass</basecompoundref>
+    <includes refid="_ch_variables_body_added_mass_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h</includes>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classchrono_1_1_ch_variables_body_added_mass_1a1e895e3e54e7778ec0932d836db12488" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int chrono::ChVariablesBodyAddedMass::ndof</definition>
+        <argsstring></argsstring>
+        <name>ndof</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="31" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classchrono_1_1_ch_variables_body_added_mass_1ae75277db57f7d662147ba68005bf5f69" prot="private" static="no" mutable="no">
+        <type>ChMatrixDynamic</type>
+        <definition>ChMatrixDynamic chrono::ChVariablesBodyAddedMass::Mmass</definition>
+        <argsstring></argsstring>
+        <name>Mmass</name>
+        <briefdescription>
+<para>6x6 mass matrix (mass and moment of inertia) </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="33" column="2" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classchrono_1_1_ch_variables_body_added_mass_1aea59584605cfd8c34996c763f5f81729" prot="private" static="no" mutable="no">
+        <type>ChMatrixDynamic</type>
+        <definition>ChMatrixDynamic chrono::ChVariablesBodyAddedMass::Maddedmass</definition>
+        <argsstring></argsstring>
+        <name>Maddedmass</name>
+        <briefdescription>
+<para>6x6 added mass matrix </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="35" column="2" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classchrono_1_1_ch_variables_body_added_mass_1a56dbce71d12e53d8aea7cd5c783193e0" prot="private" static="no" mutable="no">
+        <type>ChMatrixDynamic</type>
+        <definition>ChMatrixDynamic chrono::ChVariablesBodyAddedMass::Mfullmass</definition>
+        <argsstring></argsstring>
+        <name>Mfullmass</name>
+        <briefdescription>
+<para>6x6 full matrix (mass + added mass) </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="37" column="2" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classchrono_1_1_ch_variables_body_added_mass_1ab4327e72e31bbd75af9de9859ccedd63" prot="private" static="no" mutable="no">
+        <type>ChMatrixDynamic</type>
+        <definition>ChMatrixDynamic chrono::ChVariablesBodyAddedMass::inv_Mfullmass</definition>
+        <argsstring></argsstring>
+        <name>inv_Mfullmass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="38" column="2" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1a07791db4a4259eeca68e676a8655ad1e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>chrono::ChVariablesBodyAddedMass::ChVariablesBodyAddedMass</definition>
+        <argsstring>()</argsstring>
+        <name>ChVariablesBodyAddedMass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="41" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.cpp" bodystart="22" bodyend="31"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1a8d5823f8c71719a88206b4f47a35238c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual chrono::ChVariablesBodyAddedMass::~ChVariablesBodyAddedMass</definition>
+        <argsstring>()</argsstring>
+        <name>~ChVariablesBodyAddedMass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="42" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="42" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1a37b88518295c23812051ee2ec12affe0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classchrono_1_1_ch_variables_body_added_mass" kindref="compound">ChVariablesBodyAddedMass</ref> &amp;</type>
+        <definition>ChVariablesBodyAddedMass &amp; chrono::ChVariablesBodyAddedMass::operator=</definition>
+        <argsstring>(const ChVariablesBodyAddedMass &amp;other)</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>const <ref refid="classchrono_1_1_ch_variables_body_added_mass" kindref="compound">ChVariablesBodyAddedMass</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>Assignment operator: copy from other object. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="45" column="26" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.cpp" bodystart="33" bodyend="46"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1a0eb286374f5cc6f5df385f2068eed414" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>ChMatrixDynamic &amp;</type>
+        <definition>ChMatrixDynamic&amp; chrono::ChVariablesBodyAddedMass::GetMfullmass</definition>
+        <argsstring>()</argsstring>
+        <name>GetMfullmass</name>
+        <briefdescription>
+<para>Access the inertia matrix. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="54" column="2" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="54" bodyend="54"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1a0378440220e2e8e06596b3497dc9589d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>ChMatrixDynamic &amp;</type>
+        <definition>ChMatrixDynamic&amp; chrono::ChVariablesBodyAddedMass::GetInvMfullmass</definition>
+        <argsstring>()</argsstring>
+        <name>GetInvMfullmass</name>
+        <briefdescription>
+<para>Access the inverted inertia matrix. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="57" column="2" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="57" bodyend="57"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1aa0ffc71cda5ae012286c284b3a2b49d4" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void chrono::ChVariablesBodyAddedMass::Compute_invMb_v</definition>
+        <argsstring>(ChMatrix&lt; double &gt; &amp;result, const ChMatrix&lt; double &gt; &amp;vect) const override</argsstring>
+        <name>Compute_invMb_v</name>
+        <param>
+          <type>ChMatrix&lt; double &gt; &amp;</type>
+          <declname>result</declname>
+        </param>
+        <param>
+          <type>const ChMatrix&lt; double &gt; &amp;</type>
+          <declname>vect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Computes the product of the inverse mass matrix by a vector, and set in result: result = [invMb]*vect </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="76" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.cpp" bodystart="96" bodyend="101"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1ab3fb0b9616a142e3dd5ad1bc5ef10c67" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void chrono::ChVariablesBodyAddedMass::Compute_inc_invMb_v</definition>
+        <argsstring>(ChMatrix&lt; double &gt; &amp;result, const ChMatrix&lt; double &gt; &amp;vect) const override</argsstring>
+        <name>Compute_inc_invMb_v</name>
+        <param>
+          <type>ChMatrix&lt; double &gt; &amp;</type>
+          <declname>result</declname>
+        </param>
+        <param>
+          <type>const ChMatrix&lt; double &gt; &amp;</type>
+          <declname>vect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Computes the product of the inverse mass matrix by a vector, and increment result: result += [invMb]*vect </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="80" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.cpp" bodystart="105" bodyend="109"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1aa230ae3d8b2821a86757f227c6cfc7b0" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void chrono::ChVariablesBodyAddedMass::Compute_inc_Mb_v</definition>
+        <argsstring>(ChMatrix&lt; double &gt; &amp;result, const ChMatrix&lt; double &gt; &amp;vect) const override</argsstring>
+        <name>Compute_inc_Mb_v</name>
+        <param>
+          <type>ChMatrix&lt; double &gt; &amp;</type>
+          <declname>result</declname>
+        </param>
+        <param>
+          <type>const ChMatrix&lt; double &gt; &amp;</type>
+          <declname>vect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Computes the product of the mass matrix by a vector, and set in result: result = [Mb]*vect </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="84" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.cpp" bodystart="113" bodyend="117"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1a474861622f8e353fc5554c9df615e933" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void chrono::ChVariablesBodyAddedMass::MultiplyAndAdd</definition>
+        <argsstring>(ChMatrix&lt; double &gt; &amp;result, const ChMatrix&lt; double &gt; &amp;vect, const double c_a) const override</argsstring>
+        <name>MultiplyAndAdd</name>
+        <param>
+          <type>ChMatrix&lt; double &gt; &amp;</type>
+          <declname>result</declname>
+        </param>
+        <param>
+          <type>const ChMatrix&lt; double &gt; &amp;</type>
+          <declname>vect</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>c_a</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Computes the product of the corresponding block in the system matrix (ie. the mass matrix) by &apos;vect&apos;, scale by c_a, and add to &apos;result&apos;. NOTE: the &apos;vect&apos; and &apos;result&apos; vectors must already have the size of the total variables&amp;constraints in the system; the procedure will use the ChVariable offsets (that must be already updated) to know the indexes in result and vect. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="92" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.cpp" bodystart="125" bodyend="131"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1a078ad9c6c1cf7b52e8811f3aae122b5e" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void chrono::ChVariablesBodyAddedMass::DiagonalAdd</definition>
+        <argsstring>(ChMatrix&lt; double &gt; &amp;result, const double c_a) const override</argsstring>
+        <name>DiagonalAdd</name>
+        <param>
+          <type>ChMatrix&lt; double &gt; &amp;</type>
+          <declname>result</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>c_a</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Add the diagonal of the mass matrix scaled by c_a, to &apos;result&apos;. NOTE: the &apos;result&apos; vector must already have the size of system unknowns, ie the size of the total variables&amp;constraints in the system; the procedure will use the ChVariable offset (that must be already updated) as index. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="100" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.cpp" bodystart="137" bodyend="142"/>
+      </memberdef>
+      <memberdef kind="function" id="classchrono_1_1_ch_variables_body_added_mass_1ac9cd65ffe3604642926545ed58a6bade" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void chrono::ChVariablesBodyAddedMass::Build_M</definition>
+        <argsstring>(ChSparseMatrix &amp;storage, int insrow, int inscol, const double c_a) override</argsstring>
+        <name>Build_M</name>
+        <param>
+          <type>ChSparseMatrix &amp;</type>
+          <declname>storage</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>insrow</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>inscol</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>c_a</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Build the mass matrix (for these variables) scaled by c_a, storing it in &apos;storage&apos; sparse matrix, at given column/row offset. Note, most iterative solvers don&apos;t need to know mass matrix explicitly. Optimized: doesn&apos;t fill unneeded elements except mass and 3x3 inertia. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="106" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.cpp" bodystart="148" bodyend="152"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Specialized class for representing a 6-DOF item for a system, that is a 3D rigid body, with mass matrix and associate variables (a 6 element vector, ex.speed) A full 6x6 matrix is used for the mass matrix, but forces still computed using the &quot;mass&quot; variable of ChVariablesBodyOwnMass </para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>chrono::ChVariablesBodyAddedMass</label>
+        <link refid="classchrono_1_1_ch_variables_body_added_mass"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ChVariablesBodyOwnMass</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>chrono::ChVariablesBodyAddedMass</label>
+        <link refid="classchrono_1_1_ch_variables_body_added_mass"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ChVariablesBodyOwnMass</label>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" line="28" column="42" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChVariablesBodyAddedMass.h" bodystart="28" bodyend="108"/>
+    <listofallmembers>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1ac9cd65ffe3604642926545ed58a6bade" prot="public" virt="virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>Build_M</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a07791db4a4259eeca68e676a8655ad1e" prot="public" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>ChVariablesBodyAddedMass</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1ab3fb0b9616a142e3dd5ad1bc5ef10c67" prot="public" virt="virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>Compute_inc_invMb_v</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1aa230ae3d8b2821a86757f227c6cfc7b0" prot="public" virt="virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>Compute_inc_Mb_v</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1aa0ffc71cda5ae012286c284b3a2b49d4" prot="public" virt="virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>Compute_invMb_v</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a078ad9c6c1cf7b52e8811f3aae122b5e" prot="public" virt="virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>DiagonalAdd</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a0378440220e2e8e06596b3497dc9589d" prot="public" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>GetInvMfullmass</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a0eb286374f5cc6f5df385f2068eed414" prot="public" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>GetMfullmass</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1ab4327e72e31bbd75af9de9859ccedd63" prot="private" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>inv_Mfullmass</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1aea59584605cfd8c34996c763f5f81729" prot="private" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>Maddedmass</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a56dbce71d12e53d8aea7cd5c783193e0" prot="private" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>Mfullmass</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1ae75277db57f7d662147ba68005bf5f69" prot="private" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>Mmass</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a474861622f8e353fc5554c9df615e933" prot="public" virt="virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>MultiplyAndAdd</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a1e895e3e54e7778ec0932d836db12488" prot="private" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>ndof</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a37b88518295c23812051ee2ec12affe0" prot="public" virt="non-virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>operator=</name></member>
+      <member refid="classchrono_1_1_ch_variables_body_added_mass_1a8d5823f8c71719a88206b4f47a35238c" prot="public" virt="virtual"><scope>chrono::ChVariablesBodyAddedMass</scope><name>~ChVariablesBodyAddedMass</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

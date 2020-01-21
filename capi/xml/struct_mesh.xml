@@ -1,0 +1,865 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="struct_mesh" kind="struct" language="C++" prot="public">
+    <compoundname>Mesh</compoundname>
+    <includes refid="mesh_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mesh.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nElements_global</definition>
+        <argsstring></argsstring>
+        <name>nElements_global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="30" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nNodes_global</definition>
+        <argsstring></argsstring>
+        <name>nNodes_global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="31" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nNodes_element</definition>
+        <argsstring></argsstring>
+        <name>nNodes_element</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="32" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a23828f68c8378cc9cba4f12da8efab1c" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nNodes_elementBoundary</definition>
+        <argsstring></argsstring>
+        <name>nNodes_elementBoundary</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="33" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a8bef0eb2839ee8e5e520471073ccc893" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nElementBoundaries_element</definition>
+        <argsstring></argsstring>
+        <name>nElementBoundaries_element</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="34" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nElementBoundaries_global</definition>
+        <argsstring></argsstring>
+        <name>nElementBoundaries_global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="35" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ac4c81e5919b922684341f2e9f4fe1054" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nInteriorElementBoundaries_global</definition>
+        <argsstring></argsstring>
+        <name>nInteriorElementBoundaries_global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="36" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a82b53fc6597fe4f29edddeb858bd716d" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nExteriorElementBoundaries_global</definition>
+        <argsstring></argsstring>
+        <name>nExteriorElementBoundaries_global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="37" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a6f5879bf09d44edbad753f9f39616bf7" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::max_nElements_node</definition>
+        <argsstring></argsstring>
+        <name>max_nElements_node</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="38" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nEdges_global</definition>
+        <argsstring></argsstring>
+        <name>nEdges_global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="39" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1aa4f5f67da601632a68e00c0aea778c14" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::max_nNodeNeighbors_node</definition>
+        <argsstring></argsstring>
+        <name>max_nNodeNeighbors_node</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="40" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* Mesh::elementNodesArray</definition>
+        <argsstring></argsstring>
+        <name>elementNodesArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="42" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="42" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a60c946aca5fb10c00847f2595024f645" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::nodeElementsArray</definition>
+        <argsstring></argsstring>
+        <name>nodeElementsArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="43" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="43" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a50cba320e431088d67f5567d80308a05" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::nodeElementOffsets</definition>
+        <argsstring></argsstring>
+        <name>nodeElementOffsets</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="44" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a7dc84c8761e788b972cadef8126c3714" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementNeighborsArray</definition>
+        <argsstring></argsstring>
+        <name>elementNeighborsArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="45" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ac7e8f6ef5efc37bb959e4811f1d19f0d" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementBoundariesArray</definition>
+        <argsstring></argsstring>
+        <name>elementBoundariesArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="46" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a005d4b8e1dde115eea69745da68ce51e" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementBoundaryNodesArray</definition>
+        <argsstring></argsstring>
+        <name>elementBoundaryNodesArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="47" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a42b5669b961653b62ad86094940ff599" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementBoundaryElementsArray</definition>
+        <argsstring></argsstring>
+        <name>elementBoundaryElementsArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="48" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a80fee2f34a4f1ce046b8d238ca6eb44d" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementBoundaryLocalElementBoundariesArray</definition>
+        <argsstring></argsstring>
+        <name>elementBoundaryLocalElementBoundariesArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="49" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="49" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ada24a4a97b51d0796ef5d7041a538baa" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::interiorElementBoundariesArray</definition>
+        <argsstring></argsstring>
+        <name>interiorElementBoundariesArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="50" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a80b82e649bdf89cfb40a4d63128dfe8f" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::exteriorElementBoundariesArray</definition>
+        <argsstring></argsstring>
+        <name>exteriorElementBoundariesArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="51" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1aabe8196d403a4e08ab8ae82add6c95ad" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::edgeNodesArray</definition>
+        <argsstring></argsstring>
+        <name>edgeNodesArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="52" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="52" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a74dac6068c1cd0a5224d70dff687541f" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::nodeStarArray</definition>
+        <argsstring></argsstring>
+        <name>nodeStarArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="53" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a0d6da5259c422d0a0e7725f7f4194fd4" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::nodeStarOffsets</definition>
+        <argsstring></argsstring>
+        <name>nodeStarOffsets</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="54" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1aa7d0c5c7194c72ae5673282fd26f80e6" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementMaterialTypes</definition>
+        <argsstring></argsstring>
+        <name>elementMaterialTypes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="55" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a9d8f135ebe113d6c9d1ef60e2ea56cb1" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementBoundaryMaterialTypes</definition>
+        <argsstring></argsstring>
+        <name>elementBoundaryMaterialTypes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="56" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ae91c6279fa8161e18e52543079aa8cf6" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::nodeMaterialTypes</definition>
+        <argsstring></argsstring>
+        <name>nodeMaterialTypes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="57" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a0523657cb6cfdce7d0da88820680794c" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* Mesh::elementIJK</definition>
+        <argsstring></argsstring>
+        <name>elementIJK</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="60" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a793f466f5106361d2dec620afdb58db3" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double* Mesh::weights</definition>
+        <argsstring></argsstring>
+        <name>weights</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="61" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ab2c4fedd881b06d39fb00a716cbd28a9" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double* Mesh::U_KNOT</definition>
+        <argsstring></argsstring>
+        <name>U_KNOT</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="62" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ae691477076082597d4ca0e6dbd603f93" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double * Mesh::V_KNOT</definition>
+        <argsstring></argsstring>
+        <name>V_KNOT</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="62" column="18" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a547f0b4951a4e4000b1df74961accc34" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double * Mesh::W_KNOT</definition>
+        <argsstring></argsstring>
+        <name>W_KNOT</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="62" column="24" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a05eb17a6df74f735b305bbe456d1d84f" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nx</definition>
+        <argsstring></argsstring>
+        <name>nx</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="63" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ad94801e2c9bd9c7e66deefad68f5707d" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::ny</definition>
+        <argsstring></argsstring>
+        <name>ny</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="63" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1aeda5d14f9cec8ccea61a4c1af632caf5" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::nz</definition>
+        <argsstring></argsstring>
+        <name>nz</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="63" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1abc76092e9f0d48b311c47122dd847d92" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::px</definition>
+        <argsstring></argsstring>
+        <name>px</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="64" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a7fdce7c323f95480164d26da8bd73b65" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::py</definition>
+        <argsstring></argsstring>
+        <name>py</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="64" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a84f3e389f9666f4e40a65cb50499d712" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Mesh::pz</definition>
+        <argsstring></argsstring>
+        <name>pz</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="64" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double* Mesh::nodeArray</definition>
+        <argsstring></argsstring>
+        <name>nodeArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="67" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a33db44f726dd430707fd7c93d1a5c592" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double * Mesh::elementDiametersArray</definition>
+        <argsstring></argsstring>
+        <name>elementDiametersArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="67" column="21" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1abf9b852488d1bcee92c20efddced5ca4" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double * Mesh::elementInnerDiametersArray</definition>
+        <argsstring></argsstring>
+        <name>elementInnerDiametersArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="67" column="42" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a7ce07e95c74c63e9548357c54492dec7" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double * Mesh::elementBoundaryDiametersArray</definition>
+        <argsstring></argsstring>
+        <name>elementBoundaryDiametersArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="67" column="68" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ab31abbfccc0c4d695624f2123dd97bbc" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double* Mesh::elementBarycentersArray</definition>
+        <argsstring></argsstring>
+        <name>elementBarycentersArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="68" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a0ba00ec42c4dd93a3cffe5052d4b7edd" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double * Mesh::elementBoundaryBarycentersArray</definition>
+        <argsstring></argsstring>
+        <name>elementBoundaryBarycentersArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="68" column="36" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ae390b049ea87b78184f8d094869949cb" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double* Mesh::nodeDiametersArray</definition>
+        <argsstring></argsstring>
+        <name>nodeDiametersArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="69" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a6052bace6fa51aa24de5835ef0fb7e17" prot="public" static="no" mutable="no">
+        <type>double *</type>
+        <definition>double * Mesh::nodeSupportArray</definition>
+        <argsstring></argsstring>
+        <name>nodeSupportArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="69" column="30" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1afe5d77b8a3696af225b8a9fa627bac39" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Mesh::h</definition>
+        <argsstring></argsstring>
+        <name>h</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="70" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1ad6461ab438d3ec71a40cd15799213346" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Mesh::hMin</definition>
+        <argsstring></argsstring>
+        <name>hMin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="70" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a75885c0e7c16f82e7747a58bc5277a56" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Mesh::sigmaMax</definition>
+        <argsstring></argsstring>
+        <name>sigmaMax</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="70" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a77b3cbcd0ac8b21666b5319f36376ab1" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Mesh::volume</definition>
+        <argsstring></argsstring>
+        <name>volume</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="70" column="25" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1acb8395aa478d9beb2983e921a156d4b6" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* Mesh::newestNodeBases</definition>
+        <argsstring></argsstring>
+        <name>newestNodeBases</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="72" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a6d8c1e8a3743ccf2b9ac61d79d2aed42" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* Mesh::elementOffsets_subdomain_owned</definition>
+        <argsstring></argsstring>
+        <name>elementOffsets_subdomain_owned</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="76" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a9a62f7c5208b688193ad82dfb8cc3b4c" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementNumbering_subdomain2global</definition>
+        <argsstring></argsstring>
+        <name>elementNumbering_subdomain2global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="77" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="77" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a9c5445d99949e9311ff67a900cf40a3a" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::nodeOffsets_subdomain_owned</definition>
+        <argsstring></argsstring>
+        <name>nodeOffsets_subdomain_owned</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="78" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="78" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a26d2763692e6a60ebdd57fe5b985c569" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::nodeNumbering_subdomain2global</definition>
+        <argsstring></argsstring>
+        <name>nodeNumbering_subdomain2global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="79" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a5806b14e322aa308b7b2332137195d0e" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementBoundaryOffsets_subdomain_owned</definition>
+        <argsstring></argsstring>
+        <name>elementBoundaryOffsets_subdomain_owned</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="80" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="80" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a18cf197b92cbab062e2a294849766cf1" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::elementBoundaryNumbering_subdomain2global</definition>
+        <argsstring></argsstring>
+        <name>elementBoundaryNumbering_subdomain2global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="81" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="81" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1aad6fb618bfc1b53f688723ae41b0ce3f" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::edgeOffsets_subdomain_owned</definition>
+        <argsstring></argsstring>
+        <name>edgeOffsets_subdomain_owned</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="82" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="82" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1a087e6d20726837e45bd1caaf1f4bd404" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int * Mesh::edgeNumbering_subdomain2global</definition>
+        <argsstring></argsstring>
+        <name>edgeNumbering_subdomain2global</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="83" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="83" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" prot="public" static="no" mutable="no">
+        <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> *</type>
+        <definition>Mesh* Mesh::subdomainp</definition>
+        <argsstring></argsstring>
+        <name>subdomainp</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="84" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="84" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>Mesh</label>
+        <link refid="struct_mesh"/>
+        <childnode refid="1" relation="usage">
+          <edgelabel>subdomainp</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="28" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="27" bodyend="85"/>
+    <listofallmembers>
+      <member refid="struct_mesh_1aabe8196d403a4e08ab8ae82add6c95ad" prot="public" virt="non-virtual"><scope>Mesh</scope><name>edgeNodesArray</name></member>
+      <member refid="struct_mesh_1a087e6d20726837e45bd1caaf1f4bd404" prot="public" virt="non-virtual"><scope>Mesh</scope><name>edgeNumbering_subdomain2global</name></member>
+      <member refid="struct_mesh_1aad6fb618bfc1b53f688723ae41b0ce3f" prot="public" virt="non-virtual"><scope>Mesh</scope><name>edgeOffsets_subdomain_owned</name></member>
+      <member refid="struct_mesh_1ab31abbfccc0c4d695624f2123dd97bbc" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBarycentersArray</name></member>
+      <member refid="struct_mesh_1ac7e8f6ef5efc37bb959e4811f1d19f0d" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundariesArray</name></member>
+      <member refid="struct_mesh_1a0ba00ec42c4dd93a3cffe5052d4b7edd" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundaryBarycentersArray</name></member>
+      <member refid="struct_mesh_1a7ce07e95c74c63e9548357c54492dec7" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundaryDiametersArray</name></member>
+      <member refid="struct_mesh_1a42b5669b961653b62ad86094940ff599" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundaryElementsArray</name></member>
+      <member refid="struct_mesh_1a80fee2f34a4f1ce046b8d238ca6eb44d" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundaryLocalElementBoundariesArray</name></member>
+      <member refid="struct_mesh_1a9d8f135ebe113d6c9d1ef60e2ea56cb1" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundaryMaterialTypes</name></member>
+      <member refid="struct_mesh_1a005d4b8e1dde115eea69745da68ce51e" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundaryNodesArray</name></member>
+      <member refid="struct_mesh_1a18cf197b92cbab062e2a294849766cf1" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundaryNumbering_subdomain2global</name></member>
+      <member refid="struct_mesh_1a5806b14e322aa308b7b2332137195d0e" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementBoundaryOffsets_subdomain_owned</name></member>
+      <member refid="struct_mesh_1a33db44f726dd430707fd7c93d1a5c592" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementDiametersArray</name></member>
+      <member refid="struct_mesh_1a0523657cb6cfdce7d0da88820680794c" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementIJK</name></member>
+      <member refid="struct_mesh_1abf9b852488d1bcee92c20efddced5ca4" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementInnerDiametersArray</name></member>
+      <member refid="struct_mesh_1aa7d0c5c7194c72ae5673282fd26f80e6" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementMaterialTypes</name></member>
+      <member refid="struct_mesh_1a7dc84c8761e788b972cadef8126c3714" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementNeighborsArray</name></member>
+      <member refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementNodesArray</name></member>
+      <member refid="struct_mesh_1a9a62f7c5208b688193ad82dfb8cc3b4c" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementNumbering_subdomain2global</name></member>
+      <member refid="struct_mesh_1a6d8c1e8a3743ccf2b9ac61d79d2aed42" prot="public" virt="non-virtual"><scope>Mesh</scope><name>elementOffsets_subdomain_owned</name></member>
+      <member refid="struct_mesh_1a80b82e649bdf89cfb40a4d63128dfe8f" prot="public" virt="non-virtual"><scope>Mesh</scope><name>exteriorElementBoundariesArray</name></member>
+      <member refid="struct_mesh_1afe5d77b8a3696af225b8a9fa627bac39" prot="public" virt="non-virtual"><scope>Mesh</scope><name>h</name></member>
+      <member refid="struct_mesh_1ad6461ab438d3ec71a40cd15799213346" prot="public" virt="non-virtual"><scope>Mesh</scope><name>hMin</name></member>
+      <member refid="struct_mesh_1ada24a4a97b51d0796ef5d7041a538baa" prot="public" virt="non-virtual"><scope>Mesh</scope><name>interiorElementBoundariesArray</name></member>
+      <member refid="struct_mesh_1a6f5879bf09d44edbad753f9f39616bf7" prot="public" virt="non-virtual"><scope>Mesh</scope><name>max_nElements_node</name></member>
+      <member refid="struct_mesh_1aa4f5f67da601632a68e00c0aea778c14" prot="public" virt="non-virtual"><scope>Mesh</scope><name>max_nNodeNeighbors_node</name></member>
+      <member refid="struct_mesh_1a1ab38b6ade39987726268e990e3e24e7" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nEdges_global</name></member>
+      <member refid="struct_mesh_1a8bef0eb2839ee8e5e520471073ccc893" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nElementBoundaries_element</name></member>
+      <member refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nElementBoundaries_global</name></member>
+      <member refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nElements_global</name></member>
+      <member refid="struct_mesh_1acb8395aa478d9beb2983e921a156d4b6" prot="public" virt="non-virtual"><scope>Mesh</scope><name>newestNodeBases</name></member>
+      <member refid="struct_mesh_1a82b53fc6597fe4f29edddeb858bd716d" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nExteriorElementBoundaries_global</name></member>
+      <member refid="struct_mesh_1ac4c81e5919b922684341f2e9f4fe1054" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nInteriorElementBoundaries_global</name></member>
+      <member refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nNodes_element</name></member>
+      <member refid="struct_mesh_1a23828f68c8378cc9cba4f12da8efab1c" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nNodes_elementBoundary</name></member>
+      <member refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nNodes_global</name></member>
+      <member refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeArray</name></member>
+      <member refid="struct_mesh_1ae390b049ea87b78184f8d094869949cb" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeDiametersArray</name></member>
+      <member refid="struct_mesh_1a50cba320e431088d67f5567d80308a05" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeElementOffsets</name></member>
+      <member refid="struct_mesh_1a60c946aca5fb10c00847f2595024f645" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeElementsArray</name></member>
+      <member refid="struct_mesh_1ae91c6279fa8161e18e52543079aa8cf6" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeMaterialTypes</name></member>
+      <member refid="struct_mesh_1a26d2763692e6a60ebdd57fe5b985c569" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeNumbering_subdomain2global</name></member>
+      <member refid="struct_mesh_1a9c5445d99949e9311ff67a900cf40a3a" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeOffsets_subdomain_owned</name></member>
+      <member refid="struct_mesh_1a74dac6068c1cd0a5224d70dff687541f" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeStarArray</name></member>
+      <member refid="struct_mesh_1a0d6da5259c422d0a0e7725f7f4194fd4" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeStarOffsets</name></member>
+      <member refid="struct_mesh_1a6052bace6fa51aa24de5835ef0fb7e17" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nodeSupportArray</name></member>
+      <member refid="struct_mesh_1a05eb17a6df74f735b305bbe456d1d84f" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nx</name></member>
+      <member refid="struct_mesh_1ad94801e2c9bd9c7e66deefad68f5707d" prot="public" virt="non-virtual"><scope>Mesh</scope><name>ny</name></member>
+      <member refid="struct_mesh_1aeda5d14f9cec8ccea61a4c1af632caf5" prot="public" virt="non-virtual"><scope>Mesh</scope><name>nz</name></member>
+      <member refid="struct_mesh_1abc76092e9f0d48b311c47122dd847d92" prot="public" virt="non-virtual"><scope>Mesh</scope><name>px</name></member>
+      <member refid="struct_mesh_1a7fdce7c323f95480164d26da8bd73b65" prot="public" virt="non-virtual"><scope>Mesh</scope><name>py</name></member>
+      <member refid="struct_mesh_1a84f3e389f9666f4e40a65cb50499d712" prot="public" virt="non-virtual"><scope>Mesh</scope><name>pz</name></member>
+      <member refid="struct_mesh_1a75885c0e7c16f82e7747a58bc5277a56" prot="public" virt="non-virtual"><scope>Mesh</scope><name>sigmaMax</name></member>
+      <member refid="struct_mesh_1abb9c745014c9e5efdc6f9545592b8d9e" prot="public" virt="non-virtual"><scope>Mesh</scope><name>subdomainp</name></member>
+      <member refid="struct_mesh_1ab2c4fedd881b06d39fb00a716cbd28a9" prot="public" virt="non-virtual"><scope>Mesh</scope><name>U_KNOT</name></member>
+      <member refid="struct_mesh_1ae691477076082597d4ca0e6dbd603f93" prot="public" virt="non-virtual"><scope>Mesh</scope><name>V_KNOT</name></member>
+      <member refid="struct_mesh_1a77b3cbcd0ac8b21666b5319f36376ab1" prot="public" virt="non-virtual"><scope>Mesh</scope><name>volume</name></member>
+      <member refid="struct_mesh_1a547f0b4951a4e4000b1df74961accc34" prot="public" virt="non-virtual"><scope>Mesh</scope><name>W_KNOT</name></member>
+      <member refid="struct_mesh_1a793f466f5106361d2dec620afdb58db3" prot="public" virt="non-virtual"><scope>Mesh</scope><name>weights</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

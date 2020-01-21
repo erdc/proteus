@@ -1,0 +1,2600 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classproteus_1_1cpp_r_a_n_s3_p_f__base" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>proteus::cppRANS3PF_base</compoundname>
+    <derivedcompoundref refid="classproteus_1_1cpp_r_a_n_s3_p_f" prot="public" virt="non-virtual">proteus::cppRANS3PF&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</derivedcompoundref>
+    <includes refid="_r_a_n_s3_p_f_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a142cddab4a15cf06969379daff86bb6b" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::TransportMatrix</definition>
+        <argsstring></argsstring>
+        <name>TransportMatrix</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="52" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="52" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a31ef2a3a2427cdb9cac4520b09e82fff" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::TransposeTransportMatrix</definition>
+        <argsstring></argsstring>
+        <name>TransposeTransportMatrix</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="52" column="35" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="52" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1addef2f7b95be59118eb5608d55246b5a" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::uStar_psi</definition>
+        <argsstring></argsstring>
+        <name>uStar_psi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="53" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a927313f70f44ab3a219da5601886db6c" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::vStar_psi</definition>
+        <argsstring></argsstring>
+        <name>vStar_psi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="53" column="29" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1ae604e4ba06e3ac4c091873987d78d41c" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::wStar_psi</definition>
+        <argsstring></argsstring>
+        <name>wStar_psi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="53" column="39" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a31e60d8f0d921173d7fe698e3ab624a1" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::uStar_hi</definition>
+        <argsstring></argsstring>
+        <name>uStar_hi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="54" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a857b010f57aa3ee96984f732e15da48f" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::vStar_hi</definition>
+        <argsstring></argsstring>
+        <name>vStar_hi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="54" column="28" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1ab29c56c92bfdce817264c6ea8bbd442d" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::wStar_hi</definition>
+        <argsstring></argsstring>
+        <name>wStar_hi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="54" column="37" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a56c916752bd075533fc397c31a9636ef" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::den_hi</definition>
+        <argsstring></argsstring>
+        <name>den_hi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="54" column="46" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a322710047d392857170359f4b3d796cc" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::uStar_min_hiHe</definition>
+        <argsstring></argsstring>
+        <name>uStar_min_hiHe</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="55" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a1b0369f51ca0e6dd551d8a8102ea08ad" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::vStar_min_hiHe</definition>
+        <argsstring></argsstring>
+        <name>vStar_min_hiHe</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="55" column="34" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a348849ef9b932c8287fa9652532553fa" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::wStar_min_hiHe</definition>
+        <argsstring></argsstring>
+        <name>wStar_min_hiHe</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="55" column="49" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a491a037588514aae35e2fa658e41d68c" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::uStar_gamma</definition>
+        <argsstring></argsstring>
+        <name>uStar_gamma</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="56" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a46f4b0ed3805ed9ae90ebaab0d6b5ae7" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::vStar_gamma</definition>
+        <argsstring></argsstring>
+        <name>vStar_gamma</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="56" column="31" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a3267a20964548e100a590e516eba32d3" prot="public" static="no" mutable="no">
+        <type>std::valarray&lt; double &gt;</type>
+        <definition>std::valarray&lt;double&gt; proteus::cppRANS3PF_base::wStar_gamma</definition>
+        <argsstring></argsstring>
+        <name>wStar_gamma</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="56" column="43" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a65be2b42220a082b1b9c319a17fe4bf4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual proteus::cppRANS3PF_base::~cppRANS3PF_base</definition>
+        <argsstring>()</argsstring>
+        <name>~cppRANS3PF_base</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="57" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="57" bodyend="57"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a2b9be02c1e570610169feeed129c7b1d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void proteus::cppRANS3PF_base::setSedClosure</definition>
+        <argsstring>(double aDarcy, double betaForch, double grain, double packFraction, double packMargin, double maxFraction, double frFraction, double sigmaC, double C3e, double C4e, double eR, double fContact, double mContact, double nContact, double angFriction, double vos_limiter, double mu_fr_limiter)</argsstring>
+        <name>setSedClosure</name>
+        <reimplementedby refid="classproteus_1_1cpp_r_a_n_s3_p_f_1a5ed23365295539d20e06bd9b8102b724">setSedClosure</reimplementedby>
+        <param>
+          <type>double</type>
+          <declname>aDarcy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>betaForch</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>grain</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>packFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>packMargin</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>maxFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>frFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sigmaC</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C3e</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C4e</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>eR</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>fContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>mContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>angFriction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>vos_limiter</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>mu_fr_limiter</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="58" column="18" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="58" bodyend="75"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1aa4f7b1d06ccd83a7c761c5c02227202e" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void proteus::cppRANS3PF_base::calculateResidual</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, double *mesh_velocity_dof, double MOVING_DOMAIN, double PSTAB, int *mesh_l2g, double *x_ref, double *dV_ref, int nDOF_per_element_pressure, double *p_trial_ref, double *p_grad_trial_ref, double *p_test_ref, double *p_grad_test_ref, double *q_p, double *q_grad_p, double *ebqe_p, double *ebqe_grad_p, double *vel_trial_ref, double *vel_grad_trial_ref, double *vel_hess_trial_ref, double *vel_test_ref, double *vel_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *p_trial_trace_ref, double *p_grad_trial_trace_ref, double *p_test_trace_ref, double *p_grad_test_trace_ref, double *vel_trial_trace_ref, double *vel_grad_trial_trace_ref, double *vel_test_trace_ref, double *vel_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, double eb_adjoint_sigma, double *elementDiameter, double *nodeDiametersArray, double hFactor, int nElements_global, int nElements_owned, int nElementBoundaries_global, int nElementBoundaries_owned, int nNodes_owned, double useRBLES, double useMetrics, double alphaBDF, double epsFact_rho, double epsFact_mu, double sigma, double rho_0, double nu_0, double rho_1, double nu_1, double smagorinskyConstant, int turbulenceClosureModel, double Ct_sge, double Cd_sge, double C_dc, double C_b, const double *eps_solid, const double *ebq_global_phi_solid, const double *ebq_global_grad_phi_solid, const double *ebq_particle_velocity_solid, double *phi_solid_nodes, double *phi_solid, const double *q_velocity_solid, const double *q_velocityStar_solid, const double *q_vos, const double *q_dvos_dt, const double *q_grad_vos, const double *q_dragAlpha, const double *q_dragBeta, const double *q_mass_source, const double *q_turb_var_0, const double *q_turb_var_1, const double *q_turb_var_grad_0, double *q_eddy_viscosity, int *p_l2g, int *vel_l2g, double *p_dof, double *u_dof, double *v_dof, double *w_dof, double *u_dof_old, double *v_dof_old, double *w_dof_old, double *u_dof_old_old, double *v_dof_old_old, double *w_dof_old_old, double *uStar_dof, double *vStar_dof, double *wStar_dof, double *g, const double useVF, double *vf, double *phi, double *phi_dof, double *normal_phi, double *kappa_phi, double *q_mom_u_acc, double *q_mom_v_acc, double *q_mom_w_acc, double *q_mass_adv, double *q_mom_u_acc_beta_bdf, double *q_mom_v_acc_beta_bdf, double *q_mom_w_acc_beta_bdf, double *q_dV, double *q_dV_last, double *q_velocity_sge, double *ebqe_velocity_star, double *q_cfl, double *q_numDiff_u, double *q_numDiff_v, double *q_numDiff_w, double *q_numDiff_u_last, double *q_numDiff_v_last, double *q_numDiff_w_last, int *sdInfo_u_u_rowptr, int *sdInfo_u_u_colind, int *sdInfo_u_v_rowptr, int *sdInfo_u_v_colind, int *sdInfo_u_w_rowptr, int *sdInfo_u_w_colind, int *sdInfo_v_v_rowptr, int *sdInfo_v_v_colind, int *sdInfo_v_u_rowptr, int *sdInfo_v_u_colind, int *sdInfo_v_w_rowptr, int *sdInfo_v_w_colind, int *sdInfo_w_w_rowptr, int *sdInfo_w_w_colind, int *sdInfo_w_u_rowptr, int *sdInfo_w_u_colind, int *sdInfo_w_v_rowptr, int *sdInfo_w_v_colind, int offset_p, int offset_u, int offset_v, int offset_w, int stride_p, int stride_u, int stride_v, int stride_w, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_vf_ext, double *bc_ebqe_vf_ext, double *ebqe_phi_ext, double *bc_ebqe_phi_ext, double *ebqe_normal_phi_ext, double *ebqe_kappa_phi_ext, const double *ebqe_vos_ext, const double *ebqe_turb_var_0, const double *ebqe_turb_var_1, int *isDOFBoundary_p, int *isDOFBoundary_u, int *isDOFBoundary_v, int *isDOFBoundary_w, int *isAdvectiveFluxBoundary_p, int *isAdvectiveFluxBoundary_u, int *isAdvectiveFluxBoundary_v, int *isAdvectiveFluxBoundary_w, int *isDiffusiveFluxBoundary_u, int *isDiffusiveFluxBoundary_v, int *isDiffusiveFluxBoundary_w, double *ebqe_bc_p_ext, double *ebqe_bc_flux_mass_ext, double *ebqe_bc_flux_mom_u_adv_ext, double *ebqe_bc_flux_mom_v_adv_ext, double *ebqe_bc_flux_mom_w_adv_ext, double *ebqe_bc_u_ext, double *ebqe_bc_flux_u_diff_ext, double *ebqe_penalty_ext, double *ebqe_bc_v_ext, double *ebqe_bc_flux_v_diff_ext, double *ebqe_bc_w_ext, double *ebqe_bc_flux_w_diff_ext, double *q_x, double *q_velocity, double *ebqe_velocity, double *q_grad_u, double *q_grad_v, double *q_grad_w, double *q_divU, double *ebqe_grad_u, double *ebqe_grad_v, double *ebqe_grad_w, double *flux, double *elementResidual_p, int *elementFlags, int *boundaryFlags, double *barycenters, double *wettedAreas, double *netForces_p, double *netForces_v, double *netMoments, double *q_rho, double *ebqe_rho, double *q_nu, double *ebqe_nu, int nParticles, double particle_epsFact, double particle_alpha, double particle_beta, double particle_penalty_constant, double *particle_signed_distances, double *particle_signed_distance_normals, double *particle_velocities, double *particle_centroids, double *particle_netForces, double *particle_netMoments, double *particle_surfaceArea, double particle_nitsche, int use_ball_as_particle, double *ball_center, double *ball_radius, double *ball_velocity, double *ball_angular_velocity, double *phisError, double *phisErrorNodal, int USE_SUPG, int ARTIFICIAL_VISCOSITY, double cMax, double cE, int MULTIPLY_EXTERNAL_FORCE_BY_DENSITY, double *forcex, double *forcey, double *forcez, int KILL_PRESSURE_TERM, double dt, double *quantDOFs, int MATERIAL_PARAMETERS_AS_FUNCTION, double *density_as_function, double *dynamic_viscosity_as_function, double *ebqe_density_as_function, double *ebqe_dynamic_viscosity_as_function, double order_polynomial, double *isActiveDOF, int USE_SBM, double *ncDrag, double *betaDrag, double *vos_vel_nodes, double *entropyResidualPerNode, double *laggedEntropyResidualPerNode, double *uStar_dMatrix, double *vStar_dMatrix, double *wStar_dMatrix, int numDOFs_1D, int NNZ_1D, int *csrRowIndeces_1D, int *csrColumnOffsets_1D, int *rowptr_1D, int *colind_1D, double *isBoundary_1D, int INT_BY_PARTS_PRESSURE, bool useExact)=0</argsstring>
+        <name>calculateResidual</name>
+        <reimplementedby refid="classproteus_1_1cpp_r_a_n_s3_p_f_1a95a5645115ba143785c67f2421236331">calculateResidual</reimplementedby>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>MOVING_DOMAIN</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>PSTAB</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_per_element_pressure</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_grad_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_grad_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_hess_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>eb_adjoint_sigma</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>hFactor</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_owned</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElementBoundaries_owned</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nNodes_owned</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useRBLES</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_rho</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_mu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sigma</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu_1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>smagorinskyConstant</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>turbulenceClosureModel</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Ct_sge</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Cd_sge</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C_dc</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C_b</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>eps_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebq_global_phi_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebq_global_grad_phi_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebq_particle_velocity_solid</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_solid_nodes</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_velocity_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_velocityStar_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_vos</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_dvos_dt</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_grad_vos</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_dragAlpha</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_dragBeta</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_mass_source</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_turb_var_0</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_turb_var_1</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_turb_var_grad_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_eddy_viscosity</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>p_l2g</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>vel_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>w_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v_dof_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>w_dof_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof_old_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v_dof_old_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>w_dof_old_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>uStar_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vStar_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>wStar_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>g</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>useVF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vf</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>kappa_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_u_acc</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_v_acc</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_w_acc</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mass_adv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_u_acc_beta_bdf</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_v_acc_beta_bdf</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_w_acc_beta_bdf</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dV_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_velocity_sge</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_velocity_star</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_v_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_w_last</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_u_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_u_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_v_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_v_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_w_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_w_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_v_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_v_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_u_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_u_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_w_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_w_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_w_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_w_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_u_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_u_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_v_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_v_colind</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_p</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_v</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_w</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_p</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_v</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_vf_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>bc_ebqe_vf_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>bc_ebqe_phi_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_kappa_phi_ext</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebqe_vos_ext</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebqe_turb_var_0</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebqe_turb_var_1</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDiffusiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDiffusiveFluxBoundary_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDiffusiveFluxBoundary_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_p_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_mass_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_mom_u_adv_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_mom_v_adv_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_mom_w_adv_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_u_diff_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_penalty_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_v_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_v_diff_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_w_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_w_diff_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_x</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_grad_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_grad_v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_grad_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_divU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_grad_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_grad_v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_grad_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>flux</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementResidual_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementFlags</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>boundaryFlags</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>barycenters</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>wettedAreas</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>netForces_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>netForces_v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>netMoments</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_rho</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_rho</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_nu</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_nu</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nParticles</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_epsFact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_alpha</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_beta</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_penalty_constant</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_signed_distances</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_signed_distance_normals</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_velocities</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_centroids</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_netForces</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_netMoments</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_surfaceArea</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_nitsche</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>use_ball_as_particle</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ball_center</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ball_radius</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ball_velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ball_angular_velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phisError</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phisErrorNodal</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>USE_SUPG</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>ARTIFICIAL_VISCOSITY</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>cMax</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>cE</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>MULTIPLY_EXTERNAL_FORCE_BY_DENSITY</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>forcex</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>forcey</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>forcez</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>KILL_PRESSURE_TERM</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>quantDOFs</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>MATERIAL_PARAMETERS_AS_FUNCTION</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>density_as_function</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dynamic_viscosity_as_function</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_density_as_function</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_dynamic_viscosity_as_function</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>order_polynomial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>isActiveDOF</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>USE_SBM</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ncDrag</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>betaDrag</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vos_vel_nodes</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>entropyResidualPerNode</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>laggedEntropyResidualPerNode</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>uStar_dMatrix</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vStar_dMatrix</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>wStar_dMatrix</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>numDOFs_1D</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>NNZ_1D</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_1D</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_1D</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr_1D</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind_1D</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>isBoundary_1D</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>INT_BY_PARTS_PRESSURE</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="76" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a1b2a640b6a2dedeec532aa1d137ed21d" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void proteus::cppRANS3PF_base::calculateJacobian</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, double *mesh_velocity_dof, double MOVING_DOMAIN, double PSTAB, int *mesh_l2g, double *x_ref, double *dV_ref, double *p_trial_ref, double *p_grad_trial_ref, double *p_test_ref, double *p_grad_test_ref, double *q_p, double *q_grad_p, double *ebqe_p, double *ebqe_grad_p, double *vel_trial_ref, double *vel_grad_trial_ref, double *vel_hess_trial_ref, double *vel_test_ref, double *vel_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *p_trial_trace_ref, double *p_grad_trial_trace_ref, double *p_test_trace_ref, double *p_grad_test_trace_ref, double *vel_trial_trace_ref, double *vel_grad_trial_trace_ref, double *vel_test_trace_ref, double *vel_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, double eb_adjoint_sigma, double *elementDiameter, double *nodeDiametersArray, double hFactor, int nElements_global, int nElements_owned, int nElementBoundaries_global, int nElementBoundaries_owned, int nNodes_owned, double useRBLES, double useMetrics, double alphaBDF, double epsFact_rho, double epsFact_mu, double sigma, double rho_0, double nu_0, double rho_1, double nu_1, double smagorinskyConstant, int turbulenceClosureModel, double Ct_sge, double Cd_sge, double C_dg, double C_b, const double *eps_solid, const double *ebq_global_phi_solid, const double *ebq_global_grad_phi_solid, const double *ebq_particle_velocity_solid, double *phi_solid_nodes, const double *phi_solid, const double *q_velocity_solid, const double *q_velocityStar_solid, const double *q_vos, const double *q_dvos_dt, const double *q_grad_vos, const double *q_dragAlpha, const double *q_dragBeta, const double *q_mass_source, const double *q_turb_var_0, const double *q_turb_var_1, const double *q_turb_var_grad_0, int *p_l2g, int *vel_l2g, double *p_dof, double *u_dof, double *v_dof, double *w_dof, double *g, const double useVF, double *vf, double *phi, double *phi_dof, double *normal_phi, double *kappa_phi, double *q_mom_u_acc_beta_bdf, double *q_mom_v_acc_beta_bdf, double *q_mom_w_acc_beta_bdf, double *q_dV, double *q_dV_last, double *q_velocity_sge, double *ebqe_velocity_star, double *q_cfl, double *q_numDiff_u_last, double *q_numDiff_v_last, double *q_numDiff_w_last, int *sdInfo_u_u_rowptr, int *sdInfo_u_u_colind, int *sdInfo_u_v_rowptr, int *sdInfo_u_v_colind, int *sdInfo_u_w_rowptr, int *sdInfo_u_w_colind, int *sdInfo_v_v_rowptr, int *sdInfo_v_v_colind, int *sdInfo_v_u_rowptr, int *sdInfo_v_u_colind, int *sdInfo_v_w_rowptr, int *sdInfo_v_w_colind, int *sdInfo_w_w_rowptr, int *sdInfo_w_w_colind, int *sdInfo_w_u_rowptr, int *sdInfo_w_u_colind, int *sdInfo_w_v_rowptr, int *sdInfo_w_v_colind, int *csrRowIndeces_p_p, int *csrColumnOffsets_p_p, int *csrRowIndeces_p_u, int *csrColumnOffsets_p_u, int *csrRowIndeces_p_v, int *csrColumnOffsets_p_v, int *csrRowIndeces_p_w, int *csrColumnOffsets_p_w, int *csrRowIndeces_u_p, int *csrColumnOffsets_u_p, int *csrRowIndeces_u_u, int *csrColumnOffsets_u_u, int *csrRowIndeces_u_v, int *csrColumnOffsets_u_v, int *csrRowIndeces_u_w, int *csrColumnOffsets_u_w, int *csrRowIndeces_v_p, int *csrColumnOffsets_v_p, int *csrRowIndeces_v_u, int *csrColumnOffsets_v_u, int *csrRowIndeces_v_v, int *csrColumnOffsets_v_v, int *csrRowIndeces_v_w, int *csrColumnOffsets_v_w, int *csrRowIndeces_w_p, int *csrColumnOffsets_w_p, int *csrRowIndeces_w_u, int *csrColumnOffsets_w_u, int *csrRowIndeces_w_v, int *csrColumnOffsets_w_v, int *csrRowIndeces_w_w, int *csrColumnOffsets_w_w, double *globalJacobian, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_vf_ext, double *bc_ebqe_vf_ext, double *ebqe_phi_ext, double *bc_ebqe_phi_ext, double *ebqe_normal_phi_ext, double *ebqe_kappa_phi_ext, const double *ebqe_vos_ext, const double *ebqe_turb_var_0, const double *ebqe_turb_var_1, int *isDOFBoundary_p, int *isDOFBoundary_u, int *isDOFBoundary_v, int *isDOFBoundary_w, int *isAdvectiveFluxBoundary_p, int *isAdvectiveFluxBoundary_u, int *isAdvectiveFluxBoundary_v, int *isAdvectiveFluxBoundary_w, int *isDiffusiveFluxBoundary_u, int *isDiffusiveFluxBoundary_v, int *isDiffusiveFluxBoundary_w, double *ebqe_bc_p_ext, double *ebqe_bc_flux_mass_ext, double *ebqe_bc_flux_mom_u_adv_ext, double *ebqe_bc_flux_mom_v_adv_ext, double *ebqe_bc_flux_mom_w_adv_ext, double *ebqe_bc_u_ext, double *ebqe_bc_flux_u_diff_ext, double *ebqe_penalty_ext, double *ebqe_bc_v_ext, double *ebqe_bc_flux_v_diff_ext, double *ebqe_bc_w_ext, double *ebqe_bc_flux_w_diff_ext, int *csrColumnOffsets_eb_p_p, int *csrColumnOffsets_eb_p_u, int *csrColumnOffsets_eb_p_v, int *csrColumnOffsets_eb_p_w, int *csrColumnOffsets_eb_u_p, int *csrColumnOffsets_eb_u_u, int *csrColumnOffsets_eb_u_v, int *csrColumnOffsets_eb_u_w, int *csrColumnOffsets_eb_v_p, int *csrColumnOffsets_eb_v_u, int *csrColumnOffsets_eb_v_v, int *csrColumnOffsets_eb_v_w, int *csrColumnOffsets_eb_w_p, int *csrColumnOffsets_eb_w_u, int *csrColumnOffsets_eb_w_v, int *csrColumnOffsets_eb_w_w, int *elementFlags, int nParticles, double particle_epsFact, double particle_alpha, double particle_beta, double particle_penalty_constant, double *particle_signed_distances, double *particle_signed_distance_normals, double *particle_velocities, double *particle_centroids, double particle_nitsche, int use_ball_as_particle, double *ball_center, double *ball_radius, double *ball_velocity, double *ball_angular_velocity, int USE_SUPG, int KILL_PRESSURE_TERM, double dt, int MATERIAL_PARAMETERS_AS_FUNCTION, double *density_as_function, double *dynamic_viscosity_as_function, double *ebqe_density_as_function, double *ebqe_dynamic_viscosity_as_function, int USE_SBM, int ARTIFICIAL_VISCOSITY, double *uStar_dMatrix, double *vStar_dMatrix, double *wStar_dMatrix, int numDOFs_1D, int offset_u, int offset_v, int offset_w, int stride_u, int stride_v, int stride_w, int *rowptr_1D, int *colind_1D, int *rowptr, int *colind, int INT_BY_PARTS_PRESSURE, bool useExact)=0</argsstring>
+        <name>calculateJacobian</name>
+        <reimplementedby refid="classproteus_1_1cpp_r_a_n_s3_p_f_1a2c7909912a4caf46e3811e3e96795990">calculateJacobian</reimplementedby>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>MOVING_DOMAIN</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>PSTAB</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_grad_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_grad_p</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_hess_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>eb_adjoint_sigma</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>hFactor</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_owned</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElementBoundaries_owned</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nNodes_owned</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useRBLES</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_rho</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_mu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sigma</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu_1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>smagorinskyConstant</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>turbulenceClosureModel</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Ct_sge</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Cd_sge</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C_dg</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C_b</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>eps_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebq_global_phi_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebq_global_grad_phi_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebq_particle_velocity_solid</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_solid_nodes</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>phi_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_velocity_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_velocityStar_solid</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_vos</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_dvos_dt</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_grad_vos</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_dragAlpha</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_dragBeta</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_mass_source</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_turb_var_0</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_turb_var_1</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>q_turb_var_grad_0</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>p_l2g</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>vel_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>p_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>w_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>g</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>useVF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vf</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>kappa_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_u_acc_beta_bdf</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_v_acc_beta_bdf</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_mom_w_acc_beta_bdf</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dV_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_velocity_sge</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_velocity_star</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_v_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_w_last</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_u_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_u_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_v_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_v_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_w_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_u_w_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_v_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_v_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_u_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_u_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_w_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_v_w_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_w_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_w_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_u_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_u_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_v_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>sdInfo_w_v_colind</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_p_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_p_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_p_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_p_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_p_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_p_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_p_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_p_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_v_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_v_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_v_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_v_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_v_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_v_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_v_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_v_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_w_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_w_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_w_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_w_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_w_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_w_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_w_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_w_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalJacobian</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_vf_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>bc_ebqe_vf_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>bc_ebqe_phi_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_kappa_phi_ext</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebqe_vos_ext</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebqe_turb_var_0</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>ebqe_turb_var_1</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDiffusiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDiffusiveFluxBoundary_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDiffusiveFluxBoundary_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_p_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_mass_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_mom_u_adv_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_mom_v_adv_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_mom_w_adv_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_u_diff_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_penalty_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_v_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_v_diff_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_w_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_w_diff_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_p_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_p_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_p_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_p_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_u_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_u_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_u_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_v_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_v_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_v_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_v_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_w_p</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_w_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_w_v</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_w_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementFlags</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nParticles</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_epsFact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_alpha</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_beta</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_penalty_constant</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_signed_distances</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_signed_distance_normals</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_velocities</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>particle_centroids</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>particle_nitsche</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>use_ball_as_particle</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ball_center</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ball_radius</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ball_velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ball_angular_velocity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>USE_SUPG</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>KILL_PRESSURE_TERM</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>MATERIAL_PARAMETERS_AS_FUNCTION</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>density_as_function</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dynamic_viscosity_as_function</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_density_as_function</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_dynamic_viscosity_as_function</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>USE_SBM</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>ARTIFICIAL_VISCOSITY</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>uStar_dMatrix</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vStar_dMatrix</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>wStar_dMatrix</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>numDOFs_1D</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_v</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_w</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_v</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_w</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr_1D</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind_1D</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>INT_BY_PARTS_PRESSURE</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="340" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1ae6a1ef2b8b127e8b96a49e79f97898ce" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void proteus::cppRANS3PF_base::calculateVelocityAverage</definition>
+        <argsstring>(int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int nInteriorElementBoundaries_global, int *interiorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *mesh_dof, double *mesh_velocity_dof, double MOVING_DOMAIN, int *mesh_l2g, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *normal_ref, double *boundaryJac_ref, int *vel_l2g, double *u_dof, double *v_dof, double *w_dof, double *vos_dof, double *vel_trial_trace_ref, double *ebqe_velocity, double *velocityAverage)=0</argsstring>
+        <name>calculateVelocityAverage</name>
+        <reimplementedby refid="classproteus_1_1cpp_r_a_n_s3_p_f_1aca5ce4d5a925d65a6f6206576b768d80">calculateVelocityAverage</reimplementedby>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nInteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>interiorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>MOVING_DOMAIN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>vel_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>w_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vos_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocityAverage</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="557" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a0bef6619b1872dcd07f01e514b5c94b9" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void proteus::cppRANS3PF_base::getBoundaryDOFs</definition>
+        <argsstring>(double *mesh_dof, int *mesh_l2g, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *vel_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int *vel_l2g, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *isBoundary_1D)=0</argsstring>
+        <name>getBoundaryDOFs</name>
+        <reimplementedby refid="classproteus_1_1cpp_r_a_n_s3_p_f_1a10fd226e59f47a5086a21c7d0e6c59a2">getBoundaryDOFs</reimplementedby>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vel_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>vel_l2g</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>isBoundary_1D</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="579" column="18"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>proteus::cppRANS3PF_base</label>
+        <link refid="classproteus_1_1cpp_r_a_n_s3_p_f__base"/>
+      </node>
+      <node id="2">
+        <label>proteus::cppRANS3PF&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1cpp_r_a_n_s3_p_f"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>std::valarray&lt; double &gt;</label>
+      </node>
+      <node id="1">
+        <label>proteus::cppRANS3PF_base</label>
+        <link refid="classproteus_1_1cpp_r_a_n_s3_p_f__base"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>wStar_min_hiHe</edgelabel>
+          <edgelabel>den_hi</edgelabel>
+          <edgelabel>vStar_hi</edgelabel>
+          <edgelabel>TransposeTransportMatrix</edgelabel>
+          <edgelabel>uStar_hi</edgelabel>
+          <edgelabel>wStar_hi</edgelabel>
+          <edgelabel>wStar_psi</edgelabel>
+          <edgelabel>wStar_gamma</edgelabel>
+          <edgelabel>vStar_psi</edgelabel>
+          <edgelabel>uStar_psi</edgelabel>
+          <edgelabel>...</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" line="50" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RANS3PF.h" bodystart="49" bodyend="593"/>
+    <listofallmembers>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a1b2a640b6a2dedeec532aa1d137ed21d" prot="public" virt="pure-virtual"><scope>proteus::cppRANS3PF_base</scope><name>calculateJacobian</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1aa4f7b1d06ccd83a7c761c5c02227202e" prot="public" virt="pure-virtual"><scope>proteus::cppRANS3PF_base</scope><name>calculateResidual</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1ae6a1ef2b8b127e8b96a49e79f97898ce" prot="public" virt="pure-virtual"><scope>proteus::cppRANS3PF_base</scope><name>calculateVelocityAverage</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a56c916752bd075533fc397c31a9636ef" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>den_hi</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a0bef6619b1872dcd07f01e514b5c94b9" prot="public" virt="pure-virtual"><scope>proteus::cppRANS3PF_base</scope><name>getBoundaryDOFs</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a2b9be02c1e570610169feeed129c7b1d" prot="public" virt="virtual"><scope>proteus::cppRANS3PF_base</scope><name>setSedClosure</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a142cddab4a15cf06969379daff86bb6b" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>TransportMatrix</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a31ef2a3a2427cdb9cac4520b09e82fff" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>TransposeTransportMatrix</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a491a037588514aae35e2fa658e41d68c" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>uStar_gamma</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a31e60d8f0d921173d7fe698e3ab624a1" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>uStar_hi</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a322710047d392857170359f4b3d796cc" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>uStar_min_hiHe</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1addef2f7b95be59118eb5608d55246b5a" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>uStar_psi</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a46f4b0ed3805ed9ae90ebaab0d6b5ae7" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>vStar_gamma</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a857b010f57aa3ee96984f732e15da48f" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>vStar_hi</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a1b0369f51ca0e6dd551d8a8102ea08ad" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>vStar_min_hiHe</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a927313f70f44ab3a219da5601886db6c" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>vStar_psi</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a3267a20964548e100a590e516eba32d3" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>wStar_gamma</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1ab29c56c92bfdce817264c6ea8bbd442d" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>wStar_hi</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a348849ef9b932c8287fa9652532553fa" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>wStar_min_hiHe</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1ae604e4ba06e3ac4c091873987d78d41c" prot="public" virt="non-virtual"><scope>proteus::cppRANS3PF_base</scope><name>wStar_psi</name></member>
+      <member refid="classproteus_1_1cpp_r_a_n_s3_p_f__base_1a65be2b42220a082b1b9c319a17fe4bf4" prot="public" virt="virtual"><scope>proteus::cppRANS3PF_base</scope><name>~cppRANS3PF_base</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

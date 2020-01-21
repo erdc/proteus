@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_dpythag_8cpp" kind="file" language="C++">
+    <compoundname>Dpythag.cpp</compoundname>
+    <includes local="no">math.h</includes>
+    <incdepgraph>
+      <node id="1">
+        <label>Dpythag.cpp</label>
+        <link refid="_dpythag_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>math.h</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="_dpythag_8cpp_1aa3c80caa06171d7fad9ab72cb3c9cd5b" prot="public" static="no">
+        <name>DSQR</name>
+        <param><defname>a</defname></param>
+        <initializer>((dsqrarg=(a)) == 0.0 ? 0.0 : dsqrarg*dsqrarg)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Dpythag.cpp" line="3" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Dpythag.cpp" bodystart="3" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="_dpythag_8cpp_1aae595920915eeb5b429caf0f764c1e96" prot="public" static="yes" mutable="no">
+        <type>double</type>
+        <definition>double dsqrarg</definition>
+        <argsstring></argsstring>
+        <name>dsqrarg</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Dpythag.cpp" line="2" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Dpythag.cpp" bodystart="2" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_dpythag_8cpp_1a275092db92cf0e4bf31d8a01f05b6b14" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double dpythag</definition>
+        <argsstring>(double a, double b)</argsstring>
+        <name>dpythag</name>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>b</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Dpythag.cpp" line="5" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Dpythag.cpp" bodystart="5" bodyend="12"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>dsqrarg;</highlight></codeline>
+<codeline lineno="3" refid="_dpythag_8cpp_1aa3c80caa06171d7fad9ab72cb3c9cd5b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DSQR(a)<sp/>((dsqrarg=(a))<sp/>==<sp/>0.0<sp/>?<sp/>0.0<sp/>:<sp/>dsqrarg*dsqrarg)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight></codeline>
+<codeline lineno="5" refid="_dpythag_8cpp_1a275092db92cf0e4bf31d8a01f05b6b14" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_dpythag_8cpp_1a275092db92cf0e4bf31d8a01f05b6b14" kindref="member">dpythag</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>a,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>b)</highlight></codeline>
+<codeline lineno="6"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>absa,absb;</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>absa=fabs(a);</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>absb=fabs(b);</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(absa<sp/>&gt;<sp/>absb)<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>absa*sqrt(1.0+<ref refid="_dpythag_8cpp_1aa3c80caa06171d7fad9ab72cb3c9cd5b" kindref="member">DSQR</ref>(absb/absa));</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>(absb<sp/>==<sp/>0.0<sp/>?<sp/>0.0<sp/>:<sp/>absb*sqrt(1.0+<ref refid="_dpythag_8cpp_1aa3c80caa06171d7fad9ab72cb3c9cd5b" kindref="member">DSQR</ref>(absa/absb)));</highlight></codeline>
+<codeline lineno="12"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Dpythag.cpp"/>
+  </compounddef>
+</doxygen>

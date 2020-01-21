@@ -1,129 +1,268 @@
+
+
 <!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>proteus.SimTools module &mdash; Proteus 1.7.2 documentation</title>
+  
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>proteus.SimTools module &#8212; Proteus 1.7.0 documentation</title>
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+  
+  
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="proteus.SpatialTools module" href="proteus.SpatialTools.html" />
-    <link rel="prev" title="proteus.ShockCapturing module" href="proteus.ShockCapturing.html" />
-<meta charset='utf-8'>
-<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
-<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
-<meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
 
-  </head><body>
+<body class="wy-body-for-nav">
 
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
 
-
-  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="../index.html">
-          proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
-      </div>
-
-        <div class="collapse navbar-collapse nav-collapse">
-          <ul class="nav navbar-nav">
-            
-                <li><a href="proteus.html">API</a></li>
-                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
-            
-            
-              <li class="dropdown globaltoc-container">
-  <a role="button"
-     id="dLabelGlobalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="../index.html">Site <b class="caret"></b></a>
-  <ul class="dropdown-menu globaltoc"
-      role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
-</ul>
-</li>
-</ul>
-</ul>
-</li>
-              
-                <li class="dropdown">
-  <a role="button"
-     id="dLabelLocalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="#">Page <b class="caret"></b></a>
-  <ul class="dropdown-menu localtoc"
-      role="menu"
-      aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">proteus.SimTools module</a></li>
-</ul>
-</ul>
-</li>
-              
-            
-            
-              
-                
-  <li>
-    <a href="proteus.ShockCapturing.html" title="Previous Chapter: proteus.ShockCapturing module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Shock...</span>
-    </a>
-  </li>
-  <li>
-    <a href="proteus.SpatialTools.html" title="Next Chapter: proteus.SpatialTools module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Spati... &raquo;</span>
-    </a>
-  </li>
-              
-            
-            
-            
-            
-              <li class="hidden-sm"></li>
-            
-          </ul>
+          
+            <a href="../index.html">
+          
 
           
             
-<form class="navbar-form navbar-right" action="../search.html" method="get">
- <div class="form-group">
-  <input type="text" name="q" class="form-control" placeholder="Search" />
- </div>
-  <input type="hidden" name="check_keywords" value="yes" />
-  <input type="hidden" name="area" value="default" />
-</form>
+            <img src="../_static/corps_logo_cross2.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
           
         </div>
-    </div>
-  </div>
 
-<div class="container">
-  <div class="row">
-    <div class="col-md-12 content">
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apicapi.html">API docs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/boundary_conditions.html">BoundaryConditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/boundary_conditions.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/boundary_conditions.html#import">Import</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/spatial_tools.html">SpatialTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#import">Import</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#choosing-the-domain">Choosing the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#assembling-the-domain">Assembling the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#boundaryconditions-with-spatialtools">BoundaryConditions with SpatialTools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#id1">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#linking-it-to-p-py-files">Linking it to _p.py files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#complete-examples">Complete Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#d">2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#id2">3D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#d-with-stl">3D with STL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#base-classes">Base classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#customshape">CustomShape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#rectangle">Rectangle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#circle">Circle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#cuboid">Cuboid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#cylinder">Cylinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#sphere">Sphere</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#shapestl">ShapeSTL</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#mprans-specific">mprans specific</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tank2d">Tank2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tank3d">Tank3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tankwithobstacle2d">TankWithObstacle2D</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/two_phase_flow.html">TwoPhaseFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/wave_tools.html">WaveTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/wave_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#import-in-command-line">Import in command line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#list-of-wave-theories">List of wave theories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#how-to-use-in-proteus">How to use in Proteus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#how-to-use-as-stand-alone-tool">How to use as stand-alone tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Models</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../models/body_dynamics.html">Body Dynamics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchsystem">ProtChSystem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchbody">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmesh">ProtChMesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmoorings">ProtChMoorings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchaddedmass">ProtChAddedMass</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#postprocessing-tools">Postprocessing Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id4">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id5">ProtChMoorings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/free_surface.html">Free Surface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#vof-ncls">VOF - NCLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#clsvof">CLSVOF</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_adaptivity.html">Mesh Adaptivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_motion.html">Mesh Motion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/navier_stokes.html">Navier-Stokes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#two-phase">Two-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#three-phase">Three-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#dealing-with-moving-domains">Dealing with Moving Domains</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#moving-ale-mesh">Moving (ALE) Mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#immersed-boundaries">Immersed Boundaries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/SWFlows.html">Shallow Water Flows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#shallow-water-equations">Shallow Water equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#modified-green-naghdi-equations">Modified Green-Naghdi equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#running-the-tests">Running the tests</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
       
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Proteus</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>proteus.SimTools module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/erdc/proteus/blob/masterdocs/source/api/proteus.SimTools.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
   <div class="section" id="module-proteus.SimTools">
 <span id="proteus-simtools-module"></span><h1>proteus.SimTools module<a class="headerlink" href="#module-proteus.SimTools" title="Permalink to this headline">¶</a></h1>
 <p>Collect higher level tools for running simulation, processing results, etc</p>
@@ -131,39 +270,39 @@
 <p class="warning">Inheritance diagram of proteus.SimTools</p></object></div>
 <dl class="class">
 <dt id="proteus.SimTools.zeroFunction">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">zeroFunction</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">zeroFunction</code><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SimTools.zeroFunction.uOfX">
-<code class="sig-name descname">uOfX</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroFunction.uOfX" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">uOfX</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroFunction.uOfX" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.zeroFunction.uOfXT">
-<code class="sig-name descname">uOfXT</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroFunction.uOfXT" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">uOfXT</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroFunction.uOfXT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SimTools.zeroVectorFunction">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">zeroVectorFunction</code><span class="sig-paren">(</span><em class="sig-param">shape</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroVectorFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">zeroVectorFunction</code><span class="sig-paren">(</span><em class="sig-param">shape</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroVectorFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SimTools.zeroVectorFunction.uOfX">
-<code class="sig-name descname">uOfX</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroVectorFunction.uOfX" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">uOfX</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroVectorFunction.uOfX" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.zeroVectorFunction.uOfXT">
-<code class="sig-name descname">uOfXT</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroVectorFunction.uOfXT" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">uOfXT</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.zeroVectorFunction.uOfXT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SimTools.SimulationProcessor">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">SimulationProcessor</code><span class="sig-paren">(</span><em class="sig-param">flags=None</em>, <em class="sig-param">nLevels=1</em>, <em class="sig-param">pFile=None</em>, <em class="sig-param">nFile=None</em>, <em class="sig-param">analyticalSolution={}</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">SimulationProcessor</code><span class="sig-paren">(</span><em class="sig-param">flags=None</em>, <em class="sig-param">nLevels=1</em>, <em class="sig-param">pFile=None</em>, <em class="sig-param">nFile=None</em>, <em class="sig-param">analyticalSolution={}</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Collect some functionality for doing something with simulation results like
 calculating error, saving it to disk, etc.</p>
@@ -173,77 +312,77 @@ calculating error, saving it to disk, etc.</p>
 and labels for storing things, etc</p>
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.math">
-<code class="sig-name descname">math</code><em class="property"> = &lt;module 'math' from '/home/cekees/proteus/linux/lib/python3.7/lib-dynload/math.cpython-37-x86_64-linux-gnu.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.math" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">math</code><em class="property"> = &lt;module 'math' from '/home/tridelat/PROTEUS/proteus2/linux/lib/python3.7/lib-dynload/math.cpython-37-x86_64-linux-gnu.so'&gt;</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.math" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.defaultFlags">
-<code class="sig-name descname">defaultFlags</code><em class="property"> = {'appendResults': False, 'components': [0], 'dataDir': '.', 'dataFile': 'results.dat', 'echo': False, 'echoRelativeErrors': False, 'errorNorms': [None], 'errorQuantities': [None], 'errorTimes': [None], 'errorTypes': [None], 'plotOptions': {'ensight': {'on': False}, 'gnuplot': {'on': False}, 'matlab': {'on': False}, 'vtk': {'on': False}}, 'plotQuantities': [None], 'plotTimes': [None], 'simulationName': None, 'simulationNameProc': None, 'storeQuantities': [None], 'storeTimes': [None]}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.defaultFlags" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">defaultFlags</code><em class="property"> = {'appendResults': False, 'components': [0], 'dataDir': '.', 'dataFile': 'results.dat', 'echo': False, 'echoRelativeErrors': False, 'errorNorms': [None], 'errorQuantities': [None], 'errorTimes': [None], 'errorTypes': [None], 'plotOptions': {'ensight': {'on': False}, 'gnuplot': {'on': False}, 'matlab': {'on': False}, 'vtk': {'on': False}}, 'plotQuantities': [None], 'plotTimes': [None], 'simulationName': None, 'simulationNameProc': None, 'storeQuantities': [None], 'storeTimes': [None]}</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.defaultFlags" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.notSetVal">
-<code class="sig-name descname">notSetVal</code><em class="property"> = -12345.0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.notSetVal" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">notSetVal</code><em class="property"> = -12345.0</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.notSetVal" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.ErrorQuantities">
-<code class="sig-name descname">ErrorQuantities</code><em class="property"> = ['m', 'u', 'grad(u)', 'velocity']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.ErrorQuantities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ErrorQuantities</code><em class="property"> = ['m', 'u', 'grad(u)', 'velocity']</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.ErrorQuantities" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.ErrorNorms">
-<code class="sig-name descname">ErrorNorms</code><em class="property"> = ['L1', 'L2', 'LI', 'TV', 'H1', 'H1semi', 'W11', 'W11semi', 'L1_L1', 'L1_LI', 'L2_L2', 'L2_LI', 'TV_L1', 'TV_LI']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.ErrorNorms" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ErrorNorms</code><em class="property"> = ['L1', 'L2', 'LI', 'TV', 'H1', 'H1semi', 'W11', 'W11semi', 'L1_L1', 'L1_LI', 'L2_L2', 'L2_LI', 'TV_L1', 'TV_LI']</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.ErrorNorms" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.ErrorTimes">
-<code class="sig-name descname">ErrorTimes</code><em class="property"> = ['All', 'Last', 'tList']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.ErrorTimes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ErrorTimes</code><em class="property"> = ['All', 'Last', 'tList']</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.ErrorTimes" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.ErrorTypes">
-<code class="sig-name descname">ErrorTypes</code><em class="property"> = ['globalMassBalance', 'globalHeavisideMassBalance', 'localMassBalance', 'numericalSolution']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.ErrorTypes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ErrorTypes</code><em class="property"> = ['globalMassBalance', 'globalHeavisideMassBalance', 'localMassBalance', 'numericalSolution']</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.ErrorTypes" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.PlotTimes">
-<code class="sig-name descname">PlotTimes</code><em class="property"> = ['All', 'Last', 'Init', 'tList']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.PlotTimes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PlotTimes</code><em class="property"> = ['All', 'Last', 'Init', 'tList']</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.PlotTimes" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.PlotQuantities">
-<code class="sig-name descname">PlotQuantities</code><em class="property"> = ['u', 'u_exact', 'velocity', 'velocity_exact', &quot;q:('%s',%d)&quot;, &quot;q:('%s',%d,%d)&quot;]</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.PlotQuantities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PlotQuantities</code><em class="property"> = ['u', 'u_exact', 'velocity', 'velocity_exact', &quot;q:('%s',%d)&quot;, &quot;q:('%s',%d,%d)&quot;]</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.PlotQuantities" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.PlotOptions">
-<code class="sig-name descname">PlotOptions</code><em class="property"> = {'ensight': {'on': False}, 'gnuplot': {'on': False, 'setGnuplotGridSize': True}, 'matlab': {'on': False, 'usePDEtoolbox': False}, 'vtk': {'hardcopy': False, 'on': False, 'pause': False}}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.PlotOptions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PlotOptions</code><em class="property"> = {'ensight': {'on': False}, 'gnuplot': {'on': False, 'setGnuplotGridSize': True}, 'matlab': {'on': False, 'usePDEtoolbox': False}, 'vtk': {'hardcopy': False, 'on': False, 'pause': False}}</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.PlotOptions" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.StoreTimes">
-<code class="sig-name descname">StoreTimes</code><em class="property"> = ['All', 'Last', 'Init', 'tList']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.StoreTimes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">StoreTimes</code><em class="property"> = ['All', 'Last', 'Init', 'tList']</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.StoreTimes" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.StoreQuantities">
-<code class="sig-name descname">StoreQuantities</code><em class="property"> = ['u', 'u_dof', 'errorData', 'simulationData', 'mesh', &quot;q:('%s',%d)&quot;, 'multilevelModel']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.StoreQuantities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">StoreQuantities</code><em class="property"> = ['u', 'u_dof', 'errorData', 'simulationData', 'mesh', &quot;q:('%s',%d)&quot;, 'multilevelModel']</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.StoreQuantities" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.SolutionDataStorageData">
-<code class="sig-name descname">SolutionDataStorageData</code><em class="property"> = ['nSpace_global', 'name', 'dof', 'dofMap.l2g', 'dim_dof', 'isVector', 'CGDOFMap.lagrangesNodesArray', 'CGDOFMap.l2g']</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.SolutionDataStorageData" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">SolutionDataStorageData</code><em class="property"> = ['nSpace_global', 'name', 'dof', 'dofMap.l2g', 'dim_dof', 'isVector', 'CGDOFMap.lagrangesNodesArray', 'CGDOFMap.l2g']</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.SolutionDataStorageData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.preprocess">
-<code class="sig-name descname">preprocess</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.preprocess" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">preprocess</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.preprocess" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.processTimeLevel">
-<code class="sig-name descname">processTimeLevel</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim=None</em>, <em class="sig-param">plotOffSet=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.processTimeLevel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">processTimeLevel</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim=None</em>, <em class="sig-param">plotOffSet=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.processTimeLevel" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculate desired quantities after each macro time step</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -257,7 +396,7 @@ and labels for storing things, etc</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.postprocess">
-<code class="sig-name descname">postprocess</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.postprocess" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">postprocess</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.postprocess" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculate desired quantities after simulation ends</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -271,7 +410,7 @@ and labels for storing things, etc</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.saveToDisk">
-<code class="sig-name descname">saveToDisk</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.saveToDisk" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">saveToDisk</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.saveToDisk" title="Permalink to this definition">¶</a></dt>
 <dd><p>TO DO
 save error to disk
 make sure can append if necessary?</p>
@@ -279,7 +418,7 @@ make sure can append if necessary?</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.stepProcessError">
-<code class="sig-name descname">stepProcessError</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepProcessError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stepProcessError</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepProcessError" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculate desired error quantities for a single step</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -293,70 +432,70 @@ make sure can append if necessary?</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getScalarElementStorageKeys">
-<code class="sig-name descname">getScalarElementStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getScalarElementStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getScalarElementStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getScalarElementStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in element quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getVectorElementStorageKeys">
-<code class="sig-name descname">getVectorElementStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getVectorElementStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getVectorElementStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getVectorElementStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in element quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getTensorElementStorageKeys">
-<code class="sig-name descname">getTensorElementStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getTensorElementStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getTensorElementStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getTensorElementStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in element quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getScalarElementBoundaryStorageKeys">
-<code class="sig-name descname">getScalarElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getScalarElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getScalarElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getScalarElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in element  boundary quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getVectorElementBoundaryStorageKeys">
-<code class="sig-name descname">getVectorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getVectorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getVectorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getVectorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in element  boundary quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getTensorElementBoundaryStorageKeys">
-<code class="sig-name descname">getTensorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getTensorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getTensorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getTensorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in element  boundary quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getScalarExteriorElementBoundaryStorageKeys">
-<code class="sig-name descname">getScalarExteriorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getScalarExteriorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getScalarExteriorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getScalarExteriorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in exterior element boundary  quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getVectorExteriorElementBoundaryStorageKeys">
-<code class="sig-name descname">getVectorExteriorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getVectorExteriorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getVectorExteriorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getVectorExteriorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in exterior element boundary quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.getTensorExteriorElementBoundaryStorageKeys">
-<code class="sig-name descname">getTensorExteriorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getTensorExteriorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getTensorExteriorElementBoundaryStorageKeys</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.getTensorExteriorElementBoundaryStorageKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>simple utility to pull out keys for things in exterior element  boundary quadrature dictionary that
 need to be stored</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.stepPlotElementQuantitiesEnsight">
-<code class="sig-name descname">stepPlotElementQuantitiesEnsight</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepPlotElementQuantitiesEnsight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stepPlotElementQuantitiesEnsight</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepPlotElementQuantitiesEnsight" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>sort through desired quantities in quadrature dictionaries like m, dm, to plot</dt><dd><p>p    — problem definition
 n    — numerics definition
@@ -370,7 +509,7 @@ and plotOffSet is set correctly</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.stepStoreQuantities">
-<code class="sig-name descname">stepStoreQuantities</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepStoreQuantities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stepStoreQuantities</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepStoreQuantities" title="Permalink to this definition">¶</a></dt>
 <dd><p>shelve quantities for a given time instance, if self.storeHeavyData == True
 soon to be deprecated and will use Archiver tools instead</p>
 <p>Quadrature dictionary quantities are shelved in a dictionary
@@ -398,14 +537,14 @@ tsim — simulation time</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.computeNodalQuadratureInfo">
-<code class="sig-name descname">computeNodalQuadratureInfo</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.computeNodalQuadratureInfo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">computeNodalQuadratureInfo</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.computeNodalQuadratureInfo" title="Permalink to this definition">¶</a></dt>
 <dd><p>if need values of quantities at mesh nodes and don’t have them already, use this
 only compute values on finest mesh for now</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.stepPlotEnsight">
-<code class="sig-name descname">stepPlotEnsight</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepPlotEnsight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stepPlotEnsight</code><span class="sig-paren">(</span><em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepPlotEnsight" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>plot solution and solution ‘velocity’ for ensight/paraview</dt><dd><p>p    — problem definition
 n    — numerics definition
@@ -420,27 +559,27 @@ and plotOffSet is set correctly</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.writeEnsightMeshForElementQuantities">
-<code class="sig-name descname">writeEnsightMeshForElementQuantities</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.writeEnsightMeshForElementQuantities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeEnsightMeshForElementQuantities</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.writeEnsightMeshForElementQuantities" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.writeEnsightMeshForElementBoundaryQuantities">
-<code class="sig-name descname">writeEnsightMeshForElementBoundaryQuantities</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.writeEnsightMeshForElementBoundaryQuantities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeEnsightMeshForElementBoundaryQuantities</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.writeEnsightMeshForElementBoundaryQuantities" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.writeScalarElementFunctionHeaderEnsight">
-<code class="sig-name descname">writeScalarElementFunctionHeaderEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">filename</em>, <em class="sig-param">append=False</em>, <em class="sig-param">firstVariable=True</em>, <em class="sig-param">case_filename=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.writeScalarElementFunctionHeaderEnsight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeScalarElementFunctionHeaderEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">filename</em>, <em class="sig-param">append=False</em>, <em class="sig-param">firstVariable=True</em>, <em class="sig-param">case_filename=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.writeScalarElementFunctionHeaderEnsight" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.writeVectorElementFunctionHeaderEnsight">
-<code class="sig-name descname">writeVectorElementFunctionHeaderEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">filename</em>, <em class="sig-param">append=False</em>, <em class="sig-param">firstVariable=True</em>, <em class="sig-param">case_filename=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.writeVectorElementFunctionHeaderEnsight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeVectorElementFunctionHeaderEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">filename</em>, <em class="sig-param">append=False</em>, <em class="sig-param">firstVariable=True</em>, <em class="sig-param">case_filename=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.writeVectorElementFunctionHeaderEnsight" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.plotScalarElementQuantityEnsight">
-<code class="sig-name descname">plotScalarElementQuantityEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.plotScalarElementQuantityEnsight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plotScalarElementQuantityEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.plotScalarElementQuantityEnsight" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Ensight plotting routine to look at scalar quantity stored in element quad dictionary q</dt><dd><p>ckey — what should be plotted
 p    — problem definition
@@ -456,7 +595,7 @@ and plotOffSet is set correctly</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.plotVectorElementQuantityEnsight">
-<code class="sig-name descname">plotVectorElementQuantityEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em>, <em class="sig-param">scaleOutput=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.plotVectorElementQuantityEnsight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plotVectorElementQuantityEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em>, <em class="sig-param">scaleOutput=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.plotVectorElementQuantityEnsight" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Ensight plotting routine to look at vector quantity stored in element quad dictionary q</dt><dd><p>ckey — what should be plotted
 p    — problem definition
@@ -473,7 +612,7 @@ TODO : check format for 3d</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.plotScalarGlobalElementBoundaryQuantityEnsight">
-<code class="sig-name descname">plotScalarGlobalElementBoundaryQuantityEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.plotScalarGlobalElementBoundaryQuantityEnsight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plotScalarGlobalElementBoundaryQuantityEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.plotScalarGlobalElementBoundaryQuantityEnsight" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Ensight plotting routine to look at scalar quantity stored in element quad dictionary ebq_global</dt><dd><p>ckey — what should be plotted
 p    — problem definition
@@ -489,7 +628,7 @@ and plotOffSet is set correctly</p>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.plotVectorGlobalElementBoundaryQuantityEnsight">
-<code class="sig-name descname">plotVectorGlobalElementBoundaryQuantityEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em>, <em class="sig-param">scaleOutput=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.plotVectorGlobalElementBoundaryQuantityEnsight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plotVectorGlobalElementBoundaryQuantityEnsight</code><span class="sig-paren">(</span><em class="sig-param">ckey</em>, <em class="sig-param">mlvt</em>, <em class="sig-param">tsim</em>, <em class="sig-param">scaleOutput=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.plotVectorGlobalElementBoundaryQuantityEnsight" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Ensight plotting routine to look at vector quantity stored in element quad dictionary ebq_global</dt><dd><p>ckey — what should be plotted
 p    — problem definition
@@ -508,7 +647,7 @@ TODO : check format for 3d</p>
 
 <dl class="function">
 <dt id="proteus.SimTools.projectToFinestLevel">
-<code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">projectToFinestLevel</code><span class="sig-paren">(</span><em class="sig-param">mlTransport</em>, <em class="sig-param">level</em>, <em class="sig-param">tsim=0.0</em>, <em class="sig-param">verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.projectToFinestLevel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">projectToFinestLevel</code><span class="sig-paren">(</span><em class="sig-param">mlTransport</em>, <em class="sig-param">level</em>, <em class="sig-param">tsim=0.0</em>, <em class="sig-param">verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.projectToFinestLevel" title="Permalink to this definition">¶</a></dt>
 <dd><p>use multilevel transport prolongation to get fine grid information
 starting at level.</p>
 <p>returns quadrature dictionary of projected values on fine grid</p>
@@ -516,7 +655,7 @@ starting at level.</p>
 
 <dl class="function">
 <dt id="proteus.SimTools.generateParentInfo">
-<code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">generateParentInfo</code><span class="sig-paren">(</span><em class="sig-param">mlMesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.generateParentInfo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">generateParentInfo</code><span class="sig-paren">(</span><em class="sig-param">mlMesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.generateParentInfo" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>get array P[l,e] = e_c, where element e_c is the parent of element e</dt><dd><p>P[0,:] = -1</p>
 </dd>
@@ -525,7 +664,7 @@ starting at level.</p>
 
 <dl class="function">
 <dt id="proteus.SimTools.getIntegrationPointsOnCoarseGrid">
-<code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">getIntegrationPointsOnCoarseGrid</code><span class="sig-paren">(</span><em class="sig-param">xf</em>, <em class="sig-param">lf</em>, <em class="sig-param">P</em>, <em class="sig-param">lc</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.getIntegrationPointsOnCoarseGrid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">getIntegrationPointsOnCoarseGrid</code><span class="sig-paren">(</span><em class="sig-param">xf</em>, <em class="sig-param">lf</em>, <em class="sig-param">P</em>, <em class="sig-param">lc</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.getIntegrationPointsOnCoarseGrid" title="Permalink to this definition">¶</a></dt>
 <dd><p>given array of points N^f_e x n_q x 3 on level lf
 generate dictionary on coarse
 grid that’s N^c_e x n_q^c(e_c) x 3 and holds the integration points
@@ -537,7 +676,7 @@ In general the number won’t be the same for nonuniform refinement</p>
 
 <dl class="function">
 <dt id="proteus.SimTools.projectVelocityToFinestLevelNC">
-<code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">projectVelocityToFinestLevelNC</code><span class="sig-paren">(</span><em class="sig-param">mlTransport</em>, <em class="sig-param">level</em>, <em class="sig-param">ci=0</em>, <em class="sig-param">tsim=0.0</em>, <em class="sig-param">verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.projectVelocityToFinestLevelNC" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.SimTools.</code><code class="sig-name descname">projectVelocityToFinestLevelNC</code><span class="sig-paren">(</span><em class="sig-param">mlTransport</em>, <em class="sig-param">level</em>, <em class="sig-param">ci=0</em>, <em class="sig-param">tsim=0.0</em>, <em class="sig-param">verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.projectVelocityToFinestLevelNC" title="Permalink to this definition">¶</a></dt>
 <dd><p>use brute force evaluation to get coarse grid quantities on fine grid
 starting at level.</p>
 <p>returns quadrature dictionary of projected values on fine grid</p>
@@ -546,21 +685,70 @@ starting at level.</p>
 </div>
 
 
-    </div>
-      
-  </div>
-</div>
-<footer class="footer">
-  <div class="container">
-    <p class="pull-right">
-      <a href="#">Back to top</a>
-      
-    </p>
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+        &copy; Copyright 2020, The Proteus Team
+
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
 </footer>
-  </body>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+   /* .wy-side-nav-search, .wy-nav-top { */
+    .wy-side-nav-search {
+        background: #F0F0F0;
+    }
+   .wy-side-nav-search > div.version {
+       color: rgba(0,0,0,.5);
+   }
+   /* .wy-side-nav-search img { */
+   /* max-width: 200%; */
+   /* } */
+   .wy-side-nav-search>a img.logo {
+       width: 150px;
+       /* width: 200px; */
+   }
+
+
+
+    /* Sidebar */
+   /* .wy-nav-side { */
+   /* background: #ff0000; */
+   /* } */
+  </style>
+
+
+
+</body>
 </html>

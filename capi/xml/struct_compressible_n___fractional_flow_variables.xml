@@ -1,0 +1,202 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="struct_compressible_n___fractional_flow_variables" kind="struct" language="C++" prot="public">
+    <compoundname>CompressibleN_FractionalFlowVariables</compoundname>
+    <basecompoundref refid="class_fractional_flow_variables" prot="public" virt="non-virtual">FractionalFlowVariables</basecompoundref>
+    <includes refid="psk_relations_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_compressible_n___fractional_flow_variables_1a29778b60eafcb6a60fef1547a0aca372" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double CompressibleN_FractionalFlowVariables::drhon</definition>
+        <argsstring></argsstring>
+        <name>drhon</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="645" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="645" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_compressible_n___fractional_flow_variables_1a503eb74ce1caf77a60c2e0e4b0a829a9" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double CompressibleN_FractionalFlowVariables::dlambdaw_psiw</definition>
+        <argsstring></argsstring>
+        <name>dlambdaw_psiw</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="646" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="646" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_compressible_n___fractional_flow_variables_1ab708c49880ac7d138991746c3353c624" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double CompressibleN_FractionalFlowVariables::drhon_psiw</definition>
+        <argsstring></argsstring>
+        <name>drhon_psiw</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="647" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="647" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_compressible_n___fractional_flow_variables_1ab31a49780421764369a9a29ed23f638b" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double CompressibleN_FractionalFlowVariables::dlambdan_psiw</definition>
+        <argsstring></argsstring>
+        <name>dlambdan_psiw</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="648" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="648" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_compressible_n___fractional_flow_variables_1ab8d6b7a578a2ee7bf0a2c1bf9a1faeb5" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double CompressibleN_FractionalFlowVariables::dlambdat_psiw</definition>
+        <argsstring></argsstring>
+        <name>dlambdat_psiw</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="649" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="649" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_compressible_n___fractional_flow_variables_1aa9357fd934328fadde6d02338591f8ea" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double CompressibleN_FractionalFlowVariables::dfw_psiw</definition>
+        <argsstring></argsstring>
+        <name>dfw_psiw</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="650" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="650" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_compressible_n___fractional_flow_variables_1a2ff735f4e2575ffcf2dc8dec07b3b078" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double CompressibleN_FractionalFlowVariables::dfn_psiw</definition>
+        <argsstring></argsstring>
+        <name>dfn_psiw</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="651" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="651" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="struct_compressible_n___fractional_flow_variables_1a1ad626722f65e0af6db3987413ddd2ab" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>CompressibleN_FractionalFlowVariables::CompressibleN_FractionalFlowVariables</definition>
+        <argsstring>(double muwIn, double munIn)</argsstring>
+        <name>CompressibleN_FractionalFlowVariables</name>
+        <param>
+          <type>double</type>
+          <declname>muwIn</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>munIn</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="641" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="641" bodyend="643"/>
+      </memberdef>
+      <memberdef kind="function" id="struct_compressible_n___fractional_flow_variables_1ab3d17dd466265bf37137c2c85ee0f7a2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompressibleN_FractionalFlowVariables::calc</definition>
+        <argsstring>(const PskRelation &amp;psk, const DensityRelation &amp;density_w, const DensityRelation &amp;density_n)</argsstring>
+        <name>calc</name>
+        <param>
+          <type>const <ref refid="class_psk_relation" kindref="compound">PskRelation</ref> &amp;</type>
+          <declname>psk</declname>
+        </param>
+        <param>
+          <type>const <ref refid="class_density_relation" kindref="compound">DensityRelation</ref> &amp;</type>
+          <declname>density_w</declname>
+        </param>
+        <param>
+          <type>const <ref refid="class_density_relation" kindref="compound">DensityRelation</ref> &amp;</type>
+          <declname>density_n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="653" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="653" bodyend="679"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>FractionalFlowVariables</label>
+        <link refid="class_fractional_flow_variables"/>
+      </node>
+      <node id="1">
+        <label>CompressibleN_FractionalFlowVariables</label>
+        <link refid="struct_compressible_n___fractional_flow_variables"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>FractionalFlowVariables</label>
+        <link refid="class_fractional_flow_variables"/>
+      </node>
+      <node id="1">
+        <label>CompressibleN_FractionalFlowVariables</label>
+        <link refid="struct_compressible_n___fractional_flow_variables"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="639" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="638" bodyend="680"/>
+    <listofallmembers>
+      <member refid="struct_compressible_n___fractional_flow_variables_1ab3d17dd466265bf37137c2c85ee0f7a2" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>calc</name></member>
+      <member refid="struct_compressible_n___fractional_flow_variables_1a1ad626722f65e0af6db3987413ddd2ab" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>CompressibleN_FractionalFlowVariables</name></member>
+      <member refid="class_fractional_flow_variables_1a1cb7093d0813d19c9e80a78ef93400ec" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dfn</name></member>
+      <member refid="struct_compressible_n___fractional_flow_variables_1a2ff735f4e2575ffcf2dc8dec07b3b078" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dfn_psiw</name></member>
+      <member refid="class_fractional_flow_variables_1ae8a2dd3aa44b5419a4a802f444c841ee" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dfw</name></member>
+      <member refid="struct_compressible_n___fractional_flow_variables_1aa9357fd934328fadde6d02338591f8ea" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dfw_psiw</name></member>
+      <member refid="class_fractional_flow_variables_1a2afeb3c57313a6f5b6f26faa2ff3eba0" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dlambdan</name></member>
+      <member refid="struct_compressible_n___fractional_flow_variables_1ab31a49780421764369a9a29ed23f638b" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dlambdan_psiw</name></member>
+      <member refid="class_fractional_flow_variables_1ad1a30bcbead69b8a3babfb4046bfb1e4" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dlambdat</name></member>
+      <member refid="struct_compressible_n___fractional_flow_variables_1ab8d6b7a578a2ee7bf0a2c1bf9a1faeb5" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dlambdat_psiw</name></member>
+      <member refid="class_fractional_flow_variables_1a8ddfd7957ccfd78b6159bd4590449ce9" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dlambdaw</name></member>
+      <member refid="struct_compressible_n___fractional_flow_variables_1a503eb74ce1caf77a60c2e0e4b0a829a9" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>dlambdaw_psiw</name></member>
+      <member refid="struct_compressible_n___fractional_flow_variables_1a29778b60eafcb6a60fef1547a0aca372" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>drhon</name></member>
+      <member refid="struct_compressible_n___fractional_flow_variables_1ab708c49880ac7d138991746c3353c624" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>drhon_psiw</name></member>
+      <member refid="class_fractional_flow_variables_1a33f2beb17d53101e1e8d4243b8b13d7f" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>fn</name></member>
+      <member refid="class_fractional_flow_variables_1a5a36dc13e136e82414df91267302e2ec" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>FractionalFlowVariables</name></member>
+      <member refid="class_fractional_flow_variables_1ab4094d741a2e14eee57441574c5877f6" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>fw</name></member>
+      <member refid="class_fractional_flow_variables_1a82d839c9afd72575832bb0d5ab23b264" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>lambdan</name></member>
+      <member refid="class_fractional_flow_variables_1a899c0396459f2d3e1fe3d9a19b5b1c25" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>lambdat</name></member>
+      <member refid="class_fractional_flow_variables_1a293c0ca40a7b62e288932ab56a3100c6" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>lambdaw</name></member>
+      <member refid="class_fractional_flow_variables_1accee90c9f989ad919226c2ccaf43e4df" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>mun</name></member>
+      <member refid="class_fractional_flow_variables_1a70c803e2eeafac2ca24f00d8ad65de5c" prot="public" virt="non-virtual"><scope>CompressibleN_FractionalFlowVariables</scope><name>muw</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

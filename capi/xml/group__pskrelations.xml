@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="group__pskrelations" kind="group">
+    <compoundname>pskrelations</compoundname>
+    <title>pskrelations</title>
+    <innerclass refid="class_psk_relation" prot="public">PskRelation</innerclass>
+    <innerclass refid="class_simple_p_s_k" prot="public">SimplePSK</innerclass>
+    <innerclass refid="class_v_g_morig" prot="public">VGMorig</innerclass>
+    <innerclass refid="class_v_g_m" prot="public">VGM</innerclass>
+    <innerclass refid="class_v_g_b" prot="public">VGB</innerclass>
+    <innerclass refid="class_b_c_m" prot="public">BCM</innerclass>
+    <innerclass refid="class_b_c_b" prot="public">BCB</innerclass>
+    <innerclass refid="class_fractional_flow_variables" prot="public">FractionalFlowVariables</innerclass>
+    <innerclass refid="struct_compressible_n___fractional_flow_variables" prot="public">CompressibleN_FractionalFlowVariables</innerclass>
+    <innerclass refid="class_psk_spline" prot="public">PskSpline</innerclass>
+    <briefdescription>
+<para>A library of pressure-saturation-permeability relations. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

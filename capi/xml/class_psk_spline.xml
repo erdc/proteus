@@ -1,0 +1,241 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_psk_spline" kind="class" language="C++" prot="public">
+    <compoundname>PskSpline</compoundname>
+    <basecompoundref refid="class_psk_relation" prot="public" virt="non-virtual">PskRelation</basecompoundref>
+    <includes refid="psk_relations_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_psk_spline_1abd219fb7b4d125876b7df69ab475b4b3" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PskSpline::nknots</definition>
+        <argsstring></argsstring>
+        <name>nknots</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="779" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="779" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_psk_spline_1acff855f25f9b3a050b14c178ceacde2e" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PskSpline::lastIndex</definition>
+        <argsstring></argsstring>
+        <name>lastIndex</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="779" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="779" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_psk_spline_1a8bb3cea9486e9094bc41ea876a3fbc2b" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PskSpline::uinvOffset</definition>
+        <argsstring></argsstring>
+        <name>uinvOffset</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="779" column="22" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="779" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_psk_spline_1ac2800ef78cdbf728d2d0b291e28438f1" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PskSpline::krwOffset</definition>
+        <argsstring></argsstring>
+        <name>krwOffset</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="779" column="32" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="779" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_psk_spline_1af52590e123b8c191106e388084963e03" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int PskSpline::krnOffset</definition>
+        <argsstring></argsstring>
+        <name>krnOffset</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="779" column="41" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="779" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_psk_spline_1a903b87fff3da55125acf8c73e32be800" prot="public" static="no" mutable="no">
+        <type>const double *</type>
+        <definition>const double* PskSpline::splineArray</definition>
+        <argsstring></argsstring>
+        <name>splineArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="780" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="780" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_psk_spline_1a2268fc130d4808c67ebc7f45c0849669" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>PskSpline::PskSpline</definition>
+        <argsstring>(const double *rworkIn, const int *iworkIn=0)</argsstring>
+        <name>PskSpline</name>
+        <param>
+          <type>const double *</type>
+          <declname>rworkIn</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>iworkIn</declname>
+          <defval>0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="696" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="696" bodyend="707"/>
+      </memberdef>
+      <memberdef kind="function" id="class_psk_spline_1a09e27b7edea493b85630caf87bd880f6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual PskSpline::~PskSpline</definition>
+        <argsstring>()</argsstring>
+        <name>~PskSpline</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="708" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="708" bodyend="708"/>
+      </memberdef>
+      <memberdef kind="function" id="class_psk_spline_1a4be5aeb70898c9bbebc8f7b62fbb3496" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void PskSpline::calc</definition>
+        <argsstring>(const double &amp;Sw)</argsstring>
+        <name>calc</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Sw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="709" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="709" bodyend="740"/>
+      </memberdef>
+      <memberdef kind="function" id="class_psk_spline_1a11e72c82673b5bf5a4b7b4fc9ff456ce" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void PskSpline::calc_from_psic</definition>
+        <argsstring>(const double &amp;psicIn)</argsstring>
+        <name>calc_from_psic</name>
+        <reimplements refid="class_psk_relation_1ac0d106cc145713dcaac8af85a5747ccb">calc_from_psic</reimplements>
+        <param>
+          <type>const double &amp;</type>
+          <declname>psicIn</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="741" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="741" bodyend="771"/>
+      </memberdef>
+      <memberdef kind="function" id="class_psk_spline_1ad1286349cfdc2a95b4bb3516c9ccd991" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void PskSpline::setParams</definition>
+        <argsstring>(const double *rwork, const int *iwork=0)</argsstring>
+        <name>setParams</name>
+        <reimplements refid="class_psk_relation_1a30b1846138c6cf1e5d343d19e00ffa8a">setParams</reimplements>
+        <param>
+          <type>const double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>iwork</declname>
+          <defval>0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="772" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="772" bodyend="777"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>PskSpline</label>
+        <link refid="class_psk_spline"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>PskRelation</label>
+        <link refid="class_psk_relation"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>PskSpline</label>
+        <link refid="class_psk_spline"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>PskRelation</label>
+        <link refid="class_psk_relation"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="684" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="683" bodyend="781"/>
+    <listofallmembers>
+      <member refid="class_psk_spline_1a4be5aeb70898c9bbebc8f7b62fbb3496" prot="public" virt="virtual"><scope>PskSpline</scope><name>calc</name></member>
+      <member refid="class_psk_spline_1a11e72c82673b5bf5a4b7b4fc9ff456ce" prot="public" virt="virtual"><scope>PskSpline</scope><name>calc_from_psic</name></member>
+      <member refid="class_psk_relation_1acd429c272ae68decd203c71acc945b4b" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>calc_Se</name></member>
+      <member refid="class_psk_relation_1af02b9bc46a0aa0e5c835c068303fc4e9" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>dkrn</name></member>
+      <member refid="class_psk_relation_1a23dee4b92bcd95d0f4c740a45507cda3" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>dkrw</name></member>
+      <member refid="class_psk_relation_1ac0fb939909427791167f7e9fdb875bd4" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>dpsic</name></member>
+      <member refid="class_psk_relation_1a4a8163ffde6cbffc32090d68c35841e7" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>dSe_dpsic</name></member>
+      <member refid="class_psk_relation_1a5e6a67004a600bd0c90e569c6e6e2076" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>dSe_dSw</name></member>
+      <member refid="class_psk_relation_1a6a0f012cf857ae0d2ce028f1a8f895f4" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>krn</name></member>
+      <member refid="class_psk_spline_1af52590e123b8c191106e388084963e03" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>krnOffset</name></member>
+      <member refid="class_psk_relation_1a707ca7b7fd867bf7385ef2f79ac5bb96" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>krw</name></member>
+      <member refid="class_psk_spline_1ac2800ef78cdbf728d2d0b291e28438f1" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>krwOffset</name></member>
+      <member refid="class_psk_spline_1acff855f25f9b3a050b14c178ceacde2e" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>lastIndex</name></member>
+      <member refid="class_psk_spline_1abd219fb7b4d125876b7df69ab475b4b3" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>nknots</name></member>
+      <member refid="class_psk_relation_1af617caae6303510b061b80be4d3a2091" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>psic</name></member>
+      <member refid="class_psk_relation_1a46f5861789f5ca2f5e853beaf718f41f" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>PskRelation</name></member>
+      <member refid="class_psk_relation_1ae315c6c80c12e4f3adec2f8078a57581" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>PskRelation</name></member>
+      <member refid="class_psk_spline_1a2268fc130d4808c67ebc7f45c0849669" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>PskSpline</name></member>
+      <member refid="class_psk_relation_1ad52b5314994defb4cc76ee7d618125d5" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>Se</name></member>
+      <member refid="class_psk_spline_1ad1286349cfdc2a95b4bb3516c9ccd991" prot="public" virt="virtual"><scope>PskSpline</scope><name>setParams</name></member>
+      <member refid="class_psk_relation_1aaaa9abaee3f4652981a42ef3936c79d1" prot="public" virt="virtual"><scope>PskSpline</scope><name>setTolerances</name></member>
+      <member refid="class_psk_spline_1a903b87fff3da55125acf8c73e32be800" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>splineArray</name></member>
+      <member refid="class_psk_relation_1aa525a6f18f699a45d64aa30da1983c06" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>Sw_max</name></member>
+      <member refid="class_psk_relation_1a6fa349ba17507d00269038a6dbbcd2b9" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>Sw_min</name></member>
+      <member refid="class_psk_spline_1a8bb3cea9486e9094bc41ea876a3fbc2b" prot="public" virt="non-virtual"><scope>PskSpline</scope><name>uinvOffset</name></member>
+      <member refid="class_psk_relation_1a88724ddafea3a55efbbb43c8ad73df3e" prot="public" virt="virtual"><scope>PskSpline</scope><name>~PskRelation</name></member>
+      <member refid="class_psk_spline_1a09e27b7edea493b85630caf87bd880f6" prot="public" virt="virtual"><scope>PskSpline</scope><name>~PskSpline</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,402 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_fourier_8cpp" kind="file" language="C++">
+    <compoundname>Fourier.cpp</compoundname>
+    <includes local="no">math.h</includes>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">sys/types.h</includes>
+    <includes local="no">string.h</includes>
+    <includes local="yes">ncurses/curses.h</includes>
+    <includes local="no">stdlib.h</includes>
+    <includes refid="_allocation_8h" local="yes">Allocation.h</includes>
+    <includes refid="_headers_8h" local="yes">Headers.h</includes>
+    <incdepgraph>
+      <node id="8">
+        <label>Allocation.h</label>
+        <link refid="_allocation_8h"/>
+      </node>
+      <node id="7">
+        <label>stdlib.h</label>
+      </node>
+      <node id="6">
+        <label>ncurses/curses.h</label>
+      </node>
+      <node id="4">
+        <label>sys/types.h</label>
+      </node>
+      <node id="5">
+        <label>string.h</label>
+      </node>
+      <node id="1">
+        <label>Fourier.cpp</label>
+        <link refid="_fourier_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>math.h</label>
+      </node>
+      <node id="9">
+        <label>Headers.h</label>
+        <link refid="_headers_8h"/>
+      </node>
+      <node id="3">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="_fourier_8cpp_1a9382b15380bf4f6adaafd94f1c78991a" prot="public" static="no">
+        <name>ANSI</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="10" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" bodystart="10" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_fourier_8cpp_1a5d94534b4ec22b6e5a2c706bc6b54ccc" prot="public" static="no">
+        <name>Main</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="18" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" bodystart="18" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_fourier_8cpp_1a91adff1610bdf681555a8f2e330dc963" prot="public" static="no">
+        <name>Int</name>
+        <initializer>int</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="19" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_fourier_8cpp_1ab255c8e32d555c305816584a4578d1b3" prot="public" static="no">
+        <name>Double</name>
+        <initializer>double</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="20" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="_fourier_8cpp_1a8e8a98e44ae34a718d50f1f6365dd462" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double SU</definition>
+        <argsstring></argsstring>
+        <name>SU</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="26" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_fourier_8cpp_1a2858154e2009b0e6e616f313177762bc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void init</definition>
+        <argsstring>(void)</argsstring>
+        <name>init</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="14" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="_fourier_8cpp_1ac0c206292f12496c35914959487fec95" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Solve</definition>
+        <argsstring>(void)</argsstring>
+        <name>Solve</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="14" column="6"/>
+      </memberdef>
+      <memberdef kind="function" id="_fourier_8cpp_1a2f950117272553394b5fd157771f30ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Title_block</definition>
+        <argsstring>(FILE *)</argsstring>
+        <name>Title_block</name>
+        <param>
+          <type>FILE *</type>
+          <defname>file</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="14" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="125" bodyend="138"/>
+      </memberdef>
+      <memberdef kind="function" id="_fourier_8cpp_1a9b678886728729fa3a755b29221d7c09" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Output</definition>
+        <argsstring>(void)</argsstring>
+        <name>Output</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="14" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="140" bodyend="297" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" declline="14" declcolumn="23"/>
+      </memberdef>
+      <memberdef kind="function" id="_fourier_8cpp_1a734b3471f7615fd1567cbfd81b14b395" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int flushall</definition>
+        <argsstring>(void)</argsstring>
+        <name>flushall</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="16" column="1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" declline="16" declcolumn="1"/>
+      </memberdef>
+      <memberdef kind="function" id="_fourier_8cpp_1a4b9745654c2f7ddcf3ae49db1dc65cc3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runfourier</definition>
+        <argsstring>()</argsstring>
+        <name>runfourier</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="28" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" bodystart="28" bodyend="157"/>
+      </memberdef>
+      <memberdef kind="function" id="_fourier_8cpp_1a840291bc02cba5474a4cb46a9b9566fe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int main</definition>
+        <argsstring>(void)</argsstring>
+        <name>main</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" line="159" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" bodystart="159" bodyend="162"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Steady<sp/>wave<sp/>program<sp/>-<sp/>C++<sp/>version</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;sys/types.h&gt;</highlight><highlight class="normal"><sp/></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ncurses/curses.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10" refid="_fourier_8cpp_1a9382b15380bf4f6adaafd94f1c78991a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ANSI</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="_allocation_8h" kindref="compound">Allocation.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_fourier_8cpp_1a2858154e2009b0e6e616f313177762bc" kindref="member">init</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">),<sp/><ref refid="_fourier_8cpp_1ac0c206292f12496c35914959487fec95" kindref="member">Solve</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">),<sp/><ref refid="_fourier_8cpp_1a2f950117272553394b5fd157771f30ee" kindref="member">Title_block</ref>(FILE*),<sp/><sp/><sp/><sp/><ref refid="_fourier_8cpp_1a9b678886728729fa3a755b29221d7c09" kindref="member">Output</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_fourier_8cpp_1a734b3471f7615fd1567cbfd81b14b395" kindref="member">flushall</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight></codeline>
+<codeline lineno="18" refid="_fourier_8cpp_1a5d94534b4ec22b6e5a2c706bc6b54ccc" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Main</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19" refid="_fourier_8cpp_1a91adff1610bdf681555a8f2e330dc963" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Int<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20" refid="_fourier_8cpp_1ab255c8e32d555c305816584a4578d1b3" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Double<sp/><sp/>double</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="_headers_8h" kindref="compound">Headers.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="comment">//#define<sp/><sp/><sp/><sp/><sp/><sp/><sp/>Diagnostic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="comment">//#ifdef<sp/>Diagnostic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="comment">//char<sp/>Diagname[30],<sp/>Theory[10];</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="comment">//#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26" refid="_inout_8cpp_1a8e8a98e44ae34a718d50f1f6365dd462" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_fourier_8cpp_1a8e8a98e44ae34a718d50f1f6365dd462" kindref="member">SU</ref>;</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28" refid="_fourier_8cpp_1a4b9745654c2f7ddcf3ae49db1dc65cc3" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_fourier_8cpp_1a4b9745654c2f7ddcf3ae49db1dc65cc3" kindref="member">runfourier</ref>()</highlight></codeline>
+<codeline lineno="29"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><sp/>i,<sp/>j,<sp/>iter,<sp/>m;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><ref refid="_inout_8cpp_1afb874c1c3ff5fb5e43ee78f4d4f7fe21" kindref="member">Read_data</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><sp/><ref refid="_subroutines_8cpp_1ac1a0c20c2332d40bc8f5a2d2fa0923eb" kindref="member">Newton</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">),<sp/>dhe,<sp/>dho,<sp/>error,<sp/>**CC;</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><sp/><sp/><sp/>Powell(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*,</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>(*)(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*));</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal">Input1<sp/>=<sp/>fopen(</highlight><highlight class="stringliteral">&quot;Data.dat&quot;</highlight><highlight class="normal">,</highlight><highlight class="stringliteral">&quot;r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal">strcpy(Convergence_file,</highlight><highlight class="stringliteral">&quot;Convergence.dat&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="39"><highlight class="normal">strcpy(Points_file,</highlight><highlight class="stringliteral">&quot;Points.dat&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal">monitor<sp/>=<sp/>stdout;</highlight></codeline>
+<codeline lineno="41"><highlight class="normal">strcpy(Theory,</highlight><highlight class="stringliteral">&quot;Fourier&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="42"><highlight class="normal">strcpy(Diagname,</highlight><highlight class="stringliteral">&quot;Catalogue.res&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/><ref refid="_headers_8h_1a1b8eed57b0f22422909fda3998456bf5" kindref="member">wave</ref>=1<sp/>;<sp/><ref refid="_headers_8h_1a1b8eed57b0f22422909fda3998456bf5" kindref="member">wave</ref>&lt;2;<sp/><ref refid="_headers_8h_1a1b8eed57b0f22422909fda3998456bf5" kindref="member">wave</ref>++<sp/>)</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<ref refid="_inout_8cpp_1afb874c1c3ff5fb5e43ee78f4d4f7fe21" kindref="member">Read_data</ref>()<sp/>==<sp/>0)<sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>=2*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+10;</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>dhe=<ref refid="_headers_8h_1a5554d9ddb970ea46ca620bfa405ba2a3" kindref="member">Height</ref>/<ref refid="_headers_8h_1a5ae4803c4bbba017b625cb5e5b3e6219" kindref="member">nstep</ref>;</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>dho=<ref refid="_headers_8h_1a55b21f9cd6fded5b67b9266cc53498f8" kindref="member">MaxH</ref>/<ref refid="_headers_8h_1a5ae4803c4bbba017b625cb5e5b3e6219" kindref="member">nstep</ref>;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CC<sp/>=<sp/><ref refid="_allocation_8h_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" kindref="member">dmatrix</ref>(1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>j=1;<sp/>j<sp/>&lt;=<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>++j)</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1;<sp/>i<sp/>&lt;=<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>++i)</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CC[j][i]<sp/>=<sp/>0.;</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CC[j][j]<sp/>=<sp/>1.;</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1aa565e3a13199f860447a094f48c9dd6b" kindref="member">Y</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(0,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a117c4e9cde832599b9e0767f35e2cb27" kindref="member">rhs1</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1af3345be82f6601fd459019c6d75b1f29" kindref="member">rhs2</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1ae62d0b7e5a1af6ff6d6257554340d2d1" kindref="member">coeff</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(0,<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(0,2*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a995bb1509a6943811fef5e852eb5b454" kindref="member">sina</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(0,2*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref><sp/>=<sp/><ref refid="_allocation_8h_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" kindref="member">dmatrix</ref>(0,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,1,2);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(1,<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1ac39fb431d54fa94a455bbdf2e4d91fff" kindref="member">Tanh</ref><sp/>=<sp/><ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(1,<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>Commence<sp/>stepping<sp/>through<sp/>steps<sp/>in<sp/>wave<sp/>height</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/><ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref><sp/>=<sp/>1<sp/>;<sp/><ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref><sp/>&lt;=<sp/><ref refid="_headers_8h_1a5ae4803c4bbba017b625cb5e5b3e6219" kindref="member">nstep</ref><sp/>;<sp/><ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref>++<sp/>)</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a4dbff2664c02385f0a9a62cc755b7b3c" kindref="member">height</ref>=<ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref>*dhe;</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a37996e8bc08a8ba963041be8c1cd22ce" kindref="member">Hoverd</ref>=<ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref>*dho;</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(monitor,</highlight><highlight class="stringliteral">&quot;\n\nHeight<sp/>step<sp/>%2d<sp/>of<sp/>%2d\n&quot;</highlight><highlight class="normal">,<sp/><ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref>,<sp/><ref refid="_headers_8h_1a5ae4803c4bbba017b625cb5e5b3e6219" kindref="member">nstep</ref>);</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"></highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>Calculate<sp/>initial<sp/>linear<sp/>solution</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"></highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref><sp/>&lt;=<sp/>1)<sp/><ref refid="_fourier_8cpp_1a2858154e2009b0e6e616f313177762bc" kindref="member">init</ref>();</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>Or,<sp/>extrapolate<sp/>for<sp/>next<sp/>wave<sp/>height,<sp/>if<sp/>necessary</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1<sp/>;<sp/>i<sp/>&lt;=<sp/><ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i]=2.*<ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>[i][2]-<ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>[i][1];</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>Commence<sp/>iterative<sp/>solution</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal"></highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(iter=1<sp/>;<sp/>iter<sp/>&lt;=<sp/><ref refid="_headers_8h_1a75dde92eec1297f87deda0fe215773cf" kindref="member">number</ref><sp/>;<sp/>iter++<sp/>)</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(monitor,</highlight><highlight class="stringliteral">&quot;\nIteration%3d:&quot;</highlight><highlight class="normal">,<sp/>iter);</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"></highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>Calculate<sp/>right<sp/>sides<sp/>of<sp/>equations<sp/>and<sp/>differentiate<sp/>numerically</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>to<sp/>obtain<sp/>Jacobian<sp/>matrix,<sp/>then<sp/>solve<sp/>matrix<sp/>equation</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>error<sp/>=<sp/><ref refid="_subroutines_8cpp_1ac1a0c20c2332d40bc8f5a2d2fa0923eb" kindref="member">Newton</ref>(iter);</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>Convergence<sp/>criterion<sp/>satisfied?</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(stdout,</highlight><highlight class="stringliteral">&quot;<sp/>Mean<sp/>of<sp/>corrections<sp/>to<sp/>free<sp/>surface:<sp/>%8.1e&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref><sp/>==<sp/><ref refid="_headers_8h_1a5ae4803c4bbba017b625cb5e5b3e6219" kindref="member">nstep</ref>)<sp/><ref refid="_headers_8h_1a7cb75ab3309b4db118cbc3e9e21cba75" kindref="member">criter</ref><sp/>=<sp/>1.e-10<sp/>;</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a7cb75ab3309b4db118cbc3e9e21cba75" kindref="member">criter</ref><sp/>=<sp/><ref refid="_headers_8h_1aff5d6bceef73e23cd16d9c23a818ca4a" kindref="member">crit</ref>;</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">((error<sp/>&lt;<sp/><ref refid="_headers_8h_1a7cb75ab3309b4db118cbc3e9e21cba75" kindref="member">criter</ref><sp/>*<sp/>fabs(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]))<sp/><sp/>&amp;&amp;<sp/>iter<sp/>&gt;<sp/>1<sp/>)<sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(iter<sp/>==<sp/><ref refid="_headers_8h_1a75dde92eec1297f87deda0fe215773cf" kindref="member">number</ref>)</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(stdout,</highlight><highlight class="stringliteral">&quot;\nNote<sp/>that<sp/>the<sp/>program<sp/>still<sp/>had<sp/>not<sp/>converged<sp/>to<sp/>the<sp/>degree<sp/>specified\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"></highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>Operations<sp/>for<sp/>extrapolations<sp/>if<sp/>more<sp/>than<sp/>one<sp/>height<sp/>step<sp/>used</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"></highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a8d89c1c01f11c291e3bf8dfeb781946d" kindref="member">ns</ref><sp/>==<sp/>1)</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1<sp/>;<sp/>i&lt;=<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>[i][2]<sp/>=<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i];</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1<sp/>;<sp/>i&lt;=<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref><sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>[i][1]<sp/>=<sp/><ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>[i][2];</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>[i][2]<sp/>=<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[i];</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>Fourier<sp/>coefficients<sp/>(for<sp/>surface<sp/>elevation<sp/>by<sp/>slow<sp/>Fourier<sp/>transform)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="123"><highlight class="normal"></highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/><ref refid="_headers_8h_1aa565e3a13199f860447a094f48c9dd6b" kindref="member">Y</ref>[0]<sp/>=<sp/>0.,<sp/>j<sp/>=<sp/>1<sp/>;<sp/>j<sp/>&lt;=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>j++<sp/>)</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref>[j]=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[j+<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+10];</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a4236a05d5d04839f0af91439cb8820b8" kindref="member">sum</ref><sp/>=<sp/>0.5*(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[10]+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+10]*pow(-1.,(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">)j));</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>m<sp/>=<sp/>1<sp/>;<sp/>m<sp/>&lt;=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>-1<sp/>;<sp/>m++<sp/>)</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a4236a05d5d04839f0af91439cb8820b8" kindref="member">sum</ref><sp/>+=<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[10+m]*<ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref>[(m*j)%(<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>+<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>)];</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1aa565e3a13199f860447a094f48c9dd6b" kindref="member">Y</ref>[j]<sp/>=<sp/>2.<sp/>*<sp/><ref refid="_headers_8h_1a4236a05d5d04839f0af91439cb8820b8" kindref="member">sum</ref><sp/>/<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>;</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}<sp/></highlight><highlight class="comment">//<sp/>End<sp/>stepping<sp/>through<sp/>wave<sp/>heights</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="133"><highlight class="normal"></highlight></codeline>
+<codeline lineno="134"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Print<sp/><sp/>results</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Solution=fopen(</highlight><highlight class="stringliteral">&quot;Solution.res&quot;</highlight><highlight class="normal">,</highlight><highlight class="stringliteral">&quot;w&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Elevation<sp/>=<sp/>fopen(</highlight><highlight class="stringliteral">&quot;Surface.res&quot;</highlight><highlight class="normal">,</highlight><highlight class="stringliteral">&quot;w&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Flowfield<sp/>=<sp/>fopen(</highlight><highlight class="stringliteral">&quot;Flowfield.res&quot;</highlight><highlight class="normal">,</highlight><highlight class="stringliteral">&quot;w&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_fourier_8cpp_1a9b678886728729fa3a755b29221d7c09" kindref="member">Output</ref>();</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/><sp/><sp/>fflush(NULL);</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nTouch<sp/>key<sp/>to<sp/>continue\n\n&quot;</highlight><highlight class="normal">);<sp/>getch();</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"></highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1a04fbc9bc53e6303830eb4338bc1f3259" kindref="member">free_dmatrix</ref>(CC,1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="_headers_8h_1aa565e3a13199f860447a094f48c9dd6b" kindref="member">Y</ref>,0,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>,<sp/>1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="_headers_8h_1a117c4e9cde832599b9e0767f35e2cb27" kindref="member">rhs1</ref>,<sp/>1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="_headers_8h_1af3345be82f6601fd459019c6d75b1f29" kindref="member">rhs2</ref>,<sp/>1,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>);</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="_headers_8h_1ae62d0b7e5a1af6ff6d6257554340d2d1" kindref="member">coeff</ref>,<sp/>0,<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="_headers_8h_1a58b1bd289f6ea2af0011261ea4e74c95" kindref="member">cosa</ref>,<sp/>0,2*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="_headers_8h_1a995bb1509a6943811fef5e852eb5b454" kindref="member">sina</ref>,<sp/>0,2*<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1a04fbc9bc53e6303830eb4338bc1f3259" kindref="member">free_dmatrix</ref>(<ref refid="_headers_8h_1a21088ebd92b5ed9b7cc32cb31bda2e89" kindref="member">sol</ref>,<sp/>0,<ref refid="_headers_8h_1a8242dee47c9f3525c44e230a3a2d954c" kindref="member">num</ref>,1,2);</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref>,<sp/>1,<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="_headers_8h_1ac39fb431d54fa94a455bbdf2e4d91fff" kindref="member">Tanh</ref>,<sp/>1,<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="154"><highlight class="normal">}<sp/></highlight><highlight class="comment">//<sp/>End<sp/>stepping<sp/>through<sp/>waves</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="155"><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal">printf(</highlight><highlight class="stringliteral">&quot;\nFinished\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="157"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"></highlight></codeline>
+<codeline lineno="159" refid="_fourier_8cpp_1a840291bc02cba5474a4cb46a9b9566fe" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_fourier_8cpp_1a840291bc02cba5474a4cb46a9b9566fe" kindref="member">main</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="160"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="_fourier_8cpp_1a4b9745654c2f7ddcf3ae49db1dc65cc3" kindref="member">runfourier</ref>();</highlight></codeline>
+<codeline lineno="162"><highlight class="normal">}<sp/></highlight><highlight class="comment">//<sp/>End<sp/>main<sp/>program</highlight><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp"/>
+  </compounddef>
+</doxygen>

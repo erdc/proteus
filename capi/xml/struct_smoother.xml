@@ -1,0 +1,202 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="struct_smoother" kind="struct" language="C++" prot="public">
+    <compoundname>Smoother</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">CavityOp</basecompoundref>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_smoother_1ae07831f68880f409f7fdbf7036570b45" prot="public" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* Smoother::field</definition>
+        <argsstring></argsstring>
+        <name>field</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1122" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1122" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_smoother_1acb7694ab3ef87be544da1403c5bf7948" prot="public" static="no" mutable="no">
+        <type>apf::Field *</type>
+        <definition>apf::Field* Smoother::newField</definition>
+        <argsstring></argsstring>
+        <name>newField</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1123" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1123" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_smoother_1a3c342990fe5f7dec4c1677aa0b20d2ca" prot="public" static="no" mutable="no">
+        <type>apf::MeshEntity *</type>
+        <definition>apf::MeshEntity* Smoother::vertex</definition>
+        <argsstring></argsstring>
+        <name>vertex</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1124" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1124" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_smoother_1af5f0c6fd1508ba2460ad695bc224889c" prot="public" static="no" mutable="no">
+        <type>apf::DynamicVector</type>
+        <definition>apf::DynamicVector Smoother::sum</definition>
+        <argsstring></argsstring>
+        <name>sum</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1125" column="22" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1125" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_smoother_1a8b008c73e6a8fe8c426f11752a02611e" prot="public" static="no" mutable="no">
+        <type>apf::DynamicVector</type>
+        <definition>apf::DynamicVector Smoother::value</definition>
+        <argsstring></argsstring>
+        <name>value</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1126" column="22" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1126" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_smoother_1a5a100b714c0ef73dd547f12407045d3c" prot="public" static="no" mutable="no">
+        <type>apf::MeshTag *</type>
+        <definition>apf::MeshTag* Smoother::emptyTag</definition>
+        <argsstring></argsstring>
+        <name>emptyTag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1127" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1127" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_smoother_1a20a49e8e66965232edd41e96623bf94b" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Smoother::nApplied</definition>
+        <argsstring></argsstring>
+        <name>nApplied</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1128" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1128" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="struct_smoother_1a9cc853cd755c8afd414bc866a6192a4a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Smoother::Smoother</definition>
+        <argsstring>(apf::Field *f)</argsstring>
+        <name>Smoother</name>
+        <param>
+          <type>apf::Field *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1080" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1080" bodyend="1088"/>
+      </memberdef>
+      <memberdef kind="function" id="struct_smoother_1a04950044ad31407594085f37010b3ef1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Smoother::~Smoother</definition>
+        <argsstring>()</argsstring>
+        <name>~Smoother</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1089" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1089" bodyend="1093"/>
+      </memberdef>
+      <memberdef kind="function" id="struct_smoother_1a8e7b58bd18db732df42dd2eae7b05828" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>Outcome</type>
+        <definition>virtual Outcome Smoother::setEntity</definition>
+        <argsstring>(apf::MeshEntity *e)</argsstring>
+        <name>setEntity</name>
+        <param>
+          <type>apf::MeshEntity *</type>
+          <declname>e</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1094" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1094" bodyend="1102"/>
+      </memberdef>
+      <memberdef kind="function" id="struct_smoother_1a0d53b6189444cdbe7346dca410a9bc76" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void Smoother::apply</definition>
+        <argsstring>()</argsstring>
+        <name>apply</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1103" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1103" bodyend="1121"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>apf::CavityOp</label>
+      </node>
+      <node id="1">
+        <label>Smoother</label>
+        <link refid="struct_smoother"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>apf::CavityOp</label>
+      </node>
+      <node id="1">
+        <label>Smoother</label>
+        <link refid="struct_smoother"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" line="1079" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/SizeField.cpp" bodystart="1078" bodyend="1129"/>
+    <listofallmembers>
+      <member refid="struct_smoother_1a0d53b6189444cdbe7346dca410a9bc76" prot="public" virt="virtual"><scope>Smoother</scope><name>apply</name></member>
+      <member refid="struct_smoother_1a5a100b714c0ef73dd547f12407045d3c" prot="public" virt="non-virtual"><scope>Smoother</scope><name>emptyTag</name></member>
+      <member refid="struct_smoother_1ae07831f68880f409f7fdbf7036570b45" prot="public" virt="non-virtual"><scope>Smoother</scope><name>field</name></member>
+      <member refid="struct_smoother_1a20a49e8e66965232edd41e96623bf94b" prot="public" virt="non-virtual"><scope>Smoother</scope><name>nApplied</name></member>
+      <member refid="struct_smoother_1acb7694ab3ef87be544da1403c5bf7948" prot="public" virt="non-virtual"><scope>Smoother</scope><name>newField</name></member>
+      <member refid="struct_smoother_1a8e7b58bd18db732df42dd2eae7b05828" prot="public" virt="virtual"><scope>Smoother</scope><name>setEntity</name></member>
+      <member refid="struct_smoother_1a9cc853cd755c8afd414bc866a6192a4a" prot="public" virt="non-virtual"><scope>Smoother</scope><name>Smoother</name></member>
+      <member refid="struct_smoother_1af5f0c6fd1508ba2460ad695bc224889c" prot="public" virt="non-virtual"><scope>Smoother</scope><name>sum</name></member>
+      <member refid="struct_smoother_1a8b008c73e6a8fe8c426f11752a02611e" prot="public" virt="non-virtual"><scope>Smoother</scope><name>value</name></member>
+      <member refid="struct_smoother_1a3c342990fe5f7dec4c1677aa0b20d2ca" prot="public" virt="non-virtual"><scope>Smoother</scope><name>vertex</name></member>
+      <member refid="struct_smoother_1a04950044ad31407594085f37010b3ef1" prot="public" virt="non-virtual"><scope>Smoother</scope><name>~Smoother</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

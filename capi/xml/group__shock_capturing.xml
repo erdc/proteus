@@ -1,0 +1,391 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="group__shock_capturing" kind="group">
+    <compoundname>shockCapturing</compoundname>
+    <title>shockCapturing</title>
+    <innerfile refid="shock_capturing_8c">shockCapturing.c</innerfile>
+      <sectiondef kind="user-defined">
+      <memberdef kind="function" id="group__shock_capturing_1ga1aac95dc8dd45d4598ab11fc7beaf99a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateNumericalDiffusionEikonal</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, double shockCapturingDiffusion, double *elementDiameter, double *strong_residual, double *numDiff)</argsstring>
+        <name>calculateNumericalDiffusionEikonal</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" line="91" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" bodystart="91" bodyend="109"/>
+      </memberdef>
+      <memberdef kind="function" id="group__shock_capturing_1ga16b05cb333f9adb6f0cd2e7cd737949b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateNumericalDiffusionJaffre</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double shockCapturingDiffusion, double beta, double *elementDiameter, double *strong_residual, double *grad_u, double *numDiff)</argsstring>
+        <name>calculateNumericalDiffusionJaffre</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" line="299" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" bodystart="299" bodyend="335"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group__shock_capturing_1gaa6d18e18ad2b8a7f7ad06c29c8df35fe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateNumericalDiffusionResGrad</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double shockCapturingDiffusion, double *elementDiameter, double *strong_residual, double *grad_u, double *numDiff)</argsstring>
+        <name>calculateNumericalDiffusionResGrad</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" line="13" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" bodystart="8" bodyend="58" declfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" declline="13" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__shock_capturing_1ga2e0b96e8e6b4b836b4370b50ac3ea054" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateNumericalDiffusionResGradQuad</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double shockCapturingDiffusion, double *elementDiameter, double *strong_residual, double *grad_u, double *numDiff)</argsstring>
+        <name>calculateNumericalDiffusionResGradQuad</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" line="21" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" bodystart="60" bodyend="89" declfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" declline="21" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__shock_capturing_1gaad17a3bec6ee17e7bae58f7e682a09fc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateNumericalDiffusionHJ</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, char shockCapturing, double shockCapturingDiffusion, double *elementDiameter, double *strong_residual, double *mt, double *H, double *numDiff)</argsstring>
+        <name>calculateNumericalDiffusionHJ</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>shockCapturing</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the shock capturing diffusion for a Hamilton-Jacobi equation at the quadrature points. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" line="29" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" bodystart="114" bodyend="160" declfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" declline="29" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__shock_capturing_1ga7afac90ac17d9275d2147cd406ad2a67" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateNumericalDiffusionHJV2</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, char shockCapturing, double shockCapturingDiffusion, double *elementDiameter, double *strong_residual, double *mt, double *H, double *numDiff)</argsstring>
+        <name>calculateNumericalDiffusionHJV2</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>shockCapturing</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the shock capturing diffusion for a Hamilton-Jacobi equation at the quadrature points mwf try this with <formula id="151">$H(\nabla u)$</formula> in denominator. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" line="38" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" bodystart="166" bodyend="205" declfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" declline="38" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__shock_capturing_1gaad5cf6bf2d88ea7088cd8f161fe10229" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateNumericalDiffusion_A_1</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double shockCapturingFactor, double *elementDiameter, double *strong_residual, double *mt, double *df, double *numDiff)</argsstring>
+        <name>calculateNumericalDiffusion_A_1</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingFactor</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" line="47" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" bodystart="207" bodyend="246" declfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" declline="47" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__shock_capturing_1ga9f19761014f624e62c532eff3ac279f9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateNumericalDiffusionResGradJuanes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double shockCapturingDiffusion, double uSC, double *elementDiameter, double *strong_residual, double *grad_u, double *numDiff)</argsstring>
+        <name>calculateNumericalDiffusionResGradJuanes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>uSC</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" line="56" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.c" bodystart="249" bodyend="293" declfile="/home/tridelat/PROTEUS/proteus2/proteus/shockCapturing.h" declline="56" declcolumn="13"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>C implementations of shock capturing diffusion calculations. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

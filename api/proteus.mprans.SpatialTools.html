@@ -1,129 +1,268 @@
+
+
 <!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>proteus.mprans.SpatialTools module &mdash; Proteus 1.7.2 documentation</title>
+  
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>proteus.mprans.SpatialTools module &#8212; Proteus 1.7.0 documentation</title>
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+  
+  
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="proteus.mprans.VOF module" href="proteus.mprans.VOF.html" />
-    <link rel="prev" title="proteus.mprans.SedClosure module" href="proteus.mprans.SedClosure.html" />
-<meta charset='utf-8'>
-<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
-<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
-<meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
 
-  </head><body>
+<body class="wy-body-for-nav">
 
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
 
-
-  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="../index.html">
-          proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
-      </div>
-
-        <div class="collapse navbar-collapse nav-collapse">
-          <ul class="nav navbar-nav">
-            
-                <li><a href="proteus.html">API</a></li>
-                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
-            
-            
-              <li class="dropdown globaltoc-container">
-  <a role="button"
-     id="dLabelGlobalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="../index.html">Site <b class="caret"></b></a>
-  <ul class="dropdown-menu globaltoc"
-      role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
-</ul>
-</li>
-</ul>
-</ul>
-</li>
-              
-                <li class="dropdown">
-  <a role="button"
-     id="dLabelLocalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="#">Page <b class="caret"></b></a>
-  <ul class="dropdown-menu localtoc"
-      role="menu"
-      aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">proteus.mprans.SpatialTools module</a></li>
-</ul>
-</ul>
-</li>
-              
-            
-            
-              
-                
-  <li>
-    <a href="proteus.mprans.SedClosure.html" title="Previous Chapter: proteus.mprans.SedClosure module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.mpran...</span>
-    </a>
-  </li>
-  <li>
-    <a href="proteus.mprans.VOF.html" title="Next Chapter: proteus.mprans.VOF module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.mpran... &raquo;</span>
-    </a>
-  </li>
-              
-            
-            
-            
-            
-              <li class="hidden-sm"></li>
-            
-          </ul>
+          
+            <a href="../index.html">
+          
 
           
             
-<form class="navbar-form navbar-right" action="../search.html" method="get">
- <div class="form-group">
-  <input type="text" name="q" class="form-control" placeholder="Search" />
- </div>
-  <input type="hidden" name="check_keywords" value="yes" />
-  <input type="hidden" name="area" value="default" />
-</form>
+            <img src="../_static/corps_logo_cross2.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
           
         </div>
-    </div>
-  </div>
 
-<div class="container">
-  <div class="row">
-    <div class="col-md-12 content">
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apicapi.html">API docs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/boundary_conditions.html">BoundaryConditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/boundary_conditions.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/boundary_conditions.html#import">Import</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/spatial_tools.html">SpatialTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#import">Import</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#choosing-the-domain">Choosing the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#assembling-the-domain">Assembling the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#boundaryconditions-with-spatialtools">BoundaryConditions with SpatialTools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#id1">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#linking-it-to-p-py-files">Linking it to _p.py files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#complete-examples">Complete Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#d">2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#id2">3D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#d-with-stl">3D with STL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#base-classes">Base classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#customshape">CustomShape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#rectangle">Rectangle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#circle">Circle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#cuboid">Cuboid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#cylinder">Cylinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#sphere">Sphere</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#shapestl">ShapeSTL</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#mprans-specific">mprans specific</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tank2d">Tank2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tank3d">Tank3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tankwithobstacle2d">TankWithObstacle2D</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/two_phase_flow.html">TwoPhaseFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/wave_tools.html">WaveTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/wave_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#import-in-command-line">Import in command line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#list-of-wave-theories">List of wave theories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#how-to-use-in-proteus">How to use in Proteus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#how-to-use-as-stand-alone-tool">How to use as stand-alone tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Models</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../models/body_dynamics.html">Body Dynamics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchsystem">ProtChSystem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchbody">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmesh">ProtChMesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmoorings">ProtChMoorings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchaddedmass">ProtChAddedMass</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#postprocessing-tools">Postprocessing Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id4">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id5">ProtChMoorings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/free_surface.html">Free Surface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#vof-ncls">VOF - NCLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#clsvof">CLSVOF</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_adaptivity.html">Mesh Adaptivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_motion.html">Mesh Motion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/navier_stokes.html">Navier-Stokes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#two-phase">Two-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#three-phase">Three-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#dealing-with-moving-domains">Dealing with Moving Domains</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#moving-ale-mesh">Moving (ALE) Mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#immersed-boundaries">Immersed Boundaries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/SWFlows.html">Shallow Water Flows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#shallow-water-equations">Shallow Water equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#modified-green-naghdi-equations">Modified Green-Naghdi equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#running-the-tests">Running the tests</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
       
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Proteus</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>proteus.mprans.SpatialTools module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/erdc/proteus/blob/masterdocs/source/api/proteus.mprans.SpatialTools.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
   <div class="section" id="module-proteus.mprans.SpatialTools">
 <span id="proteus-mprans-spatialtools-module"></span><h1>proteus.mprans.SpatialTools module<a class="headerlink" href="#module-proteus.mprans.SpatialTools" title="Permalink to this headline">¶</a></h1>
 <p>This module adds functionality to proteus.SpatialTools module by enabling
@@ -144,7 +283,7 @@ shape2.BC.left.setNoSlip()</p>
 <p>st.assembleDomain(domain)</p>
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">ShapeRANS</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">ShapeRANS</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.SpatialTools.html#proteus.SpatialTools.Shape" title="proteus.SpatialTools.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SpatialTools.Shape</span></code></a></p>
 <p>Base/super class of all shapes. Sets the boundary condition class to
 proteus.mprans.BoundaryConditions.BC_RANS.</p>
@@ -160,7 +299,7 @@ dimensions of the domain.</p></li>
 </dl>
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.attachPointGauges">
-<code class="sig-name descname">attachPointGauges</code><span class="sig-paren">(</span><em class="sig-param">model_key</em>, <em class="sig-param">gauges</em>, <em class="sig-param">activeTime=None</em>, <em class="sig-param">sampleRate=0</em>, <em class="sig-param">fileName='point_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.attachPointGauges" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attachPointGauges</code><span class="sig-paren">(</span><em class="sig-param">model_key</em>, <em class="sig-param">gauges</em>, <em class="sig-param">activeTime=None</em>, <em class="sig-param">sampleRate=0</em>, <em class="sig-param">fileName='point_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.attachPointGauges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attaches Point Gauges (in the Proteus/Gauges.py style) to the shape.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -174,7 +313,7 @@ dimensions of the domain.</p></li>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.attachLineGauges">
-<code class="sig-name descname">attachLineGauges</code><span class="sig-paren">(</span><em class="sig-param">model_key</em>, <em class="sig-param">gauges</em>, <em class="sig-param">activeTime=None</em>, <em class="sig-param">sampleRate=0</em>, <em class="sig-param">fileName='line_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.attachLineGauges" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attachLineGauges</code><span class="sig-paren">(</span><em class="sig-param">model_key</em>, <em class="sig-param">gauges</em>, <em class="sig-param">activeTime=None</em>, <em class="sig-param">sampleRate=0</em>, <em class="sig-param">fileName='line_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.attachLineGauges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attaches Line Gauges (in the Proteus/Gauges.py style) to the shape.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -188,7 +327,7 @@ dimensions of the domain.</p></li>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.attachLineIntegralGauges">
-<code class="sig-name descname">attachLineIntegralGauges</code><span class="sig-paren">(</span><em class="sig-param">model_key</em>, <em class="sig-param">gauges</em>, <em class="sig-param">activeTime=None</em>, <em class="sig-param">sampleRate=0</em>, <em class="sig-param">fileName='line_integral_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.attachLineIntegralGauges" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attachLineIntegralGauges</code><span class="sig-paren">(</span><em class="sig-param">model_key</em>, <em class="sig-param">gauges</em>, <em class="sig-param">activeTime=None</em>, <em class="sig-param">sampleRate=0</em>, <em class="sig-param">fileName='line_integral_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.attachLineIntegralGauges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attaches Line Integral Gauges (in the Proteus/Gauges.py style).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -202,13 +341,13 @@ dimensions of the domain.</p></li>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.setTank">
-<code class="sig-name descname">setTank</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setTank" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setTank</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setTank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets tank boundary conditions (for moving domain).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.setTurbulentWall">
-<code class="sig-name descname">setTurbulentWall</code><span class="sig-paren">(</span><em class="sig-param">wall</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setTurbulentWall" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setTurbulentWall</code><span class="sig-paren">(</span><em class="sig-param">wall</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setTurbulentWall" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets a turbulent wall as an object to be attacched to auxiliaryVariable.
 The objects has to be defined with WallFunction class.</p>
 <dl class="field-list simple">
@@ -220,7 +359,7 @@ The objects has to be defined with WallFunction class.</p>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.setTurbulentKWall">
-<code class="sig-name descname">setTurbulentKWall</code><span class="sig-paren">(</span><em class="sig-param">kWall</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setTurbulentKWall" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setTurbulentKWall</code><span class="sig-paren">(</span><em class="sig-param">kWall</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setTurbulentKWall" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets a turbulent wall as an object to be attacched to auxiliaryVariable.
 The objects has to be defined with WallFunction class.</p>
 <dl class="field-list simple">
@@ -232,7 +371,7 @@ The objects has to be defined with WallFunction class.</p>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.setAbsorptionZones">
-<code class="sig-name descname">setAbsorptionZones</code><span class="sig-paren">(</span><em class="sig-param">flags</em>, <em class="sig-param">epsFact_solid</em>, <em class="sig-param">center</em>, <em class="sig-param">orientation</em>, <em class="sig-param">dragAlpha</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setAbsorptionZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setAbsorptionZones</code><span class="sig-paren">(</span><em class="sig-param">flags</em>, <em class="sig-param">epsFact_solid</em>, <em class="sig-param">center</em>, <em class="sig-param">orientation</em>, <em class="sig-param">dragAlpha</em>, <em class="sig-param">vert_axis=None</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setAbsorptionZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets a region (given the local flag) to an absorption zone</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -242,6 +381,8 @@ The objects has to be defined with WallFunction class.</p>
 <li><p><strong>epsFact_solid</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Half of absorption zone (region) length (used for blending func).</p></li>
 <li><p><strong>center</strong> (<em>array_like</em>) – Coordinates of the center of the absorption zone.</p></li>
 <li><p><strong>orientation</strong> (<em>array_like</em>) – Orientation vector pointing TOWARDS incoming waves.</p></li>
+<li><p><strong>vert_axis</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – index of vertical position vector (x:0, y:1, z:2), must always be
+aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).</p></li>
 <li><p><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</p></li>
 <li><p><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</p></li>
 </ul>
@@ -251,7 +392,7 @@ The objects has to be defined with WallFunction class.</p>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.setGenerationZones">
-<code class="sig-name descname">setGenerationZones</code><span class="sig-paren">(</span><em class="sig-param">flags</em>, <em class="sig-param">epsFact_solid</em>, <em class="sig-param">center</em>, <em class="sig-param">orientation</em>, <em class="sig-param">waves</em>, <em class="sig-param">dragAlpha</em>, <em class="sig-param">wind_speed=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em>, <em class="sig-param">smoothing=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setGenerationZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setGenerationZones</code><span class="sig-paren">(</span><em class="sig-param">flags</em>, <em class="sig-param">epsFact_solid</em>, <em class="sig-param">center</em>, <em class="sig-param">orientation</em>, <em class="sig-param">waves</em>, <em class="sig-param">dragAlpha</em>, <em class="sig-param">vert_axis=None</em>, <em class="sig-param">wind_speed=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em>, <em class="sig-param">smoothing=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setGenerationZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets a region (given the local flag) to a generation zone</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -262,6 +403,8 @@ The objects has to be defined with WallFunction class.</p>
 <li><p><strong>orientation</strong> (<em>array_like</em>) – Orientation vector pointing ACCORDING WITH the direction of generated waves.</p></li>
 <li><p><strong>waves</strong> (<em>proteus.WaveTools</em>) – Class instance of wave generated from proteus.WaveTools.</p></li>
 <li><p><strong>dragAlpha</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</p></li>
+<li><p><strong>vert_axis</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – index of vertical position vector (x:0, y:1, z:2), must always be
+aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).</p></li>
 <li><p><strong>wind_speed</strong> (<em>Optional</em><em>[</em><em>array_like</em><em>]</em>) – Speed of wind in generation zone (default is (0., 0., 0.))</p></li>
 <li><p><strong>dragBeta</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</p></li>
 <li><p><strong>porosity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>]</em>) – Relaxation zone coefficient.</p></li>
@@ -272,7 +415,7 @@ The objects has to be defined with WallFunction class.</p>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.ShapeRANS.setPorousZones">
-<code class="sig-name descname">setPorousZones</code><span class="sig-paren">(</span><em class="sig-param">flags</em>, <em class="sig-param">dragAlpha</em>, <em class="sig-param">dragBeta</em>, <em class="sig-param">porosity</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setPorousZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setPorousZones</code><span class="sig-paren">(</span><em class="sig-param">flags</em>, <em class="sig-param">dragAlpha</em>, <em class="sig-param">dragBeta</em>, <em class="sig-param">porosity</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.ShapeRANS.setPorousZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets a region (given the local flag) to a porous zone</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -290,7 +433,7 @@ The objects has to be defined with WallFunction class.</p>
 
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.Tank3D">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">Tank3D</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">dim=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">coords=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">Tank3D</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">dim=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">coords=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.ShapeRANS" title="proteus.mprans.SpatialTools.ShapeRANS"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.ShapeRANS</span></code></a></p>
 <p>Class to create a 3D tank (cuboidal shape).</p>
 <dl class="field-list simple">
@@ -305,12 +448,12 @@ boundary conditions of the shape.</p></li>
 </dl>
 <dl class="attribute">
 <dt id="proteus.mprans.SpatialTools.Tank3D.count">
-<code class="sig-name descname">count</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.count" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">count</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.count" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.Tank3D.setSponge">
-<code class="sig-name descname">setSponge</code><span class="sig-paren">(</span><em class="sig-param">x_p=None</em>, <em class="sig-param">x_n=None</em>, <em class="sig-param">y_p=None</em>, <em class="sig-param">y_n=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.setSponge" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setSponge</code><span class="sig-paren">(</span><em class="sig-param">x_p=None</em>, <em class="sig-param">x_n=None</em>, <em class="sig-param">y_p=None</em>, <em class="sig-param">y_n=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.setSponge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set length of sponge layers of the tank (used for wave absorption or
 generation zones).
 (!) Sponge layers expand outwards.</p>
@@ -328,7 +471,7 @@ generation zones).
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.Tank3D.setDimensions">
-<code class="sig-name descname">setDimensions</code><span class="sig-paren">(</span><em class="sig-param">dim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.setDimensions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setDimensions</code><span class="sig-paren">(</span><em class="sig-param">dim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.setDimensions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set dimension of the tank
 :param dim: dimensions of the tank (excluding sponge layers), array of length 3.
 :type dim: array_like</p>
@@ -336,7 +479,7 @@ generation zones).
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.Tank3D.setAbsorptionZones">
-<code class="sig-name descname">setAbsorptionZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">allSponge=False</em>, <em class="sig-param">y_n=False</em>, <em class="sig-param">y_p=False</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.setAbsorptionZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setAbsorptionZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">allSponge=False</em>, <em class="sig-param">y_n=False</em>, <em class="sig-param">y_p=False</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.setAbsorptionZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets regions (x+, x-, y+, y-) to absorption zones</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -356,7 +499,7 @@ generation zones).
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.Tank3D.setGenerationZones">
-<code class="sig-name descname">setGenerationZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">smoothing</em>, <em class="sig-param">waves=None</em>, <em class="sig-param">wind_speed=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">allSponge=False</em>, <em class="sig-param">y_n=False</em>, <em class="sig-param">y_p=False</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.setGenerationZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setGenerationZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">smoothing</em>, <em class="sig-param">waves=None</em>, <em class="sig-param">wind_speed=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">allSponge=False</em>, <em class="sig-param">y_n=False</em>, <em class="sig-param">y_p=False</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank3D.setGenerationZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets regions (x+, x-, y+, y-) to generation zones</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -381,7 +524,7 @@ generation zones).
 
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.Tank2D">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">Tank2D</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">dim</em>, <em class="sig-param">coords=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">Tank2D</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">dim</em>, <em class="sig-param">coords=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.ShapeRANS" title="proteus.mprans.SpatialTools.ShapeRANS"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.ShapeRANS</span></code></a></p>
 <p>Class to create a 2D tank (rectangular shape).</p>
 <dl class="field-list simple">
@@ -396,12 +539,12 @@ boundary conditions of the shape.</p></li>
 </dl>
 <dl class="attribute">
 <dt id="proteus.mprans.SpatialTools.Tank2D.count">
-<code class="sig-name descname">count</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.count" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">count</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.count" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.Tank2D.constructShape">
-<code class="sig-name descname">constructShape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.constructShape" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">constructShape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.constructShape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct the geometry of the tank: segments, regions, etc.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -420,7 +563,7 @@ specific methods.</p></li>
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.Tank2D.setSponge">
-<code class="sig-name descname">setSponge</code><span class="sig-paren">(</span><em class="sig-param">x_n=None</em>, <em class="sig-param">x_p=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.setSponge" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setSponge</code><span class="sig-paren">(</span><em class="sig-param">x_n=None</em>, <em class="sig-param">x_p=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.setSponge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set length of sponge layers of the tank (used for wave absorption or
 generation zones).
 (!) Sponge layers expand outwards.</p>
@@ -436,7 +579,7 @@ generation zones).
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.Tank2D.setAbsorptionZones">
-<code class="sig-name descname">setAbsorptionZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.setAbsorptionZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setAbsorptionZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.setAbsorptionZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets regions (x+, x-) to absorption zones</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -454,7 +597,7 @@ generation zones).
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.Tank2D.setGenerationZones">
-<code class="sig-name descname">setGenerationZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">smoothing</em>, <em class="sig-param">waves=None</em>, <em class="sig-param">wind_speed=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.setGenerationZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setGenerationZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">smoothing</em>, <em class="sig-param">waves=None</em>, <em class="sig-param">wind_speed=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.Tank2D.setGenerationZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets regions (x+, x-) to generation zones</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -477,7 +620,7 @@ generation zones).
 
 <dl class="class">
 <dt id="proteus.mprans.SpatialTools.TankWithObstacles2D">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">TankWithObstacles2D</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">dim=(0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">obstacles=None</em>, <em class="sig-param">special_boundaries=None</em>, <em class="sig-param">full_circle=False</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">hole=True</em>, <em class="sig-param">obstacle_regions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">TankWithObstacles2D</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">dim=(0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">obstacles=None</em>, <em class="sig-param">special_boundaries=None</em>, <em class="sig-param">full_circle=False</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">hole=True</em>, <em class="sig-param">obstacle_regions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.mprans.SpatialTools.Tank2D" title="proteus.mprans.SpatialTools.Tank2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.mprans.SpatialTools.Tank2D</span></code></a></p>
 <p>Class to create a 2D rectangular tank with obstacles built out of any wall.</p>
 <p>An obstacle is defined by a contiguous list of points which start and end
@@ -524,7 +667,7 @@ obstacle in order to fill the obstacle with what should be inside
 </dl>
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.TankWithObstacles2D.setAbsorptionZones">
-<code class="sig-name descname">setAbsorptionZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D.setAbsorptionZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setAbsorptionZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D.setAbsorptionZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets regions (x+, x-) to absorption zones</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -542,7 +685,7 @@ obstacle in order to fill the obstacle with what should be inside
 
 <dl class="method">
 <dt id="proteus.mprans.SpatialTools.TankWithObstacles2D.setGenerationZones">
-<code class="sig-name descname">setGenerationZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">smoothing</em>, <em class="sig-param">waves=None</em>, <em class="sig-param">wind_speed=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D.setGenerationZones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setGenerationZones</code><span class="sig-paren">(</span><em class="sig-param">dragAlpha</em>, <em class="sig-param">smoothing</em>, <em class="sig-param">waves=None</em>, <em class="sig-param">wind_speed=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">x_n=False</em>, <em class="sig-param">x_p=False</em>, <em class="sig-param">dragBeta=0.0</em>, <em class="sig-param">porosity=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.TankWithObstacles2D.setGenerationZones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets regions (x+, x-) to generation zones</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -565,7 +708,7 @@ obstacle in order to fill the obstacle with what should be inside
 
 <dl class="function">
 <dt id="proteus.mprans.SpatialTools.assembleDomain">
-<code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">assembleDomain</code><span class="sig-paren">(</span><em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.assembleDomain" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">assembleDomain</code><span class="sig-paren">(</span><em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.assembleDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function sets up everything needed for the domain, meshing, and
 AuxiliaryVariables calculations (if any).
 It should always be called after defining and manipulating all the shapes
@@ -580,7 +723,7 @@ boundary conditions of the shape.</p>
 
 <dl class="function">
 <dt id="proteus.mprans.SpatialTools.assembleAuxiliaryVariables">
-<code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">assembleAuxiliaryVariables</code><span class="sig-paren">(</span><em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.assembleAuxiliaryVariables" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">assembleAuxiliaryVariables</code><span class="sig-paren">(</span><em class="sig-param">domain</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.assembleAuxiliaryVariables" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds the auxiliary variables to the domain.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -594,27 +737,76 @@ boundary conditions of the shape.</p>
 
 <dl class="function">
 <dt id="proteus.mprans.SpatialTools.get_unit_vector">
-<code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">get_unit_vector</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.get_unit_vector" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.mprans.SpatialTools.</code><code class="sig-name descname">get_unit_vector</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/mprans/SpatialTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.SpatialTools.get_unit_vector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
 
 
-    </div>
-      
-  </div>
-</div>
-<footer class="footer">
-  <div class="container">
-    <p class="pull-right">
-      <a href="#">Back to top</a>
-      
-    </p>
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+        &copy; Copyright 2020, The Proteus Team
+
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
 </footer>
-  </body>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+   /* .wy-side-nav-search, .wy-nav-top { */
+    .wy-side-nav-search {
+        background: #F0F0F0;
+    }
+   .wy-side-nav-search > div.version {
+       color: rgba(0,0,0,.5);
+   }
+   /* .wy-side-nav-search img { */
+   /* max-width: 200%; */
+   /* } */
+   .wy-side-nav-search>a img.logo {
+       width: 150px;
+       /* width: 200px; */
+   }
+
+
+
+    /* Sidebar */
+   /* .wy-nav-side { */
+   /* background: #ff0000; */
+   /* } */
+  </style>
+
+
+
+</body>
 </html>

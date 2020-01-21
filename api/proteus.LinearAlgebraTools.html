@@ -1,129 +1,268 @@
+
+
 <!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>proteus.LinearAlgebraTools module &mdash; Proteus 1.7.2 documentation</title>
+  
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>proteus.LinearAlgebraTools module &#8212; Proteus 1.7.0 documentation</title>
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+  
+  
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="proteus.LinearSolvers module" href="proteus.LinearSolvers.html" />
-    <link rel="prev" title="proteus.LatexReport module" href="proteus.LatexReport.html" />
-<meta charset='utf-8'>
-<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
-<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
-<meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
 
-  </head><body>
+<body class="wy-body-for-nav">
 
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
 
-
-  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="../index.html">
-          proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
-      </div>
-
-        <div class="collapse navbar-collapse nav-collapse">
-          <ul class="nav navbar-nav">
-            
-                <li><a href="proteus.html">API</a></li>
-                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
-            
-            
-              <li class="dropdown globaltoc-container">
-  <a role="button"
-     id="dLabelGlobalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="../index.html">Site <b class="caret"></b></a>
-  <ul class="dropdown-menu globaltoc"
-      role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
-</ul>
-</li>
-</ul>
-</ul>
-</li>
-              
-                <li class="dropdown">
-  <a role="button"
-     id="dLabelLocalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="#">Page <b class="caret"></b></a>
-  <ul class="dropdown-menu localtoc"
-      role="menu"
-      aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">proteus.LinearAlgebraTools module</a></li>
-</ul>
-</ul>
-</li>
-              
-            
-            
-              
-                
-  <li>
-    <a href="proteus.LatexReport.html" title="Previous Chapter: proteus.LatexReport module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Latex...</span>
-    </a>
-  </li>
-  <li>
-    <a href="proteus.LinearSolvers.html" title="Next Chapter: proteus.LinearSolvers module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Linea... &raquo;</span>
-    </a>
-  </li>
-              
-            
-            
-            
-            
-              <li class="hidden-sm"></li>
-            
-          </ul>
+          
+            <a href="../index.html">
+          
 
           
             
-<form class="navbar-form navbar-right" action="../search.html" method="get">
- <div class="form-group">
-  <input type="text" name="q" class="form-control" placeholder="Search" />
- </div>
-  <input type="hidden" name="check_keywords" value="yes" />
-  <input type="hidden" name="area" value="default" />
-</form>
+            <img src="../_static/corps_logo_cross2.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
           
         </div>
-    </div>
-  </div>
 
-<div class="container">
-  <div class="row">
-    <div class="col-md-12 content">
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apicapi.html">API docs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/boundary_conditions.html">BoundaryConditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/boundary_conditions.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/boundary_conditions.html#import">Import</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/spatial_tools.html">SpatialTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#import">Import</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#choosing-the-domain">Choosing the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#assembling-the-domain">Assembling the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#boundaryconditions-with-spatialtools">BoundaryConditions with SpatialTools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#id1">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#linking-it-to-p-py-files">Linking it to _p.py files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#complete-examples">Complete Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#d">2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#id2">3D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#d-with-stl">3D with STL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#base-classes">Base classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#customshape">CustomShape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#rectangle">Rectangle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#circle">Circle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#cuboid">Cuboid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#cylinder">Cylinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#sphere">Sphere</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#shapestl">ShapeSTL</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#mprans-specific">mprans specific</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tank2d">Tank2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tank3d">Tank3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tankwithobstacle2d">TankWithObstacle2D</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/two_phase_flow.html">TwoPhaseFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/wave_tools.html">WaveTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/wave_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#import-in-command-line">Import in command line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#list-of-wave-theories">List of wave theories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#how-to-use-in-proteus">How to use in Proteus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#how-to-use-as-stand-alone-tool">How to use as stand-alone tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Models</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../models/body_dynamics.html">Body Dynamics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchsystem">ProtChSystem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchbody">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmesh">ProtChMesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmoorings">ProtChMoorings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchaddedmass">ProtChAddedMass</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#postprocessing-tools">Postprocessing Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id4">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id5">ProtChMoorings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/free_surface.html">Free Surface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#vof-ncls">VOF - NCLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#clsvof">CLSVOF</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_adaptivity.html">Mesh Adaptivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_motion.html">Mesh Motion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/navier_stokes.html">Navier-Stokes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#two-phase">Two-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#three-phase">Three-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#dealing-with-moving-domains">Dealing with Moving Domains</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#moving-ale-mesh">Moving (ALE) Mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#immersed-boundaries">Immersed Boundaries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/SWFlows.html">Shallow Water Flows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#shallow-water-equations">Shallow Water equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#modified-green-naghdi-equations">Modified Green-Naghdi equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#running-the-tests">Running the tests</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
       
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Proteus</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>proteus.LinearAlgebraTools module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/erdc/proteus/blob/masterdocs/source/api/proteus.LinearAlgebraTools.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
   <div class="section" id="module-proteus.LinearAlgebraTools">
 <span id="proteus-linearalgebratools-module"></span><h1>proteus.LinearAlgebraTools module<a class="headerlink" href="#module-proteus.LinearAlgebraTools" title="Permalink to this headline">¶</a></h1>
 <p>Tools for n-dimensional linear algebra</p>
@@ -134,7 +273,7 @@ representations using PETSc.</p>
 <p class="warning">Inheritance diagram of proteus.LinearAlgebraTools</p></object></div>
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc_load_matrix">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc_load_matrix</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_matrix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc_load_matrix</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function loads a PETSc matrix from a binary format.
 (Eg. what is saved using the petsc_view function).</p>
 <dl class="field-list simple">
@@ -152,7 +291,7 @@ representations using PETSc.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc_load_vector">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc_load_vector</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_vector" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc_load_vector</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_vector" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function loads a PETSc vector from a binary format.
 (Eg. what is saved using the petsc_view function).</p>
 <dl class="field-list simple">
@@ -170,7 +309,7 @@ representations using PETSc.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc_load_IS">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc_load_IS</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_IS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc_load_IS</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_load_IS" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function loads a PETSc index-set from a binary format.
 (Eg. what is saved using the petsc_view function).</p>
 <dl class="field-list simple">
@@ -188,7 +327,7 @@ representations using PETSc.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.csr_2_petsc">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">csr_2_petsc</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">csr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.csr_2_petsc" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">csr_2_petsc</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">csr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.csr_2_petsc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an petsc4py matrix from size and CSR information.</p>
 <dl class="simple">
 <dt>size<span class="classifier">tuple</span></dt><dd><p>A 2-tuple with the number of matrix rows and columns.</p>
@@ -201,7 +340,7 @@ representations using PETSc.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.superlu_get_rank">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">superlu_get_rank</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_get_rank" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">superlu_get_rank</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_get_rank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the rank of a superluWrapper sparse matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -221,7 +360,7 @@ for small matrices.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc4py_get_rank">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc4py_get_rank</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_get_rank" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc4py_get_rank</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_get_rank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the rank of a superluWrapper sparse matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -241,7 +380,7 @@ for small matrices.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.superlu_has_pressure_null_space">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">superlu_has_pressure_null_space</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_has_pressure_null_space" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">superlu_has_pressure_null_space</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_has_pressure_null_space" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks whether a superluWrapper sparse matrix has a constant
 pressure null space.</p>
 <dl class="field-list simple">
@@ -264,7 +403,7 @@ slow for large matrices.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc4py_mat_has_pressure_null_space">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc4py_mat_has_pressure_null_space</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_mat_has_pressure_null_space" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc4py_mat_has_pressure_null_space</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_mat_has_pressure_null_space" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks whether a PETSc4Py sparse matrix has a constant
 pressure null space.</p>
 <dl class="field-list simple">
@@ -287,7 +426,7 @@ slow for large matrices.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.superlu_sparse_2_dense">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">superlu_sparse_2_dense</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em>, <em class="sig-param">output=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_sparse_2_dense" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">superlu_sparse_2_dense</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em>, <em class="sig-param">output=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_sparse_2_dense" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a sparse superluWrapper into a dense matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -309,7 +448,7 @@ slow for large matrices.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc4py_sparse_2_dense">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc4py_sparse_2_dense</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em>, <em class="sig-param">output=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_sparse_2_dense" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc4py_sparse_2_dense</code><span class="sig-paren">(</span><em class="sig-param">sparse_matrix</em>, <em class="sig-param">output=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_sparse_2_dense" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a PETSc4Py matrix to a dense numpyarray.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -331,7 +470,7 @@ slow for large matrices.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.superlu_2_petsc4py">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">superlu_2_petsc4py</code><span class="sig-paren">(</span><em class="sig-param">sparse_superlu</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_2_petsc4py" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">superlu_2_petsc4py</code><span class="sig-paren">(</span><em class="sig-param">sparse_superlu</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_2_petsc4py" title="Permalink to this definition">¶</a></dt>
 <dd><p>Copy a sparse superlu matrix to a sparse petsc4py matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -353,7 +492,7 @@ slow for large matrices.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.petsc_create_diagonal_inv_matrix">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc_create_diagonal_inv_matrix</code><span class="sig-paren">(</span><em class="sig-param">sparse_petsc</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_create_diagonal_inv_matrix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">petsc_create_diagonal_inv_matrix</code><span class="sig-paren">(</span><em class="sig-param">sparse_petsc</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc_create_diagonal_inv_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an inverse diagonal petsc4py matrix from input matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -370,7 +509,7 @@ slow for large matrices.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.dense_numpy_2_petsc4py">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">dense_numpy_2_petsc4py</code><span class="sig-paren">(</span><em class="sig-param">dense_numpy</em>, <em class="sig-param">eps=1e-12</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.dense_numpy_2_petsc4py" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">dense_numpy_2_petsc4py</code><span class="sig-paren">(</span><em class="sig-param">dense_numpy</em>, <em class="sig-param">eps=1e-12</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.dense_numpy_2_petsc4py" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a sparse petsc4py matrix from a dense numpy matrix.</p>
 <p>Note - This routine has been built mainly to support testing.
 It would be rare for this routine to be useful for most applications.</p>
@@ -392,7 +531,7 @@ It would be rare for this routine to be useful for most applications.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.csr_2_petsc_mpiaij">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">csr_2_petsc_mpiaij</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">csr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.csr_2_petsc_mpiaij" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">csr_2_petsc_mpiaij</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">csr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.csr_2_petsc_mpiaij" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an MPIaij petsc4py matrix from size and CSR information.</p>
 <dl class="simple">
 <dt>size<span class="classifier">tuple</span></dt><dd><p>Two entires: (num_rows, num_cols)</p>
@@ -405,7 +544,7 @@ It would be rare for this routine to be useful for most applications.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.split_PETSc_Mat">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">split_PETSc_Mat</code><span class="sig-paren">(</span><em class="sig-param">mat</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.split_PETSc_Mat" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">split_PETSc_Mat</code><span class="sig-paren">(</span><em class="sig-param">mat</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.split_PETSc_Mat" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Decompose a PETSc matrix into a symmetric and skew-symmetric</dt><dd><p>matrix</p>
 </dd>
@@ -421,7 +560,7 @@ It would be rare for this routine to be useful for most applications.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParVec_petsc4py">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">ParVec_petsc4py</code><span class="sig-paren">(</span><em class="sig-param">array=None</em>, <em class="sig-param">bs=None</em>, <em class="sig-param">n=None</em>, <em class="sig-param">N=None</em>, <em class="sig-param">nghosts=None</em>, <em class="sig-param">subdomain2global=None</em>, <em class="sig-param">blockVecType='simple'</em>, <em class="sig-param">ghosts=None</em>, <em class="sig-param">proteus2petsc_subdomain=None</em>, <em class="sig-param">petsc2proteus_subdomain=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">ParVec_petsc4py</code><span class="sig-paren">(</span><em class="sig-param">array=None</em>, <em class="sig-param">bs=None</em>, <em class="sig-param">n=None</em>, <em class="sig-param">N=None</em>, <em class="sig-param">nghosts=None</em>, <em class="sig-param">subdomain2global=None</em>, <em class="sig-param">blockVecType='simple'</em>, <em class="sig-param">ghosts=None</em>, <em class="sig-param">proteus2petsc_subdomain=None</em>, <em class="sig-param">petsc2proteus_subdomain=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">petsc4py.PETSc.Vec</span></code></p>
 <p>Parallel vector using petsc4py’s wrappers for PETSc</p>
 <dl class="field-list simple">
@@ -447,17 +586,17 @@ ordering to the proteus unknown ordering</p></li>
 </dl>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_forward_insert">
-<code class="sig-name descname">scatter_forward_insert</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_forward_insert" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">scatter_forward_insert</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_forward_insert" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_reverse_add">
-<code class="sig-name descname">scatter_reverse_add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_reverse_add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">scatter_reverse_add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_reverse_add" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.ParVec_petsc4py.save">
-<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.save" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves to disk using a PETSc binary viewer.</p>
 </dd></dl>
 
@@ -465,7 +604,7 @@ ordering to the proteus unknown ordering</p></li>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParInfo_petsc4py">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">ParInfo_petsc4py</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParInfo_petsc4py" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">ParInfo_petsc4py</code><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParInfo_petsc4py" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>ARB - this class is experimental.  My idea is to store the
 information need to constructor parallel vectors and matrices
@@ -473,14 +612,14 @@ here as static class values.  Then ParVec and ParMat can
 use these values to create parallel objects later.</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.ParInfo_petsc4py.print_info">
-<code class="sig-name descname">print_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParInfo_petsc4py.print_info" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">print_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParInfo_petsc4py.print_info" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParMat_petsc4py">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">ParMat_petsc4py</code><span class="sig-paren">(</span><em class="sig-param">ghosted_csr_mat=None</em>, <em class="sig-param">par_bs=None</em>, <em class="sig-param">par_n=None</em>, <em class="sig-param">par_N=None</em>, <em class="sig-param">par_nghost=None</em>, <em class="sig-param">subdomain2global=None</em>, <em class="sig-param">blockVecType='simple'</em>, <em class="sig-param">pde=None</em>, <em class="sig-param">par_nc=None</em>, <em class="sig-param">par_Nc=None</em>, <em class="sig-param">proteus_jacobian=None</em>, <em class="sig-param">nzval_proteus2petsc=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">ParMat_petsc4py</code><span class="sig-paren">(</span><em class="sig-param">ghosted_csr_mat=None</em>, <em class="sig-param">par_bs=None</em>, <em class="sig-param">par_n=None</em>, <em class="sig-param">par_N=None</em>, <em class="sig-param">par_nghost=None</em>, <em class="sig-param">subdomain2global=None</em>, <em class="sig-param">blockVecType='simple'</em>, <em class="sig-param">pde=None</em>, <em class="sig-param">par_nc=None</em>, <em class="sig-param">par_Nc=None</em>, <em class="sig-param">proteus_jacobian=None</em>, <em class="sig-param">nzval_proteus2petsc=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">petsc4py.PETSc.Mat</span></code></p>
 <p>Parallel matrix based on petsc4py’s wrappers for PETSc.
 ghosted_csr_mat : <code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></p>
@@ -517,7 +656,7 @@ proteus and petsc degrees of freedom.</p>
 </dl>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.ParMat_petsc4py.create_ParMat_from_OperatorConstructor">
-<em class="property">classmethod </em><code class="sig-name descname">create_ParMat_from_OperatorConstructor</code><span class="sig-paren">(</span><em class="sig-param">operator</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py.create_ParMat_from_OperatorConstructor" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">create_ParMat_from_OperatorConstructor</code><span class="sig-paren">(</span><em class="sig-param">operator</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py.create_ParMat_from_OperatorConstructor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a ParMat consistent with the problem from an Operator
 constructor matrix.</p>
 <dl class="field-list simple">
@@ -529,7 +668,7 @@ constructor matrix.</p>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.ParMat_petsc4py.save">
-<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py.save" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves to disk using a PETSc binary viewer.</p>
 </dd></dl>
 
@@ -537,7 +676,7 @@ constructor matrix.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.Vec">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">Vec</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Vec" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">Vec</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a vector of length n (using numpy)</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Vec</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
@@ -548,7 +687,7 @@ constructor matrix.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.Mat">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">Mat</code><span class="sig-paren">(</span><em class="sig-param">m</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Mat" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">Mat</code><span class="sig-paren">(</span><em class="sig-param">m</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Mat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build an m x n matrix (using numpy)</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Mat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
@@ -560,13 +699,13 @@ constructor matrix.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.SparseMatFromDict">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">SparseMatFromDict</code><span class="sig-paren">(</span><em class="sig-param">nr</em>, <em class="sig-param">nc</em>, <em class="sig-param">aDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatFromDict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">SparseMatFromDict</code><span class="sig-paren">(</span><em class="sig-param">nr</em>, <em class="sig-param">nc</em>, <em class="sig-param">aDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatFromDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a nr x nc sparse matrix from a dictionary representation</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.SparseMat">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">SparseMat</code><span class="sig-paren">(</span><em class="sig-param">nr</em>, <em class="sig-param">nc</em>, <em class="sig-param">nnz</em>, <em class="sig-param">nzval</em>, <em class="sig-param">colind</em>, <em class="sig-param">rowptr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMat" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">SparseMat</code><span class="sig-paren">(</span><em class="sig-param">nr</em>, <em class="sig-param">nc</em>, <em class="sig-param">nnz</em>, <em class="sig-param">nzval</em>, <em class="sig-param">colind</em>, <em class="sig-param">rowptr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a nr x nc sparse matrix from the CSR data structures</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -595,7 +734,7 @@ constructor matrix.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.SparseMatShell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">SparseMatShell</code><span class="sig-paren">(</span><em class="sig-param">ghosted_csr_mat</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">SparseMatShell</code><span class="sig-paren">(</span><em class="sig-param">ghosted_csr_mat</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Build a parallel matrix shell from CSR data structures.</p>
 <dl class="field-list simple">
@@ -605,29 +744,29 @@ constructor matrix.</p>
 </dl>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.SparseMatShell.create">
-<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell.create" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell.create" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.SparseMatShell.mult">
-<code class="sig-name descname">mult</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell.mult" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mult</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell.mult" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.OperatorShell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">OperatorShell</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">OperatorShell</code><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>A base class for operator shells</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.OperatorShell.create">
-<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell.create" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell.create" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.OperatorShell.getSize">
-<code class="sig-name descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell.getSize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.OperatorShell.getSize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the number of degrees of freedom for the operator.</p>
 </dd></dl>
 
@@ -635,33 +774,33 @@ constructor matrix.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ProductOperatorShell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">ProductOperatorShell</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ProductOperatorShell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">ProductOperatorShell</code><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ProductOperatorShell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.OperatorShell" title="proteus.LinearAlgebraTools.OperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.OperatorShell</span></code></a></p>
 <p>A base class for shell operators that apply multiplcation.</p>
 <p>Operators derived from this class should have working multiplication
 functions.</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.ProductOperatorShell.mult">
-<code class="sig-name descname">mult</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ProductOperatorShell.mult" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mult</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ProductOperatorShell.mult" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.InvOperatorShell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">InvOperatorShell</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">InvOperatorShell</code><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.OperatorShell" title="proteus.LinearAlgebraTools.OperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.OperatorShell</span></code></a></p>
 <p>A base class for inverse operator shells</p>
 <p>Operators derived from this class should have working apply
 functions.</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.InvOperatorShell.apply">
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.apply" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.apply" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.InvOperatorShell.getSize">
-<code class="sig-name descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.getSize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.getSize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the size of InvOperatorShell.</p>
 <p class="rubric">Notes</p>
 <p>This acts a virtual method and must be implemented for
@@ -670,7 +809,7 @@ all inherited classes.</p>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.InvOperatorShell.create_petsc_ksp_obj">
-<code class="sig-name descname">create_petsc_ksp_obj</code><span class="sig-paren">(</span><em class="sig-param">petsc_option_prefix</em>, <em class="sig-param">matrix_operator</em>, <em class="sig-param">constant_null_space=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.create_petsc_ksp_obj" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">create_petsc_ksp_obj</code><span class="sig-paren">(</span><em class="sig-param">petsc_option_prefix</em>, <em class="sig-param">matrix_operator</em>, <em class="sig-param">constant_null_space=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.InvOperatorShell.create_petsc_ksp_obj" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a PETSc4py KSP object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -693,7 +832,7 @@ all inherited classes.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.LSCInv_shell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">LSCInv_shell</code><span class="sig-paren">(</span><em class="sig-param">Qv</em>, <em class="sig-param">B</em>, <em class="sig-param">Bt</em>, <em class="sig-param">F</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.LSCInv_shell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">LSCInv_shell</code><span class="sig-paren">(</span><em class="sig-param">Qv</em>, <em class="sig-param">B</em>, <em class="sig-param">Bt</em>, <em class="sig-param">F</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.LSCInv_shell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>Shell class for the LSC Inverse Preconditioner</p>
 <p>This class creates a shell for the least-squares commutator (LSC)
@@ -714,7 +853,7 @@ is used to approximate the Schur complement.</p>
 </dl>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.LSCInv_shell.apply">
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.LSCInv_shell.apply" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.LSCInv_shell.apply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the LSC inverse operator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -736,7 +875,7 @@ is used to approximate the Schur complement.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.MatrixShell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">MatrixShell</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixShell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">MatrixShell</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixShell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.ProductOperatorShell" title="proteus.LinearAlgebraTools.ProductOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.ProductOperatorShell</span></code></a></p>
 <p>A shell class for a matrix.</p>
 <p>Specifies a basic matrix shell.</p>
@@ -747,7 +886,7 @@ is used to approximate the Schur complement.</p>
 </dl>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.MatrixShell.mult">
-<code class="sig-name descname">mult</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixShell.mult" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mult</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixShell.mult" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multiply the matrix and x.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -769,7 +908,7 @@ is used to approximate the Schur complement.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.MatrixInvShell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">MatrixInvShell</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixInvShell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">MatrixInvShell</code><span class="sig-paren">(</span><em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixInvShell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>A PETSc shell class for a inverse operator.</p>
 <p>Initializes operators and solvers for inverse operator.</p>
@@ -780,7 +919,7 @@ is used to approximate the Schur complement.</p>
 </dl>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.MatrixInvShell.apply">
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixInvShell.apply" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.MatrixInvShell.apply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the inverse pressure mass matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -802,7 +941,7 @@ is used to approximate the Schur complement.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.SpInv_shell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">SpInv_shell</code><span class="sig-paren">(</span><em class="sig-param">A00</em>, <em class="sig-param">A11</em>, <em class="sig-param">A01</em>, <em class="sig-param">A10</em>, <em class="sig-param">constNullSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SpInv_shell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">SpInv_shell</code><span class="sig-paren">(</span><em class="sig-param">A00</em>, <em class="sig-param">A11</em>, <em class="sig-param">A01</em>, <em class="sig-param">A10</em>, <em class="sig-param">constNullSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SpInv_shell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>Shell class for the SIMPLE preconditioner which applies the
 following action:</p>
@@ -833,7 +972,7 @@ problem uses pure Dirichlet boundary conditions will likely result
 in poor solver performance or failure.</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.SpInv_shell.apply">
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SpInv_shell.apply" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SpInv_shell.apply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applies the <span class="math notranslate nohighlight">\(S_{p}\)</span> operator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -855,7 +994,7 @@ in poor solver performance or failure.</p>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">TwoPhase_PCDInv_shell</code><span class="sig-paren">(</span><em class="sig-param">Qp_visc</em>, <em class="sig-param">Qp_dens</em>, <em class="sig-param">Ap_rho</em>, <em class="sig-param">Np_rho</em>, <em class="sig-param">alpha=False</em>, <em class="sig-param">delta_t=0</em>, <em class="sig-param">num_chebyshev_its=0</em>, <em class="sig-param">strong_dirichlet_DOF=[]</em>, <em class="sig-param">laplace_null_space=False</em>, <em class="sig-param">par_info=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">TwoPhase_PCDInv_shell</code><span class="sig-paren">(</span><em class="sig-param">Qp_visc</em>, <em class="sig-param">Qp_dens</em>, <em class="sig-param">Ap_rho</em>, <em class="sig-param">Np_rho</em>, <em class="sig-param">alpha=False</em>, <em class="sig-param">delta_t=0</em>, <em class="sig-param">num_chebyshev_its=0</em>, <em class="sig-param">strong_dirichlet_DOF=[]</em>, <em class="sig-param">laplace_null_space=False</em>, <em class="sig-param">par_info=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.LinearAlgebraTools.InvOperatorShell" title="proteus.LinearAlgebraTools.InvOperatorShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.LinearAlgebraTools.InvOperatorShell</span></code></a></p>
 <p>Shell class for the two-phase PCD preconditioner.  The
 two-phase PCD_inverse shell applies the following operator.</p>
@@ -894,13 +1033,13 @@ null space or not.</p></li>
 </dl>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.getSize">
-<code class="sig-name descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.getSize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.getSize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the total number of DOF for the shell problem.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.apply">
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.apply" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.TwoPhase_PCDInv_shell.apply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applies the two-phase pressure-convection-diffusion
 Schur complement approximation.</p>
 <dl class="field-list simple">
@@ -928,13 +1067,13 @@ is then loaded into the original y-vector.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.l2Norm">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">l2Norm</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2Norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">l2Norm</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2Norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the parallel <span class="math notranslate nohighlight">\(l_2\)</span> norm</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.l1Norm">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">l1Norm</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l1Norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">l1Norm</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l1Norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the parallel <span class="math notranslate nohighlight">\(l_1\)</span> norm</p>
 <p>The <span class="math notranslate nohighlight">\(l_1\)</span> norm of a vector <span class="math notranslate nohighlight">\(\mathbf{x} \in
 \mathbb{R}^n\)</span> is</p>
@@ -957,7 +1096,7 @@ components (each component must be on a single processor).</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.lInfNorm">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">lInfNorm</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.lInfNorm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">lInfNorm</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.lInfNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the parallel <span class="math notranslate nohighlight">\(l_{\infty}\)</span> norm</p>
 <p>The <span class="math notranslate nohighlight">\(l_{\infty}\)</span> norm of a vector <span class="math notranslate nohighlight">\(\mathbf{x} \in
 \mathbb{R}^n\)</span> is</p>
@@ -977,7 +1116,7 @@ components (each component must be on a single processor).</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.wDot">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">wDot</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wDot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">wDot</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wDot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the parallel weighted dot product of vectors x and y using
 weight vector h.</p>
 <p>The weighted dot product is defined for a weight vector
@@ -997,65 +1136,65 @@ weight vector h.</p>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.wl2Norm">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">wl2Norm</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wl2Norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">wl2Norm</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wl2Norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the parallel weighted l_2 norm with weight h</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.wl1Norm">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">wl1Norm</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wl1Norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">wl1Norm</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wl1Norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the parallel weighted l_1 norm with weight h</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.wlInfNorm">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">wlInfNorm</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wlInfNorm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">wlInfNorm</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wlInfNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the parallel weighted l_{infty} norm with weight h</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.energyDot">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">energyDot</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.energyDot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">energyDot</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.energyDot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the “energy” dot product x^t A y (not parallel)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.energyNorm">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">energyNorm</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.energyNorm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">energyNorm</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.energyNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the “energy” norm x^t A x (not parallel)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.l2NormAvg">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">l2NormAvg</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2NormAvg" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">l2NormAvg</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2NormAvg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the arithmetic averaged l_2 norm (root mean squared norm)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.rmsNorm">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">rmsNorm</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.rmsNorm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">rmsNorm</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.rmsNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the arithmetic averaged l_2 norm (root mean squared norm)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.l2Norm_local">
-<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">l2Norm_local</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2Norm_local" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">l2Norm_local</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2Norm_local" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the l_2 norm for just local (processor) system  (not parallel)</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.WeightedNorm">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">WeightedNorm</code><span class="sig-paren">(</span><em class="sig-param">shape</em>, <em class="sig-param">atol</em>, <em class="sig-param">rtol</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.LinearAlgebraTools.</code><code class="sig-name descname">WeightedNorm</code><span class="sig-paren">(</span><em class="sig-param">shape</em>, <em class="sig-param">atol</em>, <em class="sig-param">rtol</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Compute the weighted norm for time step control (not currently parallel)</p>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.WeightedNorm.setWeight">
-<code class="sig-name descname">setWeight</code><span class="sig-paren">(</span><em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm.setWeight" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setWeight</code><span class="sig-paren">(</span><em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm.setWeight" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.WeightedNorm.norm">
-<code class="sig-name descname">norm</code><span class="sig-paren">(</span><em class="sig-param">y</em>, <em class="sig-param">type</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm.norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">norm</code><span class="sig-paren">(</span><em class="sig-param">y</em>, <em class="sig-param">type</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm.norm" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1063,21 +1202,70 @@ weight vector h.</p>
 </div>
 
 
-    </div>
-      
-  </div>
-</div>
-<footer class="footer">
-  <div class="container">
-    <p class="pull-right">
-      <a href="#">Back to top</a>
-      
-    </p>
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+        &copy; Copyright 2020, The Proteus Team
+
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
 </footer>
-  </body>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+   /* .wy-side-nav-search, .wy-nav-top { */
+    .wy-side-nav-search {
+        background: #F0F0F0;
+    }
+   .wy-side-nav-search > div.version {
+       color: rgba(0,0,0,.5);
+   }
+   /* .wy-side-nav-search img { */
+   /* max-width: 200%; */
+   /* } */
+   .wy-side-nav-search>a img.logo {
+       width: 150px;
+       /* width: 200px; */
+   }
+
+
+
+    /* Sidebar */
+   /* .wy-nav-side { */
+   /* background: #ff0000; */
+   /* } */
+  </style>
+
+
+
+</body>
 </html>

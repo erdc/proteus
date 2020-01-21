@@ -1,0 +1,1249 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespaceequivalent__polynomials" kind="namespace" language="C++">
+    <compoundname>equivalent_polynomials</compoundname>
+    <innerclass refid="classequivalent__polynomials_1_1_generalized_functions__mix" prot="public">equivalent_polynomials::GeneralizedFunctions_mix</innerclass>
+    <innerclass refid="classequivalent__polynomials_1_1_regularized" prot="public">equivalent_polynomials::Regularized</innerclass>
+    <innerclass refid="classequivalent__polynomials_1_1_simplex" prot="public">equivalent_polynomials::Simplex</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a996dea2c52ca8f8cb03bfcc63bc70821" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nSpace</declname>
+            <defname>nSpace</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>nP</declname>
+            <defname>nP</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="7" column="15" declfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" declline="7" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1ad859dcd2d5b47f1bd52fd7c33d433176" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nSpace</declname>
+            <defname>nSpace</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>nP</declname>
+            <defname>nP</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="10" column="15" declfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" declline="10" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1aa8ff437014fbf1272d12fb8172681151" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 1, 1 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 1, 1 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="13" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="13" bodyend="19"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1ae42b61ab0680a554fecb81b28bd98946" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 1, 1 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 1, 1 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="22" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="22" bodyend="31"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a429de1f2c83f34c5c1f5adde9d8587ab" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 1, 2 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 1, 2 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="34" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="34" bodyend="45"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a5da6fd9f0e72bc8a3020e2fb33da4849" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 1, 2 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 1, 2 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="48" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="48" bodyend="60"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a2efe6d1d4103932e14766d42176f58db" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 1, 3 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 1, 3 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="63" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="63" bodyend="81"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a150191a31f363d8141553c6e9070d539" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 1, 3 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 1, 3 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="84" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="84" bodyend="99"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1ab4f501448367c2a455e472dee0baa216" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 1, 4 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 1, 4 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="102" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="102" bodyend="129"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a28f149546627f87234a1582d1fa49158" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 1, 4 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 1, 4 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="132" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="132" bodyend="150"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a496eb79382216295ec2b9c783a58fa08" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 2, 1 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 2, 1 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="153" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="153" bodyend="164"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a2fe91bb722caf125d1785ab1d13b2cd6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 2, 1 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 2, 1 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="167" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="167" bodyend="182"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a4ae4f9377cfb47ea05e936531709e05a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 2, 2 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 2, 2 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="185" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="185" bodyend="223"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a13049a415eab0022059e492427414dce" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 2, 2 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 2, 2 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="226" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="226" bodyend="253"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a11f1d536ef91c33f11bf91d9311e58d1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 2, 3 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 2, 3 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="256" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="256" bodyend="358"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a140a49d045efde6fe8140ef80644da47" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 2, 3 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 2, 3 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="361" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="361" bodyend="404"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1af5d80969be50167157772cc98c6ccb26" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 2, 4 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 2, 4 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="407" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="407" bodyend="634"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1ace4f7c191f57ea8aa8b73abe34ebdb07" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 2, 4 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 2, 4 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="637" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="637" bodyend="700"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a44e418c98be2a474fb689763f31a45ec" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 3, 1 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 3, 1 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="703" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="703" bodyend="721"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a379046a2b8900ae3000e722550a26010" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 3, 1 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 3, 1 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="724" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="724" bodyend="747"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a1ddc2fd3219a4724aab0aa9088ca09cf" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 3, 2 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 3, 2 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="750" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="750" bodyend="852"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a3018ca1825923abe12b18cba258028ee" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 3, 2 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 3, 2 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="855" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="855" bodyend="908"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a40319e49989e2008c2f0b123e1cccee2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 3, 3 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 3, 3 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="911" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="911" bodyend="1313"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a9b62e03da5076da6a2e0ca0817abe327" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 3, 3 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 3, 3 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="1316" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="1316" bodyend="1419"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a0cedd6c08e6f2b3d0337af29b5533f73" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_set_Ainv&lt; 3, 4 &gt;</definition>
+        <argsstring>(double *Ainv)</argsstring>
+        <name>_set_Ainv&lt; 3, 4 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="1422" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="1422" bodyend="2649"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a80e8508548a4f2f5ef83b6f3aed7504f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_b&lt; 3, 4 &gt;</definition>
+        <argsstring>(double *X_0, double *b_H, double *b_ImH, double *b_dH)</argsstring>
+        <name>_calculate_b&lt; 3, 4 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>X_0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b_dH</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" line="2652" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_coefficients.h" bodystart="2652" bodyend="2830"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1aac129889cc17bddb81c3f4658df17cff" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nSpace</declname>
+            <defname>nSpace</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_normal</definition>
+        <argsstring>(double *phys_nodes_cut, double *level_set_normal)</argsstring>
+        <name>_calculate_normal</name>
+        <param>
+          <type>double *</type>
+          <declname>phys_nodes_cut</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>level_set_normal</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="6" column="15" declfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" declline="6" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a9c5dc3aafbd5369a96ab4b77bd36ee30" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_normal&lt; 1 &gt;</definition>
+        <argsstring>(double *phys_nodes_cut, double *level_set_normal)</argsstring>
+        <name>_calculate_normal&lt; 1 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>phys_nodes_cut</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>level_set_normal</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="9" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="9" bodyend="13"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1aca72bce4bbe55d2995559eab1b685346" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_normal&lt; 2 &gt;</definition>
+        <argsstring>(double *phys_nodes_cut, double *level_set_normal)</argsstring>
+        <name>_calculate_normal&lt; 2 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>phys_nodes_cut</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>level_set_normal</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="16" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="16" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a444cd19232f627b0fd604d12dc0d2786" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_normal&lt; 3 &gt;</definition>
+        <argsstring>(double *phys_nodes_cut, double *level_set_normal)</argsstring>
+        <name>_calculate_normal&lt; 3 &gt;</name>
+        <param>
+          <type>double *</type>
+          <declname>phys_nodes_cut</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>level_set_normal</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="37" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="37" bodyend="61"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a4435814b30d410a29cb1e7a6e705b8b9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nP</declname>
+            <defname>nP</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_polynomial_1D</definition>
+        <argsstring>(double *xi, double *C_H, double *C_ImH, double *C_D, double &amp;_H, double &amp;_ImH, double &amp;_D)</argsstring>
+        <name>_calculate_polynomial_1D</name>
+        <param>
+          <type>double *</type>
+          <declname>xi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_D</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_H</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_ImH</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_D</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="64" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="64" bodyend="79"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a0a180ca78159e58074f32352fec78514" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nP</declname>
+            <defname>nP</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_polynomial_2D</definition>
+        <argsstring>(double *xi, double *C_H, double *C_ImH, double *C_D, double &amp;_H, double &amp;_ImH, double &amp;_D)</argsstring>
+        <name>_calculate_polynomial_2D</name>
+        <param>
+          <type>double *</type>
+          <declname>xi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_D</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_H</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_ImH</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_D</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="82" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="82" bodyend="102"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a9dfb54c74fa05339cf11f3c013974883" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nP</declname>
+            <defname>nP</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::_calculate_polynomial_3D</definition>
+        <argsstring>(double *xi, double *C_H, double *C_ImH, double *C_D, double &amp;_H, double &amp;_ImH, double &amp;_D)</argsstring>
+        <name>_calculate_polynomial_3D</name>
+        <param>
+          <type>double *</type>
+          <declname>xi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_ImH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>C_D</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_H</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_ImH</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>_D</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="105" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="105" bodyend="130"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1aa9667f8d96a139bc9c49c71354fd9807" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::XX</definition>
+        <argsstring>(0)</argsstring>
+        <name>XX</name>
+        <param>
+          <type>0</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="13"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a4f3f83682900019b1ea30dbe32f04096" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::XY</definition>
+        <argsstring>(1)</argsstring>
+        <name>XY</name>
+        <param>
+          <type>1</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="15"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a0050579f6172dc53308a1d7e870f49cb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::XZ</definition>
+        <argsstring>(2)</argsstring>
+        <name>XZ</name>
+        <param>
+          <type>2</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="17"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1ae12febd75efb9d26932f52a301314d7d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::YX</definition>
+        <argsstring>(3)</argsstring>
+        <name>YX</name>
+        <param>
+          <type>3</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="19"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a66658cd883b58f139d511307d2ec0e72" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::YY</definition>
+        <argsstring>(4)</argsstring>
+        <name>YY</name>
+        <param>
+          <type>4</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="21"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1ac5ae44e4abfd29c6a8df1a167b63f412" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::YZ</definition>
+        <argsstring>(5)</argsstring>
+        <name>YZ</name>
+        <param>
+          <type>5</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="23"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1af63ba62549e7eda39fcdeeedad1d9b34" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::ZX</definition>
+        <argsstring>(6)</argsstring>
+        <name>ZX</name>
+        <param>
+          <type>6</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="25"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a5d71cdba9f3ad56b8b593501eb4f93da" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::ZY</definition>
+        <argsstring>(7)</argsstring>
+        <name>ZY</name>
+        <param>
+          <type>7</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="27"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a8b669ff3b96038723835272644b5a1e2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const int</type>
+        <definition>const int equivalent_polynomials::ZZ</definition>
+        <argsstring>(8)</argsstring>
+        <name>ZZ</name>
+        <param>
+          <type>8</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="132" column="29" declfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" declline="132" declcolumn="29"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a77afc2537dcd45118cf32d871719ad99" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nSpace</declname>
+            <defname>nSpace</defname>
+          </param>
+        </templateparamlist>
+        <type>double</type>
+        <definition>double equivalent_polynomials::det</definition>
+        <argsstring>(const double *A)</argsstring>
+        <name>det</name>
+        <param>
+          <type>const double *</type>
+          <declname>A</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="135" column="17" declfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" declline="135" declcolumn="17"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a8317d777c216cd662d4389421e86bc86" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>double</type>
+        <definition>double equivalent_polynomials::det&lt; 1 &gt;</definition>
+        <argsstring>(const double *A)</argsstring>
+        <name>det&lt; 1 &gt;</name>
+        <param>
+          <type>const double *</type>
+          <declname>A</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="138" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="138" bodyend="141"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a94b9bdc335720c57f61772f3ef33f6d6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>double</type>
+        <definition>double equivalent_polynomials::det&lt; 2 &gt;</definition>
+        <argsstring>(const double *A)</argsstring>
+        <name>det&lt; 2 &gt;</name>
+        <param>
+          <type>const double *</type>
+          <declname>A</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="144" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="144" bodyend="147"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a6b03d737410580f568bea11d39d5f8e8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>double</type>
+        <definition>double equivalent_polynomials::det&lt; 3 &gt;</definition>
+        <argsstring>(const double *A)</argsstring>
+        <name>det&lt; 3 &gt;</name>
+        <param>
+          <type>const double *</type>
+          <declname>A</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="150" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="150" bodyend="155"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a17233bbcee21881487b1da0217c4fdd9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nSpace</declname>
+            <defname>nSpace</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::inv</definition>
+        <argsstring>(const double *A, double *Ainv)</argsstring>
+        <name>inv</name>
+        <param>
+          <type>const double *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="158" column="15" declfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" declline="158" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a274f4f091991dc6f3d9ebd7c9a5a8524" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::inv&lt; 1 &gt;</definition>
+        <argsstring>(const double *A, double *Ainv)</argsstring>
+        <name>inv&lt; 1 &gt;</name>
+        <param>
+          <type>const double *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="161" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="161" bodyend="164"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1abe89a58d9efc05cd9b627066dac3e367" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::inv&lt; 2 &gt;</definition>
+        <argsstring>(const double *A, double *Ainv)</argsstring>
+        <name>inv&lt; 2 &gt;</name>
+        <param>
+          <type>const double *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="167" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="167" bodyend="174"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceequivalent__polynomials_1a6e088125898f0bc1d56b70dcaec8de5b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void equivalent_polynomials::inv&lt; 3 &gt;</definition>
+        <argsstring>(const double *A, double *Ainv)</argsstring>
+        <name>inv&lt; 3 &gt;</name>
+        <param>
+          <type>const double *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>Ainv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" line="177" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials_utils.h" bodystart="177" bodyend="189"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="9" column="1"/>
+  </compounddef>
+</doxygen>

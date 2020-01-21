@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_70196c58804081ed305e7f84907058fe" kind="dir">
+    <compoundname>MeshAdaptPUMI</compoundname>
+    <innerfile refid="c_mesh_adapt_p_u_m_i_8cpp">cMeshAdaptPUMI.cpp</innerfile>
+    <innerfile refid="create_analytic_geometry_8cpp">createAnalyticGeometry.cpp</innerfile>
+    <innerfile refid="create_analytic_geometry_8h">createAnalyticGeometry.h</innerfile>
+    <innerfile refid="_dump_mesh_8cpp">DumpMesh.cpp</innerfile>
+    <innerfile refid="_dump_mesh_8h">DumpMesh.h</innerfile>
+    <innerfile refid="_error_residual_method_8cpp">ErrorResidualMethod.cpp</innerfile>
+    <innerfile refid="_mesh_adapt_p_u_m_i_8cpp">MeshAdaptPUMI.cpp</innerfile>
+    <innerfile refid="_mesh_adapt_p_u_m_i_8h">MeshAdaptPUMI.h</innerfile>
+    <innerfile refid="_mesh_converter_8cpp">MeshConverter.cpp</innerfile>
+    <innerfile refid="_mesh_fields_8cpp">MeshFields.cpp</innerfile>
+    <innerfile refid="_parallel_mesh_converter_8cpp">ParallelMeshConverter.cpp</innerfile>
+    <innerfile refid="_size_field_8cpp">SizeField.cpp</innerfile>
+    <innerfile refid="_v_m_s_8cpp">VMS.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/"/>
+  </compounddef>
+</doxygen>

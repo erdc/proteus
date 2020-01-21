@@ -1,0 +1,2189 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="subgrid_error_8h" kind="file" language="C++">
+    <compoundname>subgridError.h</compoundname>
+    <includes local="no">math.h</includes>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">assert.h</includes>
+    <includedby refid="subgrid_error_8c" local="yes">subgridError.c</includedby>
+    <incdepgraph>
+      <node id="1">
+        <label>subgridError.h</label>
+        <link refid="subgrid_error_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>assert.h</label>
+      </node>
+      <node id="2">
+        <label>math.h</label>
+      </node>
+      <node id="3">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="2">
+        <label>subgridError.c</label>
+        <link refid="subgrid_error_8c"/>
+      </node>
+      <node id="1">
+        <label>subgridError.h</label>
+        <link refid="subgrid_error_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group__subgrid_error_1ga6c9bb7bf386e1b5fb95af717c7bba311" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, double *tau, double *pdeResidual, double *dpdeResidual, double *subgridError, double *dsubgridError)</argsstring>
+        <name>calculateSubgridError_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridError</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridError</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the ASGS subgrid error given tau and the strong residual. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="17" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="12" bodyend="44" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="17" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga67672b477eccbd5bd8a5abb25024a82d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_generic_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *inverseJ, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_generic_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="27" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="580" bodyend="697" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="27" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga05fbee4c84a2d90c0ab437fad2204915" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_generic_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *inverseJ, double *dmt, double *dm, double *f, double *a, double *tau0, double *tau1, double *cfl)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_generic_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="41" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2125" bodyend="2214" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="41" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gadd72739d77678a3e34c4e551ca6163e7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_p</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_p</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the peclet number formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="52" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="49" bodyend="130" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="52" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga19c0fd9e0c98798fa7d095edbcf0990c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_1</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_1</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="68" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="224" bodyend="303" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="68" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga822c8ac4f2a0e44d98a1207e354ead86" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_2</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_2</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_2 norm&quot; formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="84" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="394" bodyend="482" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="84" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga8820a65285a4a112f8da14e2fa76ba0b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, char stabilization, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>stabilization</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="100" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="826" bodyend="849" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="100" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gadcf8c07c457e78fd959f3964c105e558" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_A_tau_1</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_A_tau_1</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_2 norm&quot; formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="117" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="880" bodyend="918" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="117" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gac8cade2f2590e6616eca56452dc7d5dc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_A_tau_2</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_A_tau_2</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_2 norm&quot; formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="127" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="923" bodyend="966" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="127" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gabe686b9b5f32f06a7c787f53b77ba0c5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_A_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, char stabilization, double *elementDiameter, double *dmt, double *df, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_A_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>stabilization</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="137" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="971" bodyend="985" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="137" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga7922c98269db7125db89cbd931cb5bfe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_GLS_velocity</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_GLS_velocity</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the subgrid error for velocity in 2D Stokes equation with a GLS-like formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="148" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="990" bodyend="1070" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="148" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga35c4dc223b3a5ecdcf113de84f33aed5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes3D_GLS_velocity</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorStokes3D_GLS_velocity</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the subgrid error for velocity in 3D Stokes equation with a GLS-like formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="168" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1157" bodyend="1266" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="168" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gae9106e9cf9de6b084d11dc52fbec5059" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_GLS_velocity_pressure</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_GLS_velocity_pressure</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="194" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1382" bodyend="1496" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="194" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga589c59dccad8b1a96f801ae5b86bfca2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes3D_GLS_velocity_pressure</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorStokes3D_GLS_velocity_pressure</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="220" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1617" bodyend="1762" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="220" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga57653d84de0b215d83923c5cb6bd4aa6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_GLS_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double hFactor, double *elementDiameter, double *dmt, double *dm, double *f, double *a, double *tau0, double *tau1, double *cfl)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_GLS_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>hFactor</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="254" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1914" bodyend="2018" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="254" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga7521a7ee9c8a56c0db7c38cce5c11dec" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes_GLS_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dH, double *a, double *tau0, double *tau1)</argsstring>
+        <name>calculateSubgridErrorStokes_GLS_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="268" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2632" bodyend="2655" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="268" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gadd765a125b63b789fe545c6909d88ff8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes_GLS_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dH, double *a, double *tau0, double *tau1)</argsstring>
+        <name>calculateSubgridErrorStokes_GLS_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="278" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2657" bodyend="2680" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="278" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga6a59597ab29928775b48be851b328506" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_GLS_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_GLS_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="288" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2685" bodyend="2793" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="288" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gac0f3d18568b952ee0c092c94aff92ae4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes3D_GLS_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorStokes3D_GLS_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>3D version of Stokes GLS tau </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="315" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2797" bodyend="2945" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="315" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga17a01ed7a53bd1eecf50f1286a3fbe82" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes3D_GLS_velocity_pressure</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *dm, double *f, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorNavierStokes3D_GLS_velocity_pressure</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="349" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="3163" bodyend="3310" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="349" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga2c5989bf014a0df1155745f37f1a78df" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_1</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *u, double *v, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_dp, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *dsubgridErrorU_dv, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_du, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_1</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="385" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="3464" bodyend="3713" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="385" declcolumn="13"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>C implementations of subgrid error calculations. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>SUBGRIDERROR_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SUBGRIDERROR_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"><sp/></highlight><highlight class="comment">/*mwf<sp/>for<sp/>debugging*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;assert.h&gt;</highlight></codeline>
+<codeline lineno="17"><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga6c9bb7bf386e1b5fb95af717c7bba311" kindref="member">calculateSubgridError_tauRes</ref>(</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau,</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidual,</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidual,</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridError,</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridError</highlight></codeline>
+<codeline lineno="26"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga67672b477eccbd5bd8a5abb25024a82d" kindref="member">calculateSubgridError_ADR_generic_tau</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>inverseJ,</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dmt,</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/><ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>a,</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>da,</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>grad_phi,</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dphi,</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dr,</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/><ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>,</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>cfl,</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>tau);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga05fbee4c84a2d90c0ab437fad2204915" kindref="member">calculateSubgridErrorNavierStokes2D_generic_tau</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>inverseJ,</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dmt,</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dm,</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>a,</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>tau0,</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>tau1,</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>cfl);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1gadd72739d77678a3e34c4e551ca6163e7" kindref="member">calculateSubgridError_ADR_tau_p</ref>(</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dmt,</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*da,</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*grad_phi,</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dphi,</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dr,</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>,</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*cfl,</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau</highlight></codeline>
+<codeline lineno="67"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga19c0fd9e0c98798fa7d095edbcf0990c" kindref="member">calculateSubgridError_ADR_tau_1</ref>(</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dmt,</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*da,</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*grad_phi,</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dphi,</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dr,</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>,</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*cfl,</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau</highlight></codeline>
+<codeline lineno="83"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga822c8ac4f2a0e44d98a1207e354ead86" kindref="member">calculateSubgridError_ADR_tau_2</ref>(</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dmt,</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*da,</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*grad_phi,</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dphi,</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dr,</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>,</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*cfl,</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau</highlight></codeline>
+<codeline lineno="99"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga8820a65285a4a112f8da14e2fa76ba0b" kindref="member">calculateSubgridError_ADR_tau</ref>(</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>stabilization,</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dmt,</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*da,</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*grad_phi,</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dphi,</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dr,</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>,</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*cfl,</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau</highlight></codeline>
+<codeline lineno="116"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1gadcf8c07c457e78fd959f3964c105e558" kindref="member">calculateSubgridError_A_tau_1</ref>(</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dmt,</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*cfl,</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau</highlight></codeline>
+<codeline lineno="126"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1gac8cade2f2590e6616eca56452dc7d5dc" kindref="member">calculateSubgridError_A_tau_2</ref>(</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dmt,</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*cfl,</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau</highlight></codeline>
+<codeline lineno="136"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1gabe686b9b5f32f06a7c787f53b77ba0c5" kindref="member">calculateSubgridError_A_tau</ref>(</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>stabilization,</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dmt,</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*cfl,</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau</highlight></codeline>
+<codeline lineno="147"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga7922c98269db7125db89cbd931cb5bfe" kindref="member">calculateSubgridErrorStokes2D_GLS_velocity</ref>(</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualU,</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_dp,</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_du,</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualV,</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dp,</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dv,</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorU,</highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_dp,</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_du,</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorV,</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dp,</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dv</highlight></codeline>
+<codeline lineno="167"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga35c4dc223b3a5ecdcf113de84f33aed5" kindref="member">calculateSubgridErrorStokes3D_GLS_velocity</ref>(</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualU,</highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_dp,</highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_du,</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualV,</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dp,</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dv,</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualW,</highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualW_dp,</highlight></codeline>
+<codeline lineno="183"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualW_dw,</highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorU,</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_dp,</highlight></codeline>
+<codeline lineno="186"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_du,</highlight></codeline>
+<codeline lineno="187"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorV,</highlight></codeline>
+<codeline lineno="188"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dp,</highlight></codeline>
+<codeline lineno="189"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dv,</highlight></codeline>
+<codeline lineno="190"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorW,</highlight></codeline>
+<codeline lineno="191"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorW_dp,</highlight></codeline>
+<codeline lineno="192"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorW_dw</highlight></codeline>
+<codeline lineno="193"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="194"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1gae9106e9cf9de6b084d11dc52fbec5059" kindref="member">calculateSubgridErrorStokes2D_GLS_velocity_pressure</ref>(</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="196"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="197"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualP,</highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_du,</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_dv,</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualU,</highlight></codeline>
+<codeline lineno="205"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_dp,</highlight></codeline>
+<codeline lineno="206"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_du,</highlight></codeline>
+<codeline lineno="207"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualV,</highlight></codeline>
+<codeline lineno="208"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dp,</highlight></codeline>
+<codeline lineno="209"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dv,</highlight></codeline>
+<codeline lineno="210"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorP,</highlight></codeline>
+<codeline lineno="211"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_du,</highlight></codeline>
+<codeline lineno="212"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_dv,</highlight></codeline>
+<codeline lineno="213"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorU,</highlight></codeline>
+<codeline lineno="214"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_dp,</highlight></codeline>
+<codeline lineno="215"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_du,</highlight></codeline>
+<codeline lineno="216"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorV,</highlight></codeline>
+<codeline lineno="217"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dp,</highlight></codeline>
+<codeline lineno="218"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dv</highlight></codeline>
+<codeline lineno="219"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="220"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga589c59dccad8b1a96f801ae5b86bfca2" kindref="member">calculateSubgridErrorStokes3D_GLS_velocity_pressure</ref>(</highlight></codeline>
+<codeline lineno="221"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="222"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="223"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="224"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="225"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="226"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="227"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualP,</highlight></codeline>
+<codeline lineno="228"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_du,</highlight></codeline>
+<codeline lineno="229"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_dv,</highlight></codeline>
+<codeline lineno="230"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_dw,</highlight></codeline>
+<codeline lineno="231"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualU,</highlight></codeline>
+<codeline lineno="232"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_dp,</highlight></codeline>
+<codeline lineno="233"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_du,</highlight></codeline>
+<codeline lineno="234"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualV,</highlight></codeline>
+<codeline lineno="235"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dp,</highlight></codeline>
+<codeline lineno="236"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dv,</highlight></codeline>
+<codeline lineno="237"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualW,</highlight></codeline>
+<codeline lineno="238"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualW_dp,</highlight></codeline>
+<codeline lineno="239"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualW_dw,</highlight></codeline>
+<codeline lineno="240"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorP,</highlight></codeline>
+<codeline lineno="241"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_du,</highlight></codeline>
+<codeline lineno="242"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_dv,</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_dw,</highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorU,</highlight></codeline>
+<codeline lineno="245"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_dp,</highlight></codeline>
+<codeline lineno="246"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_du,</highlight></codeline>
+<codeline lineno="247"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorV,</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dp,</highlight></codeline>
+<codeline lineno="249"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dv,</highlight></codeline>
+<codeline lineno="250"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorW,</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorW_dp,</highlight></codeline>
+<codeline lineno="252"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorW_dw</highlight></codeline>
+<codeline lineno="253"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="254"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga57653d84de0b215d83923c5cb6bd4aa6" kindref="member">calculateSubgridErrorNavierStokes2D_GLS_tau</ref>(</highlight></codeline>
+<codeline lineno="255"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="256"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="257"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="258"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>hFactor,</highlight></codeline>
+<codeline lineno="259"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="260"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dmt,</highlight></codeline>
+<codeline lineno="261"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dm,</highlight></codeline>
+<codeline lineno="262"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,</highlight></codeline>
+<codeline lineno="263"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="264"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau0,</highlight></codeline>
+<codeline lineno="265"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau1,</highlight></codeline>
+<codeline lineno="266"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*cfl</highlight></codeline>
+<codeline lineno="267"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="268"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga7521a7ee9c8a56c0db7c38cce5c11dec" kindref="member">calculateSubgridErrorStokes_GLS_tau</ref>(</highlight></codeline>
+<codeline lineno="269"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="270"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="271"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="272"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="273"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dH,</highlight></codeline>
+<codeline lineno="274"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="275"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau0,</highlight></codeline>
+<codeline lineno="276"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau1</highlight></codeline>
+<codeline lineno="277"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="278"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1gadd765a125b63b789fe545c6909d88ff8" kindref="member">calculateSubgridErrorStokes_GLS_tau_sd</ref>(</highlight></codeline>
+<codeline lineno="279"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="280"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="281"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="282"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="283"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dH,</highlight></codeline>
+<codeline lineno="284"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="285"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau0,</highlight></codeline>
+<codeline lineno="286"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau1</highlight></codeline>
+<codeline lineno="287"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="288"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga6a59597ab29928775b48be851b328506" kindref="member">calculateSubgridErrorStokes2D_GLS_tauRes</ref>(</highlight></codeline>
+<codeline lineno="289"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="290"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="291"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="292"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="293"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau0,</highlight></codeline>
+<codeline lineno="294"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*tau1,</highlight></codeline>
+<codeline lineno="295"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualP,</highlight></codeline>
+<codeline lineno="296"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_du,</highlight></codeline>
+<codeline lineno="297"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_dv,</highlight></codeline>
+<codeline lineno="298"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualU,</highlight></codeline>
+<codeline lineno="299"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_dp,</highlight></codeline>
+<codeline lineno="300"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_du,</highlight></codeline>
+<codeline lineno="301"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualV,</highlight></codeline>
+<codeline lineno="302"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dp,</highlight></codeline>
+<codeline lineno="303"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dv,</highlight></codeline>
+<codeline lineno="304"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorP,</highlight></codeline>
+<codeline lineno="305"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_du,</highlight></codeline>
+<codeline lineno="306"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_dv,</highlight></codeline>
+<codeline lineno="307"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorU,</highlight></codeline>
+<codeline lineno="308"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_dp,</highlight></codeline>
+<codeline lineno="309"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_du,</highlight></codeline>
+<codeline lineno="310"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorV,</highlight></codeline>
+<codeline lineno="311"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dp,</highlight></codeline>
+<codeline lineno="312"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dv</highlight></codeline>
+<codeline lineno="313"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="314"><highlight class="normal"></highlight></codeline>
+<codeline lineno="315"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1gac0f3d18568b952ee0c092c94aff92ae4" kindref="member">calculateSubgridErrorStokes3D_GLS_tauRes</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="316"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="317"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="318"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="319"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>tau0,</highlight></codeline>
+<codeline lineno="320"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>tau1,</highlight></codeline>
+<codeline lineno="321"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>pdeResidualP,</highlight></codeline>
+<codeline lineno="322"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualP_du,</highlight></codeline>
+<codeline lineno="323"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualP_dv,</highlight></codeline>
+<codeline lineno="324"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualP_dw,</highlight></codeline>
+<codeline lineno="325"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>pdeResidualU,</highlight></codeline>
+<codeline lineno="326"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualU_dp,</highlight></codeline>
+<codeline lineno="327"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualU_du,</highlight></codeline>
+<codeline lineno="328"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>pdeResidualV,</highlight></codeline>
+<codeline lineno="329"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualV_dp,</highlight></codeline>
+<codeline lineno="330"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualV_dv,</highlight></codeline>
+<codeline lineno="331"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>pdeResidualW,</highlight></codeline>
+<codeline lineno="332"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualW_dp,</highlight></codeline>
+<codeline lineno="333"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dpdeResidualW_dw,</highlight></codeline>
+<codeline lineno="334"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>subgridErrorP,</highlight></codeline>
+<codeline lineno="335"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorP_du,</highlight></codeline>
+<codeline lineno="336"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorP_dv,</highlight></codeline>
+<codeline lineno="337"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorP_dw,</highlight></codeline>
+<codeline lineno="338"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>subgridErrorU,</highlight></codeline>
+<codeline lineno="339"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorU_dp,</highlight></codeline>
+<codeline lineno="340"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorU_du,</highlight></codeline>
+<codeline lineno="341"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>subgridErrorV,</highlight></codeline>
+<codeline lineno="342"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorV_dp,</highlight></codeline>
+<codeline lineno="343"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorV_dv,</highlight></codeline>
+<codeline lineno="344"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>subgridErrorW,</highlight></codeline>
+<codeline lineno="345"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorW_dp,</highlight></codeline>
+<codeline lineno="346"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dsubgridErrorW_dw);</highlight></codeline>
+<codeline lineno="347"><highlight class="normal"></highlight></codeline>
+<codeline lineno="348"><highlight class="normal"></highlight></codeline>
+<codeline lineno="349"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga17a01ed7a53bd1eecf50f1286a3fbe82" kindref="member">calculateSubgridErrorNavierStokes3D_GLS_velocity_pressure</ref>(</highlight></codeline>
+<codeline lineno="350"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="351"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="352"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="353"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="354"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="355"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dm,</highlight></codeline>
+<codeline lineno="356"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,</highlight></codeline>
+<codeline lineno="357"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="358"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualP,</highlight></codeline>
+<codeline lineno="359"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_du,</highlight></codeline>
+<codeline lineno="360"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_dv,</highlight></codeline>
+<codeline lineno="361"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_dw,</highlight></codeline>
+<codeline lineno="362"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualU,</highlight></codeline>
+<codeline lineno="363"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_dp,</highlight></codeline>
+<codeline lineno="364"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_du,</highlight></codeline>
+<codeline lineno="365"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualV,</highlight></codeline>
+<codeline lineno="366"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dp,</highlight></codeline>
+<codeline lineno="367"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dv,</highlight></codeline>
+<codeline lineno="368"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualW,</highlight></codeline>
+<codeline lineno="369"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualW_dp,</highlight></codeline>
+<codeline lineno="370"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualW_dw,</highlight></codeline>
+<codeline lineno="371"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorP,</highlight></codeline>
+<codeline lineno="372"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_du,</highlight></codeline>
+<codeline lineno="373"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_dv,</highlight></codeline>
+<codeline lineno="374"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_dw,</highlight></codeline>
+<codeline lineno="375"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorU,</highlight></codeline>
+<codeline lineno="376"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_dp,</highlight></codeline>
+<codeline lineno="377"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_du,</highlight></codeline>
+<codeline lineno="378"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorV,</highlight></codeline>
+<codeline lineno="379"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dp,</highlight></codeline>
+<codeline lineno="380"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dv,</highlight></codeline>
+<codeline lineno="381"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorW,</highlight></codeline>
+<codeline lineno="382"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorW_dp,</highlight></codeline>
+<codeline lineno="383"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorW_dw</highlight></codeline>
+<codeline lineno="384"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="385"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="group__subgrid_error_1ga2c5989bf014a0df1155745f37f1a78df" kindref="member">calculateSubgridErrorStokes2D_1</ref>(</highlight></codeline>
+<codeline lineno="386"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nElements_global,</highlight></codeline>
+<codeline lineno="387"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nQuadraturePoints_element,</highlight></codeline>
+<codeline lineno="388"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nDOF_trial_element,</highlight></codeline>
+<codeline lineno="389"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSpace,</highlight></codeline>
+<codeline lineno="390"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*elementDiameter,</highlight></codeline>
+<codeline lineno="391"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>,</highlight></codeline>
+<codeline lineno="392"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,</highlight></codeline>
+<codeline lineno="393"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*a,</highlight></codeline>
+<codeline lineno="394"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualP,</highlight></codeline>
+<codeline lineno="395"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_du,</highlight></codeline>
+<codeline lineno="396"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualP_dv,</highlight></codeline>
+<codeline lineno="397"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualU,</highlight></codeline>
+<codeline lineno="398"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_dp,</highlight></codeline>
+<codeline lineno="399"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualU_du,</highlight></codeline>
+<codeline lineno="400"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*pdeResidualV,</highlight></codeline>
+<codeline lineno="401"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dp,</highlight></codeline>
+<codeline lineno="402"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dpdeResidualV_dv,</highlight></codeline>
+<codeline lineno="403"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorP,</highlight></codeline>
+<codeline lineno="404"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_dp,</highlight></codeline>
+<codeline lineno="405"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_du,</highlight></codeline>
+<codeline lineno="406"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorP_dv,</highlight></codeline>
+<codeline lineno="407"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorU,</highlight></codeline>
+<codeline lineno="408"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_dp,</highlight></codeline>
+<codeline lineno="409"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_du,</highlight></codeline>
+<codeline lineno="410"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorU_dv,</highlight></codeline>
+<codeline lineno="411"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*subgridErrorV,</highlight></codeline>
+<codeline lineno="412"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dp,</highlight></codeline>
+<codeline lineno="413"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_du,</highlight></codeline>
+<codeline lineno="414"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*dsubgridErrorV_dv</highlight></codeline>
+<codeline lineno="415"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="417"><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,573 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_inout_8cpp" kind="file" language="C++">
+    <compoundname>Inout.cpp</compoundname>
+    <includes local="no">math.h</includes>
+    <includes local="yes">ncurses/curses.h</includes>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">stdlib.h</includes>
+    <includes local="no">string.h</includes>
+    <includes refid="_headers_8h" local="yes">Headers.h</includes>
+    <incdepgraph>
+      <node id="5">
+        <label>stdlib.h</label>
+      </node>
+      <node id="3">
+        <label>ncurses/curses.h</label>
+      </node>
+      <node id="6">
+        <label>string.h</label>
+      </node>
+      <node id="2">
+        <label>math.h</label>
+      </node>
+      <node id="1">
+        <label>Inout.cpp</label>
+        <link refid="_inout_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>Headers.h</label>
+        <link refid="_headers_8h"/>
+      </node>
+      <node id="4">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="_inout_8cpp_1a7bcc0241265b2b82a49dc65e8fba0951" prot="public" static="no">
+        <name>Subprograms</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="7" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="7" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_inout_8cpp_1a91adff1610bdf681555a8f2e330dc963" prot="public" static="no">
+        <name>Int</name>
+        <initializer>extern int</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="8" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="8" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_inout_8cpp_1ab255c8e32d555c305816584a4578d1b3" prot="public" static="no">
+        <name>Double</name>
+        <initializer>extern double</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="9" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="9" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="_inout_8cpp_1a8e8a98e44ae34a718d50f1f6365dd462" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double SU</definition>
+        <argsstring></argsstring>
+        <name>SU</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="14" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Fourier.cpp" bodystart="26" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" declline="14" declcolumn="15"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_inout_8cpp_1a2f950117272553394b5fd157771f30ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Title_block</definition>
+        <argsstring>(FILE *)</argsstring>
+        <name>Title_block</name>
+        <param>
+          <type>FILE *</type>
+          <defname>file</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="17" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="125" bodyend="138"/>
+      </memberdef>
+      <memberdef kind="function" id="_inout_8cpp_1ad235fec75b07656120325ef63a390672" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Input_Data_block</definition>
+        <argsstring>(FILE *)</argsstring>
+        <name>Input_Data_block</name>
+        <param>
+          <type>FILE *</type>
+          <defname>file</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="93" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="93" bodyend="123" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" declline="17" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="_inout_8cpp_1afb874c1c3ff5fb5e43ee78f4d4f7fe21" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int Read_data</definition>
+        <argsstring>(void)</argsstring>
+        <name>Read_data</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="20" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="20" bodyend="89"/>
+      </memberdef>
+      <memberdef kind="function" id="_inout_8cpp_1a9b678886728729fa3a755b29221d7c09" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Output</definition>
+        <argsstring>(void)</argsstring>
+        <name>Output</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="140" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="140" bodyend="297"/>
+      </memberdef>
+      <memberdef kind="function" id="_inout_8cpp_1a87e6c7f1f2eece776c2c07f229ef4023" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>double Surface</definition>
+        <argsstring>(double x)</argsstring>
+        <name>Surface</name>
+        <param>
+          <type>double</type>
+          <declname>x</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="301" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="301" bodyend="311"/>
+      </memberdef>
+      <memberdef kind="function" id="_inout_8cpp_1a43cf233a8e98e1885cbf6a138fc05081" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Point</definition>
+        <argsstring>(double X, double y)</argsstring>
+        <name>Point</name>
+        <param>
+          <type>double</type>
+          <declname>X</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" line="315" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp" bodystart="315" bodyend="361"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ncurses/curses.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight></codeline>
+<codeline lineno="7" refid="_inout_8cpp_1a7bcc0241265b2b82a49dc65e8fba0951" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Subprograms</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8" refid="_inout_8cpp_1a91adff1610bdf681555a8f2e330dc963" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Int<sp/><sp/><sp/><sp/><sp/>extern<sp/>int</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9" refid="_inout_8cpp_1ab255c8e32d555c305816584a4578d1b3" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>Double<sp/><sp/>extern<sp/>double</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;<ref refid="_headers_8h" kindref="compound">Headers.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1a8e8a98e44ae34a718d50f1f6365dd462" kindref="member">SU</ref>;</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_inout_8cpp_1a2f950117272553394b5fd157771f30ee" kindref="member">Title_block</ref>(FILE*),<sp/><ref refid="_inout_8cpp_1ad235fec75b07656120325ef63a390672" kindref="member">Input_Data_block</ref>(FILE*);</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="comment">/**********************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20" refid="_inout_8cpp_1afb874c1c3ff5fb5e43ee78f4d4f7fe21" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1afb874c1c3ff5fb5e43ee78f4d4f7fe21" kindref="member">Read_data</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="comment">/**********************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><ref refid="_headers_8h_1a00a69c13c1d2fa3062422eaee4c52008" kindref="member">Readtext</ref>(Title);</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><ref refid="_headers_8h_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(Title,<sp/>FINISH)<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal">(0);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><ref refid="_headers_8h_1af366e78f8645c4171b281fff5185454a" kindref="member">Read</ref>(<ref refid="_headers_8h_1a55b21f9cd6fded5b67b9266cc53498f8" kindref="member">MaxH</ref>,lf);</highlight></codeline>
+<codeline lineno="26"><highlight class="normal">fscanf(Input1,</highlight><highlight class="stringliteral">&quot;%s&quot;</highlight><highlight class="normal">,<sp/><ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>);<sp/><ref refid="_headers_8h_1aed3139cd68677866e9ef0665d1ad1ef4" kindref="member">Skip</ref>;</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><ref refid="_headers_8h_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(<ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>,Wavelength)</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1af366e78f8645c4171b281fff5185454a" kindref="member">Read</ref>(<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>,lf);</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a5554d9ddb970ea46ca620bfa405ba2a3" kindref="member">Height</ref><sp/>=<sp/><ref refid="_headers_8h_1a55b21f9cd6fded5b67b9266cc53498f8" kindref="member">MaxH</ref>/<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><ref refid="_headers_8h_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(<ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>,Period)</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1af366e78f8645c4171b281fff5185454a" kindref="member">Read</ref>(<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>,lf);</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a5554d9ddb970ea46ca620bfa405ba2a3" kindref="member">Height</ref><sp/>=<sp/><ref refid="_headers_8h_1a55b21f9cd6fded5b67b9266cc53498f8" kindref="member">MaxH</ref>/(<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>*<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><ref refid="_headers_8h_1af366e78f8645c4171b281fff5185454a" kindref="member">Read</ref>(<ref refid="_headers_8h_1a172a20466bb3dd9379bb2143bfbeb1e4" kindref="member">Current_criterion</ref>,d);</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><ref refid="_headers_8h_1af366e78f8645c4171b281fff5185454a" kindref="member">Read</ref>(<ref refid="_headers_8h_1afa66c5e494f9798d09025ed1f9ae090b" kindref="member">Current</ref>,lf);</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a172a20466bb3dd9379bb2143bfbeb1e4" kindref="member">Current_criterion</ref><sp/>==<sp/>1)<sp/>strcpy(Currentname,<sp/>Current1);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a172a20466bb3dd9379bb2143bfbeb1e4" kindref="member">Current_criterion</ref><sp/>==<sp/>2)<sp/>strcpy(Currentname,<sp/>Current2);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><ref refid="_headers_8h_1af366e78f8645c4171b281fff5185454a" kindref="member">Read</ref>(<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,d);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><ref refid="_headers_8h_1af366e78f8645c4171b281fff5185454a" kindref="member">Read</ref>(<ref refid="_headers_8h_1a5ae4803c4bbba017b625cb5e5b3e6219" kindref="member">nstep</ref>,d);</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><ref refid="_inout_8cpp_1ad235fec75b07656120325ef63a390672" kindref="member">Input_Data_block</ref>(monitor);</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(strcmp(Theory,</highlight><highlight class="stringliteral">&quot;Stokes&quot;</highlight><highlight class="normal">)==0)</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(<ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>,Wavelength)</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref><sp/>&gt;<sp/>10.)</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nThe<sp/>dimensionless<sp/>wavelength<sp/>is<sp/>greater<sp/>than<sp/>10.&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nStokes<sp/>theory<sp/>should<sp/>not<sp/>be<sp/>applied.<sp/>Exiting.&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>getch();</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>exit(1);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(<ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>,Period)</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref><sp/>&gt;<sp/>10.)</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nThe<sp/>dimensionless<sp/>period<sp/>is<sp/>greater<sp/>than<sp/>10.&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nStokes<sp/>theory<sp/>should<sp/>not<sp/>be<sp/>applied.<sp/>Exiting.&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>getch();</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>exit(1);</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Convergence<sp/>criteria</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal">Input2=fopen(Convergence_file,</highlight><highlight class="stringliteral">&quot;r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="70"><highlight class="normal">fgets(dummy,400,Input2);</highlight></codeline>
+<codeline lineno="71"><highlight class="normal">fscanf(Input2,</highlight><highlight class="stringliteral">&quot;%d&quot;</highlight><highlight class="normal">,<sp/>&amp;<ref refid="_headers_8h_1a75dde92eec1297f87deda0fe215773cf" kindref="member">number</ref>);fgets(dummy,400,Input2);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal">fscanf(Input2,</highlight><highlight class="stringliteral">&quot;%le&quot;</highlight><highlight class="normal">,<sp/>&amp;<ref refid="_headers_8h_1aff5d6bceef73e23cd16d9c23a818ca4a" kindref="member">crit</ref>);fgets(dummy,400,Input2);</highlight></codeline>
+<codeline lineno="73"><highlight class="normal">fclose(Input2);</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Number<sp/>of<sp/>data<sp/>points<sp/>to<sp/>present<sp/>results<sp/>for</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"></highlight></codeline>
+<codeline lineno="77"><highlight class="normal">Input2<sp/>=<sp/>fopen(Points_file,</highlight><highlight class="stringliteral">&quot;r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="78"><highlight class="normal">fgets(dummy,400,Input2);</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Number<sp/>of<sp/>points<sp/>on<sp/>surface<sp/>profile<sp/>(clustered<sp/>quadratically<sp/>near<sp/>crest)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal">fscanf(Input2,</highlight><highlight class="stringliteral">&quot;%d&quot;</highlight><highlight class="normal">,<sp/>&amp;<ref refid="_headers_8h_1a31c2a08abdd4c799a11963a946df7b7b" kindref="member">Surface_points</ref>);fgets(dummy,400,Input2);</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Number<sp/>of<sp/>vertical<sp/>profiles</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal">fscanf(Input2,</highlight><highlight class="stringliteral">&quot;%d&quot;</highlight><highlight class="normal">,<sp/>&amp;<ref refid="_headers_8h_1a58e2c29a4baf54159834ba079d08f602" kindref="member">Nprofiles</ref>);fgets(dummy,400,Input2);</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Number<sp/>of<sp/>points<sp/>in<sp/>each<sp/>profile</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal">fscanf(Input2,</highlight><highlight class="stringliteral">&quot;%d&quot;</highlight><highlight class="normal">,<sp/>&amp;<ref refid="_headers_8h_1ae4f2bca90b1de69264be2795bdcd001d" kindref="member">Points</ref>);fgets(dummy,400,Input2);</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight></codeline>
+<codeline lineno="86"><highlight class="normal">fclose(Input2);</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal"></highlight><highlight class="keywordflow">return</highlight><highlight class="normal">(1);</highlight></codeline>
+<codeline lineno="89"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"></highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/>PRINT<sp/>OUT<sp/>TITLE<sp/>BLOCKS</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"></highlight></codeline>
+<codeline lineno="93" refid="_inout_8cpp_1ad235fec75b07656120325ef63a390672" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1ad235fec75b07656120325ef63a390672" kindref="member">Input_Data_block</ref>(FILE*<sp/>file)</highlight></codeline>
+<codeline lineno="94"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="95"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;#<sp/>%s&quot;</highlight><highlight class="normal">,<sp/>Title);</highlight></codeline>
+<codeline lineno="96"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n\n#<sp/>Printing<sp/>input<sp/>data<sp/>here<sp/>to<sp/>check&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="97"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n\n#<sp/>Height/Depth:%6.3f&quot;</highlight><highlight class="normal">,<sp/><ref refid="_headers_8h_1a55b21f9cd6fded5b67b9266cc53498f8" kindref="member">MaxH</ref>);</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><ref refid="_headers_8h_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(<ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>,Wavelength)</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(file,</highlight><highlight class="stringliteral">&quot;\n#<sp/>Length/Depth:%7.2f&quot;</highlight><highlight class="normal">,<sp/><ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>);</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><ref refid="_headers_8h_1afa85674f034d00d641e579588a123444" kindref="member">iff</ref>(<ref refid="_subroutines_8cpp_1aa60d12d19fbc852b355af8f169869225" kindref="member">Case</ref>,Period)</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(file,</highlight><highlight class="stringliteral">&quot;\n#<sp/>Dimensionless<sp/>Period<sp/>T*sqrt(g/d):%7.2f&quot;</highlight><highlight class="normal">,<sp/><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>);</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="106"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n#<sp/>Current<sp/>criterion:<sp/>%s,<sp/><sp/>Dimensionless<sp/>value:%6.3lf&quot;</highlight><highlight class="normal">,<sp/>Currentname,<sp/><ref refid="_headers_8h_1afa66c5e494f9798d09025ed1f9ae090b" kindref="member">Current</ref>);</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(strcmp(Theory,</highlight><highlight class="stringliteral">&quot;Stokes&quot;</highlight><highlight class="normal">)==0)</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>&lt;=5)<sp/>sprintf(Method,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Solution<sp/>by<sp/>%d-order<sp/>Stokes<sp/>theory&quot;</highlight><highlight class="normal">,<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>=<sp/>5;</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>sprintf(Method,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Solution<sp/>by<sp/>%d-order<sp/>Stokes<sp/>theory&quot;</highlight><highlight class="normal">,<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\n\n#<sp/>(A<sp/>value<sp/>of<sp/>N<sp/>&gt;<sp/>5<sp/>has<sp/>been<sp/>specified<sp/>for<sp/>the<sp/>Stokes<sp/>theory.&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\n#<sp/>I<sp/>do<sp/>not<sp/>have<sp/>a<sp/>theory<sp/>for<sp/>that.<sp/>The<sp/>program<sp/>has<sp/>set<sp/>N<sp/>=<sp/>5)&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(strcmp(Theory,</highlight><highlight class="stringliteral">&quot;Fourier&quot;</highlight><highlight class="normal">)==0)</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>sprintf(Method,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Solution<sp/>by<sp/>%d-term<sp/>Fourier<sp/>series&quot;</highlight><highlight class="normal">,<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>);</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n%s\n&quot;</highlight><highlight class="normal">,<sp/>Method);</highlight></codeline>
+<codeline lineno="123"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"></highlight></codeline>
+<codeline lineno="125" refid="_inout_8cpp_1a2f950117272553394b5fd157771f30ee" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1a2f950117272553394b5fd157771f30ee" kindref="member">Title_block</ref>(FILE*<sp/>file)</highlight></codeline>
+<codeline lineno="126"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Highest<sp/>wave<sp/>-<sp/>eqn<sp/>(32)<sp/>of<sp/>Fenton<sp/>(1990)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref><sp/>=<sp/>2*<ref refid="create_analytic_geometry_8cpp_1a43016d873124d39034edb8cd164794db" kindref="member">pi</ref>/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1];</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><ref refid="_headers_8h_1af8440e121a521c0022823229e88cd1a8" kindref="member">Highest</ref><sp/>=<sp/>(0.0077829*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>+0.0095721*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>+0.141063*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>)</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>/(0.0093407*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>+0.0317567*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>+0.078834*<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>+1);</highlight></codeline>
+<codeline lineno="131"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;#<sp/>%s&quot;</highlight><highlight class="normal">,<sp/>Title);</highlight></codeline>
+<codeline lineno="132"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n%s\n&quot;</highlight><highlight class="normal">,<sp/>Method);</highlight></codeline>
+<codeline lineno="133"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n#<sp/>Height/Depth:%6.3f,<sp/>%3.0lf\%%<sp/>of<sp/>the<sp/>maximum<sp/>of<sp/>H/d<sp/>=%6.3f<sp/>for<sp/>this<sp/>length:&quot;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1],<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]/<ref refid="_headers_8h_1af8440e121a521c0022823229e88cd1a8" kindref="member">Highest</ref>*100.,<sp/><ref refid="_headers_8h_1af8440e121a521c0022823229e88cd1a8" kindref="member">Highest</ref>);</highlight></codeline>
+<codeline lineno="135"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n#<sp/>Length/Depth:%7.2f&quot;</highlight><highlight class="normal">,<sp/>2*<ref refid="create_analytic_geometry_8cpp_1a43016d873124d39034edb8cd164794db" kindref="member">pi</ref>/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]);</highlight></codeline>
+<codeline lineno="136"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n#<sp/>Dimensionless<sp/>Period<sp/>T*sqrt(g/d):%7.2f&quot;</highlight><highlight class="normal">,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[3]/sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]));</highlight></codeline>
+<codeline lineno="137"><highlight class="normal">fprintf(file,</highlight><highlight class="stringliteral">&quot;\n#<sp/>Current<sp/>criterion:<sp/>%s,<sp/><sp/>Dimensionless<sp/>value:%6.3lf\n&quot;</highlight><highlight class="normal">,<sp/>Currentname,<sp/><ref refid="_headers_8h_1afa66c5e494f9798d09025ed1f9ae090b" kindref="member">Current</ref>);</highlight></codeline>
+<codeline lineno="138"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"></highlight></codeline>
+<codeline lineno="140" refid="_inout_8cpp_1a9b678886728729fa3a755b29221d7c09" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1a9b678886728729fa3a755b29221d7c09" kindref="member">Output</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="141"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>i,<sp/>I;</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><sp/>X,<sp/>eta,<sp/>y;</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1a87e6c7f1f2eece776c2c07f229ef4023" kindref="member">Surface</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1a43cf233a8e98e1885cbf6a138fc05081" kindref="member">Point</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"></highlight></codeline>
+<codeline lineno="147"><highlight class="normal">fprintf(monitor,</highlight><highlight class="stringliteral">&quot;\n\n#<sp/>Solution<sp/>summary:\n\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><ref refid="_inout_8cpp_1a2f950117272553394b5fd157771f30ee" kindref="member">Title_block</ref>(monitor);</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight></codeline>
+<codeline lineno="150"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Print<sp/>out<sp/>summary<sp/>file<sp/>of<sp/>solution</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="151"><highlight class="normal"></highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><ref refid="_inout_8cpp_1a2f950117272553394b5fd157771f30ee" kindref="member">Title_block</ref>(Solution);</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"></highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref><sp/>=<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1];</highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>=2*<ref refid="create_analytic_geometry_8cpp_1a43016d873124d39034edb8cd164794db" kindref="member">pi</ref>/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1];</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><ref refid="_headers_8h_1a633037a59f66fd11edddfafad4d3104a" kindref="member">H</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1];</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[3]/sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]);</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]/sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]);</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><ref refid="_headers_8h_1a576d0ef34cb2180b614d05f257a76567" kindref="member">ce</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5]/sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]);</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><ref refid="_headers_8h_1a523e58fd6261d8bf366c532c1267b225" kindref="member">cs</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[6]/sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]);</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><ref refid="_headers_8h_1a1dd36ca42f6dc0b650f15e01fc72c00e" kindref="member">ubar</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]/sqrt(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]);</highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><ref refid="_headers_8h_1ab8d83b3526dced5e412b93bcc089927f" kindref="member">Q</ref>=<ref refid="_headers_8h_1a1dd36ca42f6dc0b650f15e01fc72c00e" kindref="member">ubar</ref>-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8]/pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,1.5);</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><ref refid="_headers_8h_1ac8e838e6f10957014cfbeb426045ceea" kindref="member">R</ref>=1+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[9]/<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1];</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"></highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><ref refid="_headers_8h_1ad39d1297da3441075b937d1ae80571ea" kindref="member">pulse</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8]+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5];</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><ref refid="_headers_8h_1a917a4d5c96cde47e52523d9e8a9e08c1" kindref="member">ke</ref>=0.5*(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]*<ref refid="_headers_8h_1ad39d1297da3441075b937d1ae80571ea" kindref="member">pulse</ref>-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5]*<ref refid="_headers_8h_1ab8d83b3526dced5e412b93bcc089927f" kindref="member">Q</ref>*pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,1.5));</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"></highlight></codeline>
+<codeline lineno="168"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Calculate<sp/>potential<sp/>energy,<sp/>not<sp/>by<sp/>computing<sp/>the<sp/>mean<sp/>of<sp/>1/2<sp/>(eta-d)^2</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="169"><highlight class="normal"></highlight><highlight class="comment">//<sp/>but<sp/>by<sp/>exploiting<sp/>orthogonality<sp/>of<sp/>the<sp/>cosine<sp/>functions<sp/>to<sp/>give<sp/>the<sp/>sum<sp/>of<sp/>1/4<sp/>Y[i]^2</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref><sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(i=1;i&lt;=<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>;++i)</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref><sp/>+=<sp/>0.25*pow(<ref refid="_headers_8h_1aa565e3a13199f860447a094f48c9dd6b" kindref="member">Y</ref>[i],2);</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"></highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><ref refid="_headers_8h_1adf4642805534c658ee6450604dedc1d1" kindref="member">ub2</ref>=2.*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[9]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4];</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><ref refid="_headers_8h_1a432c4efec69057ea02d7fce22a7e30c3" kindref="member">sxx</ref>=4.*<ref refid="_headers_8h_1a917a4d5c96cde47e52523d9e8a9e08c1" kindref="member">ke</ref>-3.*<ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>+<ref refid="_headers_8h_1adf4642805534c658ee6450604dedc1d1" kindref="member">ub2</ref>*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]+2.*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5]*(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8]);</highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]*(3.*<ref refid="_headers_8h_1a917a4d5c96cde47e52523d9e8a9e08c1" kindref="member">ke</ref>-2.*<ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>)+0.5*<ref refid="_headers_8h_1adf4642805534c658ee6450604dedc1d1" kindref="member">ub2</ref>*(<ref refid="_headers_8h_1ad39d1297da3441075b937d1ae80571ea" kindref="member">pulse</ref>+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1])+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5]*(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8]);</highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><ref refid="_headers_8h_1a1fd0784d88f1dd3a465423f8a63d1af2" kindref="member">q</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1]-<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8];</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"><ref refid="_headers_8h_1a51d5468d74b4eccfb8e26ea458562120" kindref="member">r</ref>=<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[9]+<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1];</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>=<ref refid="_headers_8h_1a432c4efec69057ea02d7fce22a7e30c3" kindref="member">sxx</ref>-2.*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]*<ref refid="_headers_8h_1ad39d1297da3441075b937d1ae80571ea" kindref="member">pulse</ref>+(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4]+0.5*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1])*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1];</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"></highlight></codeline>
+<codeline lineno="181"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Stokes-Ursell<sp/>number<sp/>%7.3f&quot;</highlight><highlight class="normal">,<sp/>0.5*<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2]/pow(<ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1],3));</highlight></codeline>
+<codeline lineno="182"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n\n#<sp/>Integral<sp/>quantities<sp/>-<sp/>notation<sp/>from<sp/>Fenton<sp/>(1988)&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="183"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>(1)<sp/>Quantity,<sp/>(2)<sp/>symbol,<sp/>solution<sp/>non-dimensionalised<sp/>by<sp/>(3)<sp/>g<sp/>&amp;<sp/>wavenumber,<sp/>and<sp/>(4)<sp/>g<sp/>&amp;<sp/>mean<sp/>depth\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="184"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Water<sp/>depth<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(d)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[1],<sp/>1.);</highlight></codeline>
+<codeline lineno="185"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Wave<sp/>length<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(lambda)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/>2*<ref refid="create_analytic_geometry_8cpp_1a43016d873124d39034edb8cd164794db" kindref="member">pi</ref>,<sp/><ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>);</highlight></codeline>
+<codeline lineno="186"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Wave<sp/>height<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(H)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[2],<sp/><ref refid="_headers_8h_1a633037a59f66fd11edddfafad4d3104a" kindref="member">H</ref>);</highlight></codeline>
+<codeline lineno="187"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Wave<sp/>period<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(tau)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[3],<sp/><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref>);</highlight></codeline>
+<codeline lineno="188"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Wave<sp/>speed<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(c)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[4],<sp/><ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>);</highlight></codeline>
+<codeline lineno="189"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Eulerian<sp/>current<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(u1_)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[5],<sp/><ref refid="_headers_8h_1a576d0ef34cb2180b614d05f257a76567" kindref="member">ce</ref>);</highlight></codeline>
+<codeline lineno="190"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Stokes<sp/>current<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(u2_)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[6],<sp/><ref refid="_headers_8h_1a523e58fd6261d8bf366c532c1267b225" kindref="member">cs</ref>);</highlight></codeline>
+<codeline lineno="191"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Mean<sp/>fluid<sp/>speed<sp/>in<sp/>frame<sp/>of<sp/>wave<sp/>(U_)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[7],<sp/><ref refid="_headers_8h_1a1dd36ca42f6dc0b650f15e01fc72c00e" kindref="member">ubar</ref>);</highlight></codeline>
+<codeline lineno="192"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Volume<sp/>flux<sp/>due<sp/>to<sp/>waves<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(q)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8],<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[8]/pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,1.5));</highlight></codeline>
+<codeline lineno="193"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Bernoulli<sp/>constant<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(r)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[9],<sp/><ref refid="_headers_8h_1a9d199fcfc162b9ad09d4c9426e713a74" kindref="member">z</ref>[9]/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="194"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Volume<sp/>flux<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(Q)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1ab8d83b3526dced5e412b93bcc089927f" kindref="member">Q</ref>*pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,1.5),<sp/><ref refid="_headers_8h_1ab8d83b3526dced5e412b93bcc089927f" kindref="member">Q</ref>);</highlight></codeline>
+<codeline lineno="195"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Bernoulli<sp/>constant<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(R)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1ac8e838e6f10957014cfbeb426045ceea" kindref="member">R</ref>*<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,<sp/><ref refid="_headers_8h_1ac8e838e6f10957014cfbeb426045ceea" kindref="member">R</ref>);</highlight></codeline>
+<codeline lineno="196"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Momentum<sp/>flux<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(S)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>,<sp/><ref refid="_headers_8h_1a7cbe4dbecea8b00e5845e24579f6036d" kindref="member">s</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref><sp/>);</highlight></codeline>
+<codeline lineno="197"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Impulse<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(I)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1ad39d1297da3441075b937d1ae80571ea" kindref="member">pulse</ref>,<sp/><ref refid="_headers_8h_1ad39d1297da3441075b937d1ae80571ea" kindref="member">pulse</ref>/pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,1.5));</highlight></codeline>
+<codeline lineno="198"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Kinetic<sp/>energy<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(T)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a917a4d5c96cde47e52523d9e8a9e08c1" kindref="member">ke</ref>,<sp/><ref refid="_headers_8h_1a917a4d5c96cde47e52523d9e8a9e08c1" kindref="member">ke</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="199"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Potential<sp/>energy<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(V)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>,<sp/><ref refid="_headers_8h_1ad361b0f40ce6a79f768e7e67abf39483" kindref="member">pe</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="200"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Mean<sp/>square<sp/>of<sp/>bed<sp/>velocity<sp/><sp/><sp/><sp/><sp/>(ub2_)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1adf4642805534c658ee6450604dedc1d1" kindref="member">ub2</ref>,<sp/><ref refid="_headers_8h_1adf4642805534c658ee6450604dedc1d1" kindref="member">ub2</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="201"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Radiation<sp/>stress<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(Sxx)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a432c4efec69057ea02d7fce22a7e30c3" kindref="member">sxx</ref>,<sp/><ref refid="_headers_8h_1a432c4efec69057ea02d7fce22a7e30c3" kindref="member">sxx</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="202"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Wave<sp/>power<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(F)&quot;</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref><sp/><ref refid="_headers_8h_1af6756f4391699fde08af441bb7d9d49f" kindref="member">LO</ref>,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>/pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,2.5));</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"></highlight></codeline>
+<codeline lineno="204"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n\n#<sp/>Dimensionless<sp/>coefficients<sp/>in<sp/>Fourier<sp/>series&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="205"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Potential/Streamfn\tSurface<sp/>elevations&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="206"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>j,<sp/>B[j],<sp/>&amp;<sp/>E[j],<sp/>j=1..N\n&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="207"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1<sp/>;<sp/>i<sp/>&lt;=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>i++<sp/>)</highlight></codeline>
+<codeline lineno="208"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n%2d\t%15.7e\t%15.7e&quot;</highlight><highlight class="normal">,<sp/>i,<sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref>[i],<sp/><ref refid="_headers_8h_1aa565e3a13199f860447a094f48c9dd6b" kindref="member">Y</ref>[i]);</highlight></codeline>
+<codeline lineno="209"><highlight class="normal">fprintf(Solution,<sp/></highlight><highlight class="stringliteral">&quot;\n\n&quot;</highlight><highlight class="normal"><sp/>);</highlight></codeline>
+<codeline lineno="210"><highlight class="normal"></highlight></codeline>
+<codeline lineno="211"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Surface<sp/>-<sp/>print<sp/>out<sp/>coordinates<sp/>of<sp/>points<sp/>on<sp/>surface<sp/>for<sp/>plotting<sp/>plus<sp/>check<sp/>of<sp/>pressure<sp/>on<sp/>surface</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="212"><highlight class="normal"></highlight></codeline>
+<codeline lineno="213"><highlight class="normal">fprintf(Elevation,<sp/><sp/></highlight><highlight class="stringliteral">&quot;#<sp/>%s\n&quot;</highlight><highlight class="normal">,<sp/>Title);</highlight></codeline>
+<codeline lineno="214"><highlight class="normal">fprintf(Elevation,<sp/><sp/></highlight><highlight class="stringliteral">&quot;%s\n&quot;</highlight><highlight class="normal">,<sp/>Method);</highlight></codeline>
+<codeline lineno="215"><highlight class="normal">fprintf(Elevation,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Surface<sp/>of<sp/>wave<sp/>-<sp/>trough-crest-trough,&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="216"><highlight class="normal">fprintf(Elevation,<sp/><sp/></highlight><highlight class="stringliteral">&quot;<sp/>note<sp/>quadratic<sp/>point<sp/>spacing<sp/>clustered<sp/>around<sp/>crest&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="217"><highlight class="normal">fprintf(Elevation,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Non-dimensionalised<sp/>with<sp/>respect<sp/>to<sp/>depth&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="218"><highlight class="normal">fprintf(Elevation,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>X/d,<sp/>eta/d,<sp/>&amp;<sp/>check<sp/>of<sp/>surface<sp/>pressure\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="219"><highlight class="normal"></highlight></codeline>
+<codeline lineno="220"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=-<ref refid="_headers_8h_1a31c2a08abdd4c799a11963a946df7b7b" kindref="member">Surface_points</ref>/2<sp/>;<sp/>i<sp/>&lt;=<sp/><ref refid="_headers_8h_1a31c2a08abdd4c799a11963a946df7b7b" kindref="member">Surface_points</ref>/2;<sp/>i++)</highlight></codeline>
+<codeline lineno="221"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="222"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>X<sp/>=<sp/>2<sp/>*<sp/><ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref><sp/>*<sp/>(i<sp/>*<sp/>fabs(i)/<ref refid="_headers_8h_1a31c2a08abdd4c799a11963a946df7b7b" kindref="member">Surface_points</ref>/<ref refid="_headers_8h_1a31c2a08abdd4c799a11963a946df7b7b" kindref="member">Surface_points</ref>);<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//NB<sp/>Quadratic<sp/>point<sp/>spacing,<sp/>clustered<sp/>near<sp/>crest</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="223"><highlight class="normal"><sp/><sp/><sp/>eta<sp/>=<sp/><ref refid="_inout_8cpp_1a87e6c7f1f2eece776c2c07f229ef4023" kindref="member">Surface</ref>(X);</highlight></codeline>
+<codeline lineno="224"><highlight class="normal"><sp/><sp/><sp/><ref refid="_inout_8cpp_1a43cf233a8e98e1885cbf6a138fc05081" kindref="member">Point</ref>(X,eta);</highlight></codeline>
+<codeline lineno="225"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(Elevation,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n%8.4lf\t%7.4f\t%7.0e&quot;</highlight><highlight class="normal">,<sp/>X,<sp/>eta,<sp/><ref refid="_headers_8h_1a1a4dd154b77e2e56f793a399214d9296" kindref="member">Pressure</ref>);</highlight></codeline>
+<codeline lineno="226"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="227"><highlight class="normal">fprintf(Elevation,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="228"><highlight class="normal"></highlight></codeline>
+<codeline lineno="229"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Surface<sp/>-<sp/>print<sp/>out<sp/>Velocity<sp/>and<sp/>acceleration<sp/>profiles<sp/>plus<sp/>check<sp/>of<sp/>Bernoulli</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="230"><highlight class="normal"></highlight></codeline>
+<codeline lineno="231"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;#<sp/>%s\n&quot;</highlight><highlight class="normal">,<sp/>Title);</highlight></codeline>
+<codeline lineno="232"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;%s\n&quot;</highlight><highlight class="normal">,<sp/>Method);</highlight></codeline>
+<codeline lineno="233"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>Velocity<sp/>and<sp/>acceleration<sp/>profiles<sp/>and<sp/>Bernoulli<sp/>checks\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="234"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>All<sp/>quantities<sp/>are<sp/>dimensionless<sp/>with<sp/>respect<sp/>to<sp/>g<sp/>and/or<sp/>d\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="235"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#*******************************************************************************&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="236"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>y<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>u<sp/><sp/><sp/><sp/><sp/><sp/><sp/>v<sp/><sp/><sp/><sp/>dphi/dt<sp/><sp/><sp/>du/dt<sp/><sp/><sp/>dv/dt<sp/><sp/>du/dx<sp/><sp/><sp/>du/dy<sp/>Bernoulli<sp/>check<sp/><sp/>&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="237"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>-<sp/><sp/><sp/><sp/><sp/>-------------<sp/><sp/><sp/>-------<sp/><sp/>------<sp/><sp/><sp/>-----<sp/><sp/>-------------<sp/>---------------<sp/><sp/>&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="238"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#<sp/>d<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>sqrt(gd)<sp/><sp/><sp/><sp/><sp/><sp/><sp/>gd<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>g<sp/><sp/><sp/><sp/><sp/><sp/><sp/>g<sp/><sp/><sp/><sp/><sp/><sp/><sp/>sqrt(g/d)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>gd<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="239"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n#*******************************************************************************&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="240"><highlight class="normal"></highlight></codeline>
+<codeline lineno="241"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(I<sp/>=<sp/>0;<sp/>I<sp/>&lt;=<sp/><ref refid="_headers_8h_1a58e2c29a4baf54159834ba079d08f602" kindref="member">Nprofiles</ref><sp/>;<sp/>++I)</highlight></codeline>
+<codeline lineno="242"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>X<sp/>=<sp/>0.5<sp/>*<sp/><ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref><sp/>*<sp/>I/(<ref refid="_headers_8h_1a58e2c29a4baf54159834ba079d08f602" kindref="member">Nprofiles</ref>);</highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>eta<sp/>=<sp/><ref refid="_inout_8cpp_1a87e6c7f1f2eece776c2c07f229ef4023" kindref="member">Surface</ref>(X);</highlight></codeline>
+<codeline lineno="245"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n\n#<sp/>X/d<sp/>=<sp/>%8.4f,<sp/>Phase<sp/>=<sp/>%6.1f°\n&quot;</highlight><highlight class="normal">,<sp/>X,<sp/>X/<ref refid="_headers_8h_1a499d78bdc2c754c7a4cf8d39ed245e9f" kindref="member">L</ref>*360);</highlight></codeline>
+<codeline lineno="246"><highlight class="normal"></highlight></codeline>
+<codeline lineno="247"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(i=0<sp/>;<sp/>i<sp/>&lt;=<sp/><ref refid="_headers_8h_1ae4f2bca90b1de69264be2795bdcd001d" kindref="member">Points</ref>;<sp/>++i)</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="249"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>y<sp/>=<sp/>(i)*eta/(<ref refid="_headers_8h_1ae4f2bca90b1de69264be2795bdcd001d" kindref="member">Points</ref>);</highlight></codeline>
+<codeline lineno="250"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_inout_8cpp_1a43cf233a8e98e1885cbf6a138fc05081" kindref="member">Point</ref>(X,<sp/>y);</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n%7.4f\t%7.4f\t%7.4f\t%7.4f\t%7.4f\t%7.4f\t%7.4f\t%7.4f\t%7.4f&quot;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="252"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>y,<sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>,<sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,<sp/><ref refid="_headers_8h_1a347de017615607348d9496c352f2f6e4" kindref="member">dphidt</ref>,<sp/><ref refid="_headers_8h_1a9e4b770383e9f981e0936b9e817dbe0d" kindref="member">ut</ref>,<sp/><ref refid="_headers_8h_1ab95e531ab677a7d3e6c4722a0314dc16" kindref="member">vt</ref>,<sp/><ref refid="_headers_8h_1a630fcf9a038e13713f56aedeb723f019" kindref="member">ux</ref>,<sp/><ref refid="_headers_8h_1ab2abb77f1a9fe8d1be7b3306797d1612" kindref="member">uy</ref>,<sp/><ref refid="_headers_8h_1a6246c5264b2f72ebaf8690aab8288e1a" kindref="member">Bernoulli_check</ref>);</highlight></codeline>
+<codeline lineno="253"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="254"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="255"><highlight class="normal">fprintf(Flowfield,<sp/><sp/></highlight><highlight class="stringliteral">&quot;\n\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="256"><highlight class="normal"></highlight></codeline>
+<codeline lineno="257"><highlight class="normal"></highlight><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="258"><highlight class="comment">Procedure<sp/>for<sp/>recording<sp/>every<sp/>run<sp/>-<sp/>not<sp/>activated<sp/>in<sp/>distribution<sp/>versions</highlight></codeline>
+<codeline lineno="259"><highlight class="comment">If<sp/>the<sp/>lines<sp/>below<sp/>are<sp/>not<sp/>commented<sp/>out<sp/>the<sp/>program<sp/>will<sp/>add<sp/>a<sp/>line<sp/>to<sp/>a</highlight></codeline>
+<codeline lineno="260"><highlight class="comment">file<sp/>Catalogue.res,<sp/>which<sp/>could<sp/>have<sp/>this<sp/>as<sp/>a<sp/>header:</highlight></codeline>
+<codeline lineno="261"><highlight class="comment"></highlight></codeline>
+<codeline lineno="262"><highlight class="comment">#<sp/>A<sp/>continuing<sp/>record<sp/>of<sp/>all<sp/>runs<sp/>with<sp/>Fourier,<sp/>Cnoidal,<sp/>or<sp/>Stokes.</highlight></codeline>
+<codeline lineno="263"><highlight class="comment">#<sp/>Any<sp/>run<sp/>of<sp/>those<sp/>programs<sp/>adds<sp/>a<sp/>line<sp/>to<sp/>it.</highlight></codeline>
+<codeline lineno="264"><highlight class="comment">#<sp/>This<sp/>can<sp/>be<sp/>edited<sp/>at<sp/>any<sp/>time.</highlight></codeline>
+<codeline lineno="265"><highlight class="comment">#<sp/>Columns<sp/>are:<sp/>name<sp/>of<sp/>theory,<sp/>N,<sp/>H/d,<sp/>L/d,<sp/>Stokes-Ursell<sp/>Number,</highlight></codeline>
+<codeline lineno="266"><highlight class="comment">#<sp/>wave<sp/>height<sp/>as<sp/>a<sp/>percentage<sp/>of<sp/>the<sp/>highest<sp/>possible<sp/>for<sp/>that<sp/>L/d,</highlight></codeline>
+<codeline lineno="267"><highlight class="comment">#<sp/>mean<sp/>horizontal<sp/>velocity<sp/>on<sp/>a<sp/>vertical<sp/>line<sp/>under<sp/>the<sp/>crest.</highlight></codeline>
+<codeline lineno="268"><highlight class="comment"></highlight></codeline>
+<codeline lineno="269"><highlight class="comment">#<sp/>Theory<sp/>n<sp/><sp/><sp/>H/d<sp/><sp/><sp/><sp/><sp/><sp/><sp/>L/d<sp/><sp/><sp/><sp/><sp/>S-U<sp/>Highest%<sp/>u_crest_mean</highlight></codeline>
+<codeline lineno="270"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="271"><highlight class="normal"></highlight></codeline>
+<codeline lineno="272"><highlight class="normal"></highlight><highlight class="comment">//<sp/>To<sp/>activate,<sp/>de-comment<sp/>these<sp/>lines</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="273"><highlight class="normal"></highlight><highlight class="comment">/***************************************************************************</highlight></codeline>
+<codeline lineno="274"><highlight class="comment">FILE<sp/>*Output1;</highlight></codeline>
+<codeline lineno="275"><highlight class="comment">double<sp/>Velo[Points+1],<sp/>sum1,<sp/>sum2,<sp/>ucm;</highlight></codeline>
+<codeline lineno="276"><highlight class="comment">Output1<sp/>=<sp/>fopen(Diagname,&quot;a&quot;);</highlight></codeline>
+<codeline lineno="277"><highlight class="comment"></highlight></codeline>
+<codeline lineno="278"><highlight class="comment">X<sp/>=<sp/>0.;</highlight></codeline>
+<codeline lineno="279"><highlight class="comment">eta<sp/>=<sp/>Surface(X);</highlight></codeline>
+<codeline lineno="280"><highlight class="comment"></highlight></codeline>
+<codeline lineno="281"><highlight class="comment">for(i=0<sp/>;<sp/>i<sp/>&lt;=<sp/>Points;<sp/>++i)</highlight></codeline>
+<codeline lineno="282"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="283"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>y<sp/>=<sp/>(i)*eta/(Points);</highlight></codeline>
+<codeline lineno="284"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Point(X,<sp/>y);</highlight></codeline>
+<codeline lineno="285"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Velo[i]<sp/>=<sp/>u;</highlight></codeline>
+<codeline lineno="286"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="287"><highlight class="comment"></highlight></codeline>
+<codeline lineno="288"><highlight class="comment">for(i=1,<sp/>sum1=0;<sp/>i<sp/>&lt;=<sp/>Points-1;<sp/>i+=2)<sp/>sum1<sp/>+=<sp/>Velo[i];</highlight></codeline>
+<codeline lineno="289"><highlight class="comment">for(i=2,<sp/>sum2=0;<sp/>i<sp/>&lt;=<sp/>Points-2;<sp/>i+=2)<sp/>sum2<sp/>+=<sp/>Velo[i];</highlight></codeline>
+<codeline lineno="290"><highlight class="comment">ucm<sp/>=<sp/>(Velo[0]+4*sum1+2*sum2+Velo[Points])/3./Points;</highlight></codeline>
+<codeline lineno="291"><highlight class="comment"></highlight></codeline>
+<codeline lineno="292"><highlight class="comment">I<sp/>=<sp/>strlen(Theory)+1;</highlight></codeline>
+<codeline lineno="293"><highlight class="comment">for(i=I;<sp/>i<sp/>&lt;=8<sp/>;<sp/>++i)<sp/>strcat(Theory,&quot;<sp/>&quot;);</highlight></codeline>
+<codeline lineno="294"><highlight class="comment">fprintf(Output1,&quot;\n%s%2d\t%7.4f\t%8.3f\t%7.3f\t%3.0f\t%7.4f&quot;,</highlight></codeline>
+<codeline lineno="295"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Theory,<sp/>n,<sp/>H,<sp/>L,<sp/>0.5*z[2]/pow(z[1],3),<sp/>z[2]/z[1]/Highest*100.,<sp/>ucm);</highlight></codeline>
+<codeline lineno="296"><highlight class="comment">*************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="297"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="298"><highlight class="normal"></highlight></codeline>
+<codeline lineno="299"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Surface<sp/>elevation</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="300"><highlight class="normal"></highlight></codeline>
+<codeline lineno="301" refid="_inout_8cpp_1a87e6c7f1f2eece776c2c07f229ef4023" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1a87e6c7f1f2eece776c2c07f229ef4023" kindref="member">Surface</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>x)</highlight></codeline>
+<codeline lineno="302"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="303"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>j;</highlight></codeline>
+<codeline lineno="304"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>kEta;</highlight></codeline>
+<codeline lineno="305"><highlight class="normal"></highlight></codeline>
+<codeline lineno="306"><highlight class="normal">kEta<sp/>=<sp/><ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>;</highlight></codeline>
+<codeline lineno="307"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>j<sp/>=<sp/>1<sp/>;<sp/>j<sp/>&lt;<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>j++<sp/>)</highlight></codeline>
+<codeline lineno="308"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>kEta<sp/>+=<sp/><ref refid="_headers_8h_1aa565e3a13199f860447a094f48c9dd6b" kindref="member">Y</ref>[j]<sp/>*<sp/>cos(j*x*<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="309"><highlight class="normal">kEta<sp/>+=<sp/>0.5*<ref refid="_headers_8h_1aa565e3a13199f860447a094f48c9dd6b" kindref="member">Y</ref>[<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>]<sp/>*<sp/>cos(<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>*x*<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="310"><highlight class="normal"></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>(kEta/<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="311"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="312"><highlight class="normal"></highlight></codeline>
+<codeline lineno="313"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Velocities,<sp/>accelerations,<sp/>and<sp/>pressure<sp/>at<sp/>a<sp/>point</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="314"><highlight class="normal"></highlight></codeline>
+<codeline lineno="315" refid="_inout_8cpp_1a43cf233a8e98e1885cbf6a138fc05081" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_inout_8cpp_1a43cf233a8e98e1885cbf6a138fc05081" kindref="member">Point</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>X,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>y)</highlight></codeline>
+<codeline lineno="316"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="317"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>j;</highlight></codeline>
+<codeline lineno="318"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>Cosh,<sp/>Sinh,<sp/>Sin,<sp/>Cos;</highlight></codeline>
+<codeline lineno="319"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>coshdelta,sinhdelta;</highlight></codeline>
+<codeline lineno="320"><highlight class="normal"></highlight></codeline>
+<codeline lineno="321"><highlight class="normal"><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref><sp/>=<sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref><sp/>=<sp/><ref refid="_headers_8h_1a630fcf9a038e13713f56aedeb723f019" kindref="member">ux</ref><sp/>=<sp/><ref refid="_headers_8h_1ae920d60831fd60b11f1b758a12e87eff" kindref="member">vx</ref><sp/>=<sp/><ref refid="_headers_8h_1ace0097aceb19d2d05a51f5d244573c4f" kindref="member">phi</ref><sp/>=<sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref><sp/>=<sp/>0.;</highlight></codeline>
+<codeline lineno="322"><highlight class="normal"></highlight></codeline>
+<codeline lineno="323"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>j<sp/>=<sp/>1<sp/>;<sp/>j<sp/>&lt;=<sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>j++<sp/>)</highlight></codeline>
+<codeline lineno="324"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="325"><highlight class="normal"><sp/><sp/><sp/>Cos<sp/><sp/>=<sp/>cos(j*X*<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="326"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Sin<sp/><sp/>=<sp/>sin(j*X*<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>);</highlight></codeline>
+<codeline lineno="327"><highlight class="normal"><sp/><sp/><sp/>coshdelta<sp/>=<sp/>cosh(j*<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>*(y-1.));</highlight></codeline>
+<codeline lineno="328"><highlight class="normal"><sp/><sp/><sp/>sinhdelta<sp/>=<sp/>sinh(j*<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>*(y-1.));</highlight></codeline>
+<codeline lineno="329"><highlight class="normal"><sp/><sp/><sp/>Cosh<sp/>=<sp/>coshdelta+sinhdelta*<ref refid="_headers_8h_1ac39fb431d54fa94a455bbdf2e4d91fff" kindref="member">Tanh</ref>[j];</highlight></codeline>
+<codeline lineno="330"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Sinh<sp/>=<sp/>sinhdelta+coshdelta*<ref refid="_headers_8h_1ac39fb431d54fa94a455bbdf2e4d91fff" kindref="member">Tanh</ref>[j];</highlight></codeline>
+<codeline lineno="331"><highlight class="normal"><sp/><sp/><sp/><ref refid="_headers_8h_1ace0097aceb19d2d05a51f5d244573c4f" kindref="member">phi</ref><sp/>+=<sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref>[j]<sp/>*<sp/>Cosh<sp/>*<sp/>Sin;</highlight></codeline>
+<codeline lineno="332"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref><sp/>+=<sp/>j<sp/>*<sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref>[j]<sp/>*<sp/>Cosh<sp/>*<sp/>Cos;</highlight></codeline>
+<codeline lineno="333"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref><sp/>+=<sp/>j<sp/>*<sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref>[j]<sp/>*<sp/>Sinh<sp/>*<sp/>Sin;</highlight></codeline>
+<codeline lineno="334"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1a630fcf9a038e13713f56aedeb723f019" kindref="member">ux</ref><sp/>+=<sp/>-<sp/>j<sp/>*<sp/>j<sp/>*<sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref>[j]<sp/>*<sp/>Cosh<sp/>*<sp/>Sin;</highlight></codeline>
+<codeline lineno="335"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1ae920d60831fd60b11f1b758a12e87eff" kindref="member">vx</ref><sp/>+=<sp/>j<sp/>*<sp/>j<sp/>*<sp/><ref refid="_headers_8h_1a713b4ebff2afa5e6dd2945d5f83f6307" kindref="member">B</ref>[j]<sp/>*<sp/>Sinh<sp/>*<sp/>Cos;</highlight></codeline>
+<codeline lineno="336"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="337"><highlight class="normal"></highlight></codeline>
+<codeline lineno="338"><highlight class="normal"></highlight><highlight class="comment">//<sp/>All<sp/>PHI,<sp/>PSI,<sp/>u,<sp/>v,<sp/>ux<sp/>and<sp/>vx<sp/>are<sp/>dimensionless<sp/>w.r.t.<sp/>g<sp/>&amp;<sp/>k.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="339"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Now<sp/>convert<sp/>to<sp/>dimensionless<sp/>w.r.t.<sp/>d.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="340"><highlight class="normal"></highlight></codeline>
+<codeline lineno="341"><highlight class="normal"><ref refid="_headers_8h_1ace0097aceb19d2d05a51f5d244573c4f" kindref="member">phi</ref><sp/>/=<sp/>pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,1.5);</highlight></codeline>
+<codeline lineno="342"><highlight class="normal"><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref><sp/>/=<sp/>pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,0.5);</highlight></codeline>
+<codeline lineno="343"><highlight class="normal"><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref><sp/>/=<sp/>pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,0.5);</highlight></codeline>
+<codeline lineno="344"><highlight class="normal"><ref refid="_headers_8h_1a630fcf9a038e13713f56aedeb723f019" kindref="member">ux</ref><sp/>*=<sp/>pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,0.5);</highlight></codeline>
+<codeline lineno="345"><highlight class="normal"><ref refid="_headers_8h_1ae920d60831fd60b11f1b758a12e87eff" kindref="member">vx</ref><sp/>*=<sp/>pow(<ref refid="_headers_8h_1a572e157cebed05acf68fca88e9c9579a" kindref="member">kd</ref>,0.5);</highlight></codeline>
+<codeline lineno="346"><highlight class="normal"></highlight></codeline>
+<codeline lineno="347"><highlight class="normal"><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref><sp/>=<sp/><ref refid="_headers_8h_1a576d0ef34cb2180b614d05f257a76567" kindref="member">ce</ref><sp/>+<sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>;</highlight></codeline>
+<codeline lineno="348"><highlight class="normal"><ref refid="_headers_8h_1ace0097aceb19d2d05a51f5d244573c4f" kindref="member">phi</ref><sp/>=<sp/><ref refid="_headers_8h_1a576d0ef34cb2180b614d05f257a76567" kindref="member">ce</ref><sp/>*<sp/>X<sp/>+<sp/><ref refid="_headers_8h_1ace0097aceb19d2d05a51f5d244573c4f" kindref="member">phi</ref>;</highlight></codeline>
+<codeline lineno="349"><highlight class="normal"><ref refid="_headers_8h_1a347de017615607348d9496c352f2f6e4" kindref="member">dphidt</ref><sp/>=<sp/>-<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref><sp/>*<sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>;</highlight></codeline>
+<codeline lineno="350"><highlight class="normal"></highlight></codeline>
+<codeline lineno="351"><highlight class="normal"><ref refid="_headers_8h_1a9e4b770383e9f981e0936b9e817dbe0d" kindref="member">ut</ref><sp/>=<sp/>-<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref><sp/>*<sp/><ref refid="_headers_8h_1a630fcf9a038e13713f56aedeb723f019" kindref="member">ux</ref>;</highlight></codeline>
+<codeline lineno="352"><highlight class="normal"><ref refid="_headers_8h_1ab95e531ab677a7d3e6c4722a0314dc16" kindref="member">vt</ref><sp/>=<sp/>-<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref><sp/>*<sp/><ref refid="_headers_8h_1ae920d60831fd60b11f1b758a12e87eff" kindref="member">vx</ref>;</highlight></codeline>
+<codeline lineno="353"><highlight class="normal"><ref refid="_headers_8h_1ab2abb77f1a9fe8d1be7b3306797d1612" kindref="member">uy</ref><sp/>=<sp/><ref refid="_headers_8h_1ae920d60831fd60b11f1b758a12e87eff" kindref="member">vx</ref>;</highlight></codeline>
+<codeline lineno="354"><highlight class="normal"><ref refid="_headers_8h_1a9891a031d6c4d31d28333ae6e6f6b746" kindref="member">vy</ref><sp/>=<sp/>-<ref refid="_headers_8h_1a630fcf9a038e13713f56aedeb723f019" kindref="member">ux</ref>;</highlight></codeline>
+<codeline lineno="355"><highlight class="normal"><ref refid="_headers_8h_1add244ad89e3638ad32211f7ecdab7831" kindref="member">dudt</ref><sp/>=<sp/><ref refid="_headers_8h_1a9e4b770383e9f981e0936b9e817dbe0d" kindref="member">ut</ref><sp/>+<sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>*<ref refid="_headers_8h_1a630fcf9a038e13713f56aedeb723f019" kindref="member">ux</ref><sp/>+<sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>*<ref refid="_headers_8h_1ab2abb77f1a9fe8d1be7b3306797d1612" kindref="member">uy</ref>;</highlight></codeline>
+<codeline lineno="356"><highlight class="normal"><ref refid="_headers_8h_1a047d769bf00fe5c3be2f98b865f8f689" kindref="member">dvdt</ref><sp/>=<sp/><ref refid="_headers_8h_1ab95e531ab677a7d3e6c4722a0314dc16" kindref="member">vt</ref><sp/>+<sp/><ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>*<ref refid="_headers_8h_1ae920d60831fd60b11f1b758a12e87eff" kindref="member">vx</ref><sp/>+<sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>*<ref refid="_headers_8h_1a9891a031d6c4d31d28333ae6e6f6b746" kindref="member">vy</ref>;</highlight></codeline>
+<codeline lineno="357"><highlight class="normal"><ref refid="_headers_8h_1a1a4dd154b77e2e56f793a399214d9296" kindref="member">Pressure</ref><sp/>=<sp/><ref refid="_headers_8h_1ac8e838e6f10957014cfbeb426045ceea" kindref="member">R</ref><sp/>-<sp/>y<sp/>-<sp/>0.5<sp/>*<sp/>((<ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>-<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>)*(<ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>-<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>)+<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>);</highlight></codeline>
+<codeline lineno="358"><highlight class="normal"><ref refid="_headers_8h_1a6246c5264b2f72ebaf8690aab8288e1a" kindref="member">Bernoulli_check</ref><sp/>=<sp/><ref refid="_headers_8h_1a347de017615607348d9496c352f2f6e4" kindref="member">dphidt</ref><sp/>+<sp/><ref refid="_headers_8h_1a1a4dd154b77e2e56f793a399214d9296" kindref="member">Pressure</ref><sp/>+<sp/>y<sp/>+<sp/>0.5*(<ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>*<ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>+<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>)-(<ref refid="_headers_8h_1ac8e838e6f10957014cfbeb426045ceea" kindref="member">R</ref>-0.5*<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>*<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>);</highlight></codeline>
+<codeline lineno="359"><highlight class="normal"></highlight></codeline>
+<codeline lineno="360"><highlight class="normal"></highlight><highlight class="keywordflow">return</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="361"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="362"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Inout.cpp"/>
+  </compounddef>
+</doxygen>

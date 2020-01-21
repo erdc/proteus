@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['lapackwrappers',['lapackWrappers',['../group__lapack_wrappers.html',1,'']]]
+  ['numericalflux_4841',['numericalFlux',['../group__numerical_flux.html',1,'']]]
 ];

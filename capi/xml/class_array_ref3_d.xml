@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_array_ref3_d" kind="class" language="C++" prot="public">
+    <compoundname>ArrayRef3D</compoundname>
+    <includes refid="_array_ref_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h</includes>
+    <templateparamlist>
+      <param>
+        <type>class <ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref></type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_array_ref3_d_1a62e63f064b3ead06ea7ff5806e332abb" prot="private" static="no" mutable="no">
+        <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> *</type>
+        <definition>T* ArrayRef3D&lt; T &gt;::values</definition>
+        <argsstring></argsstring>
+        <name>values</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="30" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_array_ref3_d_1a30e94c49905a1b1c970604043cc64232" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int ArrayRef3D&lt; T &gt;::dimension1</definition>
+        <argsstring></argsstring>
+        <name>dimension1</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="31" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_array_ref3_d_1ab1ed5724129b349e0f5c554a90e824fb" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int ArrayRef3D&lt; T &gt;::dimension2</definition>
+        <argsstring></argsstring>
+        <name>dimension2</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="32" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_array_ref3_d_1a8222bc9198387dcda3d82f97083dd64f" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int ArrayRef3D&lt; T &gt;::dimension3</definition>
+        <argsstring></argsstring>
+        <name>dimension3</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="33" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_array_ref3_d_1a23e5e7d1063847fe4941e866ed4d8c1d" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int ArrayRef3D&lt; T &gt;::mult</definition>
+        <argsstring></argsstring>
+        <name>mult</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="34" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_array_ref3_d_1a675aabd650ace836d947377f332703cf" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ArrayRef3D&lt; T &gt;::ArrayRef3D</definition>
+        <argsstring>(T *vals, int dim1, int dim2, int dim3)</argsstring>
+        <name>ArrayRef3D</name>
+        <param>
+          <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> *</type>
+          <declname>vals</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim1</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim2</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim3</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="37" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="37" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="function" id="class_array_ref3_d_1a59840622c8279cc9e36ebeeea8daa92b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="class_array_ref2_d" kindref="compound">ArrayRef2D</ref>&lt; <ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> &gt;</type>
+        <definition>ArrayRef2D&lt;T&gt; ArrayRef3D&lt; T &gt;::operator[]</definition>
+        <argsstring>(int i)</argsstring>
+        <name>operator[]</name>
+        <param>
+          <type>int</type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="38" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="38" bodyend="38"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="29" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="28" bodyend="39"/>
+    <listofallmembers>
+      <member refid="class_array_ref3_d_1a675aabd650ace836d947377f332703cf" prot="public" virt="non-virtual"><scope>ArrayRef3D</scope><name>ArrayRef3D</name></member>
+      <member refid="class_array_ref3_d_1a30e94c49905a1b1c970604043cc64232" prot="private" virt="non-virtual"><scope>ArrayRef3D</scope><name>dimension1</name></member>
+      <member refid="class_array_ref3_d_1ab1ed5724129b349e0f5c554a90e824fb" prot="private" virt="non-virtual"><scope>ArrayRef3D</scope><name>dimension2</name></member>
+      <member refid="class_array_ref3_d_1a8222bc9198387dcda3d82f97083dd64f" prot="private" virt="non-virtual"><scope>ArrayRef3D</scope><name>dimension3</name></member>
+      <member refid="class_array_ref3_d_1a23e5e7d1063847fe4941e866ed4d8c1d" prot="private" virt="non-virtual"><scope>ArrayRef3D</scope><name>mult</name></member>
+      <member refid="class_array_ref3_d_1a59840622c8279cc9e36ebeeea8daa92b" prot="public" virt="non-virtual"><scope>ArrayRef3D</scope><name>operator[]</name></member>
+      <member refid="class_array_ref3_d_1a62e63f064b3ead06ea7ff5806e332abb" prot="private" virt="non-virtual"><scope>ArrayRef3D</scope><name>values</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

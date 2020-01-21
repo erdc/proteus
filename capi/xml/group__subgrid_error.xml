@@ -1,0 +1,3754 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="group__subgrid_error" kind="group">
+    <compoundname>subgridError</compoundname>
+    <title>subgridError</title>
+    <innerfile refid="subgrid_error_8c">subgridError.c</innerfile>
+      <sectiondef kind="user-defined">
+      <memberdef kind="function" id="group__subgrid_error_1ga6f21189484624fdbb76d00876bd58016" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_p_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, int *rowptr, int *colind, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_p_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="132" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="132" bodyend="219"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga5cb9388a11d079a4fef9db5fbab0dbb6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_1_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, int *rowptr, int *colind, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_1_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="304" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="304" bodyend="389"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga195000a5bdd76051cc09b8e0903e76bc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_2_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, int *rowptr, int *colind, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_2_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="484" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="484" bodyend="578"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga216855e72b06a303f8d05b68c7ddc717" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_generic_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, int *rowptr, int *colind, double *inverseJ, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_generic_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="699" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="699" bodyend="821"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga4774d4131e1477b4ee403c2e8b9b2574" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, int *rowptr, int *colind, char stabilization, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>stabilization</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="851" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="851" bodyend="875"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gaecda68c327adbd0d31128283ddb01ca5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_GLS_velocity_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_GLS_velocity_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="1072" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1072" bodyend="1152"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga3d5fde7234cc58057ae384b8d270cf41" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes3D_GLS_velocity_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorStokes3D_GLS_velocity_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="1268" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1268" bodyend="1377"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga628d5ae6cd68c0c2deab3c00fee000c6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_GLS_velocity_pressure_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_GLS_velocity_pressure_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="1498" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1498" bodyend="1612"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga76bd5227634be0937d8ef4758d3acc8e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes3D_GLS_velocity_pressure_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorStokes3D_GLS_velocity_pressure_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="1763" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1763" bodyend="1908"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga955e76f41a48e07c42d8e608a29602ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_GLS_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double hFactor, double *elementDiameter, double *dmt, double *dm, double *f, double *a, double *tau0, double *tau1, double *cfl)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_GLS_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>hFactor</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="2020" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2020" bodyend="2123"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gac3ba20dbdf75c7ae82e9e665a27b6544" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_generic_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *inverseJ, double *dmt, double *dm, double *f, double *a, double *tau0, double *tau1, double *cfl)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_generic_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="2215" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2215" bodyend="2303"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga3d7c94ffdedf2887d7df31f5c7ed14b6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_generic_withBodyForce_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *inverseJ, double *dmt, double *dm, double *f, double *a, double *dr, double *tau0, double *tau1, double *cfl)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_generic_withBodyForce_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="2304" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2304" bodyend="2398"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga12ebc3949c1beb31d1bb97ef8276b4ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_generic_withBodyForce_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *inverseJ, double *dmt, double *dm, double *f, double *a, double *dr, double *tau0, double *tau1, double *cfl)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_generic_withBodyForce_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="2400" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2400" bodyend="2494"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gabb5f44066bdf220976bbc0c43fd1b5df" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_GLS_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *dpdeResidualU_dv, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_du, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *dsubgridErrorU_dv, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_du, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_GLS_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="2499" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2499" bodyend="2627"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga51194e5ab8e3a306279ffc4859841765" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes3D_GLS_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *dpdeResidualU_dv, double *dpdeResidualU_dw, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_du, double *dpdeResidualV_dv, double *dpdeResidualV_dw, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_du, double *dpdeResidualW_dv, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *dsubgridErrorU_dv, double *dsubgridErrorU_dw, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_du, double *dsubgridErrorV_dv, double *dsubgridErrorV_dw, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_du, double *dsubgridErrorW_dv, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorNavierStokes3D_GLS_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="2950" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2950" bodyend="3158"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gaa5450c9fa9d59f4e7ac1fd6e12c1e5c3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes3D_GLS_velocity_pressure_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *dm, double *f, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorNavierStokes3D_GLS_velocity_pressure_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="3312" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="3312" bodyend="3459"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga568e995679eab617d8c57535d0c2b7d8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_1_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *u, double *v, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_dp, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *dsubgridErrorU_dv, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_du, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_1_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="3715" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="3715" bodyend="3964"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga105e9ff5da47a0f8d65fc566bd0bba92" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorShallowWater1D</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, double g, double *elementDiameter, double *h, double *hu, double *cfl_1, double *cfl_2)</argsstring>
+        <name>calculateSubgridErrorShallowWater1D</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>h</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>hu</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl_1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl_2</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="3966" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="3966" bodyend="3987"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gaabeb04d2066f8ef96b9a02b88265bfdd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorShallowWater2D</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, double g, double *elementDiameter, double *h, double *hu, double *hv, double *cfl_1, double *cfl_2, double *cfl_3)</argsstring>
+        <name>calculateSubgridErrorShallowWater2D</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>h</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>hu</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>hv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl_1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl_2</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl_3</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="3988" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="3988" bodyend="4014"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gac826736edd80832312eaddce9c85c590" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_Harari_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double dt, int *rowptr, int *colind, double *elementDiameter, double *a, double *tau)</argsstring>
+        <name>calculateSubgridError_Harari_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="4017" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="4017" bodyend="4058"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gaf051f37c9496421fe2d18f93c7f59b03" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorGradient_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *tau_gradient, double *grad_pdeResidual, double *grad_subgridError)</argsstring>
+        <name>calculateSubgridErrorGradient_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau_gradient</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_pdeResidual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_subgridError</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the ASGS subgrid error given tau and the strong residual. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="4064" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="4064" bodyend="4087"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gaff69d975a40150f27a43d320d9c33393" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_Sangalli_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *inverseJ, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau, double *tau_gradient)</argsstring>
+        <name>calculateSubgridError_ADR_Sangalli_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau_gradient</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="4091" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="4091" bodyend="4242"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga2dff161ca874f3e344d0e7119bd539ad" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_Sangalli_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, int *rowptr, int *colind, double *inverseJ, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau, double *tau_gradient)</argsstring>
+        <name>calculateSubgridError_ADR_Sangalli_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau_gradient</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" line="4244" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="4244" bodyend="4477"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group__subgrid_error_1ga6c9bb7bf386e1b5fb95af717c7bba311" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, double *tau, double *pdeResidual, double *dpdeResidual, double *subgridError, double *dsubgridError)</argsstring>
+        <name>calculateSubgridError_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridError</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridError</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the ASGS subgrid error given tau and the strong residual. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="17" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="12" bodyend="44" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="17" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga67672b477eccbd5bd8a5abb25024a82d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_generic_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *inverseJ, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_generic_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="27" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="580" bodyend="697" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="27" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga05fbee4c84a2d90c0ab437fad2204915" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_generic_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *inverseJ, double *dmt, double *dm, double *f, double *a, double *tau0, double *tau1, double *cfl)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_generic_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>inverseJ</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="41" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2125" bodyend="2214" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="41" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gadd72739d77678a3e34c4e551ca6163e7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_p</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_p</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the peclet number formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="52" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="49" bodyend="130" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="52" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga19c0fd9e0c98798fa7d095edbcf0990c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_1</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_1</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="68" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="224" bodyend="303" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="68" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga822c8ac4f2a0e44d98a1207e354ead86" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau_2</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau_2</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_2 norm&quot; formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="84" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="394" bodyend="482" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="84" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga8820a65285a4a112f8da14e2fa76ba0b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_ADR_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, char stabilization, double *elementDiameter, double *dmt, double *df, double *a, double *da, double *grad_phi, double *dphi, double *dr, double *pe, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_ADR_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>stabilization</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pe</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="100" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="826" bodyend="849" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="100" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gadcf8c07c457e78fd959f3964c105e558" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_A_tau_1</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_A_tau_1</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_2 norm&quot; formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="117" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="880" bodyend="918" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="117" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gac8cade2f2590e6616eca56452dc7d5dc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_A_tau_2</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *df, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_A_tau_2</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_2 norm&quot; formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="127" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="923" bodyend="966" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="127" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gabe686b9b5f32f06a7c787f53b77ba0c5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridError_A_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, char stabilization, double *elementDiameter, double *dmt, double *df, double *cfl, double *tau)</argsstring>
+        <name>calculateSubgridError_A_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>stabilization</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="137" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="971" bodyend="985" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="137" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga7922c98269db7125db89cbd931cb5bfe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_GLS_velocity</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_GLS_velocity</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the subgrid error for velocity in 2D Stokes equation with a GLS-like formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="148" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="990" bodyend="1070" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="148" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga35c4dc223b3a5ecdcf113de84f33aed5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes3D_GLS_velocity</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorStokes3D_GLS_velocity</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the subgrid error for velocity in 3D Stokes equation with a GLS-like formula. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="168" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1157" bodyend="1266" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="168" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gae9106e9cf9de6b084d11dc52fbec5059" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_GLS_velocity_pressure</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_GLS_velocity_pressure</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="194" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1382" bodyend="1496" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="194" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga589c59dccad8b1a96f801ae5b86bfca2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes3D_GLS_velocity_pressure</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorStokes3D_GLS_velocity_pressure</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="220" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1617" bodyend="1762" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="220" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga57653d84de0b215d83923c5cb6bd4aa6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes2D_GLS_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double hFactor, double *elementDiameter, double *dmt, double *dm, double *f, double *a, double *tau0, double *tau1, double *cfl)</argsstring>
+        <name>calculateSubgridErrorNavierStokes2D_GLS_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>hFactor</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="254" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="1914" bodyend="2018" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="254" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga7521a7ee9c8a56c0db7c38cce5c11dec" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes_GLS_tau</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dH, double *a, double *tau0, double *tau1)</argsstring>
+        <name>calculateSubgridErrorStokes_GLS_tau</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="268" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2632" bodyend="2655" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="268" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gadd765a125b63b789fe545c6909d88ff8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes_GLS_tau_sd</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dH, double *a, double *tau0, double *tau1)</argsstring>
+        <name>calculateSubgridErrorStokes_GLS_tau_sd</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="278" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2657" bodyend="2680" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="278" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga6a59597ab29928775b48be851b328506" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_GLS_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_GLS_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="288" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2685" bodyend="2793" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="288" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1gac0f3d18568b952ee0c092c94aff92ae4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes3D_GLS_tauRes</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorStokes3D_GLS_tauRes</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau0</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>tau1</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>3D version of Stokes GLS tau </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="315" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="2797" bodyend="2945" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="315" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga17a01ed7a53bd1eecf50f1286a3fbe82" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorNavierStokes3D_GLS_velocity_pressure</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *dm, double *f, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_dw)</argsstring>
+        <name>calculateSubgridErrorNavierStokes3D_GLS_velocity_pressure</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualW_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dw</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorW</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorW_dw</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="349" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="3163" bodyend="3310" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="349" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__subgrid_error_1ga2c5989bf014a0df1155745f37f1a78df" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void calculateSubgridErrorStokes2D_1</definition>
+        <argsstring>(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *elementDiameter, double *u, double *v, double *a, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_dp, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *dsubgridErrorU_dv, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_du, double *dsubgridErrorV_dv)</argsstring>
+        <name>calculateSubgridErrorStokes2D_1</name>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nQuadraturePoints_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nDOF_trial_element</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nSpace</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>pdeResidualV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dpdeResidualV_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorP</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorP_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorU</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorU_dv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>subgridErrorV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dp</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_du</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dsubgridErrorV_dv</declname>
+        </param>
+        <briefdescription>
+<para>Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the &quot;l_1 norm formula&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" line="385" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.c" bodystart="3464" bodyend="3713" declfile="/home/tridelat/PROTEUS/proteus2/proteus/subgridError.h" declline="385" declcolumn="13"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>c implementation of multiscale fem subgrid error approximations </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

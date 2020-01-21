@@ -1,0 +1,2550 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classproteus_1_1_m_corr" kind="class" language="C++" prot="public">
+    <compoundname>proteus::MCorr</compoundname>
+    <basecompoundref refid="classproteus_1_1_m_corr__base" prot="public" virt="non-virtual">proteus::MCorr_base</basecompoundref>
+    <includes refid="_m_corr_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h</includes>
+    <templateparamlist>
+      <param>
+        <type>class CompKernelType</type>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nSpace</declname>
+        <defname>nSpace</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQuadraturePoints_element</declname>
+        <defname>nQuadraturePoints_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_mesh_trial_element</declname>
+        <defname>nDOF_mesh_trial_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_trial_element</declname>
+        <defname>nDOF_trial_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_test_element</declname>
+        <defname>nDOF_test_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQuadraturePoints_elementBoundary</declname>
+        <defname>nQuadraturePoints_elementBoundary</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classproteus_1_1_m_corr_1a19d6fbfa421b21e2bad2fd7dedecf2f1" prot="public" static="no" mutable="no">
+        <type>CompKernelType</type>
+        <definition>CompKernelType proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::ck</definition>
+        <argsstring></argsstring>
+        <name>ck</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="478" column="22" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="478" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1_m_corr_1afc62f78ab928093bc050589d371506f8" prot="public" static="no" mutable="no">
+        <type><ref refid="namespaceproteus_1acdff9c5188c64d27db5cdf2669c2a849" kindref="member">GeneralizedFunctions</ref>&lt; nSpace, 1, nQuadraturePoints_element &gt;</type>
+        <definition>GeneralizedFunctions&lt;nSpace,1,nQuadraturePoints_element&gt; proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::gf</definition>
+        <argsstring></argsstring>
+        <name>gf</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="479" column="28" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="479" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1_m_corr_1a6d4ac62d75b559055e9fb20ab272f1cf" prot="public" static="no" mutable="no">
+        <type><ref refid="namespaceproteus_1acdff9c5188c64d27db5cdf2669c2a849" kindref="member">GeneralizedFunctions</ref>&lt; nSpace, 1, nDOF_trial_element &gt;</type>
+        <definition>GeneralizedFunctions&lt;nSpace,1,nDOF_trial_element&gt; proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::gf_nodes</definition>
+        <argsstring></argsstring>
+        <name>gf_nodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="480" column="28" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="480" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a59886621ff33796cc6be7057c0ee4d1a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::MCorr</definition>
+        <argsstring>()</argsstring>
+        <name>MCorr</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="481" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="481" bodyend="482"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a5638e7fe08d686ad53db2ea4ccec807b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::evaluateCoefficients</definition>
+        <argsstring>(const double &amp;epsHeaviside, const double &amp;epsDirac, const double &amp;phi, const double &amp;H, const double &amp;u, const double &amp;porosity, double &amp;r, double &amp;dr)</argsstring>
+        <name>evaluateCoefficients</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>epsHeaviside</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>epsDirac</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>phi</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>H</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>porosity</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>r</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="485" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="485" bodyend="496"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a6eff98060ad29142057190fb54c45163" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateElementResidual</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *q_phi, double *q_normal_phi, double *ebqe_phi, double *ebqe_normal_phi, double *q_H, double *q_u, double *q_n, double *ebqe_u, double *ebqe_n, double *q_r, double *q_porosity, int offset_u, int stride_u, double *elementResidual_u, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *element_u, int eN)</argsstring>
+        <name>calculateElementResidual</name>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementResidual_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>element_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="498" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="498" bodyend="664"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a7fe97cf709db9a6ac0f94d88c699a9be" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateResidual</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, int *r_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *phi_dof, double *q_phi, double *q_normal_phi, double *ebqe_phi, double *ebqe_normal_phi, double *q_H, double *q_u, double *q_n, double *ebqe_u, double *ebqe_n, double *q_r, double *q_porosity, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, bool useExact)</argsstring>
+        <name>calculateResidual</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1a3ec8f493b7ba5374cac6496f9c293ea8">calculateResidual</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>r_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="665" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="665" bodyend="892"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1ab8825c8baf8a41d28d1925d12244a792" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateElementJacobian</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *q_phi, double *q_normal_phi, double *q_H, double *q_porosity, double *elementJacobian_u_u, double *element_u, int eN)</argsstring>
+        <name>calculateElementJacobian</name>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementJacobian_u_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>element_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="894" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="894" bodyend="1040"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1adc782e3f5f73a00e8ce2910b035571b1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateJacobian</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *phi_dof, double *q_phi, double *q_normal_phi, double *q_H, double *q_porosity, int *csrRowIndeces_u_u, int *csrColumnOffsets_u_u, double *globalJacobian, bool useExact)</argsstring>
+        <name>calculateJacobian</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1a55c30429bb703b3d8ea4ce7a1fdbc5b2">calculateJacobian</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalJacobian</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="1042" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="1042" bodyend="1155"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a2d9a965fae1a15c6f8329693cb86388d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::elementSolve</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *q_phi, double *q_normal_phi, double *ebqe_phi, double *ebqe_normal_phi, double *q_H, double *q_u, double *q_n, double *ebqe_u, double *ebqe_n, double *q_r, double *q_porosity, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, int maxIts, double atol)</argsstring>
+        <name>elementSolve</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1af4cfb6f08ae0b8090a99f9b2f58254bd">elementSolve</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>maxIts</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>atol</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="1156" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="1156" bodyend="1426"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a7da4e3ecfdd1f5f52879b93095e242c5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::elementConstantSolve</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *q_phi, double *q_normal_phi, double *ebqe_phi, double *ebqe_normal_phi, double *q_H, double *q_u, double *q_n, double *ebqe_u, double *ebqe_n, double *q_r, double *q_porosity, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, int maxIts, double atol)</argsstring>
+        <name>elementConstantSolve</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1a44aa8d4a6844ebe450a3613dc341c768">elementConstantSolve</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>maxIts</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>atol</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="1427" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="1427" bodyend="1654"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a82f9cf29eeb5f45ee6f3900679b3e061" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::globalConstantRJ</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_owned, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *q_phi, double *q_normal_phi, double *ebqe_phi, double *ebqe_normal_phi, double *q_H, double *q_u, double *q_n, double *ebqe_u, double *ebqe_n, double *q_r, double *q_porosity, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, int maxIts, double atol, double constant_u, double *constantResidual, double *constantJacobian)</argsstring>
+        <name>globalConstantRJ</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1ac3972de6873dcf5136e4cf6bac9db09d">globalConstantRJ</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_owned</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>maxIts</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>atol</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>constant_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>constantResidual</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>constantJacobian</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="1656" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="1656" bodyend="1814"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1ae3b9ec63897311903813674ad61eb5e4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateMass</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_owned, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *phi_dof, double *q_phi, double *q_normal_phi, double *ebqe_phi, double *ebqe_normal_phi, double *q_H, double *q_u, double *q_n, double *ebqe_u, double *ebqe_n, double *q_r, double *q_porosity, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *globalMass, bool useExact)</argsstring>
+        <name>calculateMass</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1a94d087e24b93aa4263f4b4a7cb954f12">calculateMass</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_owned</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalMass</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="1816" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="1816" bodyend="1939"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1aece884d13deed0bedf0bf188a738fc83" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::setMassQuadrature</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *phi_l2g, double *elementDiameter, double *nodeDiametersArray, double *phi_dof, double *q_phi, double *q_normal_phi, double *ebqe_phi, double *ebqe_normal_phi, double *q_H, double *q_u, double *q_n, double *ebqe_u, double *ebqe_n, double *q_r, double *q_porosity, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *H_dof, bool useExact)</argsstring>
+        <name>setMassQuadrature</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1a6d3badfba8dcc972a0b60f60ea877d47">setMassQuadrature</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>phi_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>H_dof</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="1941" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="1941" bodyend="2075"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a68d516ed405b1d4a58dcc83dbe9e0262" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::FCTStep</definition>
+        <argsstring>(int NNZ, int numDOFs, double *lumped_mass_matrix, double *solH, double *solL, double *limited_solution, int *csrRowIndeces_DofLoops, int *csrColumnOffsets_DofLoops, double *MassMatrix)</argsstring>
+        <name>FCTStep</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1a97afe7020413bb1ef481cfd494e09d0a">FCTStep</reimplements>
+        <param>
+          <type>int</type>
+          <declname>NNZ</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>numDOFs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_mass_matrix</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>solH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>solL</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>limited_solution</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_DofLoops</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_DofLoops</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>MassMatrix</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="2077" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="2077" bodyend="2153"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1ae245d642ba2df18b37b661f9cddf33f2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateElementMassMatrix</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *q_phi, double *q_normal_phi, double *q_H, double *q_porosity, double *elementMassMatrix, double *elementLumpedMassMatrix, double *element_u, int eN)</argsstring>
+        <name>calculateElementMassMatrix</name>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementMassMatrix</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementLumpedMassMatrix</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>element_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="2156" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="2156" bodyend="2301"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a8ead3dd400c7e08874be679f26fd127c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateMassMatrix</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *q_phi, double *q_normal_phi, double *q_H, double *q_porosity, int *csrRowIndeces_u_u, int *csrColumnOffsets_u_u, double *globalMassMatrix, double *globalLumpedMassMatrix)</argsstring>
+        <name>calculateMassMatrix</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1a23f139b5de59b6945b1fa41aa555dae5">calculateMassMatrix</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalMassMatrix</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalLumpedMassMatrix</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="2303" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="2303" bodyend="2407"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_m_corr_1a45130536aca29433674aadd5cdbf5959" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::setMassQuadratureEdgeBasedStabilizationMethods</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double epsFactHeaviside, double epsFactDirac, double epsFactDiffusion, int *phi_l2g, double *elementDiameter, double *nodeDiametersArray, double *phi_dof, double *q_phi, double *q_normal_phi, double *ebqe_phi, double *ebqe_normal_phi, double *q_H, double *q_u, double *q_n, double *ebqe_u, double *ebqe_n, double *q_r, double *q_porosity, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *rhs_mass_correction, double *lumped_L2p_vof_mass_correction, double *lumped_mass_matrix, int numDOFs, bool useExact)</argsstring>
+        <name>setMassQuadratureEdgeBasedStabilizationMethods</name>
+        <reimplements refid="classproteus_1_1_m_corr__base_1af0688d513f3850b772b8130d09fab2c1">setMassQuadratureEdgeBasedStabilizationMethods</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactHeaviside</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDirac</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFactDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>phi_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_normal_phi</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_H</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>rhs_mass_correction</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_L2p_vof_mass_correction</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_mass_matrix</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>numDOFs</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="2409" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="2409" bodyend="2558"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>proteus::MCorr_base</label>
+        <link refid="classproteus_1_1_m_corr__base"/>
+      </node>
+      <node id="1">
+        <label>proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1_m_corr"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="5">
+        <label>equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, 1, nQuadraturePoints_element &gt;</label>
+        <link refid="classequivalent__polynomials_1_1_generalized_functions__mix"/>
+      </node>
+      <node id="2">
+        <label>proteus::MCorr_base</label>
+        <link refid="classproteus_1_1_m_corr__base"/>
+        <childnode refid="3" relation="usage">
+          <edgelabel>Rpos</edgelabel>
+          <edgelabel>FluxCorrectionMatrix</edgelabel>
+          <edgelabel>Rneg</edgelabel>
+        </childnode>
+      </node>
+      <node id="4">
+        <label>equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, 1, nDOF_trial_element &gt;</label>
+        <link refid="classequivalent__polynomials_1_1_generalized_functions__mix"/>
+      </node>
+      <node id="3">
+        <label>std::valarray&lt; double &gt;</label>
+      </node>
+      <node id="1">
+        <label>proteus::MCorr&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1_m_corr"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+        <childnode refid="4" relation="usage">
+          <edgelabel>gf_nodes</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>gf</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" line="476" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/MCorr.h" bodystart="475" bodyend="2559"/>
+    <listofallmembers>
+      <member refid="classproteus_1_1_m_corr_1ab8825c8baf8a41d28d1925d12244a792" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>calculateElementJacobian</name></member>
+      <member refid="classproteus_1_1_m_corr_1ae245d642ba2df18b37b661f9cddf33f2" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>calculateElementMassMatrix</name></member>
+      <member refid="classproteus_1_1_m_corr_1a6eff98060ad29142057190fb54c45163" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>calculateElementResidual</name></member>
+      <member refid="classproteus_1_1_m_corr_1adc782e3f5f73a00e8ce2910b035571b1" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>calculateJacobian</name></member>
+      <member refid="classproteus_1_1_m_corr_1ae3b9ec63897311903813674ad61eb5e4" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>calculateMass</name></member>
+      <member refid="classproteus_1_1_m_corr_1a8ead3dd400c7e08874be679f26fd127c" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>calculateMassMatrix</name></member>
+      <member refid="classproteus_1_1_m_corr_1a7fe97cf709db9a6ac0f94d88c699a9be" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>calculateResidual</name></member>
+      <member refid="classproteus_1_1_m_corr_1a19d6fbfa421b21e2bad2fd7dedecf2f1" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>ck</name></member>
+      <member refid="classproteus_1_1_m_corr_1a7da4e3ecfdd1f5f52879b93095e242c5" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>elementConstantSolve</name></member>
+      <member refid="classproteus_1_1_m_corr_1a2d9a965fae1a15c6f8329693cb86388d" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>elementSolve</name></member>
+      <member refid="classproteus_1_1_m_corr_1a5638e7fe08d686ad53db2ea4ccec807b" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>evaluateCoefficients</name></member>
+      <member refid="classproteus_1_1_m_corr_1a68d516ed405b1d4a58dcc83dbe9e0262" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>FCTStep</name></member>
+      <member refid="classproteus_1_1_m_corr__base_1abf06b9bb4831491cb944ad99f0530be7" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>FluxCorrectionMatrix</name></member>
+      <member refid="classproteus_1_1_m_corr_1afc62f78ab928093bc050589d371506f8" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>gf</name></member>
+      <member refid="classproteus_1_1_m_corr_1a6d4ac62d75b559055e9fb20ab272f1cf" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>gf_nodes</name></member>
+      <member refid="classproteus_1_1_m_corr_1a82f9cf29eeb5f45ee6f3900679b3e061" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>globalConstantRJ</name></member>
+      <member refid="classproteus_1_1_m_corr_1a59886621ff33796cc6be7057c0ee4d1a" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>MCorr</name></member>
+      <member refid="classproteus_1_1_m_corr__base_1a8f86799e797defa8ed64b9c2d209d853" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>Rneg</name></member>
+      <member refid="classproteus_1_1_m_corr__base_1a0326304d15fad9a87b3921fe765b03d9" prot="public" virt="non-virtual"><scope>proteus::MCorr</scope><name>Rpos</name></member>
+      <member refid="classproteus_1_1_m_corr_1aece884d13deed0bedf0bf188a738fc83" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>setMassQuadrature</name></member>
+      <member refid="classproteus_1_1_m_corr_1a45130536aca29433674aadd5cdbf5959" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>setMassQuadratureEdgeBasedStabilizationMethods</name></member>
+      <member refid="classproteus_1_1_m_corr__base_1a9a3f53a7c6daf57474c04d563d9ec483" prot="public" virt="virtual"><scope>proteus::MCorr</scope><name>~MCorr_base</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

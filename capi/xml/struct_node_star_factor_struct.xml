@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="struct_node_star_factor_struct" kind="struct" language="C++" prot="public">
+    <compoundname>NodeStarFactorStruct</compoundname>
+    <includes refid="postprocessing_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_node_star_factor_struct_1ada778a5c3f35416b82d8e53da91ef73e" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int NodeStarFactorStruct::N</definition>
+        <argsstring></argsstring>
+        <name>N</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" line="23" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_node_star_factor_struct_1a23e9fa832939642f096cc6ad16042647" prot="public" static="no" mutable="no">
+        <type>int *</type>
+        <definition>int* NodeStarFactorStruct::subdomain_dim</definition>
+        <argsstring></argsstring>
+        <name>subdomain_dim</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" line="24" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_node_star_factor_struct_1a94bcc80385de51622816d10350b99bc4" prot="public" static="no" mutable="no">
+        <type>double **</type>
+        <definition>double** NodeStarFactorStruct::subdomain_L</definition>
+        <argsstring></argsstring>
+        <name>subdomain_L</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" line="25" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_node_star_factor_struct_1a29b01ec2ea47b79b6cbb8787d3af37f5" prot="public" static="no" mutable="no">
+        <type>double **</type>
+        <definition>double ** NodeStarFactorStruct::subdomain_R</definition>
+        <argsstring></argsstring>
+        <name>subdomain_R</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" line="26" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_node_star_factor_struct_1a43435b3c812b37955e86f63003ed1289" prot="public" static="no" mutable="no">
+        <type>double **</type>
+        <definition>double ** NodeStarFactorStruct::subdomain_U</definition>
+        <argsstring></argsstring>
+        <name>subdomain_U</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" line="27" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_node_star_factor_struct_1ae5446f62acef30cf5be5e9d370edbb81" prot="public" static="no" mutable="no">
+        <type>PROTEUS_LAPACK_INTEGER **</type>
+        <definition>PROTEUS_LAPACK_INTEGER** NodeStarFactorStruct::subdomain_pivots</definition>
+        <argsstring></argsstring>
+        <name>subdomain_pivots</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" line="28" column="26" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_node_star_factor_struct_1ab7e6fdc6be41776d412f40889925a8d8" prot="public" static="no" mutable="no">
+        <type>PROTEUS_LAPACK_INTEGER **</type>
+        <definition>PROTEUS_LAPACK_INTEGER** NodeStarFactorStruct::subdomain_column_pivots</definition>
+        <argsstring></argsstring>
+        <name>subdomain_column_pivots</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" line="29" column="26" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" line="20" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/postprocessing.h" bodystart="19" bodyend="28"/>
+    <listofallmembers>
+      <member refid="struct_node_star_factor_struct_1ada778a5c3f35416b82d8e53da91ef73e" prot="public" virt="non-virtual"><scope>NodeStarFactorStruct</scope><name>N</name></member>
+      <member refid="struct_node_star_factor_struct_1ab7e6fdc6be41776d412f40889925a8d8" prot="public" virt="non-virtual"><scope>NodeStarFactorStruct</scope><name>subdomain_column_pivots</name></member>
+      <member refid="struct_node_star_factor_struct_1a23e9fa832939642f096cc6ad16042647" prot="public" virt="non-virtual"><scope>NodeStarFactorStruct</scope><name>subdomain_dim</name></member>
+      <member refid="struct_node_star_factor_struct_1a94bcc80385de51622816d10350b99bc4" prot="public" virt="non-virtual"><scope>NodeStarFactorStruct</scope><name>subdomain_L</name></member>
+      <member refid="struct_node_star_factor_struct_1ae5446f62acef30cf5be5e9d370edbb81" prot="public" virt="non-virtual"><scope>NodeStarFactorStruct</scope><name>subdomain_pivots</name></member>
+      <member refid="struct_node_star_factor_struct_1a29b01ec2ea47b79b6cbb8787d3af37f5" prot="public" virt="non-virtual"><scope>NodeStarFactorStruct</scope><name>subdomain_R</name></member>
+      <member refid="struct_node_star_factor_struct_1a43435b3c812b37955e86f63003ed1289" prot="public" virt="non-virtual"><scope>NodeStarFactorStruct</scope><name>subdomain_U</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_py_embedded_functions_8h" kind="file" language="C++">
+    <compoundname>PyEmbeddedFunctions.h</compoundname>
+    <includes local="yes">Python.h</includes>
+    <includedby refid="_r_a_n_s2_p_8h" local="yes">RANS2P.h</includedby>
+    <includedby refid="_r_a_n_s2_p2_d_8h" local="yes">RANS2P2D.h</includedby>
+    <incdepgraph>
+      <node id="2">
+        <label>Python.h</label>
+      </node>
+      <node id="1">
+        <label>PyEmbeddedFunctions.h</label>
+        <link refid="_py_embedded_functions_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="3">
+        <label>RANS2P2D.h</label>
+        <link refid="_r_a_n_s2_p2_d_8h"/>
+      </node>
+      <node id="2">
+        <label>RANS2P.h</label>
+        <link refid="_r_a_n_s2_p_8h"/>
+      </node>
+      <node id="1">
+        <label>PyEmbeddedFunctions.h</label>
+        <link refid="_py_embedded_functions_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_py_embedded_functions_8h_1a3ddeb1b85023f01e48ff330ed82632b4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int logEvent</definition>
+        <argsstring>(char *logString, int logLevel)</argsstring>
+        <name>logEvent</name>
+        <param>
+          <type>char *</type>
+          <declname>logString</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>logLevel</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/PyEmbeddedFunctions.h" line="7" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/PyEmbeddedFunctions.h" bodystart="7" bodyend="55"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>PYEMBEDDEDFUNCTIONS_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PYEMBEDDEDFUNCTIONS_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;Python.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="comment">//This<sp/>function<sp/>accepts<sp/>a<sp/>string<sp/>which<sp/>gets<sp/>passed<sp/>to<sp/>the<sp/>logEvent<sp/>Python<sp/>function<sp/>in<sp/>Profiling</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7" refid="_py_embedded_functions_8h_1a3ddeb1b85023f01e48ff330ed82632b4" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_py_embedded_functions_8h_1a3ddeb1b85023f01e48ff330ed82632b4" kindref="member">logEvent</ref>(</highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>logString,</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>logLevel)</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="comment">//logString<sp/>is<sp/>the<sp/>desired<sp/>string:<sp/>usually<sp/>set<sp/>with<sp/>sprintf()<sp/>to<sp/>combine<sp/>characters<sp/>with<sp/>numbers</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="comment">//logLevel<sp/>means<sp/>the<sp/>same<sp/>as<sp/>with<sp/>the<sp/>python<sp/>function</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(!Py_IsInitialized())</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/><sp/><sp/>Py_Initialize();</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/>PyObject<sp/>*pName=NULL,<sp/>*pModule=NULL,<sp/>*pFunc=NULL;</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/>PyObject<sp/>*pArgs=NULL,<sp/>*pValue=NULL;</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/>pName<sp/>=<sp/>PyUnicode_FromString(</highlight><highlight class="stringliteral">&quot;proteus.Profiling&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/>pModule<sp/>=<sp/>PyImport_Import(pName);</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/>Py_DECREF(pName);</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(pModule<sp/>!=<sp/>NULL)</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/>{</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/>pFunc<sp/>=<sp/>PyObject_GetAttrString(pModule,</highlight><highlight class="stringliteral">&quot;logEvent&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/>pArgs<sp/>=<sp/>PyTuple_New(2);</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="26"><highlight class="comment"><sp/><sp/>//This<sp/>is<sp/>how<sp/>the<sp/>embedding<sp/>is<sp/>done<sp/>in<sp/>the<sp/>official<sp/>Python<sp/>example...but<sp/>this<sp/>leads<sp/>to<sp/>a<sp/>memory<sp/>leak<sp/>for<sp/>some<sp/>reason</highlight></codeline>
+<codeline lineno="27"><highlight class="comment"><sp/><sp/><sp/><sp/>pValue<sp/>=<sp/>PyUnicode_FromString(logString);</highlight></codeline>
+<codeline lineno="28"><highlight class="comment"><sp/><sp/><sp/><sp/>//<sp/>pValue<sp/>reference<sp/>stolen<sp/>here:</highlight></codeline>
+<codeline lineno="29"><highlight class="comment"><sp/><sp/><sp/><sp/>PyTuple_SetItem(pArgs,<sp/>0,<sp/>pValue);</highlight></codeline>
+<codeline lineno="30"><highlight class="comment"></highlight></codeline>
+<codeline lineno="31"><highlight class="comment"><sp/><sp/><sp/><sp/>pValue<sp/>=<sp/>PyInt_FromLong(logLevel);</highlight></codeline>
+<codeline lineno="32"><highlight class="comment"><sp/><sp/><sp/><sp/>//<sp/>pValue<sp/>reference<sp/>stolen<sp/>here:</highlight></codeline>
+<codeline lineno="33"><highlight class="comment"><sp/><sp/><sp/><sp/>PyTuple_SetItem(pArgs,<sp/>1,<sp/>pValue);</highlight></codeline>
+<codeline lineno="34"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/>PyTuple_SetItem(pArgs,<sp/>0,<sp/>PyUnicode_FromString(logString));</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/>PyTuple_SetItem(pArgs,<sp/>1,<sp/>PyInt_FromLong(logLevel));</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/>PyObject_CallObject(pFunc,pArgs);</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/>Py_DECREF(pFunc);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/>Py_DECREF(pArgs);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(pValue<sp/>!=NULL)</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>Py_DECREF(pValue);</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>Py_XDECREF(pValue);</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/>{</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/>PyErr_Print();</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/>fprintf(stderr,</highlight><highlight class="stringliteral">&quot;Failed<sp/>to<sp/>load<sp/>\&quot;%s\&quot;\n&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;proteus.Profiling&quot;</highlight><highlight class="normal">);<sp/></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>1;</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/>Py_DECREF(pModule);</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0;</highlight></codeline>
+<codeline lineno="55"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/PyEmbeddedFunctions.h"/>
+  </compounddef>
+</doxygen>

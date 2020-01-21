@@ -1,0 +1,256 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_v_g_m" kind="class" language="C++" prot="public">
+    <compoundname>VGM</compoundname>
+    <basecompoundref refid="class_v_g_morig" prot="public" virt="non-virtual">VGMorig</basecompoundref>
+    <derivedcompoundref refid="class_v_g_b" prot="public" virt="non-virtual">VGB</derivedcompoundref>
+    <includes refid="psk_relations_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_v_g_m_1ad21cf94f9b49fc1b3eb57fd186affc3f" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double VGM::ns_del</definition>
+        <argsstring></argsstring>
+        <name>ns_del</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="222" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="222" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_v_g_m_1a5aa540a3af87cd0152032ad86c397cee" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double VGM::eps_small</definition>
+        <argsstring></argsstring>
+        <name>eps_small</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="222" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="222" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_v_g_m_1a6ac8809e741b6cdf15f9e5d23921e25d" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double VGM::sqrt_eps_small</definition>
+        <argsstring></argsstring>
+        <name>sqrt_eps_small</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="222" column="25" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="222" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_v_g_m_1a94eff2526496925ce8c0470a8e1f1d78" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>VGM::VGM</definition>
+        <argsstring>()</argsstring>
+        <name>VGM</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="223" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="223" bodyend="224"/>
+      </memberdef>
+      <memberdef kind="function" id="class_v_g_m_1aca8d9ac46a135f9c0f93beca6c1f2a69" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>VGM::VGM</definition>
+        <argsstring>(const double *rwork, const int *iwork=0)</argsstring>
+        <name>VGM</name>
+        <param>
+          <type>const double *</type>
+          <declname>rwork</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>iwork</declname>
+          <defval>0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="225" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="225" bodyend="230"/>
+      </memberdef>
+      <memberdef kind="function" id="class_v_g_m_1ac9bcad4fd0c07fab422a7aab846e5f16" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>VGM::VGM</definition>
+        <argsstring>(const VGM &amp;r)</argsstring>
+        <name>VGM</name>
+        <param>
+          <type>const <ref refid="class_v_g_m" kindref="compound">VGM</ref> &amp;</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="231" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="231" bodyend="251"/>
+      </memberdef>
+      <memberdef kind="function" id="class_v_g_m_1a0b5dc7a61c067a454b5a462bcf9a800f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void VGM::setTolerances</definition>
+        <argsstring>(const double *rwork_tol)</argsstring>
+        <name>setTolerances</name>
+        <reimplements refid="class_v_g_morig_1a988e45f78667f88762bb64be2b1a2758">setTolerances</reimplements>
+        <param>
+          <type>const double *</type>
+          <declname>rwork_tol</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="253" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="253" bodyend="257"/>
+      </memberdef>
+      <memberdef kind="function" id="class_v_g_m_1afabf407e3dad219556bb3c5dc8e08575" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void VGM::calc_Se</definition>
+        <argsstring>(const double &amp;Sw)</argsstring>
+        <name>calc_Se</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Sw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="259" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="259" bodyend="264"/>
+      </memberdef>
+      <memberdef kind="function" id="class_v_g_m_1a0e157d31c5fcc5aae1a4bdfaa0c26f18" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void VGM::calc</definition>
+        <argsstring>(const double &amp;Sw)</argsstring>
+        <name>calc</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Sw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="266" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="266" bodyend="370"/>
+      </memberdef>
+      <memberdef kind="function" id="class_v_g_m_1a47d37377ecf8f141fcd755c020287e83" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void VGM::calc_from_psic</definition>
+        <argsstring>(const double &amp;psicIn)</argsstring>
+        <name>calc_from_psic</name>
+        <reimplements refid="class_psk_relation_1ac0d106cc145713dcaac8af85a5747ccb">calc_from_psic</reimplements>
+        <param>
+          <type>const double &amp;</type>
+          <declname>psicIn</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="372" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="372" bodyend="475"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="4">
+        <label>VGB</label>
+        <link refid="class_v_g_b"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>VGM</label>
+        <link refid="class_v_g_m"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>VGMorig</label>
+        <link refid="class_v_g_morig"/>
+        <childnode refid="3" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>PskRelation</label>
+        <link refid="class_psk_relation"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>VGM</label>
+        <link refid="class_v_g_m"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>VGMorig</label>
+        <link refid="class_v_g_morig"/>
+        <childnode refid="3" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>PskRelation</label>
+        <link refid="class_psk_relation"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" line="220" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/pskRelations.h" bodystart="219" bodyend="476"/>
+    <listofallmembers>
+      <member refid="class_v_g_morig_1a7446515ec1857fd13b99d0359928c7d0" prot="public" virt="non-virtual"><scope>VGM</scope><name>alpha</name></member>
+      <member refid="class_v_g_m_1a0e157d31c5fcc5aae1a4bdfaa0c26f18" prot="public" virt="non-virtual"><scope>VGM</scope><name>calc</name></member>
+      <member refid="class_v_g_m_1a47d37377ecf8f141fcd755c020287e83" prot="public" virt="virtual"><scope>VGM</scope><name>calc_from_psic</name></member>
+      <member refid="class_v_g_m_1afabf407e3dad219556bb3c5dc8e08575" prot="public" virt="non-virtual"><scope>VGM</scope><name>calc_Se</name></member>
+      <member refid="class_v_g_morig_1a093a0629e2de77eed03edadb048e7693" prot="public" virt="non-virtual"><scope>VGM</scope><name>calc_Se_eps</name></member>
+      <member refid="class_psk_relation_1af02b9bc46a0aa0e5c835c068303fc4e9" prot="public" virt="non-virtual"><scope>VGM</scope><name>dkrn</name></member>
+      <member refid="class_psk_relation_1a23dee4b92bcd95d0f4c740a45507cda3" prot="public" virt="non-virtual"><scope>VGM</scope><name>dkrw</name></member>
+      <member refid="class_psk_relation_1ac0fb939909427791167f7e9fdb875bd4" prot="public" virt="non-virtual"><scope>VGM</scope><name>dpsic</name></member>
+      <member refid="class_psk_relation_1a4a8163ffde6cbffc32090d68c35841e7" prot="public" virt="non-virtual"><scope>VGM</scope><name>dSe_dpsic</name></member>
+      <member refid="class_psk_relation_1a5e6a67004a600bd0c90e569c6e6e2076" prot="public" virt="non-virtual"><scope>VGM</scope><name>dSe_dSw</name></member>
+      <member refid="class_v_g_m_1a5aa540a3af87cd0152032ad86c397cee" prot="public" virt="non-virtual"><scope>VGM</scope><name>eps_small</name></member>
+      <member refid="class_psk_relation_1a6a0f012cf857ae0d2ce028f1a8f895f4" prot="public" virt="non-virtual"><scope>VGM</scope><name>krn</name></member>
+      <member refid="class_psk_relation_1a707ca7b7fd867bf7385ef2f79ac5bb96" prot="public" virt="non-virtual"><scope>VGM</scope><name>krw</name></member>
+      <member refid="class_v_g_morig_1ac886b59ffd0c227d5ff003a415ebf4be" prot="public" virt="non-virtual"><scope>VGM</scope><name>m</name></member>
+      <member refid="class_v_g_morig_1a07e0b5778f59ba32ae667c1793d18c78" prot="public" virt="non-virtual"><scope>VGM</scope><name>n</name></member>
+      <member refid="class_v_g_m_1ad21cf94f9b49fc1b3eb57fd186affc3f" prot="public" virt="non-virtual"><scope>VGM</scope><name>ns_del</name></member>
+      <member refid="class_psk_relation_1af617caae6303510b061b80be4d3a2091" prot="public" virt="non-virtual"><scope>VGM</scope><name>psic</name></member>
+      <member refid="class_psk_relation_1a46f5861789f5ca2f5e853beaf718f41f" prot="public" virt="non-virtual"><scope>VGM</scope><name>PskRelation</name></member>
+      <member refid="class_psk_relation_1ae315c6c80c12e4f3adec2f8078a57581" prot="public" virt="non-virtual"><scope>VGM</scope><name>PskRelation</name></member>
+      <member refid="class_psk_relation_1ad52b5314994defb4cc76ee7d618125d5" prot="public" virt="non-virtual"><scope>VGM</scope><name>Se</name></member>
+      <member refid="class_v_g_morig_1a5c08a0b4d06af03ab95b80a6e4f51c48" prot="public" virt="non-virtual"><scope>VGM</scope><name>Se_eps</name></member>
+      <member refid="class_v_g_morig_1a1911483b19a18353aeda9b3a3d69ed60" prot="public" virt="non-virtual"><scope>VGM</scope><name>Se_eps_const</name></member>
+      <member refid="class_v_g_morig_1a677edfbfd34092e6a377fbfe36effdcb" prot="public" virt="virtual"><scope>VGM</scope><name>setParams</name></member>
+      <member refid="class_v_g_m_1a0b5dc7a61c067a454b5a462bcf9a800f" prot="public" virt="virtual"><scope>VGM</scope><name>setTolerances</name></member>
+      <member refid="class_v_g_m_1a6ac8809e741b6cdf15f9e5d23921e25d" prot="public" virt="non-virtual"><scope>VGM</scope><name>sqrt_eps_small</name></member>
+      <member refid="class_psk_relation_1aa525a6f18f699a45d64aa30da1983c06" prot="public" virt="non-virtual"><scope>VGM</scope><name>Sw_max</name></member>
+      <member refid="class_psk_relation_1a6fa349ba17507d00269038a6dbbcd2b9" prot="public" virt="non-virtual"><scope>VGM</scope><name>Sw_min</name></member>
+      <member refid="class_v_g_m_1a94eff2526496925ce8c0470a8e1f1d78" prot="public" virt="non-virtual"><scope>VGM</scope><name>VGM</name></member>
+      <member refid="class_v_g_m_1aca8d9ac46a135f9c0f93beca6c1f2a69" prot="public" virt="non-virtual"><scope>VGM</scope><name>VGM</name></member>
+      <member refid="class_v_g_m_1ac9bcad4fd0c07fab422a7aab846e5f16" prot="public" virt="non-virtual"><scope>VGM</scope><name>VGM</name></member>
+      <member refid="class_v_g_morig_1aa7d797944d0ad2d88c68fd5bb99dfdba" prot="public" virt="non-virtual"><scope>VGM</scope><name>VGMorig</name></member>
+      <member refid="class_v_g_morig_1abbe457a3b237a4ac3993f7d0b7e87ca0" prot="public" virt="non-virtual"><scope>VGM</scope><name>VGMorig</name></member>
+      <member refid="class_psk_relation_1a88724ddafea3a55efbbb43c8ad73df3e" prot="public" virt="virtual"><scope>VGM</scope><name>~PskRelation</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

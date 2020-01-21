@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespace_i_outils" kind="namespace" language="C++">
+    <compoundname>IOutils</compoundname>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespace_i_outils_1a88095cfa87223a722ffb84ce3f8e82d2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::istream &amp;</type>
+        <definition>std::istream &amp; IOutils::eatline</definition>
+        <argsstring>(std::istream &amp;s)</argsstring>
+        <name>eatline</name>
+        <param>
+          <type>std::istream &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" line="11" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" bodystart="11" bodyend="15" declfile="/home/tridelat/PROTEUS/proteus2/proteus/meshio.h" declline="13" declcolumn="14"/>
+      </memberdef>
+      <memberdef kind="function" id="namespace_i_outils_1a44dbc06e1cde47b5ea8121082576b0eb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::istream &amp;</type>
+        <definition>std::istream &amp; IOutils::eatchar</definition>
+        <argsstring>(std::istream &amp;s)</argsstring>
+        <name>eatchar</name>
+        <param>
+          <type>std::istream &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" line="17" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" bodystart="17" bodyend="18" declfile="/home/tridelat/PROTEUS/proteus2/proteus/meshio.h" declline="14" declcolumn="14"/>
+      </memberdef>
+      <memberdef kind="function" id="namespace_i_outils_1ac2895e8f2e806e6d06500829ccdf365a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool IOutils::iswhitespace</definition>
+        <argsstring>(const char &amp;c)</argsstring>
+        <name>iswhitespace</name>
+        <param>
+          <type>const char &amp;</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" line="19" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" bodystart="19" bodyend="20" declfile="/home/tridelat/PROTEUS/proteus2/proteus/meshio.h" declline="16" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="namespace_i_outils_1a6864bd589ffd5c8a9609b2f776b7acee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::istream &amp;</type>
+        <definition>std::istream &amp; IOutils::eatcomments</definition>
+        <argsstring>(std::istream &amp;s)</argsstring>
+        <name>eatcomments</name>
+        <param>
+          <type>std::istream &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" line="21" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" bodystart="21" bodyend="29" declfile="/home/tridelat/PROTEUS/proteus2/proteus/meshio.h" declline="15" declcolumn="14"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/meshio.cpp" line="10" column="1"/>
+  </compounddef>
+</doxygen>

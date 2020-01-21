@@ -1,0 +1,258 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="test_mesh_8cpp" kind="file" language="C++">
+    <compoundname>testMesh.cpp</compoundname>
+    <includes refid="mesh_8h" local="yes">mesh.h</includes>
+    <incdepgraph>
+      <node id="7">
+        <label>list</label>
+      </node>
+      <node id="9">
+        <label>iomanip</label>
+      </node>
+      <node id="1">
+        <label>testMesh.cpp</label>
+        <link refid="test_mesh_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="12">
+        <label>cmath</label>
+      </node>
+      <node id="11">
+        <label>cassert</label>
+      </node>
+      <node id="6">
+        <label>map</label>
+      </node>
+      <node id="10">
+        <label>fstream</label>
+      </node>
+      <node id="4">
+        <label>vector</label>
+      </node>
+      <node id="8">
+        <label>iostream</label>
+      </node>
+      <node id="3">
+        <label>set</label>
+      </node>
+      <node id="5">
+        <label>algorithm</label>
+      </node>
+      <node id="2">
+        <label>mesh.h</label>
+        <link refid="mesh_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="test_mesh_8cpp_1ae66f6b31b5ad750f1fe042a706a4e3d4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int main</definition>
+        <argsstring>()</argsstring>
+        <name>main</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/tests/sandbox/testMesh.cpp" line="3" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/tests/sandbox/testMesh.cpp" bodystart="3" bodyend="167"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&quot;<ref refid="mesh_8h" kindref="compound">mesh.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight></codeline>
+<codeline lineno="3" refid="test_mesh_8cpp_1ae66f6b31b5ad750f1fe042a706a4e3d4" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="test_mesh_8cpp_1ae66f6b31b5ad750f1fe042a706a4e3d4" kindref="member">main</ref>()</highlight></codeline>
+<codeline lineno="4"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="5"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//todo<sp/>write<sp/>mesh<sp/>destructor<sp/>so<sp/>this<sp/>test<sp/>doesn&apos;t<sp/>leak<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">std;</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nx,ny,nz;</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>start,stop,diff;</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">string</highlight><highlight class="normal"><sp/>outfilename,infilename;</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Testing<sp/>simple<sp/>mesh<sp/>generation&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Enter<sp/>nx,ny,<sp/>and<sp/>nz&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/>cin&gt;&gt;nx&gt;&gt;ny&gt;&gt;nz;</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Print<sp/>mesh?<sp/>(n/filename/cout)&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/>cin&gt;&gt;outfilename;</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/><ref refid="struct_mesh" kindref="compound">Mesh</ref><sp/>mesh;</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1ga509a95e0124b5fdd0a7cd09574cb5e30" kindref="member">initializeMesh</ref>(mesh);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/>start<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ny<sp/>==<sp/>1<sp/>&amp;&amp;<sp/>nz<sp/>==<sp/>1)</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Generating<sp/>Edge<sp/>Mesh<sp/>Elements&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1gabc239fca1803721a81b882c99fc8a817" kindref="member">edgeMeshElements</ref>(nx,mesh);</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Generating<sp/>Edge<sp/>Mesh<sp/>Nodes&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga2dcef8d6600302d66dcc2a7261e5e506" kindref="member">regularEdgeMeshNodes</ref>(nx,1.0,mesh);</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(nz<sp/>==<sp/>1)</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Generating<sp/>Triangular<sp/>Mesh<sp/>Elements&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga399d399e9ab8c6742aff3864d7e882a8" kindref="member">regularRectangularToTriangularMeshElements</ref>(nx,ny,mesh);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Generating<sp/>Triangular<sp/>Mesh<sp/>Nodes&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga9b1a55a88d7b2238b2248a84f9ed5271" kindref="member">regularRectangularToTriangularMeshNodes</ref>(nx,ny,1.0,1.0,mesh);</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Generating<sp/>Tetrahedral<sp/>Mesh<sp/>Elements&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga867bc8cc7de1299c306dcb28bf401aa2" kindref="member">regularHexahedralToTetrahedralMeshElements</ref>(nx,ny,nz,mesh);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Generating<sp/>Tetrahedral<sp/>Mesh<sp/>Nodes&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga5fb49b127603edd31e6aab3b6e84f633" kindref="member">regularHexahedralToTetrahedralMeshNodes</ref>(nx,ny,nz,1.0,1.0,1.0,mesh);</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/>stop<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Elapsed<sp/>time<sp/>for<sp/>mesh<sp/>generation<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;(stop-start)&lt;&lt;</highlight><highlight class="stringliteral">&quot;s&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;nElements_global<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;mesh.<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;nNodes_global<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;mesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Writing<sp/>mesh&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/>start<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(outfilename<sp/>!=<sp/></highlight><highlight class="stringliteral">&quot;n&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(outfilename<sp/>!=<sp/></highlight><highlight class="stringliteral">&quot;cout&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ofstream<sp/>outfile(outfilename.c_str());</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga273d705930d0ad0775498d0be44c739d" kindref="member">writeElements</ref>(outfile,mesh);</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga093904f19cdbf5c7f0076e6a6c56081e" kindref="member">writeNodes</ref>(outfile,mesh);</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga273d705930d0ad0775498d0be44c739d" kindref="member">writeElements</ref>(cout,mesh);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga093904f19cdbf5c7f0076e6a6c56081e" kindref="member">writeNodes</ref>(cout,mesh);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/>stop<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Elapsed<sp/>time<sp/>for<sp/>writing<sp/>mesh<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;(stop-start)&lt;&lt;</highlight><highlight class="stringliteral">&quot;s&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">delete</highlight><highlight class="normal"><sp/>[]<sp/>mesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref>;</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Testing<sp/>readElements&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Enter<sp/>mesh<sp/>filename&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/>cin&gt;&gt;infilename;</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Reading<sp/>mesh<sp/>from<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;infilename&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/>start<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/>ifstream<sp/>infile(infilename.c_str());</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1gac9bf9640ca027ca766ace6272e16400c" kindref="member">readElements</ref>(infile,mesh);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/>stop<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Elapsed<sp/>time<sp/>for<sp/><sp/>reading<sp/>mesh<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;(stop-start)&lt;&lt;</highlight><highlight class="stringliteral">&quot;s&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Testing<sp/>global<sp/>refinement&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Enter<sp/>nLevels&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nLevels;</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/>cin&gt;&gt;nLevels;</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/>start<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref><sp/>multilevelMesh;</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ny<sp/>==<sp/>1<sp/>&amp;&amp;<sp/>nz==1)</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="group__mesh_1gabe3df821ff4ab8aec3dd150a638b26e3" kindref="member">globallyRefineEdgeMesh</ref>(nLevels,mesh,multilevelMesh);</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(nz<sp/>==<sp/>1)</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="group__mesh_1gac8f50ad63a717bf616c78b8390e7744e" kindref="member">globallyRefineTriangularMesh</ref>(nLevels,mesh,multilevelMesh);</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="group__mesh_1gab4d638c87ade6bd196a81384af108e8e" kindref="member">globallyRefineTetrahedralMesh</ref>(nLevels,mesh,multilevelMesh);</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/>stop<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Elapsed<sp/>time<sp/>for<sp/>global<sp/>refinements<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;(stop-start)&lt;&lt;</highlight><highlight class="stringliteral">&quot;s&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/>mesh<sp/>=<sp/>multilevelMesh.<ref refid="struct_multilevel_mesh_1afac2870657d5f0b10216e12a4193eee7" kindref="member">meshArray</ref>[nLevels-1];</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1ga82076ed1124688014a6bc263ac24d3ae" kindref="member">constructElementBoundaryElementsArray_tetrahedron</ref>(mesh);</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1gaff191b3e806b335cd6d0916218132c96" kindref="member">computeGeometricInfo_tetrahedron</ref>(mesh);</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><ref refid="struct_mesh" kindref="compound">Mesh</ref><sp/>edgeMesh;</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><ref refid="group__mesh_1ga509a95e0124b5fdd0a7cd09574cb5e30" kindref="member">initializeMesh</ref>(edgeMesh);</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;nElements_global<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;mesh.nElements_global&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;nNodes_global<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;mesh.nNodes_global&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Constructing<sp/>element<sp/>boundary<sp/>element<sp/>arrays&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ny<sp/>==<sp/>1<sp/>&amp;&amp;<sp/>nz<sp/>==<sp/>1)</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga0ca99f07f47c3775a54c126aa5b1cace" kindref="member">constructElementBoundaryElementsArray_edge</ref>(mesh);</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh<sp/>=<sp/>mesh;</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(nz<sp/>==<sp/>1)</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga99583103d5f83c1d3b073b917c782d69" kindref="member">constructElementBoundaryElementsArray_triangle</ref>(mesh);</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//set<sp/>up<sp/>the<sp/>edge<sp/>mesh,<sp/>need<sp/>to<sp/>make<sp/>sure<sp/>I&apos;ve<sp/>set<sp/>everything</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref><sp/>=<sp/>mesh.nNodes_global;</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref><sp/>=<sp/>mesh.nodeArray;</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref><sp/>=<sp/>mesh.nElementBoundaries_global;</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref><sp/>=<sp/>mesh.elementBoundaryNodesArray;</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" kindref="member">nNodes_element</ref><sp/>=<sp/>mesh.nNodes_elementBoundary;</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga82076ed1124688014a6bc263ac24d3ae" kindref="member">constructElementBoundaryElementsArray_tetrahedron</ref>(mesh);</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1gaff191b3e806b335cd6d0916218132c96" kindref="member">computeGeometricInfo_tetrahedron</ref>(mesh);</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//set<sp/>up<sp/>the<sp/>face<sp/>and<sp/>edge<sp/>meshes</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_mesh" kindref="compound">Mesh</ref><sp/>faceMesh;</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga509a95e0124b5fdd0a7cd09574cb5e30" kindref="member">initializeMesh</ref>(faceMesh);</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>faceMesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref><sp/>=<sp/>mesh.nNodes_global;</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>faceMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref><sp/>=<sp/>mesh.nodeArray;</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>faceMesh.<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref><sp/>=<sp/>mesh.nElementBoundaries_global;</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>faceMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref><sp/>=<sp/>mesh.elementBoundaryNodesArray;</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>faceMesh.<ref refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" kindref="member">nNodes_element</ref><sp/>=<sp/>mesh.nNodes_elementBoundary;</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga99583103d5f83c1d3b073b917c782d69" kindref="member">constructElementBoundaryElementsArray_triangle</ref>(faceMesh);</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref><sp/>=<sp/>faceMesh.<ref refid="struct_mesh_1a7038fb145b0b7b77e5fd0cd162ae2fed" kindref="member">nNodes_global</ref>;</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref><sp/>=<sp/>faceMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>;</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref><sp/>=<sp/>faceMesh.<ref refid="struct_mesh_1ae88b87eca5860ae8f0faf5ddf8edd55e" kindref="member">nElementBoundaries_global</ref>;</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref><sp/>=<sp/>faceMesh.<ref refid="struct_mesh_1a005d4b8e1dde115eea69745da68ce51e" kindref="member">elementBoundaryNodesArray</ref>;</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>edgeMesh.<ref refid="struct_mesh_1a410907bc17e0cf51e268e4db2b8be459" kindref="member">nNodes_element</ref><sp/>=<sp/>faceMesh.<ref refid="struct_mesh_1a23828f68c8378cc9cba4f12da8efab1c" kindref="member">nNodes_elementBoundary</ref>;</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Print<sp/>mesh?<sp/>(n/filename/cout)&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/>cin&gt;&gt;outfilename;</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/>start<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(outfilename<sp/>!=<sp/></highlight><highlight class="stringliteral">&quot;n&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(outfilename<sp/>!=<sp/></highlight><highlight class="stringliteral">&quot;cout&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ofstream<sp/>outfile(outfilename.c_str());</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga273d705930d0ad0775498d0be44c739d" kindref="member">writeElements</ref>(outfile,mesh);</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga093904f19cdbf5c7f0076e6a6c56081e" kindref="member">writeNodes</ref>(outfile,mesh);</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga273d705930d0ad0775498d0be44c739d" kindref="member">writeElements</ref>(cout,mesh);</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga093904f19cdbf5c7f0076e6a6c56081e" kindref="member">writeNodes</ref>(cout,mesh);</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/>stop<sp/>=<sp/>CurrentTime();</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/>cout&lt;&lt;</highlight><highlight class="stringliteral">&quot;Elapsed<sp/>time<sp/>for<sp/>writing<sp/>mesh<sp/>=<sp/>&quot;</highlight><highlight class="normal">&lt;&lt;(stop-start)&lt;&lt;</highlight><highlight class="stringliteral">&quot;s&quot;</highlight><highlight class="normal">&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"></highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/>ofstream<sp/>datFile(</highlight><highlight class="stringliteral">&quot;edgeMesh.dat&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>eN=0;eN&lt;edgeMesh.<ref refid="struct_mesh_1a67e33052617d0e53ebe053d71412dee8" kindref="member">nElements_global</ref>;eN++)</highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>datFile&lt;&lt;scientific&lt;&lt;setprecision(8)&lt;&lt;setw(16)&lt;&lt;edgeMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>[edgeMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref>[eN*2+0]*3+0]</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;scientific&lt;&lt;setprecision(8)&lt;&lt;setw(16)&lt;&lt;edgeMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>[edgeMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref>[eN*2+0]*3+1]</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;scientific&lt;&lt;setprecision(8)&lt;&lt;setw(16)&lt;&lt;edgeMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>[edgeMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref>[eN*2+0]*3+2]&lt;&lt;endl</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;scientific&lt;&lt;setprecision(8)&lt;&lt;setw(16)&lt;&lt;edgeMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>[edgeMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref>[eN*2+1]*3+0]</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;scientific&lt;&lt;setprecision(8)&lt;&lt;setw(16)&lt;&lt;edgeMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>[edgeMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref>[eN*2+1]*3+1]</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;scientific&lt;&lt;setprecision(8)&lt;&lt;setw(16)&lt;&lt;edgeMesh.<ref refid="struct_mesh_1a22b669f60fea89c7f47dfbe0ee4fd80c" kindref="member">nodeArray</ref>[edgeMesh.<ref refid="struct_mesh_1a75f9e7d19dc4a7e7589f712f2e8fe849" kindref="member">elementNodesArray</ref>[eN*2+1]*3+2]&lt;&lt;endl&lt;&lt;endl&lt;&lt;endl;</highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//deleteMesh(edgeMesh);<sp/>mesh.nodeArray<sp/>=<sp/>NULL;//the<sp/>edgeMesh<sp/>shares<sp/>the<sp/>nodes</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i=0;i&lt;multilevelMesh.<ref refid="struct_multilevel_mesh_1a6548922b35b3b706b7c204b506678d36" kindref="member">nLevels</ref>;i++)</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="group__mesh_1ga137e5d0abd63a35938eb82b9f6cc4a62" kindref="member">deleteMesh</ref>(multilevelMesh.<ref refid="struct_multilevel_mesh_1afac2870657d5f0b10216e12a4193eee7" kindref="member">meshArray</ref>[i]);</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0;</highlight></codeline>
+<codeline lineno="167"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/tests/sandbox/testMesh.cpp"/>
+  </compounddef>
+</doxygen>

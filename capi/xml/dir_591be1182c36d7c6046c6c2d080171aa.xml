@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_591be1182c36d7c6046c6c2d080171aa" kind="dir">
+    <compoundname>elastoplastic</compoundname>
+    <innerfile refid="c_elasto_plastic_8cpp">cElastoPlastic.cpp</innerfile>
+    <innerfile refid="drucker_prager_8h">druckerPrager.h</innerfile>
+    <innerfile refid="_elasto_plastic_8h">ElastoPlastic.h</innerfile>
+    <innerfile refid="mcdp_8h">mcdp.h</innerfile>
+    <innerfile refid="mohr_coulomb_8h">mohrCoulomb.h</innerfile>
+    <innerfile refid="mohr_coulomb2_8h">mohrCoulomb2.h</innerfile>
+    <innerfile refid="tresca_8h">tresca.h</innerfile>
+    <innerfile refid="von_mises_8h">vonMises.h</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/elastoplastic/"/>
+  </compounddef>
+</doxygen>

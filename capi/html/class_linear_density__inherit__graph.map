@@ -1,4 +1,5 @@
 <map id="LinearDensity" name="LinearDensity">
-<area shape="rect" id="node3" href="$class_exponential_density.html" title="ExponentialDensity" alt="" coords="5,155,140,181"/>
-<area shape="rect" id="node2" href="$class_density_relation.html" title="DensityRelation" alt="" coords="15,5,130,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="24,80,136,107"/>
+<area shape="rect" id="node3" href="$class_exponential_density.html" title=" " alt="" coords="5,155,155,181"/>
+<area shape="rect" id="node2" href="$class_density_relation.html" title=" " alt="" coords="17,5,143,32"/>
 </map>

@@ -1,0 +1,1186 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classcpp_cable" kind="class" language="C++" prot="public">
+    <compoundname>cppCable</compoundname>
+    <includes refid="_prot_ch_moorings_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classcpp_cable_1abf6a207bbe6e4a601c75921c9ad5040a" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChSystem &gt;</type>
+        <definition>std::shared_ptr&lt;ChSystem&gt; cppCable::system</definition>
+        <argsstring></argsstring>
+        <name>system</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="117" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="117" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a69111440455982d24f53e964945d053e" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChMesh &gt;</type>
+        <definition>std::shared_ptr&lt;ChMesh&gt; cppCable::mesh</definition>
+        <argsstring></argsstring>
+        <name>mesh</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="118" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="118" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a862f8649fa80033bee8b4413afbaca17" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int cppCable::nb_elems</definition>
+        <argsstring></argsstring>
+        <name>nb_elems</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="119" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="119" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a4384aa8dedd22a32545fb92a7ced9b1f" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppCable::length_per_elem</definition>
+        <argsstring></argsstring>
+        <name>length_per_elem</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="120" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="120" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a4e5cfd02bfc79a92b4b93089a1f0eb2e" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::Cd_axial</definition>
+        <argsstring></argsstring>
+        <name>Cd_axial</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="121" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="121" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1aa32cc99eb80081cf0e32bd5c762da74c" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::Cd_normal</definition>
+        <argsstring></argsstring>
+        <name>Cd_normal</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="122" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="122" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a7585df9378ecbe1139245598c20bf68b" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::Cm_axial</definition>
+        <argsstring></argsstring>
+        <name>Cm_axial</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="123" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="123" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a488818539a1396116eaf003103ea9d37" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::Cm_normal</definition>
+        <argsstring></argsstring>
+        <name>Cm_normal</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="124" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="124" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a76a018acec012e748b5f3ae0dcdc0766" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppCable::mvecs</definition>
+        <argsstring></argsstring>
+        <name>mvecs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="125" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="125" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a39bae133378e4bd6147d65b84189159f" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppCable::mvecs_tangents</definition>
+        <argsstring></argsstring>
+        <name>mvecs_tangents</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="126" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="126" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1aa73e67acf211ce72d7112c3543f85b90" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppCable::mvecs_middle</definition>
+        <argsstring></argsstring>
+        <name>mvecs_middle</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="127" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="127" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1af0cf9932e24431c3ab555b99f66ca7e6" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppCable::mdirs</definition>
+        <argsstring></argsstring>
+        <name>mdirs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="128" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="128" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a3e6d901316cd79a4fb690c02ac753956" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::d</definition>
+        <argsstring></argsstring>
+        <name>d</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="129" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="129" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1ad40947b824c2d203238910a2252d7315" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::rho</definition>
+        <argsstring></argsstring>
+        <name>rho</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="129" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="129" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a7a8a5ca210f630eb0b05e813654bff05" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::E</definition>
+        <argsstring></argsstring>
+        <name>E</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="129" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="129" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1aee8538399b8f348a7b3edeab2560b694" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::length</definition>
+        <argsstring></argsstring>
+        <name>length</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="129" column="18" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="129" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1abf4d469dfdd2acaa62f1aedc15ef587b" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::A0</definition>
+        <argsstring></argsstring>
+        <name>A0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="130" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="130" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a38a0e97b5f64ef3505bedd8cf3b186d7" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::L0</definition>
+        <argsstring></argsstring>
+        <name>L0</name>
+        <initializer>= 0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="131" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="131" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a8fa2e32f9363e45cb5237ba1659e020d" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppCable::Iyy</definition>
+        <argsstring></argsstring>
+        <name>Iyy</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="132" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="132" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a53c155d590332a97c35970fc03639b1a" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int cppCable::nb_nodes</definition>
+        <argsstring></argsstring>
+        <name>nb_nodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="133" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="133" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a2fe64545b3e0ace4ef802f6b00912c01" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool cppCable::applyDrag</definition>
+        <argsstring></argsstring>
+        <name>applyDrag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="134" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="134" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1abd2ed7f279ebbbe195db353008b071e9" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool cppCable::applyAddedMass</definition>
+        <argsstring></argsstring>
+        <name>applyAddedMass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="135" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="135" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a2625d2d46b41e7bcefd7537bd9727fed" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool cppCable::applyBuoyancy</definition>
+        <argsstring></argsstring>
+        <name>applyBuoyancy</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="136" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="136" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1ad5c86f4899704a1feb8617acf7802ed2" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string cppCable::beam_type</definition>
+        <argsstring></argsstring>
+        <name>beam_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="137" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="137" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a746456de6a19d310176bf9f675bf3a0b" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChNodeFEAxyzD &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChNodeFEAxyzD&gt; &gt; cppCable::nodes</definition>
+        <argsstring></argsstring>
+        <name>nodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="138" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="138" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1abd41d91dce532626fe6e4bdf6d23299d" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChNodeFEAxyzDD &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChNodeFEAxyzDD&gt; &gt; cppCable::nodesDD</definition>
+        <argsstring></argsstring>
+        <name>nodesDD</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="139" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a206207ad980be861bcb281f4c98f6195" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChElementCableANCF &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChElementCableANCF&gt; &gt; cppCable::elemsCableANCF</definition>
+        <argsstring></argsstring>
+        <name>elemsCableANCF</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="140" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="140" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a45d1a19cf5ab77066c473f35349b5f7d" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChElementBeamEuler &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChElementBeamEuler&gt; &gt; cppCable::elemsBeamEuler</definition>
+        <argsstring></argsstring>
+        <name>elemsBeamEuler</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="141" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="141" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a175d53c16eed799a76309c838a107be9" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChNodeFEAxyzrot &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChNodeFEAxyzrot&gt; &gt; cppCable::nodesRot</definition>
+        <argsstring></argsstring>
+        <name>nodesRot</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="142" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="142" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a6bcda2410f4b183e7c12a0a2545a375a" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChElementCableANCF &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChElementCableANCF&gt; &gt; cppCable::elems_cable</definition>
+        <argsstring></argsstring>
+        <name>elems_cable</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="143" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="143" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1af3346ce46541fa83bee7afc726535b5b" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChBeamSectionCable &gt;</type>
+        <definition>std::shared_ptr&lt;ChBeamSectionCable&gt; cppCable::msection_cable</definition>
+        <argsstring></argsstring>
+        <name>msection_cable</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="144" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="144" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1abf0dc1b8476879bca938dbbc98142155" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChBeamSectionAdvanced &gt;</type>
+        <definition>std::shared_ptr&lt;ChBeamSectionAdvanced&gt; cppCable::msection_advanced</definition>
+        <argsstring></argsstring>
+        <name>msection_advanced</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="145" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="145" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1abf0c75012db691a74bf21ac0007859b0" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppCable::elems_length</definition>
+        <argsstring></argsstring>
+        <name>elems_length</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="146" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="146" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1ae2d1c9122f97e0bf259adf9d080e9cdf" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppCable::fluid_velocity</definition>
+        <argsstring></argsstring>
+        <name>fluid_velocity</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="147" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="147" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a261eea33d13dcfe2410f0fd0be6c8107" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt; &gt;</type>
+        <definition>std::vector&lt;ChVector&lt;&gt; &gt; cppCable::fluid_acceleration</definition>
+        <argsstring></argsstring>
+        <name>fluid_acceleration</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="148" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="148" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1ab2e46a9b415d8b39059af0e0a632c581" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppCable::fluid_density</definition>
+        <argsstring></argsstring>
+        <name>fluid_density</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="149" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="149" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1ac88e2cc9dba684530eaea6a0418ea3e7" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+        <definition>std::vector&lt;double&gt; cppCable::nodes_density</definition>
+        <argsstring></argsstring>
+        <name>nodes_density</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="150" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="150" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1aa9d128c47e1d9862b4de138f60a7ad03" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChVector&lt;double&gt; &gt; &gt; cppCable::forces_drag</definition>
+        <argsstring></argsstring>
+        <name>forces_drag</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="157" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="157" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a839746caf132363226121f99e42e0566" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChVector&lt;double&gt; &gt; &gt; cppCable::forces_addedmass</definition>
+        <argsstring></argsstring>
+        <name>forces_addedmass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="158" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="158" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a9ecc09e99c40840557425c30d9a0ddd1" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChLoad&lt; <ref refid="class_my_loader_triangular" kindref="compound">MyLoaderTriangular</ref> &gt; &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChLoad&lt;MyLoaderTriangular&gt; &gt; &gt; cppCable::elems_loads_triangular</definition>
+        <argsstring></argsstring>
+        <name>elems_loads_triangular</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="160" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="160" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_cable_1a5c81afd379504ab182c49f2932644e5c" prot="public" static="no" mutable="no">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChLoad&lt; ChLoaderGravity &gt; &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChLoad&lt;ChLoaderGravity&gt; &gt; &gt; cppCable::elems_loads_volumetric</definition>
+        <argsstring></argsstring>
+        <name>elems_loads_volumetric</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="161" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="161" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classcpp_cable_1a3362a77b01df79bb6bf9e234186ca122" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>cppCable::cppCable</definition>
+        <argsstring>(std::shared_ptr&lt; ChSystem &gt; system, std::shared_ptr&lt; ChMesh &gt; mesh, double length, int nb_elems, double d, double rho, double E, double L0, std::string beam_type)</argsstring>
+        <name>cppCable</name>
+        <param>
+          <type>std::shared_ptr&lt; ChSystem &gt;</type>
+          <declname>system</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; ChMesh &gt;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>length</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nb_elems</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>d</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>E</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>L0</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>beam_type</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="151" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="555" bodyend="605"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a57f30b2d382c847408e885486d79cb81" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setFluidVelocityAtNodes</definition>
+        <argsstring>(std::vector&lt; ChVector&lt;&gt;&gt; vel)</argsstring>
+        <name>setFluidVelocityAtNodes</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt;&gt;</type>
+          <declname>vel</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="153" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="830" bodyend="832"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a3f163c62ead40b2a8666b948f5e0927d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setFluidAccelerationAtNodes</definition>
+        <argsstring>(std::vector&lt; ChVector&lt;&gt;&gt; acc)</argsstring>
+        <name>setFluidAccelerationAtNodes</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; ChVector&lt;&gt;&gt;</type>
+          <declname>acc</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="154" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="826" bodyend="828"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1ad7b60b88dc3630bbd05421bd777440b3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setFluidDensityAtNodes</definition>
+        <argsstring>(std::vector&lt; double &gt; vof)</argsstring>
+        <name>setFluidDensityAtNodes</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>vof</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="155" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="834" bodyend="836"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1afe8c3aee55f82a7d9eb61c176e0f82a3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;ChVector&lt;double&gt; &gt; &gt; cppCable::getNodalPositions</definition>
+        <argsstring>()</argsstring>
+        <name>getNodalPositions</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="156" column="15"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a455a8ac36364b03769f1e57bc74c11d2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildVectors</definition>
+        <argsstring>()</argsstring>
+        <name>buildVectors</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="163" column="8"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a331c41780b7c6953c643ebe1e06b7f72" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildNodes</definition>
+        <argsstring>(bool last_node)</argsstring>
+        <name>buildNodes</name>
+        <param>
+          <type>bool</type>
+          <declname>last_node</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="164" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="618" bodyend="621"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a1315c62ca9ac4d9147af8d9041a9f766" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildNodesBeamEuler</definition>
+        <argsstring>(bool last_node)</argsstring>
+        <name>buildNodesBeamEuler</name>
+        <param>
+          <type>bool</type>
+          <declname>last_node</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="165" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="623" bodyend="665"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1aeb49144281998588fe1bfaa4d3f1dab3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildNodesCableANCF</definition>
+        <argsstring>(bool last_node)</argsstring>
+        <name>buildNodesCableANCF</name>
+        <param>
+          <type>bool</type>
+          <declname>last_node</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="166" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="667" bodyend="700"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1ae0ddbc352f4ad27be6e4a67af97cbbc8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildElements</definition>
+        <argsstring>(bool set_lastnodes)</argsstring>
+        <name>buildElements</name>
+        <param>
+          <type>bool</type>
+          <declname>set_lastnodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="167" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="702" bodyend="709"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a87cfe9c2522c12ac4f30861e2be0a45d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildElementsBeamEuler</definition>
+        <argsstring>(bool set_lastnodes)</argsstring>
+        <name>buildElementsBeamEuler</name>
+        <param>
+          <type>bool</type>
+          <declname>set_lastnodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="168" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="749" bodyend="784"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a89b92a50c7b6ee09f2e494233f2b20fd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildElementsCableANCF</definition>
+        <argsstring>(bool set_lastnodes)</argsstring>
+        <name>buildElementsCableANCF</name>
+        <param>
+          <type>bool</type>
+          <declname>set_lastnodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="169" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="711" bodyend="747"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1ad59d9407ce948079c49e6abf281f1845" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildMesh</definition>
+        <argsstring>(bool add_lastnode)</argsstring>
+        <name>buildMesh</name>
+        <param>
+          <type>bool</type>
+          <declname>add_lastnode</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="170" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="786" bodyend="793"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a1d4c1341f2179754371d76caff1d2bb1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildMeshBeamEuler</definition>
+        <argsstring>(bool add_lastnode)</argsstring>
+        <name>buildMeshBeamEuler</name>
+        <param>
+          <type>bool</type>
+          <declname>add_lastnode</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="171" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="795" bodyend="809"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1aaf43913c70de6cf5ac34fa8433a92a59" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::buildMeshCableANCF</definition>
+        <argsstring>(bool add_lastnode)</argsstring>
+        <name>buildMeshCableANCF</name>
+        <param>
+          <type>bool</type>
+          <declname>add_lastnode</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="172" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="811" bodyend="825"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a2b9a0fa85de9be5edc4cf6e1b431cd1e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setDragForce</definition>
+        <argsstring>()</argsstring>
+        <name>setDragForce</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="173" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="853" bodyend="895"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a5d7268017c7fc26d594b6a1b6a56cb4b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setAddedMassForce</definition>
+        <argsstring>()</argsstring>
+        <name>setAddedMassForce</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="174" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="898" bodyend="941"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1ae4d48f9e790c7dd29505831fdfe96fdf" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::applyForces</definition>
+        <argsstring>()</argsstring>
+        <name>applyForces</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="175" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="943" bodyend="966"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1ab37a3d2f1419cbdb105d116264c0d9a4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::addNodestoContactCloud</definition>
+        <argsstring>(std::shared_ptr&lt; ChContactSurfaceNodeCloud &gt; cloud)</argsstring>
+        <name>addNodestoContactCloud</name>
+        <param>
+          <type>std::shared_ptr&lt; ChContactSurfaceNodeCloud &gt;</type>
+          <declname>cloud</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="176" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="968" bodyend="977"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a8e06095c2f4e570a37a92d454f505285" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setDragCoefficients</definition>
+        <argsstring>(double axial, double normal)</argsstring>
+        <name>setDragCoefficients</name>
+        <param>
+          <type>double</type>
+          <declname>axial</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>normal</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="177" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="838" bodyend="841"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a8326a943a13038e660f4749c77e3b951" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setAddedMassCoefficients</definition>
+        <argsstring>(double axial, double normal)</argsstring>
+        <name>setAddedMassCoefficients</name>
+        <param>
+          <type>double</type>
+          <declname>axial</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>normal</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="178" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="844" bodyend="847"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1acfa85cafd6343b9284a45bed29a41321" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setRestLengthPerElement</definition>
+        <argsstring>(std::vector&lt; double &gt; length_array)</argsstring>
+        <name>setRestLengthPerElement</name>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt;</type>
+          <declname>length_array</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="179" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="849" bodyend="851"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_cable_1a7e02cd35c9b31350893d1552cc485b4c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppCable::setIyy</definition>
+        <argsstring>(double Iyy_in)</argsstring>
+        <name>setIyy</name>
+        <param>
+          <type>double</type>
+          <declname>Iyy_in</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="180" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="607" bodyend="616"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="3">
+        <label>std::shared_ptr&lt; ChVector&lt; double &gt; &gt;</label>
+      </node>
+      <node id="17">
+        <label>std::shared_ptr&lt; ChBeamSectionAdvanced &gt;</label>
+      </node>
+      <node id="4">
+        <label>std::shared_ptr&lt; ChBeamSectionCable &gt;</label>
+      </node>
+      <node id="25">
+        <label>std::vector&lt; double &gt;</label>
+      </node>
+      <node id="24">
+        <label>std::shared_ptr&lt; ChNodeFEAxyzrot &gt;</label>
+      </node>
+      <node id="13">
+        <label>std::vector&lt; std::shared_ptr&lt; ChLoad&lt; MyLoaderTriangular &gt; &gt; &gt;</label>
+        <childnode refid="14" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="7">
+        <label>std::shared_ptr&lt; ChNodeFEAxyzDD &gt;</label>
+      </node>
+      <node id="9">
+        <label>std::vector&lt; std::shared_ptr&lt; ChElementBeamEuler &gt; &gt;</label>
+        <childnode refid="10" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="23">
+        <label>std::vector&lt; std::shared_ptr&lt; ChNodeFEAxyzrot &gt; &gt;</label>
+        <childnode refid="24" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="19">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="21">
+        <label>std::vector&lt; std::shared_ptr&lt; ChElementCableANCF &gt; &gt;</label>
+        <childnode refid="22" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="5">
+        <label>std::shared_ptr&lt; ChSystem &gt;</label>
+      </node>
+      <node id="2">
+        <label>std::vector&lt; std::shared_ptr&lt; ChVector&lt; double &gt; &gt; &gt;</label>
+        <childnode refid="3" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="10">
+        <label>std::shared_ptr&lt; ChElementBeamEuler &gt;</label>
+      </node>
+      <node id="6">
+        <label>std::vector&lt; std::shared_ptr&lt; ChNodeFEAxyzDD &gt; &gt;</label>
+        <childnode refid="7" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="16">
+        <label>std::shared_ptr&lt; ChLoad&lt; ChLoaderGravity &gt; &gt;</label>
+      </node>
+      <node id="15">
+        <label>std::vector&lt; std::shared_ptr&lt; ChLoad&lt; ChLoaderGravity &gt; &gt; &gt;</label>
+        <childnode refid="16" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="20">
+        <label>std::vector&lt; ChVector&lt;&gt; &gt;</label>
+      </node>
+      <node id="1">
+        <label>cppCable</label>
+        <link refid="classcpp_cable"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>forces_drag</edgelabel>
+          <edgelabel>forces_addedmass</edgelabel>
+        </childnode>
+        <childnode refid="4" relation="usage">
+          <edgelabel>msection_cable</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>system</edgelabel>
+        </childnode>
+        <childnode refid="6" relation="usage">
+          <edgelabel>nodesDD</edgelabel>
+        </childnode>
+        <childnode refid="8" relation="usage">
+          <edgelabel>mesh</edgelabel>
+        </childnode>
+        <childnode refid="9" relation="usage">
+          <edgelabel>elemsBeamEuler</edgelabel>
+        </childnode>
+        <childnode refid="11" relation="usage">
+          <edgelabel>nodes</edgelabel>
+        </childnode>
+        <childnode refid="13" relation="usage">
+          <edgelabel>elems_loads_triangular</edgelabel>
+        </childnode>
+        <childnode refid="15" relation="usage">
+          <edgelabel>elems_loads_volumetric</edgelabel>
+        </childnode>
+        <childnode refid="17" relation="usage">
+          <edgelabel>msection_advanced</edgelabel>
+        </childnode>
+        <childnode refid="18" relation="usage">
+          <edgelabel>beam_type</edgelabel>
+        </childnode>
+        <childnode refid="20" relation="usage">
+          <edgelabel>fluid_acceleration</edgelabel>
+          <edgelabel>mvecs_tangents</edgelabel>
+          <edgelabel>fluid_velocity</edgelabel>
+          <edgelabel>mvecs</edgelabel>
+          <edgelabel>mvecs_middle</edgelabel>
+          <edgelabel>mdirs</edgelabel>
+        </childnode>
+        <childnode refid="21" relation="usage">
+          <edgelabel>elems_cable</edgelabel>
+          <edgelabel>elemsCableANCF</edgelabel>
+        </childnode>
+        <childnode refid="23" relation="usage">
+          <edgelabel>nodesRot</edgelabel>
+        </childnode>
+        <childnode refid="25" relation="usage">
+          <edgelabel>nodes_density</edgelabel>
+          <edgelabel>elems_length</edgelabel>
+          <edgelabel>length_per_elem</edgelabel>
+          <edgelabel>fluid_density</edgelabel>
+        </childnode>
+      </node>
+      <node id="8">
+        <label>std::shared_ptr&lt; ChMesh &gt;</label>
+      </node>
+      <node id="12">
+        <label>std::shared_ptr&lt; ChNodeFEAxyzD &gt;</label>
+      </node>
+      <node id="22">
+        <label>std::shared_ptr&lt; ChElementCableANCF &gt;</label>
+      </node>
+      <node id="14">
+        <label>std::shared_ptr&lt; ChLoad&lt; MyLoaderTriangular &gt; &gt;</label>
+      </node>
+      <node id="11">
+        <label>std::vector&lt; std::shared_ptr&lt; ChNodeFEAxyzD &gt; &gt;</label>
+        <childnode refid="12" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="18">
+        <label>std::string</label>
+        <childnode refid="19" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" line="115" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChMoorings.h" bodystart="115" bodyend="181"/>
+    <listofallmembers>
+      <member refid="classcpp_cable_1abf4d469dfdd2acaa62f1aedc15ef587b" prot="public" virt="non-virtual"><scope>cppCable</scope><name>A0</name></member>
+      <member refid="classcpp_cable_1ab37a3d2f1419cbdb105d116264c0d9a4" prot="public" virt="non-virtual"><scope>cppCable</scope><name>addNodestoContactCloud</name></member>
+      <member refid="classcpp_cable_1abd2ed7f279ebbbe195db353008b071e9" prot="public" virt="non-virtual"><scope>cppCable</scope><name>applyAddedMass</name></member>
+      <member refid="classcpp_cable_1a2625d2d46b41e7bcefd7537bd9727fed" prot="public" virt="non-virtual"><scope>cppCable</scope><name>applyBuoyancy</name></member>
+      <member refid="classcpp_cable_1a2fe64545b3e0ace4ef802f6b00912c01" prot="public" virt="non-virtual"><scope>cppCable</scope><name>applyDrag</name></member>
+      <member refid="classcpp_cable_1ae4d48f9e790c7dd29505831fdfe96fdf" prot="public" virt="non-virtual"><scope>cppCable</scope><name>applyForces</name></member>
+      <member refid="classcpp_cable_1ad5c86f4899704a1feb8617acf7802ed2" prot="public" virt="non-virtual"><scope>cppCable</scope><name>beam_type</name></member>
+      <member refid="classcpp_cable_1ae0ddbc352f4ad27be6e4a67af97cbbc8" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildElements</name></member>
+      <member refid="classcpp_cable_1a87cfe9c2522c12ac4f30861e2be0a45d" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildElementsBeamEuler</name></member>
+      <member refid="classcpp_cable_1a89b92a50c7b6ee09f2e494233f2b20fd" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildElementsCableANCF</name></member>
+      <member refid="classcpp_cable_1ad59d9407ce948079c49e6abf281f1845" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildMesh</name></member>
+      <member refid="classcpp_cable_1a1d4c1341f2179754371d76caff1d2bb1" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildMeshBeamEuler</name></member>
+      <member refid="classcpp_cable_1aaf43913c70de6cf5ac34fa8433a92a59" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildMeshCableANCF</name></member>
+      <member refid="classcpp_cable_1a331c41780b7c6953c643ebe1e06b7f72" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildNodes</name></member>
+      <member refid="classcpp_cable_1a1315c62ca9ac4d9147af8d9041a9f766" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildNodesBeamEuler</name></member>
+      <member refid="classcpp_cable_1aeb49144281998588fe1bfaa4d3f1dab3" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildNodesCableANCF</name></member>
+      <member refid="classcpp_cable_1a455a8ac36364b03769f1e57bc74c11d2" prot="public" virt="non-virtual"><scope>cppCable</scope><name>buildVectors</name></member>
+      <member refid="classcpp_cable_1a4e5cfd02bfc79a92b4b93089a1f0eb2e" prot="public" virt="non-virtual"><scope>cppCable</scope><name>Cd_axial</name></member>
+      <member refid="classcpp_cable_1aa32cc99eb80081cf0e32bd5c762da74c" prot="public" virt="non-virtual"><scope>cppCable</scope><name>Cd_normal</name></member>
+      <member refid="classcpp_cable_1a7585df9378ecbe1139245598c20bf68b" prot="public" virt="non-virtual"><scope>cppCable</scope><name>Cm_axial</name></member>
+      <member refid="classcpp_cable_1a488818539a1396116eaf003103ea9d37" prot="public" virt="non-virtual"><scope>cppCable</scope><name>Cm_normal</name></member>
+      <member refid="classcpp_cable_1a3362a77b01df79bb6bf9e234186ca122" prot="public" virt="non-virtual"><scope>cppCable</scope><name>cppCable</name></member>
+      <member refid="classcpp_cable_1a3e6d901316cd79a4fb690c02ac753956" prot="public" virt="non-virtual"><scope>cppCable</scope><name>d</name></member>
+      <member refid="classcpp_cable_1a7a8a5ca210f630eb0b05e813654bff05" prot="public" virt="non-virtual"><scope>cppCable</scope><name>E</name></member>
+      <member refid="classcpp_cable_1a6bcda2410f4b183e7c12a0a2545a375a" prot="public" virt="non-virtual"><scope>cppCable</scope><name>elems_cable</name></member>
+      <member refid="classcpp_cable_1abf0c75012db691a74bf21ac0007859b0" prot="public" virt="non-virtual"><scope>cppCable</scope><name>elems_length</name></member>
+      <member refid="classcpp_cable_1a9ecc09e99c40840557425c30d9a0ddd1" prot="public" virt="non-virtual"><scope>cppCable</scope><name>elems_loads_triangular</name></member>
+      <member refid="classcpp_cable_1a5c81afd379504ab182c49f2932644e5c" prot="public" virt="non-virtual"><scope>cppCable</scope><name>elems_loads_volumetric</name></member>
+      <member refid="classcpp_cable_1a45d1a19cf5ab77066c473f35349b5f7d" prot="public" virt="non-virtual"><scope>cppCable</scope><name>elemsBeamEuler</name></member>
+      <member refid="classcpp_cable_1a206207ad980be861bcb281f4c98f6195" prot="public" virt="non-virtual"><scope>cppCable</scope><name>elemsCableANCF</name></member>
+      <member refid="classcpp_cable_1a261eea33d13dcfe2410f0fd0be6c8107" prot="public" virt="non-virtual"><scope>cppCable</scope><name>fluid_acceleration</name></member>
+      <member refid="classcpp_cable_1ab2e46a9b415d8b39059af0e0a632c581" prot="public" virt="non-virtual"><scope>cppCable</scope><name>fluid_density</name></member>
+      <member refid="classcpp_cable_1ae2d1c9122f97e0bf259adf9d080e9cdf" prot="public" virt="non-virtual"><scope>cppCable</scope><name>fluid_velocity</name></member>
+      <member refid="classcpp_cable_1a839746caf132363226121f99e42e0566" prot="public" virt="non-virtual"><scope>cppCable</scope><name>forces_addedmass</name></member>
+      <member refid="classcpp_cable_1aa9d128c47e1d9862b4de138f60a7ad03" prot="public" virt="non-virtual"><scope>cppCable</scope><name>forces_drag</name></member>
+      <member refid="classcpp_cable_1afe8c3aee55f82a7d9eb61c176e0f82a3" prot="public" virt="non-virtual"><scope>cppCable</scope><name>getNodalPositions</name></member>
+      <member refid="classcpp_cable_1a8fa2e32f9363e45cb5237ba1659e020d" prot="public" virt="non-virtual"><scope>cppCable</scope><name>Iyy</name></member>
+      <member refid="classcpp_cable_1a38a0e97b5f64ef3505bedd8cf3b186d7" prot="public" virt="non-virtual"><scope>cppCable</scope><name>L0</name></member>
+      <member refid="classcpp_cable_1aee8538399b8f348a7b3edeab2560b694" prot="public" virt="non-virtual"><scope>cppCable</scope><name>length</name></member>
+      <member refid="classcpp_cable_1a4384aa8dedd22a32545fb92a7ced9b1f" prot="public" virt="non-virtual"><scope>cppCable</scope><name>length_per_elem</name></member>
+      <member refid="classcpp_cable_1af0cf9932e24431c3ab555b99f66ca7e6" prot="public" virt="non-virtual"><scope>cppCable</scope><name>mdirs</name></member>
+      <member refid="classcpp_cable_1a69111440455982d24f53e964945d053e" prot="public" virt="non-virtual"><scope>cppCable</scope><name>mesh</name></member>
+      <member refid="classcpp_cable_1abf0dc1b8476879bca938dbbc98142155" prot="public" virt="non-virtual"><scope>cppCable</scope><name>msection_advanced</name></member>
+      <member refid="classcpp_cable_1af3346ce46541fa83bee7afc726535b5b" prot="public" virt="non-virtual"><scope>cppCable</scope><name>msection_cable</name></member>
+      <member refid="classcpp_cable_1a76a018acec012e748b5f3ae0dcdc0766" prot="public" virt="non-virtual"><scope>cppCable</scope><name>mvecs</name></member>
+      <member refid="classcpp_cable_1aa73e67acf211ce72d7112c3543f85b90" prot="public" virt="non-virtual"><scope>cppCable</scope><name>mvecs_middle</name></member>
+      <member refid="classcpp_cable_1a39bae133378e4bd6147d65b84189159f" prot="public" virt="non-virtual"><scope>cppCable</scope><name>mvecs_tangents</name></member>
+      <member refid="classcpp_cable_1a862f8649fa80033bee8b4413afbaca17" prot="public" virt="non-virtual"><scope>cppCable</scope><name>nb_elems</name></member>
+      <member refid="classcpp_cable_1a53c155d590332a97c35970fc03639b1a" prot="public" virt="non-virtual"><scope>cppCable</scope><name>nb_nodes</name></member>
+      <member refid="classcpp_cable_1a746456de6a19d310176bf9f675bf3a0b" prot="public" virt="non-virtual"><scope>cppCable</scope><name>nodes</name></member>
+      <member refid="classcpp_cable_1ac88e2cc9dba684530eaea6a0418ea3e7" prot="public" virt="non-virtual"><scope>cppCable</scope><name>nodes_density</name></member>
+      <member refid="classcpp_cable_1abd41d91dce532626fe6e4bdf6d23299d" prot="public" virt="non-virtual"><scope>cppCable</scope><name>nodesDD</name></member>
+      <member refid="classcpp_cable_1a175d53c16eed799a76309c838a107be9" prot="public" virt="non-virtual"><scope>cppCable</scope><name>nodesRot</name></member>
+      <member refid="classcpp_cable_1ad40947b824c2d203238910a2252d7315" prot="public" virt="non-virtual"><scope>cppCable</scope><name>rho</name></member>
+      <member refid="classcpp_cable_1a8326a943a13038e660f4749c77e3b951" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setAddedMassCoefficients</name></member>
+      <member refid="classcpp_cable_1a5d7268017c7fc26d594b6a1b6a56cb4b" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setAddedMassForce</name></member>
+      <member refid="classcpp_cable_1a8e06095c2f4e570a37a92d454f505285" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setDragCoefficients</name></member>
+      <member refid="classcpp_cable_1a2b9a0fa85de9be5edc4cf6e1b431cd1e" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setDragForce</name></member>
+      <member refid="classcpp_cable_1a3f163c62ead40b2a8666b948f5e0927d" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setFluidAccelerationAtNodes</name></member>
+      <member refid="classcpp_cable_1ad7b60b88dc3630bbd05421bd777440b3" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setFluidDensityAtNodes</name></member>
+      <member refid="classcpp_cable_1a57f30b2d382c847408e885486d79cb81" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setFluidVelocityAtNodes</name></member>
+      <member refid="classcpp_cable_1a7e02cd35c9b31350893d1552cc485b4c" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setIyy</name></member>
+      <member refid="classcpp_cable_1acfa85cafd6343b9284a45bed29a41321" prot="public" virt="non-virtual"><scope>cppCable</scope><name>setRestLengthPerElement</name></member>
+      <member refid="classcpp_cable_1abf6a207bbe6e4a601c75921c9ad5040a" prot="public" virt="non-virtual"><scope>cppCable</scope><name>system</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

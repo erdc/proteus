@@ -1,0 +1,372 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="create_analytic_geometry_8h" kind="file" language="C++">
+    <compoundname>createAnalyticGeometry.h</compoundname>
+    <includes local="no">apf.h</includes>
+    <includes local="no">apfMDS.h</includes>
+    <includes local="no">apfMesh2.h</includes>
+    <includes local="no">apfShape.h</includes>
+    <includes local="no">PCU.h</includes>
+    <includes local="no">gmi_analytic.h</includes>
+    <includes local="no">gmi_mesh.h</includes>
+    <includes local="no">cassert</includes>
+    <includes local="no">stdlib.h</includes>
+    <includes local="no">iostream</includes>
+    <includes local="no">fstream</includes>
+    <includes local="no">map</includes>
+    <includes local="no">math.h</includes>
+    <includes local="no">pcu_util.h</includes>
+    <includedby refid="create_analytic_geometry_8cpp" local="no">createAnalyticGeometry.cpp</includedby>
+    <incdepgraph>
+      <node id="1">
+        <label>createAnalyticGeometry.h</label>
+        <link refid="create_analytic_geometry_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>apfShape.h</label>
+      </node>
+      <node id="10">
+        <label>stdlib.h</label>
+      </node>
+      <node id="9">
+        <label>cassert</label>
+      </node>
+      <node id="13">
+        <label>map</label>
+      </node>
+      <node id="12">
+        <label>fstream</label>
+      </node>
+      <node id="6">
+        <label>PCU.h</label>
+      </node>
+      <node id="15">
+        <label>pcu_util.h</label>
+      </node>
+      <node id="3">
+        <label>apfMDS.h</label>
+      </node>
+      <node id="2">
+        <label>apf.h</label>
+      </node>
+      <node id="14">
+        <label>math.h</label>
+      </node>
+      <node id="8">
+        <label>gmi_mesh.h</label>
+      </node>
+      <node id="11">
+        <label>iostream</label>
+      </node>
+      <node id="4">
+        <label>apfMesh2.h</label>
+      </node>
+      <node id="7">
+        <label>gmi_analytic.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="1">
+        <label>createAnalyticGeometry.h</label>
+        <link refid="create_analytic_geometry_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>createAnalyticGeometry.cpp</label>
+        <link refid="create_analytic_geometry_8cpp"/>
+      </node>
+    </invincdepgraph>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="create_analytic_geometry_8h_1a667023f263e0de427542a5dcda34ed03" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int edgeMap[12]</definition>
+        <argsstring>[12]</argsstring>
+        <name>edgeMap</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="26" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="24" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="26" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="variable" id="create_analytic_geometry_8h_1a9c5ad38cc52eb8617cb0d5064f449445" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int faceLoop[6]</definition>
+        <argsstring>[6]</argsstring>
+        <name>faceLoop</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="27" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="25" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="27" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="variable" id="create_analytic_geometry_8h_1a764d47fb959003eee8c61950e98930e6" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double boxLength</definition>
+        <argsstring></argsstring>
+        <name>boxLength</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="28" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="21" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="28" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="variable" id="create_analytic_geometry_8h_1a17e0ae23e2e6851abaffbb8d90ee5af0" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double boxWidth</definition>
+        <argsstring></argsstring>
+        <name>boxWidth</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="29" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="22" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="29" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="variable" id="create_analytic_geometry_8h_1adf8727203915e79bfb80ef81abb88e3d" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double boxHeight</definition>
+        <argsstring></argsstring>
+        <name>boxHeight</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="30" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="23" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="30" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="variable" id="create_analytic_geometry_8h_1a53b8d47f0745f99da7c42bb408632da2" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int sphereFaceID</definition>
+        <argsstring></argsstring>
+        <name>sphereFaceID</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="31" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="478" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="31" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="variable" id="create_analytic_geometry_8h_1a643a5d34bdffeab19e43426b8457c3ee" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double sphereRadius</definition>
+        <argsstring></argsstring>
+        <name>sphereRadius</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="32" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="479" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="32" declcolumn="15"/>
+      </memberdef>
+      <memberdef kind="variable" id="create_analytic_geometry_8h_1a939bf538df7dfcbf550243746441b4d6" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double xyz_offset[3]</definition>
+        <argsstring>[3]</argsstring>
+        <name>xyz_offset</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="33" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="480" bodyend="-1" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="33" declcolumn="15"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="create_analytic_geometry_8h_1ace69042cdfa80336df3b06b6ae5a5395" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>agm_bdry</type>
+        <definition>agm_bdry add_bdry</definition>
+        <argsstring>(gmi_model *m, gmi_ent *e)</argsstring>
+        <name>add_bdry</name>
+        <param>
+          <type>gmi_model *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>gmi_ent *</type>
+          <declname>e</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="22" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="8" bodyend="11" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="22" declcolumn="10"/>
+      </memberdef>
+      <memberdef kind="function" id="create_analytic_geometry_8h_1a1e749b7f673e5f971249bd7984167371" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>agm_use</type>
+        <definition>agm_use add_adj</definition>
+        <argsstring>(gmi_model *m, agm_bdry b, int tag)</argsstring>
+        <name>add_adj</name>
+        <param>
+          <type>gmi_model *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>agm_bdry</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>tag</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="23" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="13" bodyend="19" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="23" declcolumn="9"/>
+      </memberdef>
+      <memberdef kind="function" id="create_analytic_geometry_8h_1a75b7b82a4daa614cd6d5cefa00907044" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>agm_use</type>
+        <definition>agm_use add_adj</definition>
+        <argsstring>(gmi_model *m, agm_bdry b, int dim, int tag)</argsstring>
+        <name>add_adj</name>
+        <param>
+          <type>gmi_model *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>agm_bdry</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dim</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>tag</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="24" column="9" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="24" declcolumn="9"/>
+      </memberdef>
+      <memberdef kind="function" id="create_analytic_geometry_8h_1a85e70baf5727dc20b6cf08102be0ff76" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void makeBox</definition>
+        <argsstring>(gmi_model *model)</argsstring>
+        <name>makeBox</name>
+        <param>
+          <type>gmi_model *</type>
+          <declname>model</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="36" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="264" bodyend="473" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="36" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="create_analytic_geometry_8h_1adec1905579fa580af3aba5d2b6b962aa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void makeSphere</definition>
+        <argsstring>(gmi_model *model)</argsstring>
+        <name>makeSphere</name>
+        <param>
+          <type>gmi_model *</type>
+          <declname>model</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" line="37" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.cpp" bodystart="489" bodyend="495" declfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h" declline="37" declcolumn="6"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>CREATE_ANALYTIC_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CREATE_ANALYTIC_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;apf.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;apfMDS.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;apfMesh2.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;apfShape.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;PCU.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;gmi_analytic.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;gmi_mesh.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cassert&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;iostream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;fstream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include&lt;map&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;pcu_util.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal">agm_bdry<sp/><ref refid="create_analytic_geometry_8h_1ace69042cdfa80336df3b06b6ae5a5395" kindref="member">add_bdry</ref>(gmi_model*<sp/>m,<sp/>gmi_ent*<sp/>e);</highlight></codeline>
+<codeline lineno="23"><highlight class="normal">agm_use<sp/><ref refid="create_analytic_geometry_8h_1a1e749b7f673e5f971249bd7984167371" kindref="member">add_adj</ref>(gmi_model*<sp/>m,<sp/>agm_bdry<sp/>b,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>tag);</highlight></codeline>
+<codeline lineno="24"><highlight class="normal">agm_use<sp/><ref refid="create_analytic_geometry_8h_1a1e749b7f673e5f971249bd7984167371" kindref="member">add_adj</ref>(gmi_model*<sp/>m,<sp/>agm_bdry<sp/>b,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>dim,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>tag);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1a667023f263e0de427542a5dcda34ed03" kindref="member">edgeMap</ref>[12];</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1a9c5ad38cc52eb8617cb0d5064f449445" kindref="member">faceLoop</ref>[6];</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1a764d47fb959003eee8c61950e98930e6" kindref="member">boxLength</ref>;</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1a17e0ae23e2e6851abaffbb8d90ee5af0" kindref="member">boxWidth</ref>;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1adf8727203915e79bfb80ef81abb88e3d" kindref="member">boxHeight</ref>;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1a53b8d47f0745f99da7c42bb408632da2" kindref="member">sphereFaceID</ref>;</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1a643a5d34bdffeab19e43426b8457c3ee" kindref="member">sphereRadius</ref>;</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1a939bf538df7dfcbf550243746441b4d6" kindref="member">xyz_offset</ref>[3];</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1a85e70baf5727dc20b6cf08102be0ff76" kindref="member">makeBox</ref>(gmi_model*<sp/>model);</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="create_analytic_geometry_8h_1adec1905579fa580af3aba5d2b6b962aa" kindref="member">makeSphere</ref>(gmi_model*<sp/>model);</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/createAnalyticGeometry.h"/>
+  </compounddef>
+</doxygen>

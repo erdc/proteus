@@ -1,0 +1,221 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_util_8cpp" kind="file" language="C++">
+    <compoundname>Util.cpp</compoundname>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">stddef.h</includes>
+    <includes local="no">stdlib.h</includes>
+    <incdepgraph>
+      <node id="4">
+        <label>stdlib.h</label>
+      </node>
+      <node id="3">
+        <label>stddef.h</label>
+      </node>
+      <node id="1">
+        <label>Util.cpp</label>
+        <link refid="_util_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" prot="public" static="no">
+        <name>NR_END</name>
+        <initializer>1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" line="4" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="4" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_util_8cpp_1ae6416b4cb6bfb8e50f7c4a083d2fb745" prot="public" static="no">
+        <name>FREE_ARG</name>
+        <initializer>char*</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" line="5" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="5" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_util_8cpp_1a73f5f9ece0bd0ede1affa44e28c72081" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double *</type>
+        <definition>double* dvector</definition>
+        <argsstring>(long nl, long nh)</argsstring>
+        <name>dvector</name>
+        <param>
+          <type>long</type>
+          <declname>nl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" line="7" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="7" bodyend="14"/>
+      </memberdef>
+      <memberdef kind="function" id="_util_8cpp_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double **</type>
+        <definition>double** dmatrix</definition>
+        <argsstring>(long nrl, long nrh, long ncl, long nch)</argsstring>
+        <name>dmatrix</name>
+        <param>
+          <type>long</type>
+          <declname>nrl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrh</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>ncl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nch</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" line="16" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="16" bodyend="36"/>
+      </memberdef>
+      <memberdef kind="function" id="_util_8cpp_1ac7ec1a76a4b8d3d8423246676977c919" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_dvector</definition>
+        <argsstring>(double *v, long nl, long nh)</argsstring>
+        <name>free_dvector</name>
+        <param>
+          <type>double *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" line="38" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="38" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="_util_8cpp_1a04fbc9bc53e6303830eb4338bc1f3259" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_dmatrix</definition>
+        <argsstring>(double **m, long nrl, long nrh, long ncl, long nch)</argsstring>
+        <name>free_dmatrix</name>
+        <param>
+          <type>double **</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrh</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>ncl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nch</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" line="44" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="44" bodyend="49"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stddef.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4" refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>NR_END<sp/>1</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5" refid="_util_8cpp_1ae6416b4cb6bfb8e50f7c4a083d2fb745" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>FREE_ARG<sp/>char*</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight></codeline>
+<codeline lineno="7" refid="_util_8cpp_1a73f5f9ece0bd0ede1affa44e28c72081" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_util_8cpp_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nh)</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>allocate<sp/>a<sp/>double<sp/>vector<sp/>with<sp/>subscript<sp/>range<sp/>v[nl..nh]<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>;</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>=(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*)malloc((</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal">)<sp/>((nh-<ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>+1+<ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>)*</highlight><highlight class="keyword">sizeof</highlight><highlight class="normal">(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">)));</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>-<ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>+<ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>;</highlight></codeline>
+<codeline lineno="14"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16" refid="_util_8cpp_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**<ref refid="_util_8cpp_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" kindref="member">dmatrix</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrh,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>ncl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nch)</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>allocate<sp/>a<sp/>double<sp/>matrix<sp/>with<sp/>subscript<sp/>range<sp/>m[nrl..nrh][ncl..nch]<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>i,<sp/>nrow=nrh-nrl+1,ncol=nch-ncl+1;</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**m;</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>allocate<sp/>pointers<sp/>to<sp/>rows<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m=(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**)<sp/>malloc((</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal">)((nrow+<ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>)*</highlight><highlight class="keyword">sizeof</highlight><highlight class="normal">(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*)));</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m<sp/>+=<sp/><ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>;</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m<sp/>-=<sp/>nrl;</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>allocate<sp/>rows<sp/>and<sp/>set<sp/>pointers<sp/>to<sp/>them<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m[nrl]=(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*)<sp/>malloc((</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal">)((nrow*ncol+<ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>)*</highlight><highlight class="keyword">sizeof</highlight><highlight class="normal">(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">)));</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m[nrl]<sp/>+=<sp/><ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m[nrl]<sp/>-=<sp/>ncl;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(i=nrl+1;i&lt;=nrh;i++)<sp/>m[i]=m[i-1]+ncol;</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>return<sp/>pointer<sp/>to<sp/>array<sp/>of<sp/>pointers<sp/>to<sp/>rows<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m;</highlight></codeline>
+<codeline lineno="36"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38" refid="_util_8cpp_1ac7ec1a76a4b8d3d8423246676977c919" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_util_8cpp_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nh)</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>free<sp/>a<sp/>double<sp/>vector<sp/>allocated<sp/>with<sp/>dvector()<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>free((<ref refid="_util_8cpp_1ae6416b4cb6bfb8e50f7c4a083d2fb745" kindref="member">FREE_ARG</ref>)<sp/>(<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>+<ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>-<ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>));</highlight></codeline>
+<codeline lineno="42"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44" refid="_util_8cpp_1a04fbc9bc53e6303830eb4338bc1f3259" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_util_8cpp_1a04fbc9bc53e6303830eb4338bc1f3259" kindref="member">free_dmatrix</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**m,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrh,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>ncl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nch)</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>free<sp/>a<sp/>double<sp/>matrix<sp/>allocated<sp/>by<sp/>dmatrix()<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>free((<ref refid="_util_8cpp_1ae6416b4cb6bfb8e50f7c4a083d2fb745" kindref="member">FREE_ARG</ref>)<sp/>(m[nrl]+ncl-<ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>));</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>free((<ref refid="_util_8cpp_1ae6416b4cb6bfb8e50f7c4a083d2fb745" kindref="member">FREE_ARG</ref>)<sp/>(m+nrl-<ref refid="_util_8cpp_1a71212bcd68ee44b80905c37c538cecff" kindref="member">NR_END</ref>));</highlight></codeline>
+<codeline lineno="49"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp"/>
+  </compounddef>
+</doxygen>

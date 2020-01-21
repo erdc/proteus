@@ -1,5 +1,6 @@
 <map id="D_base" name="D_base">
-<area shape="rect" id="node2" href="$class_piecewise_linear_complex_domain.html" title="PiecewiseLinearComplexDomain" alt="" coords="5,80,220,107"/>
-<area shape="rect" id="node3" href="$class_planar_straight_line_graph_domain.html" title="PlanarStraightLineGraphDomain" alt="" coords="245,80,453,107"/>
-<area shape="rect" id="node4" href="$class_rectangular_domain.html" title="RectangularDomain" alt="" coords="477,80,615,107"/>
+<area shape="rect" id="node1" title=" " alt="" coords="345,5,416,32"/>
+<area shape="rect" id="node2" href="$class_piecewise_linear_complex_domain.html" title=" " alt="" coords="5,80,241,107"/>
+<area shape="rect" id="node3" href="$class_planar_straight_line_graph_domain.html" title=" " alt="" coords="265,80,496,107"/>
+<area shape="rect" id="node4" href="$class_rectangular_domain.html" title=" " alt="" coords="520,80,671,107"/>
 </map>

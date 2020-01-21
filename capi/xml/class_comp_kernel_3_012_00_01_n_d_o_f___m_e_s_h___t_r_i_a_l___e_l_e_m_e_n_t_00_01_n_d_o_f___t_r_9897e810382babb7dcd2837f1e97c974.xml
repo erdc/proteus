@@ -1,0 +1,2670 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974" kind="class" language="C++" prot="public">
+    <compoundname>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</compoundname>
+    <includes refid="_comp_kernel_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>NDOF_MESH_TRIAL_ELEMENT</declname>
+        <defname>NDOF_MESH_TRIAL_ELEMENT</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>NDOF_TRIAL_ELEMENT</declname>
+        <defname>NDOF_TRIAL_ELEMENT</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>NDOF_TEST_ELEMENT</declname>
+        <defname>NDOF_TEST_ELEMENT</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a2401fe501c7e10d7f0c572248fdff253" prot="public" static="no" mutable="no">
+        <type><ref refid="class_comp_kernel_space_mapping" kindref="compound">CompKernelSpaceMapping</ref>&lt; 2, NDOF_MESH_TRIAL_ELEMENT &gt;</type>
+        <definition>CompKernelSpaceMapping&lt;2,NDOF_MESH_TRIAL_ELEMENT&gt; CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::mapping</definition>
+        <argsstring></argsstring>
+        <name>mapping</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1780" column="26" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1780" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a600f548cd4ab91b1cfc3fdf11b7bba0b" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::X</definition>
+        <argsstring></argsstring>
+        <name>X</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1781" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1781" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa5bb41f1d2b825dbf6490869da1d83ee" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Y</definition>
+        <argsstring></argsstring>
+        <name>Y</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1782" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1782" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a524056756920d5bfba0043e7a8fe3305" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::XX</definition>
+        <argsstring></argsstring>
+        <name>XX</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1783" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1783" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a0a346d6b6eae9c65c90da52f24575338" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::XY</definition>
+        <argsstring></argsstring>
+        <name>XY</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1783" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1783" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a193a0dfcc96dbf4635811a0eeb8521ab" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::YX</definition>
+        <argsstring></argsstring>
+        <name>YX</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1784" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1784" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a641b17e3623cc36b9336c8f2acc3638f" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::YY</definition>
+        <argsstring></argsstring>
+        <name>YY</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1784" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1784" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a5a1483c5b6e965c4cf31aabf63fecc99" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::sXX</definition>
+        <argsstring></argsstring>
+        <name>sXX</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1785" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1785" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1afa9393cb76e887be44d88b1426813b89" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::sXY</definition>
+        <argsstring></argsstring>
+        <name>sXY</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1785" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1785" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1add3feb4c642bcecc610e12d0fc46c70b" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::sYX</definition>
+        <argsstring></argsstring>
+        <name>sYX</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1786" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1786" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1af3fe09fc4d48537bb61f67d646862aa2" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::sYY</definition>
+        <argsstring></argsstring>
+        <name>sYY</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1786" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1786" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3980412031fad53fde7fc04732770a36" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::nSymTen</definition>
+        <argsstring></argsstring>
+        <name>nSymTen</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1787" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1787" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a80d9fb043c04f3b1e6e09e990ed98e69" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::XHX</definition>
+        <argsstring></argsstring>
+        <name>XHX</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1788" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1788" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a4b1ed9b2d1fd8b8418894f278e55450d" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::YHX</definition>
+        <argsstring></argsstring>
+        <name>YHX</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1789" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1789" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1abe70f07b36dcf04fb5f9f8e7e9eb6693" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::HXHX</definition>
+        <argsstring></argsstring>
+        <name>HXHX</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1790" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1790" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a60b0f77d19b6b08f18bcf0e35697b620" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::CompKernel</definition>
+        <argsstring>()</argsstring>
+        <name>CompKernel</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1791" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1791" bodyend="1802"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3e318c622c13ffd0b5cc2b04286bdfbb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateG</definition>
+        <argsstring>(double *jacInv, double *G, double &amp;G_dd_G, double &amp;tr_G)</argsstring>
+        <name>calculateG</name>
+        <param>
+          <type>double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>G</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>G_dd_G</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>tr_G</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1803" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1803" bodyend="1824"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a85ad2756688935b0cb687dce53502dc5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateGScale</definition>
+        <argsstring>(double *G, double *v, double &amp;h)</argsstring>
+        <name>calculateGScale</name>
+        <param>
+          <type>double *</type>
+          <declname>G</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>h</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1825" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1825" bodyend="1832"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a32dd1f4f997a210dcf8b089fde99df12" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::valFromDOF</definition>
+        <argsstring>(const double *dof, const int *l2g_element, const double *trial_ref, double &amp;val)</argsstring>
+        <name>valFromDOF</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>l2g_element</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>trial_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1833" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1833" bodyend="1838"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a40b1437841d152b947e95d7d2af8a57a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::gradFromDOF</definition>
+        <argsstring>(const double *dof, const int *l2g_element, const double *grad_trial, double *grad)</argsstring>
+        <name>gradFromDOF</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>l2g_element</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>grad_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1840" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1840" bodyend="1847"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a6e015f225445c27b88c3d6281068b5da" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::hessFromDOF</definition>
+        <argsstring>(const double *dof, const int *l2g_element, const double *hess_trial, double *hess)</argsstring>
+        <name>hessFromDOF</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>l2g_element</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>hess_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>hess</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1849" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1849" bodyend="1858"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ab243ec25f9d3a061d4cf8dbe4e09da04" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::valFromElementDOF</definition>
+        <argsstring>(const double *dof, const double *trial_ref, double &amp;val)</argsstring>
+        <name>valFromElementDOF</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>trial_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1860" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1860" bodyend="1865"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa1cfb8aa7096996e6c98ea1758a5bdc4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::gradFromElementDOF</definition>
+        <argsstring>(const double *dof, const double *grad_trial, double *grad)</argsstring>
+        <name>gradFromElementDOF</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>grad_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1867" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1867" bodyend="1874"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ad6238e64f6473e3505c96801cf5144d0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::gradTrialFromRef</definition>
+        <argsstring>(const double *grad_trial_ref, const double *jacInv, double *grad_trial)</argsstring>
+        <name>gradTrialFromRef</name>
+        <param>
+          <type>const double *</type>
+          <declname>grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_trial</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1876" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1876" bodyend="1885"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa441cbd6d22fd116a90555047800f18f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::DOFaverage</definition>
+        <argsstring>(const double *dof, const int *l2g_element, double &amp;val)</argsstring>
+        <name>DOFaverage</name>
+        <param>
+          <type>const double *</type>
+          <declname>dof</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>l2g_element</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1898" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1898" bodyend="1906"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3e47cfcb69ef02d83aa1422a80ca12d6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::hessTrialFromRef</definition>
+        <argsstring>(const double *hess_trial_ref, const double *jacInv, double *hess_trial)</argsstring>
+        <name>hessTrialFromRef</name>
+        <param>
+          <type>const double *</type>
+          <declname>hess_trial_ref</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>hess_trial</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1909" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1909" bodyend="1921"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a1b43880a2da5ff51590d442e8bd864cd" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::gradTestFromRef</definition>
+        <argsstring>(const double *grad_test_ref, const double *jacInv, double *grad_test)</argsstring>
+        <name>gradTestFromRef</name>
+        <param>
+          <type>const double *</type>
+          <declname>grad_test_ref</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_test</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1923" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1923" bodyend="1932"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ad9472a76406105fb103ef8d0e2592190" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::backwardEuler</definition>
+        <argsstring>(const double &amp;dt, const double &amp;m_old, const double &amp;m, const double &amp;dm, double &amp;mt, double &amp;dmt)</argsstring>
+        <name>backwardEuler</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>m_old</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>mt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1934" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1934" bodyend="1938"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a4b69d69b83b585458a2b225642cee98c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::bdf</definition>
+        <argsstring>(const double &amp;alpha, const double &amp;beta, const double &amp;m, const double &amp;dm, double &amp;mt, double &amp;dmt)</argsstring>
+        <name>bdf</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>mt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1940" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1940" bodyend="1944"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa8e3c7d02ade99645da8f890d0fb4933" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::bdfC2</definition>
+        <argsstring>(const double &amp;alpha, const double &amp;beta, const double &amp;m, const double &amp;dm, const double &amp;dm2, double &amp;mt, double &amp;dmt, double &amp;dm2t)</argsstring>
+        <name>bdfC2</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dm2</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>mt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dm2t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1946" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1946" bodyend="1951"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a0b0ff390a59b6625db3d385125ca7431" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Mass_weak</definition>
+        <argsstring>(const double &amp;mt, const double &amp;w_dV)</argsstring>
+        <name>Mass_weak</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>mt</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1953" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1953" bodyend="1956"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ac28bfec66b8752dca236d8e437ea8da3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::MassJacobian_weak</definition>
+        <argsstring>(const double &amp;dmt, const double &amp;v, const double &amp;w_dV)</argsstring>
+        <name>MassJacobian_weak</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1958" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1958" bodyend="1963"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a0fed5557f68202f2e8ba3b6044ce1ab9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Mass_strong</definition>
+        <argsstring>(const double &amp;mt)</argsstring>
+        <name>Mass_strong</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>mt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1965" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1965" bodyend="1968"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1add062632938ad1d6632b66ff7513a45e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::MassJacobian_strong</definition>
+        <argsstring>(const double &amp;dmt, const double &amp;v)</argsstring>
+        <name>MassJacobian_strong</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1970" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1970" bodyend="1974"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aed77955d2ec64e55f18dc3660ba05b66" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Mass_adjoint</definition>
+        <argsstring>(const double &amp;dmt, const double &amp;w_dV)</argsstring>
+        <name>Mass_adjoint</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1976" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1976" bodyend="1980"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a5184fc5a0243e32717ac063eab5ab0fb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::pressureProjection_weak</definition>
+        <argsstring>(const double &amp;viscosity, const double &amp;p, const double &amp;p_avg, const double &amp;q, const double &amp;dV)</argsstring>
+        <name>pressureProjection_weak</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>viscosity</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>p</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>p_avg</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>q</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2000" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2000" bodyend="2008"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a5c2757e1fffbd7515516397b350b81dc" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Advection_weak</definition>
+        <argsstring>(const double f[2], const double grad_w_dV[2])</argsstring>
+        <name>Advection_weak</name>
+        <param>
+          <type>const double</type>
+          <declname>f</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2010" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2010" bodyend="2017"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a933955281784ff66b5e3fe4259697e56" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::AdvectionJacobian_weak</definition>
+        <argsstring>(const double df[2], const double &amp;v, const double grad_w_dV[2])</argsstring>
+        <name>AdvectionJacobian_weak</name>
+        <param>
+          <type>const double</type>
+          <declname>df</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2019" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2019" bodyend="2027"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a7f4d2f1bedf8c231e272b6a28ff99855" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Advection_strong</definition>
+        <argsstring>(const double df[2], const double grad_u[2])</argsstring>
+        <name>Advection_strong</name>
+        <param>
+          <type>const double</type>
+          <declname>df</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2029" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2029" bodyend="2036"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ada111538bc77249574b195ba71c38830" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::AdvectionJacobian_strong</definition>
+        <argsstring>(const double df[2], const double grad_v[2])</argsstring>
+        <name>AdvectionJacobian_strong</name>
+        <param>
+          <type>const double</type>
+          <declname>df</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_v</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2038" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2038" bodyend="2045"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a96775502eec531703c25dc6fd0f2bb05" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Advection_adjoint</definition>
+        <argsstring>(const double df[2], const double grad_w_dV[2])</argsstring>
+        <name>Advection_adjoint</name>
+        <param>
+          <type>const double</type>
+          <declname>df</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2047" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2047" bodyend="2054"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a945bc586d5313f0de107fcccf0d029c0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Hamiltonian_weak</definition>
+        <argsstring>(const double &amp;H, const double &amp;w_dV)</argsstring>
+        <name>Hamiltonian_weak</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>H</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2056" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2056" bodyend="2060"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1afb81b0019dd89243b293443441c92eb4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::HamiltonianJacobian_weak</definition>
+        <argsstring>(const double dH[2], const double grad_v[2], const double &amp;w_dV)</argsstring>
+        <name>HamiltonianJacobian_weak</name>
+        <param>
+          <type>const double</type>
+          <declname>dH</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_v</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2062" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2062" bodyend="2070"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a6857f852c1e02c337d1845f55ebc16cf" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Hamiltonian_strong</definition>
+        <argsstring>(const double dH[2], const double grad_u[2])</argsstring>
+        <name>Hamiltonian_strong</name>
+        <param>
+          <type>const double</type>
+          <declname>dH</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2072" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2072" bodyend="2079"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a888b2a2bc94cf01d5b8fd5dc87ee1591" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::HamiltonianJacobian_strong</definition>
+        <argsstring>(const double dH[2], const double grad_v[2])</argsstring>
+        <name>HamiltonianJacobian_strong</name>
+        <param>
+          <type>const double</type>
+          <declname>dH</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_v</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2081" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2081" bodyend="2088"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ae74d03a301e83d24512ff0bf1e4be906" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Hamiltonian_adjoint</definition>
+        <argsstring>(const double dH[2], const double grad_w_dV[2])</argsstring>
+        <name>Hamiltonian_adjoint</name>
+        <param>
+          <type>const double</type>
+          <declname>dH</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2090" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2090" bodyend="2097"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ac1a9f826a20c01b0d9b3149d16b4efdb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Diffusion_weak</definition>
+        <argsstring>(int *rowptr, int *colind, double *a, const double grad_phi[2], const double grad_w_dV[2])</argsstring>
+        <name>Diffusion_weak</name>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_phi</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2099" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2099" bodyend="2110"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a60e3ae3fc311e81504e7e7a1274f4581" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::DiffusionJacobian_weak</definition>
+        <argsstring>(int *rowptr, int *colind, double *a, double *da, const double grad_phi[2], const double grad_w_dV[2], const double &amp;dphi, const double &amp;v, const double grad_v[2])</argsstring>
+        <name>DiffusionJacobian_weak</name>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_phi</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dphi</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_v</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2112" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2112" bodyend="2130"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a51d889638ae87797e924de0e7b5c7906" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::SimpleDiffusionJacobian_weak</definition>
+        <argsstring>(int *rowptr, int *colind, double *a, const double grad_v[2], const double grad_w_dV[2])</argsstring>
+        <name>SimpleDiffusionJacobian_weak</name>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_v</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2132" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2132" bodyend="2145"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ac02f0140ae939b06531568d4cb17ff17" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Reaction_weak</definition>
+        <argsstring>(const double &amp;r, const double &amp;w_dV)</argsstring>
+        <name>Reaction_weak</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>r</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2147" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2147" bodyend="2151"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a8d214eb03a00b72cb157abeb06a92871" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ReactionJacobian_weak</definition>
+        <argsstring>(const double &amp;dr, const double &amp;v, const double &amp;w_dV)</argsstring>
+        <name>ReactionJacobian_weak</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2153" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2153" bodyend="2158"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a83b3d43c68dbffb01f3636156443357a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Reaction_strong</definition>
+        <argsstring>(const double &amp;r)</argsstring>
+        <name>Reaction_strong</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2160" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2160" bodyend="2163"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a5075dcffd331939d634a66553ebe6083" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ReactionJacobian_strong</definition>
+        <argsstring>(const double &amp;dr, const double &amp;v)</argsstring>
+        <name>ReactionJacobian_strong</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2165" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2165" bodyend="2169"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a8f47fd28d2895314d819f982ecfbe4fb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Reaction_adjoint</definition>
+        <argsstring>(const double &amp;dr, const double &amp;w_dV)</argsstring>
+        <name>Reaction_adjoint</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dr</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2171" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2171" bodyend="2175"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a799fc883f685a0adc4c098cf4f8f5a34" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateNumericalDiffusion</definition>
+        <argsstring>(const double &amp;shockCapturingDiffusion, const double &amp;elementDiameter, const double &amp;strong_residual, const double grad_u[2], double &amp;numDiff)</argsstring>
+        <name>calculateNumericalDiffusion</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2177" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2177" bodyend="2195"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ace07081bd96df6fada91512a3ea2c5c6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateNumericalDiffusion</definition>
+        <argsstring>(const double &amp;shockCapturingDiffusion, const double G[2 *2], const double &amp;strong_residual, const double grad_u[2], double &amp;numDiff)</argsstring>
+        <name>calculateNumericalDiffusion</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>G</declname>
+          <array>[2 *2]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2198" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2198" bodyend="2210"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a2dc3a2b7765133f7e20cbbf08642d4ab" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateNumericalDiffusion</definition>
+        <argsstring>(const double &amp;shockCapturingDiffusion, const double &amp;uref, const double &amp;beta, const double G[2 *2], const double &amp;G_dd_G, const double &amp;strong_residual, const double grad_u[2], double &amp;numDiff)</argsstring>
+        <name>calculateNumericalDiffusion</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>uref</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>G</declname>
+          <array>[2 *2]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>G_dd_G</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2212" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2212" bodyend="2228"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1afca436dc5effc9e5a17901cb83f6da36" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateNumericalDiffusion</definition>
+        <argsstring>(const double &amp;shockCapturingDiffusion, const double G[2 *2], const double &amp;strong_residual, const double vel[2], const double grad_u[2], double &amp;numDiff)</argsstring>
+        <name>calculateNumericalDiffusion</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>G</declname>
+          <array>[2 *2]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>vel</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2232" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2232" bodyend="2248"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a217d89885f618c5da57e7d5c184b3747" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateNumericalDiffusion</definition>
+        <argsstring>(const double &amp;shockCapturingDiffusion, const double &amp;elementDiameter, const double &amp;strong_residual, const double grad_u[2], double &amp;gradNorm, double &amp;gradNorm_last, double &amp;numDiff)</argsstring>
+        <name>calculateNumericalDiffusion</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>gradNorm</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>gradNorm_last</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2251" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2251" bodyend="2270"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aebe04917b1b58a2c3b35b80790311d09" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::SubgridError</definition>
+        <argsstring>(const double &amp;error, const double &amp;Lstar_w_dV)</argsstring>
+        <name>SubgridError</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>error</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lstar_w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2272" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2272" bodyend="2276"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a9512b220b8f6eecccdb841f02e8f1f39" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::SubgridErrorJacobian</definition>
+        <argsstring>(const double &amp;derror, const double &amp;Lstar_w_dV)</argsstring>
+        <name>SubgridErrorJacobian</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>derror</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lstar_w_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2278" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2278" bodyend="2282"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a0f0e4871f596ce21a79ef4986199939b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::NumericalDiffusion</definition>
+        <argsstring>(const double &amp;numDiff, const double grad_u[2], const double grad_w_dV[2])</argsstring>
+        <name>NumericalDiffusion</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2284" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2284" bodyend="2292"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a2e9c9aa4359ae77c871b2cb6aed6ce1d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::NumericalDiffusionJacobian</definition>
+        <argsstring>(const double &amp;numDiff, const double grad_v[2], const double grad_w_dV[2])</argsstring>
+        <name>NumericalDiffusionJacobian</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_v</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dV</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2294" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2294" bodyend="2302"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a71cc193bf43146af169478e1a0c228e1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ExteriorElementBoundaryFlux</definition>
+        <argsstring>(const double &amp;flux, const double &amp;w_dS)</argsstring>
+        <name>ExteriorElementBoundaryFlux</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>flux</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dS</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2306" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2306" bodyend="2310"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a437e4b3fa1475162fdc2fb0bae2fd923" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::InteriorElementBoundaryFlux</definition>
+        <argsstring>(const double &amp;flux, const double &amp;w_dS)</argsstring>
+        <name>InteriorElementBoundaryFlux</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>flux</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>w_dS</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2312" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2312" bodyend="2316"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa8700e3eb704229b70e9e107c4b11eb1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ExteriorNumericalAdvectiveFluxJacobian</definition>
+        <argsstring>(const double &amp;dflux_left, const double &amp;v)</argsstring>
+        <name>ExteriorNumericalAdvectiveFluxJacobian</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dflux_left</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2318" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2318" bodyend="2322"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aaf140c5116d29f08b575d06aea096672" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::InteriorNumericalAdvectiveFluxJacobian</definition>
+        <argsstring>(const double &amp;dflux_left, const double &amp;v)</argsstring>
+        <name>InteriorNumericalAdvectiveFluxJacobian</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dflux_left</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2324" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2324" bodyend="2328"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a383868e63cd7fef79b0f3e5b1122dc19" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ExteriorElementBoundaryScalarDiffusionAdjoint</definition>
+        <argsstring>(const int &amp;isDOFBoundary, const int &amp;isFluxBoundary, const double &amp;sigma, const double &amp;u, const double &amp;bc_u, const double normal[2], const double &amp;a, const double grad_w_dS[2])</argsstring>
+        <name>ExteriorElementBoundaryScalarDiffusionAdjoint</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDOFBoundary</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isFluxBoundary</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>sigma</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>bc_u</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>normal</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dS</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2330" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2330" bodyend="2346"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aec88912e4067a4ab1fce32ae69b71d21" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ExteriorElementBoundaryScalarDiffusionAdjointJacobian</definition>
+        <argsstring>(const int &amp;isDOFBoundary, const int &amp;isFluxBoundary, const double &amp;sigma, const double &amp;v, const double normal[2], const double &amp;a, const double grad_w_dS[2])</argsstring>
+        <name>ExteriorElementBoundaryScalarDiffusionAdjointJacobian</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDOFBoundary</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isFluxBoundary</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>sigma</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>normal</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dS</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2348" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2348" bodyend="2363"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3be237fb141524501d9a6142d145c493" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ExteriorElementBoundaryDiffusionAdjoint</definition>
+        <argsstring>(const int &amp;isDOFBoundary, const int &amp;isFluxBoundary, const double &amp;sigma, const double &amp;u, const double &amp;bc_u, const double normal[2], int *rowptr, int *colind, double *a, const double grad_w_dS[2])</argsstring>
+        <name>ExteriorElementBoundaryDiffusionAdjoint</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDOFBoundary</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isFluxBoundary</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>sigma</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>bc_u</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>normal</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dS</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2365" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2365" bodyend="2381"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a9d678c702898b30d7d47bd9bcedf3861" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ExteriorElementBoundaryDiffusionAdjointJacobian</definition>
+        <argsstring>(const int &amp;isDOFBoundary, const int &amp;isFluxBoundary, const double &amp;sigma, const double &amp;v, const double normal[2], int *rowptr, int *colind, double *a, const double grad_w_dS[2])</argsstring>
+        <name>ExteriorElementBoundaryDiffusionAdjointJacobian</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDOFBoundary</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isFluxBoundary</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>sigma</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>normal</declname>
+          <array>[2]</array>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>colind</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_w_dS</declname>
+          <array>[2]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2383" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2383" bodyend="2398"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1abb69daedaa69606e75baa9442a2d5902" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateMapping_element</definition>
+        <argsstring>(const int eN, const int k, double *mesh_dof, int *mesh_l2g, double *mesh_trial_ref, double *mesh_grad_trial_ref, double *jac, double &amp;jacDet, double *jacInv, double &amp;x, double &amp;y)</argsstring>
+        <name>calculateMapping_element</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jac</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>jacDet</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2400" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2400" bodyend="2413"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3fa49fbe32f222b9409489d4d8bee9e6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateH_element</definition>
+        <argsstring>(const int eN, const int k, double *h_dof, int *mesh_l2g, double *mesh_trial_ref, double &amp;h)</argsstring>
+        <name>calculateH_element</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>h_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>h</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2415" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2415" bodyend="2428"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ad8d84cdb9823df63bd86bc23aea28896" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateMapping_element</definition>
+        <argsstring>(const int eN, const int k, double *mesh_dof, int *mesh_l2g, double *mesh_trial_ref, double *mesh_grad_trial_ref, double *jac, double &amp;jacDet, double *jacInv, double &amp;x, double &amp;y, double &amp;z)</argsstring>
+        <name>calculateMapping_element</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jac</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>jacDet</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>z</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2430" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2430" bodyend="2444"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3d2c5260af08d99453a7a7ae61cbd610" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateMappingVelocity_element</definition>
+        <argsstring>(const int eN, const int k, double *meshVelocity_dof, int *mesh_l2g, double *mesh_trial_ref, double &amp;xt, double &amp;yt)</argsstring>
+        <name>calculateMappingVelocity_element</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>meshVelocity_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>xt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>yt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2446" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2446" bodyend="2455"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ad161cdf351afabcc953eb215c4a8ff09" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateMappingVelocity_element</definition>
+        <argsstring>(const int eN, const int k, double *meshVelocity_dof, int *mesh_l2g, double *mesh_trial_ref, double &amp;xt, double &amp;yt, double &amp;zt)</argsstring>
+        <name>calculateMappingVelocity_element</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>meshVelocity_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>xt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>yt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>zt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2457" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2457" bodyend="2467"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a71373cea4b8855ec0c86b7f0e4b9f467" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateMapping_elementBoundary</definition>
+        <argsstring>(const int eN, const int ebN_local, const int kb, const int ebN_local_kb, double *mesh_dof, int *mesh_l2g, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *boundaryJac_ref, double *jac, double &amp;jacDet, double *jacInv, double *boundaryJac, double *metricTensor, double &amp;metricTensorDetSqrt, double *normal_ref, double *normal, double &amp;x, double &amp;y)</argsstring>
+        <name>calculateMapping_elementBoundary</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>kb</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local_kb</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jac</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>jacDet</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>metricTensor</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>metricTensorDetSqrt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2470" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2470" bodyend="2509"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a7c08f54080f009d0131aebb42687037b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateMapping_elementBoundary</definition>
+        <argsstring>(const int eN, const int ebN_local, const int kb, const int ebN_local_kb, double *mesh_dof, int *mesh_l2g, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *boundaryJac_ref, double *jac, double &amp;jacDet, double *jacInv, double *boundaryJac, double *metricTensor, double &amp;metricTensorDetSqrt, double *normal_ref, double *normal, double &amp;x, double &amp;y, double &amp;z)</argsstring>
+        <name>calculateMapping_elementBoundary</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>kb</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local_kb</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jac</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>jacDet</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>jacInv</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>metricTensor</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>metricTensorDetSqrt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>z</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2512" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2512" bodyend="2553"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a640f74014ef439887695f35406d07ace" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateMappingVelocity_elementBoundary</definition>
+        <argsstring>(const int eN, const int ebN_local, const int kb, const int ebN_local_kb, double *mesh_velocity_dof, int *mesh_l2g, double *mesh_trial_trace_ref, double &amp;xt, double &amp;yt, double *normal, double *boundaryJac, double *metricTensor, double &amp;metricTensorDetSqrt)</argsstring>
+        <name>calculateMappingVelocity_elementBoundary</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>kb</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local_kb</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>xt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>yt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>metricTensor</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>metricTensorDetSqrt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2556" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2556" bodyend="2583"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a53a3da5dc6ce051b78cffcb05b202d26" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::calculateMappingVelocity_elementBoundary</definition>
+        <argsstring>(const int eN, const int ebN_local, const int kb, const int ebN_local_kb, double *mesh_velocity_dof, int *mesh_l2g, double *mesh_trial_trace_ref, double &amp;xt, double &amp;yt, double &amp;zt, double *normal, double *boundaryJac, double *metricTensor, double &amp;metricTensorDetSqrt)</argsstring>
+        <name>calculateMappingVelocity_elementBoundary</name>
+        <param>
+          <type>const int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>kb</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>ebN_local_kb</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>xt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>yt</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>zt</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>metricTensor</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>metricTensorDetSqrt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2585" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2585" bodyend="2614"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a8b7521c9d6e2f2a5e6c8bd897a0513a7" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Stress_u_weak</definition>
+        <argsstring>(double *stress, double *grad_test_dV)</argsstring>
+        <name>Stress_u_weak</name>
+        <param>
+          <type>double *</type>
+          <declname>stress</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_test_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2615" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2615" bodyend="2618"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a6772a927b0758c8972542ca63089802f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::StressJacobian_u_u_weak</definition>
+        <argsstring>(double *dstress, double *grad_trial, double *grad_test_dV)</argsstring>
+        <name>StressJacobian_u_u_weak</name>
+        <param>
+          <type>double *</type>
+          <declname>dstress</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_test_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2619" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2619" bodyend="2624"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a85fbb10d4a815be4b9316d6480f0f943" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::StressJacobian_u_v_weak</definition>
+        <argsstring>(double *dstress, double *grad_trial, double *grad_test_dV)</argsstring>
+        <name>StressJacobian_u_v_weak</name>
+        <param>
+          <type>double *</type>
+          <declname>dstress</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_test_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2625" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2625" bodyend="2630"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a49dacf7d7dcf50067825b02c3f032aa6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::Stress_v_weak</definition>
+        <argsstring>(double *stress, double *grad_test_dV)</argsstring>
+        <name>Stress_v_weak</name>
+        <param>
+          <type>double *</type>
+          <declname>stress</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_test_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2631" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2631" bodyend="2634"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1acb87d408f4d14ae174812e5861ba88eb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::StressJacobian_v_u_weak</definition>
+        <argsstring>(double *dstress, double *grad_trial, double *grad_test_dV)</argsstring>
+        <name>StressJacobian_v_u_weak</name>
+        <param>
+          <type>double *</type>
+          <declname>dstress</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_test_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2635" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2635" bodyend="2640"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a58ac1080d6cbdf19cad64d27e1b7279b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::StressJacobian_v_v_weak</definition>
+        <argsstring>(double *dstress, double *grad_trial, double *grad_test_dV)</argsstring>
+        <name>StressJacobian_v_v_weak</name>
+        <param>
+          <type>double *</type>
+          <declname>dstress</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_trial</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>grad_test_dV</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2641" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2641" bodyend="2646"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1accdcb40eb7e2a2d5bbef7c80376a866d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ExteriorElementBoundaryStressFlux</definition>
+        <argsstring>(const double &amp;stressFlux, const double &amp;disp_test_dS)</argsstring>
+        <name>ExteriorElementBoundaryStressFlux</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>stressFlux</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>disp_test_dS</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2647" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2647" bodyend="2650"/>
+      </memberdef>
+      <memberdef kind="function" id="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a78fc6657cd15f30b4498538678bacce4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;::ExteriorElementBoundaryStressFluxJacobian</definition>
+        <argsstring>(const double &amp;dstressFlux, const double &amp;disp_test_dS)</argsstring>
+        <name>ExteriorElementBoundaryStressFluxJacobian</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dstressFlux</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>disp_test_dS</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="2651" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="2651" bodyend="2654"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="2">
+        <label>CompKernelSpaceMapping&lt; 2, NDOF_MESH_TRIAL_ELEMENT &gt;</label>
+        <link refid="class_comp_kernel_space_mapping_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_01_4"/>
+      </node>
+      <node id="1">
+        <label>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</label>
+        <link refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>mapping</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" line="1778" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/CompKernel.h" bodystart="1777" bodyend="2655"/>
+    <listofallmembers>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a96775502eec531703c25dc6fd0f2bb05" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Advection_adjoint</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a7f4d2f1bedf8c231e272b6a28ff99855" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Advection_strong</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a5c2757e1fffbd7515516397b350b81dc" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Advection_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ada111538bc77249574b195ba71c38830" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>AdvectionJacobian_strong</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a933955281784ff66b5e3fe4259697e56" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>AdvectionJacobian_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ad9472a76406105fb103ef8d0e2592190" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>backwardEuler</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a4b69d69b83b585458a2b225642cee98c" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>bdf</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa8e3c7d02ade99645da8f890d0fb4933" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>bdfC2</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3e318c622c13ffd0b5cc2b04286bdfbb" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateG</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a85ad2756688935b0cb687dce53502dc5" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateGScale</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3fa49fbe32f222b9409489d4d8bee9e6" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateH_element</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1abb69daedaa69606e75baa9442a2d5902" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateMapping_element</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ad8d84cdb9823df63bd86bc23aea28896" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateMapping_element</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a71373cea4b8855ec0c86b7f0e4b9f467" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateMapping_elementBoundary</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a7c08f54080f009d0131aebb42687037b" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateMapping_elementBoundary</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3d2c5260af08d99453a7a7ae61cbd610" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateMappingVelocity_element</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ad161cdf351afabcc953eb215c4a8ff09" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateMappingVelocity_element</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a640f74014ef439887695f35406d07ace" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateMappingVelocity_elementBoundary</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a53a3da5dc6ce051b78cffcb05b202d26" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateMappingVelocity_elementBoundary</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a799fc883f685a0adc4c098cf4f8f5a34" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateNumericalDiffusion</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ace07081bd96df6fada91512a3ea2c5c6" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateNumericalDiffusion</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a2dc3a2b7765133f7e20cbbf08642d4ab" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateNumericalDiffusion</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1afca436dc5effc9e5a17901cb83f6da36" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateNumericalDiffusion</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a217d89885f618c5da57e7d5c184b3747" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>calculateNumericalDiffusion</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a60b0f77d19b6b08f18bcf0e35697b620" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>CompKernel</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ac1a9f826a20c01b0d9b3149d16b4efdb" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Diffusion_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a60e3ae3fc311e81504e7e7a1274f4581" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>DiffusionJacobian_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa441cbd6d22fd116a90555047800f18f" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>DOFaverage</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3be237fb141524501d9a6142d145c493" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ExteriorElementBoundaryDiffusionAdjoint</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a9d678c702898b30d7d47bd9bcedf3861" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ExteriorElementBoundaryDiffusionAdjointJacobian</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a71cc193bf43146af169478e1a0c228e1" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ExteriorElementBoundaryFlux</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a383868e63cd7fef79b0f3e5b1122dc19" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ExteriorElementBoundaryScalarDiffusionAdjoint</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aec88912e4067a4ab1fce32ae69b71d21" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ExteriorElementBoundaryScalarDiffusionAdjointJacobian</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1accdcb40eb7e2a2d5bbef7c80376a866d" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ExteriorElementBoundaryStressFlux</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a78fc6657cd15f30b4498538678bacce4" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ExteriorElementBoundaryStressFluxJacobian</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa8700e3eb704229b70e9e107c4b11eb1" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ExteriorNumericalAdvectiveFluxJacobian</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a40b1437841d152b947e95d7d2af8a57a" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>gradFromDOF</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa1cfb8aa7096996e6c98ea1758a5bdc4" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>gradFromElementDOF</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a1b43880a2da5ff51590d442e8bd864cd" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>gradTestFromRef</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ad6238e64f6473e3505c96801cf5144d0" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>gradTrialFromRef</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ae74d03a301e83d24512ff0bf1e4be906" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Hamiltonian_adjoint</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a6857f852c1e02c337d1845f55ebc16cf" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Hamiltonian_strong</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a945bc586d5313f0de107fcccf0d029c0" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Hamiltonian_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a888b2a2bc94cf01d5b8fd5dc87ee1591" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>HamiltonianJacobian_strong</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1afb81b0019dd89243b293443441c92eb4" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>HamiltonianJacobian_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a6e015f225445c27b88c3d6281068b5da" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>hessFromDOF</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3e47cfcb69ef02d83aa1422a80ca12d6" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>hessTrialFromRef</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1abe70f07b36dcf04fb5f9f8e7e9eb6693" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>HXHX</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a437e4b3fa1475162fdc2fb0bae2fd923" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>InteriorElementBoundaryFlux</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aaf140c5116d29f08b575d06aea096672" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>InteriorNumericalAdvectiveFluxJacobian</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a2401fe501c7e10d7f0c572248fdff253" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>mapping</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aed77955d2ec64e55f18dc3660ba05b66" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Mass_adjoint</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a0fed5557f68202f2e8ba3b6044ce1ab9" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Mass_strong</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a0b0ff390a59b6625db3d385125ca7431" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Mass_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1add062632938ad1d6632b66ff7513a45e" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>MassJacobian_strong</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ac28bfec66b8752dca236d8e437ea8da3" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>MassJacobian_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a3980412031fad53fde7fc04732770a36" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>nSymTen</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a0f0e4871f596ce21a79ef4986199939b" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>NumericalDiffusion</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a2e9c9aa4359ae77c871b2cb6aed6ce1d" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>NumericalDiffusionJacobian</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a5184fc5a0243e32717ac063eab5ab0fb" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>pressureProjection_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a8f47fd28d2895314d819f982ecfbe4fb" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Reaction_adjoint</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a83b3d43c68dbffb01f3636156443357a" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Reaction_strong</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ac02f0140ae939b06531568d4cb17ff17" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Reaction_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a5075dcffd331939d634a66553ebe6083" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ReactionJacobian_strong</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a8d214eb03a00b72cb157abeb06a92871" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>ReactionJacobian_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a51d889638ae87797e924de0e7b5c7906" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>SimpleDiffusionJacobian_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a8b7521c9d6e2f2a5e6c8bd897a0513a7" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Stress_u_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a49dacf7d7dcf50067825b02c3f032aa6" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Stress_v_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a6772a927b0758c8972542ca63089802f" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>StressJacobian_u_u_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a85fbb10d4a815be4b9316d6480f0f943" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>StressJacobian_u_v_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1acb87d408f4d14ae174812e5861ba88eb" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>StressJacobian_v_u_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a58ac1080d6cbdf19cad64d27e1b7279b" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>StressJacobian_v_v_weak</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aebe04917b1b58a2c3b35b80790311d09" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>SubgridError</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a9512b220b8f6eecccdb841f02e8f1f39" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>SubgridErrorJacobian</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a5a1483c5b6e965c4cf31aabf63fecc99" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>sXX</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1afa9393cb76e887be44d88b1426813b89" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>sXY</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1add3feb4c642bcecc610e12d0fc46c70b" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>sYX</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1af3fe09fc4d48537bb61f67d646862aa2" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>sYY</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a32dd1f4f997a210dcf8b089fde99df12" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>valFromDOF</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1ab243ec25f9d3a061d4cf8dbe4e09da04" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>valFromElementDOF</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a600f548cd4ab91b1cfc3fdf11b7bba0b" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>X</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a80d9fb043c04f3b1e6e09e990ed98e69" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>XHX</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a524056756920d5bfba0043e7a8fe3305" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>XX</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a0a346d6b6eae9c65c90da52f24575338" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>XY</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1aa5bb41f1d2b825dbf6490869da1d83ee" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>Y</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a4b1ed9b2d1fd8b8418894f278e55450d" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>YHX</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a193a0dfcc96dbf4635811a0eeb8521ab" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>YX</name></member>
+      <member refid="class_comp_kernel_3_012_00_01_n_d_o_f___m_e_s_h___t_r_i_a_l___e_l_e_m_e_n_t_00_01_n_d_o_f___t_r_9897e810382babb7dcd2837f1e97c974_1a641b17e3623cc36b9336c8f2acc3638f" prot="public" virt="non-virtual"><scope>CompKernel&lt; 2, NDOF_MESH_TRIAL_ELEMENT, NDOF_TRIAL_ELEMENT, NDOF_TEST_ELEMENT &gt;</scope><name>YY</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

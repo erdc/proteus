@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="struct_multilevel_mesh" kind="struct" language="C++" prot="public">
+    <compoundname>MultilevelMesh</compoundname>
+    <includes refid="mesh_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mesh.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_multilevel_mesh_1a6548922b35b3b706b7c204b506678d36" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int MultilevelMesh::nLevels</definition>
+        <argsstring></argsstring>
+        <name>nLevels</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="259" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="259" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_multilevel_mesh_1afac2870657d5f0b10216e12a4193eee7" prot="public" static="no" mutable="no">
+        <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> *</type>
+        <definition>Mesh* MultilevelMesh::meshArray</definition>
+        <argsstring></argsstring>
+        <name>meshArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="260" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="260" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_multilevel_mesh_1a6ada5eb59a4afae6c8300ecaeca2d9bb" prot="public" static="no" mutable="no">
+        <type>int **</type>
+        <definition>int** MultilevelMesh::elementParentsArray</definition>
+        <argsstring></argsstring>
+        <name>elementParentsArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="261" column="9" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="261" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_multilevel_mesh_1abd7168c12797775bfefbb4dc915190d8" prot="public" static="no" mutable="no">
+        <type>int **</type>
+        <definition>int ** MultilevelMesh::elementChildrenArray</definition>
+        <argsstring></argsstring>
+        <name>elementChildrenArray</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="262" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="262" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_multilevel_mesh_1acf9305656a51158e04d5e613c26880ce" prot="public" static="no" mutable="no">
+        <type>int **</type>
+        <definition>int ** MultilevelMesh::elementChildrenOffsets</definition>
+        <argsstring></argsstring>
+        <name>elementChildrenOffsets</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="263" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="263" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="2">
+        <label>Mesh</label>
+        <link refid="struct_mesh"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>subdomainp</edgelabel>
+        </childnode>
+      </node>
+      <node id="1">
+        <label>MultilevelMesh</label>
+        <link refid="struct_multilevel_mesh"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>meshArray</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="258" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="257" bodyend="264"/>
+    <listofallmembers>
+      <member refid="struct_multilevel_mesh_1abd7168c12797775bfefbb4dc915190d8" prot="public" virt="non-virtual"><scope>MultilevelMesh</scope><name>elementChildrenArray</name></member>
+      <member refid="struct_multilevel_mesh_1acf9305656a51158e04d5e613c26880ce" prot="public" virt="non-virtual"><scope>MultilevelMesh</scope><name>elementChildrenOffsets</name></member>
+      <member refid="struct_multilevel_mesh_1a6ada5eb59a4afae6c8300ecaeca2d9bb" prot="public" virt="non-virtual"><scope>MultilevelMesh</scope><name>elementParentsArray</name></member>
+      <member refid="struct_multilevel_mesh_1afac2870657d5f0b10216e12a4193eee7" prot="public" virt="non-virtual"><scope>MultilevelMesh</scope><name>meshArray</name></member>
+      <member refid="struct_multilevel_mesh_1a6548922b35b3b706b7c204b506678d36" prot="public" virt="non-virtual"><scope>MultilevelMesh</scope><name>nLevels</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

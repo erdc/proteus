@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_solve_8cpp" kind="file" language="C++">
+    <compoundname>Solve.cpp</compoundname>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_solve_8cpp_1a3968b9fc852423275f40ce0691459328" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Solve</definition>
+        <argsstring>(double **a, double *b, int m, int n, double *solution, int MP, int NP)</argsstring>
+        <name>Solve</name>
+        <param>
+          <type>double **</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>solution</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>MP</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>NP</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Solve.cpp" line="1" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Solve.cpp" bodystart="1" bodyend="32"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1" refid="_solve_8cpp_1a3968b9fc852423275f40ce0691459328" refkind="member"><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_solve_8cpp_1a3968b9fc852423275f40ce0691459328" kindref="member">Solve</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**a,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*b,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*solution,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>MP,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>NP)</highlight></codeline>
+<codeline lineno="2"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i;</highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>,<sp/>**<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,<sp/>wmax,<sp/>wmin;</highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nh);</highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**<ref refid="_allocation_8h_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" kindref="member">dmatrix</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrh,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>ncl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nch);</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_dsvdcmp_8cpp_1ab791ce4302c0d29d57ea815d1def66aa" kindref="member">dsvdcmp</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**a,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>[],<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>);</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_dsvbksb_8cpp_1a56e6e0499518be2771c063e7e6ea8209" kindref="member">dsvbksb</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**<ref refid="_headers_8h_1a81073496b3df485c6b59c5823819310b" kindref="member">u</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>[],<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>b[],<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>x[]);</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nh);</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_allocation_8h_1a04fbc9bc53e6303830eb4338bc1f3259" kindref="member">free_dmatrix</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**m,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrh,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>ncl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nch);</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>=<ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(1,NP);</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>=<ref refid="_allocation_8h_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" kindref="member">dmatrix</ref>(1,NP,1,NP);</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Perform<sp/>decomposition</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><ref refid="_dsvdcmp_8cpp_1ab791ce4302c0d29d57ea815d1def66aa" kindref="member">dsvdcmp</ref>(a,m,<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,<ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>,<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>);</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Set<sp/>up:<sp/>see<sp/>p65<sp/>of<sp/>Press<sp/>et<sp/>al.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal">wmax<sp/>=<sp/>0.;</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1<sp/>;<sp/>i&lt;=<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>i++)<sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>[i]<sp/>&gt;=<sp/>wmax<sp/>)<sp/>wmax<sp/>=<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>[i];</highlight></codeline>
+<codeline lineno="23"><highlight class="normal">wmin<sp/>=<sp/>wmax<sp/>*<sp/>1.e-12;</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(<sp/>i=1<sp/>;<sp/>i&lt;=<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref><sp/>;<sp/>i++)<sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>[i]<sp/>&lt;=<sp/>wmin<sp/>)<sp/><ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>[i]<sp/>=<sp/>0.;</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Back<sp/>substitute</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><ref refid="_dsvbksb_8cpp_1a56e6e0499518be2771c063e7e6ea8209" kindref="member">dsvbksb</ref>(a,<ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>,<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,m,<ref refid="_headers_8h_1a08a4b8173deed2dbe6993d906ff006cb" kindref="member">n</ref>,b,solution);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><ref refid="_allocation_8h_1a04fbc9bc53e6303830eb4338bc1f3259" kindref="member">free_dmatrix</ref>(<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,1,NP,1,NP);</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(<ref refid="jf_8h_1a903054ae14c61b1d440291818185c51c" kindref="member">w</ref>,1,NP);</highlight></codeline>
+<codeline lineno="32"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Solve.cpp"/>
+  </compounddef>
+</doxygen>

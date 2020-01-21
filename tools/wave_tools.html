@@ -1,0 +1,462 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>WaveTools &mdash; Proteus 1.7.2 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Body Dynamics" href="../models/body_dynamics.html" />
+    <link rel="prev" title="TwoPhaseFlow" href="two_phase_flow.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/corps_logo_cross2.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apicapi.html">API docs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tools</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="boundary_conditions.html">BoundaryConditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="boundary_conditions.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="boundary_conditions.html#import">Import</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spatial_tools.html">SpatialTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spatial_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#import">Import</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#choosing-the-domain">Choosing the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#assembling-the-domain">Assembling the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#boundaryconditions-with-spatialtools">BoundaryConditions with SpatialTools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#id1">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#linking-it-to-p-py-files">Linking it to _p.py files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="spatial_tools.html#complete-examples">Complete Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#d">2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#id2">3D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#d-with-stl">3D with STL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="spatial_tools.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#base-classes">Base classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#customshape">CustomShape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#rectangle">Rectangle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#circle">Circle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#cuboid">Cuboid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#cylinder">Cylinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#sphere">Sphere</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#shapestl">ShapeSTL</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spatial_tools.html#mprans-specific">mprans specific</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#tank2d">Tank2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#tank3d">Tank3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="spatial_tools.html#tankwithobstacle2d">TankWithObstacle2D</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="two_phase_flow.html">TwoPhaseFlow</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">WaveTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#import-in-command-line">Import in command line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#list-of-wave-theories">List of wave theories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-use-in-proteus">How to use in Proteus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-use-as-stand-alone-tool">How to use as stand-alone tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Models</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../models/body_dynamics.html">Body Dynamics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchsystem">ProtChSystem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchbody">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmesh">ProtChMesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmoorings">ProtChMoorings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchaddedmass">ProtChAddedMass</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#postprocessing-tools">Postprocessing Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id4">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id5">ProtChMoorings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/free_surface.html">Free Surface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#vof-ncls">VOF - NCLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#clsvof">CLSVOF</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_adaptivity.html">Mesh Adaptivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_motion.html">Mesh Motion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/navier_stokes.html">Navier-Stokes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#two-phase">Two-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#three-phase">Three-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#dealing-with-moving-domains">Dealing with Moving Domains</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#moving-ale-mesh">Moving (ALE) Mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#immersed-boundaries">Immersed Boundaries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/SWFlows.html">Shallow Water Flows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#shallow-water-equations">Shallow Water equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#modified-green-naghdi-equations">Modified Green-Naghdi equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#running-the-tests">Running the tests</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Proteus</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>WaveTools</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/erdc/proteus/blob/masterdocs/source/tools/wave_tools.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="wavetools">
+<span id="wave-tools"></span><h1>WaveTools<a class="headerlink" href="#wavetools" title="Permalink to this headline">¶</a></h1>
+<p>source: <a class="reference internal" href="../api/proteus.WaveTools.html#module-proteus.WaveTools" title="proteus.WaveTools"><code class="xref py py-mod docutils literal notranslate"><span class="pre">proteus.WaveTools</span></code></a></p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>This module offers a framework for calculating the free-surface elevation and wave velocities based on various wave theories. Wave theories are organised in classes within the module. The module is written in Python / Cython and C++ for optimising calculation speed.</p>
+<div class="section" id="import-in-command-line">
+<h3>Import in command line<a class="headerlink" href="#import-in-command-line" title="Permalink to this headline">¶</a></h3>
+<p>Once installed Proteus, you can open a python or ipython command line and type</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">WaveTools</span> <span class="k">as</span> <span class="n">wt</span>
+</pre></div>
+</div>
+<p>You can see information on the module (including available classes) by typing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">wt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and you can see a list of classes and functions by typing</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wt</span><span class="o">.</span><span class="n">__all__</span>
+</pre></div>
+</div>
+<p>Each function or class has documentation info which is accessible by typing</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">wt</span><span class="o">.</span><span class="n">function</span><span class="p">)</span>
+<span class="n">help</span><span class="p">(</span><span class="n">wt</span><span class="o">.</span><span class="n">class</span><span class="p">)</span>
+<span class="n">help</span><span class="p">(</span><span class="n">wt</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">function</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="list-of-wave-theories">
+<h3>List of wave theories<a class="headerlink" href="#list-of-wave-theories" title="Permalink to this headline">¶</a></h3>
+<p>Available classes that correspond to wave theories are</p>
+<p><code class="docutils literal notranslate"><span class="pre">SteadyCurrent</span></code> - Introduce steady currents with ramp time</p>
+<p><code class="docutils literal notranslate"><span class="pre">SolitaryWave</span></code> - Generate 1st order solitary waves</p>
+<p><code class="docutils literal notranslate"><span class="pre">MonochromaticWaves</span></code> - Generate linear and nonlinear monochromatic waves. Nonlinear wave theory according to <a class="reference external" href="http://johndfenton.com/Steady-waves/Fourier.html">Fenton’s Fourier transform</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">NewWave</span></code> - Generate waves according to NewWave theory <a class="reference external" href="https://www.onepetro.org/conference-paper/ISOPE-I-91-154">Tromans et al 1991</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">RandomWaves</span></code> - Generate plane random waves from JONSWAP or Pierson Moskovitch</p>
+<p><code class="docutils literal notranslate"><span class="pre">MultiSpectraRandomWaves</span></code> - Generate random waves by overlaying multiple frequency spectra. Wave spectra can meet in different angles</p>
+<p><code class="docutils literal notranslate"><span class="pre">DirectionalWaves</span></code> - Generate random waves using JOSNWAP / PM spectra for frequencies and cos-2s/Mitsuyashu spectra for directions</p>
+<p><code class="docutils literal notranslate"><span class="pre">TimeSeries</span></code> - Generate waves from a given free-surface time series. Time series can be reconstructed using direct or windowed methods</p>
+<p><code class="docutils literal notranslate"><span class="pre">RandomWavesFast</span></code> - Same as <code class="docutils literal notranslate"><span class="pre">RandomWaves</span></code> only much more computationally efficient, see <a class="reference external" href="https://www.icevirtuallibrary.com/doi/abs/10.1680/jencm.17.00016">Dimakopoulos et al 2019</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">RandomNLWaves</span></code>  - Generate plane random waves from JONSWAP or RM, using 2nd order theory, following <a class="reference external" href="https://www.sciencedirect.com/science/article/abs/pii/S0141118799000085">Dalzell’s formulae</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">RandomNLWavesFast</span></code> - Same as  <code class="docutils literal notranslate"><span class="pre">RandomNLWaves</span></code> only much more computationally efficient, by using the approach of <a class="reference external" href="https://www.icevirtuallibrary.com/doi/abs/10.1680/jencm.17.00016">Dimakopoulos et al 2019</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">CombineWaves</span></code> - Generate waves by combining any of the wave theories above</p>
+</div>
+<div class="section" id="how-to-use-in-proteus">
+<h3>How to use in Proteus<a class="headerlink" href="#how-to-use-in-proteus" title="Permalink to this headline">¶</a></h3>
+<p>The wave tools module is loaded at the preample as in the case of the command line:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">proteus</span> <span class="kn">import</span> <span class="n">WaveTools</span> <span class="k">as</span> <span class="n">wt</span>
+</pre></div>
+</div>
+<p>Then the target wave theory is set, by initializing the relevant class as follows</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wave</span> <span class="o">=</span> <span class="n">wt</span><span class="o">.</span><span class="n">MonochromaticWaves</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+                              <span class="n">waveHeight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                              <span class="n">mwl</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                              <span class="n">depth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                              <span class="n">g</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">9.81</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span>
+                              <span class="n">waveDir</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span>
+                              <span class="n">waveType</span><span class="o">=</span><span class="s2">&quot;Fenton&quot;</span><span class="p">,</span>
+                              <span class="n">autoFenton</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                              <span class="n">Nf</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The wave theory is passed through the <code class="docutils literal notranslate"><span class="pre">setUnsteadyTwoPhaseVelocityInlet</span></code> boundary condition as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tank</span><span class="o">.</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;x-&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setUnsteadyTwoPhaseVelocityInlet</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="n">smoothing</span><span class="p">,</span> <span class="n">vert_axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the relaxation zone method is used, then the class should be passed through the relevant <code class="docutils literal notranslate"><span class="pre">setGenerationZones</span></code> function</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tank</span><span class="o">.</span><span class="n">setGenerationZones</span><span class="p">(</span><span class="n">x_n</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">waves</span><span class="o">=</span><span class="n">wave</span><span class="p">,</span> <span class="n">dragAlpha</span><span class="o">=</span><span class="n">dragAlpha</span><span class="p">,</span> <span class="n">smoothing</span> <span class="o">=</span> <span class="n">smoothing</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Guidance for using the <code class="docutils literal notranslate"><span class="pre">setUnsteadyTwoPhaseVelocityInlet</span></code> and <code class="docutils literal notranslate"><span class="pre">setGenerationZones</span></code> functions are given in the <a class="reference internal" href="boundary_conditions.html"><span class="doc">BoundaryConditions</span></a> and <a class="reference internal" href="spatial_tools.html"><span class="doc">Spatial Tools</span></a> sections of the documentation</p>
+<p>Simple examples of usage within the context of a 2D numerical tank can be found in <a class="reference external" href="https://github.com/erdc/air-water-vv/tree/master/2d/numericalTanks">air-water-vv</a></p>
+</div>
+<div class="section" id="how-to-use-as-stand-alone-tool">
+<h3>How to use as stand-alone tool<a class="headerlink" href="#how-to-use-as-stand-alone-tool" title="Permalink to this headline">¶</a></h3>
+<p>After importing the tool in a python interface (command line, editor) following the examples above, you can load a class that corresponds to a wave theory, as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wave</span> <span class="o">=</span> <span class="n">wt</span><span class="o">.</span><span class="n">RandomWavesFast</span><span class="p">(</span><span class="n">Tstart</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+                      <span class="n">Tend</span><span class="o">=</span><span class="mf">5000.</span><span class="p">,</span>
+                      <span class="n">x0</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">])</span>
+                      <span class="n">Tp</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
+                      <span class="n">Hs</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                      <span class="n">mwl</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                      <span class="n">depth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                      <span class="n">waveDir</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span>
+                      <span class="n">g</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">9.81</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span>
+                      <span class="n">N</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+                      <span class="n">bandFactor</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
+                      <span class="n">spectName</span><span class="o">=</span><span class="s2">&quot;JONSWAP&quot;</span><span class="p">,</span>
+                      <span class="n">Lgen</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+                      <span class="n">Nwaves</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+                      <span class="n">Nfreq</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                      <span class="n">checkAcc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then the free surface and velocity for a point in space and time can be calculated as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>
+<span class="n">U</span> <span class="o">=</span> <span class="n">wave</span><span class="o">.</span><span class="n">u</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">t0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Full time series can be calculated and plotted by appropriately manipulating the calculations and storing in arrays, e.g.:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span>
+<span class="n">time_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time_array</span><span class="p">),)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">time_array</span><span class="p">):</span>
+     <span class="n">eta</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">wave</span><span class="o">.</span><span class="n">eta</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">t</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_array</span><span class="p">,</span><span class="n">eta</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Time (s)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Free-surface elevation (m)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;Free-surface.pdf&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../models/body_dynamics.html" class="btn btn-neutral float-right" title="Body Dynamics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="two_phase_flow.html" class="btn btn-neutral float-left" title="TwoPhaseFlow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, The Proteus Team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+   /* .wy-side-nav-search, .wy-nav-top { */
+    .wy-side-nav-search {
+        background: #F0F0F0;
+    }
+   .wy-side-nav-search > div.version {
+       color: rgba(0,0,0,.5);
+   }
+   /* .wy-side-nav-search img { */
+   /* max-width: 200%; */
+   /* } */
+   .wy-side-nav-search>a img.logo {
+       width: 150px;
+       /* width: 200px; */
+   }
+
+
+
+    /* Sidebar */
+   /* .wy-nav-side { */
+   /* background: #ff0000; */
+   /* } */
+  </style>
+
+
+
+</body>
+</html>

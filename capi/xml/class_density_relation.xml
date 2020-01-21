@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_density_relation" kind="class" language="C++" prot="public">
+    <compoundname>DensityRelation</compoundname>
+    <derivedcompoundref refid="class_constant_density" prot="public" virt="non-virtual">ConstantDensity</derivedcompoundref>
+    <derivedcompoundref refid="class_ideal_gas_density" prot="public" virt="non-virtual">IdealGasDensity</derivedcompoundref>
+    <derivedcompoundref refid="class_linear_density" prot="public" virt="non-virtual">LinearDensity</derivedcompoundref>
+    <derivedcompoundref refid="class_real_gas_density" prot="public" virt="non-virtual">RealGasDensity</derivedcompoundref>
+    <includes refid="density_relations_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double DensityRelation::rho</definition>
+        <argsstring></argsstring>
+        <name>rho</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="23" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double DensityRelation::drho</definition>
+        <argsstring></argsstring>
+        <name>drho</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="23" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>The density of an incompressible fluid.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">psi</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The pressure head (not used) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The density constant </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">rho</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The density </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">drho</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The derivative of density with respect to pressure head</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+This is a trivial function but it demonstrates the density relation interface. <formula id="89">\[ \rho(\psi) = \rho_0 \]</formula> </para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="4">
+        <label>LinearDensity</label>
+        <link refid="class_linear_density"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>IdealGasDensity</label>
+        <link refid="class_ideal_gas_density"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>ExponentialDensity</label>
+        <link refid="class_exponential_density"/>
+        <childnode refid="4" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>DensityRelation</label>
+        <link refid="class_density_relation"/>
+      </node>
+      <node id="6">
+        <label>RealGasDensity</label>
+        <link refid="class_real_gas_density"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ConstantDensity</label>
+        <link refid="class_constant_density"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="21" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="20" bodyend="24"/>
+    <listofallmembers>
+      <member refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" prot="public" virt="non-virtual"><scope>DensityRelation</scope><name>drho</name></member>
+      <member refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" prot="public" virt="non-virtual"><scope>DensityRelation</scope><name>rho</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

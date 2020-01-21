@@ -1,0 +1,997 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classproteus_1_1_richards" kind="class" language="C++" prot="public">
+    <compoundname>proteus::Richards</compoundname>
+    <basecompoundref refid="classproteus_1_1_richards__base" prot="public" virt="non-virtual">proteus::Richards_base</basecompoundref>
+    <includes refid="_richards_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h</includes>
+    <templateparamlist>
+      <param>
+        <type>class CompKernelType</type>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nSpace</declname>
+        <defname>nSpace</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQuadraturePoints_element</declname>
+        <defname>nQuadraturePoints_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_mesh_trial_element</declname>
+        <defname>nDOF_mesh_trial_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_trial_element</declname>
+        <defname>nDOF_trial_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_test_element</declname>
+        <defname>nDOF_test_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQuadraturePoints_elementBoundary</declname>
+        <defname>nQuadraturePoints_elementBoundary</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classproteus_1_1_richards_1aba883abfc912c543ceb5afe55eb99c71" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::nDOF_test_X_trial_element</definition>
+        <argsstring></argsstring>
+        <name>nDOF_test_X_trial_element</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="159" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="159" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1_richards_1a01b112cc9dc743627c02957f71ecc39e" prot="public" static="no" mutable="no">
+        <type>CompKernelType</type>
+        <definition>CompKernelType proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::ck</definition>
+        <argsstring></argsstring>
+        <name>ck</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="160" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="160" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classproteus_1_1_richards_1a2031c5199a073a4daafbb8cdd65dc4fe" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::Richards</definition>
+        <argsstring>()</argsstring>
+        <name>Richards</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="161" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="161" bodyend="164"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_richards_1a58f36c9beb6b6eed0d04e589a71c4594" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::evaluateCoefficients</definition>
+        <argsstring>(const int rowptr[nSpace], const int colind[nnz], const double rho, const double beta, const double gravity[nSpace], const double alpha, const double n_vg, const double thetaR, const double thetaSR, const double KWs[nnz], const double &amp;u, double &amp;m, double &amp;dm, double f[nSpace], double df[nSpace], double a[nnz], double da[nnz])</argsstring>
+        <name>evaluateCoefficients</name>
+        <param>
+          <type>const int</type>
+          <declname>rowptr</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>colind</declname>
+          <array>[nnz]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>gravity</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>n_vg</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>thetaR</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>thetaSR</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>KWs</declname>
+          <array>[nnz]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>f</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>df</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+          <array>[nnz]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>da</declname>
+          <array>[nnz]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="166" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="166" bodyend="253"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_richards_1a6c57e02c80d5cb80e0ae82cd91926f39" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateSubgridError_tau</definition>
+        <argsstring>(const double &amp;elementDiameter, const double &amp;dmt, const double dH[nSpace], double &amp;cfl, double &amp;tau)</argsstring>
+        <name>calculateSubgridError_tau</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>dH</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="256" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="256" bodyend="271"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_richards_1aafd6c2c359e7e3720aed329ccb015162" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateSubgridError_tau</definition>
+        <argsstring>(const double &amp;Ct_sge, const double G[nSpace *nSpace], const double &amp;A0, const double Ai[nSpace], double &amp;tau_v, double &amp;cfl)</argsstring>
+        <name>calculateSubgridError_tau</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ct_sge</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>G</declname>
+          <array>[nSpace *nSpace]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>A0</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>Ai</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>tau_v</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="275" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="275" bodyend="288"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_richards_1a2c18f652026ca01921ff0ec8d4235eb6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateNumericalDiffusion</definition>
+        <argsstring>(const double &amp;shockCapturingDiffusion, const double &amp;elementDiameter, const double &amp;strong_residual, const double grad_u[nSpace], double &amp;numDiff)</argsstring>
+        <name>calculateNumericalDiffusion</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="293" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="293" bodyend="310"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_richards_1a3075f66354b63842bbdf94ae013a8aba" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::exteriorNumericalFlux</definition>
+        <argsstring>(const double &amp;bc_flux, int rowptr[nSpace], int colind[nnz], int isSeepageFace, int &amp;isDOFBoundary, double n[nSpace], double bc_u, double K[nnz], double grad_psi[nSpace], double u, double K_rho_g[nSpace], double penalty, double &amp;flux)</argsstring>
+        <name>exteriorNumericalFlux</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>bc_flux</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>rowptr</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>colind</declname>
+          <array>[nnz]</array>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>isSeepageFace</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>isDOFBoundary</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>bc_u</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>K</declname>
+          <array>[nnz]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>grad_psi</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>K_rho_g</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>penalty</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>flux</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="313" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="313" bodyend="378"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_richards_1ae6ea91c19d02b8747aac93b5ab2cf6ef" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::exteriorNumericalFluxJacobian</definition>
+        <argsstring>(const int rowptr[nSpace], const int colind[nnz], const int isDOFBoundary, const double n[nSpace], const double K[nnz], const double dK[nnz], const double grad_psi[nSpace], const double grad_v[nSpace], const double dK_rho_g[nSpace], const double v, const double penalty, double &amp;fluxJacobian)</argsstring>
+        <name>exteriorNumericalFluxJacobian</name>
+        <param>
+          <type>const int</type>
+          <declname>rowptr</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>colind</declname>
+          <array>[nnz]</array>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>isDOFBoundary</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>K</declname>
+          <array>[nnz]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>dK</declname>
+          <array>[nnz]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_psi</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_v</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>dK_rho_g</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>penalty</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>fluxJacobian</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="380" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="380" bodyend="411"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_richards_1a45bb9f43bd0f008e3dc4aa11a0e24c16" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateResidual</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, double *mesh_velocity_dof, double MOVING_DOMAIN, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double *ebqe_penalty_ext, int *elementMaterialTypes, int *isSeepageFace, int *a_rowptr, int *a_colind, double rho, double beta, double *gravity, double *alpha, double *n, double *thetaR, double *thetaSR, double *KWs, double useMetrics, double alphaBDF, int lag_shockCapturing, double shockCapturingDiffusion, double sc_uref, double sc_alpha, int *u_l2g, double *elementDiameter, double *u_dof, double *u_dof_old, double *velocity, double *q_m, double *q_u, double *q_dV, double *q_m_betaBDF, double *cfl, double *q_numDiff_u, double *q_numDiff_u_last, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_velocity_ext, int *isDOFBoundary_u, double *ebqe_bc_u_ext, int *isFluxBoundary_u, double *ebqe_bc_flux_ext, double *ebqe_phi, double epsFact, double *ebqe_u, double *ebqe_flux)</argsstring>
+        <name>calculateResidual</name>
+        <reimplements refid="classproteus_1_1_richards__base_1aba832c63cbaf0e4848f20f1c7a79e85e">calculateResidual</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>MOVING_DOMAIN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_penalty_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementMaterialTypes</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isSeepageFace</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>a_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>a_colind</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>gravity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>thetaR</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>thetaSR</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>KWs</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_shockCapturing</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sc_uref</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sc_alpha</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dV</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m_betaBDF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_velocity_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_flux</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="413" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="413" bodyend="841"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_richards_1a3044ee67e3c52992dcf686fdb493db20" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateJacobian</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, double *mesh_velocity_dof, double MOVING_DOMAIN, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double *ebqe_penalty_ext, int *elementMaterialTypes, int *isSeepageFace, int *a_rowptr, int *a_colind, double rho, double beta, double *gravity, double *alpha, double *n, double *thetaR, double *thetaSR, double *KWs, double useMetrics, double alphaBDF, int lag_shockCapturing, double shockCapturingDiffusion, int *u_l2g, double *elementDiameter, double *u_dof, double *velocity, double *q_m_betaBDF, double *cfl, double *q_numDiff_u_last, int *csrRowIndeces_u_u, int *csrColumnOffsets_u_u, double *globalJacobian, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_velocity_ext, int *isDOFBoundary_u, double *ebqe_bc_u_ext, int *isFluxBoundary_u, double *ebqe_bc_flux_ext, int *csrColumnOffsets_eb_u_u)</argsstring>
+        <name>calculateJacobian</name>
+        <reimplements refid="classproteus_1_1_richards__base_1a5ad1ca62dc3399c34559e9e9d6140305">calculateJacobian</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>MOVING_DOMAIN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_penalty_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementMaterialTypes</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isSeepageFace</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>a_rowptr</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>a_colind</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>gravity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>thetaR</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>thetaSR</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>KWs</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_shockCapturing</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m_betaBDF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalJacobian</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_velocity_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_flux_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_u_u</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="843" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="843" bodyend="1254"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>proteus::Richards_base</label>
+        <link refid="classproteus_1_1_richards__base"/>
+      </node>
+      <node id="1">
+        <label>proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1_richards"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>proteus::Richards_base</label>
+        <link refid="classproteus_1_1_richards__base"/>
+      </node>
+      <node id="1">
+        <label>proteus::Richards&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1_richards"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" line="157" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/richards/Richards.h" bodystart="156" bodyend="1255"/>
+    <listofallmembers>
+      <member refid="classproteus_1_1_richards_1a3044ee67e3c52992dcf686fdb493db20" prot="public" virt="virtual"><scope>proteus::Richards</scope><name>calculateJacobian</name></member>
+      <member refid="classproteus_1_1_richards_1a2c18f652026ca01921ff0ec8d4235eb6" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>calculateNumericalDiffusion</name></member>
+      <member refid="classproteus_1_1_richards_1a45bb9f43bd0f008e3dc4aa11a0e24c16" prot="public" virt="virtual"><scope>proteus::Richards</scope><name>calculateResidual</name></member>
+      <member refid="classproteus_1_1_richards_1a6c57e02c80d5cb80e0ae82cd91926f39" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>calculateSubgridError_tau</name></member>
+      <member refid="classproteus_1_1_richards_1aafd6c2c359e7e3720aed329ccb015162" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>calculateSubgridError_tau</name></member>
+      <member refid="classproteus_1_1_richards_1a01b112cc9dc743627c02957f71ecc39e" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>ck</name></member>
+      <member refid="classproteus_1_1_richards_1a58f36c9beb6b6eed0d04e589a71c4594" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>evaluateCoefficients</name></member>
+      <member refid="classproteus_1_1_richards_1a3075f66354b63842bbdf94ae013a8aba" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>exteriorNumericalFlux</name></member>
+      <member refid="classproteus_1_1_richards_1ae6ea91c19d02b8747aac93b5ab2cf6ef" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>exteriorNumericalFluxJacobian</name></member>
+      <member refid="classproteus_1_1_richards_1aba883abfc912c543ceb5afe55eb99c71" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>nDOF_test_X_trial_element</name></member>
+      <member refid="classproteus_1_1_richards_1a2031c5199a073a4daafbb8cdd65dc4fe" prot="public" virt="non-virtual"><scope>proteus::Richards</scope><name>Richards</name></member>
+      <member refid="classproteus_1_1_richards__base_1a94d377d01c1249b2f70deb9fa6d14b48" prot="public" virt="virtual"><scope>proteus::Richards</scope><name>~Richards_base</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

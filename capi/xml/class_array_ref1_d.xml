@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_array_ref1_d" kind="class" language="C++" prot="public">
+    <compoundname>ArrayRef1D</compoundname>
+    <includes refid="_array_ref_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h</includes>
+    <templateparamlist>
+      <param>
+        <type>class <ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref></type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_array_ref1_d_1af0a32c320e5dd6186e939e4799438914" prot="private" static="no" mutable="no">
+        <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> *</type>
+        <definition>T* ArrayRef1D&lt; T &gt;::values</definition>
+        <argsstring></argsstring>
+        <name>values</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="7" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="7" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_array_ref1_d_1a69135a77bc1474be45a2e948ba86b835" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ArrayRef1D&lt; T &gt;::ArrayRef1D</definition>
+        <argsstring>(T *vals)</argsstring>
+        <name>ArrayRef1D</name>
+        <param>
+          <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> *</type>
+          <declname>vals</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="10" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="10" bodyend="10"/>
+      </memberdef>
+      <memberdef kind="function" id="class_array_ref1_d_1ac067d4fd1848b82fe8fb13cf484867f1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="_headers_8h_1a38fec5c94a02f67ba7bf45025dd3ac80" kindref="member">T</ref> &amp;</type>
+        <definition>T&amp; ArrayRef1D&lt; T &gt;::operator[]</definition>
+        <argsstring>(int i)</argsstring>
+        <name>operator[]</name>
+        <param>
+          <type>int</type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="11" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="11" bodyend="11"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" line="6" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/ArrayRef.h" bodystart="5" bodyend="12"/>
+    <listofallmembers>
+      <member refid="class_array_ref1_d_1a69135a77bc1474be45a2e948ba86b835" prot="public" virt="non-virtual"><scope>ArrayRef1D</scope><name>ArrayRef1D</name></member>
+      <member refid="class_array_ref1_d_1ac067d4fd1848b82fe8fb13cf484867f1" prot="public" virt="non-virtual"><scope>ArrayRef1D</scope><name>operator[]</name></member>
+      <member refid="class_array_ref1_d_1af0a32c320e5dd6186e939e4799438914" prot="private" virt="non-virtual"><scope>ArrayRef1D</scope><name>values</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,1518 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classproteus_1_1_kappa" kind="class" language="C++" prot="public">
+    <compoundname>proteus::Kappa</compoundname>
+    <basecompoundref refid="classproteus_1_1_kappa__base" prot="public" virt="non-virtual">proteus::Kappa_base</basecompoundref>
+    <includes refid="_kappa_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h</includes>
+    <templateparamlist>
+      <param>
+        <type>class CompKernelType</type>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nSpace</declname>
+        <defname>nSpace</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQuadraturePoints_element</declname>
+        <defname>nQuadraturePoints_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_mesh_trial_element</declname>
+        <defname>nDOF_mesh_trial_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_trial_element</declname>
+        <defname>nDOF_trial_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_test_element</declname>
+        <defname>nDOF_test_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQuadraturePoints_elementBoundary</declname>
+        <defname>nQuadraturePoints_elementBoundary</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classproteus_1_1_kappa_1a115c9988f56e8a3fab66a8fbb441c3f9" prot="public" static="no" mutable="no">
+        <type><ref refid="classproteus_1_1cpp_hsu_sed_stress" kindref="compound">cppHsuSedStress</ref>&lt; 3 &gt;</type>
+        <definition>cppHsuSedStress&lt;3&gt; proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::closure</definition>
+        <argsstring></argsstring>
+        <name>closure</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="217" column="25" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="217" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1_kappa_1aeea2ffbecb45c7fb45c6d67424d94429" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::nDOF_test_X_trial_element</definition>
+        <argsstring></argsstring>
+        <name>nDOF_test_X_trial_element</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="218" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="218" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1_kappa_1a461a3e511698c36aa91e5475beaf5b59" prot="public" static="no" mutable="no">
+        <type>CompKernelType</type>
+        <definition>CompKernelType proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::ck</definition>
+        <argsstring></argsstring>
+        <name>ck</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="219" column="20" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="219" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classproteus_1_1_kappa_1ad86090d7997561f99b02fa3bd881b505" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::Kappa</definition>
+        <argsstring>()</argsstring>
+        <name>Kappa</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="220" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="220" bodyend="241"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1ac18cf7bafc96cb2776e1a1f33e9ff809" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::setSedClosure</definition>
+        <argsstring>(double aDarcy, double betaForch, double grain, double packFraction, double packMargin, double maxFraction, double frFraction, double sigmaC, double C3e, double C4e, double eR, double fContact, double mContact, double nContact, double angFriction, double vos_limiter, double mu_fr_limiter)</argsstring>
+        <name>setSedClosure</name>
+        <reimplements refid="classproteus_1_1_kappa__base_1a4b10953a4ff6d7cb1293d5c2a88f5a89">setSedClosure</reimplements>
+        <param>
+          <type>double</type>
+          <declname>aDarcy</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>betaForch</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>grain</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>packFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>packMargin</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>maxFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>frFraction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sigmaC</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C3e</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>C4e</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>eR</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>fContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>mContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nContact</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>angFriction</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>vos_limiter</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>mu_fr_limiter</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="243" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="243" bodyend="278"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1a41589889c96cb070178423b0cc8e4849" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::computeK_OmegaCoefficients</definition>
+        <argsstring>(const double &amp;div_eps, const double &amp;k, const double &amp;omega, const double grad_k[nSpace], const double grad_omega[nSpace], const double grad_vx[nSpace], const double grad_vy[nSpace], double &amp;inverse_sigma_k, double &amp;inverse_sigma_omega, double &amp;beta_star, double &amp;beta, double &amp;gamma)</argsstring>
+        <name>computeK_OmegaCoefficients</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>div_eps</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>omega</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_k</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_omega</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_vx</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_vy</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>inverse_sigma_k</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>inverse_sigma_omega</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>beta_star</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>gamma</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="281" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="281" bodyend="357"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1abce7d7a04c743cb3d80b40d422734070" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::evaluateCoefficients</definition>
+        <argsstring>(double v[nSpace], const double eps_mu, const double phi, const double nu_0, const double nu_1, const double sigma_k, const double c_mu, const double grad_vx[nSpace], const double grad_vy[nSpace], const double grad_vz[nSpace], const double &amp;k, double &amp;k_old, double &amp;dissipation, const double &amp;porosity, int sedFlag, double q_vos, double q_vos_gradc[nSpace], double rho_f, double rho_s, double vs[nSpace], double g[nSpace], int dissipation_model_flag, const double grad_k_old[nSpace], const double grad_dissipation[nSpace], double &amp;m, double &amp;dm, double f[nSpace], double df[nSpace], double &amp;a, double &amp;da_dk, double &amp;r, double &amp;dr_dk)</argsstring>
+        <name>evaluateCoefficients</name>
+        <param>
+          <type>double</type>
+          <declname>v</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>eps_mu</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>phi</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>nu_0</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>nu_1</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>sigma_k</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>c_mu</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_vx</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_vy</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_vz</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>k_old</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dissipation</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>porosity</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>sedFlag</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>q_vos</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>q_vos_gradc</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_f</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_s</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>vs</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>g</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dissipation_model_flag</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_k_old</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_dissipation</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>f</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>df</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>da_dk</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>r</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dr_dk</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="360" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="360" bodyend="519"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1a6f444e7147f0654c99f7ca574649f35d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::computeK_OmegaCoefficients</definition>
+        <argsstring>(const double &amp;div_eps, const double &amp;k, const double &amp;omega, const double grad_k[nSpace], const double grad_omega[nSpace], const double grad_vx[nSpace], const double grad_vy[nSpace], const double grad_vz[nSpace], double &amp;inverse_sigma_k, double &amp;inverse_sigma_omega, double &amp;beta_star, double &amp;beta, double &amp;gamma)</argsstring>
+        <name>computeK_OmegaCoefficients</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>div_eps</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>omega</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_k</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_omega</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_vx</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_vy</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_vz</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>inverse_sigma_k</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>inverse_sigma_omega</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>beta_star</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>gamma</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="521" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="521" bodyend="600"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1a04157403448f5e0e3d8f1b387e49c6a8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateSubgridError_tau</definition>
+        <argsstring>(const double &amp;elementDiameter, const double &amp;dmt, const double dH[nSpace], double &amp;cfl, double &amp;tau)</argsstring>
+        <name>calculateSubgridError_tau</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>dH</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="604" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="604" bodyend="619"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1a1dcf8a467cb888d0e11a964df93e2367" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateSubgridError_tau</definition>
+        <argsstring>(const double &amp;Ct_sge, const double G[nSpace *nSpace], const double &amp;A0, const double Ai[nSpace], double &amp;tau_v, double &amp;cfl)</argsstring>
+        <name>calculateSubgridError_tau</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ct_sge</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>G</declname>
+          <array>[nSpace *nSpace]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>A0</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>Ai</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>tau_v</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="623" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="623" bodyend="636"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1a4e19aa2c8a3400910a78af777b92316e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateNumericalDiffusion</definition>
+        <argsstring>(const double &amp;shockCapturingDiffusion, const double &amp;elementDiameter, const double &amp;strong_residual, const double grad_u[nSpace], double &amp;numDiff)</argsstring>
+        <name>calculateNumericalDiffusion</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>strong_residual</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>numDiff</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="641" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="641" bodyend="658"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1acc9432599aacc19b1fac5b175ce471cb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::exteriorNumericalAdvectiveFlux</definition>
+        <argsstring>(const int &amp;isDOFBoundary_u, const int &amp;isAdvectiveFluxBoundary_u, const double n[nSpace], const double &amp;bc_u, const double &amp;bc_flux_u, const double &amp;u, const double velocity[nSpace], double &amp;flux)</argsstring>
+        <name>exteriorNumericalAdvectiveFlux</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isAdvectiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>bc_u</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>bc_flux_u</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>velocity</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>flux</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="661" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="661" bodyend="711"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1a4e9fb713de4c0272d2d745ce4e1c45d3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::smoothedHeaviside</definition>
+        <argsstring>(double eps, double phi)</argsstring>
+        <name>smoothedHeaviside</name>
+        <param>
+          <type>double</type>
+          <declname>eps</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>phi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="712" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="712" bodyend="724"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1acdd0173ff0770be9084d033f8ae5ece4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::exteriorNumericalAdvectiveFluxDerivative</definition>
+        <argsstring>(const int &amp;isDOFBoundary_u, const int &amp;isAdvectiveFluxBoundary, const double n[nSpace], const double velocity[nSpace], double &amp;dflux)</argsstring>
+        <name>exteriorNumericalAdvectiveFluxDerivative</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isAdvectiveFluxBoundary</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>velocity</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dflux</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="727" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="727" bodyend="760"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1a7b2ffaca7704f7d507581e482d0ffa21" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::exteriorNumericalDiffusiveFlux</definition>
+        <argsstring>(const double &amp;bc_flux, const int &amp;isDOFBoundary, const int &amp;isDiffusiveFluxBoundary, double n[nSpace], double bc_u, double a, double grad_psi[nSpace], double u, double penalty, double &amp;flux)</argsstring>
+        <name>exteriorNumericalDiffusiveFlux</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>bc_flux</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDOFBoundary</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDiffusiveFluxBoundary</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>bc_u</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>grad_psi</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>penalty</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>flux</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="762" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="762" bodyend="794"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1ac162c9940afa182cc7393d58e3585c1c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::exteriorNumericalDiffusiveFluxDerivative</definition>
+        <argsstring>(const int &amp;isDOFBoundary, const int &amp;isDiffusiveFluxBoundary, double n[nSpace], double a, double da, double grad_psi[nSpace], const double grad_v[nSpace], double v, double penalty, double &amp;fluxJacobian)</argsstring>
+        <name>exteriorNumericalDiffusiveFluxDerivative</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDOFBoundary</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>isDiffusiveFluxBoundary</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>n</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>da</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>grad_psi</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_v</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>penalty</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>fluxJacobian</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="796" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="796" bodyend="818"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1a2de604fecd1592afd4adb106cbcb43ff" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateResidual</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, double *mesh_velocity_dof, double MOVING_DOMAIN, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double nu_0, double nu_1, double sigma_k, double c_mu, double rho_0, double rho_1, double sedFlag, double *q_vos, double *q_vos_gradc, double *ebqe_q_vos, double *ebqe_q_vos_gradc, double rho_f, double rho_s, double *vs, double *ebqe_vs, double *g, int dissipation_model_flag, double useMetrics, double alphaBDF, int lag_shockCapturing, double shockCapturingDiffusion, double sc_uref, double sc_alpha, int *u_l2g, double *elementDiameter, double *u_dof, double *u_dof_old, double *velocity, double *phi_ls, double *q_dissipation, double *q_grad_dissipation, double *q_porosity, double *velocity_dof_u, double *velocity_dof_v, double *velocity_dof_w, double *q_m, double *q_u, double *q_grad_u, double *q_m_betaBDF, double *cfl, double *q_numDiff_u, double *q_numDiff_u_last, double *ebqe_penalty_ext, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_velocity_ext, int *isDOFBoundary_u, double *ebqe_bc_u_ext, int *isAdvectiveFluxBoundary_u, double *ebqe_bc_advectiveFlux_u_ext, int *isDiffusiveFluxBoundary_u, double *ebqe_bc_diffusiveFlux_u_ext, double *ebqe_phi, double epsFact, double *ebqe_dissipation, double *ebqe_porosity, double *ebqe_u, double *ebqe_flux)</argsstring>
+        <name>calculateResidual</name>
+        <reimplements refid="classproteus_1_1_kappa__base_1a8557bc0dde30dcf40dde260c39ac983c">calculateResidual</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>MOVING_DOMAIN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu_1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sigma_k</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>c_mu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sedFlag</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_vos</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_vos_gradc</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_q_vos</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_q_vos_gradc</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_f</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_s</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_vs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>g</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dissipation_model_flag</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_shockCapturing</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sc_uref</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sc_alpha</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_ls</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dissipation</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_grad_dissipation</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity_dof_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity_dof_v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity_dof_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_grad_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m_betaBDF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_penalty_ext</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_velocity_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_advectiveFlux_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDiffusiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_diffusiveFlux_u_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_dissipation</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_porosity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_flux</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="820" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="820" bodyend="1402"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_kappa_1adb8237acbd70ed211e552216b9aa357c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateJacobian</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, double *mesh_velocity_dof, double MOVING_DOMAIN, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double nu_0, double nu_1, double sigma_k, double c_mu, double rho_0, double rho_1, int dissipation_model_flag, double useMetrics, double alphaBDF, int lag_shockCapturing, double shockCapturingDiffusion, int *u_l2g, double *elementDiameter, double *u_dof, double *u_dof_old, double *velocity, double *phi_ls, double *q_dissipation, double *q_grad_dissipation, double *q_porosity, double sedFlag, double *q_vos, double *q_vos_gradc, double *ebqe_q_vos, double *ebqe_q_vos_gradc, double rho_f, double rho_s, double *vs, double *ebqe_vs, double *g, double *velocity_dof_u, double *velocity_dof_v, double *velocity_dof_w, double *q_m_betaBDF, double *cfl, double *q_numDiff_u_last, double *ebqe_penalty_ext, int *csrRowIndeces_u_u, int *csrColumnOffsets_u_u, double *globalJacobian, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_velocity_ext, int *isDOFBoundary_u, double *ebqe_bc_u_ext, int *isAdvectiveFluxBoundary_u, double *ebqe_bc_advectiveFlux_u_ext, int *isDiffusiveFluxBoundary_u, double *ebqe_bc_diffusiveFlux_u_ext, int *csrColumnOffsets_eb_u_u, double *ebqe_phi, double epsFact, double *ebqe_dissipation, double *ebqe_porosity)</argsstring>
+        <name>calculateJacobian</name>
+        <reimplements refid="classproteus_1_1_kappa__base_1a2cfbef7c136b1e255558405447e0fc77">calculateJacobian</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_velocity_dof</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>MOVING_DOMAIN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>nu_1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sigma_k</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>c_mu</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_1</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dissipation_model_flag</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_shockCapturing</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof_old</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_ls</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dissipation</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_grad_dissipation</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_porosity</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>sedFlag</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_vos</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_vos_gradc</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_q_vos</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_q_vos_gradc</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_f</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>rho_s</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>vs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_vs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity_dof_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity_dof_v</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>velocity_dof_w</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m_betaBDF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_penalty_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalJacobian</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_velocity_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isAdvectiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_advectiveFlux_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDiffusiveFluxBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_diffusiveFlux_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_u_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_dissipation</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_porosity</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="1404" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="1404" bodyend="1973"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>proteus::Kappa_base</label>
+        <link refid="classproteus_1_1_kappa__base"/>
+      </node>
+      <node id="1">
+        <label>proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1_kappa"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>proteus::Kappa_base</label>
+        <link refid="classproteus_1_1_kappa__base"/>
+      </node>
+      <node id="1">
+        <label>proteus::Kappa&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1_kappa"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3" relation="usage">
+          <edgelabel>closure</edgelabel>
+        </childnode>
+      </node>
+      <node id="3">
+        <label>proteus::cppHsuSedStress&lt; 3 &gt;</label>
+        <link refid="classproteus_1_1cpp_hsu_sed_stress"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" line="215" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/Kappa.h" bodystart="214" bodyend="1974"/>
+    <listofallmembers>
+      <member refid="classproteus_1_1_kappa_1adb8237acbd70ed211e552216b9aa357c" prot="public" virt="virtual"><scope>proteus::Kappa</scope><name>calculateJacobian</name></member>
+      <member refid="classproteus_1_1_kappa_1a4e19aa2c8a3400910a78af777b92316e" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>calculateNumericalDiffusion</name></member>
+      <member refid="classproteus_1_1_kappa_1a2de604fecd1592afd4adb106cbcb43ff" prot="public" virt="virtual"><scope>proteus::Kappa</scope><name>calculateResidual</name></member>
+      <member refid="classproteus_1_1_kappa_1a04157403448f5e0e3d8f1b387e49c6a8" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>calculateSubgridError_tau</name></member>
+      <member refid="classproteus_1_1_kappa_1a1dcf8a467cb888d0e11a964df93e2367" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>calculateSubgridError_tau</name></member>
+      <member refid="classproteus_1_1_kappa_1a461a3e511698c36aa91e5475beaf5b59" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>ck</name></member>
+      <member refid="classproteus_1_1_kappa_1a115c9988f56e8a3fab66a8fbb441c3f9" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>closure</name></member>
+      <member refid="classproteus_1_1_kappa_1a41589889c96cb070178423b0cc8e4849" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>computeK_OmegaCoefficients</name></member>
+      <member refid="classproteus_1_1_kappa_1a6f444e7147f0654c99f7ca574649f35d" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>computeK_OmegaCoefficients</name></member>
+      <member refid="classproteus_1_1_kappa_1abce7d7a04c743cb3d80b40d422734070" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>evaluateCoefficients</name></member>
+      <member refid="classproteus_1_1_kappa_1acc9432599aacc19b1fac5b175ce471cb" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>exteriorNumericalAdvectiveFlux</name></member>
+      <member refid="classproteus_1_1_kappa_1acdd0173ff0770be9084d033f8ae5ece4" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>exteriorNumericalAdvectiveFluxDerivative</name></member>
+      <member refid="classproteus_1_1_kappa_1a7b2ffaca7704f7d507581e482d0ffa21" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>exteriorNumericalDiffusiveFlux</name></member>
+      <member refid="classproteus_1_1_kappa_1ac162c9940afa182cc7393d58e3585c1c" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>exteriorNumericalDiffusiveFluxDerivative</name></member>
+      <member refid="classproteus_1_1_kappa_1ad86090d7997561f99b02fa3bd881b505" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>Kappa</name></member>
+      <member refid="classproteus_1_1_kappa_1aeea2ffbecb45c7fb45c6d67424d94429" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>nDOF_test_X_trial_element</name></member>
+      <member refid="classproteus_1_1_kappa_1ac18cf7bafc96cb2776e1a1f33e9ff809" prot="public" virt="virtual"><scope>proteus::Kappa</scope><name>setSedClosure</name></member>
+      <member refid="classproteus_1_1_kappa_1a4e9fb713de4c0272d2d745ce4e1c45d3" prot="public" virt="non-virtual"><scope>proteus::Kappa</scope><name>smoothedHeaviside</name></member>
+      <member refid="classproteus_1_1_kappa__base_1a9eb5e4f8c007db253e868d8de19d8410" prot="public" virt="virtual"><scope>proteus::Kappa</scope><name>~Kappa_base</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

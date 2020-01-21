@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ioutils',['IOutils',['../namespace_i_outils.html',1,'']]]
+  ['equivalent_5fpolynomials_2503',['equivalent_polynomials',['../namespaceequivalent__polynomials.html',1,'']]]
 ];

@@ -1,7 +1,8 @@
 <map id="DensityRelation" name="DensityRelation">
-<area shape="rect" id="node2" href="$class_constant_density.html" title="ConstantDensity" alt="" coords="5,80,125,107"/>
-<area shape="rect" id="node3" href="$class_ideal_gas_density.html" title="IdealGasDensity" alt="" coords="150,80,269,107"/>
-<area shape="rect" id="node4" href="$class_linear_density.html" title="LinearDensity" alt="" coords="293,80,395,107"/>
-<area shape="rect" id="node6" href="$class_real_gas_density.html" title="RealGasDensity" alt="" coords="419,80,538,107"/>
-<area shape="rect" id="node5" href="$class_exponential_density.html" title="ExponentialDensity" alt="" coords="277,155,411,181"/>
+<area shape="rect" id="node1" title=" " alt="" coords="234,5,361,32"/>
+<area shape="rect" id="node2" href="$class_constant_density.html" title=" " alt="" coords="5,80,136,107"/>
+<area shape="rect" id="node3" href="$class_ideal_gas_density.html" title=" " alt="" coords="161,80,290,107"/>
+<area shape="rect" id="node4" href="$class_linear_density.html" title=" " alt="" coords="315,80,427,107"/>
+<area shape="rect" id="node6" href="$class_real_gas_density.html" title=" " alt="" coords="451,80,578,107"/>
+<area shape="rect" id="node5" href="$class_exponential_density.html" title=" " alt="" coords="296,155,445,181"/>
 </map>

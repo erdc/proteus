@@ -1,0 +1,1517 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classproteus_1_1_r_d_l_s" kind="class" language="C++" prot="public">
+    <compoundname>proteus::RDLS</compoundname>
+    <basecompoundref refid="classproteus_1_1_r_d_l_s__base" prot="public" virt="non-virtual">proteus::RDLS_base</basecompoundref>
+    <includes refid="_r_d_l_s_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h</includes>
+    <templateparamlist>
+      <param>
+        <type>class CompKernelType</type>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nSpace</declname>
+        <defname>nSpace</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQuadraturePoints_element</declname>
+        <defname>nQuadraturePoints_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_mesh_trial_element</declname>
+        <defname>nDOF_mesh_trial_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_trial_element</declname>
+        <defname>nDOF_trial_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nDOF_test_element</declname>
+        <defname>nDOF_test_element</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQuadraturePoints_elementBoundary</declname>
+        <defname>nQuadraturePoints_elementBoundary</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classproteus_1_1_r_d_l_s_1aa001e06d2a0eed4e5827929ed2125f03" prot="public" static="no" mutable="no">
+        <type>const int</type>
+        <definition>const int proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::nDOF_test_X_trial_element</definition>
+        <argsstring></argsstring>
+        <name>nDOF_test_X_trial_element</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="342" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="342" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1_r_d_l_s_1a51e3c9d41c270a1970d8aac107b69e0f" prot="public" static="no" mutable="no">
+        <type>CompKernelType</type>
+        <definition>CompKernelType proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::ck</definition>
+        <argsstring></argsstring>
+        <name>ck</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="343" column="22" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="343" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1_r_d_l_s_1a9ca430ab04ac6b1ddda49109b79a7b05" prot="public" static="no" mutable="no">
+        <type><ref refid="namespaceproteus_1acdff9c5188c64d27db5cdf2669c2a849" kindref="member">GeneralizedFunctions</ref>&lt; nSpace, 1, nQuadraturePoints_element &gt;</type>
+        <definition>GeneralizedFunctions&lt;nSpace,1,nQuadraturePoints_element&gt; proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::gf</definition>
+        <argsstring></argsstring>
+        <name>gf</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="344" column="28" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="344" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classproteus_1_1_r_d_l_s_1a92ddf6699fc9b5442dc96718d51884a1" prot="public" static="no" mutable="no">
+        <type><ref refid="namespaceproteus_1acdff9c5188c64d27db5cdf2669c2a849" kindref="member">GeneralizedFunctions</ref>&lt; nSpace, 1, nQuadraturePoints_element &gt;</type>
+        <definition>GeneralizedFunctions&lt;nSpace,1,nQuadraturePoints_element&gt; proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::gfu</definition>
+        <argsstring></argsstring>
+        <name>gfu</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="344" column="30" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="344" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1ac8f1656100c871b93649147460e37f44" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::RDLS</definition>
+        <argsstring>()</argsstring>
+        <name>RDLS</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="345" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="345" bodyend="348"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1a1c1c17af4bbe4a7d38e4fda266e95c66" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::evaluateCoefficients</definition>
+        <argsstring>(const double &amp;eps, const double &amp;u_levelSet, const double &amp;u, const double grad_u[nSpace], double &amp;m, double &amp;dm, double &amp;H, double dH[nSpace], double &amp;r)</argsstring>
+        <name>evaluateCoefficients</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>eps</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>u_levelSet</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>u</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>grad_u</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>dm</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>H</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>dH</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>r</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="351" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="351" bodyend="378"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1ac62fe83b4abbae9c1326eef1945baebb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateSubgridError_tau</definition>
+        <argsstring>(const double &amp;elementDiameter, const double &amp;dmt, const double dH[nSpace], double &amp;cfl, double &amp;tau)</argsstring>
+        <name>calculateSubgridError_tau</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>dmt</declname>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>dH</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>cfl</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>tau</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="381" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="381" bodyend="399"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1a3f29589857c6998ba684e3e5936a04f1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateSubgridError_tau</definition>
+        <argsstring>(const double G[nSpace *nSpace], const double Ai[nSpace], double &amp;tau_v, double &amp;q_cfl)</argsstring>
+        <name>calculateSubgridError_tau</name>
+        <param>
+          <type>const double</type>
+          <declname>G</declname>
+          <array>[nSpace *nSpace]</array>
+        </param>
+        <param>
+          <type>const double</type>
+          <declname>Ai</declname>
+          <array>[nSpace]</array>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>tau_v</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>q_cfl</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="402" column="14" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="402" bodyend="413"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1aa0e6f5abaa21394596ba2eddfab26aa4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateResidual</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double alphaBDF, double epsFact_redist, double backgroundDiffusionFactor, double weakDirichletFactor, int freezeLevelSet, int useTimeIntegration, int lag_shockCapturing, int lag_subgridError, double shockCapturingDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *phi_dof, double *phi_ls, double *q_m, double *q_u, double *q_n, double *q_dH, double *u_weak_internal_bc_dofs, double *q_m_betaBDF, double *q_dH_last, double *q_cfl, double *q_numDiff_u, double *q_numDiff_u_last, int *weakDirichletConditionFlags, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_phi_ls_ext, int *isDOFBoundary_u, double *ebqe_bc_u_ext, double *ebqe_u, double *ebqe_n, int ELLIPTIC_REDISTANCING, double backgroundDissipationEllipticRedist, double *lumped_qx, double *lumped_qy, double *lumped_qz, double alpha, bool useExact)</argsstring>
+        <name>calculateResidual</name>
+        <reimplements refid="classproteus_1_1_r_d_l_s__base_1a6d1019bf15c1e84240f6fc05c6a87c2f">calculateResidual</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_redist</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>backgroundDiffusionFactor</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>weakDirichletFactor</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>freezeLevelSet</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>useTimeIntegration</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_shockCapturing</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_subgridError</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_ls</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_weak_internal_bc_dofs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m_betaBDF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dH_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>weakDirichletConditionFlags</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi_ls_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>ELLIPTIC_REDISTANCING</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>backgroundDissipationEllipticRedist</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qx</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qy</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="416" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="416" bodyend="892"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1a71d383cfdfe57433d6ce54636f6d1c8c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateJacobian</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double alphaBDF, double epsFact_redist, double backgroundDiffusionFactor, double weakDirichletFactor, int freezeLevelSet, int useTimeIntegration, int lag_shockCapturing, int lag_subgridError, double shockCapturingDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *phi_dof, double *u_weak_internal_bc_dofs, double *phi_ls, double *q_m_betaBDF, double *q_dH_last, double *q_cfl, double *q_numDiff_u, double *q_numDiff_u_last, int *weakDirichletConditionFlags, int *csrRowIndeces_u_u, int *csrColumnOffsets_u_u, double *globalJacobian, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_phi_ls_ext, int *isDOFBoundary_u, double *ebqe_bc_u_ext, int *csrColumnOffsets_eb_u_u, int ELLIPTIC_REDISTANCING, double backgroundDissipationEllipticRedist, double alpha, bool useExact)</argsstring>
+        <name>calculateJacobian</name>
+        <reimplements refid="classproteus_1_1_r_d_l_s__base_1ad5e4da3cfd86f575f51b0defa7a5eca1">calculateJacobian</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_redist</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>backgroundDiffusionFactor</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>weakDirichletFactor</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>freezeLevelSet</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>useTimeIntegration</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_shockCapturing</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_subgridError</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_weak_internal_bc_dofs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_ls</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m_betaBDF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dH_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>weakDirichletConditionFlags</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalJacobian</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi_ls_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_u_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>ELLIPTIC_REDISTANCING</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>backgroundDissipationEllipticRedist</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="897" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="897" bodyend="1390"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1a898b96f30ee26edcf7509371ce300272" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateResidual_ellipticRedist</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double alphaBDF, double epsFact_redist, double backgroundDiffusionFactor, double weakDirichletFactor, int freezeLevelSet, int useTimeIntegration, int lag_shockCapturing, int lag_subgridError, double shockCapturingDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *phi_dof, double *phi_ls, double *q_m, double *q_u, double *q_n, double *q_dH, double *u_weak_internal_bc_dofs, double *q_m_betaBDF, double *q_dH_last, double *q_cfl, double *q_numDiff_u, double *q_numDiff_u_last, int *weakDirichletConditionFlags, int offset_u, int stride_u, double *globalResidual, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_phi_ls_ext, int *isDOFBoundary_u, double *ebqe_bc_u_ext, double *ebqe_u, double *ebqe_n, int ELLIPTIC_REDISTANCING, double backgroundDissipationEllipticRedist, double *lumped_qx, double *lumped_qy, double *lumped_qz, double alpha, bool useExact)</argsstring>
+        <name>calculateResidual_ellipticRedist</name>
+        <reimplements refid="classproteus_1_1_r_d_l_s__base_1a45ba6bea9a2c12bf5afd53d24038eaed">calculateResidual_ellipticRedist</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_redist</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>backgroundDiffusionFactor</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>weakDirichletFactor</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>freezeLevelSet</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>useTimeIntegration</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_shockCapturing</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_subgridError</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_ls</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_n</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dH</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_weak_internal_bc_dofs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m_betaBDF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dH_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>weakDirichletConditionFlags</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalResidual</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi_ls_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_n</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>ELLIPTIC_REDISTANCING</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>backgroundDissipationEllipticRedist</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qx</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qy</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qz</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="1392" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="1392" bodyend="1708"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1a9e1428f4346935a72210d69f2c9c1fe0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateJacobian_ellipticRedist</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *x_ref, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, double *u_grad_test_ref, double *mesh_trial_trace_ref, double *mesh_grad_trial_trace_ref, double *dS_ref, double *u_trial_trace_ref, double *u_grad_trial_trace_ref, double *u_test_trace_ref, double *u_grad_test_trace_ref, double *normal_ref, double *boundaryJac_ref, int nElements_global, double useMetrics, double alphaBDF, double epsFact_redist, double backgroundDiffusionFactor, double weakDirichletFactor, int freezeLevelSet, int useTimeIntegration, int lag_shockCapturing, int lag_subgridError, double shockCapturingDiffusion, int *u_l2g, double *elementDiameter, double *nodeDiametersArray, double *u_dof, double *phi_dof, double *u_weak_internal_bc_dofs, double *phi_ls, double *q_m_betaBDF, double *q_dH_last, double *q_cfl, double *q_numDiff_u, double *q_numDiff_u_last, int *weakDirichletConditionFlags, int *csrRowIndeces_u_u, int *csrColumnOffsets_u_u, double *globalJacobian, int nExteriorElementBoundaries_global, int *exteriorElementBoundariesArray, int *elementBoundaryElementsArray, int *elementBoundaryLocalElementBoundariesArray, double *ebqe_phi_ls_ext, int *isDOFBoundary_u, double *ebqe_bc_u_ext, int *csrColumnOffsets_eb_u_u, int ELLIPTIC_REDISTANCING, double backgroundDissipationEllipticRedist, double alpha, bool useExact)</argsstring>
+        <name>calculateJacobian_ellipticRedist</name>
+        <reimplements refid="classproteus_1_1_r_d_l_s__base_1ad37af9b859ea814b55a4d0f4f57606b0">calculateJacobian_ellipticRedist</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>x_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dS_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_test_trace_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>normal_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>boundaryJac_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>useMetrics</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alphaBDF</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_redist</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>backgroundDiffusionFactor</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>weakDirichletFactor</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>freezeLevelSet</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>useTimeIntegration</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_shockCapturing</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>lag_subgridError</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>shockCapturingDiffusion</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>nodeDiametersArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_weak_internal_bc_dofs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>phi_ls</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_m_betaBDF</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_dH_last</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_cfl</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>q_numDiff_u_last</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>weakDirichletConditionFlags</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrRowIndeces_u_u</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_u_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>globalJacobian</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nExteriorElementBoundaries_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>exteriorElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryElementsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementBoundaryLocalElementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_phi_ls_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>isDOFBoundary_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>ebqe_bc_u_ext</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>csrColumnOffsets_eb_u_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>ELLIPTIC_REDISTANCING</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>backgroundDissipationEllipticRedist</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="1710" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="1710" bodyend="1918"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1a27415bf5a03bf8cec4874bb0e69bcb6b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::normalReconstruction</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, int nElements_global, int *u_l2g, double *elementDiameter, double *u_dof, int offset_u, int stride_u, int numDOFs, double *lumped_qx, double *lumped_qy, double *lumped_qz)</argsstring>
+        <name>normalReconstruction</name>
+        <reimplements refid="classproteus_1_1_r_d_l_s__base_1a0bf94e967e89e337171225e3604ecb67">normalReconstruction</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>numDOFs</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qx</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qy</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>lumped_qz</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="1920" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="1920" bodyend="2043"/>
+      </memberdef>
+      <memberdef kind="function" id="classproteus_1_1_r_d_l_s_1a6d3c3954bb9c93453d1474d41c398252" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>void proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;::calculateMetricsAtEOS</definition>
+        <argsstring>(double *mesh_trial_ref, double *mesh_grad_trial_ref, double *mesh_dof, int *mesh_l2g, double *dV_ref, double *u_trial_ref, double *u_grad_trial_ref, double *u_test_ref, int nElements_global, int *u_l2g, double *elementDiameter, double degree_polynomial, double epsFact_redist, double *u_dof, double *u_exact, int offset_u, int stride_u, double *global_I_err, double *global_V_err, double *global_D_err)</argsstring>
+        <name>calculateMetricsAtEOS</name>
+        <reimplements refid="classproteus_1_1_r_d_l_s__base_1a2404871a67bb07692c5b3abdb6f5dff2">calculateMetricsAtEOS</reimplements>
+        <param>
+          <type>double *</type>
+          <declname>mesh_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>mesh_dof</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>mesh_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dV_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_grad_trial_ref</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_test_ref</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>u_l2g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>elementDiameter</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>degree_polynomial</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>epsFact_redist</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_dof</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>u_exact</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>offset_u</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>stride_u</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>global_I_err</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>global_V_err</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>global_D_err</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="2045" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="2045" bodyend="2146"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>proteus::RDLS_base</label>
+        <link refid="classproteus_1_1_r_d_l_s__base"/>
+      </node>
+      <node id="1">
+        <label>proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1_r_d_l_s"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>proteus::RDLS_base</label>
+        <link refid="classproteus_1_1_r_d_l_s__base"/>
+        <childnode refid="3" relation="usage">
+          <edgelabel>weighted_lumped_mass_matrix</edgelabel>
+        </childnode>
+      </node>
+      <node id="4">
+        <label>equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, 1, nQuadraturePoints_element &gt;</label>
+        <link refid="classequivalent__polynomials_1_1_generalized_functions__mix"/>
+      </node>
+      <node id="3">
+        <label>std::valarray&lt; double &gt;</label>
+      </node>
+      <node id="1">
+        <label>proteus::RDLS&lt; CompKernelType, nSpace, nQuadraturePoints_element, nDOF_mesh_trial_element, nDOF_trial_element, nDOF_test_element, nQuadraturePoints_elementBoundary &gt;</label>
+        <link refid="classproteus_1_1_r_d_l_s"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+        <childnode refid="4" relation="usage">
+          <edgelabel>gfu</edgelabel>
+          <edgelabel>gf</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" line="340" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mprans/RDLS.h" bodystart="339" bodyend="2148"/>
+    <listofallmembers>
+      <member refid="classproteus_1_1_r_d_l_s_1a71d383cfdfe57433d6ce54636f6d1c8c" prot="public" virt="virtual"><scope>proteus::RDLS</scope><name>calculateJacobian</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a9e1428f4346935a72210d69f2c9c1fe0" prot="public" virt="virtual"><scope>proteus::RDLS</scope><name>calculateJacobian_ellipticRedist</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a6d3c3954bb9c93453d1474d41c398252" prot="public" virt="virtual"><scope>proteus::RDLS</scope><name>calculateMetricsAtEOS</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1aa0e6f5abaa21394596ba2eddfab26aa4" prot="public" virt="virtual"><scope>proteus::RDLS</scope><name>calculateResidual</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a898b96f30ee26edcf7509371ce300272" prot="public" virt="virtual"><scope>proteus::RDLS</scope><name>calculateResidual_ellipticRedist</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1ac62fe83b4abbae9c1326eef1945baebb" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>calculateSubgridError_tau</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a3f29589857c6998ba684e3e5936a04f1" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>calculateSubgridError_tau</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a51e3c9d41c270a1970d8aac107b69e0f" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>ck</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a1c1c17af4bbe4a7d38e4fda266e95c66" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>evaluateCoefficients</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a9ca430ab04ac6b1ddda49109b79a7b05" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>gf</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a92ddf6699fc9b5442dc96718d51884a1" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>gfu</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1aa001e06d2a0eed4e5827929ed2125f03" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>nDOF_test_X_trial_element</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1a27415bf5a03bf8cec4874bb0e69bcb6b" prot="public" virt="virtual"><scope>proteus::RDLS</scope><name>normalReconstruction</name></member>
+      <member refid="classproteus_1_1_r_d_l_s_1ac8f1656100c871b93649147460e37f44" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>RDLS</name></member>
+      <member refid="classproteus_1_1_r_d_l_s__base_1a3ca77687396b8b097009379b369932b1" prot="public" virt="non-virtual"><scope>proteus::RDLS</scope><name>weighted_lumped_mass_matrix</name></member>
+      <member refid="classproteus_1_1_r_d_l_s__base_1ae4cbb2b0f904a397750129e6ab6f7a3f" prot="public" virt="virtual"><scope>proteus::RDLS</scope><name>~RDLS_base</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,206 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classequivalent__polynomials_1_1_generalized_functions__mix" kind="class" language="C++" prot="public">
+    <compoundname>equivalent_polynomials::GeneralizedFunctions_mix</compoundname>
+    <includes refid="equivalent__polynomials_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>nSpace</declname>
+        <defname>nSpace</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nP</declname>
+        <defname>nP</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>nQ</declname>
+        <defname>nQ</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_generalized_functions__mix_1afff4d4d7cf117a31bcfca7e61402ab0a" prot="public" static="no" mutable="no">
+        <type><ref refid="classequivalent__polynomials_1_1_regularized" kindref="compound">Regularized</ref>&lt; nSpace, nP, nQ &gt;</type>
+        <definition>Regularized&lt;nSpace, nP, nQ&gt; equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::regularized</definition>
+        <argsstring></argsstring>
+        <name>regularized</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="373" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="373" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_generalized_functions__mix_1a2d0bc97097f5b7c39835d4dcbba2e848" prot="public" static="no" mutable="no">
+        <type><ref refid="classequivalent__polynomials_1_1_simplex" kindref="compound">Simplex</ref>&lt; nSpace, nP, nQ &gt;</type>
+        <definition>Simplex&lt;nSpace, nP, nQ&gt; equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::exact</definition>
+        <argsstring></argsstring>
+        <name>exact</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="374" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="374" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classequivalent__polynomials_1_1_generalized_functions__mix_1a29e15de3b47785fc77175da05814a6d5" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::useExact</definition>
+        <argsstring></argsstring>
+        <name>useExact</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="375" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="375" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_generalized_functions__mix_1a8f5f7e83b37292460894883f24a512b5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::GeneralizedFunctions_mix</definition>
+        <argsstring>(bool useExact=true)</argsstring>
+        <name>GeneralizedFunctions_mix</name>
+        <param>
+          <type>bool</type>
+          <declname>useExact</declname>
+          <defval>true</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="376" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="376" bodyend="378"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_generalized_functions__mix_1a8ee719735a1637ec9326612bfd6dc6db" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::calculate</definition>
+        <argsstring>(const double *phi_dof, const double *phi_nodes, const double *xi_r)</argsstring>
+        <name>calculate</name>
+        <param>
+          <type>const double *</type>
+          <declname>phi_dof</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>phi_nodes</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>xi_r</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="380" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="380" bodyend="391"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_generalized_functions__mix_1ae3098d2e854fd7c6a3175f735e813a54" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::set_quad</definition>
+        <argsstring>(unsigned int q)</argsstring>
+        <name>set_quad</name>
+        <param>
+          <type>unsigned int</type>
+          <declname>q</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="393" column="17" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="393" bodyend="397"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_generalized_functions__mix_1acbb60b320192db3d6f9a9427c415f6f5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::H</definition>
+        <argsstring>(double eps, double phi)</argsstring>
+        <name>H</name>
+        <param>
+          <type>double</type>
+          <declname>eps</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>phi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="399" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="399" bodyend="405"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_generalized_functions__mix_1a77f5617808d292facf8e62b60f250d9d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::ImH</definition>
+        <argsstring>(double eps, double phi)</argsstring>
+        <name>ImH</name>
+        <param>
+          <type>double</type>
+          <declname>eps</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>phi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="407" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="407" bodyend="413"/>
+      </memberdef>
+      <memberdef kind="function" id="classequivalent__polynomials_1_1_generalized_functions__mix_1a325e7b9390dd9932df9710a8043dddd2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double equivalent_polynomials::GeneralizedFunctions_mix&lt; nSpace, nP, nQ &gt;::D</definition>
+        <argsstring>(double eps, double phi)</argsstring>
+        <name>D</name>
+        <param>
+          <type>double</type>
+          <declname>eps</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>phi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="415" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="415" bodyend="421"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" line="371" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/equivalent_polynomials.h" bodystart="370" bodyend="422"/>
+    <listofallmembers>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1a8ee719735a1637ec9326612bfd6dc6db" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>calculate</name></member>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1a325e7b9390dd9932df9710a8043dddd2" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>D</name></member>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1a2d0bc97097f5b7c39835d4dcbba2e848" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>exact</name></member>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1a8f5f7e83b37292460894883f24a512b5" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>GeneralizedFunctions_mix</name></member>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1acbb60b320192db3d6f9a9427c415f6f5" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>H</name></member>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1a77f5617808d292facf8e62b60f250d9d" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>ImH</name></member>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1afff4d4d7cf117a31bcfca7e61402ab0a" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>regularized</name></member>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1ae3098d2e854fd7c6a3175f735e813a54" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>set_quad</name></member>
+      <member refid="classequivalent__polynomials_1_1_generalized_functions__mix_1a29e15de3b47785fc77175da05814a6d5" prot="public" virt="non-virtual"><scope>equivalent_polynomials::GeneralizedFunctions_mix</scope><name>useExact</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

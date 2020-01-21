@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['destr',['destr',['../group__triangle_wrappers.html#gad6aafbbf31112021663c7cc2fee4e823',1,'triangleWrappersModule.c']]]
+  ['cpphsusedstress2d_4752',['cppHsuSedStress2D',['../namespaceproteus.html#ad6e60169b6d890f254386e6473efd3e0',1,'proteus']]]
 ];

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="structno__op__delete" kind="struct" language="C++" prot="public">
+    <compoundname>no_op_delete</compoundname>
+    <includes refid="_prot_ch_body_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structno__op__delete_1ad542d9e186cb5661f8375c544418d2a3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void no_op_delete::operator()</definition>
+        <argsstring>(void *)</argsstring>
+        <name>operator()</name>
+        <param>
+          <type>void *</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="638" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="638" bodyend="638"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="637" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="636" bodyend="639"/>
+    <listofallmembers>
+      <member refid="structno__op__delete_1ad542d9e186cb5661f8375c544418d2a3" prot="public" virt="non-virtual"><scope>no_op_delete</scope><name>operator()</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

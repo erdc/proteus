@@ -1,4 +1,4 @@
 <map id="timeIntegration.h" name="timeIntegration.h">
-<area shape="rect" id="node2" href="$ctime_integration_module_8c.html" title="ctimeIntegrationModule.c" alt="" coords="5,80,173,107"/>
-<area shape="rect" id="node3" href="$time_integration_8c.html" title="timeIntegration.c" alt="" coords="198,80,317,107"/>
+<area shape="rect" id="node1" title="c interface for implementation of time discretization algorithms" alt="" coords="5,5,140,32"/>
+<area shape="rect" id="node2" href="$time_integration_8c.html" title=" " alt="" coords="5,80,140,107"/>
 </map>

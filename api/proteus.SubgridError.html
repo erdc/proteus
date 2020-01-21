@@ -1,129 +1,268 @@
+
+
 <!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>proteus.SubgridError module &mdash; Proteus 1.7.2 documentation</title>
+  
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>proteus.SubgridError module &#8212; Proteus 1.7.0 documentation</title>
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.7/spacelab/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+  
+  
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="proteus.SubsurfaceTransportCoefficients module" href="proteus.SubsurfaceTransportCoefficients.html" />
-    <link rel="prev" title="proteus.StupidHeap module" href="proteus.StupidHeap.html" />
-<meta charset='utf-8'>
-<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
-<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
-<meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
 
-  </head><body>
+<body class="wy-body-for-nav">
 
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
 
-
-  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="../index.html">
-          proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.7.0</b></span>
-      </div>
-
-        <div class="collapse navbar-collapse nav-collapse">
-          <ul class="nav navbar-nav">
-            
-                <li><a href="proteus.html">API</a></li>
-                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
-            
-            
-              <li class="dropdown globaltoc-container">
-  <a role="button"
-     id="dLabelGlobalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="../index.html">Site <b class="caret"></b></a>
-  <ul class="dropdown-menu globaltoc"
-      role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
-</ul>
-</li>
-</ul>
-</ul>
-</li>
-              
-                <li class="dropdown">
-  <a role="button"
-     id="dLabelLocalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="#">Page <b class="caret"></b></a>
-  <ul class="dropdown-menu localtoc"
-      role="menu"
-      aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">proteus.SubgridError module</a></li>
-</ul>
-</ul>
-</li>
-              
-            
-            
-              
-                
-  <li>
-    <a href="proteus.StupidHeap.html" title="Previous Chapter: proteus.StupidHeap module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Stupi...</span>
-    </a>
-  </li>
-  <li>
-    <a href="proteus.SubsurfaceTransportCoefficients.html" title="Next Chapter: proteus.SubsurfaceTransportCoefficients module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Subsu... &raquo;</span>
-    </a>
-  </li>
-              
-            
-            
-            
-            
-              <li class="hidden-sm"></li>
-            
-          </ul>
+          
+            <a href="../index.html">
+          
 
           
             
-<form class="navbar-form navbar-right" action="../search.html" method="get">
- <div class="form-group">
-  <input type="text" name="q" class="form-control" placeholder="Search" />
- </div>
-  <input type="hidden" name="check_keywords" value="yes" />
-  <input type="hidden" name="area" value="default" />
-</form>
+            <img src="../_static/corps_logo_cross2.svg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
           
         </div>
-    </div>
-  </div>
 
-<div class="container">
-  <div class="row">
-    <div class="col-md-12 content">
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apicapi.html">API docs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tools/boundary_conditions.html">BoundaryConditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/boundary_conditions.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/boundary_conditions.html#import">Import</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/spatial_tools.html">SpatialTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#import">Import</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#choosing-the-domain">Choosing the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#assembling-the-domain">Assembling the domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#boundaryconditions-with-spatialtools">BoundaryConditions with SpatialTools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#id1">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#linking-it-to-p-py-files">Linking it to _p.py files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#complete-examples">Complete Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#d">2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#id2">3D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#d-with-stl">3D with STL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/spatial_tools.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#base-classes">Base classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#customshape">CustomShape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#rectangle">Rectangle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#circle">Circle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#cuboid">Cuboid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#cylinder">Cylinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#sphere">Sphere</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#shapestl">ShapeSTL</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/spatial_tools.html#mprans-specific">mprans specific</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tank2d">Tank2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tank3d">Tank3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tools/spatial_tools.html#tankwithobstacle2d">TankWithObstacle2D</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/two_phase_flow.html">TwoPhaseFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools/wave_tools.html">WaveTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tools/wave_tools.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#import-in-command-line">Import in command line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#list-of-wave-theories">List of wave theories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#how-to-use-in-proteus">How to use in Proteus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tools/wave_tools.html#how-to-use-as-stand-alone-tool">How to use as stand-alone tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Models</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../models/body_dynamics.html">Body Dynamics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#classes">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchsystem">ProtChSystem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchbody">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmesh">ProtChMesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchmoorings">ProtChMoorings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#protchaddedmass">ProtChAddedMass</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../models/body_dynamics.html#postprocessing-tools">Postprocessing Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id4">ProtChBody</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/body_dynamics.html#id5">ProtChMoorings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/free_surface.html">Free Surface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#vof-ncls">VOF - NCLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/free_surface.html#clsvof">CLSVOF</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_adaptivity.html">Mesh Adaptivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/mesh_motion.html">Mesh Motion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/navier_stokes.html">Navier-Stokes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#two-phase">Two-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#three-phase">Three-Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/navier_stokes.html#dealing-with-moving-domains">Dealing with Moving Domains</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#moving-ale-mesh">Moving (ALE) Mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/navier_stokes.html#immersed-boundaries">Immersed Boundaries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/SWFlows.html">Shallow Water Flows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#shallow-water-equations">Shallow Water equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#modified-green-naghdi-equations">Modified Green-Naghdi equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../models/SWFlows.html#running-the-tests">Running the tests</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
       
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Proteus</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>proteus.SubgridError module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/erdc/proteus/blob/masterdocs/source/api/proteus.SubgridError.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
   <div class="section" id="module-proteus.SubgridError">
 <span id="proteus-subgriderror-module"></span><h1>proteus.SubgridError module<a class="headerlink" href="#module-proteus.SubgridError" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for subgrid error estimation methods (multiscale methods)</p>
@@ -131,32 +270,32 @@
 <p class="warning">Inheritance diagram of proteus.SubgridError</p></object></div>
 <dl class="class">
 <dt id="proteus.SubgridError.SGE_base">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">SGE_base</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">trackSubScales=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">SGE_base</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">trackSubScales=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.SGE_base.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.SGE_base.initializeTimeIntegration">
-<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">timeIntegration</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">timeIntegration</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
 <dd><p>allow for connection with time integration method if tracking subscales</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.SGE_base.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.SGE_base.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.SGE_base.accumulateSubgridMassHistory">
-<code class="sig-name descname">accumulateSubgridMassHistory</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.accumulateSubgridMassHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">accumulateSubgridMassHistory</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SGE_base.accumulateSubgridMassHistory" title="Permalink to this definition">¶</a></dt>
 <dd><p>incorporate subgrid scale mass accumulation
 delta m^{n}/delta t^{n+1}</p>
 </dd></dl>
@@ -165,346 +304,346 @@ delta m^{n}/delta t^{n+1}</p>
 
 <dl class="class">
 <dt id="proteus.SubgridError.Advection_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">Advection_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.Advection_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">Advection_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.Advection_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.Advection_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.Advection_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.Advection_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.Advection_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.Advection_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.Advection_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.Advection_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.Advection_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.Advection_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.AdvectionLag_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionLag_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionLag_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionLag_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionLag_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionLag_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionLag_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionLag_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionLag_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionLag_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionLag_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionLag_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionLag_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionLag_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.AdvectionDiffusionReaction_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionDiffusionReaction_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionDiffusionReaction_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReaction_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReaction_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReaction_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.FFDarcyFC_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">FFDarcyFC_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.FFDarcyFC_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">FFDarcyFC_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.FFDarcyFC_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <p>basic stablization for TwophaseDarcy_fc_ff, only ‘mixture’ equation has advection term
 ‘w’ phase equation has nonlinear diffusion wrt mixture potential,
 ‘mixture’ equation has two nonlinear diffusion terms</p>
 <dl class="method">
 <dt id="proteus.SubgridError.FFDarcyFC_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.FFDarcyFC_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.FFDarcyFC_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.FFDarcyFC_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.FFDarcyFC_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.FFDarcyFC_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.FFDarcyFC_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.FFDarcyFC_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.FFDarcyFC_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.DarcyFC_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">DarcyFC_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.DarcyFC_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">DarcyFC_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.DarcyFC_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <p>basic stablization for TwophaseDarcy_fc, no advection term
 ‘w’ phase and ‘n’ phase have nonlinear diffusion wrt to their own potential
 phi_w = psi_w, phi_n = psi_w + psi_c</p>
 <dl class="method">
 <dt id="proteus.SubgridError.DarcyFC_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.DarcyFC_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.DarcyFC_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.DarcyFC_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.DarcyFC_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.DarcyFC_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.DarcyFC_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.DarcyFC_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.DarcyFC_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.HamiltonJacobi_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">HamiltonJacobi_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">HamiltonJacobi_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobi_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobi_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobi_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">HamiltonJacobiDiffusionReaction_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">HamiltonJacobiDiffusionReaction_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobiDiffusionReaction_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.HamiltonJacobi_ASGS_opt">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">HamiltonJacobi_ASGS_opt</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS_opt" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">HamiltonJacobi_ASGS_opt</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS_opt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobi_ASGS_opt.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS_opt.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS_opt.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobi_ASGS_opt.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS_opt.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS_opt.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.HamiltonJacobi_ASGS_opt.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS_opt.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.HamiltonJacobi_ASGS_opt.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.StokesStabilization_1">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">StokesStabilization_1</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesStabilization_1" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">StokesStabilization_1</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesStabilization_1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.StokesStabilization_1.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesStabilization_1.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesStabilization_1.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.StokesStabilization_1.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesStabilization_1.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesStabilization_1.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.StokesASGS_velocity">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">StokesASGS_velocity</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">StokesASGS_velocity</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.StokesASGS_velocity.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.StokesASGS_velocity.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesASGS_velocity_pressure</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=5</em>, <em class="sig-param">hFactor=1.0</em>, <em class="sig-param">noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesASGS_velocity_pressure</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=5</em>, <em class="sig-param">hFactor=1.0</em>, <em class="sig-param">noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesASGS_velocity_pressure_opt</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=5</em>, <em class="sig-param">hFactor=1.0</em>, <em class="sig-param">noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesASGS_velocity_pressure_opt</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=5</em>, <em class="sig-param">hFactor=1.0</em>, <em class="sig-param">noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_opt.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesASGS_velocity_pressure_optV2</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=0</em>, <em class="sig-param">hFactor=1.0</em>, <em class="sig-param">noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesASGS_velocity_pressure_optV2</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=0</em>, <em class="sig-param">hFactor=1.0</em>, <em class="sig-param">noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure_optV2.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesWithBodyForceASGS_velocity_pressure</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=5</em>, <em class="sig-param">hFactor=1.0</em>, <em class="sig-param">noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesWithBodyForceASGS_velocity_pressure</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=5</em>, <em class="sig-param">hFactor=1.0</em>, <em class="sig-param">noPressureStabilization=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure" title="proteus.SubgridError.NavierStokesASGS_velocity_pressure"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.NavierStokesASGS_velocity_pressure</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesWithBodyForceASGS_velocity_pressure.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.StokesASGS_velocity_pressure">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">StokesASGS_velocity_pressure</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity_pressure" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">StokesASGS_velocity_pressure</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity_pressure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.StokesASGS_velocity_pressure.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity_pressure.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.StokesASGS_velocity_pressure.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.TwophaseStokes_LS_FC_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">TwophaseStokes_LS_FC_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">TwophaseStokes_LS_FC_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.TwophaseStokes_LS_FC_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.ShallowWater_CFL">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">ShallowWater_CFL</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">g</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.ShallowWater_CFL" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">ShallowWater_CFL</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">g</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.ShallowWater_CFL" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.ShallowWater_CFL.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.ShallowWater_CFL.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.ShallowWater_CFL.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.SkewStabilization_1">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">SkewStabilization_1</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">nc</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SkewStabilization_1" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">SkewStabilization_1</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">nc</em>, <em class="sig-param">nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SkewStabilization_1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.SkewStabilization_1.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SkewStabilization_1.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.SkewStabilization_1.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionDiffusionReactionTransientSubscales_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">trackSubScales=False</em>, <em class="sig-param">useHarariDirectly=False</em>, <em class="sig-param">limit_tau_t=False</em>, <em class="sig-param">tau_t_limit_min=0.0</em>, <em class="sig-param">tau_t_limit_max=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionDiffusionReactionTransientSubscales_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">trackSubScales=False</em>, <em class="sig-param">useHarariDirectly=False</em>, <em class="sig-param">limit_tau_t=False</em>, <em class="sig-param">tau_t_limit_min=0.0</em>, <em class="sig-param">tau_t_limit_max=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.AdvectionDiffusionReaction_ASGS" title="proteus.SubgridError.AdvectionDiffusionReaction_ASGS"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.AdvectionDiffusionReaction_ASGS</span></code></a></p>
 <blockquote>
 <div><p>track subgrid scales in time with Backward Euler</p>
@@ -534,28 +673,28 @@ phi_w = psi_w, phi_n = psi_w + psi_c</p>
 </div></blockquote>
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.initializeTimeIntegration">
-<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">timeIntegration</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">timeIntegration</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
 <dd><p>allow for connection with time integration method if tracking subscales</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.accumulateSubgridMassHistory">
-<code class="sig-name descname">accumulateSubgridMassHistory</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.accumulateSubgridMassHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">accumulateSubgridMassHistory</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionTransientSubscales_ASGS.accumulateSubgridMassHistory" title="Permalink to this definition">¶</a></dt>
 <dd><p>incorporate subgrid scale mass accumulation
 delta m^{n}/delta t^{n+1}</p>
 </dd></dl>
@@ -564,25 +703,25 @@ delta m^{n}/delta t^{n+1}</p>
 
 <dl class="class">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">interpolationFemSpaceType=None</em>, <em class="sig-param">tau_00_force=None</em>, <em class="sig-param">tau_11_force=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">interpolationFemSpaceType=None</em>, <em class="sig-param">tau_00_force=None</em>, <em class="sig-param">tau_11_force=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
 <p>Should be basic Hauke Sangalli approach but computes terms at interpolation points
 and then uses this to compute the gradient for Sangalli type approach
 Adjoint gradient is computed manually</p>
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em>, <em class="sig-param">cip=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em>, <em class="sig-param">cip=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.initializeTimeIntegration">
-<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">timeIntegration</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">timeIntegration</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
 <dd><p>allow for connection with time integration method if tracking subscales</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.calculateSubgridErrorInterpolants">
-<code class="sig-name descname">calculateSubgridErrorInterpolants</code><span class="sig-paren">(</span><em class="sig-param">ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.calculateSubgridErrorInterpolants" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridErrorInterpolants</code><span class="sig-paren">(</span><em class="sig-param">ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.calculateSubgridErrorInterpolants" title="Permalink to this definition">¶</a></dt>
 <dd><p>should interpolate strong residual. One problem is that
 strong residual is discontinuous when grad(u) terms are nonzero
 so standard C0 projection
@@ -594,19 +733,19 @@ ignoring gradient terms altogether</p>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">interpolationFemSpaceType=None</em>, <em class="sig-param">trackSubScales=False</em>, <em class="sig-param">tau_00_force=None</em>, <em class="sig-param">tau_11_force=None</em>, <em class="sig-param">includeSubgridScalesInGradientStabilization=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">interpolationFemSpaceType=None</em>, <em class="sig-param">trackSubScales=False</em>, <em class="sig-param">tau_00_force=None</em>, <em class="sig-param">tau_11_force=None</em>, <em class="sig-param">includeSubgridScalesInGradientStabilization=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS" title="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS</span></code></a></p>
 <p>Should be basic Hauke Sangalli approach but computes terms at interpolation points
 and then uses this to compute the gradient for Sangalli type approach
@@ -614,12 +753,12 @@ Adjoint gradient is computed manually
 And SubScales are tracked in time</p>
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em>, <em class="sig-param">cip=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em>, <em class="sig-param">cip=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridErrorInterpolants">
-<code class="sig-name descname">calculateSubgridErrorInterpolants</code><span class="sig-paren">(</span><em class="sig-param">ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridErrorInterpolants" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridErrorInterpolants</code><span class="sig-paren">(</span><em class="sig-param">ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridErrorInterpolants" title="Permalink to this definition">¶</a></dt>
 <dd><p>should interpolate strong residual. One problem is that
 strong residual is discontinuous when grad(u) terms are nonzero
 so standard C0 projection
@@ -631,17 +770,17 @@ ignoring gradient terms altogether</p>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.accumulateSubgridMassHistory">
-<code class="sig-name descname">accumulateSubgridMassHistory</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.accumulateSubgridMassHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">accumulateSubgridMassHistory</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_ASGS.accumulateSubgridMassHistory" title="Permalink to this definition">¶</a></dt>
 <dd><p>incorporate subgrid scale mass accumulation
 delta m^{n}/delta t^{n+1}</p>
 </dd></dl>
@@ -650,34 +789,34 @@ delta m^{n}/delta t^{n+1}</p>
 
 <dl class="class">
 <dt id="proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure">
-<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesTransientSubScalesASGS_velocity_pressure</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=5</em>, <em class="sig-param">hFactor=1</em>, <em class="sig-param">noPressureStabilization=False</em>, <em class="sig-param">trackSubScales=False</em>, <em class="sig-param">limit_tau_t=False</em>, <em class="sig-param">tau_t_limit_min=0.0</em>, <em class="sig-param">tau_t_limit_max=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">proteus.SubgridError.</code><code class="sig-name descname">NavierStokesTransientSubScalesASGS_velocity_pressure</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">nd</em>, <em class="sig-param">stabFlag='1'</em>, <em class="sig-param">lag=False</em>, <em class="sig-param">delayLagSteps=5</em>, <em class="sig-param">hFactor=1</em>, <em class="sig-param">noPressureStabilization=False</em>, <em class="sig-param">trackSubScales=False</em>, <em class="sig-param">limit_tau_t=False</em>, <em class="sig-param">tau_t_limit_min=0.0</em>, <em class="sig-param">tau_t_limit_max=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SubgridError.NavierStokesASGS_velocity_pressure" title="proteus.SubgridError.NavierStokesASGS_velocity_pressure"><code class="xref py py-class docutils literal notranslate"><span class="pre">proteus.SubgridError.NavierStokesASGS_velocity_pressure</span></code></a></p>
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.initializeElementQuadrature">
-<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">t</em>, <em class="sig-param">cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.initializeTimeIntegration">
-<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">timeIntegration</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeTimeIntegration</code><span class="sig-paren">(</span><em class="sig-param">timeIntegration</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.initializeTimeIntegration" title="Permalink to this definition">¶</a></dt>
 <dd><p>allow for connection with time integration method if tracking subscales</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.updateSubgridErrorHistory">
-<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em class="sig-param">initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.accumulateSubgridMassHistory">
-<code class="sig-name descname">accumulateSubgridMassHistory</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.accumulateSubgridMassHistory" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">accumulateSubgridMassHistory</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.accumulateSubgridMassHistory" title="Permalink to this definition">¶</a></dt>
 <dd><p>incorporate subgrid scale mass accumulation
 delta m^{n}/delta t^{n+1}</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.calculateSubgridError">
-<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSubgridError</code><span class="sig-paren">(</span><em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc/proteus/tree/master/proteus/SubgridError.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SubgridError.NavierStokesTransientSubScalesASGS_velocity_pressure.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -685,21 +824,70 @@ delta m^{n}/delta t^{n+1}</p>
 </div>
 
 
-    </div>
-      
-  </div>
-</div>
-<footer class="footer">
-  <div class="container">
-    <p class="pull-right">
-      <a href="#">Back to top</a>
-      
-    </p>
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+        &copy; Copyright 2020, The Proteus Team
+
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
 </footer>
-  </body>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+   /* .wy-side-nav-search, .wy-nav-top { */
+    .wy-side-nav-search {
+        background: #F0F0F0;
+    }
+   .wy-side-nav-search > div.version {
+       color: rgba(0,0,0,.5);
+   }
+   /* .wy-side-nav-search img { */
+   /* max-width: 200%; */
+   /* } */
+   .wy-side-nav-search>a img.logo {
+       width: 150px;
+       /* width: 200px; */
+   }
+
+
+
+    /* Sidebar */
+   /* .wy-nav-side { */
+   /* background: #ff0000; */
+   /* } */
+  </style>
+
+
+
+</body>
 </html>

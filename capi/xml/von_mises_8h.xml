@@ -1,0 +1,285 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="von_mises_8h" kind="file" language="C++">
+    <compoundname>vonMises.h</compoundname>
+    <includedby refid="_elasto_plastic_8h" local="yes">ElastoPlastic.h</includedby>
+    <invincdepgraph>
+      <node id="1">
+        <label>vonMises.h</label>
+        <link refid="von_mises_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ElastoPlastic.h</label>
+        <link refid="_elasto_plastic_8h"/>
+      </node>
+    </invincdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="von_mises_8h_1ae06415bea43caec79bb5c54b209dee92" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void vonMises</definition>
+        <argsstring>(const double &amp;phi, const double &amp;psi, const double &amp;c, const double *stress, double &amp;f, double *df, double &amp;g, double *r, double *dr)</argsstring>
+        <name>vonMises</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>phi</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>psi</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>c</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>stress</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>df</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>g</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>r</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>dr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/elastoplastic/vonMises.h" line="2" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/elastoplastic/vonMises.h" bodystart="2" bodyend="208"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="normal"></highlight></codeline>
+<codeline lineno="2" refid="von_mises_8h_1ae06415bea43caec79bb5c54b209dee92" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="von_mises_8h_1ae06415bea43caec79bb5c54b209dee92" kindref="member">vonMises</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1ace0097aceb19d2d05a51f5d244573c4f" kindref="member">phi</ref>,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1acf2aa06bc881a993584c334b2b7c6e03" kindref="member">psi</ref>,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref>,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>stress,<sp/></highlight><highlight class="comment">//inputs</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/><ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/>g,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/><ref refid="_headers_8h_1a51d5468d74b4eccfb8e26ea458562120" kindref="member">r</ref>,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>dr)<sp/></highlight><highlight class="comment">//outputs</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="5"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nSymTen=6,sXX=0,sYY=1,sZZ=2,sYZ=3,sZY=3,sXZ=4,sZX=4,sXY=5,sYX=5;</highlight></codeline>
+<codeline lineno="6"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>targ,dtarg[nSymTen],ddtarg[nSymTen*nSymTen],</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"><sp/><sp/><sp/><sp/>df_dtarg,</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/><sp/><sp/>dg_dtarg,ddg_dtarg;</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">&amp;<sp/>stress_xx(stress[sXX]),</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/><sp/><sp/>stress_yy(stress[sYY]),</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/><sp/><sp/>stress_zz(stress[sZZ]),</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/>stress_yz(stress[sYZ]),</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/><sp/><sp/>stress_zx(stress[sZX]),</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/>stress_xy(stress[sXY]);</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/>targ<sp/>=<sp/>1.0e-8<sp/>+<sp/>pow(stress_xx<sp/>-<sp/>stress_yy,<sp/>2)<sp/>+<sp/>pow(stress_yy<sp/>-<sp/>stress_zz,<sp/>2)<sp/>+<sp/>pow(stress_zz<sp/>-<sp/>stress_xx,<sp/>2)<sp/>+<sp/>6*pow(stress_xy,<sp/>2)<sp/>+<sp/>6*pow(stress_yz,<sp/>2)<sp/>+<sp/>6*pow(stress_zx,<sp/>2);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/>dtarg[sXX]<sp/>=<sp/>-2*stress_yy<sp/>-<sp/>2*stress_zz<sp/>+<sp/>4*stress_xx;</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/>dtarg[sYY]<sp/>=<sp/>-2*stress_xx<sp/>-<sp/>2*stress_zz<sp/>+<sp/>4*stress_yy;</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/>dtarg[sZZ]<sp/>=<sp/>-2*stress_xx<sp/>-<sp/>2*stress_yy<sp/>+<sp/>4*stress_zz;</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/>dtarg[sYZ]<sp/>=<sp/>12*stress_yz;</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/>dtarg[sZX]<sp/>=<sp/>12*stress_zx;</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/>dtarg[sXY]<sp/>=<sp/>12*stress_xy;</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/>ddtarg[sXX+<sp/>nSymTen*sXX]<sp/>=<sp/>4;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/>ddtarg[sXX+<sp/>nSymTen*sYY]<sp/>=<sp/>-2;</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/>ddtarg[sXX+<sp/>nSymTen*sZZ]<sp/>=<sp/>-2;</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/>ddtarg[sXX+<sp/>nSymTen*sYZ]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/>ddtarg[sXX+<sp/>nSymTen*sZX]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/>ddtarg[sXX+<sp/>nSymTen*sXY]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/>ddtarg[sYY+<sp/>nSymTen*sXX]<sp/>=<sp/>-2;</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/>ddtarg[sYY+<sp/>nSymTen*sYY]<sp/>=<sp/>4;</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/>ddtarg[sYY+<sp/>nSymTen*sZZ]<sp/>=<sp/>-2;</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/>ddtarg[sYY+<sp/>nSymTen*sYZ]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/>ddtarg[sYY+<sp/>nSymTen*sZX]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/>ddtarg[sYY+<sp/>nSymTen*sXY]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/>ddtarg[sZZ+<sp/>nSymTen*sXX]<sp/>=<sp/>-2;</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/>ddtarg[sZZ+<sp/>nSymTen*sYY]<sp/>=<sp/>-2;</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/>ddtarg[sZZ+<sp/>nSymTen*sZZ]<sp/>=<sp/>4;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/>ddtarg[sZZ+<sp/>nSymTen*sYZ]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/>ddtarg[sZZ+<sp/>nSymTen*sZX]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/>ddtarg[sZZ+<sp/>nSymTen*sXY]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/>ddtarg[sYZ+<sp/>nSymTen*sXX]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/>ddtarg[sYZ+<sp/>nSymTen*sYY]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/>ddtarg[sYZ+<sp/>nSymTen*sZZ]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/>ddtarg[sYZ+<sp/>nSymTen*sYZ]<sp/>=<sp/>12;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/>ddtarg[sYZ+<sp/>nSymTen*sZX]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/>ddtarg[sYZ+<sp/>nSymTen*sXY]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/>ddtarg[sZX+<sp/>nSymTen*sXX]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/>ddtarg[sZX+<sp/>nSymTen*sYY]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/>ddtarg[sZX+<sp/>nSymTen*sZZ]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/>ddtarg[sZX+<sp/>nSymTen*sYZ]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/>ddtarg[sZX+<sp/>nSymTen*sZX]<sp/>=<sp/>12;</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/>ddtarg[sZX+<sp/>nSymTen*sXY]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/>ddtarg[sXY+<sp/>nSymTen*sXX]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/>ddtarg[sXY+<sp/>nSymTen*sYY]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/>ddtarg[sXY+<sp/>nSymTen*sZZ]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/>ddtarg[sXY+<sp/>nSymTen*sYZ]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/>ddtarg[sXY+<sp/>nSymTen*sZX]<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/>ddtarg[sXY+<sp/>nSymTen*sXY]<sp/>=<sp/>12;</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"></highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><ref refid="_headers_8h_1a760cfab91ff5a05317014c341a24853f" kindref="member">f</ref><sp/>=<sp/>-2*<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref><sp/>+<sp/>sqrt(2)*sqrt(targ)/2;</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/>df_dtarg<sp/>=<sp/>sqrt(2)/(4*sqrt(targ));</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"></highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>[sXX]<sp/>=<sp/>df_dtarg*dtarg[sXX];</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>[sYY]<sp/>=<sp/>df_dtarg*dtarg[sYY];</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>[sZZ]<sp/>=<sp/>df_dtarg*dtarg[sZZ];</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"></highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>[sYZ]<sp/>=<sp/>df_dtarg*dtarg[sYZ];</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"></highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>[sZX]<sp/>=<sp/>df_dtarg*dtarg[sZX];</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"></highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><ref refid="group__analytical_solutions_1ga31fe0a5e02da8c2ed2761f3aabf86e0d" kindref="member">df</ref>[sXY]<sp/>=<sp/>df_dtarg*dtarg[sXY];</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"></highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/>g<sp/>=<sp/>-2*<ref refid="_headers_8h_1aa0903c8c48f55ad539ee4e47f2d020ba" kindref="member">c</ref><sp/>+<sp/>sqrt(2)*sqrt(targ)/2;</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/>dg_dtarg<sp/>=<sp/>sqrt(2)/(4*sqrt(targ));</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><ref refid="_headers_8h_1a51d5468d74b4eccfb8e26ea458562120" kindref="member">r</ref>[sXX]<sp/>=<sp/>dg_dtarg*dtarg[sXX];</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"></highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><ref refid="_headers_8h_1a51d5468d74b4eccfb8e26ea458562120" kindref="member">r</ref>[sYY]<sp/>=<sp/>dg_dtarg*dtarg[sYY];</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"></highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><ref refid="_headers_8h_1a51d5468d74b4eccfb8e26ea458562120" kindref="member">r</ref>[sZZ]<sp/>=<sp/>dg_dtarg*dtarg[sZZ];</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"></highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><ref refid="_headers_8h_1a51d5468d74b4eccfb8e26ea458562120" kindref="member">r</ref>[sYZ]<sp/>=<sp/>dg_dtarg*dtarg[sYZ];</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><ref refid="_headers_8h_1a51d5468d74b4eccfb8e26ea458562120" kindref="member">r</ref>[sZX]<sp/>=<sp/>dg_dtarg*dtarg[sZX];</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"></highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><ref refid="_headers_8h_1a51d5468d74b4eccfb8e26ea458562120" kindref="member">r</ref>[sXY]<sp/>=<sp/>dg_dtarg*dtarg[sXY];</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"></highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/>ddg_dtarg<sp/>=<sp/>-sqrt(2)/(8*pow(targ,<sp/>3.0/2.0));</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/>dr[sXX+<sp/>nSymTen*sXX]<sp/>=<sp/>dg_dtarg*ddtarg[sXX+nSymTen*sXX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXX]*dtarg[sXX];</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"></highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/>dr[sXX+<sp/>nSymTen*sYY]<sp/>=<sp/>dg_dtarg*ddtarg[sXX+nSymTen*sYY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYY]*dtarg[sXX];</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"></highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/>dr[sXX+<sp/>nSymTen*sZZ]<sp/>=<sp/>dg_dtarg*ddtarg[sXX+nSymTen*sZZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZZ]*dtarg[sXX];</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"></highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/>dr[sXX+<sp/>nSymTen*sYZ]<sp/>=<sp/>dg_dtarg*ddtarg[sXX+nSymTen*sYZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYZ]*dtarg[sXX];</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"></highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/>dr[sXX+<sp/>nSymTen*sZX]<sp/>=<sp/>dg_dtarg*ddtarg[sXX+nSymTen*sZX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZX]*dtarg[sXX];</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"></highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/>dr[sXX+<sp/>nSymTen*sXY]<sp/>=<sp/>dg_dtarg*ddtarg[sXX+nSymTen*sXY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXY]*dtarg[sXX];</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"></highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/>dr[sYY+<sp/>nSymTen*sXX]<sp/>=<sp/>dg_dtarg*ddtarg[sYY+nSymTen*sXX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXX]*dtarg[sYY];</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/>dr[sYY+<sp/>nSymTen*sYY]<sp/>=<sp/>dg_dtarg*ddtarg[sYY+nSymTen*sYY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYY]*dtarg[sYY];</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"></highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/>dr[sYY+<sp/>nSymTen*sZZ]<sp/>=<sp/>dg_dtarg*ddtarg[sYY+nSymTen*sZZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZZ]*dtarg[sYY];</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"></highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/>dr[sYY+<sp/>nSymTen*sYZ]<sp/>=<sp/>dg_dtarg*ddtarg[sYY+nSymTen*sYZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYZ]*dtarg[sYY];</highlight></codeline>
+<codeline lineno="155"><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/>dr[sYY+<sp/>nSymTen*sZX]<sp/>=<sp/>dg_dtarg*ddtarg[sYY+nSymTen*sZX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZX]*dtarg[sYY];</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/>dr[sYY+<sp/>nSymTen*sXY]<sp/>=<sp/>dg_dtarg*ddtarg[sYY+nSymTen*sXY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXY]*dtarg[sYY];</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"></highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/>dr[sZZ+<sp/>nSymTen*sXX]<sp/>=<sp/>dg_dtarg*ddtarg[sZZ+nSymTen*sXX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXX]*dtarg[sZZ];</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"></highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/>dr[sZZ+<sp/>nSymTen*sYY]<sp/>=<sp/>dg_dtarg*ddtarg[sZZ+nSymTen*sYY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYY]*dtarg[sZZ];</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"></highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/>dr[sZZ+<sp/>nSymTen*sZZ]<sp/>=<sp/>dg_dtarg*ddtarg[sZZ+nSymTen*sZZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZZ]*dtarg[sZZ];</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"></highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/>dr[sZZ+<sp/>nSymTen*sYZ]<sp/>=<sp/>dg_dtarg*ddtarg[sZZ+nSymTen*sYZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYZ]*dtarg[sZZ];</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"></highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/>dr[sZZ+<sp/>nSymTen*sZX]<sp/>=<sp/>dg_dtarg*ddtarg[sZZ+nSymTen*sZX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZX]*dtarg[sZZ];</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"></highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/>dr[sZZ+<sp/>nSymTen*sXY]<sp/>=<sp/>dg_dtarg*ddtarg[sZZ+nSymTen*sXY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXY]*dtarg[sZZ];</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"></highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/>dr[sYZ+<sp/>nSymTen*sXX]<sp/>=<sp/>dg_dtarg*ddtarg[sYZ+nSymTen*sXX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXX]*dtarg[sYZ];</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"></highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/>dr[sYZ+<sp/>nSymTen*sYY]<sp/>=<sp/>dg_dtarg*ddtarg[sYZ+nSymTen*sYY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYY]*dtarg[sYZ];</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"></highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/>dr[sYZ+<sp/>nSymTen*sZZ]<sp/>=<sp/>dg_dtarg*ddtarg[sYZ+nSymTen*sZZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZZ]*dtarg[sYZ];</highlight></codeline>
+<codeline lineno="177"><highlight class="normal"></highlight></codeline>
+<codeline lineno="178"><highlight class="normal"><sp/><sp/>dr[sYZ+<sp/>nSymTen*sYZ]<sp/>=<sp/>dg_dtarg*ddtarg[sYZ+nSymTen*sYZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYZ]*dtarg[sYZ];</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"></highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/>dr[sYZ+<sp/>nSymTen*sZX]<sp/>=<sp/>dg_dtarg*ddtarg[sYZ+nSymTen*sZX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZX]*dtarg[sYZ];</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"></highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><sp/><sp/>dr[sYZ+<sp/>nSymTen*sXY]<sp/>=<sp/>dg_dtarg*ddtarg[sYZ+nSymTen*sXY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXY]*dtarg[sYZ];</highlight></codeline>
+<codeline lineno="183"><highlight class="normal"></highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/>dr[sZX+<sp/>nSymTen*sXX]<sp/>=<sp/>dg_dtarg*ddtarg[sZX+nSymTen*sXX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXX]*dtarg[sZX];</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"></highlight></codeline>
+<codeline lineno="186"><highlight class="normal"><sp/><sp/>dr[sZX+<sp/>nSymTen*sYY]<sp/>=<sp/>dg_dtarg*ddtarg[sZX+nSymTen*sYY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYY]*dtarg[sZX];</highlight></codeline>
+<codeline lineno="187"><highlight class="normal"></highlight></codeline>
+<codeline lineno="188"><highlight class="normal"><sp/><sp/>dr[sZX+<sp/>nSymTen*sZZ]<sp/>=<sp/>dg_dtarg*ddtarg[sZX+nSymTen*sZZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZZ]*dtarg[sZX];</highlight></codeline>
+<codeline lineno="189"><highlight class="normal"></highlight></codeline>
+<codeline lineno="190"><highlight class="normal"><sp/><sp/>dr[sZX+<sp/>nSymTen*sYZ]<sp/>=<sp/>dg_dtarg*ddtarg[sZX+nSymTen*sYZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYZ]*dtarg[sZX];</highlight></codeline>
+<codeline lineno="191"><highlight class="normal"></highlight></codeline>
+<codeline lineno="192"><highlight class="normal"><sp/><sp/>dr[sZX+<sp/>nSymTen*sZX]<sp/>=<sp/>dg_dtarg*ddtarg[sZX+nSymTen*sZX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZX]*dtarg[sZX];</highlight></codeline>
+<codeline lineno="193"><highlight class="normal"></highlight></codeline>
+<codeline lineno="194"><highlight class="normal"><sp/><sp/>dr[sZX+<sp/>nSymTen*sXY]<sp/>=<sp/>dg_dtarg*ddtarg[sZX+nSymTen*sXY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXY]*dtarg[sZX];</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"></highlight></codeline>
+<codeline lineno="196"><highlight class="normal"><sp/><sp/>dr[sXY+<sp/>nSymTen*sXX]<sp/>=<sp/>dg_dtarg*ddtarg[sXY+nSymTen*sXX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXX]*dtarg[sXY];</highlight></codeline>
+<codeline lineno="197"><highlight class="normal"></highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><sp/><sp/>dr[sXY+<sp/>nSymTen*sYY]<sp/>=<sp/>dg_dtarg*ddtarg[sXY+nSymTen*sYY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYY]*dtarg[sXY];</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"></highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/>dr[sXY+<sp/>nSymTen*sZZ]<sp/>=<sp/>dg_dtarg*ddtarg[sXY+nSymTen*sZZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZZ]*dtarg[sXY];</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"></highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/>dr[sXY+<sp/>nSymTen*sYZ]<sp/>=<sp/>dg_dtarg*ddtarg[sXY+nSymTen*sYZ]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sYZ]*dtarg[sXY];</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"></highlight></codeline>
+<codeline lineno="204"><highlight class="normal"><sp/><sp/>dr[sXY+<sp/>nSymTen*sZX]<sp/>=<sp/>dg_dtarg*ddtarg[sXY+nSymTen*sZX]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sZX]*dtarg[sXY];</highlight></codeline>
+<codeline lineno="205"><highlight class="normal"></highlight></codeline>
+<codeline lineno="206"><highlight class="normal"><sp/><sp/>dr[sXY+<sp/>nSymTen*sXY]<sp/>=<sp/>dg_dtarg*ddtarg[sXY+nSymTen*sXY]<sp/><sp/>+<sp/>ddg_dtarg*dtarg[sXY]*dtarg[sXY];</highlight></codeline>
+<codeline lineno="207"><highlight class="normal"></highlight></codeline>
+<codeline lineno="208"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/elastoplastic/vonMises.h"/>
+  </compounddef>
+</doxygen>

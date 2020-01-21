@@ -1,0 +1,235 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespaceapf" kind="namespace" language="C++">
+    <compoundname>apf</compoundname>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="namespaceapf_1a13c4b4f5e52d755d7f8c80c1c082b48d" prot="public" static="no">
+        <type>int</type>
+        <definition>typedef int apf::Gid</definition>
+        <argsstring></argsstring>
+        <name>Gid</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="642" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="642" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespaceapf_1aefae5dcd32388caa61a0c548cd3e68c9" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void apf::constructVerts</definition>
+        <argsstring>(Mesh2 *m, int nverts, int *local2globalMap, GlobalToVert &amp;result)</argsstring>
+        <name>constructVerts</name>
+        <param>
+          <type>Mesh2 *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nverts</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>local2globalMap</declname>
+        </param>
+        <param>
+          <type>GlobalToVert &amp;</type>
+          <declname>result</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="644" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="644" bodyend="652"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceapf_1a43bae43c74ef0fd0cef7870635c07b25" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void apf::constructBoundaryElements</definition>
+        <argsstring>(Mesh2 *m, const Gid *conn_b, int nelem_b, int etype_b, GlobalToVert &amp;globalToVert)</argsstring>
+        <name>constructBoundaryElements</name>
+        <param>
+          <type>Mesh2 *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespaceapf_1a13c4b4f5e52d755d7f8c80c1c082b48d" kindref="member">Gid</ref> *</type>
+          <declname>conn_b</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nelem_b</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>etype_b</declname>
+        </param>
+        <param>
+          <type>GlobalToVert &amp;</type>
+          <declname>globalToVert</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="655" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="655" bodyend="674"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceapf_1a83ca32a27862f243f078f4f5fbbce70d" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void apf::constructElements</definition>
+        <argsstring>(Mesh2 *m, const Gid *conn, int nelem, int etype, GlobalToVert &amp;globalToVert)</argsstring>
+        <name>constructElements</name>
+        <param>
+          <type>Mesh2 *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespaceapf_1a13c4b4f5e52d755d7f8c80c1c082b48d" kindref="member">Gid</ref> *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nelem</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>etype</declname>
+        </param>
+        <param>
+          <type>GlobalToVert &amp;</type>
+          <declname>globalToVert</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="675" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="675" bodyend="688"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceapf_1aa738f00827c897daae4effe551d67f7d" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespaceapf_1a13c4b4f5e52d755d7f8c80c1c082b48d" kindref="member">Gid</ref></type>
+        <definition>static Gid apf::getMax</definition>
+        <argsstring>(const GlobalToVert &amp;globalToVert)</argsstring>
+        <name>getMax</name>
+        <param>
+          <type>const GlobalToVert &amp;</type>
+          <declname>globalToVert</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="690" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="690" bodyend="696"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceapf_1a715738178cb6a012af0d5fbdd0e27cee" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void apf::constructResidence</definition>
+        <argsstring>(Mesh2 *m, GlobalToVert &amp;globalToVert)</argsstring>
+        <name>constructResidence</name>
+        <param>
+          <type>Mesh2 *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>GlobalToVert &amp;</type>
+          <declname>globalToVert</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="703" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="703" bodyend="767"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceapf_1a5c08ee6e22c472b53ef5b40ece5a0b36" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void apf::constructRemotes</definition>
+        <argsstring>(Mesh2 *m, GlobalToVert &amp;globalToVert)</argsstring>
+        <name>constructRemotes</name>
+        <param>
+          <type>Mesh2 *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>GlobalToVert &amp;</type>
+          <declname>globalToVert</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="772" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="772" bodyend="797"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceapf_1ad2cd56661f04d58f443c5b9e2b797175" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void apf::construct</definition>
+        <argsstring>(Mesh2 *m, const int *conn, const int *conn_b, int nelem, int nelem_b, int nverts, int etype, int etype_b, int *local2globalMap, GlobalToVert &amp;globalToVert)</argsstring>
+        <name>construct</name>
+        <param>
+          <type>Mesh2 *</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>conn</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>conn_b</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nelem</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nelem_b</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nverts</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>etype</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>etype_b</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>local2globalMap</declname>
+        </param>
+        <param>
+          <type>GlobalToVert &amp;</type>
+          <declname>globalToVert</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="799" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" bodystart="799" bodyend="810"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/MeshAdaptPUMI/MeshConverter.cpp" line="640" column="13"/>
+  </compounddef>
+</doxygen>

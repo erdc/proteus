@@ -1,0 +1,2341 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="group__mesh" kind="group">
+    <compoundname>mesh</compoundname>
+    <title>mesh</title>
+    <innerclass refid="struct_mesh" prot="public">Mesh</innerclass>
+    <innerclass refid="struct_multilevel_mesh" prot="public">MultilevelMesh</innerclass>
+    <innerclass refid="class_node_tuple" prot="public">NodeTuple</innerclass>
+    <innerclass refid="class_node" prot="public">Node</innerclass>
+    <innerclass refid="class_element_neighbors" prot="public">ElementNeighbors</innerclass>
+      <sectiondef kind="user-defined">
+      <memberdef kind="function" id="group__mesh_1ga61c67c5aed8dad35932ccf2f00b8589d" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double</type>
+        <definition>static double CurrentTime</definition>
+        <argsstring>(void)</argsstring>
+        <name>CurrentTime</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" line="11" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="11" bodyend="23"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="group__mesh_1ga509a95e0124b5fdd0a7cd09574cb5e30" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void initializeMesh</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>initializeMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="87" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="87" bodyend="162"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga137e5d0abd63a35938eb82b9f6cc4a62" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void deleteMesh</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>deleteMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="164" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="164" bodyend="255"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga1fca12c22083b27c29a43d765d02341a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void initializeMultilevelMesh</definition>
+        <argsstring>(MultilevelMesh &amp;multilevelMesh)</argsstring>
+        <name>initializeMultilevelMesh</name>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="266" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="266" bodyend="273"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaf6c44a116f31b63a8d8d082a5bd0cc0e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void deleteMultilevelMesh</definition>
+        <argsstring>(MultilevelMesh &amp;multilevelMesh)</argsstring>
+        <name>deleteMultilevelMesh</name>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="275" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="275" bodyend="297"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gabc239fca1803721a81b882c99fc8a817" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int edgeMeshElements</definition>
+        <argsstring>(const int &amp;nx, Mesh &amp;mesh)</argsstring>
+        <name>edgeMeshElements</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="299" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="59" bodyend="71" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="299" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga2dcef8d6600302d66dcc2a7261e5e506" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularEdgeMeshNodes</definition>
+        <argsstring>(const int &amp;nx, const double &amp;Lx, Mesh &amp;mesh)</argsstring>
+        <name>regularEdgeMeshNodes</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="300" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="73" bodyend="86" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="300" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gabe3df821ff4ab8aec3dd150a638b26e3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int globallyRefineEdgeMesh</definition>
+        <argsstring>(const int &amp;nLevels, Mesh &amp;mesh, MultilevelMesh &amp;multilevelMesh, bool averageNewNodeFlags=false)</argsstring>
+        <name>globallyRefineEdgeMesh</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nLevels</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>averageNewNodeFlags</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="301" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3961" bodyend="4054" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="301" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaf3b6657eb67edd06d7661efdd5eef570" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int locallyRefineEdgeMesh</definition>
+        <argsstring>(MultilevelMesh &amp;multilevelMesh, int *elementTagArray)</argsstring>
+        <name>locallyRefineEdgeMesh</name>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementTagArray</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="302" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5801" bodyend="5950" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="302" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga336f7c853f7c2889c3d57a0702ada9d8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int locallyRefineTriangleMesh</definition>
+        <argsstring>(MultilevelMesh &amp;multilevelMesh, int *elementTagArray)</argsstring>
+        <name>locallyRefineTriangleMesh</name>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementTagArray</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="304" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5951" bodyend="6128" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="304" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaed3a370167525bf808917033346a7aa8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int locallyRefineTriangleMesh_4T</definition>
+        <argsstring>(MultilevelMesh &amp;multilevelMesh, int *elementTagArray)</argsstring>
+        <name>locallyRefineTriangleMesh_4T</name>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementTagArray</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="306" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="6669" bodyend="6844" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="306" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaa0e013b44f0b757455a50e61f5e19db8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int locallyRefineTriangleMesh_redGreen</definition>
+        <argsstring>(MultilevelMesh &amp;multilevelMesh, int *elementTagArray)</argsstring>
+        <name>locallyRefineTriangleMesh_redGreen</name>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementTagArray</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="308" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="6158" bodyend="6668" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="308" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga1837479558ffb93432b410f8eaf25b39" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int setNewestNodeBasesToLongestEdge</definition>
+        <argsstring>(MultilevelMesh &amp;multilevelMesh)</argsstring>
+        <name>setNewestNodeBasesToLongestEdge</name>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="310" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="6130" bodyend="6156" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="310" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga399d399e9ab8c6742aff3864d7e882a8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularRectangularToTriangularMeshElements</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, Mesh &amp;mesh, int triangleFlag)</argsstring>
+        <name>regularRectangularToTriangularMeshElements</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>triangleFlag</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="312" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="88" bodyend="139" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="312" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga9b1a55a88d7b2238b2248a84f9ed5271" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularRectangularToTriangularMeshNodes</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, const double &amp;Lx, const double &amp;Ly, Mesh &amp;mesh)</argsstring>
+        <name>regularRectangularToTriangularMeshNodes</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="313" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="168" bodyend="197" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="313" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaeba813e2207db2b208be1bd5715a6f8b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularRectangularToTriangularElementBoundaryMaterials</definition>
+        <argsstring>(const double &amp;Lx, const double &amp;Ly, Mesh &amp;mesh)</argsstring>
+        <name>regularRectangularToTriangularElementBoundaryMaterials</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="314" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="141" bodyend="166" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="314" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gac8f50ad63a717bf616c78b8390e7744e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int globallyRefineTriangularMesh</definition>
+        <argsstring>(const int &amp;nLevels, Mesh &amp;mesh, MultilevelMesh &amp;multilevelMesh, bool averageNewNodeFlags=false)</argsstring>
+        <name>globallyRefineTriangularMesh</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nLevels</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>averageNewNodeFlags</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="315" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4056" bodyend="4179" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="315" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga554392b1260b82e3eaee5a4e02574f5b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularQuadrilateralMeshElements</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, Mesh &amp;mesh)</argsstring>
+        <name>regularQuadrilateralMeshElements</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="317" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="473" bodyend="499" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="317" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaadf7742fb4b66683f8a0e2788d297397" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularQuadrilateralMeshElementBoundaryMaterials</definition>
+        <argsstring>(const double &amp;Lx, const double &amp;Ly, Mesh &amp;mesh)</argsstring>
+        <name>regularQuadrilateralMeshElementBoundaryMaterials</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="318" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="328" bodyend="331" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="318" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gad4add441d1af1fc56b191bb96304fe3b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int globallyRefineQuadrilateralMesh</definition>
+        <argsstring>(const int &amp;nLevels, Mesh &amp;mesh, MultilevelMesh &amp;multilevelMesh, bool averageNewNodeFlags=false)</argsstring>
+        <name>globallyRefineQuadrilateralMesh</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nLevels</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>averageNewNodeFlags</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="319" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4181" bodyend="4198" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="319" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga73b4c6525541ecae499d2dc09b7f001b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularMeshNodes</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, const int &amp;nz, const double &amp;Lx, const double &amp;Ly, const double &amp;Lz, Mesh &amp;mesh)</argsstring>
+        <name>regularMeshNodes</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nz</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lz</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="322" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="333" bodyend="378" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="322" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga44e77982690cf63f701bde2b8357bef9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularMeshNodes2D</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, const double &amp;Lx, const double &amp;Ly, Mesh &amp;mesh)</argsstring>
+        <name>regularMeshNodes2D</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="323" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="380" bodyend="416" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="323" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga372d10f8d5a2382ce7b71be9b0db2fbe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularHexahedralMeshElementBoundaryMaterials</definition>
+        <argsstring>(const double &amp;Lx, const double &amp;Ly, const double &amp;Lz, Mesh &amp;mesh)</argsstring>
+        <name>regularHexahedralMeshElementBoundaryMaterials</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lz</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="324" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="278" bodyend="326" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="324" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga5fb49b127603edd31e6aab3b6e84f633" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularHexahedralToTetrahedralMeshNodes</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, const int &amp;nz, const double &amp;Lx, const double &amp;Ly, const double &amp;Lz, Mesh &amp;mesh)</argsstring>
+        <name>regularHexahedralToTetrahedralMeshNodes</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nz</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lz</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="325" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="418" bodyend="429" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="325" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga867bc8cc7de1299c306dcb28bf401aa2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularHexahedralToTetrahedralMeshElements</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, const int &amp;nz, Mesh &amp;mesh)</argsstring>
+        <name>regularHexahedralToTetrahedralMeshElements</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nz</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="326" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="199" bodyend="232" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="326" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga02ba112acd0bc3cff45d7c317ba9d635" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularHexahedralToTetrahedralElementBoundaryMaterials</definition>
+        <argsstring>(const double &amp;Lx, const double &amp;Ly, const double &amp;Lz, Mesh &amp;mesh)</argsstring>
+        <name>regularHexahedralToTetrahedralElementBoundaryMaterials</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type>const double &amp;</type>
+          <declname>Lz</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="327" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="234" bodyend="276" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="327" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gae1179b86882c92ec58cc40b61010d0e1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularHexahedralMeshElements</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, const int &amp;nz, const int &amp;px, const int &amp;py, const int &amp;pz, Mesh &amp;mesh)</argsstring>
+        <name>regularHexahedralMeshElements</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nz</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>px</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>py</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>pz</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="328" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="431" bodyend="471" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="328" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gae507f3c0e3b76aae899ebba0b0382653" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int regularNURBSMeshElements</definition>
+        <argsstring>(const int &amp;nx, const int &amp;ny, const int &amp;nz, const int &amp;px, const int &amp;py, const int &amp;pz, Mesh &amp;mesh)</argsstring>
+        <name>regularNURBSMeshElements</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nx</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>ny</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nz</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>px</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>py</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>pz</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="329" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="501" bodyend="580" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="329" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga68488c00a1abeb741d57a6e416c82a53" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int globallyRefineHexahedralMesh</definition>
+        <argsstring>(const int &amp;nLevels, Mesh &amp;mesh, MultilevelMesh &amp;multilevelMesh, bool averageNewNodeFlags=false)</argsstring>
+        <name>globallyRefineHexahedralMesh</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nLevels</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>averageNewNodeFlags</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="330" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4485" bodyend="4502" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="330" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gab4d638c87ade6bd196a81384af108e8e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int globallyRefineTetrahedralMesh</definition>
+        <argsstring>(const int &amp;nLevels, Mesh &amp;mesh, MultilevelMesh &amp;multilevelMesh, bool averageNewNodeFlags=false)</argsstring>
+        <name>globallyRefineTetrahedralMesh</name>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nLevels</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_multilevel_mesh" kindref="compound">MultilevelMesh</ref> &amp;</type>
+          <declname>multilevelMesh</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>averageNewNodeFlags</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="332" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4200" bodyend="4483" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="332" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga0ca99f07f47c3775a54c126aa5b1cace" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArray_edge</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArray_edge</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="334" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="582" bodyend="738" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="334" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga99583103d5f83c1d3b073b917c782d69" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArray_triangle</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArray_triangle</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="335" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="740" bodyend="907" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="335" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga17e8af5e2ec0c13e9c86f5e12eb4d4b9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArray_quadrilateral</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArray_quadrilateral</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="336" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="909" bodyend="1076" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="336" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga82076ed1124688014a6bc263ac24d3ae" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArray_tetrahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArray_tetrahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="337" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="1078" bodyend="1251" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="337" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga4751b505347ed744aa5495e1e43bd2bc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArray_hexahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArray_hexahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="338" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="1253" bodyend="1458" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="338" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga2aea69a4233a90a4d2e7914ce6fdeb59" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArray_NURBS</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArray_NURBS</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="339" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="1461" bodyend="1681" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="339" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gabf2819715294cc6d161fdb1a30d3f6ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="341" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="1889" bodyend="2048" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="341" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaa1b05cb9c4d42c1d435e36a21020e46f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_triangle</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_triangle</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="342" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="2050" bodyend="2222" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="342" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga12a7f52deabde430ed8174fc71e5b652" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_quadrilateral</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_quadrilateral</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="343" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="2224" bodyend="2395" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="343" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga56a12610c9dfc7c51ed3e6d633f375e3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="344" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="2397" bodyend="2573" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="344" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga71bd5b1f46b653a7be9c65b2af9499b4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_edge</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_edge</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="346" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="2577" bodyend="2730" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="346" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga8fca2274c01965e94bc8855f7391332a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_triangle</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_triangle</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="347" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="2732" bodyend="2905" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="347" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaa187306a2346aeb53640156d1e1890fe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_quadrilateral</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_quadrilateral</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="348" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="2907" bodyend="3060" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="348" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaf0f4c6fcb9b418b4096b9fe1a62329d3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_tetrahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_tetrahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="349" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3062" bodyend="3239" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="349" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga11c306c06b8fe371531389373dac48d5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="350" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3241" bodyend="3428" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="350" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga928d08a58ffb5a778e738d6847115f47" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="351" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="1683" bodyend="1887" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="351" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga273d705930d0ad0775498d0be44c739d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int writeElements</definition>
+        <argsstring>(std::ostream &amp;meshFile, const Mesh &amp;mesh)</argsstring>
+        <name>writeElements</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <declname>meshFile</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="353" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4766" bodyend="4807" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="353" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga093904f19cdbf5c7f0076e6a6c56081e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int writeNodes</definition>
+        <argsstring>(std::ostream &amp;meshFile, const Mesh &amp;mesh)</argsstring>
+        <name>writeNodes</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <declname>meshFile</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="354" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4754" bodyend="4764" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="354" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gac9bf9640ca027ca766ace6272e16400c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int readElements</definition>
+        <argsstring>(std::istream &amp;meshFile, Mesh &amp;mesh)</argsstring>
+        <name>readElements</name>
+        <param>
+          <type>std::istream &amp;</type>
+          <declname>meshFile</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="355" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4690" bodyend="4752" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="355" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gad97db4b6e238c242afedd5fa8b914e3e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int allocateGeometricInfo_tetrahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>allocateGeometricInfo_tetrahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="357" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3471" bodyend="3481" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="357" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga1ad1cf0d175b08dec8e1ed161e065295" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int allocateGeometricInfo_triangle</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>allocateGeometricInfo_triangle</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="358" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3690" bodyend="3700" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="358" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga8b4def6a8ea5675441b05b5a7061713b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int allocateGeometricInfo_edge</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>allocateGeometricInfo_edge</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="359" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3860" bodyend="3870" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="359" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga7a5874cc209a0c576ed8391e77111a9c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int allocateGeometricInfo_quadrilateral</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>allocateGeometricInfo_quadrilateral</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="360" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3790" bodyend="3798" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="360" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga0d4a836f32fdf0cacb6250884aafe10b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int allocateGeometricInfo_hexahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>allocateGeometricInfo_hexahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="361" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3585" bodyend="3595" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="361" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gad36c6af3da3b8edd3b32f5dd8f7b5f18" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int allocateGeometricInfo_NURBS</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>allocateGeometricInfo_NURBS</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="362" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3677" bodyend="3681" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="362" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaff191b3e806b335cd6d0916218132c96" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int computeGeometricInfo_tetrahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>computeGeometricInfo_tetrahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="364" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3483" bodyend="3575" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="364" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaad90ffdf6bb84d92b74bf824f8662a4b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int computeGeometricInfo_triangle</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>computeGeometricInfo_triangle</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="365" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3702" bodyend="3788" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="365" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga88041ad8d6afe29f23c6e30837b777db" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int computeGeometricInfo_edge</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>computeGeometricInfo_edge</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="366" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3872" bodyend="3939" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="366" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gafdde7ba7852d7a8a4da1e3dc6bf91b36" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int computeGeometricInfo_hexahedron</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>computeGeometricInfo_hexahedron</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="367" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3597" bodyend="3675" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="367" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaad2c7d05554f0bb51a7ccfb6855baeb5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int computeGeometricInfo_quadrilateral</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>computeGeometricInfo_quadrilateral</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="368" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3800" bodyend="3858" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="368" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga0f4f89b6fc203f8443bc671f2ce24c2e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int computeGeometricInfo_NURBS</definition>
+        <argsstring>(Mesh &amp;mesh)</argsstring>
+        <name>computeGeometricInfo_NURBS</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="369" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3683" bodyend="3687" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="369" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga8c801b37609c0f42a31d52ad7ad52dca" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int assignElementBoundaryMaterialTypesFromParent</definition>
+        <argsstring>(Mesh &amp;parentMesh, Mesh &amp;childMesh, const int *levelElementParentsArray, const int &amp;nSpace_global)</argsstring>
+        <name>assignElementBoundaryMaterialTypesFromParent</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>parentMesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>childMesh</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>levelElementParentsArray</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>nSpace_global</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="371" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4504" bodyend="4687" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="371" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gac6cbf9a86158a88ef7393e0bfc997afd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int allocateNodeAndElementNodeDataStructures</definition>
+        <argsstring>(Mesh &amp;mesh, int nElements_global, int nNodes_global, int nNodes_element)</argsstring>
+        <name>allocateNodeAndElementNodeDataStructures</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nNodes_global</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>nNodes_element</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="373" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="3941" bodyend="3958" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="373" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gafb3cbd692f5aaeee1411ca2776b69db9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int setFromTriangleElements</definition>
+        <argsstring>(triangulateio *trimesh, Mesh &amp;mesh, int base)</argsstring>
+        <name>setFromTriangleElements</name>
+        <param>
+          <type>triangulateio *</type>
+          <declname>trimesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="377" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4810" bodyend="4842" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="377" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga5fdf05986fe93c06aad3ca6cdcadcb4c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int setFromTriangleNodes</definition>
+        <argsstring>(triangulateio *trimesh, Mesh &amp;mesh, int base)</argsstring>
+        <name>setFromTriangleNodes</name>
+        <param>
+          <type>triangulateio *</type>
+          <declname>trimesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="378" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4844" bodyend="4880" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="378" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gab1c1f7cc1d5b1041de2941eb89df59a3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int readTriangleMesh</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int base)</argsstring>
+        <name>readTriangleMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="379" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4917" bodyend="4975" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="379" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga2eb6d5e2b747bef66fe94c02182a6f62" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int readTriangleElementBoundaryMaterialTypes</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int base)</argsstring>
+        <name>readTriangleElementBoundaryMaterialTypes</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="380" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5007" bodyend="5063" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="380" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga08c052ee267f328592995e357a2f023f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int writeTriangleMesh</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int base)</argsstring>
+        <name>writeTriangleMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="381" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4977" bodyend="5005" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="381" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga1e23f5a53d60b3a60f8a62d641216a07" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int readTetgenMesh</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int base)</argsstring>
+        <name>readTetgenMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="382" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5065" bodyend="5123" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="382" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaf88d232634fffcb9c0ca4d89636d8e1c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int readTetgenElementBoundaryMaterialTypes</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int base)</argsstring>
+        <name>readTetgenElementBoundaryMaterialTypes</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="383" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5124" bodyend="5400" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="383" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gab46b1f709ad5c07ad957ab8366c84838" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int writeTetgenMesh</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int base)</argsstring>
+        <name>writeTetgenMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="384" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5402" bodyend="5435" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="384" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga226ca058f8a8bb3741f729b4bbd68467" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int read3DM</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int indexBase)</argsstring>
+        <name>read3DM</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>indexBase</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="385" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5437" bodyend="5519" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="385" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga5585bb85360aa0ce9512f685661094ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int read2DM</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int indexBase)</argsstring>
+        <name>read2DM</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>indexBase</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="386" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5521" bodyend="5602" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="386" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gac9c66ee0f6dbc487ee09b2b1fc0a0242" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int readHex</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int indexBase)</argsstring>
+        <name>readHex</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>indexBase</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="387" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5604" bodyend="5677" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="387" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga75f5fa8f64804d57c1e5742f67756106" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int readBC</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int indexBase)</argsstring>
+        <name>readBC</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>indexBase</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="388" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5679" bodyend="5716" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="388" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gad89a88a5a0b744cb8809b15bb55b28f0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int write3dmMesh</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int base)</argsstring>
+        <name>write3dmMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="389" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5717" bodyend="5736" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="389" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga3ea5e89286c9123ed49826f60722de05" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int write2dmMesh</definition>
+        <argsstring>(Mesh &amp;mesh, const char *filebase, int base)</argsstring>
+        <name>write2dmMesh</name>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>filebase</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="390" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="5737" bodyend="5756" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="390" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gae23507317ccd53c375b133ecd3b483c9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int copyElementBoundaryMaterialTypesFromTriangle</definition>
+        <argsstring>(triangulateio *trimesh, Mesh &amp;mesh, int base)</argsstring>
+        <name>copyElementBoundaryMaterialTypesFromTriangle</name>
+        <param>
+          <type>triangulateio *</type>
+          <declname>trimesh</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_mesh" kindref="compound">Mesh</ref> &amp;</type>
+          <declname>mesh</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>base</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="391" column="7" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="4882" bodyend="4915" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="391" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaf267e35a377acc7186fd2bf6ceb77fe1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>nNodes</declname>
+            <defname>nNodes</defname>
+          </param>
+        </templateparamlist>
+        <type>bool</type>
+        <definition>bool operator&lt;</definition>
+        <argsstring>(const NodeTuple&lt; nNodes &gt; &amp;left, const NodeTuple&lt; nNodes &gt; &amp;right)</argsstring>
+        <name>operator&lt;</name>
+        <param>
+          <type>const <ref refid="class_node_tuple" kindref="compound">NodeTuple</ref>&lt; nNodes &gt; &amp;</type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type>const <ref refid="class_node_tuple" kindref="compound">NodeTuple</ref>&lt; nNodes &gt; &amp;</type>
+          <declname>right</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="431" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="431" bodyend="441"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gab916ec485e9e87fa99331208ea9e876e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void midpoint</definition>
+        <argsstring>(const double *left, const double *right, Node &amp;midpoint)</argsstring>
+        <name>midpoint</name>
+        <param>
+          <type>const double *</type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>right</declname>
+        </param>
+        <param>
+          <type><ref refid="class_node" kindref="compound">Node</ref> &amp;</type>
+          <declname>midpoint</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="451" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="451" bodyend="456"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gabd444116e6f1d057ac96e61c4020920d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double edgeLength</definition>
+        <argsstring>(const Node &amp;left, const Node &amp;right)</argsstring>
+        <name>edgeLength</name>
+        <param>
+          <type>const <ref refid="class_node" kindref="compound">Node</ref> &amp;</type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type>const <ref refid="class_node" kindref="compound">Node</ref> &amp;</type>
+          <declname>right</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="458" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="458" bodyend="463"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gad28ab11ba6f458a55f43945086b06a41" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>double</type>
+        <definition>double edgeLengthFromNodeNumbers</definition>
+        <argsstring>(double *nodeArray, const int &amp;left, const int &amp;right)</argsstring>
+        <name>edgeLengthFromNodeNumbers</name>
+        <param>
+          <type>double *</type>
+          <declname>nodeArray</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type>const int &amp;</type>
+          <declname>right</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="465" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="465" bodyend="470"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga51096f2bf3ee6239c1765c3f66b337b9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool operator&lt;</definition>
+        <argsstring>(const Node &amp;left, const Node &amp;right)</argsstring>
+        <name>operator&lt;</name>
+        <param>
+          <type>const <ref refid="class_node" kindref="compound">Node</ref> &amp;</type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type>const <ref refid="class_node" kindref="compound">Node</ref> &amp;</type>
+          <declname>right</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="472" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="472" bodyend="487"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga402d2f87bc6f94428e66b13a8eaa5f31" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int newEdge</definition>
+        <argsstring>(int eN, int *nodes, int n0, int n1)</argsstring>
+        <name>newEdge</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>nodes</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n0</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="497" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="497" bodyend="503"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga98d9de4aac538b3beae2fc391fe57582" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int newTriangle</definition>
+        <argsstring>(int eN, int *nodes, int n0, int n1, int n2)</argsstring>
+        <name>newTriangle</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>nodes</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n0</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n1</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n2</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="504" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="504" bodyend="511"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga03c5355cb55caff8361b64a88951adc4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int newTetrahedron</definition>
+        <argsstring>(int eN, int *nodes, int n0, int n1, int n2, int n3)</argsstring>
+        <name>newTetrahedron</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>nodes</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n0</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n1</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n2</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n3</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="512" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="512" bodyend="520"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga4dce22164025e81bd9577bdd7a52f005" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int newQuadrilateral</definition>
+        <argsstring>(int eN, int *nodes, int n0, int n1, int n2, int n3)</argsstring>
+        <name>newQuadrilateral</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>nodes</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n0</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n1</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n2</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n3</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="522" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="522" bodyend="530"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga93e498155737b8aca6e6d858e4958db1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int newHexahedron</definition>
+        <argsstring>(int eN, int *nodes, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7)</argsstring>
+        <name>newHexahedron</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>nodes</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n0</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n1</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n2</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n3</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n4</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n5</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n6</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n7</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="532" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" bodystart="532" bodyend="544"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gaa53580028be0d07c170f9f826dac1c97" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool newestNodeBisect</definition>
+        <argsstring>(int eN, int &amp;nElements_global, int &amp;nNodes_global, std::vector&lt; double &gt; &amp;nodeArray, std::vector&lt; int &gt; &amp;elementNodesArray, std::vector&lt; int &gt; &amp;elementNeighborsArray, std::vector&lt; std::list&lt; int &gt; &gt; &amp;childrenList, std::vector&lt; int &gt; &amp;elementParentsArray, std::vector&lt; int &gt; &amp;bases, std::vector&lt; bool &gt; &amp;refined)</argsstring>
+        <name>newestNodeBisect</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>nElements_global</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>nNodes_global</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; double &gt; &amp;</type>
+          <declname>nodeArray</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt; &amp;</type>
+          <declname>elementNodesArray</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt; &amp;</type>
+          <declname>elementNeighborsArray</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; std::list&lt; int &gt; &gt; &amp;</type>
+          <declname>childrenList</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt; &amp;</type>
+          <declname>elementParentsArray</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt; &amp;</type>
+          <declname>bases</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; bool &gt; &amp;</type>
+          <declname>refined</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="547" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="6847" bodyend="7223" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="547" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga8c0a09d2570b320080038656fb2efba6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool add4TnodesForRefinement2d</definition>
+        <argsstring>(int eN, int &amp;nNodes_global, std::vector&lt; bool &gt; &amp;refined, std::vector&lt; int &gt; &amp;edgeMidNodesArray, const int *elementNodesArray, const int *elementBoundariesArray, const int *elementNeighborsArray, const double *nodeArray)</argsstring>
+        <name>add4TnodesForRefinement2d</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>nNodes_global</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; bool &gt; &amp;</type>
+          <declname>refined</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt; &amp;</type>
+          <declname>edgeMidNodesArray</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementNodesArray</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementNeighborsArray</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>nodeArray</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="559" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="7225" bodyend="7281" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="559" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga5dce5689b08b93d8ae8d051e70e96391" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool add4TnodesForConformity2d</definition>
+        <argsstring>(int eN, int ebN_longest, int ebN_neig, int eN_neig, int &amp;nNodes_global, std::vector&lt; bool &gt; &amp;refined, std::vector&lt; int &gt; &amp;edgeMidNodesArray, const int *elementNodesArray, const int *elementBoundariesArray, const int *elementNeighborsArray, const double *nodeArray)</argsstring>
+        <name>add4TnodesForConformity2d</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>ebN_longest</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>ebN_neig</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>eN_neig</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>nNodes_global</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; bool &gt; &amp;</type>
+          <declname>refined</declname>
+        </param>
+        <param>
+          <type><ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt; &amp;</type>
+          <declname>edgeMidNodesArray</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementNodesArray</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementBoundariesArray</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementNeighborsArray</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>nodeArray</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="568" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="7283" bodyend="7353" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="568" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1ga5a2a76e1649bbe26a65e708b39e38bf8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int findLocalLongestEdge2d</definition>
+        <argsstring>(int eN, const int *elementNodesArray, const double *nodeArray)</argsstring>
+        <name>findLocalLongestEdge2d</name>
+        <param>
+          <type>int</type>
+          <declname>eN</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementNodesArray</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>nodeArray</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="578" column="5" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="7354" bodyend="7380" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="578" declcolumn="5"/>
+      </memberdef>
+      <memberdef kind="function" id="group__mesh_1gac307634f2b836753119cb91562215cd9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool subdivideTriangle4T</definition>
+        <argsstring>(int eN_parent, int &amp;eN_new, int *elementParentsArray, int *elementChildrenOffsets, int *elementChildrenArray, int *elementNodesArray_child, const std::vector&lt; int &gt; &amp;edgeMidNodesArray, const std::vector&lt; bool &gt; &amp;refined, const int *elementNodesArray_parent, const int *elementBoundariesArray_parent, const double *nodeArray_parent)</argsstring>
+        <name>subdivideTriangle4T</name>
+        <param>
+          <type>int</type>
+          <declname>eN_parent</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>eN_new</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementParentsArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementChildrenOffsets</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementChildrenArray</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>elementNodesArray_child</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; int &gt; &amp;</type>
+          <declname>edgeMidNodesArray</declname>
+        </param>
+        <param>
+          <type>const <ref refid="jf_8h_1ad6a1294cda25bf40114e0b9a56cd0445" kindref="member">std::vector</ref>&lt; bool &gt; &amp;</type>
+          <declname>refined</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementNodesArray_parent</declname>
+        </param>
+        <param>
+          <type>const int *</type>
+          <declname>elementBoundariesArray_parent</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>nodeArray_parent</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" line="582" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.cpp" bodystart="7382" bodyend="7685" declfile="/home/tridelat/PROTEUS/proteus2/proteus/mesh.h" declline="582" declcolumn="6"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>A library of mesh generation and manipulation functions. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

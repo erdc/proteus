@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_ideal_gas_density" kind="class" language="C++" prot="public">
+    <compoundname>IdealGasDensity</compoundname>
+    <basecompoundref refid="class_density_relation" prot="public" virt="non-virtual">DensityRelation</basecompoundref>
+    <includes refid="density_relations_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_ideal_gas_density_1ab8ce3493ce96c01b1792984bd6426bf2" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double IdealGasDensity::T</definition>
+        <argsstring></argsstring>
+        <name>T</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="139" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_ideal_gas_density_1a0085d0bd334865d3229cc7a25ea009b7" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double IdealGasDensity::W</definition>
+        <argsstring></argsstring>
+        <name>W</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="139" column="11" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_ideal_gas_density_1a44456d29ff7c2fecc9017a7d2eeca726" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double IdealGasDensity::R</definition>
+        <argsstring></argsstring>
+        <name>R</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="139" column="12" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_ideal_gas_density_1a47e671c6389fae661f1882cf4c786a5a" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double IdealGasDensity::convFactor</definition>
+        <argsstring></argsstring>
+        <name>convFactor</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="139" column="13" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_ideal_gas_density_1a359c0e2cc51249a2e453a1d5287cc139" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double IdealGasDensity::WoverRT</definition>
+        <argsstring></argsstring>
+        <name>WoverRT</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="139" column="23" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_ideal_gas_density_1a6eab2724f7e47cc2683811754d518186" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double IdealGasDensity::rho0</definition>
+        <argsstring></argsstring>
+        <name>rho0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="139" column="30" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_ideal_gas_density_1ad95845a442f5407bdd856d3bd56b38f1" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double IdealGasDensity::psi0</definition>
+        <argsstring></argsstring>
+        <name>psi0</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="139" column="34" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_ideal_gas_density_1ad589d1f58137cab0d69a53406c138634" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>IdealGasDensity::IdealGasDensity</definition>
+        <argsstring>(const double *rwork)</argsstring>
+        <name>IdealGasDensity</name>
+        <param>
+          <type>const double *</type>
+          <declname>rwork</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="140" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="140" bodyend="149"/>
+      </memberdef>
+      <memberdef kind="function" id="class_ideal_gas_density_1a103f2ada0bc20cac8329094fb5d9d353" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void IdealGasDensity::calc</definition>
+        <argsstring>(const double &amp;psi)</argsstring>
+        <name>calc</name>
+        <param>
+          <type>const double &amp;</type>
+          <declname>psi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="150" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="150" bodyend="154"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>The density of an ideal gas.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">psi</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The pressure head </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[0]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The temperature in say [K], <formula id="97">$ T $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[1]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The molar weight of the gas in say [kg]/[mol], <formula id="99">$ W $</formula>, </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[2]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The ideal gas weight constant in say [J]/[mol]/[K], <formula id="61">$ R $</formula> </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[3]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Conversion factor for input pressure head to pressure units consistent with W, R, and T, ie rho_0*|g| </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[4]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>reference density, say in [kg]/[m^3] </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">rwork[5]</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>reference pressure head, say in [m] </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">rho</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The density </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">drho</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The derivative of density with respect to pressure head</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<formula id="100">\[ \rho &amp;= rho_0 + (\psi - psi0) d W/RT \]</formula> </para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>IdealGasDensity</label>
+        <link refid="class_ideal_gas_density"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>DensityRelation</label>
+        <link refid="class_density_relation"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>IdealGasDensity</label>
+        <link refid="class_ideal_gas_density"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>DensityRelation</label>
+        <link refid="class_density_relation"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" line="137" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/densityRelations.h" bodystart="136" bodyend="155"/>
+    <listofallmembers>
+      <member refid="class_ideal_gas_density_1a103f2ada0bc20cac8329094fb5d9d353" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>calc</name></member>
+      <member refid="class_ideal_gas_density_1a47e671c6389fae661f1882cf4c786a5a" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>convFactor</name></member>
+      <member refid="class_density_relation_1a4223fb0923f39cea1f74a0aae15624b4" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>drho</name></member>
+      <member refid="class_ideal_gas_density_1ad589d1f58137cab0d69a53406c138634" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>IdealGasDensity</name></member>
+      <member refid="class_ideal_gas_density_1ad95845a442f5407bdd856d3bd56b38f1" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>psi0</name></member>
+      <member refid="class_ideal_gas_density_1a44456d29ff7c2fecc9017a7d2eeca726" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>R</name></member>
+      <member refid="class_density_relation_1a2c9319bafd4df96dcfd07bcfe7ded02a" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>rho</name></member>
+      <member refid="class_ideal_gas_density_1a6eab2724f7e47cc2683811754d518186" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>rho0</name></member>
+      <member refid="class_ideal_gas_density_1ab8ce3493ce96c01b1792984bd6426bf2" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>T</name></member>
+      <member refid="class_ideal_gas_density_1a0085d0bd334865d3229cc7a25ea009b7" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>W</name></member>
+      <member refid="class_ideal_gas_density_1a359c0e2cc51249a2e453a1d5287cc139" prot="public" virt="non-virtual"><scope>IdealGasDensity</scope><name>WoverRT</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

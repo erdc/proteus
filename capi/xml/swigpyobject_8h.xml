@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="swigpyobject_8h" kind="file" language="C++">
+    <compoundname>swigpyobject.h</compoundname>
+    <includes local="no">Python.h</includes>
+    <incdepgraph>
+      <node id="1">
+        <label>swigpyobject.h</label>
+        <link refid="swigpyobject_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>Python.h</label>
+      </node>
+    </incdepgraph>
+    <innerclass refid="struct_swig_py_object" prot="public">SwigPyObject</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;Python.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight></codeline>
+<codeline lineno="3" refid="struct_swig_py_object" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="4"><highlight class="normal"><sp/><sp/>PyObject_HEAD</highlight></codeline>
+<codeline lineno="5" refid="struct_swig_py_object_1a41b1d569a8ba4fa9b1d87579c144891b" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*<ref refid="struct_swig_py_object_1a41b1d569a8ba4fa9b1d87579c144891b" kindref="member">ptr</ref>;<sp/></highlight><highlight class="comment">//<sp/>This<sp/>is<sp/>the<sp/>pointer<sp/>to<sp/>the<sp/>actual<sp/>C++<sp/>instance</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6" refid="struct_swig_py_object_1a8814e18610a27635403e7ef9c02c2fe6" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*<ref refid="struct_swig_py_object_1a8814e18610a27635403e7ef9c02c2fe6" kindref="member">ty</ref>;<sp/><sp/></highlight><highlight class="comment">//<sp/>swig_type_info<sp/>originally,<sp/>but<sp/>shouldn&apos;t<sp/>matter</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7" refid="struct_swig_py_object_1a83cb6489fb1b171467f06c091ae6f283" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="struct_swig_py_object_1a83cb6489fb1b171467f06c091ae6f283" kindref="member">own</ref>;</highlight></codeline>
+<codeline lineno="8" refid="struct_swig_py_object_1af7b93d7ae49a6f3bdf6511043fe8e839" refkind="member"><highlight class="normal"><sp/><sp/>PyObject<sp/>*<ref refid="struct_swig_py_object_1af7b93d7ae49a6f3bdf6511043fe8e839" kindref="member">next</ref>;</highlight></codeline>
+<codeline lineno="9"><highlight class="normal">}<sp/><ref refid="struct_swig_py_object" kindref="compound">SwigPyObject</ref>;</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/swigpyobject.h"/>
+  </compounddef>
+</doxygen>

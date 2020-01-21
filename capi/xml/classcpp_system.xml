@@ -1,0 +1,237 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classcpp_system" kind="class" language="C++" prot="public">
+    <compoundname>cppSystem</compoundname>
+    <includes refid="_prot_ch_body_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classcpp_system_1a5416d6e9549a12cbed37e912202011d4" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChSystemSMC &gt;</type>
+        <definition>std::shared_ptr&lt;ChSystemSMC&gt; cppSystem::systemSMC</definition>
+        <argsstring></argsstring>
+        <name>systemSMC</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="17" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_system_1a2875b3a46eca8b1b913845cc3b4b90ab" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; ChSystem &gt;</type>
+        <definition>std::shared_ptr&lt;ChSystem&gt; cppSystem::system</definition>
+        <argsstring></argsstring>
+        <name>system</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="18" column="19" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="18" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_system_1a7a23cde8fa53169dad2543172782219d" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double cppSystem::chrono_dt</definition>
+        <argsstring></argsstring>
+        <name>chrono_dt</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="19" column="10" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classcpp_system_1a78ac9c650ab36dba6c1a68d89e32b41c" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string cppSystem::directory</definition>
+        <argsstring></argsstring>
+        <name>directory</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="20" column="15" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classcpp_system_1acb929b40082b5cc9737173a67b69d531" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>cppSystem::cppSystem</definition>
+        <argsstring>()</argsstring>
+        <name>cppSystem</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="21" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="106" bodyend="130"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_system_1a6824ccb57e182a58dee057dbaff0fa8a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppSystem::step</definition>
+        <argsstring>(double proteus_dt, int n_substeps)</argsstring>
+        <name>step</name>
+        <param>
+          <type>double</type>
+          <declname>proteus_dt</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n_substeps</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="22" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="157" bodyend="163"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_system_1aa7405571b41d06c9cb4c705a92cbc099" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppSystem::setDirectory</definition>
+        <argsstring>(std::string dir)</argsstring>
+        <name>setDirectory</name>
+        <param>
+          <type>std::string</type>
+          <declname>dir</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="23" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="188" bodyend="190"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_system_1a2df784f0fb6ca919e4cae78501e67ae5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppSystem::setTimestepperType</definition>
+        <argsstring>(std::string tstype, bool verbose)</argsstring>
+        <name>setTimestepperType</name>
+        <param>
+          <type>std::string</type>
+          <declname>tstype</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>verbose</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="24" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="137" bodyend="155"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_system_1aa2f3e35c0d0dfbbcf501c61ca54029c0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppSystem::setCollisionEnvelopeMargin</definition>
+        <argsstring>(double envelope, double margin)</argsstring>
+        <name>setCollisionEnvelopeMargin</name>
+        <param>
+          <type>double</type>
+          <declname>envelope</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>margin</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="25" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="215" bodyend="218"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_system_1a592f836398e6fd10c473809e1033ee38" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppSystem::addMesh</definition>
+        <argsstring>(std::shared_ptr&lt; ChMesh &gt; mesh)</argsstring>
+        <name>addMesh</name>
+        <param>
+          <type>std::shared_ptr&lt; ChMesh &gt;</type>
+          <declname>mesh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="26" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="165" bodyend="167"/>
+      </memberdef>
+      <memberdef kind="function" id="classcpp_system_1ae49765b17abc7851a6566c64706769bc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cppSystem::setSolverDiagonalPreconditioning</definition>
+        <argsstring>(bool boolval)</argsstring>
+        <name>setSolverDiagonalPreconditioning</name>
+        <param>
+          <type>bool</type>
+          <declname>boolval</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="27" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="132" bodyend="135"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>cppSystem</label>
+        <link refid="classcpp_system"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>system</edgelabel>
+        </childnode>
+        <childnode refid="3" relation="usage">
+          <edgelabel>directory</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>systemSMC</edgelabel>
+        </childnode>
+      </node>
+      <node id="5">
+        <label>std::shared_ptr&lt; ChSystemSMC &gt;</label>
+      </node>
+      <node id="4">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="2">
+        <label>std::shared_ptr&lt; ChSystem &gt;</label>
+      </node>
+      <node id="3">
+        <label>std::string</label>
+        <childnode refid="4" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" line="15" column="16" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ProtChBody.h" bodystart="15" bodyend="28"/>
+    <listofallmembers>
+      <member refid="classcpp_system_1a592f836398e6fd10c473809e1033ee38" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>addMesh</name></member>
+      <member refid="classcpp_system_1a7a23cde8fa53169dad2543172782219d" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>chrono_dt</name></member>
+      <member refid="classcpp_system_1acb929b40082b5cc9737173a67b69d531" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>cppSystem</name></member>
+      <member refid="classcpp_system_1a78ac9c650ab36dba6c1a68d89e32b41c" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>directory</name></member>
+      <member refid="classcpp_system_1aa2f3e35c0d0dfbbcf501c61ca54029c0" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>setCollisionEnvelopeMargin</name></member>
+      <member refid="classcpp_system_1aa7405571b41d06c9cb4c705a92cbc099" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>setDirectory</name></member>
+      <member refid="classcpp_system_1ae49765b17abc7851a6566c64706769bc" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>setSolverDiagonalPreconditioning</name></member>
+      <member refid="classcpp_system_1a2df784f0fb6ca919e4cae78501e67ae5" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>setTimestepperType</name></member>
+      <member refid="classcpp_system_1a6824ccb57e182a58dee057dbaff0fa8a" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>step</name></member>
+      <member refid="classcpp_system_1a2875b3a46eca8b1b913845cc3b4b90ab" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>system</name></member>
+      <member refid="classcpp_system_1a5416d6e9549a12cbed37e912202011d4" prot="public" virt="non-virtual"><scope>cppSystem</scope><name>systemSMC</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

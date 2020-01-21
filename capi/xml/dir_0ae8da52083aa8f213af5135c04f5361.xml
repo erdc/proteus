@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_0ae8da52083aa8f213af5135c04f5361" kind="dir">
+    <compoundname>fenton</compoundname>
+    <innerfile refid="_allocation_8h">Allocation.h</innerfile>
+    <innerfile refid="_dpythag_8cpp">Dpythag.cpp</innerfile>
+    <innerfile refid="_dsvbksb_8cpp">Dsvbksb.cpp</innerfile>
+    <innerfile refid="_dsvdcmp_8cpp">Dsvdcmp.cpp</innerfile>
+    <innerfile refid="_fenton_8cpp">Fenton.cpp</innerfile>
+    <innerfile refid="_fourier_8cpp">Fourier.cpp</innerfile>
+    <innerfile refid="_headers_8h">Headers.h</innerfile>
+    <innerfile refid="_inout_8cpp">Inout.cpp</innerfile>
+    <innerfile refid="jf_8h">jf.h</innerfile>
+    <innerfile refid="_solve_8cpp">Solve.cpp</innerfile>
+    <innerfile refid="_subroutines_8cpp">Subroutines.cpp</innerfile>
+    <innerfile refid="_util_8cpp">Util.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/"/>
+  </compounddef>
+</doxygen>

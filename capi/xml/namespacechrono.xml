@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespacechrono" kind="namespace" language="C++">
+    <compoundname>chrono</compoundname>
+    <innerclass refid="classchrono_1_1_ch_body_added_mass" prot="public">chrono::ChBodyAddedMass</innerclass>
+    <innerclass refid="classchrono_1_1_ch_variables_body_added_mass" prot="public">chrono::ChVariablesBodyAddedMass</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/mbd/ChBodyAddedMass.cpp" line="4" column="16"/>
+  </compounddef>
+</doxygen>

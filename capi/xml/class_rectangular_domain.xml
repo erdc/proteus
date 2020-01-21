@@ -1,0 +1,253 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="class_rectangular_domain" kind="class" language="C++" prot="public">
+    <compoundname>RectangularDomain</compoundname>
+    <basecompoundref refid="class_d__base" prot="public" virt="non-virtual">D_base</basecompoundref>
+    <includes refid="_domain_8h" local="no">/home/tridelat/PROTEUS/proteus2/proteus/Domain.h</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_rectangular_domain_1ae4b47547080286f33fd25ffdf18329e3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RectangularDomain::RectangularDomain</definition>
+        <argsstring>(int dimIn=3, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>RectangularDomain</name>
+        <param>
+          <type>int</type>
+          <declname>dimIn</declname>
+          <defval>3</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="27" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="19" bodyend="21"/>
+      </memberdef>
+      <memberdef kind="function" id="class_rectangular_domain_1afa332f3db2a0cafc07b13c8ba8f98345" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RectangularDomain::RectangularDomain</definition>
+        <argsstring>(double x0, double Lx, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>RectangularDomain</name>
+        <param>
+          <type>double</type>
+          <declname>x0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="28" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="23" bodyend="28"/>
+      </memberdef>
+      <memberdef kind="function" id="class_rectangular_domain_1a6230598de79a37ac7cc9638fed46103e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RectangularDomain::RectangularDomain</definition>
+        <argsstring>(double x0, double y0, double Lx, double Ly, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>RectangularDomain</name>
+        <param>
+          <type>double</type>
+          <declname>x0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>y0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="29" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="30" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="function" id="class_rectangular_domain_1af0898354705b85ead4d3c6a7b0062c49" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>RectangularDomain::RectangularDomain</definition>
+        <argsstring>(double x0, double y0, double z0, double Lx, double Ly, double Lz, string nameIn=string(&quot;Domain&quot;), string unitsIn=string(&quot;m&quot;))</argsstring>
+        <name>RectangularDomain</name>
+        <param>
+          <type>double</type>
+          <declname>x0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>y0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>z0</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Lx</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Ly</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>Lz</declname>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>nameIn</declname>
+          <defval>string(&quot;Domain&quot;)</defval>
+        </param>
+        <param>
+          <type>string</type>
+          <declname>unitsIn</declname>
+          <defval>string(&quot;m&quot;)</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="30" column="3" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="39" bodyend="48"/>
+      </memberdef>
+      <memberdef kind="function" id="class_rectangular_domain_1a4c29ada05ce8c5168e5f3261cf0ad6d0" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void RectangularDomain::writePoly</definition>
+        <argsstring>(const char *filename)</argsstring>
+        <name>writePoly</name>
+        <reimplements refid="class_d__base_1ab9a1c2adbd1d283a75b96eddfe4880f1">writePoly</reimplements>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="31" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="50" bodyend="109"/>
+      </memberdef>
+      <memberdef kind="function" id="class_rectangular_domain_1a6a74661d619ed83d9a31bddb2276f61a" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void RectangularDomain::writeAsymptote</definition>
+        <argsstring>(const char *filename)</argsstring>
+        <name>writeAsymptote</name>
+        <reimplements refid="class_d__base_1a06516a66bdf9e56bc1278e1626b59e95">writeAsymptote</reimplements>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="32" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.cpp" bodystart="112" bodyend="206"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>RectangularDomain</label>
+        <link refid="class_rectangular_domain"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>D_base</label>
+        <link refid="class_d__base"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="5">
+        <label>std::vector&lt; double &gt;</label>
+      </node>
+      <node id="4">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="1">
+        <label>RectangularDomain</label>
+        <link refid="class_rectangular_domain"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>D_base</label>
+        <link refid="class_d__base"/>
+        <childnode refid="3" relation="usage">
+          <edgelabel>units</edgelabel>
+          <edgelabel>name</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>x</edgelabel>
+          <edgelabel>L</edgelabel>
+        </childnode>
+      </node>
+      <node id="3">
+        <label>std::string</label>
+        <childnode refid="4" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" line="25" column="1" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/Domain.h" bodystart="24" bodyend="34"/>
+    <listofallmembers>
+      <member refid="class_d__base_1a0a6e52d303b6eebaec25bc94e01a33cf" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>D_base</name></member>
+      <member refid="class_d__base_1a630e203b1b2e5a330787cee20e1f75a5" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>dim</name></member>
+      <member refid="class_d__base_1a3a982a9943f929ffff437be69fcdebd7" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>L</name></member>
+      <member refid="class_d__base_1ab4f698f5c7311cec0e5c90698d88af9f" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>name</name></member>
+      <member refid="class_rectangular_domain_1ae4b47547080286f33fd25ffdf18329e3" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>RectangularDomain</name></member>
+      <member refid="class_rectangular_domain_1afa332f3db2a0cafc07b13c8ba8f98345" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>RectangularDomain</name></member>
+      <member refid="class_rectangular_domain_1a6230598de79a37ac7cc9638fed46103e" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>RectangularDomain</name></member>
+      <member refid="class_rectangular_domain_1af0898354705b85ead4d3c6a7b0062c49" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>RectangularDomain</name></member>
+      <member refid="class_d__base_1a21b5f51f4c8d2a66cef73931474a95e3" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>units</name></member>
+      <member refid="class_rectangular_domain_1a6a74661d619ed83d9a31bddb2276f61a" prot="public" virt="virtual"><scope>RectangularDomain</scope><name>writeAsymptote</name></member>
+      <member refid="class_rectangular_domain_1a4c29ada05ce8c5168e5f3261cf0ad6d0" prot="public" virt="virtual"><scope>RectangularDomain</scope><name>writePoly</name></member>
+      <member refid="class_d__base_1a3b73f494635dabeb3e85355d24f8bd1d" prot="public" virt="non-virtual"><scope>RectangularDomain</scope><name>x</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,202 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="_allocation_8h" kind="file" language="C++">
+    <compoundname>Allocation.h</compoundname>
+    <includedby refid="_dsvbksb_8cpp" local="yes">Dsvbksb.cpp</includedby>
+    <includedby refid="_dsvdcmp_8cpp" local="yes">Dsvdcmp.cpp</includedby>
+    <includedby refid="_fourier_8cpp" local="yes">Fourier.cpp</includedby>
+    <invincdepgraph>
+      <node id="1">
+        <label>Allocation.h</label>
+        <link refid="_allocation_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>Dsvbksb.cpp</label>
+        <link refid="_dsvbksb_8cpp"/>
+      </node>
+      <node id="3">
+        <label>Dsvdcmp.cpp</label>
+        <link refid="_dsvdcmp_8cpp"/>
+      </node>
+      <node id="4">
+        <label>Fourier.cpp</label>
+        <link refid="_fourier_8cpp"/>
+      </node>
+    </invincdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="_allocation_8h_1a3e3ccfdcdd496df99eaa29f65fe68b31" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>float *</type>
+        <definition>float* vector</definition>
+        <argsstring>(long nl, long nh)</argsstring>
+        <name>vector</name>
+        <param>
+          <type>long</type>
+          <declname>nl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" line="1" column="7" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" declline="1" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double *</type>
+        <definition>double* dvector</definition>
+        <argsstring>(long nl, long nh)</argsstring>
+        <name>dvector</name>
+        <param>
+          <type>long</type>
+          <declname>nl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" line="2" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="7" bodyend="14" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" declline="2" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="_allocation_8h_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>double **</type>
+        <definition>double** dmatrix</definition>
+        <argsstring>(long nrl, long nrh, long ncl, long nch)</argsstring>
+        <name>dmatrix</name>
+        <param>
+          <type>long</type>
+          <declname>nrl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrh</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>ncl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nch</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" line="3" column="8" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="16" bodyend="36" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" declline="3" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="_allocation_8h_1a15d431001f2a68ce4669efe823266e7e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_ivector</definition>
+        <argsstring>(int *v, long nl, long nh)</argsstring>
+        <name>free_ivector</name>
+        <param>
+          <type>int *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" line="4" column="6" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" declline="4" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_dvector</definition>
+        <argsstring>(double *v, long nl, long nh)</argsstring>
+        <name>free_dvector</name>
+        <param>
+          <type>double *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nh</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" line="5" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="38" bodyend="42" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" declline="5" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="_allocation_8h_1a04fbc9bc53e6303830eb4338bc1f3259" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void free_dmatrix</definition>
+        <argsstring>(double **m, long nrl, long nrh, long ncl, long nch)</argsstring>
+        <name>free_dmatrix</name>
+        <param>
+          <type>double **</type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nrh</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>ncl</declname>
+        </param>
+        <param>
+          <type>long</type>
+          <declname>nch</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" line="6" column="6" bodyfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Util.cpp" bodystart="44" bodyend="49" declfile="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h" declline="6" declcolumn="6"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>*<ref refid="_allocation_8h_1a3e3ccfdcdd496df99eaa29f65fe68b31" kindref="member">vector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nh);</highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_allocation_8h_1a73f5f9ece0bd0ede1affa44e28c72081" kindref="member">dvector</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nh);</highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**<ref refid="_allocation_8h_1a37bd22e1a2bf0e8b3d8ba7e768fe0b98" kindref="member">dmatrix</ref>(</highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrh,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>ncl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nch);</highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_allocation_8h_1a15d431001f2a68ce4669efe823266e7e" kindref="member">free_ivector</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nh);</highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_allocation_8h_1ac7ec1a76a4b8d3d8423246676977c919" kindref="member">free_dvector</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*<ref refid="_headers_8h_1abb6e996fea4e5f276fdcec0c7d809274" kindref="member">v</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="jf_8h_1a10f3a4ffa24a661bbb35011550a18a40" kindref="member">nl</ref>,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nh);</highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="_allocation_8h_1a04fbc9bc53e6303830eb4338bc1f3259" kindref="member">free_dmatrix</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>**m,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nrh,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>ncl,<sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>nch);</highlight></codeline>
+    </programlisting>
+    <location file="/home/tridelat/PROTEUS/proteus2/proteus/fenton/Allocation.h"/>
+  </compounddef>
+</doxygen>
