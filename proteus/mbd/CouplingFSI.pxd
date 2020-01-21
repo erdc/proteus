@@ -216,7 +216,6 @@ cdef class ProtChBody:
       np.ndarray acceleration
       np.ndarray acceleration_last
       np.ndarray velocity
-      np.ndarray velocity_fluid
       np.ndarray velocity_last
       np.ndarray ang_acceleration_last
       np.ndarray ang_acceleration
@@ -246,6 +245,7 @@ cdef class ProtChBody:
       bool Aij_transform_local  # True for transforming global Aij to local
       bool useIBM
       double radiusIBM
+      object sdfIBM
       string hdfFileName
       double Aij_factor
       int[:] boundaryFlags
@@ -282,8 +282,6 @@ cdef class ProtChSystem:
         double chrono_dt
         bool build_kdtree
         bool dist_search
-        bool parallel_mode
-        int chrono_processor
         bool first_step
         string scheme  # coupling scheme
         string prediction  # force for prediction
@@ -296,7 +294,7 @@ cdef class ProtChSystem:
         object model_addedmass
         ProtChAddedMass ProtChAddedMass
         int tCount
-        bool initialised
+        bool initialized
         bool update_substeps
         int nBodiesIBM
 

@@ -9,6 +9,7 @@ from proteus.default_n import *
 from proteus.Profiling import logEvent
 
 from proteus import Context
+import os
 
 #===============================================================================
 # Context
@@ -36,7 +37,7 @@ else:
 
 Refinement = ct.Refinement
 sedimentDynamics=False
-genMesh = True
+genMesh = False#True
 movingDomain = False
 applyRedistancing = True
 useOldPETSc = False
@@ -143,8 +144,8 @@ he = old_div(L[0],(2**Refinement))
 he*=0.5
 he*=0.5
 
-he = 0.01
-L[2] = 4*he
+he = 0.04
+L[2] = 2*he
 
 import my_domain
 # domain,boundaryTags = get_domain()
@@ -156,9 +157,8 @@ domain,boundaryTags = my_domain.get_pseudo_3D_cylinder_box_domain(L=L,
                                                                  x2=(0.2-0.06,0.2-0.06),x3=(0.2+0.3,0.2+0.06),
                                                                  )
 
-domain.writePoly("mesh")
-domain.writePLY("mesh")
-domain.writeAsymptote("mesh")
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/../ibm_rans2p_3D/"+"meshCylinder"
+#domain.writePoly("meshCylinder")
 #triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
 #triangleOptions = "KVApq10Dena"
 triangleOptions="KVApq1.35q12feena"

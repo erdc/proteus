@@ -10,9 +10,9 @@ N=1
 PROTEUS ?= $(shell python3 -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_BUILD_CMD = python3 setup.py build_ext
-PROTEUS_INSTALL_CMD = pip3 --disable-pip-version-check install -v . #python3 setup.py install
+PROTEUS_INSTALL_CMD = pip --disable-pip-version-check install -v . #python3 setup.py install
 PROTEUS_DEVELOP_BUILD_CMD = python3 setup.py build_ext -i
-PROTEUS_DEVELOP_CMD = pip3 --disable-pip-version-check install -v -e .
+PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
 #
 ifeq (${N}, 1)
 PROTEUS_BUILD_CMD = python3 -c "print('Letting install handle build_ext')"
@@ -28,9 +28,15 @@ PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" ||
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python3 -c "import sys; print(sys.platform)")
+ifdef CONDA_PREFIX
+PROTEUS_ARCH ?= linux
+PROTEUS_PREFIX ?= ${CONDA_PREFIX}
+PROTEUS_PYTHON ?= python
+else
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python3
 PROTEUS_VERSION := $(shell ${VER_CMD})
+endif
 TEST_MARKER="' '"
 
 define show_info
@@ -205,6 +211,21 @@ develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	$(call show_info)
 	$(call howto)
 
+develop-conda:
+	@echo "************************************"
+	@echo "Installing conda development version"
+	@echo "************************************"
+	$(call show_info)
+	${PROTEUS_DEVELOP_BUILD_CMD}
+	${PROTEUS_DEVELOP_CMD}
+	@echo "************************"
+	@echo "Development installation complete"
+	@echo "************************"
+	@echo ""
+	@echo "Proteus was built using the following configuration:"
+	$(call show_info)
+	$(call howto)
+
 check:
 	@echo "************************"
 	@echo "Sanity environment check"
@@ -249,8 +270,10 @@ docs:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
-	-${PROTEUS_ENV} pip3 install sphinx sphinx_rtd_theme breathe exhale
+
+	-${PROTEUS_ENV} pip install sphinx sphinx_rtd_theme breathe exhale
 	cd docs && ${PROTEUS_ENV} PROTEUS=${PWD} make html
+
 	@echo "**********************************"
 	@echo "Trying to open the html at"
 	@echo "../proteus-website/index.html"
@@ -275,11 +298,29 @@ test: air-water-vv check
 	# @echo "Running air-water-vv test set 2"
 	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 
+test-conda: air-water-vv check
+	@echo "**************************************************"
+	@echo "Running git-lfs to get regression test data files."
+	-git lfs fetch
+	-git lfs checkout
+	@echo "If git-lfs failed to download data, then some tests will fail, and"
+	@echo "you should install git-lfs or try 'make lfs', passing all tests is needed"
+	@echo "**************************************************************************"
+	@echo "Running basic test suite"
+	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+	@echo "Basic tests complete "
+	@echo "************************************"
+	# @echo "Running air-water-vv test set 1"
+	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
+	# @echo "************************************"
+	# @echo "Running air-water-vv test set 2"
+	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+
 jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip3 install configparser ipyparallel ipython terminado jupyter ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume ipysheet xonsh[ptk,linux,proctitle] ipytree
+	pip install configparser ipyparallel ipython terminado jupyter ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
 	jupyter nbextension enable --py --sys-prefix ipysheet
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
@@ -309,7 +350,7 @@ jupyterlab:
 	@echo "************************************"
 	@echo "Enabling jupyter lab"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip3 install jupyterlab jupyterlab_latex
+	pip install jupyterlab jupyterlab_latex
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter serverextension enable --sys-prefix --py jupyterlab_latex
 	jupyter labextension install @jupyter-widgets/jupyterlab-manager

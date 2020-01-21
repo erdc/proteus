@@ -9,6 +9,7 @@ from proteus.Profiling import logEvent
 from proteus.mprans.SpatialTools import Tank2D
 from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import os
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -71,9 +72,9 @@ else:
                                                   regions=regions,
                                                   regionFlags=regionFlags)
     domain.boundaryTags = boundaryTags
-    domain.writePoly("mesh")
-    domain.writePLY("mesh")
-    domain.writeAsymptote("mesh")
+    #domain.polyfile="meshMarin"
+    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshRisingBubble"
+    #domain.writePoly("meshRisingBubble")
     he = old_div(tank_dim[0], float(4 * refinement - 1))
     domain.MeshOptions.he = he
     triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
