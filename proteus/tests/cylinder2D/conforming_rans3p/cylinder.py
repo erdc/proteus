@@ -13,7 +13,7 @@ from proteus import Context
 
 opts = Context.Options([
     ("T", 4.0, "Time interval [0, T]"),
-    ("he",0.04, "maximum size of edges"),
+    ("he",0.2, "maximum size of edges"),
     ("onlySaveFinalSolution",False,"Only save the final solution"),
     ("vspaceOrder",2,"FE space for velocity"),
     ("pspaceOrder",1,"FE space for pressure")
@@ -21,7 +21,7 @@ opts = Context.Options([
 
 
 sedimentDynamics=False
-genMesh = True
+genMesh = False#True
 movingDomain = False
 # applyRedistancing = True
 useOldPETSc = False
@@ -105,10 +105,10 @@ except:
 domain = symmetric2D(box=(2.2,0.41),
                      L= 0.2,
                      H = 0.2,
-                     r = 0.05,
+                     r = 0.1,
                      C = (0.2,0.2),
                      DX = DX,
-                     refinement_length=0.5,
+                     refinement_length=1.0,
                      DX_coarse = DX)
 domain.boundaryFlags['top']=domain.boundaryFlags['back']
 domain.boundaryFlags['bottom']=domain.boundaryFlags['front']
@@ -240,4 +240,10 @@ dragAlpha = 0.0
 g = [0.0, 0.0]
 
 Um = 1.5
+
+triangleOptions="pAq30ena"#D=Delaunay gives bad results for this composite meshing approach
+genMesh=False#True
+#domain.writePLY('cylinder2D')
+#domain.writePoly('mesh_cylinder2D')
+domain.polyfile = domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/../conforming_rans2p/"+"mesh_cylinder2D"
 
