@@ -36,19 +36,19 @@ class TestVortex2D(object):
         self._scriptdir = os.path.dirname(os.path.abspath(__file__))
         
     def teardown_method(self,method):
-        pass
-        # filenames = []
-        # for aux_name in self.aux_names:
-        #     filenames.extend([aux_name+'.'+ext for ext in ['h5','xmf']])
-        # filenames.append('proteus.log')
-        # for f in filenames:
-        #     if os.path.exists(f):
-        #         try:
-        #             os.remove(f)
-        #         except OSError as e:
-        #             print ("Error: %s - %s" %(e.filename,e.strerror))
-        #     else:
-        #         pass
+        #pass
+         filenames = []
+         for aux_name in self.aux_names:
+             filenames.extend([aux_name+'.'+ext for ext in ['h5','xmf']])
+         filenames.append('proteus.log')
+         for f in filenames:
+             if os.path.exists(f):
+                 try:
+                     os.remove(f)
+                 except OSError as e:
+                     print ("Error: %s - %s" %(e.filename,e.strerror))
+             else:
+                 pass
             
     def test_vortex2D(self,use_strong_constraints=False):
         from proteus import default_s
@@ -79,19 +79,22 @@ class TestVortex2D(object):
         ns.calculateSolution(ls_vortex_2d_so.name)
         self.aux_names.append(ls_vortex_2d_so.name)
         # COMPARE VS SAVED FILES #
-        expected_path = ls_vortex_2d_so.name+'_expected.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file(ls_vortex_2d_so.name+'.h5','r')
-        assert np.allclose(expected.root.u_t80,
-                           actual.root.u_t80,
-                           atol=1e-10)
-        assert np.allclose(expected.root.phid_t80,
-                           actual.root.phid_t80,
-                           atol=1e-10)
-        assert np.allclose(expected.root.vof_t80,
-                           actual.root.vof_t80,
-                           atol=1e-10)
-        expected.close()
+        expected_path = 'comparison_files/' + 'comparison_' + ls_vortex_2d_so.name + '_u_t80.csv'
+        #write comparison file
+        #np.array(actual.root.u_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t80).flatten(),decimal=10)
+
+        expected_path = 'comparison_files/' + 'comparison_' + ls_vortex_2d_so.name + '_phid_t80.csv'
+        #write comparison file
+        #np.array(actual.root.phid_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phid_t80).flatten(),decimal=10)
+
+        expected_path = 'comparison_files/' + 'comparison_' + ls_vortex_2d_so.name + '_vof_t80.csv'
+        #write comparison file
+        #np.array(actual.root.vof_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.vof_t80).flatten(),decimal=10)
+
         actual.close()
         del ns
         
@@ -127,19 +130,23 @@ class TestVortex2D(object):
         ns.calculateSolution(ls_vortex_2d_so.name)
         self.aux_names.append(ls_vortex_2d_so.name)
         # COMPARE VS SAVED FILES #
-        expected_path = ls_vortex_2d_so.name+'_expected.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
         actual = tables.open_file(ls_vortex_2d_so.name+'.h5','r')
-        assert np.allclose(expected.root.u_t80,
-                           actual.root.u_t80,
-                           atol=1e-10)
-        assert np.allclose(expected.root.phid_t80,
-                           actual.root.phid_t80,
-                           atol=1e-10)
-        assert np.allclose(expected.root.vof_t80,
-                           actual.root.vof_t80,
-                           atol=1e-10)
-        expected.close()
+        expected_path = 'comparison_files/' + 'comparison_' + ls_vortex_2d_so.name + '_u_t80.csv'
+        #write comparison file
+        #np.array(actual.root.u_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t80).flatten(),decimal=10)
+
+        expected_path = 'comparison_files/' + 'comparison_' + ls_vortex_2d_so.name + '_phid_t80.csv'
+        #write comparison file
+        #np.array(actual.root.phid_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phid_t80).flatten(),decimal=10)
+
+        expected_path = 'comparison_files/' + 'comparison_' + ls_vortex_2d_so.name + '_vof_t80.csv'
+        #write comparison file
+        #np.array(actual.root.vof_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.vof_t80).flatten(),decimal=10)
+
+
         actual.close()
         del ns
         
