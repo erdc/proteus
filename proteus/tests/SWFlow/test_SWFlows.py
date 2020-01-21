@@ -37,7 +37,7 @@ class TestSWFlow(object):
     def test_parab1D(self):
         # Call runSWEs
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v parab1D.py -C 'refinement=4 final_time=10.0 dt_output=0.1'")
+                  "-l1 -v parab1D.py -C 'refinement=4 final_time=10.0 dt_output=10.0'")
         self.compare_vs_saved_files("parab1D")
 
     def test_dam3Bumps(self):
