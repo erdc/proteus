@@ -915,7 +915,7 @@ namespace proteus
               for (int j=0;j<nDOF_trial_element;j++)
                 {
                   int eN_i_j = eN_i*nDOF_trial_element+j;
-                  globalJacobian_a.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
+                  globalJacobian_a.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
                 }//j
             }//i
         }//elements
@@ -1020,7 +1020,7 @@ namespace proteus
                         ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j,
                         j_nSpace = j*nSpace;
 
-      		      globalJacobian_a.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] +=
+      		      globalJacobian_a.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] +=
       			ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary.data()[ebNE_kb],
       							       isFluxBoundary.data()[ebNE_kb],
       							       normal,
@@ -1030,7 +1030,7 @@ namespace proteus
       							       penalty)*u_test_dS[i]
                         +
       		        ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian
-      			(isDOFBoundary[ebNE_kb],
+      			(isDOFBoundary.data()[ebNE_kb],
       			 isFluxBoundary.data()[ebNE_kb],
       			 1.0,
       			 u_trial_trace_ref.data()[ebN_local_kb_j],
