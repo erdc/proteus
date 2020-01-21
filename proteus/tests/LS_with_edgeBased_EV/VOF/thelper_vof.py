@@ -13,7 +13,7 @@ ct=Context.Options([
     ("problem",0,"0: 1D problem with periodic BCs. 1: 2D rotation of zalesak disk"),
     ("T",0.1,"Final time"),
     ("nDTout",1,"Number of time steps to archive"),
-    ("refinement",3,"Level of refinement"),
+    ("refinement",0,"Level of refinement"),
     ("unstructured",False,"Use unstructured mesh. Set to false for periodic BCs"),
     # Choice of numerical method #
     ("STABILIZATION_TYPE",1,"0: SUPG, 1: EV, 2: smoothness based indicator"),

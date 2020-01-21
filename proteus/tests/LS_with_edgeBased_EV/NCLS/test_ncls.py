@@ -60,13 +60,11 @@ class TestNCLS(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('ncls')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/ncls_level_3_pureAdvection_SUPG.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('ncls_level_3_pureAdvection_SUPG.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('ncls_level_0_pureAdvection_SUPG.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'ncls_level_0_pureAdvection_SUPG_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
         actual.close()
         
     def test_pure_advection_ev1(self):
@@ -88,15 +86,13 @@ class TestNCLS(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('ncls')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/ncls_level_3_pureAdvection_EV1.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('ncls_level_3_pureAdvection_EV1.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('ncls_level_0_pureAdvection_EV1.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'ncls_level_0_pureAdvection_EV1_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
         actual.close()
-        
+
     def test_coupez_with_redistancing_non_saturated(self):
         ncls.ct.level_set_function = 0 # distance function
         ncls.ct.STABILIZATION_TYPE = 1 # EV1
@@ -116,13 +112,12 @@ class TestNCLS(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('ncls')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/ncls_level_3_non_saturated_ls.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('ncls_level_3_non_saturated_ls.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('ncls_level_0_non_saturated_ls.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'ncls_level_0_non_saturated_ls_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+
         actual.close()
         
     def test_coupez_with_redistancing_saturated(self):
@@ -144,12 +139,12 @@ class TestNCLS(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('ncls')                
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/ncls_level_3_saturated_ls.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('ncls_level_3_saturated_ls.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('ncls_level_0_saturated_ls.h5','r')
+
+        expected_path = 'comparison_files/' + 'comparison_' + 'ncls_level_0_saturated_ls_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+
         actual.close()
         

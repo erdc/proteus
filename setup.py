@@ -5,7 +5,7 @@ cfg_vars = sysconfig.get_config_vars()
 for key, value in cfg_vars.items():
     if type(value) == str:
         cfg_vars[key] = cfg_vars[key].replace("-Wstrict-prototypes", "")
-        #cfg_vars[key] = cfg_vars[key].replace("-Wall", "-w")
+        cfg_vars[key] = cfg_vars[key].replace("-Wall", "-w")
         #cfg_vars[key] = cfg_vars[key].replace("-O3", "")
         #cfg_vars[key] = cfg_vars[key].replace("-O2", "")
         #cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "-UNDEBUG")
@@ -694,6 +694,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.matrix_constructor.import_modules',
                       'proteus.SWFlow',
                       'proteus.SWFlow.utils',
+                      'proteus.tests.SWFlow',
                       'proteus.MeshAdaptPUMI',
                       'proteus.MeshAdaptPUMI',
                       'proteus.tests.MeshAdaptPUMI',
@@ -724,6 +725,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.cylinder2D.sbm_3Dmesh',
                       'proteus.tests.HotStart_3P',
                       'proteus.tests.AddedMass',
+                      'proteus.tests.FSI',
                       'proteus.tests.MoveMeshMonitor',
                       'proteus.tests.wave_tests',
           ],
@@ -796,6 +798,13 @@ def setup_given_extensions(extensions):
                         'proteus/tests/TwoPhaseFlow/comparison_files/fillingTank.h5',
                         'proteus/tests/TwoPhaseFlow/comparison_files/marin.h5',
                         'proteus/tests/TwoPhaseFlow/comparison_files/moses.h5']),
+                      (os.path.join(proteus_install_path,'tests','SWFlow','comparison_files'),
+                       ['proteus/tests/SWFlow/comparison_files/solitary_wave.h5',
+                        'proteus/tests/SWFlow/comparison_files/parab1D.h5',
+                        'proteus/tests/SWFlow/comparison_files/dam3Bumps.h5',
+                        'proteus/tests/SWFlow/comparison_files/GN_steady.h5',
+                        'proteus/tests/SWFlow/comparison_files/solitary_reef.h5',
+                        'proteus/tests/SWFlow/comparison_files/seawall.h5']),
                       (os.path.join(proteus_install_path,'tests','SWEs','dam_over_bumps','comparison_files'),
                        ['proteus/tests/SWEs/dam_over_bumps/comparison_files/SWEs_dam_over_bumps.h5']),
                       (os.path.join(proteus_install_path,'tests','SWEs','oneD_dambreak_flat_bottom','comparison_files'),
@@ -915,6 +924,8 @@ def setup_given_extensions(extensions):
                         'proteus/tests/HotStart_3P/comparison_files/T01P2_hotstart.h5']),
                       (os.path.join(proteus_install_path,'tests','AddedMass'),
                        ['proteus/tests/AddedMass/petsc.options.superlu_dist']),
+                      (os.path.join(proteus_install_path,'tests','FSI'),
+                       ['proteus/tests/FSI/petsc.options.superlu_dist']),
                       (os.path.join(proteus_install_path,'tests','MoveMeshMonitor'),
                        ['proteus/tests/MoveMeshMonitor/petsc.options.asm',
                         'proteus/tests/MoveMeshMonitor/nodesResult.csv']),

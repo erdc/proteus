@@ -4,7 +4,11 @@ from builtins import object
 from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
-from .parameters_for_poisson import *
+import os
+try:
+    from .parameters_for_poisson import *
+except:
+    from parameters_for_poisson import *
 
 name = "poisson"
 assert ct.nd==2 or ct.nd==3, "Choose nd=2, or 3"
@@ -21,10 +25,15 @@ if (nd==2):
                                  x=(0.0,0.0),
                                  name="box");
 else:
+    nn=5
+    he=old_div(1.0,(nn-1.0))
     box=Domain.RectangularDomain(L=(1.0,1.0,1.0),
                                  x=(0.0,0.0,0.0),
                                  name="box");
-box.writePoly("box")
+genMesh=ct.genMesh #False
+if(genMesh):
+    box.writePoly("box")
+
 if ct.unstructured:
     assert ct.useHex==False, "set useHex=False for unstructure meshes"
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
@@ -33,6 +42,7 @@ if ct.unstructured:
     triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
 else:
     domain = box
+    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"box"    
     
 nc = 1
 ##################

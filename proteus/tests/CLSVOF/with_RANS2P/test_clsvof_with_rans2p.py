@@ -43,7 +43,18 @@ class TestCLSVOFWithRans2p(object):
         self._scriptdir = os.path.dirname(__file__)
         
     def teardown_method(self,method):
-        pass
+        FileList = ['mesh.ele',
+                    'mesh.edge',
+                    'mesh.node',
+                    'mesh.neigh',
+                    'mesh.face',
+                    'mesh.poly',
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
 
     @pytest.mark.skip(reason="Not reproducible on both python2 and python3")
     def test_2D_multiphase(self):
