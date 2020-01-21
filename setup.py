@@ -43,6 +43,18 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
+def get_xtensor_include():
+    return [str(get_pybind_include()),
+            str(get_pybind_include(user=True)),
+            str(get_numpy_include()),
+            os.path.join(sys.prefix, 'include'),
+            os.path.join(sys.prefix, 'Library', 'include'),
+            'proteus',
+            'proteus/xtensor/pybind11/include',
+            'proteus/xtensor/xtensor-python/include',
+            'proteus/xtensor/xtensor/include',
+            'proteus/xtensor/xtl/include']
+
 class get_pybind_include(object):
     """Helper class to determine the pybind11 include path
     The purpose of this class is to postpone importing pybind11
@@ -70,63 +82,32 @@ class get_numpy_include(object):
         import numpy as np
         return np.get_include()
 
-MPRANS2_EXTENSIONS = [
-    Extension('mprans2.cAddedMass', ['proteus/mprans2/AddedMass.cpp'],
-              depends=['proteus/mprans2/AddedMass.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+MPRANS_EXTENSIONS = [
+    Extension('mprans.cAddedMass', ['proteus/mprans/AddedMass.cpp'],
+              depends=['proteus/mprans/AddedMass.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[
-                  # Path to pybind11 headers
-                  str(get_pybind_include()),
-                  str(get_pybind_include(user=True)),
-                  str(get_numpy_include()),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ]),
-    Extension('mprans2.SedClosure', ['proteus/mprans2/SedClosure.cpp'],
-              depends=['proteus/mprans2/SedClosure.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14'],),
+    Extension('mprans.SedClosure', ['proteus/mprans/SedClosure.cpp'],
+              depends=['proteus/mprans/SedClosure.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[
-                  # Path to pybind11 headers
-                  str(get_pybind_include()),
-                  str(get_pybind_include(user=True)),
-                  str(get_numpy_include()),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ]),
-    Extension('mprans2.cVOF3P', ['proteus/mprans2/VOF3P.cpp'],
-              depends=['proteus/mprans2/VOF3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
+    Extension('mprans.cVOF3P', ['proteus/mprans/VOF3P.cpp'],
+              depends=['proteus/mprans/VOF3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[
-                  # Path to pybind11 headers
-                  get_pybind_include(),
-                  get_pybind_include(user=True),
-                  get_numpy_include(),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ]),
-    Extension('mprans2.cNCLS3P', ['proteus/mprans2/NCLS3P.cpp'],
-              depends=['proteus/mprans2/NCLS3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14'],),
+    Extension('mprans.cNCLS3P', ['proteus/mprans/NCLS3P.cpp'],
+              depends=['proteus/mprans/NCLS3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[
-                  # Path to pybind11 headers
-                  str(get_pybind_include()),
-                  str(get_pybind_include(user=True)),
-                  str(get_numpy_include()),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ]),
-    Extension('mprans2.cMCorr3P', ['proteus/mprans2/MCorr3P.cpp'],
-              depends=['proteus/mprans2/MCorr3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14'],),
+    Extension('mprans.cMCorr3P', ['proteus/mprans/MCorr3P.cpp'],
+              depends=['proteus/mprans/MCorr3P.hpp', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
-              extra_compile_args=PROTEUS_OPT,
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14'],
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
               define_macros=[('PROTEUS_LAPACK_H',
                               PROTEUS_LAPACK_H),
@@ -134,20 +115,15 @@ MPRANS2_EXTENSIONS = [
                               PROTEUS_LAPACK_INTEGER),
                              ('PROTEUS_BLAS_H',
                               PROTEUS_BLAS_H)],
-              include_dirs=[
-                  # Path to pybind11 headers
-                  str(get_pybind_include()),
-                  str(get_pybind_include(user=True)),
-                  str(get_numpy_include()),
-                  os.path.join(sys.prefix, 'include'),
-                  os.path.join(sys.prefix, 'Library', 'include'),
-                  'proteus'
-              ],
               library_dirs=[PROTEUS_LAPACK_LIB_DIR,
                             PROTEUS_BLAS_LIB_DIR],
               libraries=['m',PROTEUS_LAPACK_LIB,
-                         PROTEUS_BLAS_LIB],
-              )
+                         PROTEUS_BLAS_LIB],),
+    Extension("mprans.cRANS3PF", ['proteus/mprans/RANS3PF.cpp'],
+              depends=['proteus/mprans/RANS3PF.hpp','proteus/mprans/RANS3PF2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              language='c++',
+              include_dirs=get_xtensor_include(),
+              extra_compile_args=PROTEUS_OPT+['-std=c++14']),
 ]
 
 EXTENSIONS_TO_BUILD = [
@@ -188,48 +164,11 @@ EXTENSIONS_TO_BUILD = [
               language='c++',
               extra_compile_args=PROTEUS_OPT,
               include_dirs=[numpy.get_include(),'proteus']),
-    Extension("mprans.cAddedMass",['proteus/mprans/cAddedMass.pyx'],
-              depends=['proteus/mprans/AddedMass.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(),'proteus']),
-    Extension("mprans.SedClosure",['proteus/mprans/SedClosure.pyx'],
-              depends=['proteus/mprans/SedClosure.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(),'proteus']),
-    Extension("mprans.cVOF3P",['proteus/mprans/cVOF3P.pyx'],
-              depends=['proteus/mprans/VOF3P.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(),'proteus']),
     Extension("mprans.cVOS3P",['proteus/mprans/cVOS3P.pyx'],
               depends=['proteus/mprans/VOS3P.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
               extra_compile_args=PROTEUS_OPT,
               include_dirs=[numpy.get_include(),'proteus']),
-    Extension("mprans.cNCLS3P",['proteus/mprans/cNCLS3P.pyx'],
-              depends=['proteus/mprans/NCLS3P.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(),'proteus']),
-    Extension("mprans.cMCorr3P",
-              ["proteus/mprans/cMCorr3P.pyx"],
-              depends=["proteus/mprans/MCorr3P.h", 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              define_macros=[('PROTEUS_LAPACK_H',
-                              PROTEUS_LAPACK_H),
-                             ('PROTEUS_LAPACK_INTEGER',
-                              PROTEUS_LAPACK_INTEGER),
-                             ('PROTEUS_BLAS_H',
-                              PROTEUS_BLAS_H)],
-              language="c++",
-              include_dirs=[numpy.get_include(), 'proteus'],
-              library_dirs=[PROTEUS_LAPACK_LIB_DIR,
-                            PROTEUS_BLAS_LIB_DIR],
-              libraries=['m',PROTEUS_LAPACK_LIB,
-                         PROTEUS_BLAS_LIB],
-              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
-              extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
     Extension("richards.cRichards",['proteus/richards/cRichards.pyx'],
               depends=['proteus/richards/Richards.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
@@ -252,11 +191,7 @@ EXTENSIONS_TO_BUILD = [
                          PROTEUS_BLAS_LIB],
               extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
-    Extension("mprans.cRANS3PF",['proteus/mprans/cRANS3PF.pyx'],
-              depends=['proteus/mprans/RANS3PF.h','proteus/mprans/RANS3PF2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT+["-std=c++11","-mavx"],
-              include_dirs=[numpy.get_include(),'proteus']),
+
     Extension("mprans.cRANS3PSed",['proteus/mprans/cRANS3PSed.pyx'],
               depends=['proteus/mprans/RANS3PSed.h','proteus/mprans/RANS3PSed2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
@@ -1044,8 +979,8 @@ def setup_given_extensions(extensions):
     )
 
 def setup_extensions_in_sequential():
-    #setup_given_extensions(EXTENSIONS_TO_BUILD)
-    setup_given_extensions(MPRANS2_EXTENSIONS)
+    setup_given_extensions(MPRANS_EXTENSIONS)
+    setup_given_extensions(EXTENSIONS_TO_BUILD)
 
 def setup_extensions_in_parallel():
     import multiprocessing, logging
@@ -1053,7 +988,8 @@ def setup_extensions_in_parallel():
     logger.setLevel(logging.INFO)
     multiprocessing.log_to_stderr()
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-    EXTENSIONS=[[e] for e in EXTENSIONS_TO_BUILD]
+    EXTENSIONS_CONCAT = MPRANS_EXTENSIONS + EXTENSIONS_TO_BUILD
+    EXTENSIONS=[[e] for e in EXTENSIONS_CONCAT]
     pool.imap(setup_given_extensions, EXTENSIONS)
     pool.close()
     pool.join()
