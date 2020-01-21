@@ -1157,10 +1157,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                   self.l2g[0]['freeLocal'],
                                                                   self.csrRowIndeces[(
                                                                       0, 0)] // 5 // 5,
-                                                                  old_div(
-                                                                      self.csrColumnOffsets[(0, 0)], 5),
+                                                                  self.csrColumnOffsets[(0, 0)] // 5,
                                                                   elementMassMatrix,
                                                                   self.MC_global)
+
         diamD2 = numpy.sum(self.q['abs(det(J))'][:]
                            * self.elementQuadratureWeights[('u', 0)])
         self.ML = np.zeros((self.nFreeDOF_global[0],), 'd')
@@ -1198,10 +1198,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.csrRowIndeces[(
                                                                           0, 0)] // 5 // 5,
-                                                                      old_div(
-                                                                          self.csrColumnOffsets[(0, 0)], 5),
+                                                                      self.csrColumnOffsets[(0, 0)] // 5,
                                                                       self.cterm[d],
                                                                       self.cterm_global[d])
+
             # C Transpose matrices
             self.cterm_transpose[d] = numpy.zeros((self.mesh.nElements_global,
                                                    self.nDOF_test_element[0],
@@ -1222,16 +1222,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                               self.q[(
                                                                   'grad(w)*dV_f', 0)],
                                                               self.cterm_transpose[d])  # -int[(-di*grad(wi))*wj*dV]
+
             cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.csrRowIndeces[(
                                                                           0, 0)] // 5 // 5,
-                                                                      old_div(
-                                                                          self.csrColumnOffsets[(0, 0)], 5),
+                                                                      self.csrColumnOffsets[(0, 0)] // 5,
                                                                       self.cterm_transpose[d],
                                                                       self.cterm_global_transpose[d])
+
         #
         self.rowptr_cMatrix, self.colind_cMatrix, self.Cx = self.cterm_global[0].getCSRrepresentation(
         )
