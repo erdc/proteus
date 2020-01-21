@@ -707,11 +707,12 @@ EXTENSIONS_TO_BUILD = [
               language="c++",
               extra_compile_args=PROTEUS_OPT,
               include_dirs=[numpy.get_include(), 'proteus']),
-    Extension("mprans.cDissipation2D",["proteus/mprans/cDissipation2D.pyx"],
-              depends=["proteus/mprans/Dissipation2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
-              language="c++",
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(), 'proteus']),
+    Extension(
+        'mprans.cDissipation2D',
+        ['proteus/mprans/Dissipation2D.cpp'],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++'),
 ]
 
 def setup_given_extensions(extensions):
