@@ -17,23 +17,27 @@
 #endif
 
 namespace py = pybind11;
+using proteus::cppRANS3PSed_base;
+using proteus::cppRANS3PSed2D_base;
 
 PYBIND11_MODULE(RANS3PSed, m)
 {
     xt::import_numpy();
 
-    py::class_<proteus::cppRANS3PSed_base>(m, "RANS3PSed")
+    py::class_<cppRANS3PSed_base>(m, "RANS3PSed")
         .def(py::init(&proteus::newRANS3PSed))
-        .def("calculateResidual", &proteus::cppRANS3PSed_base::calculateResidual)
-        .def("calculateJacobian", &proteus::cppRANS3PSed_base::calculateJacobian);
+        .def("calculateResidual", &cppRANS3PSed_base::calculateResidual)
+        .def("calculateJacobian", &cppRANS3PSed_base::calculateJacobian)
+        .def("calculateVelocityAverage", &cppRANS3PSed_base::calculateVelocityAverage);
 }
 
 PYBIND11_MODULE(RANS3PSed2D, m)
 {
     xt::import_numpy();
 
-    py::class_<proteus::cppRANS3PSed2D_base>(m, "RANS3PSed2D")
+    py::class_<cppRANS3PSed2D_base>(m, "RANS3PSed2D")
         .def(py::init(&proteus::newRANS3PSed2D))
-        .def("calculateResidual", &proteus::cppRANS3PSed2D_base::calculateResidual)
-        .def("calculateJacobian", &proteus::cppRANS3PSed2D_base::calculateJacobian);
+        .def("calculateResidual", &cppRANS3PSed2D_base::calculateResidual)
+        .def("calculateJacobian", &cppRANS3PSed2D_base::calculateJacobian)
+        .def("calculateVelocityAverage", &cppRANS3PSed2D_base::calculateVelocityAverage);
 }

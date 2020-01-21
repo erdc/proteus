@@ -56,7 +56,7 @@ jobs:
       - #./linux/bin/pip3 install matplotlib
     script:
       - export MPLBACKEND="AGG"
-      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
   - python: 3.7
     env: TEST_PROFILE="proteus-conda"
     install:
