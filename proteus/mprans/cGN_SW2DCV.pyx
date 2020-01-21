@@ -82,7 +82,11 @@ cdef extern from "GN_SW2DCV.h" namespace "proteus":
                             double * huBT,
                             double * hvBT,
                             double * hetaBT,
-                            double * hwBT)
+                            double * hwBT,
+                            double * new_SourceTerm_hu,
+                            double * new_SourceTerm_hv,
+                            double * new_SourceTerm_heta,
+                            double * new_SourceTerm_hw)
         double calculateEdgeBasedCFL(
             double g,
             int numDOFsPerEqn,
@@ -248,7 +252,11 @@ cdef extern from "GN_SW2DCV.h" namespace "proteus":
                                double * hvBT,
                                double * hetaBT,
                                double * hwBT,
-                               int lstage)
+                               int lstage,
+                               double * new_SourceTerm_hu,
+                               double * new_SourceTerm_hv,
+                               double * new_SourceTerm_heta,
+                               double * new_SourceTerm_hw)
         void calculateMassMatrix(double * mesh_trial_ref,
                                  double * mesh_grad_trial_ref,
                                  double * mesh_dof,
@@ -674,7 +682,11 @@ cdef class cGN_SW2DCV_base:
                        numpy.ndarray huBT,
                        numpy.ndarray hvBT,
                        numpy.ndarray hetaBT,
-                       numpy.ndarray hwBT):
+                       numpy.ndarray hwBT,
+                       numpy.ndarray new_SourceTerm_hu,
+                       numpy.ndarray new_SourceTerm_hv,
+                       numpy.ndarray new_SourceTerm_heta,
+                       numpy.ndarray new_SourceTerm_hw):
         self.thisptr.convexLimiting(dt,
                                     NNZ,
                                     numDOFs,
@@ -712,7 +724,11 @@ cdef class cGN_SW2DCV_base:
                                     < double * > huBT.data,
                                     < double * > hvBT.data,
                                     < double * > hetaBT.data,
-                                    < double * > hwBT.data)
+                                    < double * > hwBT.data,
+                                    < double * > new_SourceTerm_hu.data,
+                                    < double * > new_SourceTerm_hv.data,
+                                    < double * > new_SourceTerm_heta.data,
+                                    < double * > new_SourceTerm_hw.data)
     def calculateEdgeBasedCFL(self,
                               double g,
                               int numDOFsPerEqn,
@@ -900,7 +916,11 @@ cdef class cGN_SW2DCV_base:
                           numpy.ndarray hvBT,
                           numpy.ndarray hetaBT,
                           numpy.ndarray hwBT,
-                          int lstage):
+                          int lstage,
+                          numpy.ndarray new_SourceTerm_hu,
+                          numpy.ndarray new_SourceTerm_hv,
+                          numpy.ndarray new_SourceTerm_heta,
+                          numpy.ndarray new_SourceTerm_hw):
         self.thisptr.calculateResidual(< double * > mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1045,9 +1065,13 @@ cdef class cGN_SW2DCV_base:
                                        < double * > hvBT.data,
                                        < double * > hetaBT.data,
                                        < double * > hwBT.data,
-                                       lstage)
+                                       lstage,
+                                       < double * > new_SourceTerm_hu.data,
+                                       < double * > new_SourceTerm_hv.data,
+                                       < double * > new_SourceTerm_heta.data,
+                                       < double * > new_SourceTerm_hw.data)
     def calculateMassMatrix(self,
-                            numpy.ndarray mesh_trial_ref,                            
+                            numpy.ndarray mesh_trial_ref,
                             numpy.ndarray mesh_grad_trial_ref,
                             numpy.ndarray mesh_dof,
                             numpy.ndarray mesh_velocity_dof,

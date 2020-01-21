@@ -11,7 +11,7 @@ import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
-import proteus.SWFlow.SWFlowProblem as SWFlowProblem
+import proteus.SWFlows.SWFlowProblem as SWFlowProblem
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
