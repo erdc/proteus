@@ -26,7 +26,7 @@ opts= Context.Options([
 # DOMAIN AND MESH #
 ###################
 L=(8000.0,800.0)
-refinement = 2
+refinement = 4
 domain = RectangularDomain(L=L,x=[0,0,0])
 
 # CREATE REFINEMENT #
