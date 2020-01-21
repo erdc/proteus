@@ -60,6 +60,7 @@ source/api/modules.rst:
 	sphinx-apidoc --output-dir=source/api ../proteus "../**/*.so" "../proteus/tests" "../proteus/test_utils" "../proteus/config" --maxdepth=1 --separate --module-first --templatedir=source/_templates/apidoc
 
 $(BUILDDIR)/capi/html/files.html:
+	mkdir -p ./build
 	doxygen
 
 dirhtml:
