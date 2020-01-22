@@ -672,7 +672,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_H_vof,
             self.coefficients.q_vos,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian)
+            jacobian.getCSRrepresentation()[2])
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
