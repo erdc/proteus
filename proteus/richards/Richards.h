@@ -1100,7 +1100,7 @@ namespace proteus
                     for (int j=0;j<nDOF_trial_element;j++)
                     {
                         int eN_i_j = eN_i*nDOF_trial_element+j;
-                        globalJacobian.data().data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+                        globalJacobian.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
                     }//j
                 }//i
             }//elements
@@ -1267,7 +1267,7 @@ namespace proteus
                         for (int j=0;j<nDOF_trial_element;j++)
                         {
                             register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
-                            globalJacobian.data().data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
+                            globalJacobian.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
                         }//j
                     }//i
                 }//kb
