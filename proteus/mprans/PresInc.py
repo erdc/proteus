@@ -916,7 +916,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.fluidModel.coefficients.ebqe_vos,
             self.coefficients.fluidModel.coefficients.ebqe_rho,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,

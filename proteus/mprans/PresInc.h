@@ -852,17 +852,13 @@ namespace proteus
                            xt::pyarray<double> ebqe_vos,
                            xt::pyarray<double> ebqe_rho_f,
                            xt::pyarray<int> csrRowIndeces_u_u,xt::pyarray<int> csrColumnOffsets_u_u,
-                           py::object globalJacobian,
+                           xt::pyarray<double> globalJacobian,
                            int nExteriorElementBoundaries_global,
                            xt::pyarray<int> exteriorElementBoundariesArray,
                            xt::pyarray<int> elementBoundaryElementsArray,
                            xt::pyarray<int> elementBoundaryLocalElementBoundariesArray,
                            xt::pyarray<int> csrColumnOffsets_eb_u_u)
     {
-      py::tuple csr_representation = globalJacobian.attr("getCSRrepresentation")();
-      py::object globalJacobian_o = csr_representation[2];
-      xt::pyarray<double> globalJacobian_a = globalJacobian_o;
-
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
@@ -915,7 +911,7 @@ namespace proteus
               for (int j=0;j<nDOF_trial_element;j++)
                 {
                   int eN_i_j = eN_i*nDOF_trial_element+j;
-                  globalJacobian_a.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
+                  globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
                 }//j
             }//i
         }//elements
@@ -1020,7 +1016,7 @@ namespace proteus
                         ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j,
                         j_nSpace = j*nSpace;
 
-      		      globalJacobian_a.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] +=
+      		      globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] +=
       			ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary.data()[ebNE_kb],
       							       isFluxBoundary.data()[ebNE_kb],
       							       normal,
