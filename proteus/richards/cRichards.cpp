@@ -16,13 +16,14 @@
 #endif
 
 namespace py = pybind11;
+using proteus::Richards_base;
 
 PYBIND11_MODULE(cRichards, m)
 {
     xt::import_numpy();
 
-    py::class_<proteus::Richards_base>(m, "cRichards_base")
+    py::class_<Richards_base>(m, "cRichards_base")
         .def(py::init(&proteus::newRichards))
-        .def("calculateResidual", &proteus::Richards_base::calculateResidual)
-        .def("calculateJacobian", &proteus::Richards_base::calculateJacobian);
+        .def("calculateResidual", &Richards_base::calculateResidual)
+        .def("calculateJacobian", &Richards_base::calculateJacobian);
 }

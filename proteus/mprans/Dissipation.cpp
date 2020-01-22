@@ -2,7 +2,7 @@
 #include "pybind11/stl_bind.h"
 
 #define FORCE_IMPORT_ARRAY
-#include "ElastoPlastic.h"
+#include "Dissipation.h"
 
 #if defined(__GNUC__) && !defined(__clang__)
     namespace workaround
@@ -16,14 +16,14 @@
 #endif
 
 namespace py = pybind11;
-using proteus::ElastoPlastic_base;
+using proteus::Dissipation_base;
 
-PYBIND11_MODULE(cElastoPlastic, m)
+PYBIND11_MODULE(cDissipation, m)
 {
     xt::import_numpy();
 
-    py::class_<ElastoPlastic_base>(m, "cElastoPlastic_base")
-        .def(py::init(&proteus::newElastoPlastic))
-        .def("calculateResidual", &ElastoPlastic_base::calculateResidual)
-        .def("calculateJacobian", &ElastoPlastic_base::calculateJacobian);
+    py::class_<Dissipation_base>(m, "cDissipation_base")
+        .def(py::init(&proteus::newDissipation))
+        .def("calculateResidual", &Dissipation_base::calculateResidual)
+        .def("calculateJacobian", &Dissipation_base::calculateJacobian);
 }

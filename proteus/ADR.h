@@ -111,7 +111,7 @@ namespace proteus
                                        xt::pyarray<double>& q_numDiff_u,
                                        xt::pyarray<double>& q_numDiff_u_last,
                                        xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
-                                       py::object& globalJacobian,
+                                       xt::pyarray<double>& globalJacobian,
                                        int nExteriorElementBoundaries_global,
                                        xt::pyarray<int>& exteriorElementBoundariesArray,
                                        xt::pyarray<int>& elementBoundaryElementsArray,
@@ -1113,7 +1113,7 @@ namespace proteus
                xt::pyarray<double>& q_numDiff_u,
                xt::pyarray<double>& q_numDiff_u_last,
                xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
-               py::object& globalJacobian,
+               xt::pyarray<double>& globalJacobian,
                int nExteriorElementBoundaries_global,
                xt::pyarray<int>& exteriorElementBoundariesArray,
                xt::pyarray<int>& elementBoundaryElementsArray,
@@ -1130,9 +1130,6 @@ namespace proteus
                xt::pyarray<double>& ebqe_penalty_ext,
                const double eb_adjoint_sigma)
                {
-                   py::tuple csr_representation = globalJacobian.attr("getCSRrepresentation")();
-                   py::object globalJacobian_o = csr_representation[2];
-                   xt::pyarray<double> globalJacobian_a = globalJacobian_o;
                    //
                    //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
                    //
@@ -1194,7 +1191,7 @@ namespace proteus
                            for (int j=0;j<nDOF_trial_element;j++)
                            {
                                int eN_i_j = eN_i*nDOF_trial_element+j;
-                               globalJacobian_a.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
+                               globalJacobian.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
                            }//j
                        }//i
                    }//elements
@@ -1388,7 +1385,7 @@ namespace proteus
                                             register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
                                             register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 
-                                            globalJacobian_a.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i]+
+                                            globalJacobian.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i]+
                                                 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u[ebNE_kb],
                                                         isDiffusiveFluxBoundary_u[ebNE_kb],
                                                         eb_adjoint_sigma,

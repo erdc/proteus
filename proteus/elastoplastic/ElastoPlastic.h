@@ -144,7 +144,7 @@ namespace proteus
                     xt::pyarray<int>& csrRowIndeces_w_u,xt::pyarray<int>& csrColumnOffsets_w_u,
                     xt::pyarray<int>& csrRowIndeces_w_v,xt::pyarray<int>& csrColumnOffsets_w_v,
                     xt::pyarray<int>& csrRowIndeces_w_w,xt::pyarray<int>& csrColumnOffsets_w_w,
-                    py::object& globalJacobian,
+                    xt::pyarray<double>& globalJacobian,
                     int nExteriorElementBoundaries_global,
                     xt::pyarray<int>& exteriorElementBoundariesArray,
                     xt::pyarray<int>& elementBoundaryElementsArray,
@@ -1520,7 +1520,7 @@ namespace proteus
                         xt::pyarray<int>& csrRowIndeces_w_u,xt::pyarray<int>& csrColumnOffsets_w_u,
                         xt::pyarray<int>& csrRowIndeces_w_v,xt::pyarray<int>& csrColumnOffsets_w_v,
                         xt::pyarray<int>& csrRowIndeces_w_w,xt::pyarray<int>& csrColumnOffsets_w_w,
-                        py::object& globalJacobian,
+                        xt::pyarray<double>& globalJacobian,
                         int nExteriorElementBoundaries_global,
                         xt::pyarray<int>& exteriorElementBoundariesArray,
                         xt::pyarray<int>& elementBoundaryElementsArray,
@@ -1541,10 +1541,6 @@ namespace proteus
                         xt::pyarray<int>& csrColumnOffsets_eb_w_v,
                         xt::pyarray<int>& csrColumnOffsets_eb_w_w)
                         {
-                            py::tuple csr_representation = globalJacobian.attr("getCSRrepresentation")();
-                            py::object globalJacobian_o = csr_representation[2];
-                            xt::pyarray<double> globalJacobian_a = globalJacobian_o;
-
                             CompKernel<nSpace,nDOF_mesh_trial_element,nDOF_trial_element,nDOF_test_element> ck;
                             const int nSymTen(ck.nSymTen);
                             //
@@ -1724,17 +1720,17 @@ namespace proteus
                                     //            <<elementJacobian_w_v[i][j]<<'\t'
                                     //            <<elementJacobian_w_w[i][j]<<std::endl;
 
-                                    globalJacobian_a.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
-                                    globalJacobian_a.data()[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_u_v[eN_i_j]] += elementJacobian_u_v[i][j];
-                                    globalJacobian_a.data()[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_u_w[eN_i_j]] += elementJacobian_u_w[i][j];
+                                    globalJacobian.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+                                    globalJacobian.data()[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_u_v[eN_i_j]] += elementJacobian_u_v[i][j];
+                                    globalJacobian.data()[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_u_w[eN_i_j]] += elementJacobian_u_w[i][j];
 
-                                    globalJacobian_a.data()[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_v_u[eN_i_j]] += elementJacobian_v_u[i][j];
-                                    globalJacobian_a.data()[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += elementJacobian_v_v[i][j];
-                                    globalJacobian_a.data()[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_v_w[eN_i_j]] += elementJacobian_v_w[i][j];
+                                    globalJacobian.data()[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_v_u[eN_i_j]] += elementJacobian_v_u[i][j];
+                                    globalJacobian.data()[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += elementJacobian_v_v[i][j];
+                                    globalJacobian.data()[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_v_w[eN_i_j]] += elementJacobian_v_w[i][j];
 
-                                    globalJacobian_a.data()[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_w_u[eN_i_j]] += elementJacobian_w_u[i][j];
-                                    globalJacobian_a.data()[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_w_v[eN_i_j]] += elementJacobian_w_v[i][j];
-                                    globalJacobian_a.data()[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_w_w[eN_i_j]] += elementJacobian_w_w[i][j];
+                                    globalJacobian.data()[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_w_u[eN_i_j]] += elementJacobian_w_u[i][j];
+                                    globalJacobian.data()[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_w_v[eN_i_j]] += elementJacobian_w_v[i][j];
+                                    globalJacobian.data()[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_w_w[eN_i_j]] += elementJacobian_w_w[i][j];
                                 }//j
                             }//i
                         }//elements
@@ -1910,17 +1906,17 @@ namespace proteus
                                 {
                                     register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
 
-                                    globalJacobian_a.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*disp_test_dS[i];
-                                    globalJacobian_a.data()[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] += fluxJacobian_u_v[j]*disp_test_dS[i];
-                                    globalJacobian_a.data()[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_eb_u_w[ebN_i_j]] += fluxJacobian_u_w[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] += fluxJacobian_u_v[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_u_w[eN_i] + csrColumnOffsets_eb_u_w[ebN_i_j]] += fluxJacobian_u_w[j]*disp_test_dS[i];
 
-                                    globalJacobian_a.data()[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] += fluxJacobian_v_u[j]*disp_test_dS[i];
-                                    globalJacobian_a.data()[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += fluxJacobian_v_v[j]*disp_test_dS[i];
-                                    globalJacobian_a.data()[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_eb_v_w[ebN_i_j]] += fluxJacobian_v_w[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] += fluxJacobian_v_u[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += fluxJacobian_v_v[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_v_w[eN_i] + csrColumnOffsets_eb_v_w[ebN_i_j]] += fluxJacobian_v_w[j]*disp_test_dS[i];
 
-                                    globalJacobian_a.data()[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_eb_w_u[ebN_i_j]] += fluxJacobian_w_u[j]*disp_test_dS[i];
-                                    globalJacobian_a.data()[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_eb_w_v[ebN_i_j]] += fluxJacobian_w_v[j]*disp_test_dS[i];
-                                    globalJacobian_a.data()[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] += fluxJacobian_w_w[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_w_u[eN_i] + csrColumnOffsets_eb_w_u[ebN_i_j]] += fluxJacobian_w_u[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_w_v[eN_i] + csrColumnOffsets_eb_w_v[ebN_i_j]] += fluxJacobian_w_v[j]*disp_test_dS[i];
+                                    globalJacobian.data()[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] += fluxJacobian_w_w[j]*disp_test_dS[i];
                                 }//j
                             }//i
                     }//kb
