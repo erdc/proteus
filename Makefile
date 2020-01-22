@@ -276,9 +276,9 @@ docs:
 
 	@echo "**********************************"
 	@echo "Trying to open the html at"
-	@echo "../proteus-website/index.html"
+	@echo "./docs/build/index.html"
 	@echo "**********************************"
-	-sensible-browser ../proteus-website/index.html &
+	-sensible-browser ./docs/build/index.html &
 
 test: air-water-vv check
 	@echo "**************************************************"
