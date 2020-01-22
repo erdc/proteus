@@ -16,13 +16,14 @@
 #endif
 
 namespace py = pybind11;
+using proteus::ElastoPlastic_base;
 
 PYBIND11_MODULE(cElastoPlastic, m)
 {
     xt::import_numpy();
 
-    py::class_<proteus::ElastoPlastic_base>(m, "cElastoPlastic_base")
+    py::class_<ElastoPlastic_base>(m, "cElastoPlastic_base")
         .def(py::init(&proteus::newElastoPlastic))
-        .def("calculateResidual", &proteus::ElastoPlastic_base::calculateResidual)
-        .def("calculateJacobian", &proteus::ElastoPlastic_base::calculateJacobian);
+        .def("calculateResidual", &ElastoPlastic_base::calculateResidual)
+        .def("calculateJacobian", &ElastoPlastic_base::calculateJacobian);
 }

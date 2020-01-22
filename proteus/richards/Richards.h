@@ -141,7 +141,7 @@ namespace proteus
                                        xt::pyarray<double>& q_numDiff_u_last,
                                        xt::pyarray<int>& csrRowIndeces_u_u,
                                        xt::pyarray<int>& csrColumnOffsets_u_u,
-                                       py::object& globalJacobian,
+                                       xt::pyarray<double>& globalJacobian,
                                        int nExteriorElementBoundaries_global,
                                        xt::pyarray<int>& exteriorElementBoundariesArray,
                                        xt::pyarray<int>& elementBoundaryElementsArray,
@@ -913,7 +913,7 @@ namespace proteus
                                xt::pyarray<double>& cfl,
                                xt::pyarray<double>& q_numDiff_u_last,
                                xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
-                               py::object& globalJacobian,
+                               xt::pyarray<double>& globalJacobian,
                                int nExteriorElementBoundaries_global,
                                xt::pyarray<int>& exteriorElementBoundariesArray,
                                xt::pyarray<int>& elementBoundaryElementsArray,
@@ -925,10 +925,6 @@ namespace proteus
                                xt::pyarray<double>& ebqe_bc_flux_ext,
                                xt::pyarray<int>& csrColumnOffsets_eb_u_u)
         {
-            py::tuple csr_representation = globalJacobian.attr("getCSRrepresentation")();
-            py::object globalJacobian_o = csr_representation[2];
-            xt::pyarray<double> globalJacobian_a = globalJacobian_o;
-
             assert(a_rowptr.data()[nSpace] == nnz);
             assert(a_rowptr.data()[nSpace] == nSpace);
             double Ct_sge = 4.0;
@@ -1104,7 +1100,7 @@ namespace proteus
                     for (int j=0;j<nDOF_trial_element;j++)
                     {
                         int eN_i_j = eN_i*nDOF_trial_element+j;
-                        globalJacobian_a.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+                        globalJacobian.data().data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
                     }//j
                 }//i
             }//elements
@@ -1271,7 +1267,7 @@ namespace proteus
                         for (int j=0;j<nDOF_trial_element;j++)
                         {
                             register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
-                            globalJacobian_a.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
+                            globalJacobian.data().data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
                         }//j
                     }//i
                 }//kb

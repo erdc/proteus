@@ -215,12 +215,14 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.RANS3PSed',
         ['proteus/mprans/RANS3PSed.cpp'],
+        depends=['proteus/mprans/RANS3PSed.h','proteus/mprans/RANS3PSed2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension(
         'richards.cRichards',
         ['proteus/richards/cRichards.cpp'],
+        depends=['proteus/richards/Richards.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         language='c++',
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
@@ -234,6 +236,7 @@ EXTENSIONS_TO_BUILD = [
                         PROTEUS_LAPACK_INTEGER),
                        ('PROTEUS_BLAS_H',
                         PROTEUS_BLAS_H)],
+        depends=['proteus/elastoplastic/ElastoPlastic.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         language='c++',
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
@@ -316,6 +319,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'ADR',
         ['proteus/ADR.cpp'],
+        depends=['proteus/ADR.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'
