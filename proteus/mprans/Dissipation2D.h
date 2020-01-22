@@ -34,27 +34,27 @@ namespace proteus
                                double vos_limiter,
                                double mu_fr_limiter){}
    virtual void calculateResidual(//element
-                                   xt::pyarray<double> mesh_trial_ref,
-                                   xt::pyarray<double> mesh_grad_trial_ref,
-                                   xt::pyarray<double> mesh_dof,
-                                   xt::pyarray<double> meshVelocity_dof,
+                                   xt::pyarray<double>& mesh_trial_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_ref,
+                                   xt::pyarray<double>& mesh_dof,
+                                   xt::pyarray<double>& meshVelocity_dof,
                                    double MOVING_DOMAIN,
-                                   xt::pyarray<int> mesh_l2g,
-                                   xt::pyarray<double> dV_ref,
-                                   xt::pyarray<double> u_trial_ref,
-                                   xt::pyarray<double> u_grad_trial_ref,
-                                   xt::pyarray<double> u_test_ref,
-                                   xt::pyarray<double> u_grad_test_ref,
+                                   xt::pyarray<int>& mesh_l2g,
+                                   xt::pyarray<double>& dV_ref,
+                                   xt::pyarray<double>& u_trial_ref,
+                                   xt::pyarray<double>& u_grad_trial_ref,
+                                   xt::pyarray<double>& u_test_ref,
+                                   xt::pyarray<double>& u_grad_test_ref,
                                    //element boundary
-                                   xt::pyarray<double> mesh_trial_trace_ref,
-                                   xt::pyarray<double> mesh_grad_trial_trace_ref,
-                                   xt::pyarray<double> dS_ref,
-                                   xt::pyarray<double> u_trial_trace_ref,
-                                   xt::pyarray<double> u_grad_trial_trace_ref,
-                                   xt::pyarray<double> u_test_trace_ref,
-                                   xt::pyarray<double> u_grad_test_trace_ref,
-                                   xt::pyarray<double> normal_ref,
-                                   xt::pyarray<double> boundaryJac_ref,
+                                   xt::pyarray<double>& mesh_trial_trace_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                                   xt::pyarray<double>& dS_ref,
+                                   xt::pyarray<double>& u_trial_trace_ref,
+                                   xt::pyarray<double>& u_grad_trial_trace_ref,
+                                   xt::pyarray<double>& u_test_trace_ref,
+                                   xt::pyarray<double>& u_grad_test_trace_ref,
+                                   xt::pyarray<double>& normal_ref,
+                                   xt::pyarray<double>& boundaryJac_ref,
                                    //physics
                                    int nElements_global,
                                    //diffusion terms
@@ -69,15 +69,15 @@ namespace proteus
                                    double rho_1,
   //                             Argumentlist for sediment
                                    double sedFlag,
-                                   xt::pyarray<double> q_vos,
-                                   xt::pyarray<double> q_vos_gradc,
-                                   xt::pyarray<double> ebqe_q_vos,
-                                   xt::pyarray<double> ebqe_q_vos_gradc,
+                                   xt::pyarray<double>& q_vos,
+                                   xt::pyarray<double>& q_vos_gradc,
+                                   xt::pyarray<double>& ebqe_q_vos,
+                                   xt::pyarray<double>& ebqe_q_vos_gradc,
                                    double rho_f,
                                    double rho_s,
-                                   xt::pyarray<double> vs,
-                                   xt::pyarray<double> ebqe_vs,
-                                   xt::pyarray<double> g,
+                                   xt::pyarray<double>& vs,
+                                   xt::pyarray<double>& ebqe_vs,
+                                   xt::pyarray<double>& g,
                               //end sediment
                                    int dissipation_model_flag,
                                    //end diffusion
@@ -86,67 +86,67 @@ namespace proteus
                                    int lag_shockCapturing,
                                    double shockCapturingDiffusion,
                                    double sc_uref, double sc_alpha,
-                                   xt::pyarray<int> u_l2g,
-                                   xt::pyarray<double> elementDiameter,
-                                   xt::pyarray<double> u_dof,xt::pyarray<double> u_dof_old,
-                                   xt::pyarray<double> velocity,
-                                   xt::pyarray<double> phi_ls, //level set variable
-                                   xt::pyarray<double> q_kappa, //kinetic energy variable
-                                   xt::pyarray<double> q_grad_kappa,
-                                   xt::pyarray<double> q_porosity, //VRANS
+                                   xt::pyarray<int>& u_l2g,
+                                   xt::pyarray<double>& elementDiameter,
+                                   xt::pyarray<double>& u_dof,xt::pyarray<double>& u_dof_old,
+                                   xt::pyarray<double>& velocity,
+                                   xt::pyarray<double>& phi_ls, //level set variable
+                                   xt::pyarray<double>& q_kappa, //kinetic energy variable
+                                   xt::pyarray<double>& q_grad_kappa,
+                                   xt::pyarray<double>& q_porosity, //VRANS
                                    //velocity dof
-                                   xt::pyarray<double>  velocity_dof_u,
-                                   xt::pyarray<double>  velocity_dof_v,
-                                   xt::pyarray<double>  velocity_dof_w,
+                                   xt::pyarray<double>&  velocity_dof_u,
+                                   xt::pyarray<double>&  velocity_dof_v,
+                                   xt::pyarray<double>&  velocity_dof_w,
                                    //end velocity dof
-                                   xt::pyarray<double> q_m,
-                                   xt::pyarray<double> q_u,
-                                   xt::pyarray<double> q_grad_u,
-                                   xt::pyarray<double> q_m_betaBDF,
-                                   xt::pyarray<double> cfl,
-                                   xt::pyarray<double> q_numDiff_u,
-                                   xt::pyarray<double> q_numDiff_u_last,
-                                   xt::pyarray<double> ebqe_penalty_ext, //penalty
+                                   xt::pyarray<double>& q_m,
+                                   xt::pyarray<double>& q_u,
+                                   xt::pyarray<double>& q_grad_u,
+                                   xt::pyarray<double>& q_m_betaBDF,
+                                   xt::pyarray<double>& cfl,
+                                   xt::pyarray<double>& q_numDiff_u,
+                                   xt::pyarray<double>& q_numDiff_u_last,
+                                   xt::pyarray<double>& ebqe_penalty_ext, //penalty
                                    int offset_u, int stride_u,
-                                   xt::pyarray<double> globalResidual,
+                                   xt::pyarray<double>& globalResidual,
                                    int nExteriorElementBoundaries_global,
-                                   xt::pyarray<int> exteriorElementBoundariesArray,
-                                   xt::pyarray<int> elementBoundaryElementsArray,
-                                   xt::pyarray<int> elementBoundaryLocalElementBoundariesArray,
-                                   xt::pyarray<double> ebqe_velocity_ext,
-                                   xt::pyarray<int> isDOFBoundary_u,
-                                   xt::pyarray<double> ebqe_bc_u_ext,
-                                   xt::pyarray<int> isAdvectiveFluxBoundary_u,
-                                   xt::pyarray<double> ebqe_bc_advectiveFlux_u_ext,
-                                   xt::pyarray<int> isDiffusiveFluxBoundary_u,
-                                   xt::pyarray<double> ebqe_bc_diffusiveFlux_u_ext,
-                                   xt::pyarray<double> ebqe_phi,double epsFact,
-                                   xt::pyarray<double> ebqe_kappa, //kinetic energy variable on boundary
-                                   xt::pyarray<double> ebqe_porosity, //VRANS
-                                   xt::pyarray<double> ebqe_u,
-                                   xt::pyarray<double> ebqe_flux)=0;
+                                   xt::pyarray<int>& exteriorElementBoundariesArray,
+                                   xt::pyarray<int>& elementBoundaryElementsArray,
+                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                                   xt::pyarray<double>& ebqe_velocity_ext,
+                                   xt::pyarray<int>& isDOFBoundary_u,
+                                   xt::pyarray<double>& ebqe_bc_u_ext,
+                                   xt::pyarray<int>& isAdvectiveFluxBoundary_u,
+                                   xt::pyarray<double>& ebqe_bc_advectiveFlux_u_ext,
+                                   xt::pyarray<int>& isDiffusiveFluxBoundary_u,
+                                   xt::pyarray<double>& ebqe_bc_diffusiveFlux_u_ext,
+                                   xt::pyarray<double>& ebqe_phi,double epsFact,
+                                   xt::pyarray<double>& ebqe_kappa, //kinetic energy variable on boundary
+                                   xt::pyarray<double>& ebqe_porosity, //VRANS
+                                   xt::pyarray<double>& ebqe_u,
+                                   xt::pyarray<double>& ebqe_flux)=0;
     virtual void calculateJacobian(//element
-                                   xt::pyarray<double> mesh_trial_ref,
-                                   xt::pyarray<double> mesh_grad_trial_ref,
-                                   xt::pyarray<double> mesh_dof,
-                                   xt::pyarray<double> mesh_velocity_dof,
+                                   xt::pyarray<double>& mesh_trial_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_ref,
+                                   xt::pyarray<double>& mesh_dof,
+                                   xt::pyarray<double>& mesh_velocity_dof,
                                    double MOVING_DOMAIN,
-                                   xt::pyarray<int> mesh_l2g,
-                                   xt::pyarray<double> dV_ref,
-                                   xt::pyarray<double> u_trial_ref,
-                                   xt::pyarray<double> u_grad_trial_ref,
-                                   xt::pyarray<double> u_test_ref,
-                                   xt::pyarray<double> u_grad_test_ref,
+                                   xt::pyarray<int>& mesh_l2g,
+                                   xt::pyarray<double>& dV_ref,
+                                   xt::pyarray<double>& u_trial_ref,
+                                   xt::pyarray<double>& u_grad_trial_ref,
+                                   xt::pyarray<double>& u_test_ref,
+                                   xt::pyarray<double>& u_grad_test_ref,
                                    //element boundary
-                                   xt::pyarray<double> mesh_trial_trace_ref,
-                                   xt::pyarray<double> mesh_grad_trial_trace_ref,
-                                   xt::pyarray<double> dS_ref,
-                                   xt::pyarray<double> u_trial_trace_ref,
-                                   xt::pyarray<double> u_grad_trial_trace_ref,
-                                   xt::pyarray<double> u_test_trace_ref,
-                                   xt::pyarray<double> u_grad_test_trace_ref,
-                                   xt::pyarray<double> normal_ref,
-                                   xt::pyarray<double> boundaryJac_ref,
+                                   xt::pyarray<double>& mesh_trial_trace_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                                   xt::pyarray<double>& dS_ref,
+                                   xt::pyarray<double>& u_trial_trace_ref,
+                                   xt::pyarray<double>& u_grad_trial_trace_ref,
+                                   xt::pyarray<double>& u_test_trace_ref,
+                                   xt::pyarray<double>& u_grad_test_trace_ref,
+                                   xt::pyarray<double>& normal_ref,
+                                   xt::pyarray<double>& boundaryJac_ref,
                                    //physics
                                    int nElements_global,
                                    //diffusion
@@ -165,52 +165,52 @@ namespace proteus
                                    double alphaBDF,
                                    int lag_shockCapturing,/*mwf not used yet*/
                                    double shockCapturingDiffusion,
-                                   xt::pyarray<int> u_l2g,
-                                   xt::pyarray<double> elementDiameter,
-                                   xt::pyarray<double> u_dof, xt::pyarray<double> u_dof_old,
-                                   xt::pyarray<double> velocity,
-                                   xt::pyarray<double> phi_ls, //level set variable
-                                   xt::pyarray<double> q_kappa, //kinetic energy
-                                   xt::pyarray<double> q_grad_kappa,
-                                   xt::pyarray<double> q_porosity,//VRANS
+                                   xt::pyarray<int>& u_l2g,
+                                   xt::pyarray<double>& elementDiameter,
+                                   xt::pyarray<double>& u_dof, xt::pyarray<double>& u_dof_old,
+                                   xt::pyarray<double>& velocity,
+                                   xt::pyarray<double>& phi_ls, //level set variable
+                                   xt::pyarray<double>& q_kappa, //kinetic energy
+                                   xt::pyarray<double>& q_grad_kappa,
+                                   xt::pyarray<double>& q_porosity,//VRANS
   //                             Argumentlist for sediment
                                    double sedFlag,
-                                   xt::pyarray<double> q_vos,
-                                   xt::pyarray<double> q_vos_gradc,
-                                   xt::pyarray<double> ebqe_q_vos,
-                                   xt::pyarray<double> ebqe_q_vos_gradc,
+                                   xt::pyarray<double>& q_vos,
+                                   xt::pyarray<double>& q_vos_gradc,
+                                   xt::pyarray<double>& ebqe_q_vos,
+                                   xt::pyarray<double>& ebqe_q_vos_gradc,
                                    double rho_f,
                                    double rho_s,
-                                   xt::pyarray<double> vs,
-                                   xt::pyarray<double> ebqe_vs,
-                                   xt::pyarray<double> g,
+                                   xt::pyarray<double>& vs,
+                                   xt::pyarray<double>& ebqe_vs,
+                                   xt::pyarray<double>& g,
                               //end sediment
                                    //velocity dof
-                                   xt::pyarray<double>  velocity_dof_u,
-                                   xt::pyarray<double>  velocity_dof_v,
-                                   xt::pyarray<double>  velocity_dof_w,
+                                   xt::pyarray<double>&  velocity_dof_u,
+                                   xt::pyarray<double>&  velocity_dof_v,
+                                   xt::pyarray<double>&  velocity_dof_w,
                                    //end velocity dof
-                                   xt::pyarray<double> q_m_betaBDF,
-                                   xt::pyarray<double> cfl,
-                                   xt::pyarray<double> q_numDiff_u_last,
-                                   xt::pyarray<double> ebqe_penalty_ext, //penalty
-                                   xt::pyarray<int> csrRowIndeces_u_u,xt::pyarray<int> csrColumnOffsets_u_u,
-                                   py::object globalJacobian,
+                                   xt::pyarray<double>& q_m_betaBDF,
+                                   xt::pyarray<double>& cfl,
+                                   xt::pyarray<double>& q_numDiff_u_last,
+                                   xt::pyarray<double>& ebqe_penalty_ext, //penalty
+                                   xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+                                   xt::pyarray<double>& globalJacobian,
                                    int nExteriorElementBoundaries_global,
-                                   xt::pyarray<int> exteriorElementBoundariesArray,
-                                   xt::pyarray<int> elementBoundaryElementsArray,
-                                   xt::pyarray<int> elementBoundaryLocalElementBoundariesArray,
-                                   xt::pyarray<double> ebqe_velocity_ext,
-                                   xt::pyarray<int> isDOFBoundary_u,
-                                   xt::pyarray<double> ebqe_bc_u_ext,
-                                   xt::pyarray<int> isAdvectiveFluxBoundary_u,
-                                   xt::pyarray<double> ebqe_bc_advectiveFlux_u_ext,
-                                   xt::pyarray<int> isDiffusiveFluxBoundary_u,
-                                   xt::pyarray<double> ebqe_bc_diffusiveFlux_u_ext,
-                                   xt::pyarray<int> csrColumnOffsets_eb_u_u,
-                                   xt::pyarray<double> ebqe_phi,double epsFact,
-                                   xt::pyarray<double> ebqe_kappa,//kinetic energy on boundary
-                                   xt::pyarray<double> ebqe_porosity)=0; //VRANS
+                                   xt::pyarray<int>& exteriorElementBoundariesArray,
+                                   xt::pyarray<int>& elementBoundaryElementsArray,
+                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                                   xt::pyarray<double>& ebqe_velocity_ext,
+                                   xt::pyarray<int>& isDOFBoundary_u,
+                                   xt::pyarray<double>& ebqe_bc_u_ext,
+                                   xt::pyarray<int>& isAdvectiveFluxBoundary_u,
+                                   xt::pyarray<double>& ebqe_bc_advectiveFlux_u_ext,
+                                   xt::pyarray<int>& isDiffusiveFluxBoundary_u,
+                                   xt::pyarray<double>& ebqe_bc_diffusiveFlux_u_ext,
+                                   xt::pyarray<int>& csrColumnOffsets_eb_u_u,
+                                   xt::pyarray<double>& ebqe_phi,double epsFact,
+                                   xt::pyarray<double>& ebqe_kappa,//kinetic energy on boundary
+                                   xt::pyarray<double>& ebqe_porosity)=0; //VRANS
   };
 
   template<class CompKernelType,
@@ -746,27 +746,27 @@ namespace proteus
     }
 
     void calculateResidual(//element
-                           xt::pyarray<double> mesh_trial_ref,
-                           xt::pyarray<double> mesh_grad_trial_ref,
-                           xt::pyarray<double> mesh_dof,
-                           xt::pyarray<double> mesh_velocity_dof,
+                           xt::pyarray<double>& mesh_trial_ref,
+                           xt::pyarray<double>& mesh_grad_trial_ref,
+                           xt::pyarray<double>& mesh_dof,
+                           xt::pyarray<double>& mesh_velocity_dof,
                            double MOVING_DOMAIN,
-                           xt::pyarray<int> mesh_l2g,
-                           xt::pyarray<double> dV_ref,
-                           xt::pyarray<double> u_trial_ref,
-                           xt::pyarray<double> u_grad_trial_ref,
-                           xt::pyarray<double> u_test_ref,
-                           xt::pyarray<double> u_grad_test_ref,
+                           xt::pyarray<int>& mesh_l2g,
+                           xt::pyarray<double>& dV_ref,
+                           xt::pyarray<double>& u_trial_ref,
+                           xt::pyarray<double>& u_grad_trial_ref,
+                           xt::pyarray<double>& u_test_ref,
+                           xt::pyarray<double>& u_grad_test_ref,
                            //element boundary
-                           xt::pyarray<double> mesh_trial_trace_ref,
-                           xt::pyarray<double> mesh_grad_trial_trace_ref,
-                           xt::pyarray<double> dS_ref,
-                           xt::pyarray<double> u_trial_trace_ref,
-                           xt::pyarray<double> u_grad_trial_trace_ref,
-                           xt::pyarray<double> u_test_trace_ref,
-                           xt::pyarray<double> u_grad_test_trace_ref,
-                           xt::pyarray<double> normal_ref,
-                           xt::pyarray<double> boundaryJac_ref,
+                           xt::pyarray<double>& mesh_trial_trace_ref,
+                           xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                           xt::pyarray<double>& dS_ref,
+                           xt::pyarray<double>& u_trial_trace_ref,
+                           xt::pyarray<double>& u_grad_trial_trace_ref,
+                           xt::pyarray<double>& u_test_trace_ref,
+                           xt::pyarray<double>& u_grad_test_trace_ref,
+                           xt::pyarray<double>& normal_ref,
+                           xt::pyarray<double>& boundaryJac_ref,
                            //physics
                            int nElements_global,
                            //diffusion terms
@@ -781,15 +781,15 @@ namespace proteus
                            double rho_1,
   //                             Argumentlist for sediment
                                    double sedFlag,
-                                   xt::pyarray<double> q_vos,
-                                   xt::pyarray<double> q_vos_gradc,
-                                   xt::pyarray<double> ebqe_q_vos,
-                                   xt::pyarray<double> ebqe_q_vos_gradc,
+                                   xt::pyarray<double>& q_vos,
+                                   xt::pyarray<double>& q_vos_gradc,
+                                   xt::pyarray<double>& ebqe_q_vos,
+                                   xt::pyarray<double>& ebqe_q_vos_gradc,
                                    double rho_f,
                                    double rho_s,
-                                   xt::pyarray<double> vs,
-                                   xt::pyarray<double> ebqe_vs,
-                                   xt::pyarray<double> g,
+                                   xt::pyarray<double>& vs,
+                                   xt::pyarray<double>& ebqe_vs,
+                                   xt::pyarray<double>& g,
                               //end sediment
                           int dissipation_model_flag,
                            //end diffusion
@@ -798,45 +798,45 @@ namespace proteus
                            int lag_shockCapturing, /*mwf not used yet*/
                            double shockCapturingDiffusion,
                            double sc_uref, double sc_alpha,
-                           xt::pyarray<int> u_l2g,
-                           xt::pyarray<double> elementDiameter,
-                           xt::pyarray<double> u_dof,xt::pyarray<double> u_dof_old,
-                           xt::pyarray<double> velocity,
-                           xt::pyarray<double> phi_ls, //level set variable
-                           xt::pyarray<double> q_kappa, //kinetic energy
-                           xt::pyarray<double> q_grad_kappa,
-                           xt::pyarray<double> q_porosity, //VRANS
+                           xt::pyarray<int>& u_l2g,
+                           xt::pyarray<double>& elementDiameter,
+                           xt::pyarray<double>& u_dof,xt::pyarray<double>& u_dof_old,
+                           xt::pyarray<double>& velocity,
+                           xt::pyarray<double>& phi_ls, //level set variable
+                           xt::pyarray<double>& q_kappa, //kinetic energy
+                           xt::pyarray<double>& q_grad_kappa,
+                           xt::pyarray<double>& q_porosity, //VRANS
                            //velocity dof
-                           xt::pyarray<double>  velocity_dof_u,
-                           xt::pyarray<double>  velocity_dof_v,
-                           xt::pyarray<double>  velocity_dof_w,
+                           xt::pyarray<double>&  velocity_dof_u,
+                           xt::pyarray<double>&  velocity_dof_v,
+                           xt::pyarray<double>&  velocity_dof_w,
                            //end velocity dof
-                           xt::pyarray<double> q_m,
-                           xt::pyarray<double> q_u,
-                           xt::pyarray<double> q_grad_u,
-                           xt::pyarray<double> q_m_betaBDF,
-                           xt::pyarray<double> cfl,
-                           xt::pyarray<double> q_numDiff_u,
-                           xt::pyarray<double> q_numDiff_u_last,
-                           xt::pyarray<double> ebqe_penalty_ext, //penalty
+                           xt::pyarray<double>& q_m,
+                           xt::pyarray<double>& q_u,
+                           xt::pyarray<double>& q_grad_u,
+                           xt::pyarray<double>& q_m_betaBDF,
+                           xt::pyarray<double>& cfl,
+                           xt::pyarray<double>& q_numDiff_u,
+                           xt::pyarray<double>& q_numDiff_u_last,
+                           xt::pyarray<double>& ebqe_penalty_ext, //penalty
                            int offset_u, int stride_u,
-                           xt::pyarray<double> globalResidual,
+                           xt::pyarray<double>& globalResidual,
                            int nExteriorElementBoundaries_global,
-                           xt::pyarray<int> exteriorElementBoundariesArray,
-                           xt::pyarray<int> elementBoundaryElementsArray,
-                           xt::pyarray<int> elementBoundaryLocalElementBoundariesArray,
-                           xt::pyarray<double> ebqe_velocity_ext,
-                           xt::pyarray<int> isDOFBoundary_u,
-                           xt::pyarray<double> ebqe_bc_u_ext,
-                           xt::pyarray<int> isAdvectiveFluxBoundary_u,
-                           xt::pyarray<double> ebqe_bc_advectiveFlux_u_ext,
-                           xt::pyarray<int> isDiffusiveFluxBoundary_u,
-                           xt::pyarray<double> ebqe_bc_diffusiveFlux_u_ext,
-                           xt::pyarray<double> ebqe_phi,double epsFact,
-                           xt::pyarray<double> ebqe_kappa, //kinetic energy on boundary
-                           xt::pyarray<double> ebqe_porosity, //VRANS
-                           xt::pyarray<double> ebqe_u,
-                           xt::pyarray<double> ebqe_flux)
+                           xt::pyarray<int>& exteriorElementBoundariesArray,
+                           xt::pyarray<int>& elementBoundaryElementsArray,
+                           xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                           xt::pyarray<double>& ebqe_velocity_ext,
+                           xt::pyarray<int>& isDOFBoundary_u,
+                           xt::pyarray<double>& ebqe_bc_u_ext,
+                           xt::pyarray<int>& isAdvectiveFluxBoundary_u,
+                           xt::pyarray<double>& ebqe_bc_advectiveFlux_u_ext,
+                           xt::pyarray<int>& isDiffusiveFluxBoundary_u,
+                           xt::pyarray<double>& ebqe_bc_diffusiveFlux_u_ext,
+                           xt::pyarray<double>& ebqe_phi,double epsFact,
+                           xt::pyarray<double>& ebqe_kappa, //kinetic energy on boundary
+                           xt::pyarray<double>& ebqe_porosity, //VRANS
+                           xt::pyarray<double>& ebqe_u,
+                           xt::pyarray<double>& ebqe_flux)
     {
       //cek should this be read in?
       double Ct_sge = 4.0;
@@ -1342,27 +1342,27 @@ namespace proteus
     }
 
     void calculateJacobian(//element
-                           xt::pyarray<double> mesh_trial_ref,
-                           xt::pyarray<double> mesh_grad_trial_ref,
-                           xt::pyarray<double> mesh_dof,
-                           xt::pyarray<double> mesh_velocity_dof,
+                           xt::pyarray<double>& mesh_trial_ref,
+                           xt::pyarray<double>& mesh_grad_trial_ref,
+                           xt::pyarray<double>& mesh_dof,
+                           xt::pyarray<double>& mesh_velocity_dof,
                            double MOVING_DOMAIN,
-                           xt::pyarray<int> mesh_l2g,
-                           xt::pyarray<double> dV_ref,
-                           xt::pyarray<double> u_trial_ref,
-                           xt::pyarray<double> u_grad_trial_ref,
-                           xt::pyarray<double> u_test_ref,
-                           xt::pyarray<double> u_grad_test_ref,
+                           xt::pyarray<int>& mesh_l2g,
+                           xt::pyarray<double>& dV_ref,
+                           xt::pyarray<double>& u_trial_ref,
+                           xt::pyarray<double>& u_grad_trial_ref,
+                           xt::pyarray<double>& u_test_ref,
+                           xt::pyarray<double>& u_grad_test_ref,
                            //element boundary
-                           xt::pyarray<double> mesh_trial_trace_ref,
-                           xt::pyarray<double> mesh_grad_trial_trace_ref,
-                           xt::pyarray<double> dS_ref,
-                           xt::pyarray<double> u_trial_trace_ref,
-                           xt::pyarray<double> u_grad_trial_trace_ref,
-                           xt::pyarray<double> u_test_trace_ref,
-                           xt::pyarray<double> u_grad_test_trace_ref,
-                           xt::pyarray<double> normal_ref,
-                           xt::pyarray<double> boundaryJac_ref,
+                           xt::pyarray<double>& mesh_trial_trace_ref,
+                           xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                           xt::pyarray<double>& dS_ref,
+                           xt::pyarray<double>& u_trial_trace_ref,
+                           xt::pyarray<double>& u_grad_trial_trace_ref,
+                           xt::pyarray<double>& u_test_trace_ref,
+                           xt::pyarray<double>& u_grad_test_trace_ref,
+                           xt::pyarray<double>& normal_ref,
+                           xt::pyarray<double>& boundaryJac_ref,
                            //physics
                            int nElements_global,
                            //diffusion terms
@@ -1381,56 +1381,52 @@ namespace proteus
                            double alphaBDF,
                            int lag_shockCapturing,/*mwf not used yet*/
                            double shockCapturingDiffusion,
-                           xt::pyarray<int> u_l2g,
-                           xt::pyarray<double> elementDiameter,
-                           xt::pyarray<double> u_dof, xt::pyarray<double> u_dof_old,
-                           xt::pyarray<double> velocity,
-                           xt::pyarray<double> phi_ls, //level set variable
-                           xt::pyarray<double> q_kappa, //kinetic energy
-                           xt::pyarray<double> q_grad_kappa,
-                           xt::pyarray<double> q_porosity,//VRANS
+                           xt::pyarray<int>& u_l2g,
+                           xt::pyarray<double>& elementDiameter,
+                           xt::pyarray<double>& u_dof, xt::pyarray<double>& u_dof_old,
+                           xt::pyarray<double>& velocity,
+                           xt::pyarray<double>& phi_ls, //level set variable
+                           xt::pyarray<double>& q_kappa, //kinetic energy
+                           xt::pyarray<double>& q_grad_kappa,
+                           xt::pyarray<double>& q_porosity,//VRANS
   //                             Argumentlist for sediment
                                    double sedFlag,
-                                   xt::pyarray<double> q_vos,
-                                   xt::pyarray<double> q_vos_gradc,
-                                   xt::pyarray<double> ebqe_q_vos,
-                                   xt::pyarray<double> ebqe_q_vos_gradc,
+                                   xt::pyarray<double>& q_vos,
+                                   xt::pyarray<double>& q_vos_gradc,
+                                   xt::pyarray<double>& ebqe_q_vos,
+                                   xt::pyarray<double>& ebqe_q_vos_gradc,
                                    double rho_f,
                                    double rho_s,
-                                   xt::pyarray<double> vs,
-                                   xt::pyarray<double> ebqe_vs,
-                                   xt::pyarray<double> g,
+                                   xt::pyarray<double>& vs,
+                                   xt::pyarray<double>& ebqe_vs,
+                                   xt::pyarray<double>& g,
                               //end sediment
-                           xt::pyarray<double>  velocity_dof_u,
-                           xt::pyarray<double>  velocity_dof_v,
-                           xt::pyarray<double>  velocity_dof_w,
+                           xt::pyarray<double>&  velocity_dof_u,
+                           xt::pyarray<double>&  velocity_dof_v,
+                           xt::pyarray<double>&  velocity_dof_w,
                            //end velocity dof
-                           xt::pyarray<double> q_m_betaBDF,
-                           xt::pyarray<double> cfl,
-                           xt::pyarray<double> q_numDiff_u_last,
-                           xt::pyarray<double> ebqe_penalty_ext, //penalty
-                           xt::pyarray<int> csrRowIndeces_u_u,xt::pyarray<int> csrColumnOffsets_u_u,
-                           py::object globalJacobian,
+                           xt::pyarray<double>& q_m_betaBDF,
+                           xt::pyarray<double>& cfl,
+                           xt::pyarray<double>& q_numDiff_u_last,
+                           xt::pyarray<double>& ebqe_penalty_ext, //penalty
+                           xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+                           xt::pyarray<double>& globalJacobian,
                            int nExteriorElementBoundaries_global,
-                           xt::pyarray<int> exteriorElementBoundariesArray,
-                           xt::pyarray<int> elementBoundaryElementsArray,
-                           xt::pyarray<int> elementBoundaryLocalElementBoundariesArray,
-                           xt::pyarray<double> ebqe_velocity_ext,
-                           xt::pyarray<int> isDOFBoundary_u,
-                           xt::pyarray<double> ebqe_bc_u_ext,
-                           xt::pyarray<int> isAdvectiveFluxBoundary_u,
-                           xt::pyarray<double> ebqe_bc_advectiveFlux_u_ext,
-                           xt::pyarray<int> isDiffusiveFluxBoundary_u,
-                           xt::pyarray<double> ebqe_bc_diffusiveFlux_u_ext,
-                           xt::pyarray<int> csrColumnOffsets_eb_u_u,
-                           xt::pyarray<double> ebqe_phi,double epsFact,
-                           xt::pyarray<double> ebqe_kappa, //kinetic energy on boundary
-                           xt::pyarray<double> ebqe_porosity)//VRANS
+                           xt::pyarray<int>& exteriorElementBoundariesArray,
+                           xt::pyarray<int>& elementBoundaryElementsArray,
+                           xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                           xt::pyarray<double>& ebqe_velocity_ext,
+                           xt::pyarray<int>& isDOFBoundary_u,
+                           xt::pyarray<double>& ebqe_bc_u_ext,
+                           xt::pyarray<int>& isAdvectiveFluxBoundary_u,
+                           xt::pyarray<double>& ebqe_bc_advectiveFlux_u_ext,
+                           xt::pyarray<int>& isDiffusiveFluxBoundary_u,
+                           xt::pyarray<double>& ebqe_bc_diffusiveFlux_u_ext,
+                           xt::pyarray<int>& csrColumnOffsets_eb_u_u,
+                           xt::pyarray<double>& ebqe_phi,double epsFact,
+                           xt::pyarray<double>& ebqe_kappa, //kinetic energy on boundary
+                           xt::pyarray<double>& ebqe_porosity)//VRANS
     {
-      py::tuple csr_representation = globalJacobian.attr("getCSRrepresentation")();
-      py::object globalJacobian_o = csr_representation[2];
-      xt::pyarray<double> globalJacobian_a = globalJacobian_o;
-
       double Ct_sge = 4.0;
 
       //
@@ -1667,7 +1663,7 @@ namespace proteus
               for (int j=0;j<nDOF_trial_element;j++)
                 {
                   int eN_i_j = eN_i*nDOF_trial_element+j;
-                  globalJacobian_a[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+                  globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
                 }//j
             }//i
         }//elements
@@ -1923,7 +1919,7 @@ namespace proteus
                     {
                       register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
 
-                      globalJacobian_a[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i]
+                      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i]
                         + diffusiveFluxJacobian_u_u[j]*u_test_dS[i];
                     }//j
                 }//i
