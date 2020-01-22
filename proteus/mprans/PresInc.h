@@ -112,7 +112,7 @@ namespace proteus
                                    xt::pyarray<double> ebqe_rho_f,
                                    xt::pyarray<int> csrRowIndeces_u_u,
                                    xt::pyarray<int> csrColumnOffsets_u_u,
-                                   py::object globalJacobian,
+                                   xt::pyarray<double> globalJacobian,
                                    int nExteriorElementBoundaries_global,
                                    xt::pyarray<int> exteriorElementBoundariesArray,
                                    xt::pyarray<int> elementBoundaryElementsArray,
