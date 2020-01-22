@@ -39,13 +39,24 @@ methods, both of which are described in more detail below
 Obtaining and Installing Proteus
 ================================
 
-For learning and experimenting there is an `Docker image <https://cloud.docker.com/u/erdc/repository/docker/erdc/proteus>`_.
+For learning and experimenting there is a `Docker image <https://cloud.docker.com/u/erdc/repository/docker/erdc/proteus>`_.
 
+Proteus can be installed through conda with::
+
+  % conda install proteus -c conda-forge
 
 Proteus is available as source from our public `GitHub
-<https://github.com/erdc/proteus>`_ repository.  If you already
-have compilers (C,C++, and Fortran!) and Git installed on your system,
-you can install Proteus with the following commands.::
+<https://github.com/erdc/proteus>`_ repository. 
+For a development installation, the installation of dependencies and the compilation of Proteus from source is done with::
+
+  % git clone https://github.com/erdc/proteus
+  % cd proteus
+  % conda env create -f environment-dev.yml
+  % conda activate proteus-dev
+  % pip install -v -e .
+
+Alternatively, if you already have compilers (C,C++, and Fortran!) and Git installed on your system,
+you can install Proteus through hashdist with the following commands::
 
   % git clone https://github.com/erdc/proteus
   % cd proteus
