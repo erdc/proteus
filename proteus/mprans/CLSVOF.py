@@ -829,7 +829,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.offset[0],self.stride[0],
             residual,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            jacobian)
+            jacobian.getCSRrepresentation()[2])
 
     def updateVelocityFieldAsFunction(self):
         X = {0:self.q[('x')][:,:,0],
@@ -1005,7 +1005,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             limited_solution,
                             self.rowptr,  # Row indices for Sparsity Pattern
                             self.colind,  # Column indices for Sparsity Pattern
-                            MassMatrix)
+                            MassMatrix.getCSRrepresentation()[2])
 
     def getNormalReconstruction(self,weighted_mass_matrix):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,weighted_mass_matrix)
@@ -1029,7 +1029,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.rhs_qy,
             self.rhs_qz,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            weighted_mass_matrix)
+            weighted_mass_matrix.getCSRrepresentation()[2])
 
     def getRhsL2Proj(self):
         self.clsvof.calculateRhsL2Proj(
@@ -1283,7 +1283,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_v,
             self.q[('cfl',0)],
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
