@@ -630,11 +630,13 @@ EXTENSIONS_TO_BUILD = [
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
-    Extension("mprans.cNCLS",["proteus/mprans/cNCLS.pyx"],
-              depends=["proteus/mprans/NCLS.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
-              language="c++",
-              extra_compile_args=PROTEUS_OPT,
-              include_dirs=[numpy.get_include(), 'proteus']),
+    Extension(
+        'mprans.cNCLS',
+        ['proteus/mprans/NCLS.cpp'],
+        depends=["proteus/mprans/NCLS.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++'),
     Extension("mprans.cMCorr",["proteus/mprans/cMCorr.pyx"],
               depends=["proteus/mprans/MCorr.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"] + [
                   "proteus/equivalent_polynomials.h",

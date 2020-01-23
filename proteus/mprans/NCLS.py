@@ -4,6 +4,10 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cNCLS import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 
 class SubgridError(proteus.SubgridError.SGE_base):
@@ -1360,7 +1364,7 @@ class LevelModel(OneLevelTransport):
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.SmoothingMatrix,
+            self.SmoothingMatrix.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
@@ -1423,7 +1427,7 @@ class LevelModel(OneLevelTransport):
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
