@@ -209,18 +209,7 @@ namespace proteus
                                        xt::pyarray<double>& u_dof,
                                        xt::pyarray<double>& u0_dof,
                                        xt::pyarray<double>& u_exact,
-                                       int offset_u, int stride_u,
-                                       xt::pyarray<double>& global_I_err,
-                                       xt::pyarray<double>& global_sI_err,
-                                       xt::pyarray<double>& global_V,
-                                       xt::pyarray<double>& global_V0,
-                                       xt::pyarray<double>& global_sV,
-                                       xt::pyarray<double>& global_sV0,
-                                       xt::pyarray<double>& global_D_err,
-				       xt::pyarray<double>& global_L2_err,
-				       xt::pyarray<double>& global_L2Banded_err,
-				       xt::pyarray<double>& global_area_band,
-				       xt::pyarray<double>& global_sH_L2_err)=0;
+                                       int offset_u, int stride_u)=0;
     virtual py::tuple calculateMetricsAtETS( //ETS=Every Time Step
                                        double dt,
                                        xt::pyarray<double>& mesh_trial_ref,
@@ -248,12 +237,7 @@ namespace proteus
                                        int offset_u, int stride_u,
                                        int numDOFs,
                                        xt::pyarray<double>& R_vector,
-                                       xt::pyarray<double>& sR_vector,
-                                       xt::pyarray<double>& global_V,
-                                       xt::pyarray<double>& global_V0,
-                                       xt::pyarray<double>& global_sV,
-                                       xt::pyarray<double>& global_sV0,
-                                       xt::pyarray<double>& global_D_err)=0;
+                                       xt::pyarray<double>& sR_vector)=0;
     virtual void normalReconstruction(xt::pyarray<double>& mesh_trial_ref,
                                       xt::pyarray<double>& mesh_grad_trial_ref,
                                       xt::pyarray<double>& mesh_dof,
