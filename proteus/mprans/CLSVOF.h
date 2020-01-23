@@ -1769,12 +1769,7 @@ namespace proteus
                                  int offset_u, int stride_u,
                                  int numDOFs,
                                  xt::pyarray<double>& R_vector,
-                                 xt::pyarray<double>& sR_vector,
-                                 xt::pyarray<double>& global_V,
-                                 xt::pyarray<double>& global_V0,
-                                 xt::pyarray<double>& global_sV,
-                                 xt::pyarray<double>& global_sV0,
-                                 xt::pyarray<double>& global_D_err)
+                                 xt::pyarray<double>& sR_vector)
       {
         double global_V = 0.0;
         double global_V0 = 0.0;
