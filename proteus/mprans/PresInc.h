@@ -524,12 +524,10 @@ namespace proteus
 	  //
 	  //load element into global residual and save element residual
 	  //
-          printf("toto\n");
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
 	      register int eN_i=eN*nDOF_test_element+i;          
 	      globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]]+=elementResidual_u[i];
-              printf("%f\n", globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]]);
 	    }//i
 	}//elements
       //
@@ -688,12 +686,10 @@ namespace proteus
           //
           //update the element and global residual storage
           //
-          printf("toto\n");
           for (int i=0;i<nDOF_test_element;i++)
             {
               int eN_i = eN*nDOF_test_element+i;
               globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]] += elementResidual_u[i];
-              printf("%f\n", globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]]);
             }//i
         }//ebNE
 

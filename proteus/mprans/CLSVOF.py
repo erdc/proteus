@@ -4,6 +4,10 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cCLSVOF import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -835,7 +839,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.offset[0],self.stride[0],
             residual,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            jacobian)
+            jacobian.getCSRrepresentation()[2])
 
     def updateVelocityFieldAsFunction(self):
         X = {0:self.q[('x')][:,:,0],
@@ -902,7 +906,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              #physics
              self.mesh.nElements_global,
              self.mesh.nElements_owned,
-             self.coefficients.useMetrics,
+             int(self.coefficients.useMetrics),
              self.coefficients.q_vos,
              self.u[0].femSpace.dofMap.l2g,
              self.mesh.elementDiametersArray,
@@ -1011,7 +1015,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             limited_solution,
                             self.rowptr,  # Row indices for Sparsity Pattern
                             self.colind,  # Column indices for Sparsity Pattern
-                            MassMatrix)
+                            MassMatrix.getCSRrepresentation()[2])
 
     def getNormalReconstruction(self,weighted_mass_matrix):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,weighted_mass_matrix)
@@ -1035,7 +1039,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.rhs_qy,
             self.rhs_qz,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            weighted_mass_matrix)
+            weighted_mass_matrix.getCSRrepresentation()[2])
 
     def getRhsL2Proj(self):
         self.clsvof.calculateRhsL2Proj(
@@ -1289,7 +1293,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_v,
             self.q[('cfl',0)],
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
