@@ -306,26 +306,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  FCT=True,
                  outputQuantDOFs=False,
                  #NULLSPACE INFO
-                 nullSpace='NoNullSpace'):
+                 nullSpace='NoNullSpace',
+                 initialize=True):
 
         self.variableNames = ['vof']
-        nc = 1
-        mass = {0: {0: 'linear'}}
-        advection = {0: {0: 'linear'}}
-        hamiltonian = {}
-        diffusion = {}
-        potential = {}
-        reaction = {}
-        TC_base.__init__(self,
-                         nc,
-                         mass,
-                         advection,
-                         diffusion,
-                         potential,
-                         reaction,
-                         hamiltonian,
-                         self.variableNames,
-                         movingDomain=movingDomain)        
         self.LS_modelIndex = LS_model
         self.V_model = V_model
         self.RD_modelIndex = RD_model
@@ -357,6 +341,27 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.porosity_dof = None
         self.flowCoefficients = None
         self.set_vos = set_vos
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        nc = 1
+        mass = {0: {0: 'linear'}}
+        advection = {0: {0: 'linear'}}
+        hamiltonian = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        TC_base.__init__(self,
+                         nc,
+                         mass,
+                         advection,
+                         diffusion,
+                         potential,
+                         reaction,
+                         hamiltonian,
+                         self.variableNames,
+                         movingDomain=self.movingDomain)        
 
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h

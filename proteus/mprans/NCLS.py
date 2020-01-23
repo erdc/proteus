@@ -269,7 +269,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
                  # NULLSPACE Info
-                 nullSpace='NoNullSpace'):
+                 nullSpace='NoNullSpace',
+                 initialize=True):
 
         self.PURE_BDF=PURE_BDF
         self.DO_SMOOTHING = DO_SMOOTHING
@@ -292,6 +293,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.useMetrics = useMetrics
         self.epsFact = epsFact
         self.variableNames = ['phi']
+        self.flowModelIndex = V_model
+        self.modelIndex = ME_model
+        self.RD_modelIndex = RD_model
+        self.checkMass = checkMass
+        self.sc_uref = sc_uref
+        self.sc_beta = sc_beta
+        self.waterline_interval = waterline_interval
+        self.nullSpace = nullSpace
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
         nc = 1
         mass = {0: {0: 'linear'}}
         hamiltonian = {0: {0: 'linear'}}
@@ -309,14 +322,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          hamiltonian,
                          ['phi'],
                          movingDomain=movingDomain)
-        self.flowModelIndex = V_model
-        self.modelIndex = ME_model
-        self.RD_modelIndex = RD_model
-        self.checkMass = checkMass
-        self.sc_uref = sc_uref
-        self.sc_beta = sc_beta
-        self.waterline_interval = waterline_interval
-        self.nullSpace = nullSpace
 
     def attachModels(self, modelList):
         # the level set model
@@ -458,7 +463,8 @@ class LevelModel(OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
                  movingDomain=False,
-                 bdyNullSpace=False):
+                 bdyNullSpace=False,
+                 initialize=True):
 
         self.L2_norm_redistancing = 0.
         self.redistancing_L2_norm_history = []
@@ -484,9 +490,6 @@ class LevelModel(OneLevelTransport):
         self.matType = matType
         # mwf try to reuse test and trial information across components if spaces are the same
         self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
-        if self.reuse_test_trial_quadrature:
-            for ci in range(1, coefficients.nc):
-                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         self.u_dof_old = None
         self.free_u = None
         # Simplicial Mesh
@@ -504,6 +507,15 @@ class LevelModel(OneLevelTransport):
         self.fluxBoundaryConditions = fluxBoundaryConditionsDict
         self.advectiveFluxBoundaryConditionsSetterDict = advectiveFluxBoundaryConditionsSetterDict
         self.diffusiveFluxBoundaryConditionsSetterDictDict = diffusiveFluxBoundaryConditionsSetterDictDict
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        coefficients = self.coefficients
+        # mwf try to reuse test and trial information across components if spaces are the same
+        if self.reuse_test_trial_quadrature:
+            for ci in range(1, coefficients.nc):
+                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         # determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         # cek come back

@@ -49,7 +49,8 @@ class Coefficients(TC_base):
                  modelIndex=None,
                  fluidModelIndex=None,
                  pressureIncrementModelIndex=None,
-                 useRotationalForm=False):
+                 useRotationalForm=False,
+                 initialize=True):
         """Construct a coefficients object
 
         :param pressureIncrementModelIndex: The index into the model list
@@ -62,9 +63,13 @@ class Coefficients(TC_base):
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
         self.pressureIncrementModelIndex = pressureIncrementModelIndex
-        if pressureIncrementModelIndex is None:
-            assert useRotationalForm == False, "The rotational form must be de-activated if there is no model for press increment"
         self.useRotationalForm = useRotationalForm
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        if self.pressureIncrementModelIndex is None:
+            assert useRotationalForm == False, "The rotational form must be de-activated if there is no model for press increment"
 
     def attachModels(self, modelList):
         self.model = modelList[self.modelIndex]
