@@ -900,7 +900,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              #physics
              self.mesh.nElements_global,
              self.mesh.nElements_owned,
-             self.coefficients.useMetrics,
+             int(self.coefficients.useMetrics),
              self.coefficients.q_vos,
              self.u[0].femSpace.dofMap.l2g,
              self.mesh.elementDiametersArray,

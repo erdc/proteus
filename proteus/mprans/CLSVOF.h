@@ -188,7 +188,7 @@ namespace proteus
 				   int preRedistancingStage,
                                    double norm_factor_lagged,
 				   double alpha)=0;
-    virtual py::tuple calculateMetricsAtEOS( //EOS=End Of Simulation
+    virtual std::tuple<double, double, double, double, double, double, double, double, double, double, double> calculateMetricsAtEOS( //EOS=End Of Simulation
                                        xt::pyarray<double>& mesh_trial_ref,
                                        xt::pyarray<double>& mesh_grad_trial_ref,
                                        xt::pyarray<double>& mesh_dof,
@@ -210,7 +210,7 @@ namespace proteus
                                        xt::pyarray<double>& u0_dof,
                                        xt::pyarray<double>& u_exact,
                                        int offset_u, int stride_u)=0;
-    virtual py::tuple calculateMetricsAtETS( //ETS=Every Time Step
+    virtual std::tuple<double, double, double, double, double> calculateMetricsAtETS( //ETS=Every Time Step
                                        double dt,
                                        xt::pyarray<double>& mesh_trial_ref,
                                        xt::pyarray<double>& mesh_grad_trial_ref,
@@ -1582,7 +1582,7 @@ namespace proteus
 	  }//ebNE
       }//computeJacobian for MCorr with CLSVOF
 
-      py::tuple calculateMetricsAtEOS( //EOS=End Of Simulation
+      std::tuple<double, double, double, double, double, double, double, double, double, double, double> calculateMetricsAtEOS( //EOS=End Of Simulation
                                  xt::pyarray<double>& mesh_trial_ref,
                                  xt::pyarray<double>& mesh_grad_trial_ref,
                                  xt::pyarray<double>& mesh_dof,
@@ -1722,11 +1722,10 @@ namespace proteus
           }
         global_D_err *= 0.5;
 
-        py::tuple ret = py::make_tuple(global_I_err, global_sI_err, global_V, global_V0, global_sV, global_sV0, global_D_err, global_L2_err, global_L2Banded_err, global_area_band, global_sH_L2_err);
-        return ret;
+        return std::tuple<double, double, double, double, double, double, double, double, double, double, double>(global_I_err, global_sI_err, global_V, global_V0, global_sV, global_sV0, global_D_err, global_L2_err, global_L2Banded_err, global_area_band, global_sH_L2_err);
       }
 
-      py::tuple calculateMetricsAtETS( // ETS=Every Time Step
+      std::tuple<double, double, double, double, double> calculateMetricsAtETS( // ETS=Every Time Step
                                  double dt,
                                  xt::pyarray<double>& mesh_trial_ref,
                                  xt::pyarray<double>& mesh_grad_trial_ref,
@@ -1883,8 +1882,7 @@ namespace proteus
           }//elements
         global_D_err *= 0.5;
 
-        py::tuple ret = py::make_tuple(global_V, global_V0, global_sV, global_sV0, global_D_err);
-        return ret;
+        return std::tuple<double, double, double, double, double>(global_V, global_V0, global_sV, global_sV0, global_D_err);
       }
 
       void normalReconstruction(//element
