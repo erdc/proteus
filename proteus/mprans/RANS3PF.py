@@ -333,6 +333,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ball_radius = ball_radius
         self.ball_velocity = ball_velocity
         self.ball_angular_velocity = ball_angular_velocity
+        self.forceTerms = None
         if initialize:
             self.initialize()
 

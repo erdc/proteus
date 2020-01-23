@@ -248,9 +248,9 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=True)
 m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.CoefficientsOptions['disc_ICs']=False if IC_type==0 else True
-m.rans3p.p.CoefficientsOptions['forceStrongDirichlet']=True
-m.rans3p.p.CoefficientsOptions['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+m.clsvof.p.coefficients['disc_ICs']=False if IC_type==0 else True
+m.rans3p.p.coefficients['forceStrongDirichlet']=True
+m.rans3p.p.coefficients['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
 if opts.test_case==1:
     physical_parameters=myTpFlowProblem.Parameters.physical
     physical_parameters['densityA'] = 1000.0

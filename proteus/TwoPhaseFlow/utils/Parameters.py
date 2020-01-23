@@ -538,7 +538,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
             initialize=False,
             useMetrics=1.,
             epsFact_density=epsFact,
-            particle_epsFact=epsFact,
+            particle_epsFact=3.,
             eb_penalty_constant = 100.0,
             ARTIFICIAL_VISCOSITY=3,
             INT_BY_PARTS_PRESSURE=1,
@@ -586,8 +586,6 @@ class ParametersModelRANS3PF(ParametersModelBase):
         # MODEL INDEX
         VOF_model=mparams.vof.index
         LS_model=mparams.ncls.index
-        RD_model=mparams.rdls.index
-        MCORR_model=mparams.mcorr.index
         SED_model=None
         VOS_model=None
         CLSVOF_model = mparams.clsvof.index
@@ -598,7 +596,8 @@ class ParametersModelRANS3PF(ParametersModelBase):
         DISS_model = mparams.dissipation.index
         # COEFFICIENTS
         coeffs = self.p.coefficients
-        if self.p.forceTerms is not None:
+        if coeffs.forceTerms is not None:
+            self.p.forceTerms = coeffs.forceTerms
             coeffs.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY = 1
         coeffs.nd = nd
         coeffs.sigma = pparams.surf_tension_coeff
@@ -610,10 +609,8 @@ class ParametersModelRANS3PF(ParametersModelBase):
         coeffs.nd = nd
         coeffs.ME_model = V_model
         coeffs.VOF_model = VOF_model
-        coeffs.CLSVOF_model = VOF_model
+        coeffs.CLSVOF_model = CLSVOF_model
         coeffs.LS_model = LS_model
-        coeffs.RD_model = RD_model
-        coeffs.MCORR_model = MCORR_model
         coeffs.SED_model = SED_model
         coeffs.VOS_model = VOS_model
         coeffs.PRESSURE_model = PRESSURE_model
@@ -1228,7 +1225,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
         mparams = self._Problem.Parameters.Models
-        CLSVOF_model = mparams.clsvof.index
+        CLSVOF_model = self.index
         V_model = mparams.rans2p.index
         if V_model is None:
             V_model = mparams.rans3p.index
