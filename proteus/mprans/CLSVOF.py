@@ -4,6 +4,10 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cCLSVOF import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,vt,getPointwiseBoundaryConditions,
