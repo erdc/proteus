@@ -725,7 +725,7 @@ class LevelModel(OneLevelTransport):
         # calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag = 0
-        self.ncls3p = cNCLS3P.NCLS3P(
+        self.ncls3p = cNCLS3P.newNCLS3P(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -939,6 +939,7 @@ class LevelModel(OneLevelTransport):
         # pdb.set_trace()
         # cNCLS3P.calculateJacobian(self.mesh.nElements_global,
 
+        (rowptr, colind, globalJacobian) = jacobian.getCSRrepresentation()
         self.ncls3p.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -975,7 +976,7 @@ class LevelModel(OneLevelTransport):
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            globalJacobian,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
