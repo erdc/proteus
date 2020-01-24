@@ -3510,7 +3510,7 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                        self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                        self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
                                                        self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
-                                                       self.TPScaledAdvectionOperator)
+                                                       self.TPScaledAdvectionOperator.getCSRrepresentation()[2])
 
     def updateTPInvScaledLaplaceOperator(self):
         """ Create a discrete two phase laplace operator matrix. """
@@ -3549,7 +3549,7 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                               self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                               self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
                                                               self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
-                                                              self.TPInvScaledLaplaceOperator)
+                                                              self.TPInvScaledLaplaceOperator.getCSRrepresentation()[2])
 
     def updateTwoPhaseMassOperator_rho(self,
                                        density_scaling = True,
@@ -3609,7 +3609,7 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                         self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                         self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
                                                         self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
-                                                        self.TPScaledMassOperator)
+                                                        self.TPScaledMassOperator.getCSRrepresentation()[2])
 
     def updateTwoPhaseInvScaledMassOperator(self,
                                             numerical_viscosity = True,
@@ -3660,7 +3660,7 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                         self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
                                                         self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
                                                         self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
-                                                        self.TPInvScaledMassOperator)
+                                                        self.TPInvScaledMassOperator.getCSRrepresentation()[2])
 
 class OperatorConstructor_oneLevel(OperatorConstructor):
     """
