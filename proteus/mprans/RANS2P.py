@@ -361,7 +361,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         2: {1: 'nonlinear', 2: 'nonlinear'}}
             hamiltonian = {1: {0: 'linear'},
                            2: {0: 'linear'}}
-            self.vectorComponents = [1, 2]
             TC_base.__init__(self,
                              3,
                              mass,
@@ -374,6 +373,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=self.sd,
                              movingDomain=self.movingDomain)
+            self.vectorComponents = [1, 2]
+            self.vectorName = "velocity"
         elif self.nd == 3:
             variableNames = ['p', 'u', 'v', 'w']
             mass = {1: {1: 'linear'},
@@ -417,7 +418,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             hamiltonian = {1: {0: 'linear'},
                            2: {0: 'linear'},
                            3: {0: 'linear'}}
-            self.vectorComponents = [1, 2, 3]
             TC_base.__init__(self,
                              4,
                              mass,
@@ -430,6 +430,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=self.sd,
                              movingDomain=self.movingDomain)
+            self.vectorComponents = [1, 2, 3]
+            self.vectorName = "velocity"
 
     def attachModels(self, modelList):
         # level set
