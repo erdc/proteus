@@ -321,7 +321,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          reaction,
                          hamiltonian,
                          ['phi'],
-                         movingDomain=movingDomain)
+                         movingDomain=self.movingDomain)
 
     def attachModels(self, modelList):
         # the level set model

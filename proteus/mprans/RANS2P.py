@@ -321,7 +321,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if self.ball_angular_acceleration is None:
                 self.ball_angular_acceleration = numpy.zeros((self.nParticles,3),'d')
             if self.ball_density is None:
-                self.ball_density = rho_0*numpy.ones((self.nParticles,1),'d')
+                self.ball_density = self.rho_0*numpy.ones((self.nParticles,1),'d')
             if self.particle_centroids is None:
                 self.particle_centroids = 1e10*numpy.zeros((self.nParticles,3),'d')
         if self.killNonlinearDrag:

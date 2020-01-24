@@ -384,9 +384,9 @@ class ParametersModelRANS2P(ParametersModelBase):
         coeffs.Closure_0_model = K_model
         coeffs.Closure_1_model = DISS_model
         coeffs.turbulenceClosureModel = pparams.useRANS
-        coeffs.porosityTypes = porosityTypes,
-        coeffs.dragAlphaTypes = dragAlphaTypes,
-        coeffs.dragBetaTypes = dragBetaTypes,
+        coeffs.porosityTypes = porosityTypes
+        coeffs.dragAlphaTypes = dragAlphaTypes
+        coeffs.dragBetaTypes = dragBetaTypes
         if coeffs.barycenters is None:
             coeffs.barycenters = domain.barycenters
         coeffs.initialize()
