@@ -662,7 +662,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
         else:
             self.elementDiameter = self.mesh.elementDiametersArray
-        self.mcorr3p = cMCorr3P.MCorr3P(
+        self.mcorr3p = cMCorr3P.newMCorr3P(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -772,7 +772,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi,
             self.mesh.nElements_global,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.stiffness_matrix,
+            self.stiffness_matrix.getCSRrepresentation()[2],
             self.coefficients.useMetrics,
             self.coefficients.epsFactDiffusion,
             self.elementDiameter,  
@@ -818,7 +818,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_H_vof,
             self.coefficients.q_vos,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             # FAST ASSEMBLY
             len(self.u[0].dof),
             self.rowptr,

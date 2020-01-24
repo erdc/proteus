@@ -119,7 +119,7 @@ namespace proteus
 					       xt::pyarray<double>& ebqe_flux,
 					       // TAYLOR GALERKIN
 					       int stage,
-					       double * uTilde_dof,
+					       xt::pyarray<double>& uTilde_dof,
 					       // PARAMETERS FOR ENTROPY VISCOSITY
 					       double cE,
 					       double cMax,
@@ -291,7 +291,7 @@ namespace proteus
 					    xt::pyarray<double>& ebqe_flux,
 					    //EXPLICIT METHODS
 					    int stage,
-					    double * uTilde_dof,
+					    xt::pyarray<double>& uTilde_dof,
 					    // PARAMETERS FOR EDGE BASED STABILIZATION
 					    double cE,
 					    double cMax,
@@ -580,7 +580,7 @@ namespace proteus
 					 xt::pyarray<double>& ebqe_flux,
 					 //EXPLICIT METHODS
 					 int stage,
-					 double * uTilde_dof,
+					 xt::pyarray<double>& uTilde_dof,
 					 // PARAMETERS FOR EDGE BASED STABILIZATION
 					 double cE,
 					 double cMax,
@@ -725,7 +725,7 @@ namespace proteus
 			       &u_l2g[eN_nDOF_trial_element],
 			       u_grad_trial,
 			       grad_u_old);
-		ck.gradFromDOF(uTilde_dof,
+		ck.gradFromDOF(uTilde_dof.data(),
 			       &u_l2g[eN_nDOF_trial_element],
 			       u_grad_trial,
 			       grad_uTilde);
@@ -1804,7 +1804,7 @@ namespace proteus
 				      xt::pyarray<double>& ebqe_flux,
 				      //EXPLICIT METHODS
 				      int stage,
-				      double * uTilde_dof,
+				      xt::pyarray<double>& uTilde_dof,
 				      // PARAMETERS FOR EDGE BASED STABILIZATION
 				      double cE,
 				      double cMax,
