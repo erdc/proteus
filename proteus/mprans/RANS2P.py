@@ -14,6 +14,10 @@ from proteus import Profiling
 from proteus import LinearAlgebraTools as LAT
 from proteus.Comm import (globalSum,
                           globalMax)
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class SubgridError(proteus.SubgridError.SGE_base):
     """
@@ -1899,7 +1903,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.csrRowIndeces[(3, 1)], self.csrColumnOffsets[(3, 1)],
                                       self.csrRowIndeces[(3, 2)], self.csrColumnOffsets[(3, 2)],
                                       self.csrRowIndeces[(3, 3)], self.csrColumnOffsets[(3, 3)],
-                                      jacobian,
+                                      jacobian.getCSRrepresentation()[2],
                                       self.mesh.nExteriorElementBoundaries_global,
                                       self.mesh.exteriorElementBoundariesArray,
                                       self.mesh.elementBoundaryElementsArray,
