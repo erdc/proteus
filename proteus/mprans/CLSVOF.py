@@ -99,8 +99,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          hamiltonian,
                          self.variableNames,
                          movingDomain=self.movingDomain)
-        with open('CLSVOF.txt', 'w') as ff:
-            ff.write(str(self.__dict__))
 
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h

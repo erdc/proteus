@@ -304,26 +304,25 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.epsFact_density = self.epsFact
         if self.particle_epsFact is None:
             self.particle_epsFact = self.epsFact
-        if self.nParticles > 0:
-            self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
-            self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
-            self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
-            if self.ball_center is None:
-                self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
-            if self.ball_radius is None:
-                self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
-            if self.ball_velocity is None:
-                self.ball_velocity = numpy.zeros((self.nParticles,3),'d')
-            if self.ball_angular_velocity is None:
-                self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
-            if self.ball_center_acceleration is None:
-                self.ball_center_acceleration = numpy.zeros((self.nParticles,3),'d')
-            if self.ball_angular_acceleration is None:
-                self.ball_angular_acceleration = numpy.zeros((self.nParticles,3),'d')
-            if self.ball_density is None:
-                self.ball_density = self.rho_0*numpy.ones((self.nParticles,1),'d')
-            if self.particle_centroids is None:
-                self.particle_centroids = 1e10*numpy.zeros((self.nParticles,3),'d')
+        self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
+        self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
+        self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
+        if self.ball_center is None:
+            self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
+        if self.ball_radius is None:
+            self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
+        if self.ball_velocity is None:
+            self.ball_velocity = numpy.zeros((self.nParticles,3),'d')
+        if self.ball_angular_velocity is None:
+            self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
+        if self.ball_center_acceleration is None:
+            self.ball_center_acceleration = numpy.zeros((self.nParticles,3),'d')
+        if self.ball_angular_acceleration is None:
+            self.ball_angular_acceleration = numpy.zeros((self.nParticles,3),'d')
+        if self.ball_density is None:
+            self.ball_density = self.rho_0*numpy.ones((self.nParticles,1),'d')
+        if self.particle_centroids is None:
+            self.particle_centroids = 1e10*numpy.zeros((self.nParticles,3),'d')
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
         mass = {}
@@ -362,6 +361,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         2: {1: 'nonlinear', 2: 'nonlinear'}}
             hamiltonian = {1: {0: 'linear'},
                            2: {0: 'linear'}}
+            self.vectorComponents = [1, 2]
             TC_base.__init__(self,
                              3,
                              mass,
@@ -374,7 +374,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=self.sd,
                              movingDomain=self.movingDomain)
-            self.vectorComponents = [1, 2]
         elif self.nd == 3:
             variableNames = ['p', 'u', 'v', 'w']
             mass = {1: {1: 'linear'},
@@ -418,6 +417,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             hamiltonian = {1: {0: 'linear'},
                            2: {0: 'linear'},
                            3: {0: 'linear'}}
+            self.vectorComponents = [1, 2, 3]
             TC_base.__init__(self,
                              4,
                              mass,
@@ -430,7 +430,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=self.sd,
                              movingDomain=self.movingDomain)
-            self.vectorComponents = [1, 2, 3]
 
     def attachModels(self, modelList):
         # level set

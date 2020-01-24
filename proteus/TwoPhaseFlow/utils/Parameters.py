@@ -554,8 +554,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         # LEVEL MODEL
         self.p.LevelModelType = RANS3PF.LevelModel
         # TIME DISCRETIZATION
-        # self.n.timeOrder = 2
-        self.timeDiscretization = 'vdbf'
+        self.timeDiscretization = 'vbdf'
         # NUMERICAL FLUX
         self.n.numericalFluxType = RANS3PF.NumericalFlux
         # LINEAR ALGEBRA

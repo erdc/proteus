@@ -69,7 +69,7 @@ class Coefficients(TC_base):
 
     def initialize(self):
         if self.pressureIncrementModelIndex is None:
-            assert useRotationalForm == False, "The rotational form must be de-activated if there is no model for press increment"
+            assert self.useRotationalForm == False, "The rotational form must be de-activated if there is no model for press increment"
 
     def attachModels(self, modelList):
         self.model = modelList[self.modelIndex]
