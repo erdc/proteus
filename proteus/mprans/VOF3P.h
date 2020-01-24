@@ -6,6 +6,8 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#include "xtensor-python/pyarray.hpp"
+
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define IS_BETAij_ONE 0
 #define GLOBAL_FCT 0
@@ -49,27 +51,27 @@ namespace proteus
     virtual ~cppVOF3P_base(){}
     virtual void calculateResidualElementBased(//element
 					       double dt,
-					       double* mesh_trial_ref,
-					       double* mesh_grad_trial_ref,
-					       double* mesh_dof,
-					       double* mesh_velocity_dof,
+					       xt::pyarray<double>& mesh_trial_ref,
+					       xt::pyarray<double>& mesh_grad_trial_ref,
+					       xt::pyarray<double>& mesh_dof,
+					       xt::pyarray<double>& mesh_velocity_dof,
 					       double MOVING_DOMAIN,
-					       int* mesh_l2g,
-					       double* dV_ref,
-					       double* u_trial_ref,
-					       double* u_grad_trial_ref,
-					       double* u_test_ref,
-					       double* u_grad_test_ref,
+					       xt::pyarray<int>& mesh_l2g,
+					       xt::pyarray<double>& dV_ref,
+					       xt::pyarray<double>& u_trial_ref,
+					       xt::pyarray<double>& u_grad_trial_ref,
+					       xt::pyarray<double>& u_test_ref,
+					       xt::pyarray<double>& u_grad_test_ref,
 					       //element boundary
-					       double* mesh_trial_trace_ref,
-					       double* mesh_grad_trial_trace_ref,
-					       double* dS_ref,
-					       double* u_trial_trace_ref,
-					       double* u_grad_trial_trace_ref,
-					       double* u_test_trace_ref,
-					       double* u_grad_test_trace_ref,
-					       double* normal_ref,
-					       double* boundaryJac_ref,
+					       xt::pyarray<double>& mesh_trial_trace_ref,
+					       xt::pyarray<double>& mesh_grad_trial_trace_ref,
+					       xt::pyarray<double>& dS_ref,
+					       xt::pyarray<double>& u_trial_trace_ref,
+					       xt::pyarray<double>& u_grad_trial_trace_ref,
+					       xt::pyarray<double>& u_test_trace_ref,
+					       xt::pyarray<double>& u_grad_test_trace_ref,
+					       xt::pyarray<double>& normal_ref,
+					       xt::pyarray<double>& boundaryJac_ref,
 					       //physics
 					       int nElements_global,
 					       double useMetrics,
@@ -79,42 +81,42 @@ namespace proteus
 					       double sc_uref,
 					       double sc_alpha,
 					       //VRANS
-					       const double* q_vos,
-					       const double* vos_dof,
+					       const xt::pyarray<double>& q_vos,
+					       const xt::pyarray<double>& vos_dof,
 					       //
-					       int* u_l2g,
-					       int* r_l2g,
-					       double* elementDiameter,
+					       xt::pyarray<int>& u_l2g,
+					       xt::pyarray<int>& r_l2g,
+					       xt::pyarray<double>& elementDiameter,
 					       double degree_polynomial,
-					       double* u_dof,
-					       double* u_dof_old,
-					       double* velocity,
-					       double* q_m,
-					       double* q_u,
-					       double* q_m_betaBDF,
-					       double* q_dV,
-					       double* q_dV_last,
-					       double* cfl,
-					       double* edge_based_cfl,
-					       double* q_numDiff_u,
-					       double* q_numDiff_u_last,
+					       xt::pyarray<double>& u_dof,
+					       xt::pyarray<double>& u_dof_old,
+					       xt::pyarray<double>& velocity,
+					       xt::pyarray<double>& q_m,
+					       xt::pyarray<double>& q_u,
+					       xt::pyarray<double>& q_m_betaBDF,
+					       xt::pyarray<double>& q_dV,
+					       xt::pyarray<double>& q_dV_last,
+					       xt::pyarray<double>& cfl,
+					       xt::pyarray<double>& edge_based_cfl,
+					       xt::pyarray<double>& q_numDiff_u,
+					       xt::pyarray<double>& q_numDiff_u_last,
 					       int offset_u, int stride_u,
-					       double* globalResidual,
+					       xt::pyarray<double>& globalResidual,
 					       int nExteriorElementBoundaries_global,
-					       int* exteriorElementBoundariesArray,
-					       int* elementBoundaryElementsArray,
-					       int* elementBoundaryLocalElementBoundariesArray,
-					       double* ebqe_velocity_ext,
+					       xt::pyarray<int>& exteriorElementBoundariesArray,
+					       xt::pyarray<int>& elementBoundaryElementsArray,
+					       xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+					       xt::pyarray<double>& ebqe_velocity_ext,
 					       //VRANS
-					       const double* ebqe_vos_ext,
+					       const xt::pyarray<double>& ebqe_vos_ext,
 					       //
-					       int* isDOFBoundary_u,
-					       double* ebqe_bc_u_ext,
-					       int* isFluxBoundary_u,
-					       double* ebqe_bc_flux_u_ext,
-					       double* ebqe_phi,double epsFact,
-					       double* ebqe_u,
-					       double* ebqe_flux,
+					       xt::pyarray<int>& isDOFBoundary_u,
+					       xt::pyarray<double>& ebqe_bc_u_ext,
+					       xt::pyarray<int>& isFluxBoundary_u,
+					       xt::pyarray<double>& ebqe_bc_flux_u_ext,
+					       xt::pyarray<double>& ebqe_phi,double epsFact,
+					       xt::pyarray<double>& ebqe_u,
+					       xt::pyarray<double>& ebqe_flux,
 					       // TAYLOR GALERKIN
 					       int stage,
 					       double * uTilde_dof,
@@ -128,46 +130,46 @@ namespace proteus
 					       // PARAMETERS FOR EDGE VISCOSITY
 					       int numDOFs,
 					       int NNZ,
-					       int* csrRowIndeces_DofLoops,
-					       int* csrColumnOffsets_DofLoops,
-					       int* csrRowIndeces_CellLoops,
-					       int* csrColumnOffsets_CellLoops,
-					       int* csrColumnOffsets_eb_CellLoops,
-					       double* ML,
+					       xt::pyarray<int>& csrRowIndeces_DofLoops,
+					       xt::pyarray<int>& csrColumnOffsets_DofLoops,
+					       xt::pyarray<int>& csrRowIndeces_CellLoops,
+					       xt::pyarray<int>& csrColumnOffsets_CellLoops,
+					       xt::pyarray<int>& csrColumnOffsets_eb_CellLoops,
+					       xt::pyarray<double>& ML,
 					       // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
 					       int LUMPED_MASS_MATRIX,
 					       int STABILIZATION_TYPE,
 					       int ENTROPY_TYPE,
 					       // FOR FCT
-					       double* uLow,
-					       double* dLow,
-					       double* dt_times_dH_minus_dL,
-					       double* min_u_bc,
-					       double* max_u_bc,
+					       xt::pyarray<double>& uLow,
+					       xt::pyarray<double>& dLow,
+					       xt::pyarray<double>& dt_times_dH_minus_dL,
+					       xt::pyarray<double>& min_u_bc,
+					       xt::pyarray<double>& max_u_bc,
 					       // AUX QUANTITIES OF INTEREST
-					       double* quantDOFs)=0;
+					       xt::pyarray<double>& quantDOFs)=0;
     virtual void calculateJacobian(//element
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   double* mesh_velocity_dof,
+                                   xt::pyarray<double>& mesh_trial_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_ref,
+                                   xt::pyarray<double>& mesh_dof,
+                                   xt::pyarray<double>& mesh_velocity_dof,
                                    double MOVING_DOMAIN,
-                                   int* mesh_l2g,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
+                                   xt::pyarray<int>& mesh_l2g,
+                                   xt::pyarray<double>& dV_ref,
+                                   xt::pyarray<double>& u_trial_ref,
+                                   xt::pyarray<double>& u_grad_trial_ref,
+                                   xt::pyarray<double>& u_test_ref,
+                                   xt::pyarray<double>& u_grad_test_ref,
                                    //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
+                                   xt::pyarray<double>& mesh_trial_trace_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                                   xt::pyarray<double>& dS_ref,
+                                   xt::pyarray<double>& u_trial_trace_ref,
+                                   xt::pyarray<double>& u_grad_trial_trace_ref,
+                                   xt::pyarray<double>& u_test_trace_ref,
+                                   xt::pyarray<double>& u_grad_test_trace_ref,
+                                   xt::pyarray<double>& normal_ref,
+                                   xt::pyarray<double>& boundaryJac_ref,
                                    //physics
                                    int nElements_global,
                                    double useMetrics,
@@ -175,73 +177,73 @@ namespace proteus
                                    int lag_shockCapturing,/*mwf not used yet*/
                                    double shockCapturingDiffusion,
                                    //VRANS
-                                   const double* q_vos,
+                                   const xt::pyarray<double>& q_vos,
                                    //
-                                   int* u_l2g,
-				   int* r_l2g,
-                                   double* elementDiameter,
-                                   double* u_dof,
-                                   double* velocity,
-                                   double* q_m_betaBDF,
-                                   double* cfl,
-                                   double* q_numDiff_u_last,
-                                   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                   double* globalJacobian,
+                                   xt::pyarray<int>& u_l2g,
+				   xt::pyarray<int>& r_l2g,
+                                   xt::pyarray<double>& elementDiameter,
+                                   xt::pyarray<double>& u_dof,
+                                   xt::pyarray<double>& velocity,
+                                   xt::pyarray<double>& q_m_betaBDF,
+                                   xt::pyarray<double>& cfl,
+                                   xt::pyarray<double>& q_numDiff_u_last,
+                                   xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+                                   xt::pyarray<double>& globalJacobian,
                                    int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_velocity_ext,
+                                   xt::pyarray<int>& exteriorElementBoundariesArray,
+                                   xt::pyarray<int>& elementBoundaryElementsArray,
+                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                                   xt::pyarray<double>& ebqe_velocity_ext,
                                    //VRANS
-                                   const double* ebqe_vos_ext,
+                                   const xt::pyarray<double>& ebqe_vos_ext,
                                    //
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_bc_u_ext,
-                                   int* isFluxBoundary_u,
-                                   double* ebqe_bc_flux_u_ext,
-                                   int* csrColumnOffsets_eb_u_u,
+                                   xt::pyarray<int>& isDOFBoundary_u,
+                                   xt::pyarray<double>& ebqe_bc_u_ext,
+                                   xt::pyarray<int>& isFluxBoundary_u,
+                                   xt::pyarray<double>& ebqe_bc_flux_u_ext,
+                                   xt::pyarray<int>& csrColumnOffsets_eb_u_u,
                                    int STABILIZATION_TYPE)=0;
     virtual void FCTStep(double dt,
 			 int NNZ, //number on non-zero entries on sparsity pattern
                          int numDOFs, //number of DOFs
-                         double* lumped_mass_matrix, //lumped mass matrix (as vector)
-                         double* soln, //DOFs of solution at time tn
-                         double* solH, //DOFs of high order solution at tnp1
-                         double* uLow,
-			 double* dLow,
-                         double* limited_solution,
-                         int* csrRowIndeces_DofLoops, //csr row indeces
-                         int* csrColumnOffsets_DofLoops, //csr column offsets
-                         double* MassMatrix, //mass matrix
-                         double* dt_times_dH_minus_dL, //low minus high order dissipative matrices
-                         double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
-                         double* max_u_bc,
+                         xt::pyarray<double>& lumped_mass_matrix, //lumped mass matrix (as vector)
+                         xt::pyarray<double>& soln, //DOFs of solution at time tn
+                         xt::pyarray<double>& solH, //DOFs of high order solution at tnp1
+                         xt::pyarray<double>& uLow,
+			 xt::pyarray<double>& dLow,
+                         xt::pyarray<double>& limited_solution,
+                         xt::pyarray<int>& csrRowIndeces_DofLoops, //csr row indeces
+                         xt::pyarray<int>& csrColumnOffsets_DofLoops, //csr column offsets
+                         xt::pyarray<double>& MassMatrix, //mass matrix
+                         xt::pyarray<double>& dt_times_dH_minus_dL, //low minus high order dissipative matrices
+                         xt::pyarray<double>& min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+                         xt::pyarray<double>& max_u_bc,
                          int LUMPED_MASS_MATRIX,
 			 int STABILIZATION_TYPE
                          )=0;
     virtual void calculateResidualEdgeBased(//element
 					    double dt,
-					    double* mesh_trial_ref,
-					    double* mesh_grad_trial_ref,
-					    double* mesh_dof,
-					    double* mesh_velocity_dof,
+					    xt::pyarray<double>& mesh_trial_ref,
+					    xt::pyarray<double>& mesh_grad_trial_ref,
+					    xt::pyarray<double>& mesh_dof,
+					    xt::pyarray<double>& mesh_velocity_dof,
 					    double MOVING_DOMAIN,
-					    int* mesh_l2g,
-					    double* dV_ref,
-					    double* u_trial_ref,
-					    double* u_grad_trial_ref,
-					    double* u_test_ref,
-					    double* u_grad_test_ref,
+					    xt::pyarray<int>& mesh_l2g,
+					    xt::pyarray<double>& dV_ref,
+					    xt::pyarray<double>& u_trial_ref,
+					    xt::pyarray<double>& u_grad_trial_ref,
+					    xt::pyarray<double>& u_test_ref,
+					    xt::pyarray<double>& u_grad_test_ref,
 					    //element boundary
-					    double* mesh_trial_trace_ref,
-					    double* mesh_grad_trial_trace_ref,
-					    double* dS_ref,
-					    double* u_trial_trace_ref,
-					    double* u_grad_trial_trace_ref,
-					    double* u_test_trace_ref,
-					    double* u_grad_test_trace_ref,
-					    double* normal_ref,
-					    double* boundaryJac_ref,
+					    xt::pyarray<double>& mesh_trial_trace_ref,
+					    xt::pyarray<double>& mesh_grad_trial_trace_ref,
+					    xt::pyarray<double>& dS_ref,
+					    xt::pyarray<double>& u_trial_trace_ref,
+					    xt::pyarray<double>& u_grad_trial_trace_ref,
+					    xt::pyarray<double>& u_test_trace_ref,
+					    xt::pyarray<double>& u_grad_test_trace_ref,
+					    xt::pyarray<double>& normal_ref,
+					    xt::pyarray<double>& boundaryJac_ref,
 					    //physics
 					    int nElements_global,
 					    double useMetrics,
@@ -251,42 +253,42 @@ namespace proteus
 					    double sc_uref,
 					    double sc_alpha,
 					    //VRANS
-					    const double* q_vos,
-					    const double* vos_dof,
+					    const xt::pyarray<double>& q_vos,
+					    const xt::pyarray<double>& vos_dof,
 					    //
-					    int* u_l2g,
-					    int* r_l2g,
-					    double* elementDiameter,
+					    xt::pyarray<int>& u_l2g,
+					    xt::pyarray<int>& r_l2g,
+					    xt::pyarray<double>& elementDiameter,
 					    double degree_polynomial,
-					    double* u_dof,
-					    double* u_dof_old,
-					    double* velocity,
-					    double* q_m,
-					    double* q_u,
-					    double* q_m_betaBDF,
-					    double* q_dV,
-					    double* q_dV_last,
-					    double* cfl,
-					    double* edge_based_cfl,
-					    double* q_numDiff_u,
-					    double* q_numDiff_u_last,
+					    xt::pyarray<double>& u_dof,
+					    xt::pyarray<double>& u_dof_old,
+					    xt::pyarray<double>& velocity,
+					    xt::pyarray<double>& q_m,
+					    xt::pyarray<double>& q_u,
+					    xt::pyarray<double>& q_m_betaBDF,
+					    xt::pyarray<double>& q_dV,
+					    xt::pyarray<double>& q_dV_last,
+					    xt::pyarray<double>& cfl,
+					    xt::pyarray<double>& edge_based_cfl,
+					    xt::pyarray<double>& q_numDiff_u,
+					    xt::pyarray<double>& q_numDiff_u_last,
 					    int offset_u, int stride_u,
-					    double* globalResidual,
+					    xt::pyarray<double>& globalResidual,
 					    int nExteriorElementBoundaries_global,
-					    int* exteriorElementBoundariesArray,
-					    int* elementBoundaryElementsArray,
-					    int* elementBoundaryLocalElementBoundariesArray,
-					    double* ebqe_velocity_ext,
+					    xt::pyarray<int>& exteriorElementBoundariesArray,
+					    xt::pyarray<int>& elementBoundaryElementsArray,
+					    xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+					    xt::pyarray<double>& ebqe_velocity_ext,
 					    //VRANS
-					    const double* ebqe_vos_ext,
+					    const xt::pyarray<double>& ebqe_vos_ext,
 					    //
-					    int* isDOFBoundary_u,
-					    double* ebqe_bc_u_ext,
-					    int* isFluxBoundary_u,
-					    double* ebqe_bc_flux_u_ext,
-					    double* ebqe_phi,double epsFact,
-					    double* ebqe_u,
-					    double* ebqe_flux,
+					    xt::pyarray<int>& isDOFBoundary_u,
+					    xt::pyarray<double>& ebqe_bc_u_ext,
+					    xt::pyarray<int>& isFluxBoundary_u,
+					    xt::pyarray<double>& ebqe_bc_flux_u_ext,
+					    xt::pyarray<double>& ebqe_phi,double epsFact,
+					    xt::pyarray<double>& ebqe_u,
+					    xt::pyarray<double>& ebqe_flux,
 					    //EXPLICIT METHODS
 					    int stage,
 					    double * uTilde_dof,
@@ -300,24 +302,24 @@ namespace proteus
 					    // PARAMETERS FOR EDGE VISCOSITY
 					    int numDOFs,
 					    int NNZ,
-					    int* csrRowIndeces_DofLoops,
-					    int* csrColumnOffsets_DofLoops,
-					    int* csrRowIndeces_CellLoops,
-					    int* csrColumnOffsets_CellLoops,
-					    int* csrColumnOffsets_eb_CellLoops,
-					    double* ML,
+					    xt::pyarray<int>& csrRowIndeces_DofLoops,
+					    xt::pyarray<int>& csrColumnOffsets_DofLoops,
+					    xt::pyarray<int>& csrRowIndeces_CellLoops,
+					    xt::pyarray<int>& csrColumnOffsets_CellLoops,
+					    xt::pyarray<int>& csrColumnOffsets_eb_CellLoops,
+					    xt::pyarray<double>& ML,
 					    // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
 					    int LUMPED_MASS_MATRIX,
 					    int STABILIZATION_TYPE,
 					    int ENTROPY_TYPE,
 					    // FOR FCT
-					    double* uLow,
-					    double* dLow,
-					    double* dt_times_dH_minus_dL,
-					    double* min_u_bc,
-					    double* max_u_bc,
+					    xt::pyarray<double>& uLow,
+					    xt::pyarray<double>& dLow,
+					    xt::pyarray<double>& dt_times_dH_minus_dL,
+					    xt::pyarray<double>& min_u_bc,
+					    xt::pyarray<double>& max_u_bc,
 					    // AUX QUANTITIES OF INTEREST
-					    double* quantDOFs)=0;
+					    xt::pyarray<double>& quantDOFs)=0;
   };
 
   template<class CompKernelType,
@@ -511,27 +513,27 @@ namespace proteus
 
       void calculateResidualElementBased(//element
 					 double dt,
-					 double* mesh_trial_ref,
-					 double* mesh_grad_trial_ref,
-					 double* mesh_dof,
-					 double* mesh_velocity_dof,
+					 xt::pyarray<double>& mesh_trial_ref,
+					 xt::pyarray<double>& mesh_grad_trial_ref,
+					 xt::pyarray<double>& mesh_dof,
+					 xt::pyarray<double>& mesh_velocity_dof,
 					 double MOVING_DOMAIN,
-					 int* mesh_l2g,
-					 double* dV_ref,
-					 double* u_trial_ref,
-					 double* u_grad_trial_ref,
-					 double* u_test_ref,
-					 double* u_grad_test_ref,
+					 xt::pyarray<int>& mesh_l2g,
+					 xt::pyarray<double>& dV_ref,
+					 xt::pyarray<double>& u_trial_ref,
+					 xt::pyarray<double>& u_grad_trial_ref,
+					 xt::pyarray<double>& u_test_ref,
+					 xt::pyarray<double>& u_grad_test_ref,
 					 //element boundary
-					 double* mesh_trial_trace_ref,
-					 double* mesh_grad_trial_trace_ref,
-					 double* dS_ref,
-					 double* u_trial_trace_ref,
-					 double* u_grad_trial_trace_ref,
-					 double* u_test_trace_ref,
-					 double* u_grad_test_trace_ref,
-					 double* normal_ref,
-					 double* boundaryJac_ref,
+					 xt::pyarray<double>& mesh_trial_trace_ref,
+					 xt::pyarray<double>& mesh_grad_trial_trace_ref,
+					 xt::pyarray<double>& dS_ref,
+					 xt::pyarray<double>& u_trial_trace_ref,
+					 xt::pyarray<double>& u_grad_trial_trace_ref,
+					 xt::pyarray<double>& u_test_trace_ref,
+					 xt::pyarray<double>& u_grad_test_trace_ref,
+					 xt::pyarray<double>& normal_ref,
+					 xt::pyarray<double>& boundaryJac_ref,
 					 //physics
 					 int nElements_global,
 					 double useMetrics,
@@ -540,42 +542,42 @@ namespace proteus
 					 double shockCapturingDiffusion,
 					 double sc_uref, double sc_alpha,
 					 //VRANS
-					 const double* q_vos,
-					 const double* vos_dof,
+					 const xt::pyarray<double>& q_vos,
+					 const xt::pyarray<double>& vos_dof,
 					 //
-					 int* u_l2g,
-					 int* r_l2g,
-					 double* elementDiameter,
+					 xt::pyarray<int>& u_l2g,
+					 xt::pyarray<int>& r_l2g,
+					 xt::pyarray<double>& elementDiameter,
 					 double degree_polynomial,
-					 double* u_dof,
-					 double* u_dof_old,
-					 double* velocity,
-					 double* q_m,
-					 double* q_u,
-					 double* q_m_betaBDF,
-					 double* q_dV,
-					 double* q_dV_last,
-					 double* cfl,
-					 double* edge_based_cfl,
-					 double* q_numDiff_u,
-					 double* q_numDiff_u_last,
+					 xt::pyarray<double>& u_dof,
+					 xt::pyarray<double>& u_dof_old,
+					 xt::pyarray<double>& velocity,
+					 xt::pyarray<double>& q_m,
+					 xt::pyarray<double>& q_u,
+					 xt::pyarray<double>& q_m_betaBDF,
+					 xt::pyarray<double>& q_dV,
+					 xt::pyarray<double>& q_dV_last,
+					 xt::pyarray<double>& cfl,
+					 xt::pyarray<double>& edge_based_cfl,
+					 xt::pyarray<double>& q_numDiff_u,
+					 xt::pyarray<double>& q_numDiff_u_last,
 					 int offset_u, int stride_u,
-					 double* globalResidual,
+					 xt::pyarray<double>& globalResidual,
 					 int nExteriorElementBoundaries_global,
-					 int* exteriorElementBoundariesArray,
-					 int* elementBoundaryElementsArray,
-					 int* elementBoundaryLocalElementBoundariesArray,
-					 double* ebqe_velocity_ext,
+					 xt::pyarray<int>& exteriorElementBoundariesArray,
+					 xt::pyarray<int>& elementBoundaryElementsArray,
+					 xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+					 xt::pyarray<double>& ebqe_velocity_ext,
 					 //VRANS
-					 const double* ebqe_vos_ext,
+					 const xt::pyarray<double>& ebqe_vos_ext,
 					 //
-					 int* isDOFBoundary_u,
-					 double* ebqe_bc_u_ext,
-					 int* isFluxBoundary_u,
-					 double* ebqe_bc_flux_u_ext,
-					 double* ebqe_phi,double epsFact,
-					 double* ebqe_u,
-					 double* ebqe_flux,
+					 xt::pyarray<int>& isDOFBoundary_u,
+					 xt::pyarray<double>& ebqe_bc_u_ext,
+					 xt::pyarray<int>& isFluxBoundary_u,
+					 xt::pyarray<double>& ebqe_bc_flux_u_ext,
+					 xt::pyarray<double>& ebqe_phi,double epsFact,
+					 xt::pyarray<double>& ebqe_u,
+					 xt::pyarray<double>& ebqe_flux,
 					 //EXPLICIT METHODS
 					 int stage,
 					 double * uTilde_dof,
@@ -589,24 +591,24 @@ namespace proteus
 					 // PARAMETERS FOR EDGE VISCOSITY
 					 int numDOFs,
 					 int NNZ,
-					 int* csrRowIndeces_DofLoops,
-					 int* csrColumnOffsets_DofLoops,
-					 int* csrRowIndeces_CellLoops,
-					 int* csrColumnOffsets_CellLoops,
-					 int* csrColumnOffsets_eb_CellLoops,
-					 double* ML,
+					 xt::pyarray<int>& csrRowIndeces_DofLoops,
+					 xt::pyarray<int>& csrColumnOffsets_DofLoops,
+					 xt::pyarray<int>& csrRowIndeces_CellLoops,
+					 xt::pyarray<int>& csrColumnOffsets_CellLoops,
+					 xt::pyarray<int>& csrColumnOffsets_eb_CellLoops,
+					 xt::pyarray<double>& ML,
 					 // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
 					 int LUMPED_MASS_MATRIX,
 					 int STABILIZATION_TYPE,
 					 int ENTROPY_TYPE,
 					 // FOR FCT
-					 double* uLow,
-					 double* dLow,
-					 double* dt_times_dH_minus_dL,
-					 double* min_u_bc,
-					 double* max_u_bc,
+					 xt::pyarray<double>& uLow,
+					 xt::pyarray<double>& dLow,
+					 xt::pyarray<double>& dt_times_dH_minus_dL,
+					 xt::pyarray<double>& min_u_bc,
+					 xt::pyarray<double>& max_u_bc,
 					 // AUX QUANTITIES OF INTEREST
-					 double* quantDOFs)
+					 xt::pyarray<double>& quantDOFs)
       {
 	double meanEntropy = 0., meanOmega = 0., maxEntropy = -1E10, minEntropy = 1E10;
 	register double maxVel[nElements_global], maxEntRes[nElements_global];
@@ -684,19 +686,19 @@ namespace proteus
 		//   }
 		ck.calculateMapping_element(eN,
 					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
+					    mesh_dof.data(),
+					    mesh_l2g.data(),
+					    mesh_trial_ref.data(),
+					    mesh_grad_trial_ref.data(),
 					    jac,
 					    jacDet,
 					    jacInv,
 					    x,y,z);
 		ck.calculateMappingVelocity_element(eN,
 						    k,
-						    mesh_velocity_dof,
-						    mesh_l2g,
-						    mesh_trial_ref,
+						    mesh_velocity_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_ref.data(),
 						    xt,yt,zt);
 		//get the physical integration weight
 		dV = fabs(jacDet)*dV_ref[k];
@@ -706,20 +708,20 @@ namespace proteus
 				    jacInv,
 				    u_grad_trial);
 		//get the solution
-		ck.valFromDOF(u_dof,
+		ck.valFromDOF(u_dof.data(),
 			      &u_l2g[eN_nDOF_trial_element],
 			      &u_trial_ref[k*nDOF_trial_element],
 			      u);
-		ck.valFromDOF(u_dof_old,
+		ck.valFromDOF(u_dof_old.data(),
 			      &u_l2g[eN_nDOF_trial_element],
 			      &u_trial_ref[k*nDOF_trial_element],
 			      un);
 		//get the solution gradients
-		ck.gradFromDOF(u_dof,
+		ck.gradFromDOF(u_dof.data(),
 			       &u_l2g[eN_nDOF_trial_element],
 			       u_grad_trial,
 			       grad_u);
-		ck.gradFromDOF(u_dof_old,
+		ck.gradFromDOF(u_dof_old.data(),
 			       &u_l2g[eN_nDOF_trial_element],
 			       u_grad_trial,
 			       grad_u_old);
@@ -982,37 +984,38 @@ namespace proteus
 		//calculate the solution and gradients at quadrature points
 		//
 		//compute information about mapping from reference element to physical element
-		ck.calculateMapping_elementBoundary(eN,
-						    ebN_local,
-						    kb,
-						    ebN_local_kb,
-						    mesh_dof,
-						    mesh_l2g,
-						    mesh_trial_trace_ref,
-						    mesh_grad_trial_trace_ref,
-						    boundaryJac_ref,
-						    jac_ext,
-						    jacDet_ext,
-						    jacInv_ext,
-						    boundaryJac,
-						    metricTensor,
-						    metricTensorDetSqrt,
-						    normal_ref,
-						    normal,
-						    x_ext,y_ext,z_ext);
-		ck.calculateMappingVelocity_elementBoundary(eN,
-							    ebN_local,
-							    kb,
-							    ebN_local_kb,
-							    mesh_velocity_dof,
-							    mesh_l2g,
-							    mesh_trial_trace_ref,
-							    xt_ext,yt_ext,zt_ext,
-							    normal,
-							    boundaryJac,
-							    metricTensor,
-							    integralScaling);
-		//std::cout<<"metricTensorDetSqrt "<<metricTensorDetSqrt<<" integralScaling "<<integralScaling<<std::endl;
+                ck.calculateMapping_elementBoundary(eN,
+                                                    ebN_local,
+                                                    kb,
+                                                    ebN_local_kb,
+                                                    mesh_dof.data(),
+                                                    mesh_l2g.data(),
+                                                    mesh_trial_trace_ref.data(),
+                                                    mesh_grad_trial_trace_ref.data(),
+                                                    boundaryJac_ref.data(),
+                                                    jac_ext,
+                                                    jacDet_ext,
+                                                    jacInv_ext,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref.data(),
+                                                    normal,
+                                                    x_ext,y_ext,z_ext);
+                ck.calculateMappingVelocity_elementBoundary(eN,
+                                                            ebN_local,
+                                                            kb,
+                                                            ebN_local_kb,
+                                                            mesh_velocity_dof.data(),
+                                                            mesh_l2g.data(),
+                                                            mesh_trial_trace_ref.data(),
+                                                            xt_ext,yt_ext,zt_ext,
+                                                            normal,
+                                                            boundaryJac,
+                                                            metricTensor,
+                                                            integralScaling);
+
+    //std::cout<<"metricTensorDetSqrt "<<metricTensorDetSqrt<<" integralScaling "<<integralScaling<<std::endl;
 		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
 		//get the metric tensor
 		//cek todo use symmetry
@@ -1025,22 +1028,22 @@ namespace proteus
 		//solution and gradients
 		if (STABILIZATION_TYPE==1) //explicit
 		  {
-		    ck.valFromDOF(u_dof_old,
+		    ck.valFromDOF(u_dof_old.data(),
 				  &u_l2g[eN_nDOF_trial_element],
 				  &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
 				  u_ext);
-		    ck.gradFromDOF(u_dof_old,
+		    ck.gradFromDOF(u_dof_old.data(),
 				   &u_l2g[eN_nDOF_trial_element],
 				   u_grad_trial_trace,
 				   grad_u_ext);
 		  }
 		else
 		  {
-		    ck.valFromDOF(u_dof,
+		    ck.valFromDOF(u_dof.data(),
 				  &u_l2g[eN_nDOF_trial_element],
 				  &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
 				  u_ext);
-		    ck.gradFromDOF(u_dof,
+		    ck.gradFromDOF(u_dof.data(),
 				   &u_l2g[eN_nDOF_trial_element],
 				   u_grad_trial_trace,
 				   grad_u_ext);
@@ -1156,27 +1159,27 @@ namespace proteus
       }
 
       void calculateJacobian(//element
-			     double* mesh_trial_ref,
-			     double* mesh_grad_trial_ref,
-			     double* mesh_dof,
-			     double* mesh_velocity_dof,
+			     xt::pyarray<double>& mesh_trial_ref,
+			     xt::pyarray<double>& mesh_grad_trial_ref,
+			     xt::pyarray<double>& mesh_dof,
+			     xt::pyarray<double>& mesh_velocity_dof,
 			     double MOVING_DOMAIN,
-			     int* mesh_l2g,
-			     double* dV_ref,
-			     double* u_trial_ref,
-			     double* u_grad_trial_ref,
-			     double* u_test_ref,
-			     double* u_grad_test_ref,
+			     xt::pyarray<int>& mesh_l2g,
+			     xt::pyarray<double>& dV_ref,
+			     xt::pyarray<double>& u_trial_ref,
+			     xt::pyarray<double>& u_grad_trial_ref,
+			     xt::pyarray<double>& u_test_ref,
+			     xt::pyarray<double>& u_grad_test_ref,
 			     //element boundary
-			     double* mesh_trial_trace_ref,
-			     double* mesh_grad_trial_trace_ref,
-			     double* dS_ref,
-			     double* u_trial_trace_ref,
-			     double* u_grad_trial_trace_ref,
-			     double* u_test_trace_ref,
-			     double* u_grad_test_trace_ref,
-			     double* normal_ref,
-			     double* boundaryJac_ref,
+			     xt::pyarray<double>& mesh_trial_trace_ref,
+			     xt::pyarray<double>& mesh_grad_trial_trace_ref,
+			     xt::pyarray<double>& dS_ref,
+			     xt::pyarray<double>& u_trial_trace_ref,
+			     xt::pyarray<double>& u_grad_trial_trace_ref,
+			     xt::pyarray<double>& u_test_trace_ref,
+			     xt::pyarray<double>& u_grad_test_trace_ref,
+			     xt::pyarray<double>& normal_ref,
+			     xt::pyarray<double>& boundaryJac_ref,
 			     //physics
 			     int nElements_global,
 			     double useMetrics,
@@ -1184,31 +1187,31 @@ namespace proteus
 			     int lag_shockCapturing,/*mwf not used yet*/
 			     double shockCapturingDiffusion,
 			     //VRANS
-			     const double* q_vos,
+			     const xt::pyarray<double>& q_vos,
 			     //
-			     int* u_l2g,
-			     int* r_l2g,
-			     double* elementDiameter,
-			     double* u_dof,
-			     double* velocity,
-			     double* q_m_betaBDF,
-			     double* cfl,
-			     double* q_numDiff_u_last,
-			     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-			     double* globalJacobian,
+			     xt::pyarray<int>& u_l2g,
+			     xt::pyarray<int>& r_l2g,
+			     xt::pyarray<double>& elementDiameter,
+			     xt::pyarray<double>& u_dof,
+			     xt::pyarray<double>& velocity,
+			     xt::pyarray<double>& q_m_betaBDF,
+			     xt::pyarray<double>& cfl,
+			     xt::pyarray<double>& q_numDiff_u_last,
+			     xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+			     xt::pyarray<double>& globalJacobian,
 			     int nExteriorElementBoundaries_global,
-			     int* exteriorElementBoundariesArray,
-			     int* elementBoundaryElementsArray,
-			     int* elementBoundaryLocalElementBoundariesArray,
-			     double* ebqe_velocity_ext,
+			     xt::pyarray<int>& exteriorElementBoundariesArray,
+			     xt::pyarray<int>& elementBoundaryElementsArray,
+			     xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+			     xt::pyarray<double>& ebqe_velocity_ext,
 			     //VRANS
-			     const double* ebqe_vos_ext,
+			     const xt::pyarray<double>& ebqe_vos_ext,
 			     //
-			     int* isDOFBoundary_u,
-			     double* ebqe_bc_u_ext,
-			     int* isFluxBoundary_u,
-			     double* ebqe_bc_flux_u_ext,
-			     int* csrColumnOffsets_eb_u_u,
+			     xt::pyarray<int>& isDOFBoundary_u,
+			     xt::pyarray<double>& ebqe_bc_u_ext,
+			     xt::pyarray<int>& isFluxBoundary_u,
+			     xt::pyarray<double>& ebqe_bc_flux_u_ext,
+			     xt::pyarray<int>& csrColumnOffsets_eb_u_u,
 			     int STABILIZATION_TYPE)
       {
 	//std::cout<<"ndjaco  address "<<q_numDiff_u_last<<std::endl;
@@ -1275,19 +1278,19 @@ namespace proteus
 		//get jacobian, etc for mapping reference element
 		ck.calculateMapping_element(eN,
 					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
+					    mesh_dof.data(),
+					    mesh_l2g.data(),
+					    mesh_trial_ref.data(),
+					    mesh_grad_trial_ref.data(),
 					    jac,
 					    jacDet,
 					    jacInv,
 					    x,y,z);
 		ck.calculateMappingVelocity_element(eN,
 						    k,
-						    mesh_velocity_dof,
-						    mesh_l2g,
-						    mesh_trial_ref,
+						    mesh_velocity_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_ref.data(),
 						    xt,yt,zt);
 		//get the physical integration weight
 		dV = fabs(jacDet)*dV_ref[k];
@@ -1295,9 +1298,9 @@ namespace proteus
 		//get the trial function gradients
 		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		//get the solution
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof.data(),&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
 		//get the solution gradients
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof.data(),&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
@@ -1499,27 +1502,27 @@ namespace proteus
 						      ebN_local,
 						      kb,
 						      ebN_local_kb,
-						      mesh_dof,
-						      mesh_l2g,
-						      mesh_trial_trace_ref,
-						      mesh_grad_trial_trace_ref,
-						      boundaryJac_ref,
+						      mesh_dof.data(),
+						      mesh_l2g.data(),
+						      mesh_trial_trace_ref.data(),
+						      mesh_grad_trial_trace_ref.data(),
+						      boundaryJac_ref.data(),
 						      jac_ext,
 						      jacDet_ext,
 						      jacInv_ext,
 						      boundaryJac,
 						      metricTensor,
 						      metricTensorDetSqrt,
-						      normal_ref,
+						      normal_ref.data(),
 						      normal,
 						      x_ext,y_ext,z_ext);
 		  ck.calculateMappingVelocity_elementBoundary(eN,
 							      ebN_local,
 							      kb,
 							      ebN_local_kb,
-							      mesh_velocity_dof,
-							      mesh_l2g,
-							      mesh_trial_trace_ref,
+							      mesh_velocity_dof.data(),
+							      mesh_l2g.data(),
+							      mesh_trial_trace_ref.data(),
 							      xt_ext,yt_ext,zt_ext,
 							      normal,
 							      boundaryJac,
@@ -1533,8 +1536,8 @@ namespace proteus
 		  //shape
 		  ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
 		  //solution and gradients
-		  ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-		  ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+		  ck.valFromDOF(u_dof.data(),&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+		  ck.gradFromDOF(u_dof.data(),&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
 		  //precalculate test function products with integration weights
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    {
@@ -1621,18 +1624,18 @@ namespace proteus
       void FCTStep(double dt,
 		   int NNZ, //number on non-zero entries on sparsity pattern
 		   int numDOFs, //number of DOFs
-		   double* lumped_mass_matrix, //lumped mass matrix (as vector)
-		   double* soln, //DOFs of solution at time tn
-		   double* solH, //DOFs of high order solution at tnp1
-		   double* uLow,
-		   double* dLow,
-		   double* limited_solution,
-		   int* csrRowIndeces_DofLoops, //csr row indeces
-		   int* csrColumnOffsets_DofLoops, //csr column offsets
-		   double* MassMatrix, //mass matrix
-		   double* dt_times_dH_minus_dL, //low minus high order dissipative matrices
-		   double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
-		   double* max_u_bc,
+		   xt::pyarray<double>& lumped_mass_matrix, //lumped mass matrix (as vector)
+		   xt::pyarray<double>& soln, //DOFs of solution at time tn
+		   xt::pyarray<double>& solH, //DOFs of high order solution at tnp1
+		   xt::pyarray<double>& uLow,
+		   xt::pyarray<double>& dLow,
+		   xt::pyarray<double>& limited_solution,
+		   xt::pyarray<int>& csrRowIndeces_DofLoops, //csr row indeces
+		   xt::pyarray<int>& csrColumnOffsets_DofLoops, //csr column offsets
+		   xt::pyarray<double>& MassMatrix, //mass matrix
+		   xt::pyarray<double>& dt_times_dH_minus_dL, //low minus high order dissipative matrices
+		   xt::pyarray<double>& min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+		   xt::pyarray<double>& max_u_bc,
 		   int LUMPED_MASS_MATRIX,
 		   int STABILIZATION_TYPE
 		   )
@@ -1734,27 +1737,27 @@ namespace proteus
 
       void calculateResidualEdgeBased(//element
 				      double dt,
-				      double* mesh_trial_ref,
-				      double* mesh_grad_trial_ref,
-				      double* mesh_dof,
-				      double* mesh_velocity_dof,
+				      xt::pyarray<double>& mesh_trial_ref,
+				      xt::pyarray<double>& mesh_grad_trial_ref,
+				      xt::pyarray<double>& mesh_dof,
+				      xt::pyarray<double>& mesh_velocity_dof,
 				      double MOVING_DOMAIN,
-				      int* mesh_l2g,
-				      double* dV_ref,
-				      double* u_trial_ref,
-				      double* u_grad_trial_ref,
-				      double* u_test_ref,
-				      double* u_grad_test_ref,
+				      xt::pyarray<int>& mesh_l2g,
+				      xt::pyarray<double>& dV_ref,
+				      xt::pyarray<double>& u_trial_ref,
+				      xt::pyarray<double>& u_grad_trial_ref,
+				      xt::pyarray<double>& u_test_ref,
+				      xt::pyarray<double>& u_grad_test_ref,
 				      //element boundary
-				      double* mesh_trial_trace_ref,
-				      double* mesh_grad_trial_trace_ref,
-				      double* dS_ref,
-				      double* u_trial_trace_ref,
-				      double* u_grad_trial_trace_ref,
-				      double* u_test_trace_ref,
-				      double* u_grad_test_trace_ref,
-				      double* normal_ref,
-				      double* boundaryJac_ref,
+				      xt::pyarray<double>& mesh_trial_trace_ref,
+				      xt::pyarray<double>& mesh_grad_trial_trace_ref,
+				      xt::pyarray<double>& dS_ref,
+				      xt::pyarray<double>& u_trial_trace_ref,
+				      xt::pyarray<double>& u_grad_trial_trace_ref,
+				      xt::pyarray<double>& u_test_trace_ref,
+				      xt::pyarray<double>& u_grad_test_trace_ref,
+				      xt::pyarray<double>& normal_ref,
+				      xt::pyarray<double>& boundaryJac_ref,
 				      //physics
 				      int nElements_global,
 				      double useMetrics,
@@ -1763,42 +1766,42 @@ namespace proteus
 				      double shockCapturingDiffusion,
 				      double sc_uref, double sc_alpha,
 				      //VRANS
-				      const double* q_vos,
-				      const double* vos_dof,
+				      const xt::pyarray<double>& q_vos,
+				      const xt::pyarray<double>& vos_dof,
 				      //
-				      int* u_l2g,
-				      int* r_l2g,
-				      double* elementDiameter,
+				      xt::pyarray<int>& u_l2g,
+				      xt::pyarray<int>& r_l2g,
+				      xt::pyarray<double>& elementDiameter,
 				      double degree_polynomial,
-				      double* u_dof,
-				      double* u_dof_old,
-				      double* velocity,
-				      double* q_m,
-				      double* q_u,
-				      double* q_m_betaBDF,
-				      double* q_dV,
-				      double* q_dV_last,
-				      double* cfl,
-				      double* edge_based_cfl,
-				      double* q_numDiff_u,
-				      double* q_numDiff_u_last,
+				      xt::pyarray<double>& u_dof,
+				      xt::pyarray<double>& u_dof_old,
+				      xt::pyarray<double>& velocity,
+				      xt::pyarray<double>& q_m,
+				      xt::pyarray<double>& q_u,
+				      xt::pyarray<double>& q_m_betaBDF,
+				      xt::pyarray<double>& q_dV,
+				      xt::pyarray<double>& q_dV_last,
+				      xt::pyarray<double>& cfl,
+				      xt::pyarray<double>& edge_based_cfl,
+				      xt::pyarray<double>& q_numDiff_u,
+				      xt::pyarray<double>& q_numDiff_u_last,
 				      int offset_u, int stride_u,
-				      double* globalResidual,
+				      xt::pyarray<double>& globalResidual,
 				      int nExteriorElementBoundaries_global,
-				      int* exteriorElementBoundariesArray,
-				      int* elementBoundaryElementsArray,
-				      int* elementBoundaryLocalElementBoundariesArray,
-				      double* ebqe_velocity_ext,
+				      xt::pyarray<int>& exteriorElementBoundariesArray,
+				      xt::pyarray<int>& elementBoundaryElementsArray,
+				      xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+				      xt::pyarray<double>& ebqe_velocity_ext,
 				      //VRANS
-				      const double* ebqe_vos_ext,
+				      const xt::pyarray<double>& ebqe_vos_ext,
 				      //
-				      int* isDOFBoundary_u,
-				      double* ebqe_bc_u_ext,
-				      int* isFluxBoundary_u,
-				      double* ebqe_bc_flux_u_ext,
-				      double* ebqe_phi,double epsFact,
-				      double* ebqe_u,
-				      double* ebqe_flux,
+				      xt::pyarray<int>& isDOFBoundary_u,
+				      xt::pyarray<double>& ebqe_bc_u_ext,
+				      xt::pyarray<int>& isFluxBoundary_u,
+				      xt::pyarray<double>& ebqe_bc_flux_u_ext,
+				      xt::pyarray<double>& ebqe_phi,double epsFact,
+				      xt::pyarray<double>& ebqe_u,
+				      xt::pyarray<double>& ebqe_flux,
 				      //EXPLICIT METHODS
 				      int stage,
 				      double * uTilde_dof,
@@ -1812,24 +1815,24 @@ namespace proteus
 				      // PARAMETERS FOR EDGE VISCOSITY
 				      int numDOFs,
 				      int NNZ,
-				      int* csrRowIndeces_DofLoops,
-				      int* csrColumnOffsets_DofLoops,
-				      int* csrRowIndeces_CellLoops,
-				      int* csrColumnOffsets_CellLoops,
-				      int* csrColumnOffsets_eb_CellLoops,
-				      double* ML,
+				      xt::pyarray<int>& csrRowIndeces_DofLoops,
+				      xt::pyarray<int>& csrColumnOffsets_DofLoops,
+				      xt::pyarray<int>& csrRowIndeces_CellLoops,
+				      xt::pyarray<int>& csrColumnOffsets_CellLoops,
+				      xt::pyarray<int>& csrColumnOffsets_eb_CellLoops,
+				      xt::pyarray<double>& ML,
 				      // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
 				      int LUMPED_MASS_MATRIX,
 				      int STABILIZATION_TYPE,
 				      int ENTROPY_TYPE,
 				      // FOR FCT
-				      double* uLow,
-				      double* dLow,
-				      double* dt_times_dH_minus_dL,
-				      double* min_u_bc,
-				      double* max_u_bc,
+				      xt::pyarray<double>& uLow,
+				      xt::pyarray<double>& dLow,
+				      xt::pyarray<double>& dt_times_dH_minus_dL,
+				      xt::pyarray<double>& min_u_bc,
+				      xt::pyarray<double>& max_u_bc,
 				      // AUX QUANTITIES OF INTEREST
-				      double* quantDOFs)
+				      xt::pyarray<double>& quantDOFs)
       {
 	// NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
 	// Allocate space for the transport matrices
@@ -1907,28 +1910,28 @@ namespace proteus
 		//get the physical integration weight
 		ck.calculateMapping_element(eN,
 					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
+					    mesh_dof.data(),
+					    mesh_l2g.data(),
+					    mesh_trial_ref.data(),
+					    mesh_grad_trial_ref.data(),
 					    jac,
 					    jacDet,
 					    jacInv,
 					    x,y,z);
 		ck.calculateMappingVelocity_element(eN,
 						    k,
-						    mesh_velocity_dof,
-						    mesh_l2g,
-						    mesh_trial_ref,
+						    mesh_velocity_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_ref.data(),
 						    xt,yt,zt);
 		dV = fabs(jacDet)*dV_ref[k];
 		//get the solution (of Newton's solver). To compute time derivative term
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof.data(),&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
 		//get the solution at quad point at tn and tnm1 for entropy viscosity
-		ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		ck.valFromDOF(u_dof_old.data(),&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
 		//get the solution gradients at tn for entropy viscosity
 		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-		ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+		ck.gradFromDOF(u_dof_old.data(),&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
 
 		//precalculate test function products with integration weights for mass matrix terms
 		for (int j=0;j<nDOF_trial_element;j++)
@@ -2070,27 +2073,27 @@ namespace proteus
 						    ebN_local,
 						    kb,
 						    ebN_local_kb,
-						    mesh_dof,
-						    mesh_l2g,
-						    mesh_trial_trace_ref,
-						    mesh_grad_trial_trace_ref,
-						    boundaryJac_ref,
+						    mesh_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_trace_ref.data(),
+						    mesh_grad_trial_trace_ref.data(),
+						    boundaryJac_ref.data(),
 						    jac_ext,
 						    jacDet_ext,
 						    jacInv_ext,
 						    boundaryJac,
 						    metricTensor,
 						    metricTensorDetSqrt,
-						    normal_ref,
+						    normal_ref.data(),
 						    normal,
 						    x_ext,y_ext,z_ext);
 		ck.calculateMappingVelocity_elementBoundary(eN,
 							    ebN_local,
 							    kb,
 							    ebN_local_kb,
-							    mesh_velocity_dof,
-							    mesh_l2g,
-							    mesh_trial_trace_ref,
+							    mesh_velocity_dof.data(),
+							    mesh_l2g.data(),
+							    mesh_trial_trace_ref.data(),
 							    xt_ext,yt_ext,zt_ext,
 							    normal,
 							    boundaryJac,
@@ -2098,7 +2101,7 @@ namespace proteus
 							    integralScaling);
 		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
 		//compute shape and solution information
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+		ck.valFromDOF(u_dof.data(),&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
