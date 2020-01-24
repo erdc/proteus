@@ -28,12 +28,12 @@ int logEvent(char* logString,int logLevel)
     // pValue reference stolen here:
     PyTuple_SetItem(pArgs, 0, pValue);
 
-    pValue = PyInt_FromLong(logLevel);
+    pValue = PyLong_FromLong(logLevel);
     // pValue reference stolen here:
     PyTuple_SetItem(pArgs, 1, pValue);
 */
     PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(logString));
-    PyTuple_SetItem(pArgs, 1, PyInt_FromLong(logLevel));
+    PyTuple_SetItem(pArgs, 1, PyLong_FromLong(logLevel));
 
     PyObject_CallObject(pFunc,pArgs);
     Py_DECREF(pFunc);
