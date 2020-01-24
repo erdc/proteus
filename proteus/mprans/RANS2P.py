@@ -216,7 +216,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_sdfList=None,
                  particle_velocityList=None,
                  nParticles = 0,
-                 particle_epsFact=None,
+                 particle_epsFact=3.0,
                  particle_alpha=1000.0,
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
