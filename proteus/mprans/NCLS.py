@@ -463,8 +463,7 @@ class LevelModel(OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
                  movingDomain=False,
-                 bdyNullSpace=False,
-                 initialize=True):
+                 bdyNullSpace=False):
 
         self.L2_norm_redistancing = 0.
         self.redistancing_L2_norm_history = []
@@ -490,6 +489,9 @@ class LevelModel(OneLevelTransport):
         self.matType = matType
         # mwf try to reuse test and trial information across components if spaces are the same
         self.reuse_test_trial_quadrature = reuse_trial_and_test_quadrature  # True#False
+        if self.reuse_test_trial_quadrature:
+            for ci in range(1, coefficients.nc):
+                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         self.u_dof_old = None
         self.free_u = None
         # Simplicial Mesh
@@ -507,17 +509,6 @@ class LevelModel(OneLevelTransport):
         self.fluxBoundaryConditions = fluxBoundaryConditionsDict
         self.advectiveFluxBoundaryConditionsSetterDict = advectiveFluxBoundaryConditionsSetterDict
         self.diffusiveFluxBoundaryConditionsSetterDictDict = diffusiveFluxBoundaryConditionsSetterDictDict
-        self.elementQuadrature = elementQuadrature
-        self.numericalFluxType = numericalFluxType
-        if initialize:
-            self.initialize()
-
-    def initialize(self):
-        coefficients = self.coefficients
-        # mwf try to reuse test and trial information across components if spaces are the same
-        if self.reuse_test_trial_quadrature:
-            for ci in range(1, coefficients.nc):
-                assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         # determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         # cek come back
@@ -552,7 +543,7 @@ class LevelModel(OneLevelTransport):
         self.elementBoundaryIntegrals = {}
         for ci in range(self.nc):
             self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
-                                                 (self.numericalFluxType is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -574,7 +565,6 @@ class LevelModel(OneLevelTransport):
         # is just for convenience so that the input doesn't have to be
         # complete)
         #
-        elementQuadrature = self.elementQuadrature
         elementQuadratureDict = {}
         elemQuadIsDict = isinstance(elementQuadrature, dict)
         if elemQuadIsDict:  # set terms manually

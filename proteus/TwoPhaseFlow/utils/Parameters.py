@@ -1730,7 +1730,7 @@ class ParametersModelAddedMass(ParametersModelBase):
             assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with addedMass'
         # COEFFICIENTS
         coeffs = self.p.coefficients
-        coeffs.V_model = V_model
+        coeffs.flowModelIndex = V_model
         coeffs.barycenters = domain.barycenters
         coeffs.initialize()
         # INITIAL CONDITIONS
