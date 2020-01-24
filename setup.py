@@ -666,14 +666,16 @@ EXTENSIONS_TO_BUILD = [
                   "proteus/equivalent_polynomials_coefficients.h"],
               extra_compile_args=PROTEUS_OPT+["-std=c++11"],
               language="c++", include_dirs=[numpy.get_include(), 'proteus']),
-    Extension("mprans.cRANS2P2D",["proteus/mprans/cRANS2P2D.pyx"],
-              depends=["proteus/mprans/RANS2P2D.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"]+ [
-                  "proteus/equivalent_polynomials.h",
-                  "proteus/equivalent_polynomials_utils.h",
-                  "proteus/equivalent_polynomials_coefficients.h"],
-              language="c++",
-              extra_compile_args=PROTEUS_OPT+["-std=c++11"],
-              include_dirs=[numpy.get_include(), 'proteus']),
+    Extension(
+        'mprans.cRANS2P2D',
+        ['proteus/mprans/RANS2P2D.cpp'],
+        depends=["proteus/mprans/RANS2P2D.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"] + [
+            "proteus/equivalent_polynomials.h",
+            "proteus/equivalent_polynomials_utils.h",
+            "proteus/equivalent_polynomials_coefficients.h"],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++'),
     Extension("mprans.cRDLS",["proteus/mprans/cRDLS.pyx"],
               depends=["proteus/mprans/RDLS.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"]+ [
                   "proteus/equivalent_polynomials.h",
