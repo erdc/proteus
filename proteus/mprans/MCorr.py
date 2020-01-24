@@ -5,6 +5,10 @@ from past.utils import old_div
 import proteus
 from proteus.Comm import globalSum
 from proteus.mprans.cMCorr import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
