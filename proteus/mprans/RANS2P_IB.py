@@ -12,6 +12,10 @@ from . import beamFEM
 from .ArchiveBeams import *
 from proteus.Comm import (globalMax,
                           globalSum)
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class Coefficients(proteus.mprans.RANS2P.Coefficients):
     def __init__(self,
@@ -1411,7 +1415,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.csrRowIndeces[(3, 1)], self.csrColumnOffsets[(3, 1)],
             self.csrRowIndeces[(3, 2)], self.csrColumnOffsets[(3, 2)],
             self.csrRowIndeces[(3, 3)], self.csrColumnOffsets[(3, 3)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
