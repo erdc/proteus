@@ -507,6 +507,8 @@ class LevelModel(OneLevelTransport):
         self.fluxBoundaryConditions = fluxBoundaryConditionsDict
         self.advectiveFluxBoundaryConditionsSetterDict = advectiveFluxBoundaryConditionsSetterDict
         self.diffusiveFluxBoundaryConditionsSetterDictDict = diffusiveFluxBoundaryConditionsSetterDictDict
+        self.elementQuadrature = elementQuadrature
+        self.numericalFluxType = numericalFluxType
         if initialize:
             self.initialize()
 
@@ -550,7 +552,7 @@ class LevelModel(OneLevelTransport):
         self.elementBoundaryIntegrals = {}
         for ci in range(self.nc):
             self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
-                                                 (numericalFluxType is not None) or
+                                                 (self.numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -572,6 +574,7 @@ class LevelModel(OneLevelTransport):
         # is just for convenience so that the input doesn't have to be
         # complete)
         #
+        elementQuadrature = self.elementQuadrature
         elementQuadratureDict = {}
         elemQuadIsDict = isinstance(elementQuadrature, dict)
         if elemQuadIsDict:  # set terms manually
