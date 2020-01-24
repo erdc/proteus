@@ -5,6 +5,10 @@ from past.utils import old_div
 import proteus
 from proteus.Comm import globalSum
 from proteus.mprans.cMCorr import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
@@ -746,7 +750,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_H_vof,
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.MassMatrix,
+            self.MassMatrix.getCSRrepresentation()[2],
             self.LumpedMassMatrix)
 
     def getJacobian(self, jacobian):
@@ -787,7 +791,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_H_vof,
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.coefficients.useExact)
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
