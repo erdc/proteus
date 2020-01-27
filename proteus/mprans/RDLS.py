@@ -1162,8 +1162,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.freezeLevelSet,
             useTimeIntegration,
             self.shockCapturing.lag,
-            self.stabilization.lag,
-            self.shockCapturing.shockCapturingFactor,
+            int(self.stabilization.lag),
+            int(self.shockCapturing.shockCapturingFactor),
             self.u[0].femSpace.dofMap.l2g,
             self.elementDiameter,  # self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
@@ -1190,7 +1190,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # elliptic re-distancing
             self.coefficients.ELLIPTIC_REDISTANCING,
             self.coefficients.backgroundDissipationEllipticRedist,
-            self.coefficients.alpha/self.elementDiameter.min(),
+            float(self.coefficients.alpha/self.elementDiameter.min()),
             self.coefficients.useExact)
 
         # FREEZING INTERFACE #
