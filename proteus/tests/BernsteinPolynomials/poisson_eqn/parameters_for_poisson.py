@@ -9,6 +9,7 @@ ct=Context.Options([
     ("refinement",0,"Mesh refinement"),
     ("useHex",True,"Use quads?"),
     ("useBernstein",True,"Use Bernstein polynomials"),
-    ("unstructured",False,"Use unstructured triangular mesh")
+    ("unstructured",False,"Use unstructured triangular mesh"),
+    ("genMesh", False, "Generate a new mesh?")
 ],mutable=True)
 

@@ -51,9 +51,14 @@ domainRect = RectangularDomain(L=L)
 if opts.structured:
     domain=domainRect
 else:
-    domainRect.writePoly("hump")
-    domain = PlanarStraightLineGraphDomain("hump")
+    pathfile = os.path.dirname(os.path.abspath(__file__))+"/"+"hump"
+    #domainRect.writePoly(pathfile)
+    domain = PlanarStraightLineGraphDomain(pathfile)
     domain.boundaryTags = domainRect.boundaryTags
+    domain.polyfile= pathfile
+
+genMesh=False
+
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
 bt['back'] = bt['top']

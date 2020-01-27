@@ -10,6 +10,7 @@ from proteus.mprans.SpatialTools import Tank2D
 from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 from proteus.Gauges import PointGauges, LineIntegralGauges, LineGauges
+import os
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -79,6 +80,8 @@ he = tank_dim[0]*opts.he
 domain.MeshOptions.he = he
 st.assembleDomain(domain)
 domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshDambreak"
+#domain.writePoly("meshDambreak")
 
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
@@ -156,3 +159,4 @@ m.rans3p.p.CoefficientsOptions.weak_bc_penalty_constant = 1e6
 
 myTpFlowProblem.Parameters.mesh.he = he
 myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+myTpFlowProblem.Parameters.mesh.genMesh=False

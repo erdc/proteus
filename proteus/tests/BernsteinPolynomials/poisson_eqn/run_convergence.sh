@@ -13,8 +13,8 @@ parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=2 refinement=1 useH
 echo "          ********************************"
 echo "          ********** 2D SIMPLEX **********"
 echo "          *********************************"
-parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=2 refinement=0 useHex=False"
-parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=2 refinement=1 useHex=False"
+parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=2 refinement=0 useHex=False genMesh=True"
+parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=2 refinement=1 useHex=False genMesh=True"
 
 ##################
 # *** 3D HEX *** #
@@ -31,5 +31,5 @@ parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=3 refinement=1 useH
 echo "          ********************************"
 echo "          ********** 3D SIMPLEX **********"
 echo "          ********************************"
-parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=3 refinement=0 useHex=False"
-parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=3 refinement=1 useHex=False"
+parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=3 refinement=0 useHex=False genMesh=True"
+parun -l1 -v poisson_p.py poisson_n.py -b L2_batch.py -C "nd=3 refinement=1 useHex=False genMesh=True"

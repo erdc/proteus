@@ -11,7 +11,7 @@ Profiling.verbose = True
 import os
 import sys
 import inspect
-import numpy
+import numpy as np
 import tables
 import pickle
 import petsc4py
@@ -85,15 +85,15 @@ def test_periodic_2D(load_periodic_opts_2D,
                                    opts)
     ns.calculateSolution('test_run')
     script_dir = os.path.dirname(__file__)
-    relpath = 'comparison_files/basic_2d_test.h5'
-    expected = tables.open_file(os.path.join(script_dir,relpath))
     actual = tables.open_file('ductq1t12dpghe0.0975609756097561.h5')
 
-    assert numpy.allclose(expected.root.velocity_t25.read(),
-                          actual.root.velocity_t25.read(),
-                          atol=1e-8)
-    expected.close()
+    expected_path = 'comparison_files/' + 'comparison_' + 'ductq1t12dpghe0.0975609756097561' + '_velocity_t25.csv'
+    #write comparison file
+    #np.array(actual.root.velocity_t25).tofile(os.path.join(script_dir, expected_path),sep=",")
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.velocity_t25).flatten(),decimal=8)
     actual.close()
+
+
 
 def test_periodic_3D(load_periodic_opts_3D,
                      load_periodic_duct):
@@ -105,14 +105,12 @@ def test_periodic_3D(load_periodic_opts_3D,
     ns.calculateSolution('test_run')
 
     script_dir = os.path.dirname(__file__)
-    relpath = 'comparison_files/basic_3d_test.h5'
-    expected = tables.open_file(os.path.join(script_dir,relpath))
-    actual = tables.open_file('ductp1t13dpghe0.2.h5')
+    actual = tables.open_file('ductp1t13dpghe0.4.h5')
 
-    assert numpy.allclose(expected.root.velocity_t25.read(),
-                          actual.root.velocity_t25.read(),
-                          atol=1e-10)
-    expected.close()
+    expected_path = 'comparison_files/' + 'comparison_' + 'ductp1t13dpghe0.4' + '_velocity_t25.csv'
+    #write comparison file
+    #np.array(actual.root.velocity_t25).tofile(os.path.join(script_dir, expected_path),sep=",")
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.velocity_t25).flatten(),decimal=10)
     actual.close()
 
 def test_periodic_3D_amg(load_periodic_opts_3D_T2,
@@ -125,12 +123,11 @@ def test_periodic_3D_amg(load_periodic_opts_3D_T2,
     ns.calculateSolution('test_run')
 
     script_dir = os.path.dirname(__file__)
-    relpath = 'comparison_files/basic_3d_test.h5'
-    expected = tables.open_file(os.path.join(script_dir,relpath))
-    actual = tables.open_file('ductp1t13dpghe0.2.h5')
-
-    assert numpy.allclose(expected.root.velocity_t25.read(),
-                          actual.root.velocity_t25.read(),
-                          atol=1e-6)
-    expected.close()
+    actual = tables.open_file('ductp1t13dpghe0.4.h5')
+    expected_path = 'comparison_files/' + 'comparison_' + 'ductp1t13dpghe0.4' + '_velocity_t25.csv'
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.velocity_t25).flatten(),decimal=6)
     actual.close()
+
+
+
+
