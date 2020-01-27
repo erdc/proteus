@@ -4,6 +4,10 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cRDLS import *
 from proteus.Comm import globalMax
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd):
