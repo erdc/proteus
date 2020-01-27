@@ -444,7 +444,7 @@ public:
     if (debugging) {
       std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3
                 << std::endl;
-      if (isinf(lambda1) == 1 || isinf(lambda3) == 1)
+      if (std::isinf(lambda1) == 1 || std::isinf(lambda3) == 1)
         abort();
     }
     // return fmax(fmax(0.,-lambda1), fmax(0,lambda3));
