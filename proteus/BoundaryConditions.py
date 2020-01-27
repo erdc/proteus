@@ -6,6 +6,7 @@
 # cython: initializedcheck=False
 
 import cython
+import numpy as np
 """
 Module for creating boundary conditions. Imported in SpatialTools.py
 
@@ -93,7 +94,7 @@ class BoundaryCondition:
                 Constant value
 
         """
-        self.uOfXT = lambda x, t: value
+        self.uOfXT = lambda x, t, n=np.zeros(3,): value
 
 
     def setLinearBC(self, a0, a):
@@ -109,7 +110,7 @@ class BoundaryCondition:
 
         """
         
-        self.uOfXT = lambda x, t: a0+sum(a[:]*x[:])
+        self.uOfXT = lambda x, t, n=np.zeros(3,): a0+sum(a[:]*x[:])
 
     def setLinearRamp(self,t1,value):
         """
@@ -122,4 +123,4 @@ class BoundaryCondition:
         value: float
             Variable value
         """
-        self.uOfXT = lambda x, t: min( t/t1, 1)*value
+        self.uOfXT = lambda x, t, n=np.zeros(3,): min( t/t1, 1)*value

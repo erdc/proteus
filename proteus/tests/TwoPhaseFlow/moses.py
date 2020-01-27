@@ -7,6 +7,7 @@ import numpy as np
 from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import os
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -133,9 +134,8 @@ domain = Domain.PiecewiseLinearComplexDomain(vertices=vertices,
 #go ahead and add a boundary tags member
 domain.MeshOptions.setParallelPartitioningType('node')
 domain.boundaryTags = boundaryTags
-domain.writePoly("mesh")
-domain.writePLY("mesh")
-domain.writeAsymptote("mesh")
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshMarin"
+#domain.writePoly("meshMoses")
 domain.MeshOptions.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 
 # ****************************** #
@@ -323,3 +323,4 @@ m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
 
 myTpFlowProblem.Parameters.mesh.setParallelPartitioningType('node')
 myTpFlowProblem.Parameters.mesh.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
+myTpFlowProblem.Parameters.mesh.genMesh=False

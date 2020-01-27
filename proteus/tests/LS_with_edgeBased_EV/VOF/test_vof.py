@@ -59,13 +59,12 @@ class TestVOF(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/vof_level_3_SUPG.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('vof_level_3_SUPG.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('vof_level_0_SUPG.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_SUPG_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+
         actual.close()
 
     def test_TaylorGalerkin(self):
@@ -86,13 +85,14 @@ class TestVOF(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/vof_level_3_TaylorGalerkin.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('vof_level_3_TaylorGalerkin.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('vof_level_0_TaylorGalerkin.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_TaylorGalerkin_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+
+
+
         actual.close()
 
     def test_EV1(self):
@@ -115,13 +115,12 @@ class TestVOF(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/vof_level_3_EV1.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('vof_level_3_EV1.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('vof_level_0_EV1.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_EV1_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+
         actual.close()
 
     def test_EV2(self):
@@ -141,13 +140,12 @@ class TestVOF(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/vof_level_3_EV2.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('vof_level_3_EV2.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('vof_level_0_EV2.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_EV2_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+
         actual.close()
 
     def test_SmoothnessBased(self):
@@ -165,13 +163,14 @@ class TestVOF(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/vof_level_3_SmoothnessBased.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('vof_level_3_SmoothnessBased.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('vof_level_0_SmoothnessBased.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_SmoothnessBased_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+
+
+
         actual.close()
 
     def test_stab4(self):
@@ -189,11 +188,9 @@ class TestVOF(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/vof_level_3_stab4.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('vof_level_3_stab4.h5','r')
-        assert np.allclose(expected.root.u_t2,
-                           actual.root.u_t2,
-                           atol=1e-10)
-        expected.close()
+        actual = tables.open_file('vof_level_0_stab4.h5','r')
+        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_stab4_' + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
         actual.close()

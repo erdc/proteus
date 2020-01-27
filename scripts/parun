@@ -343,6 +343,9 @@ if opts.SWEs:
     so_name = "SWEs_so.py"
     log("Loading module = {so_name}; with case file = {case_name}".format(so_name=so_name,
                                                                           case_name=args[0]))
+
+    if opts.pathToMyProblem is not None:
+        sys.path.append(opts.pathToMyProblem)
     log(so_name[:-3])
     log(path_utils)
     so = proteus.defaults.load_system(so_name[:-3],path=path_utils)

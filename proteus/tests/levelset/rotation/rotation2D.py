@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from past.utils import old_div
 from proteus import Domain
+import os
+
 #if True uses PETSc solvers
 parallel = False
 linearSmoother = None
@@ -39,10 +41,10 @@ else:
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=1
+lRefinement=0#1
 #tag simulation name to level of refinement
 #soname="rotationcgp2_bdf2_mc"+`lRefinement`
-nn=nnx=nny=(2**lRefinement)*5+1
+nn=nnx=nny=8#(2**lRefinement)*5+1
 nnz=1
 he=old_div(1.0,(nnx-1.0))
 L=[1.0,1.0]
@@ -51,13 +53,15 @@ unstructured=True#True for tetgen, false for tet or hex from rectangular grid
 box=Domain.RectangularDomain(L=(2.0,2.0),
                              x=(-1.0,-1.0),
                              name="box");
-box.writePoly("box")
+genMesh=False
+#box.writePoly("box")
 if unstructured:
     from .rotationDomain import *
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
     domain.boundaryTags = box.boundaryTags
     bt = domain.boundaryTags
     triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
+    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"box"
 else:
     domain = box
 #end time of simulation, full problem is T=8.0
