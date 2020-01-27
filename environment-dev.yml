@@ -3,33 +3,34 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - pip
   - compilers
   - make
   - setuptools
   - cython
-  - daetk 1.0.1
+  - daetk
   - hdf5 =*=*mpich*
-  - metis=5
+  - h5py =*=*mpich*
+  - metis
   - mpich
-  - numpy=1.14
-  - openblas=0.2
-  - parmetis=4.0
-  - petsc4py=3.11
-  - petsc=3.11
-  - python=3
+  - numpy =1.14.*
+  - openblas =0.3.7=*_7
+  - parmetis
+  - petsc4py
+  - petsc =3.12.*
   - scorec
-  - superlu=5
-  - superlu_dist=6
-  - triangle=1.6
+  - superlu
+  - superlu_dist
+  - triangle
   - pychrono
   - mpi4py
-  # This is an optional dependency
-  # - gmsh        [not osx]
+  - gmsh
   - matplotlib
   - mpi4py
   - nose
   - pytables
   - pytest
+  - pytest-cov
   - pytest-xdist
   - scipy
   - tetgen

@@ -10,7 +10,7 @@ Profiling.verbose = True
 import os
 import sys
 import inspect
-import numpy
+import numpy as np
 import tables
 import pickle
 import petsc4py
@@ -41,11 +41,11 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         Profiling.closeLog()
         FileList = ['proteus_default.log',
                     'proteus.log',
-                    'rdomain.ele',
-                    'rdomain.edge',
-                    'rdomain.neig',
-                    'rdomain.node',
-                    'rdomain.poly',
+                    #'rdomain.ele',
+                    #'rdomain.edge',
+                    #'rdomain.neig',
+                    #'rdomain.node',
+                    #'rdomain.poly',
                     'drivenCavityStokesTrial.h5',
                     'drivenCavityStokesTrial.xmf']
         self.remove_files(FileList)
@@ -74,13 +74,11 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
                                             self.so.sList,
                                             opts)
         self.ns.calculateSolution('stokes')
-        relpath = 'comparison_files/drivenCavityStokes_expected.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,relpath))
         actual = tables.open_file('drivenCavityStokesTrial.h5','r')
-        assert numpy.allclose(expected.root.velocity_t1,
-                              actual.root.velocity_t1,
-                              atol=1e-2)
-        expected.close()
+        expected_path = 'comparison_files/' + 'comparison_' + 'drivenCavityStokes' + '_velocity_t1.csv'
+        #write comparison file
+        #np.array(actual.root.velocity_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.velocity_t1).flatten(),decimal=2)
         actual.close()
 
     @pytest.mark.slowTest
