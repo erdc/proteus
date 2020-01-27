@@ -8,6 +8,7 @@ from proteus.MeshTools import MeshOptions
 from proteus.defaults import (Physics_base,
                               Numerics_base,
                               System_base)
+from proteus import InitialConditions
 from proteus import Comm
 comm=Comm.get()
 if comm.size() > 1:
@@ -325,10 +326,20 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.n.maxLineSearches = 0
         self._freeze()
 
+        #Initial Conditions
+
+        self.p.initialConditions = FreezableClass()
+        self.p.initialConditions.p = InitialConditions.InitialCondition()
+        self.p.initialConditions.u = InitialConditions.InitialCondition()
+        self.p.initialConditions.v = InitialConditions.InitialCondition()
+        self.p.initialConditions.w = InitialConditions.InitialCondition()
+        self.p.initialConditions._freeze()
+        
     def _initializePhysics(self):
         pparams = self._Problem.Parameters.physical # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
+    
         # MODEL INDEX
         idxDict = self._Problem.modelIdxDict
         ME_model = self.fetchIndex(idxDict,self.name)
