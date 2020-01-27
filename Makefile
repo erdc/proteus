@@ -270,13 +270,15 @@ docs:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
+
 	-${PROTEUS_ENV} pip install sphinx sphinx_rtd_theme breathe exhale
 	cd docs && ${PROTEUS_ENV} PROTEUS=${PWD} make html
+
 	@echo "**********************************"
 	@echo "Trying to open the html at"
-	@echo "../proteus-website/index.html"
+	@echo "./docs/build/index.html"
 	@echo "**********************************"
-	-sensible-browser ../proteus-website/index.html &
+	-sensible-browser ./docs/build/index.html &
 
 test: air-water-vv check
 	@echo "**************************************************"

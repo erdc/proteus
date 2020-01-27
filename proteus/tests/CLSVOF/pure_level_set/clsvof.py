@@ -12,6 +12,7 @@ try:
     from .parameters import *
 except:
     from parameters import *
+import os
 
 AUTOMATED_TEST=True
 
@@ -55,10 +56,14 @@ else:
 
 refinementMultiplier=12.5
 if AUTOMATED_TEST==True:
-    refinementMultiplier=5
+    refinementMultiplier=3#5
     refinement=1
     T=0.1
     nDTout=1
+
+if ct.test_case==3:
+    refinementMultiplier=4#5
+
 
 # ----- General parameters ----- #
 parallel = False # if True use PETSc solvers
@@ -95,7 +100,7 @@ clsvof_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 
 unstructured=unstructured #True for tetgen, false for tet or hex from rectangular grid
 box=Domain.RectangularDomain(L)
-box.writePoly("box")
+#box.writePoly("box")
 if unstructured:
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
     domain.boundaryTags = box.boundaryTags
@@ -103,6 +108,10 @@ if unstructured:
     triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
 else:
     domain = box
+    meshname = os.path.dirname(os.path.abspath(__file__))+"/"+"mesh_"+str(ct.test_case)
+    #domain.writePoly(meshname)
+    domain.polyfile = meshname
+    genMesh=False
 
 soname="clsvof_level_"+repr(refinement)
 

@@ -330,6 +330,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.particle_penalty_constant = 100.0
         copts.particle_nitsche = 1.0
         copts.particle_sdfList = None
+        copts.particle_velocityList = None
         copts.use_ball_as_particle = 0
         copts.ball_center = None
         copts.ball_radius = None
@@ -338,6 +339,9 @@ class ParametersModelRANS2P(ParametersModelBase):
         copts.ball_center_acceleration = None
         copts.ball_angular_acceleration = None
         copts.ball_density = None
+        copts.MOMENTUM_SGE = 1.
+        copts.PRESSURE_SGE = 1.
+        copts.VELOCITY_SGE = 1.
         copts._freeze()
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
@@ -429,6 +433,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             particle_penalty_constant=copts.particle_penalty_constant,
             particle_nitsche=copts.particle_nitsche,
             particle_sdfList=copts.particle_sdfList,
+            particle_velocityList=copts.particle_velocityList,
             use_ball_as_particle=copts.use_ball_as_particle,
             ball_center=copts.ball_center,
             ball_radius=copts.ball_radius,
@@ -438,9 +443,9 @@ class ParametersModelRANS2P(ParametersModelBase):
             ball_angular_acceleration=copts.ball_angular_acceleration,
             ball_density=copts.ball_density,
             useExact=True,
-            MOMENTUM_SGE=1.0,
-            PRESSURE_SGE=1.0,
-            VELOCITY_SGE=1.0,
+            MOMENTUM_SGE=copts.MOMENTUM_SGE,
+            PRESSURE_SGE=copts.PRESSURE_SGE,
+            VELOCITY_SGE=copts.VELOCITY_SGE,
         )
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions

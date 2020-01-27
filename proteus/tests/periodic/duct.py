@@ -15,6 +15,7 @@ from proteus import (Domain,
                      AnalyticalSolutions)
 from proteus.default_so import *
 from proteus.mprans import RANS2P
+import os
 
 opts = Context.Options([
     ("nd", 2, "Number of space dimensions"),
@@ -27,7 +28,8 @@ opts = Context.Options([
     ("weak", True, "Use weak boundary conditions"),
     ("coord", False, "Use coordinates for setting boundary conditions"),
     ("Re", 1.0, "Reynolds number for non-periodic problem"),
-    ("nnx", 21, "Number of grid nodes in x-direction"),
+    #("nnx", 21, "Number of grid nodes in x-direction"),
+    ("nnx", 11, "Number of grid nodes in x-direction"),
     ("pc_type", 'LU', "Specify preconditioner type"),
     ("A_block_AMG", False, "Specify whether a block-AMG should be used to solve A-block")])
 
@@ -607,6 +609,8 @@ tnList = p.tnList
 pnList=[(p,n)]
 if opts.periodic:
     mesh_name = "pg"
+    p.genMesh=False
+    p.domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"tetgen"
 else:
     if opts.grid:
         mesh_name = "rg"

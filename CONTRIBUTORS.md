@@ -24,6 +24,7 @@
 - Copyright 2019 Johan Mabille johan.mabille@quantstack.net
 - Copyright 2019 David Brochart david.brochart@quantstack.net
 - Copyright 2019 Martin Renou martin.renou@quantstack.net
+- Copyright 2019 Eric Tovar eric.j.tovar@usace.army.mil
 
 **Note for U.S. Federal Employees**
 
