@@ -153,7 +153,7 @@ myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,-9.8,0.0])
 myTpFlowProblem.useBoundaryConditionsModule = False
 
 m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.CoefficientsOptions.disc_ICs = True
+m.clsvof.p.coefficients.disc_ICs = True
 m.clsvof.auxiliaryVariables = [height_gauges1, height_gauges2]
 m.pressure.auxiliaryVariables = [pressure_gauges]
 m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
@@ -168,9 +168,9 @@ myTpFlowProblem.Parameters.Models.rans2p.n.linearSmootherOptions = (False, # den
 prefix = myTpFlowProblem.Parameters.Models.rans2p.n.linear_solver_options_prefix
 myTpFlowProblem.Parameters.Models.rans2p.OptDB.setValue(prefix+'ksp_atol', 1e-20)
 myTpFlowProblem.Parameters.Models.rans2p.OptDB.setValue(prefix+'ksp_rtol', 1e-9)
-myTpFlowProblem.Parameters.Models.rans2p.p.CoefficientsOptions.NONCONSERVATIVE_FORM=0.0
-myTpFlowProblem.Parameters.Models.rans2p.p.CoefficientsOptions.useVF=1.0
-myTpFlowProblem.Parameters.Models.rans2p.p.CoefficientsOptions.weak_bc_penalty_constant = 1e6
+myTpFlowProblem.Parameters.Models.rans2p.p.coefficients.NONCONSERVATIVE_FORM=0.0
+myTpFlowProblem.Parameters.Models.rans2p.p.coefficients.useVF=1.0
+myTpFlowProblem.Parameters.Models.rans2p.p.coefficients.eb_penalty_constant = 1e6
 myTpFlowProblem.Parameters.Models.rans2p.n.nl_atol_res = 1e-9
 
 myTpFlowProblem.Parameters.mesh.he = he
