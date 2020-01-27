@@ -5,6 +5,10 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cSW2DCV import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
     hasInterior = False
