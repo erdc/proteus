@@ -1174,7 +1174,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.numDiff_last[0],
             self.weakDirichletConditionFlags,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
