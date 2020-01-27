@@ -67,6 +67,7 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  he_max,
                  ME_MODEL,
                  LS_MODEL=None,
+                 useLS=True,
                  nd=2,
                  fixedNodeMaterialTypes=None,
                  fixedElementMaterialTypes=None,
@@ -81,10 +82,12 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
                  resetNodeVelocityArray=True,
                  scale_with_nd=False,
                  do_firstStep=True,
-                 nullSpace="ConstantNullSpace"):
+                 nullSpace="ConstantNullSpace",
+                 initialize=True):
         self.nullSpace = nullSpace
         self.myfunc = func
         self.LS_MODEL = LS_MODEL
+        self.useLS = useLS
         self.ME_MODEL = ME_MODEL
         self.he_min = he_min
         self.he_max = he_max
@@ -93,11 +96,8 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.C = 1.  # scaling coefficient for f (computed in preStep)
         self.integral_area = 1.
         self.nd = nd
-        assert 0 < epsTimeStep <= 1, 'epsTimeStep must be between 0. and 1.'
         self.epsTimeStep = epsTimeStep
         self.epsFact_density = epsFact_density
-        aOfX = [lambda x: np.array([[1., 0.], [0., 1.]])]
-        fOfX = [self.uOfX]  # scaled function reciprocal
         self.fixedNodeMaterialTypes = fixedNodeMaterialTypes
         self.fixedElementMaterialTypes = fixedElementMaterialTypes
         self.nSmoothOut = nSmoothOut
@@ -110,18 +110,28 @@ class Coefficients(TransportCoefficients.PoissonEquationCoefficients):
         self.poststepdone = False
         self.noNodeVelocityNodeMaterialTypes = noNodeVelocityNodeMaterialTypes
         self.ntimes_solved = ntimes_solved
-        if scale_with_nd:
+        self.resetNodeVelocityArray = resetNodeVelocityArray
+        self.ntimes_i = 0
+        self.do_firstStep = True
+        self.scale_with_nd = scale_with_nd
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        assert 0 < self.epsTimeStep <= 1, 'epsTimeStep must be between 0. and 1.'
+        if self.useLS is False:
+            self.LS_MODEL = None
+        if self.scale_with_nd:
             if self.nd == 2:
                 self.fFactor = lambda f: f**2
             elif self.nd == 3:
                 self.fFactor = lambda f: f**3
         else:
             self.fFactor = lambda f: f
-        self.resetNodeVelocityArray = resetNodeVelocityArray
-        self.ntimes_i = 0
-        self.do_firstStep = True
-        #super(MyCoeff, self).__init__(aOfX, fOfX)
+        aOfX = [lambda x: np.array([[1., 0.], [0., 1.]])]
+        fOfX = [self.uOfX]  # scaled function reciprocal
         TransportCoefficients.PoissonEquationCoefficients.__init__(self, aOfX, fOfX)
+
 
     def initializeMesh(self, mesh):
         self.mesh = mesh

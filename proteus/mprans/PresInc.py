@@ -59,7 +59,8 @@ class Coefficients(TC_base):
                  sedModelIndex = None, 
                  fixNullSpace=False,
                  INTEGRATE_BY_PARTS_DIV_U=True,
-                 nullSpace="NoNullSpace"):
+                 nullSpace="NoNullSpace",
+                 initialize=True):
         """Construct a coefficients object
 
         :param modelIndex: This model's index into the model list
@@ -73,8 +74,17 @@ class Coefficients(TC_base):
         self.INTEGRATE_BY_PARTS_DIV_U=INTEGRATE_BY_PARTS_DIV_U
         self.VOS_model=VOS_model
         self.VOF_model=VOF_model
-        assert(nd in [2,3])        
         self.nd = nd
+        self.rho_f_min = rho_f_min
+        self.rho_s_min = rho_s_min
+        self.modelIndex = modelIndex
+        self.fluidModelIndex = fluidModelIndex
+        self.sedModelIndex = sedModelIndex
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        assert(self.nd in [2,3])        
         if self.nd == 2:
             sdInfo = {(0, 0): (np.array([0, 1, 2], dtype='i'),
                                np.array([0, 1], dtype='i'))}
@@ -89,11 +99,6 @@ class Coefficients(TC_base):
                          advection={0: {0: 'constant'}},
                          sparseDiffusionTensors=sdInfo,
                          useSparseDiffusion=True)
-        self.rho_f_min = rho_f_min
-        self.rho_s_min = rho_s_min
-        self.modelIndex = modelIndex
-        self.fluidModelIndex = fluidModelIndex
-        self.sedModelIndex = sedModelIndex
 
     def attachModels(self, modelList):
         """
