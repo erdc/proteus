@@ -433,7 +433,6 @@ class ParametersModelRANS2P(ParametersModelBase):
         # TIME
         if self.timeDiscretization=='vbdf':
             self.n.timeIntegration = TimeIntegration.VBDF
-            self.n.timeOrder = 2
         elif self.timeDiscretization=='be': #backward euler
             self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
         else:
