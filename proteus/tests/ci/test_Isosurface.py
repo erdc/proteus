@@ -27,7 +27,8 @@ class TestIsosurface(object):
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
-
+    
+    @pytest.mark.skip
     def test_povgen(self):
         import difflib
         import subprocess
