@@ -3,6 +3,8 @@
 
 #include <cmath>
 #include <iostream>
+#include "xtensor-python/pyarray.hpp"
+
 namespace proteus
 {  
   template<int nSpace>
@@ -54,11 +56,23 @@ public:
          
     {}
   
+    inline double  xt_betaCoeff(     
+			      double sedF, // Sediment fraction
+			      double rhoFluid,
+			      const xt::pyarray<double>& uFluid, //Fluid velocity
+			      const xt::pyarray<double>& uSolid, //Sediment velocity
+			      double nu //Kinematic viscosity
+			      )
+    {
+        return betaCoeff(sedF, rhoFluid, uFluid.data(), uSolid.data(), nu);
+    }
+
+
     inline double  betaCoeff(     
 			      double sedF, // Sediment fraction
 			      double rhoFluid,
-			      double uFluid[nSpace], //Fluid velocity
-			      double uSolid[nSpace], //Sediment velocity
+			      const double uFluid[nSpace], //Fluid velocity
+			      const double uSolid[nSpace], //Sediment velocity
 			      double nu //Kinematic viscosity
 			      )
   {
@@ -116,20 +130,49 @@ public:
       return g0;
     }
 
-     inline double deps_sed_deps(
+     inline double xt_deps_sed_deps(
 		      double sedF, // Sediment fraction
-              double rhoFluid,
+                      double rhoFluid,
 		      double rhoSolid,
-		      double uFluid[nSpace],
-		      double uSolid[nSpace],
-		      double gradC[nSpace], //Sediment velocity
+		      const xt::pyarray<double>& uFluid,
+		      const xt::pyarray<double>& uSolid,
+		      const xt::pyarray<double>& gradC, //Sediment velocity
 		      double nu, //Kinematic viscosity
 		      double theta_n,
 		      double kappa_n,
 		      double epsilon_n,
 		      double nuT_n,
-		      double g[nSpace])
-			   
+		      const xt::pyarray<double>& g)
+     {
+         return deps_sed_deps(sedF,
+                              rhoFluid,
+                              rhoSolid,
+                              uFluid.data(),
+                              uSolid.data(),
+                              gradC.data(),
+                              nu,
+                              theta_n,
+                              kappa_n,
+                              epsilon_n,
+                              nuT_n,
+                              g.data());
+
+     }
+    
+     inline double deps_sed_deps(
+		      double sedF, // Sediment fraction
+              double rhoFluid,
+		      double rhoSolid,
+		      const double uFluid[nSpace],
+		      const double uSolid[nSpace],
+		      const double gradC[nSpace], //Sediment velocity
+		      double nu, //Kinematic viscosity
+		      double theta_n,
+		      double kappa_n,
+		      double epsilon_n,
+		      double nuT_n,
+		      const double g[nSpace])
+		   
     {		   
       
       double beta = betaCoeff(sedF,rhoFluid,uFluid,uSolid,nu)+small_;
@@ -156,22 +199,49 @@ public:
     }
       
 		      
-    inline double kappa_sed1(
+    inline double xt_kappa_sed1(
 		      double sedF, // Sediment fraction
 		      double rhoFluid,
 		      double rhoSolid,
-		      double uFluid[nSpace],
-		      double uSolid[nSpace],
-		      double gradC[nSpace],
+		      const xt::pyarray<double>& uFluid,
+		      const xt::pyarray<double>& uSolid,
+		      const xt::pyarray<double>& gradC,
 		      double nu, 
 		      double theta_n,
 		      double kappa_n,
 		      double epsilon_n,
 		      double nuT_n,
-		      double g[nSpace])
+		      const xt::pyarray<double>& g)
 			   
-    {		   
-			   
+    {
+        return kappa_sed1(sedF,
+                          rhoFluid,
+                          rhoSolid,
+                          uFluid.data(),
+                          uSolid.data(),
+                          gradC.data(),
+                          nu,
+                          theta_n,
+                          kappa_n,
+                          epsilon_n,
+                          nuT_n,
+                          g.data());
+    }
+
+    inline double kappa_sed1(
+		      double sedF, // Sediment fraction
+		      double rhoFluid,
+		      double rhoSolid,
+		      const double uFluid[nSpace],
+		      const double uSolid[nSpace],
+		      const double gradC[nSpace],
+		      double nu, 
+		      double theta_n,
+		      double kappa_n,
+		      double epsilon_n,
+		      double nuT_n,
+		      const double g[nSpace])
+    {
       
       double beta = betaCoeff(sedF,rhoFluid,uFluid,uSolid,nu)+small_;
       double gs = gs0(sedF)+small_;
@@ -195,19 +265,46 @@ public:
       return  es_1  + es_2;
 
     }
-    inline double dkappa_sed1_dk(
+
+    inline double xt_dkappa_sed1_dk(
 		      double sedF, // Sediment fraction
 		      double rhoFluid,
 		      double rhoSolid,
-		      double uFluid[nSpace], //Fluid velocity
-		      double uSolid[nSpace], //Sediment velocity
-		      double gradC[nSpace], //Sediment velocity
+		      const xt::pyarray<double>& uFluid, //Fluid velocity
+		      const xt::pyarray<double>& uSolid, //Sediment velocity
+		      const xt::pyarray<double>& gradC, //Sediment velocity
 		      double nu, //Kinematic viscosity
 		      double theta_n,
 		      double kappa_n,
 		      double epsilon_n,
 		      double nuT_n)
-			   
+    {
+        return dkappa_sed1_dk(sedF,
+                              rhoFluid,
+                              rhoSolid,
+                              uFluid.data(),
+                              uSolid.data(),
+                              gradC.data(),
+                              nu,
+                              theta_n,
+                              kappa_n,
+                              epsilon_n,
+                              nuT_n);
+
+    }
+
+    inline double dkappa_sed1_dk(
+		      double sedF, // Sediment fraction
+		      double rhoFluid,
+		      double rhoSolid,
+		      const double uFluid[nSpace], //Fluid velocity
+		      const double uSolid[nSpace], //Sediment velocity
+		      const double gradC[nSpace], //Sediment velocity
+		      double nu, //Kinematic viscosity
+		      double theta_n,
+		      double kappa_n,
+		      double epsilon_n,
+		      double nuT_n)			   
     {		   
       double beta = betaCoeff(sedF,rhoFluid,uFluid,uSolid,nu)+small_;
       double gs = gs0(sedF)+small_;
@@ -373,17 +470,36 @@ public:
       return gamma_s;
       
     }
-    inline double  jint1(  double sedF,
+    inline double  xt_jint1(  double sedF,
 			   double rhoFluid,
 			   double rhoSolid,
-			   double uFluid[nSpace],
-			   double uSolid[nSpace],
+			   const xt::pyarray<double>& uFluid,
+			   const xt::pyarray<double>& uSolid,
 			   double kappa,
 			   double epsilon,
 			   double theta,
 			   double nu)
-
-			      
+    {
+        return jint1(sedF,
+                     rhoFluid,
+                     rhoSolid,
+                     uFluid.data(),
+                     uSolid.data(),
+                     kappa,
+                     epsilon,
+                     theta,
+                     nu);
+    }
+    
+    inline double  jint1(  double sedF,
+			   double rhoFluid,
+			   double rhoSolid,
+			   const double uFluid[nSpace],
+			   const double uSolid[nSpace],
+			   double kappa,
+			   double epsilon,
+			   double theta,
+			   double nu)		      
     {
       
       double beta = betaCoeff(sedF,rhoFluid,uFluid,uSolid,nu)+small_;
@@ -398,16 +514,32 @@ public:
       double Jint1 = 4. * alpha * beta * kappa /( 3.* rhoSolid)  ;
       return Jint1;
 
-	}
-    inline double  jint2(  double sedF,
+    }
+    inline double  xt_jint2(  double sedF,
 			   double rhoFluid,
 			   double rhoSolid,
-			   double uFluid[nSpace],
-			   double uSolid[nSpace],
+			   const xt::pyarray<double>& uFluid,
+			   const xt::pyarray<double>& uSolid,
 			   double theta,
 			   double nu)
 
-			      
+    {
+        return jint2(sedF,
+                     rhoFluid,
+                     rhoSolid,
+                     uFluid.data(),
+                     uSolid.data(),
+                     theta,
+                     nu);
+    }
+    
+    inline double  jint2(  double sedF,
+			   double rhoFluid,
+			   double rhoSolid,
+			   const double uFluid[nSpace],
+			   const double uSolid[nSpace],
+			   double theta,
+			   double nu)		      
     {
       
       double beta = betaCoeff(sedF,rhoFluid,uFluid,uSolid,nu)+small_;
@@ -415,14 +547,27 @@ public:
 
     }
 
+    inline double  xt_djint2_dtheta(  double sedF,
+			   double rhoFluid,
+			   double rhoSolid,
+			   const xt::pyarray<double>& uFluid,
+			   const xt::pyarray<double>& uSolid,
+			   double nu)
+    {
+        return djint2_dtheta(sedF,
+                             rhoFluid,
+                             rhoSolid,
+                             uFluid.data(),
+                             uSolid.data(),
+                             nu);
+    }
+
     inline double  djint2_dtheta(  double sedF,
 			   double rhoFluid,
 			   double rhoSolid,
-			   double uFluid[nSpace],
-			   double uSolid[nSpace],
-			   double nu)
-
-			      
+			   const double uFluid[nSpace],
+			   const double uSolid[nSpace],
+			   double nu)      
     {
       
       double beta = betaCoeff(sedF,rhoFluid,uFluid,uSolid,nu)+small_;
@@ -563,14 +708,37 @@ public:
 
     
 
-    inline void  mIntFluid( double * mint2, double sedF,
+    inline xt::pyarray<double> xt_mIntFluid(double sedF,
 			   double rhoFluid,
-			      double uFluid_n[nSpace], //Fluid velocity
-			      double uSolid_n[nSpace], //Sediment velocity
-			      double uFluid_np1[nSpace], //Fluid velocity
+			      const xt::pyarray<double>& uFluid_n, //Fluid velocity
+			      const xt::pyarray<double>& uSolid_n, //Sediment velocity
+			      const xt::pyarray<double>& uFluid_np1, //Fluid velocity
 			      double nu, //Kinematic viscosity
 			      double nuT, //Turbulent viscosity
-			      double gradc[nSpace]
+			      const xt::pyarray<double>& gradc
+			      )
+    {
+        auto mint2 = xt::pyarray<double>::from_shape({2});
+        mIntFluid(mint2.data(),
+                  sedF,
+                  rhoFluid,
+                  uFluid_n.data(),
+                  uSolid_n.data(),
+                  uFluid_np1.data(),
+                  nu,
+                  nuT,
+                  gradc.data());
+        return mint2;
+    }
+
+    inline void  mIntFluid( double * mint2, double sedF,
+			   double rhoFluid,
+			      const double uFluid_n[nSpace], //Fluid velocity
+			      const double uSolid_n[nSpace], //Sediment velocity
+			      const double uFluid_np1[nSpace], //Fluid velocity
+			      double nu, //Kinematic viscosity
+			      double nuT, //Turbulent viscosity
+			      const double gradc[nSpace]
 			      )
     {
       
@@ -582,14 +750,37 @@ public:
       
       }
 
-    inline void mIntSolid(   double * mint2, double sedF,
+    inline xt::pyarray<double> xt_mIntSolid(double sedF,
 			   double rhoFluid,
-			      double uFluid_n[nSpace], //Fluid velocity
-			      double uSolid_n[nSpace], //Sediment velocity
-			      double uSolid_np1[nSpace], //Sediment velocity
+			      const xt::pyarray<double>& uFluid_n, //Fluid velocity
+			      const xt::pyarray<double>& uSolid_n, //Sediment velocity
+			      const xt::pyarray<double>& uSolid_np1, //Sediment velocity
 			      double nu, //Kinematic viscosity
 			      double nuT, //Turbulent viscosity
-			      double gradc[nSpace]
+			      const xt::pyarray<double>& gradc
+			      )
+    {
+        auto mint2 = xt::pyarray<double>::from_shape({2});
+        mIntSolid(mint2.data(),
+                  sedF,
+                  rhoFluid,
+                  uFluid_n.data(),
+                  uSolid_n.data(),
+                  uSolid_np1.data(),
+                  nu,
+                  nuT,
+                  gradc.data());
+        return mint2;
+    }
+
+    inline void mIntSolid(   double * mint2, double sedF,
+			   double rhoFluid,
+			      const double uFluid_n[nSpace], //Fluid velocity
+			      const double uSolid_n[nSpace], //Sediment velocity
+			      const double uSolid_np1[nSpace], //Sediment velocity
+			      double nu, //Kinematic viscosity
+			      double nuT, //Turbulent viscosity
+			      const double gradc[nSpace]
 			      )
     {
 
@@ -600,14 +791,37 @@ public:
 	    }
 
     }
-    inline void mIntgradC(double * mint2,  double sedF,
+    inline xt::pyarray<double> xt_mIntgradC(double sedF,
 			   double rhoFluid,
-				  double uFluid_n[nSpace], //Fluid velocity
-				  double uSolid_n[nSpace], //Sediment velocity
+				  const xt::pyarray<double>& uFluid_n, //Fluid velocity
+				  const xt::pyarray<double>& uSolid_n, //Sediment velocity
 				  double nu, //Kinematic viscosity
 				  double nuT, //Turbulent viscosity
-				  double gradc[nSpace]
+				  const xt::pyarray<double>& gradc
 			      )
+    {
+        
+        auto mint2 = xt::pyarray<double>::from_shape({2});
+        mIntgradC(mint2.data(),
+                  sedF,
+                  rhoFluid,
+                  uFluid_n.data(),
+                  uSolid_n.data(),
+                  nu,
+                  nuT,
+                  gradc.data());
+        return mint2;
+    }
+
+    inline void mIntgradC(double * mint2,  double sedF,
+			   double rhoFluid,
+				  const double uFluid_n[nSpace], //Fluid velocity
+				  const double uSolid_n[nSpace], //Sediment velocity
+				  double nu, //Kinematic viscosity
+				  double nuT, //Turbulent viscosity
+				  const double gradc[nSpace]
+			      )
+
     {
 
       double beta = betaCoeff(sedF,rhoFluid,uFluid_n,uSolid_n,nu);
@@ -621,11 +835,27 @@ public:
 
 
    
+    inline double  xt_dmInt_duFluid
+                            (  double sedF,
+			   double rhoFluid,
+			      const xt::pyarray<double>& uFluid_n, //Fluid velocity
+			      const xt::pyarray<double>& uSolid_n, //Sediment velocity
+			      double nu //Kinematic viscosity
+
+			      )
+    {
+        return dmInt_duFluid(sedF,
+                             rhoFluid,
+                             uFluid_n.data(),
+                             uSolid_n.data(),
+                             nu);
+    }
+
     inline double  dmInt_duFluid
                             (  double sedF,
 			   double rhoFluid,
-			      double uFluid_n[nSpace], //Fluid velocity
-			      double uSolid_n[nSpace], //Sediment velocity
+			      const double uFluid_n[nSpace], //Fluid velocity
+			      const double uSolid_n[nSpace], //Sediment velocity
 			      double nu //Kinematic viscosity
 
 			      )
@@ -635,11 +865,27 @@ public:
     }
 
 
+       inline double  xt_dmInt_duSolid
+                            (  double sedF,
+			   double rhoFluid,
+			      const xt::pyarray<double>& uFluid_n, //Fluid velocity
+			      const xt::pyarray<double>& uSolid_n, //Sediment velocity
+			      double nu //Kinematic viscosity
+
+			      )
+    {
+        return dmInt_duSolid(sedF,
+                             rhoFluid,
+                             uFluid_n.data(),
+                             uSolid_n.data(),
+                             nu);
+    }
+
        inline double  dmInt_duSolid
                             (  double sedF,
 			   double rhoFluid,
-			      double uFluid_n[nSpace], //Fluid velocity
-			      double uSolid_n[nSpace], //Sediment velocity
+			      const double uFluid_n[nSpace], //Fluid velocity
+			      const double uSolid_n[nSpace], //Sediment velocity
 			      double nu //Kinematic viscosity
 
 			      )

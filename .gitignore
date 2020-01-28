@@ -64,7 +64,6 @@ proteus/flcbdfWrappers.cpp
 proteus/mbd/CouplingFSI.cpp
 proteus/mprans/BoundaryConditions.cpp
 proteus/mprans/MeshSmoothing.cpp
-proteus/mprans/SedClosure.cpp
 proteus/mprans/cAddedMass.cpp
 proteus/mprans/cCLSVOF.cpp
 proteus/mprans/cGN_SW2DCV.cpp
