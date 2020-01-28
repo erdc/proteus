@@ -5,6 +5,10 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cKappa import *
 from proteus.mprans.cKappa2D import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 """
 NOTES:
@@ -1186,7 +1190,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.numDiff_last[0],
             self.ebqe['penalty'],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
