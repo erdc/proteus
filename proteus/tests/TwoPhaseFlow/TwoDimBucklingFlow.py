@@ -240,12 +240,12 @@ myTpFlowProblem.Parameters.physical.gravity = np.array([0., -9.8, 0.])
 
 myTpFlowProblem.useBoundaryConditionsModule = False
 m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.CoefficientsOptions.disc_ICs = False
-m.rans3p.p.CoefficientsOptions.useVF=1.0
-m.rans3p.p.CoefficientsOptions.forceStrongDirichlet = True
-m.rans3p.p.CoefficientsOptions.forceStrongDirichlet = True
-m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
-m.rans3p.p.CoefficientsOptions.epsFact_density = 3.
+m.clsvof.p.coefficients.disc_ICs = False
+m.rans3p.p.coefficients.useVF=1.0
+m.rans3p.p.coefficients.forceStrongDirichlet = True
+m.rans3p.p.coefficients.forceStrongDirichlet = True
+m.rans3p.p.coefficients.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.rans3p.p.coefficients.epsFact_density = 3.
 m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
 
 myTpFlowProblem.outputStepping.systemStepExact = True

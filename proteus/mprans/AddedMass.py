@@ -58,7 +58,8 @@ class Coefficients(TC_base):
                  barycenters=None,
                  flags_rigidbody=None,
                  solve_rate=0.,
-                 nullSpace="ConstantNullSpace"):
+                 nullSpace="ConstantNullSpace",
+                 initialize=True):
         """
         TODO
         """
@@ -66,8 +67,15 @@ class Coefficients(TC_base):
         self.updated_global = False
         self.next_solve = 0.
         self.nullSpace = nullSpace
-        assert(nd in [2, 3])
         self.nd = nd
+        self.flowModelIndex=V_model
+        self.barycenters = barycenters
+        self.flags_rigidbody = flags_rigidbody
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        assert(self.nd in [2, 3])
         if self.nd == 2:
             sdInfo = {(0, 0): (np.array([0, 1, 2], dtype='i'),
                                np.array([0, 1], dtype='i'))}
@@ -81,11 +89,7 @@ class Coefficients(TC_base):
                          potential={0: {0: 'u'}},
                          sparseDiffusionTensors=sdInfo,
                          useSparseDiffusion=True)
-        self.flowModelIndex=V_model
-        self.barycenters = barycenters
-        if flags_rigidbody is not None:
-            self.flags_rigidbody = flags_rigidbody
-        else:
+        if self.flags_rigidbody is None:
             Profiling.logEvent("Warning: flags_rigidbody was not set for"+
                                "AddedMass model, using a zero array of length"+
                                "1000, this sets all boundaries as fixed walls"+
