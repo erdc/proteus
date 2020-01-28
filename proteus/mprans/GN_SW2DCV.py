@@ -5,6 +5,10 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cGN_SW2DCV import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 
 class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
@@ -1632,7 +1636,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(4, 2)], self.csrColumnOffsets[(4, 2)],
             self.csrRowIndeces[(4, 3)], self.csrColumnOffsets[(4, 3)],
             self.csrRowIndeces[(4, 4)], self.csrColumnOffsets[(4, 4)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
