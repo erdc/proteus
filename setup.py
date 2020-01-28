@@ -245,11 +245,14 @@ EXTENSIONS_TO_BUILD = [
         libraries=['m',PROTEUS_LAPACK_LIB,
                    PROTEUS_BLAS_LIB]
     ),
-    Extension("mprans.cRANS3PF",['proteus/mprans/cRANS3PF.pyx'],
-              depends=['proteus/mprans/RANS3PF.h','proteus/mprans/RANS3PF2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT+["-std=c++11","-mavx"],
-              include_dirs=[numpy.get_include(),'proteus']),
+    Extension(
+        'mprans.cRANS3PF',
+        ['proteus/mprans/RANS3PF.cpp'],
+        depends=['proteus/mprans/RANS3PF.h','proteus/mprans/RANS3PF2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+["-std=c++14","-mavx"],
+        language='c++',
+    ),
     Extension("mprans.cRANS3PSed",['proteus/mprans/cRANS3PSed.pyx'],
               depends=['proteus/mprans/RANS3PSed.h','proteus/mprans/RANS3PSed2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
@@ -768,7 +771,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.1.dev0',
+          version='1.7.2.dev0',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
@@ -1075,8 +1078,8 @@ def setup_given_extensions(extensions):
     )
 
 def setup_extensions_in_sequential():
-    #setup_given_extensions(EXTENSIONS_TO_BUILD)
-    setup_given_extensions(MPRANS2_EXTENSIONS)
+    setup_given_extensions(EXTENSIONS_TO_BUILD)
+    #setup_given_extensions(MPRANS2_EXTENSIONS)
 
 def setup_extensions_in_parallel():
     import multiprocessing, logging
