@@ -1424,6 +1424,11 @@ cdef class ProtChSystem:
         self.initialized = False
         self.update_substeps = False
 
+        # Set the chrono logging values
+        self.log_chrono_format = 'h5'
+        self.log_chrono_bodies = None
+        self.log_chrono_springs = None
+
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
         Calculations in Chrono will use this time step within the
