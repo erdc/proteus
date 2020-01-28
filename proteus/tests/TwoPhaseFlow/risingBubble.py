@@ -194,11 +194,11 @@ else: #test_case=2
 
 myTpFlowProblem.useBoundaryConditionsModule = False
 m = myTpFlowProblem.Parameters.Models
-m.rans3p.p.CoefficientsOptions.useVF=1.0
-m.rans3p.p.CoefficientsOptions.weak_bc_penalty_constant = 1e6
+m.rans3p.p.coefficients.useVF=1.0
+m.rans3p.p.coefficients.eb_penalty_constant = 1e6
 m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
-m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
-m.clsvof.p.CoefficientsOptions.disc_ICs = True
-m.clsvof.p.CoefficientsOptions.computeMetricsForBubble = True
+m.rans3p.p.coefficients.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.clsvof.p.coefficients.disc_ICs = True
+m.clsvof.p.coefficients.computeMetricsForBubble = True
 
 myTpFlowProblem.outputStepping.systemStepExact = True

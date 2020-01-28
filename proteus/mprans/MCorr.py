@@ -34,15 +34,39 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useQuadraticRegularization=False,
                  edgeBasedStabilizationMethods=False,
                  nullSpace='NoNullSpace',
-                 useExact=False):
+                 useExact=False,
+                 initialize=True):
         self.useExact=useExact
         self.useQuadraticRegularization = useQuadraticRegularization
         self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         self.sd = sd
+        self.nd = nd
         self.checkMass = checkMass
         self.variableNames = ['phiCorr']
+        self.useQuadraticRegularization = useQuadraticRegularization
+        self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
+        self.levelSetModelIndex = LSModel_index
+        self.flowModelIndex = V_model
+        self.epsFactHeaviside = epsFactHeaviside
+        self.epsFactDirac = epsFactDirac
+        self.epsFactDiffusion = epsFactDiffusion
+        self.me_model = me_model
+        self.VOFModelIndex = VOFModel_index
+        self.useC = True
+        self.applyCorrection = applyCorrection
+        if self.applyCorrection:
+            self.applyCorrectionToDOF = applyCorrectionToDOF
+        self.massConservationError = 0.0
+        self.nullSpace = nullSpace
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        if not self.applyCorrection:
+            self.applyCorrectionToDOF = False
+        #
         nc = 1
         mass = {}
         advection = {}
@@ -51,6 +75,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         potential = {0: {0: 'u'}}
         reaction = {0: {0: 'nonlinear'}}
         # reaction={}
+        nd = self.nd
         if self.sd:
             assert nd is not None, "You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
             sdInfo = {(0, 0): (numpy.arange(start=0, stop=nd + 1, step=1, dtype='i'),
@@ -67,24 +92,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          hamiltonian,
                          self.variableNames,
                          sparseDiffusionTensors=sdInfo,
-                         useSparseDiffusion=sd)
-        self.useQuadraticRegularization = useQuadraticRegularization
-        self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
-        self.levelSetModelIndex = LSModel_index
-        self.flowModelIndex = V_model
-        self.epsFactHeaviside = epsFactHeaviside
-        self.epsFactDirac = epsFactDirac
-        self.epsFactDiffusion = epsFactDiffusion
-        self.me_model = me_model
-        self.VOFModelIndex = VOFModel_index
-        self.useC = True
-        self.applyCorrection = applyCorrection
-        if self.applyCorrection:
-            self.applyCorrectionToDOF = applyCorrectionToDOF
-        else:
-            self.applyCorrectionToDOF = False
-        self.massConservationError = 0.0
-        self.nullSpace = nullSpace
+                         useSparseDiffusion=self.sd)
 
     def initializeMesh(self, mesh):
         self.h = mesh.h

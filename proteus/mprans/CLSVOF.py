@@ -42,7 +42,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  epsFactDirac=1.5,
                  epsFactRedist=0.33,
                  lambdaFact=1.0,
-                 alpha='inf'): #lambda parameter in CLSVOF paper
+                 alpha='inf', #lambda parameter in CLSVOF paper
+                 initialize=True):
         assert timeOrder==1, "timeOrder must be 1. It will be deleted after 1st paper"
         assert timeOrder==1 or timeOrder==2, "timeOrder must be 1 or 2"
         assert computeMetrics in [0,1,2,3]
@@ -60,6 +61,31 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.epsFactRedist=epsFactRedist
         self.lambdaFact=lambdaFact
         self.variableNames=['clsvof']
+        self.movingDomain=movingDomain
+        self.epsFact=epsFact
+        self.flowModelIndex=V_model
+        self.modelIndex=ME_model
+        self.RD_modelIndex=RD_model
+        self.VOS_model=VOS_model
+        self.checkMass = checkMass
+        #VRANS
+        self.setParamsFunc   = setParamsFunc
+        self.flowCoefficients=None
+        self.movingDomain=movingDomain
+        self.forceStrongConditions=forceStrongConditions
+        self.outputQuantDOFs=outputQuantDOFs
+        self.alpha=alpha
+        self.freeze_interface_during_preRedistancing = False
+        # VRANS
+        self.q_vos = None
+        self.ebqe_vos = None
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        if self.alpha=='inf':
+            self.alpha = 0
+            self.freeze_interface_during_preRedistancing = True
         nc=1
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -76,27 +102,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          reaction,
                          hamiltonian,
                          self.variableNames,
-                         movingDomain=movingDomain)
-        self.epsFact=epsFact
-        self.flowModelIndex=V_model
-        self.modelIndex=ME_model
-        self.RD_modelIndex=RD_model
-        self.VOS_model=VOS_model
-        self.checkMass = checkMass
-        #VRANS
-        self.setParamsFunc   = setParamsFunc
-        self.flowCoefficients=None
-        self.movingDomain=movingDomain
-        self.forceStrongConditions=forceStrongConditions
-        self.outputQuantDOFs=outputQuantDOFs
-        self.alpha=alpha
-        self.freeze_interface_during_preRedistancing = False
-        if self.alpha=='inf':
-            self.alpha = 0
-            self.freeze_interface_during_preRedistancing = True
-        # VRANS
-        self.q_vos = None
-        self.ebqe_vos = None
+                         movingDomain=self.movingDomain)
 
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h

@@ -758,7 +758,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.1.dev0',
+          version='1.7.2.dev0',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
@@ -822,6 +822,7 @@ def setup_given_extensions(extensions):
                       'proteus.tests.matrix_constructor.import_modules',
                       'proteus.SWFlow',
                       'proteus.SWFlow.utils',
+                      'proteus.tests.SWFlow',
                       'proteus.MeshAdaptPUMI',
                       'proteus.MeshAdaptPUMI',
                       'proteus.tests.MeshAdaptPUMI',
@@ -925,6 +926,13 @@ def setup_given_extensions(extensions):
                         'proteus/tests/TwoPhaseFlow/comparison_files/fillingTank.h5',
                         'proteus/tests/TwoPhaseFlow/comparison_files/marin.h5',
                         'proteus/tests/TwoPhaseFlow/comparison_files/moses.h5']),
+                      (os.path.join(proteus_install_path,'tests','SWFlow','comparison_files'),
+                       ['proteus/tests/SWFlow/comparison_files/solitary_wave.h5',
+                        'proteus/tests/SWFlow/comparison_files/parab1D.h5',
+                        'proteus/tests/SWFlow/comparison_files/dam3Bumps.h5',
+                        'proteus/tests/SWFlow/comparison_files/GN_steady.h5',
+                        'proteus/tests/SWFlow/comparison_files/solitary_reef.h5',
+                        'proteus/tests/SWFlow/comparison_files/seawall.h5']),
                       (os.path.join(proteus_install_path,'tests','SWEs','dam_over_bumps','comparison_files'),
                        ['proteus/tests/SWEs/dam_over_bumps/comparison_files/SWEs_dam_over_bumps.h5']),
                       (os.path.join(proteus_install_path,'tests','SWEs','oneD_dambreak_flat_bottom','comparison_files'),

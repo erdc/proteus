@@ -5,13 +5,15 @@ from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2D
 from proteus.mprans import SW2DCV
+from proteus.mprans import GN_SW2DCV
 from proteus.Domain import RectangularDomain
+from proteus.Domain import Mesh2DMDomain
 import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
-import proteus.SWFlow.SWFlowProblem as SWFlowProblem 
-from proteus import WaveTools as wt
+import proteus.SWFlows.SWFlowProblem as SWFlowProblem
+
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -21,67 +23,60 @@ opts= Context.Options([
     ("final_time",2.0,"Final time for simulation"),
     ("dt_output",1.0,"Time interval to output solution"),
     ("cfl",0.33,"Desired CFL restriction"),
-    ("refinement",2,"Refinement level")
+    ("refinement",4,"Refinement level"),
+    ("reflectingBCs",True,"Use reflecting BCs")
     ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L=(10.0,1.0)
-refinement = opts.refinement
-domain = RectangularDomain(L=L,x=[0,0,0])
+AdH_file = "Lake_Dunlap_UTM_15N_Meters"
+domain = None
 
-# CREATE REFINEMENT #
-nnx0=6
-nnx = (nnx0-1)*(2**refinement)+1
-nny = old_div((nnx-1),10)+1
-
-he = old_div(L[0],float(nnx-1))
-triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
-
-#################
-# SOLITARY WAVE #
-#################
-h1=0.1
-h2=0.11
-x0=-2.0
-g=9.81
-
-def soliton(x,t):
-    D = np.sqrt(g * h2)
-    z = np.sqrt(old_div( 3.0*(h2-h1), h2 * h1**2 ))    
-    phase = x - D * t - x0
-    a1 = z * phase/2.0
-    return  h1 + (h2-h1) * 1.0/ np.cosh(a1)**2
-
-def u(x,t):
-    D = np.sqrt(g * h2)
-    return D*(1.0 - old_div(h1,soliton(x,t)))
+##############
+# BATHYMETRY #
+##############
+bathymetry = None
+#using mesh z coord
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
-def water_height_DBC(X,flag):
-    if X[0]==0:
-        return lambda x,t: soliton(X[0],t)
-    elif X[0]==L[0]:
-        return lambda X,t: h1
-    
-def x_mom_DBC(X,flag):
-    if X[0]==0:
-        return lambda X,t: soliton(X[0],t)*u(X[0],t)
-    elif X[0]==L[0]:
-        return lambda X,t: 0.0
-    
+# REFLECTING BCs
+
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
 class water_height_at_t0(object):
+    """set the water level to 100m behind the dam and dry elsewhere"""
     def uOfXT(self,X,t):
-        return h1
+        x = X[0]
+        #LINE 1
+        x1 = 4701.18
+        y1 = 4143.41
+        x2 = 4655.5
+        y2 = 4392.1
+        m = old_div((y2-y1),(x2-x1))
+        dam1 = m*(x-x1)+y1
+
+        #LINE 2
+        x1 = 4655.5
+        y1 = 4392.1
+        x2 = 4000.0
+        y2 = 5500.0
+        m = old_div((y2-y1),(x2-x1))
+        dam2 = m*(x-x1)+y1
+
+        return 1.
+
+        # if (X[1] <= dam1 and X[1] <= dam2):
+        #     return np.maximum(100.0-X[2],0.)
+        # else:
+        #     return 0.
 
 class Zero(object):
-    def uOfXT(self,X,t):
+    """still water conditions"""
+    def uOfXT(self,x,t):
         return 0.0
 
 # ********************************** #
@@ -91,19 +86,21 @@ outputStepping = SWFlowProblem.OutputStepping(opts.final_time,dt_output=opts.dt_
 initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': Zero(),
                      'y_mom': Zero()}
-boundaryConditions = {'water_height': water_height_DBC,
-                      'x_mom': x_mom_DBC,
-                      'y_mom': lambda x,flag: lambda x,t: 0.0}
+boundaryConditions = {'water_height': lambda x,flag: None,
+                      'x_mom': lambda x,flag: None,
+                      'y_mom': lambda x,flag: None}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=0,
                                               cfl=0.33,
                                               outputStepping=outputStepping,
                                               structured=True,
-                                              he=he,
-                                              nnx=nnx,
-                                              nny=nny,
+                                              he=1.,
+                                              nnx=1,
+                                              nny=1,
                                               domain=domain,
+                                              AdH_file=AdH_file,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              bathymetry=lambda X: X[0]*0)
+                                              reflectingBCs=opts.reflectingBCs,
+                                              bathymetry=bathymetry)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION']=0
-mySWFlowProblem.physical_parameters['mannings']=0
+mySWFlowProblem.physical_parameters['mannings']=0.033

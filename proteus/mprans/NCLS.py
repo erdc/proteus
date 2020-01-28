@@ -273,7 +273,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # OUTPUT quantDOFs
                  outputQuantDOFs=False,
                  # NULLSPACE Info
-                 nullSpace='NoNullSpace'):
+                 nullSpace='NoNullSpace',
+                 initialize=True):
 
         self.PURE_BDF=PURE_BDF
         self.DO_SMOOTHING = DO_SMOOTHING
@@ -296,6 +297,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.useMetrics = useMetrics
         self.epsFact = epsFact
         self.variableNames = ['phi']
+        self.flowModelIndex = V_model
+        self.modelIndex = ME_model
+        self.RD_modelIndex = RD_model
+        self.checkMass = checkMass
+        self.sc_uref = sc_uref
+        self.sc_beta = sc_beta
+        self.waterline_interval = waterline_interval
+        self.nullSpace = nullSpace
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
         nc = 1
         mass = {0: {0: 'linear'}}
         hamiltonian = {0: {0: 'linear'}}
@@ -312,15 +325,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          reaction,
                          hamiltonian,
                          ['phi'],
-                         movingDomain=movingDomain)
-        self.flowModelIndex = V_model
-        self.modelIndex = ME_model
-        self.RD_modelIndex = RD_model
-        self.checkMass = checkMass
-        self.sc_uref = sc_uref
-        self.sc_beta = sc_beta
-        self.waterline_interval = waterline_interval
-        self.nullSpace = nullSpace
+                         movingDomain=self.movingDomain)
 
     def attachModels(self, modelList):
         # the level set model

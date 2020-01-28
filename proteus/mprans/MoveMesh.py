@@ -20,16 +20,28 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  nd=3,
                  meIndex=0,
                  V_model=0,
-                 nullSpace='NoNullSpace'):
+                 nullSpace='NoNullSpace',
+                 initialize=True):
         self.flowModelIndex = V_model
         self.modelType_block = modelType_block
         self.modelParams_block = modelParams_block
-        self.materialProperties = self.modelParams_block
-        self.nMaterialProperties = len(self.materialProperties[-1])
         self.g = numpy.array(g)
         self.gmag = sqrt(sum([gi**2 for gi in g]))
         self.rhow = rhow
         self.nd = nd
+        self.firstCall = True
+        self.gravityStep = True
+        self.meIndex = meIndex
+        self.dt_last = None
+        self.solidsList = []
+        self.nullSpace = nullSpace
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        self.materialProperties = self.modelParams_block
+        self.nMaterialProperties = len(self.materialProperties[-1])
+        nd = self.nd
         mass = {}
         advection = {}
         diffusion = {}
@@ -81,12 +93,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              stress=stress)
             self.vectorComponents = [0, 1, 2]
             self.vectorName = "displacement"
-        self.firstCall = True
-        self.gravityStep = True
-        self.meIndex = meIndex
-        self.dt_last = None
-        self.solidsList = []
-        self.nullSpace = nullSpace
 
     def attachModels(self, modelList):
         self.model = modelList[self.meIndex]
