@@ -31,7 +31,7 @@ class TestSWFlow(object):
         actual = tables.open_file(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_h_t2.csv'
         #write comparison file
-        np.array(actual.root.h_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        #np.array(actual.root.h_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
         np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t2).flatten(),decimal=10)
         actual.close()
 
