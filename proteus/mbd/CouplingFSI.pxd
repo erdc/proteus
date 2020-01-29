@@ -297,6 +297,9 @@ cdef class ProtChSystem:
         bool initialized
         bool update_substeps
         int nBodiesIBM
+        object log_chrono_bodies
+        object log_chrono_springs
+        string log_chrono_format
 
 
 cdef class ProtChMesh:
