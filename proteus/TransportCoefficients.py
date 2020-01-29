@@ -198,6 +198,12 @@ class TC_base(object):
             self.elementIntegralKeys.append(('u',ci))
             self.elementBoundaryIntegralKeys.append(('u',ci))
 
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem__(self, key, val):
+        self.__setattr__(key, val)
+
     def evaluate(self,t,c):
         """
         Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.

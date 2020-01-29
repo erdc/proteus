@@ -49,7 +49,7 @@ class TestIBM(unittest.TestCase):
     def test_fallingCylinderIBM_ball(self):
         from proteus import defaults
         case = fallingCylinder
-        case.m.rans2p.p.CoefficientsOptions.use_ball_as_particle = 1.
+        case.m.rans2p.p.coefficients.use_ball_as_particle = 1.
         case.myTpFlowProblem.initializeAll()
         so = case.myTpFlowProblem.so
         so.name = 'fallingCylinderIBM'
@@ -96,7 +96,7 @@ class TestIBM(unittest.TestCase):
         from proteus import defaults
         importlib.reload(fallingCylinder)
         case = fallingCylinder
-        case.m.rans2p.p.CoefficientsOptions.use_ball_as_particle = 0.
+        case.m.rans2p.p.coefficients.use_ball_as_particle = 0.
         case.myTpFlowProblem.initializeAll()
         so = case.myTpFlowProblem.so
         so.name = 'fallingCylinderIBM2'

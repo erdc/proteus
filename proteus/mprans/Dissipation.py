@@ -168,14 +168,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sc_beta=1.0,
                  default_kappa=1.0e-3,
                  closure=None,
-                 nullSpace='NoNullSpace'):
+                 nullSpace='NoNullSpace',
+                 initialize=True):
 
         self.useMetrics = useMetrics
         self.dissipation_model_flag = dissipation_model_flag  # default K-Epsilon, 2 ==> K-Omega 1998, 3 --> K-Omega 1988
         self.variableNames = ['epsilon']
-        if self.dissipation_model_flag >= 2:
-            self.variableNames = ['omega']
-        nc = 1
         self.nd = nd
         self.rho_0 = rho_0
         self.nu_0 = nu_0
@@ -188,7 +186,28 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.c_e = c_e
         self.sigma_e = sigma_e
         self.g = g
+        self.epsFact = epsFact
+        self.flowModelIndex = V_model
+        self.modelIndex = ME_model
+        self.RD_modelIndex = RD_model
+        self.LS_modelIndex = LS_model
+        self.VOS_modelIndex = VOS_model
+        self.SED_modelIndex = SED_model
+        self.kappa_modelIndex = kappa_model
+        self.sc_uref = sc_uref
+        self.sc_beta = sc_beta
+        self.nullSpace = nullSpace
+        # for debugging model
+        self.default_kappa = default_kappa
+        self.closure = closure
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        if self.dissipation_model_flag >= 2:
+            self.variableNames = ['omega']
         #
+        nc = 1
         mass = {0: {0: 'linear'}}
         advection = {0: {0: 'linear'}}
         hamiltonian = {}
@@ -211,19 +230,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          hamiltonian,
                          self.variableNames,
                          sparseDiffusionTensors=sdInfo)
-        self.epsFact = epsFact
-        self.flowModelIndex = V_model
-        self.modelIndex = ME_model
-        self.RD_modelIndex = RD_model
-        self.LS_modelIndex = LS_model
-        self.VOS_modelIndex = VOS_model
-        self.SED_modelIndex = SED_model
-        self.kappa_modelIndex = kappa_model
-        self.sc_uref = sc_uref
-        self.sc_beta = sc_beta
-        self.nullSpace = nullSpace
-        # for debugging model
-        self.default_kappa = default_kappa
+        closure = self.closure
         try:
             self.aDarcy=closure.aDarcy
             self.betaForch=closure.betaForch
@@ -266,6 +273,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             assert VOS_model == None
             assert SED_model == None
             logEvent("Sediment module is off. Loading dummy parameters",2)
+
+        
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
 

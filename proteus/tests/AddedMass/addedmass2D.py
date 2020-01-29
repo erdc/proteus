@@ -129,8 +129,8 @@ params.physical.surf_tension_coeff = sigma_01
 # MODEL PARAMETERS
 m = params.Models
 m.rans2p.index = 0
-m.rans2p.p.CoefficientsOptions.NONCONSERVATIVE_FORM=0.0
-m.rans2p.p.CoefficientsOptions.useVF=1.0
+m.rans2p.p.coefficients.NONCONSERVATIVE_FORM=0.0
+m.rans2p.p.coefficients.useVF=1.0
 m.addedMass.index = 1
 
 # auxiliary variables
@@ -150,5 +150,5 @@ for s in system.subcomponents:
     if type(s) is fsi.ProtChBody:
         for flag in body.boundaryFlags:
             flags_rigidbody[flag] = 1
-m.addedMass.p.CoefficientsOptions.flags_rigidbody = flags_rigidbody
+m.addedMass.p.coefficients.flags_rigidbody = flags_rigidbody
 myTpFlowProblem.Parameters.mesh.genMesh=False
