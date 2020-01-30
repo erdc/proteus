@@ -1424,6 +1424,11 @@ cdef class ProtChSystem:
         self.initialized = False
         self.update_substeps = False
 
+        # Set the chrono logging values
+        self.log_chrono_format = 'h5'
+        self.log_chrono_bodies = None
+        self.log_chrono_springs = None
+
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
         Calculations in Chrono will use this time step within the
@@ -1557,6 +1562,23 @@ cdef class ProtChSystem:
         Profiling.logEvent("Chrono poststep")
         for s in self.subcomponents:
             s.poststep()
+
+        # Log the chrono phyics of interest
+        if self.log_chrono_bodies:
+            if self.log_chrono_format == 'h5':
+                self.log_bodies_h5(self.log_chrono_bodies)
+            else:
+                self.log_bodies_text(self.t + self.proteus_dt, self.log_chrono_bodies)
+
+        if self.log_chrono_springs:
+            if self.log_chrono_format == 'h5':
+                self.log_springs_h5(self.log_chrono_springs)
+            else:
+                self.log_springs_text(self.t + self.proteus_dt, self.log_chrono_springs)
+
+        if (self.log_chrono_bodies or self.log_chrono_springs) and self.log_chrono_format == 'h5':
+            self.log_times_h5(self.t + self.proteus_dt)
+
         self.record_values = False
         self.first_step = False  # first step passed
         self.tCount += 1
@@ -1836,6 +1858,339 @@ cdef class ProtChSystem:
 
     def setCollisionEnvelopeMargin(self, double envelope, double margin):
         self.thisptr.setCollisionEnvelopeMargin(envelope, margin)
+
+    def log_bodies_text(self, d_time, l_logging_info):
+        """
+        Logs the chrono information into a text file at each timestep
+                Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Simulation time
+        l_logging_info: list
+            Contains the information to be logged. Structure is [body number, type]
+            with multiple entries being included as a 2d list. Valid types are
+            'position', 'rotation', 'force', and 'torque'.
+        Returns
+        -------
+        None. Data is logged to a text file
+        """
+
+        # Open the file
+        s_filename = 'chrono_log_body.txt'
+        o_file = open(s_filename, 'a+')
+
+        # Loop and write the body information
+        for i_entry_body in range(0, len(l_logging_info), 1):
+            # Extract the coordinate positions
+            o_body = self.subcomponents[l_logging_info[i_entry_body][0]].ChBody
+
+            if l_logging_info[i_entry_body][1] == 'position':
+                o_body_position = o_body.GetPos()
+
+                o_file.write(str(d_time) + '\t' + 'position' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_position.x) + '\t' +
+                             str(o_body_position.y) + '\t' + str(o_body_position.z) + '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'rotation':
+                o_body_rotation = o_body.GetRot()
+
+                o_file.write(str(d_time) + '\t' + 'rotation' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_rotation.e0) + '\t' +
+                             str(o_body_rotation.e1) + '\t' + str(o_body_rotation.e2) + '\t' + str(o_body_rotation.e3) +
+                             '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'force':
+                o_body_force = o_body.Get_XForce()
+
+                o_file.write(str(d_time) + '\t' + 'force' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_force.x) + '\t' +
+                             str(o_body_force.y) + '\t' + str(o_body_force.z) + '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'torque':
+                o_body_torque = o_body.Get_Xtorque()
+
+                o_file.write(str(d_time) + '\t' + 'torque' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_torque.x) + '\t' +
+                             str(o_body_torque.y) + '\t' + str(o_body_torque.z) + '\n')
+
+            else:
+                raise NotImplementedError('Chrono body log not understood.')
+
+        # Close the log file
+        o_file.close()
+
+
+    def log_bodies_h5(self, l_logging_info):
+        """
+        Logs the chrono information into a h5 file at each timestep
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        l_logging_info: list
+            Contains the information to be logged. Structure is [body number, type]
+            with multiple entries being included as a 2d list. Valid types are
+            'position', 'rotation', 'force', and 'torque'.
+        Returns
+        -------
+        None. Data is saved to an h5 file.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Create the empty data holders
+        l_position = []
+        l_rotation = []
+        l_force = []
+        l_torque = []
+
+        # Loop and write the body information
+        for i_entry_body in range(0, len(l_logging_info), 1):
+            # Extract the coordinate positions
+            o_body = self.subcomponents[l_logging_info[i_entry_body][0]].ChBody
+
+            if l_logging_info[i_entry_body][1] == 'position':
+                o_body_position = o_body.GetPos()
+                l_position.append([o_body_position.x, o_body_position.y, o_body_position.z])
+
+            elif l_logging_info[i_entry_body][1] == 'rotation':
+                o_body_rotation = o_body.GetRot()
+                l_rotation.append([o_body_rotation.e0, o_body_rotation.e1, o_body_rotation.e2, o_body_rotation.e3])
+
+            elif l_logging_info[i_entry_body][1] == 'force':
+                o_body_force = o_body.Get_XForce()
+                l_force.append([o_body_force.x, o_body_force.y, o_body_force.z])
+
+            elif l_logging_info[i_entry_body][1] == 'torque':
+                o_body_torque = o_body.Get_Xtorque()
+                l_torque.append([o_body_torque.x, o_body_torque.y, o_body_torque.z])
+
+            else:
+                raise NotImplementedError('Chrono body log not understood.')
+
+        # Log the position data
+        if len(l_position) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_position = o_file['position']
+
+                # Resize the dataset
+                i_index = dm_position.shape[0]
+                dm_position.resize(dm_position.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_position[i_index, :, :] = np.array(l_position)
+
+            except:
+                # Create the initial dataset
+                dm_position = o_file.create_dataset('position', (1, len(l_position), 3), compression="gzip",
+                                                    maxshape=(None, len(l_position), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_position[0, :, :] = np.array(l_position)
+
+        # Log the rotation data
+        if len(l_rotation) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_rotation = o_file['rotation']
+
+                # Resize the dataset
+                i_index = dm_rotation.shape[0]
+                dm_rotation.resize(dm_rotation.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_rotation[i_index, :, :] = np.array(l_rotation)
+
+            except:
+                # Create the initial dataset
+                dm_rotation = o_file.create_dataset('rotation', (1, len(l_rotation), 4), compression="gzip",
+                                                    maxshape=(None, len(l_rotation), 4), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_rotation[0, :, :] = np.array(l_rotation)
+
+        # Log the force data
+        if len(l_force) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_force = o_file['force']
+
+                # Resize the dataset
+                i_index = dm_force.shape[0]
+                dm_force.resize(dm_force.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_force[i_index, :, :] = np.array(l_force)
+
+            except:
+                # Create the initial dataset
+                dm_force = o_file.create_dataset('force', (1, len(l_force), 3), compression="gzip",
+                                                 maxshape=(None, len(l_force), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_force[0, :, :] = np.array(l_force)
+
+        # Log the torque data
+        if len(l_torque) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_torque = o_file['torque']
+
+                # Resize the dataset
+                i_index = dm_torque.shape[0]
+                dm_torque.resize(dm_torque.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_torque[i_index, :, :] = np.array(l_torque)
+
+            except:
+                # Create the initial dataset
+                dm_torque = o_file.create_dataset('torque', (1, len(l_torque), 3), compression="gzip",
+                                                  maxshape=(None, len(l_torque), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_torque[0, :, :] = np.array(l_torque)
+
+        # Close the log file
+        o_file.close()
+
+
+    def log_springs_text(self, d_time, l_springs):
+        """
+        Logs the chrono information into a text file at each timestep
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Current simulation time
+        l_springs: list
+            Spring objects for which data is being stored
+        Returns
+        -------
+        None. Data is saved to a text file.
+        """
+
+        # Open the file
+        s_filename = 'chrono_log_spring.txt'
+        o_file = open(s_filename, 'a+')
+
+        # Loop and write the body information
+        for i_entry_spring in range(0, len(l_springs), 1):
+            # Get the current state of the spring
+            d_internal_force = l_springs[i_entry_spring].GetSpringReact()
+            d_spring_velocity = l_springs[i_entry_spring].GetSpringVelocity()
+            d_spring_length = l_springs[i_entry_spring].GetSpringLength()
+
+            # Write to the file
+            o_file.write(str(d_time) + '\t' + str(i_entry_spring) + '\t' + str(d_internal_force) + '\t' +
+                         str(d_spring_velocity) + '\t' + str(d_spring_length) + '\n')
+
+        # Close the output file
+        o_file.close()
+
+
+    def log_springs_h5(self, l_springs):
+        """
+        Logs chrono spring information to an h5 file
+        Parameters
+        ----------
+        self: object
+            ProtChSystem object being referenced.
+        l_springs: list
+            Spring objects for which the data is being logged
+        Returns
+        -------
+        None. Data is logged to an h5 file.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Create the empty data holders
+        l_spring_data = []
+
+        # Loop and write the body information
+        for i_entry_spring in range(0, len(l_springs), 1):
+            # Get the current state of the spring
+            d_internal_force = l_springs[i_entry_spring].GetSpringReact()
+            d_spring_velocity = l_springs[i_entry_spring].GetSpringVelocity()
+            d_spring_length = l_springs[i_entry_spring].GetSpringLength()
+
+            # Write to the file
+            l_spring_data.append([d_internal_force, d_spring_velocity, d_spring_length])
+
+        # Log the spring data
+        try:
+            # Open the dataset
+            dm_springs = o_file['springs']
+
+            # Resize the dataset
+            i_index = dm_springs.shape[0]
+            dm_springs.resize(dm_springs.shape[0] + 1, axis=0)
+
+            # Store the values into the dataset
+            dm_springs[i_index, :, :] = np.array(l_spring_data)
+
+        except:
+            # Create the initial dataset
+            dm_springs = o_file.create_dataset('springs', (1, len(l_spring_data), 3), compression="gzip",
+                                               maxshape=(None, len(l_spring_data), 3), dtype=float)
+
+            # Store the first entry into the dataset
+            dm_springs[0, :, :] = np.array(l_spring_data)
+
+        # Close the output file
+        o_file.close()
+
+
+    def log_times_h5(self, d_time):
+        """
+        Creates a log of the Proteus timestep within the h5 log file
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Time within the simulation
+        Returns
+        -------
+        None. Data is logged to the disk.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Log the time data
+        try:
+            # Open the dataset
+            dm_time = o_file['time']
+
+            # Resize the dataset
+            i_index = dm_time.shape[0]
+            dm_time.resize(dm_time.shape[0] + 1, axis=0)
+
+            # Store the values into the dataset
+            dm_time[i_index] = np.array(d_time)
+
+        except:
+            # Create the initial dataset
+            dm_time = o_file.create_dataset('time', (1,), compression="gzip",
+                                            maxshape=(None,), dtype=float)
+
+            # Store the first entry into the dataset
+            dm_time[0] = d_time
+
+        # Close the file
+        o_file.close()
 
     # def findFluidVelocityAtCoords(self, coords):
     #     """Finds solution from NS for velocity of fluid at given coordinates
