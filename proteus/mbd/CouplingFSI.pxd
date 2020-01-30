@@ -248,7 +248,7 @@ cdef class ProtChBody:
       object sdfIBM
       string hdfFileName
       double Aij_factor
-      int[:] boundaryFlags
+      np.ndarray boundaryFlags
     cdef np.ndarray callPrescribedMotion(self, double t)
 
 
