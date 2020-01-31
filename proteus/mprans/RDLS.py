@@ -169,7 +169,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # NULLSpace info
                  nullSpace='NoNullSpace', #penalization param for elliptic re-distancing
                  useExact=False,
-                 copyList=True):
+                 copyList=True,
+                 initialize=True):
         self.copyList=copyList
         self.useExact=useExact
         self.useConstantH = useConstantH
@@ -221,6 +222,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.alpha = 0
             self.freeze_interface_within_elliptic_redist = True
         self.nullSpace = nullSpace
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        pass
 
     def attachModels(self, modelList):
         if self.nModelId is not None:
