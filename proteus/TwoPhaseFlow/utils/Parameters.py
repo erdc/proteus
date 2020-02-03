@@ -1319,8 +1319,8 @@ class ParametersModelVOF(ParametersModelBase):
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.V_model = V_model
-        coeffs.RD_model = RD_model
-        coeffs.ME_model = ME_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.modelIndex = ME_model
         coeffs.movingDomain = self.p.movingDomain
         coeffs.initialize()
         # INITIAL CONDITIONS
@@ -1429,9 +1429,9 @@ class ParametersModelNCLS(ParametersModelBase):
             assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
         RD_model = mparams.rdls.index
         coeffs = self.p.coefficients
-        coeffs.V_model = V_model
-        coeffs.RD_model = RD_model
-        coeffs.ME_model = ME_model
+        coeffs.flowModelIndex = V_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.modelIndex = ME_model
         coeffs.movingDomain = self.p.movingDomain
         coeffs.initialize()
         # INITIAL CONDITIONS
@@ -1638,10 +1638,9 @@ class ParametersModelMCorr(ParametersModelBase):
             assert mparams.rans2p.index is not None or params.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
         # COEFFICIENTS
         coeffs = self.p.coefficients
-        coeffs.LS_model = LS_model
-        coeffs.V_model = V_model
-        coeffs.ME_model = ME_model
-        coeffs.VOF_model = VOF_model
+        coeffs.flowModelIndex = V_model
+        coeffs.me_model = ME_model
+        coeffs.VOFModelIndex = VOF_model
         coeffs.nd = nd
         coeffs.initialize()
         # INITIAL CONDITIONS
