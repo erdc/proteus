@@ -1915,8 +1915,11 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
             assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
         # COEFFICIENTS
         coeffs = self.p.coefficients
+        coeffs.flowModelIndex = V_model
+        coeffs.meIndex = ME_model
         coeffs.modelType_block = smFlags
-        coeffs.modelType_block = smTypes
+        coeffs.modelParams_block = smTypes
+        coeffs.nd = nd
         coeffs.initialize()
         # INITIAL CONDITIONS
         self.p.initialConditions = None
