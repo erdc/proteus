@@ -18,6 +18,8 @@
 
 #include <apfShape.h>
 
+#include "PyEmbeddedFunctions.h"
+
 extern double dt_err;
 #ifdef PROTEUS_USE_SIMMETRIX
 //PROTEUS_USE_SIMMETRIX is a compiler macro that indicates whether Simmetrix libraries are used
@@ -322,7 +324,6 @@ static int countTotal(apf::Mesh* m, int dim)
   return total;
 }
 
-#include "PyEmbeddedFunctions.h"
 
 int MeshAdaptPUMIDrvr::willErrorAdapt() 
 /**
