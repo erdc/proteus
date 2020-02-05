@@ -74,11 +74,11 @@ jobs:
   - os: osx
     osx_image: xcode11.3
     python: 3.7
-    env: TEST_PROFILE="proteus-conda"
+    env: TEST_PROFILE="proteus-conda-osx"
     install:
       - git lfs pull
       - sudo apt-get update
-      - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      - wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
       - bash miniconda.sh -b -p $HOME/miniconda
       - source "$HOME/miniconda/etc/profile.d/conda.sh"
       - hash -r
