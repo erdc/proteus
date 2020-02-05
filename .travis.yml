@@ -75,6 +75,9 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install -v -e .
+    script:
+      - export MPLBACKEND="AGG"
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
   - os: osx
     osx_image: xcode11.3
     python: 3.7
@@ -92,6 +95,6 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install -v -e .
-   script:
+    script:
       - export MPLBACKEND="AGG"
-      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
