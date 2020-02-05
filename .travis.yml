@@ -24,6 +24,7 @@ notifications:
 after_success:
   - conda install codecov
   - codecov
+  - bash ./scripts/deploy.sh docs
 
 jobs:
   include:
@@ -76,8 +77,8 @@ jobs:
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 
 deploy:
-  provider: script
-  script: bash scripts/deploy.sh docs
-  gh_token: $GH_TOKEN
-  on:
-    branch: travis_autodoc
+  - provider: script
+    script: bash ./scripts/deploy.sh docs
+    gh_token: $GH_TOKEN
+    on:
+      branch: travis_autodoc
