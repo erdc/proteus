@@ -1,5 +1,3 @@
-language: python
-
 addons:
   apt:
     packages:
@@ -25,6 +23,7 @@ jobs:
   include:
   - os: linux
     dist: xenial
+    language: python
     python: 2.7
     env: TEST_PROFILE="proteus-hashdist"
     install:
@@ -56,6 +55,7 @@ jobs:
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
   - os: linux
     dist: xenial
+    language: python
     python: 3.7
     env: TEST_PROFILE="proteus-conda"
     install:
