@@ -1,7 +1,3 @@
-os: linux
-dist: xenial
-#sudo: required
-
 language: python
 
 addons:
@@ -27,7 +23,8 @@ after_success:
 
 jobs:
   include:
-  - python: 2.7
+  - os: linux
+    python: 2.7
     env: TEST_PROFILE="proteus-hashdist"
     install:
       - git lfs pull
@@ -56,7 +53,8 @@ jobs:
     script:
       - export MPLBACKEND="AGG"
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
-  - python: 3.7
+  - os: linux
+    python: 3.7
     env: TEST_PROFILE="proteus-conda"
     install:
       - git lfs pull
@@ -71,6 +69,23 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install -v -e .
-    script:
+  - os: osx
+    osx_image: xcode11.3
+    python: 3.7
+    env: TEST_PROFILE="proteus-conda"
+    install:
+      - git lfs pull
+      - sudo apt-get update
+      - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      - bash miniconda.sh -b -p $HOME/miniconda
+      - source "$HOME/miniconda/etc/profile.d/conda.sh"
+      - hash -r
+      - conda config --set always_yes yes --set changeps1 no
+      - conda update -q conda
+      - conda info -a
+      - conda env create -f environment-dev.yml
+      - conda activate proteus-dev
+      - pip install -v -e .
+   script:
       - export MPLBACKEND="AGG"
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
