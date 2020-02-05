@@ -76,7 +76,7 @@ jobs:
       - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
   - os: osx
     osx_image: xcode11.2
-    python: 3.7
+    python: 3.8
     env: TEST_PROFILE="proteus-conda-osx"
     install:
       - git lfs pull
