@@ -1427,17 +1427,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         logEvent(memory("XdmfWriters", "OneLevelTransport"), level=4)
         logEvent("flux bc objects")
-        for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
-            self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
-            for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
-                if ci in self.coefficients.advection:
-                    self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
-                    self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
-            for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
-                self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
-                for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
-                    self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
-                    self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
+        try:
+            for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
+                self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
+                for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
+                    if ci in self.coefficients.advection:
+                        self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t,self.ebqe['n'][t[0],t[1]])
+                        self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
+                for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
+                    self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
+                    for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
+                        self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t,self.ebqe['n'][t[0],t[1]])
+                        self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
+        except:
+            for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
+                self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
+                for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
+                    if ci in self.coefficients.advection:
+                        self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
+                        self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
+                for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
+                    self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
+                    for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
+                        self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
+                        self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
+            
         self.numericalFlux.setDirichletValues(self.ebqe)
         if self.movingDomain:
             self.MOVING_DOMAIN = 1.0
@@ -1543,15 +1557,26 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # Dirichlet boundary conditions
             self.numericalFlux.setDirichletValues(self.ebqe)
             # Flux boundary conditions
-            for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
-                for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
-                    if ci in self.coefficients.advection:
-                        self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
-                        self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
-                for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
-                    for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
-                        self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
-                        self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
+            try:
+                for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
+                    for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
+                        if ci in self.coefficients.advection:
+                            self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t,self.ebqe['n'][t[0],t[1]])
+                            self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
+                    for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
+                        for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
+                            self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t,self.ebqe['n'][t[0],t[1]])
+                            self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
+            except:
+                for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
+                    for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
+                        if ci in self.coefficients.advection:
+                            self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
+                            self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
+                    for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
+                        for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
+                            self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
+                            self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
         r.fill(0.0)
         try:
             self.isActiveDOF[:] = 0.0
