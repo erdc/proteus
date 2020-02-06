@@ -30,8 +30,14 @@ class Test_ibm(object):
         self.aux_names = []
 
     def teardown_method(self, method):
-        pass
-
+        """ Tear down function """
+        FileList = ['cylinder_ibm_T1_rans3p.h5', 'cylinder_ibm_T1_rans3p.xmf'
+                    ]
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
 
 #     def test_ex1(self):
 #         self.compare_name = "T8P2"
@@ -80,10 +86,9 @@ class Test_ibm(object):
                                                opts)
         self.aux_names.append(ns.modelList[0].name)
         ns.calculateSolution(my_so.name)
-        # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/' + self.compare_name + '.h5'
-        with tables.open_file(os.path.join(self._scriptdir, expected_path)) as expected, \
-                tables.open_file( my_so.name + '.h5') as actual:
-            assert np.allclose(expected.root.u_t2,
-                               actual.root.u_t2,
-                               atol=1e-10)
+        actual = tables.open_file( my_so.name + '.h5')
+        expected_path = 'comparison_files/' + 'comparison_' + self.compare_name + '_u_t2.csv'
+        #write comparison file
+        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+        actual.close()

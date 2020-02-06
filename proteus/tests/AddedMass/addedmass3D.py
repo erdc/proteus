@@ -7,6 +7,7 @@ from proteus.mprans import SpatialTools as st
 from proteus.mbd import CouplingFSI as fsi
 import pychrono as chrono
 from proteus.TwoPhaseFlow import TwoPhaseFlowProblem as tpf
+import os
 
 rho_0 = 1000.
 nu_0 = 1.004e-6
@@ -14,7 +15,7 @@ rho_1 = 1.205
 nu_1 = 1.500e-5
 sigma_01 = 0.0
 g = [0., 0., -9.81]
-he = 1.
+he = 2.5
 water_level = 2.5
 
 # GEOMETRY
@@ -29,7 +30,6 @@ rect = st.Cuboid(domain, dim=[1.,1.,1.], coords=[old_div(tank_dim[0],2.),
 rect.setHoles(holes=np.array([rect.coords]))
 
 domain.MeshOptions.he = he
-
 # BOUNDARY CONDITIONS
 
 tank.BC['x+'].setNoSlip()
@@ -58,6 +58,8 @@ body.ChBody.SetBodyFixed(True)  # fixing body
 # OTHER PARAMS
 st.assembleDomain(domain)
 
+domain.polyfile=domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh3D"
+#domain.writePoly("mesh3D")
 
 #  ___       _ _   _       _    ____                _ _ _   _
 # |_ _|_ __ (_) |_(_) __ _| |  / ___|___  _ __   __| (_) |_(_) ___  _ __  ___
@@ -133,8 +135,8 @@ params.physical.surf_tension_coeff = sigma_01
 # MODEL PARAMETERS
 m = params.Models
 m.rans2p.index = 0
-m.rans2p.p.CoefficientsOptions.useVF = 1.0
-m.rans2p.p.CoefficientsOptions.NONCONSERVATIVE_FORM = 0.0
+m.rans2p.p.coefficients.useVF = 1.0
+m.rans2p.p.coefficients.NONCONSERVATIVE_FORM = 0.0
 m.addedMass.index = 1
 
 # auxiliary variables
@@ -154,5 +156,6 @@ for s in system.subcomponents:
     if type(s) is fsi.ProtChBody:
         for flag in s.boundaryFlags:
             flags_rigidbody[flag] = 1
-m.addedMass.p.CoefficientsOptions.flags_rigidbody = flags_rigidbody
+m.addedMass.p.coefficients.flags_rigidbody = flags_rigidbody
+myTpFlowProblem.Parameters.mesh.genMesh=False
 

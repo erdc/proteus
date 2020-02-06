@@ -43,12 +43,24 @@ class Coefficients(TC_base):
                  modelIndex=None,
                  fluidModelIndex=None,
                  pressureModelIndex=None,
-                 useRotationalForm=False):
+                 useRotationalForm=False,
+                 initialize=True):
         """Construct a coefficients object
 
         :param pressureIncrementModelIndex: The index into the model list
         """
         self.nd = nd
+        self.useMetrics = useMetrics
+        self.modelIndex = modelIndex
+        self.epsFactHeaviside = epsFactHeaviside
+        self.epsFactDirac = epsFactDirac
+        self.epsFactDiffusion = epsFactDiffusion
+        self.fluidModelIndex = fluidModelIndex
+        self.pressureModelIndex = pressureModelIndex
+        self.useRotationalForm = useRotationalForm
+        self.initialize()
+
+    def initialize(self):
         if self.nd == 2:
             sdInfo = {(0, 0): (np.array([0, 1, 2], dtype='i'),
                                np.array([0, 1], dtype='i'))}
@@ -63,14 +75,6 @@ class Coefficients(TC_base):
                          diffusion={0: {0: {0: 'linear'}}},
                          sparseDiffusionTensors=sdInfo,
                          useSparseDiffusion = True)
-        self.useMetrics = useMetrics
-        self.modelIndex = modelIndex
-        self.epsFactHeaviside = epsFactHeaviside
-        self.epsFactDirac = epsFactDirac
-        self.epsFactDiffusion = epsFactDiffusion
-        self.fluidModelIndex = fluidModelIndex
-        self.pressureModelIndex = pressureModelIndex
-        self.useRotationalForm = useRotationalForm
 
     def attachModels(self, modelList):
         self.model = modelList[self.modelIndex]

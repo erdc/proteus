@@ -8,6 +8,7 @@ from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import os
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -80,9 +81,8 @@ else:
                                                       regionFlags=regionFlags)
         #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
-        domain.writePoly("mesh")
-        domain.writePLY("mesh")
-        domain.writeAsymptote("mesh")
+        domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshBucklingFlow"
+        #domain.writePoly("meshBucklingFlow")
         #domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
         domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % ((he ** 2) / 2.0,)
         logEvent("""Mesh generated using: tetgen -%s %s""" % (domain.MeshOptions.triangleOptions, domain.polyfile + ".poly"))
@@ -240,14 +240,15 @@ myTpFlowProblem.Parameters.physical.gravity = np.array([0., -9.8, 0.])
 
 myTpFlowProblem.useBoundaryConditionsModule = False
 m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.CoefficientsOptions.disc_ICs = False
-m.rans3p.p.CoefficientsOptions.useVF=1.0
-m.rans3p.p.CoefficientsOptions.forceStrongDirichlet = True
-m.rans3p.p.CoefficientsOptions.forceStrongDirichlet = True
-m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
-m.rans3p.p.CoefficientsOptions.epsFact_density = 3.
+m.clsvof.p.coefficients.disc_ICs = False
+m.rans3p.p.coefficients.useVF=1.0
+m.rans3p.p.coefficients.forceStrongDirichlet = True
+m.rans3p.p.coefficients.forceStrongDirichlet = True
+m.rans3p.p.coefficients.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.rans3p.p.coefficients.epsFact_density = 3.
 m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
 
 myTpFlowProblem.outputStepping.systemStepExact = True
 
 myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+myTpFlowProblem.Parameters.mesh.genMesh=False
