@@ -12,6 +12,7 @@ addons:
     - libssl-dev
     - python-lzma
     - python3
+    - doxygen
 
 cache:
   - timeout: 1000
