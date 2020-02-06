@@ -85,5 +85,6 @@ jobs:
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
+      skip_cleanup: true
       #on:
       #  branch: master
