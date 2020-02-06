@@ -12,10 +12,10 @@ if [ "$1" == "docs" ]; then
     # check that docs folder exists
     if [[ -d ./docs/build ]]
     then
-      #make docs
+      make docs
       cd ./docs/build
       # check that we are in right repository
-      if [ $(git remote get-url origin) == "https://${GH_TOKEN}@github.com/erdc/proteus-docs.git" ]
+      if [[ $(git remote get-url origin) == "https://${GH_TOKEN}@github.com/erdc/proteus-docs.git" ]]
       then
         git add . *
         git commit -m "Travis automatic docs build: $TRAVIS_BUILD_NUMBER"
