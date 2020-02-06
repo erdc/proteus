@@ -13,6 +13,7 @@ addons:
     - python-lzma
     - python3
     - doxygen
+    - graphviz
 
 cache:
   - timeout: 1000
@@ -80,6 +81,5 @@ jobs:
 deploy:
   - provider: script
     script: bash ./scripts/deploy.sh docs
-    gh_token: $GH_TOKEN
     on:
-      branch: travis_autodoc
+      branch: master
