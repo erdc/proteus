@@ -1,6 +1,10 @@
 #!/bin/bash
 
 if [ "$1" == "docs" ]; then
+    if [[ -d ./docs/build ]]; then
+      echo "Error: ./docs/build already exists, cannot clone docs repo there; aborting"
+      exit 1
+    fi
     git config --global user.email "travis@travis-ci.org"
     git config --global user.name "Travis CI"
     git clone --branch gh-pages-test https://${GH_TOKEN}@github.com/erdc/proteus-docs.git ./docs/build > /dev/null 2>&1
