@@ -80,5 +80,5 @@ jobs:
 deploy:
   - provider: script
     script: bash ./scripts/deploy.sh docs
-    on:
-      branch: master
+    #on:
+    #  branch: master
