@@ -66,6 +66,7 @@ autosummary_generate = True
 
 autodoc_docstring_signature = True
 
+inheritance_graph_attrs = dict(vrankdir="LR", size='""')
 
 #autodoc_mock_imports = True
 
