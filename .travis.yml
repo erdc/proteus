@@ -90,4 +90,5 @@ jobs:
       - pip install -v -e .
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+      - git lfs pull
+      - py.test -n 1 --dist=no --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
