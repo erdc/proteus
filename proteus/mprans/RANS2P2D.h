@@ -1,4 +1,3 @@
-
 #ifndef RANS2P2D_H
 #define RANS2P2D_H
 #include <valarray>
@@ -877,7 +876,6 @@ namespace proteus
             dmom_v_ham_u =0.0;
             dmom_v_ham_v =0.0;
           }
-
         mom_u_source -= forcex;
         mom_v_source -= forcey;
       }
@@ -2190,6 +2188,7 @@ namespace proteus
         //
         //loop over elements to compute volume integrals and load them into element and global residual
         //
+        double p_dv=0.0,pa_dv=0.0,total_volume=0.0,total_flux=0.0;
         double mesh_volume_conservation=0.0,
           mesh_volume_conservation_weak=0.0,
           mesh_volume_conservation_err_max=0.0,
@@ -3209,7 +3208,9 @@ namespace proteus
                 p_L2 += p_e*p_e*H_s*dV*H_f;
                 u_L2 += u_e*u_e*H_s*dV*H_f;
                 v_L2 += v_e*v_e*H_s*dV*H_f;
-
+                p_dv += p*H_s*H_f*dV;
+                pa_dv += q_u_0[eN_k]*H_s*H_f*dV;
+                total_volume+=dV;
                 if (phi_solid[eN_k] >= 0.0)
                   {
                     p_Linfty = fmax(p_Linfty, fabs(p_e));
@@ -3342,15 +3343,6 @@ namespace proteus
         p_L2 = sqrt(p_L2);
         u_L2 = sqrt(u_L2);
         v_L2 = sqrt(v_L2);
-        std::cout<<"p_1.append("<<p_L1<<")"<<std::endl
-                 <<"u_1.append("<<u_L1<<")"<<std::endl
-                 <<"v_1.append("<<v_L1<<")"<<std::endl
-                 <<"p_2.append("<<p_L2<<")"<<std::endl
-                 <<"u_2.append("<<u_L2<<")"<<std::endl
-                 <<"v_2.append("<<v_L2<<")"<<std::endl
-                 <<"p_I.append("<<p_Linfty<<")"<<std::endl
-                 <<"u_I.append("<<u_Linfty<<")"<<std::endl
-                 <<"v_I.append("<<v_Linfty<<")"<<std::endl;
         for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); )
           {
             if(elementIsActive[elementBoundaryElementsArray[(*it)*2+0]] && elementIsActive[elementBoundaryElementsArray[(*it)*2+1]])
@@ -4274,6 +4266,7 @@ namespace proteus
                 const double H_s = gf_s.H(particle_eps, ebqe_phi_s[ebNE_kb]);
                 if (elementIsActive[eN])
                   { //if boundary flag positive, then include flux contributions on interpart boundaries
+                    total_flux += flux_mass_ext*dS;
                     for (int i=0;i<nDOF_test_element;i++)
                       {
                         elementResidual_mesh[i] -= H_s*ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]),p_test_dS[i]);
@@ -4356,6 +4349,71 @@ namespace proteus
         /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
         /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
         /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
+        std::cout<<"Pressure Integral "<<p_dv<<std::endl
+                 <<"Analytical Pressure Integral "<<pa_dv<<std::endl
+                 <<"Total Boundary Flux "<<total_flux<<std::endl;
+        int nDOF_pressure=0;
+        for(int eN=0;eN<nElements_global;eN++)
+          for (int i=0;i<nDOF_test_element;i++)
+            {
+              int eN_i = eN*nDOF_test_element+i;
+              if (p_l2g[eN_i] > nDOF_pressure)
+                nDOF_pressure=p_l2g[eN_i];
+            }
+        nDOF_pressure +=1;
+        std::cout<<"nDOF_pressure "<<nDOF_pressure<<std::endl;
+        for (int I=0;I<nDOF_pressure;I++)
+          p_dof[I] += (pa_dv - p_dv)/total_volume;
+        double p_dv_new=0.0, pa_dv_new=0.0;
+        p_L1=0.0;
+        p_L2=0.0;
+        p_Linfty=0.0;
+        for (int eN=0 ; eN < nElements_global ; ++eN)
+          {
+            for (int k=0 ; k < nQuadraturePoints_element ; ++k)
+              {
+                int eN_k = eN*nQuadraturePoints_element + k;
+                int eN_nDOF_trial_element = eN*nDOF_trial_element;
+                
+                double jac[nSpace*nSpace];
+                double jacInv[nSpace*nSpace];
+                double p=0.0,pe=0.0;
+                double jacDet, x, y, z, dV, h_phi;
+                
+                ck.calculateMapping_element(eN,
+                                            k,
+                                            mesh_dof,
+                                            mesh_l2g,
+                                            mesh_trial_ref,
+                                            mesh_grad_trial_ref,
+                                            jac,
+                                            jacDet,
+                                            jacInv,
+                                            x,y,z);
+                dV = fabs(jacDet)*dV_ref[k];
+                ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
+                p_dv_new += p*dV;
+                pa_dv_new += q_u_0[eN_k]*dV;
+                pe = p-q_u_0[eN_k];
+                p_L1 += fabs(pe)*dV;
+                p_L2 += pe*pe*dV;
+                if (fabs(pe) > p_Linfty)
+                  p_Linfty = fabs(pe);
+              }
+          }
+        p_L2 = sqrt(p_L2);
+        std::cout<<"p_1.append("<<p_L1<<")"<<std::endl
+                 <<"u_1.append("<<u_L1<<")"<<std::endl
+                 <<"v_1.append("<<v_L1<<")"<<std::endl
+                 <<"p_2.append("<<p_L2<<")"<<std::endl
+                 <<"u_2.append("<<u_L2<<")"<<std::endl
+                 <<"v_2.append("<<v_L2<<")"<<std::endl
+                 <<"p_I.append("<<p_Linfty<<")"<<std::endl
+                 <<"u_I.append("<<u_Linfty<<")"<<std::endl
+                 <<"v_I.append("<<v_Linfty<<")"<<std::endl;
+        //        std::cout<<"Pressure Integral Shifted"<<p_dv_new<<std::endl
+        //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
+        //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_Linfty<<std::endl;
       }
 
       void calculateJacobian(double NONCONSERVATIVE_FORM,

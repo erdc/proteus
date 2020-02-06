@@ -11,7 +11,6 @@ for key, value in cfg_vars.items():
         cfg_vars[key] = cfg_vars[key].replace("-O3", "")
         cfg_vars[key] = cfg_vars[key].replace("-O2", "")
         cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "-UNDEBUG")
-        cfg_vars[key] = cfg_vars[key] + " -g"
 
 from distutils.core import setup
 from Cython.Build import cythonize

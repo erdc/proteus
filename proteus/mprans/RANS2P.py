@@ -1513,6 +1513,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('force', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        x = self.q['x'][...,0]
+        y = self.q['x'][...,1]
+        dt=1.0
+        pi = math.pi
+        nu = self.coefficients.nu_0
+        self.q[('force', 0)][:] = (4.0*pi**2*dt*nu*(np.sin(pi*(2*x - 2*y)) - np.sin(pi*(2*x + 2*y))) - np.sin(2*pi*y)*np.cos(2*pi*x))/dt
+        self.q[('force', 1)][:] = (4.0*pi**2*dt*nu*(np.sin(pi*(2*x - 2*y)) + np.sin(pi*(2*x + 2*y))) + np.sin(2*pi*x)*np.cos(2*pi*y))/dt
 
     def getResidual(self, u, r):
         """
@@ -1790,6 +1797,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.phisField,
                                       self.coefficients.useExact,
                                       self.isActiveDOF)
+        print("l2 norm of pressure ",np.linalg.norm(self.u[0].dof,2))
         #assert((self.isActiveDOF ==1.0).all())
         try:
             #is sensitive to inactive DOF at velocity due to time derivative
