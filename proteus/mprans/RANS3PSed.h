@@ -599,9 +599,8 @@ namespace proteus
                                   double dmom_w_ham_grad_p[nSpace],
                                   double dmom_w_ham_grad_w[nSpace])
       {
-        double rho,rho_f,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
+        double rho,rho_f,H_rho;
         H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-        d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
 	//        H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
 	//        d_mu = (1.0-useVF)*smoothedDirac(eps_mu,phi);
   
@@ -759,7 +758,6 @@ namespace proteus
         mom_wv_diff_ten[0]=0.0;//vos*nu;//mu;
   
         //momentum sources
-        norm_n = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
         mom_u_source = -rho*g[0];// - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
         mom_v_source = -rho*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
         mom_w_source = -rho*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
@@ -848,19 +846,14 @@ namespace proteus
                                                double gradC_y,
                                                double gradC_z)
       {
-        double rhoFluid, muFluid,nuFluid,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+        double rhoFluid,nuFluid,H_mu,viscosity;
         H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
         nuFluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
         rhoFluid  = rho_0*(1.0-H_mu)+rho_1*H_mu;
-        muFluid  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
         //gco kinematic viscosity used, in sedclosure betaterm is multiplied by fluidDensity
         viscosity = nuFluid;//mu; gco check
         //vos is sediment fraction in this case - gco check
 
-        uc = sqrt(u*u+v*v*+w*w); 
-        duc_du = u/(uc+1.0e-12);
-        duc_dv = v/(uc+1.0e-12);
-        duc_dw = w/(uc+1.0e-12);
         double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={uStar_f,vStar_f,wStar_f};
         double new_beta =    closure.betaCoeff(vos,
                                                rhoFluid,
@@ -958,18 +951,11 @@ namespace proteus
                                     double mom_wu_diff_ten[1],
                                     double mom_wv_diff_ten[1])
       {
-        double H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-        double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-        double rho_fluid = rho_0*(1.0-H_rho)+rho_1*H_rho;
-        double nu_fluid  = nu_0*(1.0-H_mu)+nu_1*H_mu;
-        double one_by_vos = 2.0*vos/(vos*vos + fmax(1.0e-8,vos*vos));
-
         mu_fr_new = closure.mu_fr(vos,
                                   grad_u[0], grad_u[1], grad_u[2], 
                                   grad_v[0], grad_v[1], grad_v[2], 
                                   grad_w[0], grad_w[1], grad_w[2]);
         double mu_fr = LAG_MU_FR*mu_fr_last + (1.0 - LAG_MU_FR)*mu_fr_new;
-        double rho_solid = rho_s;
 
         mom_uu_diff_ten[0] += 2. * mu_fr * (2./3.); 
         mom_uu_diff_ten[1] += mu_fr;
@@ -1646,30 +1632,21 @@ namespace proteus
         //
         //loop over elements to compute volume integrals and load them into element and global residual
         //
-        double mesh_volume_conservation=0.0,
-          mesh_volume_conservation_weak=0.0,
-          mesh_volume_conservation_err_max=0.0,
-          mesh_volume_conservation_err_max_weak=0.0;
-        double globalConservationError=0.0;
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
-            register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
-              elementResidual_u[nDOF_test_element],
+            register double elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
               elementResidual_w[nDOF_test_element],
               mom_u_source_i[nDOF_test_element],
               mom_v_source_i[nDOF_test_element],
               mom_w_source_i[nDOF_test_element],
               eps_rho,eps_mu;
-            double mesh_volume_conservation_element=0.0,
-              mesh_volume_conservation_element_weak=0.0;
+            double mesh_volume_conservation_element=0.0;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
                 elementResidual_p_save[eN_i]=0.0;
-                elementResidual_mesh[i]=0.0;
-                elementResidual_p[i]=0.0;
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
                 elementResidual_w[i]=0.0;
@@ -1688,7 +1665,6 @@ namespace proteus
                   eN_k_3d     = eN_k*3,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
-                  one_by_vos=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],grad_vos[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
@@ -1743,14 +1719,9 @@ namespace proteus
                   pdeResidual_u=0.0,
                   pdeResidual_v=0.0,
                   pdeResidual_w=0.0,
-                  Lstar_u_p[nDOF_test_element],
-                  Lstar_v_p[nDOF_test_element],
-                  Lstar_w_p[nDOF_test_element],
                   Lstar_u_u[nDOF_test_element],
                   Lstar_v_v[nDOF_test_element],
                   Lstar_w_w[nDOF_test_element],
-                  Lstar_p_u[nDOF_test_element],
-                  Lstar_p_v[nDOF_test_element],
                   Lstar_p_w[nDOF_test_element],
                   subgridError_p=0.0,
                   subgridError_u=0.0,
@@ -1761,9 +1732,9 @@ namespace proteus
                   jac[nSpace*nSpace],
                   jacDet,
                   jacInv[nSpace*nSpace],
-                  p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
-                  p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
-                  p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
+                  vel_grad_trial[nDOF_trial_element*nSpace],
+                  vel_test_dV[nDOF_trial_element],
+                  vel_grad_test_dV[nDOF_test_element*nSpace],
                   dV,x,y,z,xt,yt,zt,
                   //
                   vos,
@@ -1827,7 +1798,6 @@ namespace proteus
                 ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w);
                 //VRANS
                 vos      = q_vos[eN_k];//sed fraction - gco check
-                one_by_vos = 2.0*vos/(vos*vos + fmax(1.0e-8,vos*vos));
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -2169,8 +2139,6 @@ namespace proteus
                     Lstar_u_u[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
                     Lstar_v_v[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
                     Lstar_w_w[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
-                    Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-                    Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
                     Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
 
                     //VRANS account for drag terms, diagonal only here ... decide if need off diagonal terms too
@@ -2188,10 +2156,6 @@ namespace proteus
                 //
                 //update element residual
                 //
-                double mesh_vel[3];
-                mesh_vel[0] = xt;
-                mesh_vel[1] = yt;
-                mesh_vel[2] = zt;
                 q_velocity[eN_k_nSpace+0]=u;
                 q_velocity[eN_k_nSpace+1]=v;
                 q_velocity[eN_k_nSpace+2]=w;
@@ -2289,16 +2253,12 @@ namespace proteus
               eN  = elementBoundaryElementsArray[ebN*2+0],
               ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
               eN_nDOF_trial_element = eN*nDOF_trial_element;
-            register double elementResidual_mesh[nDOF_test_element],
-              elementResidual_p[nDOF_test_element],
-              elementResidual_u[nDOF_test_element],
+            register double elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
               elementResidual_w[nDOF_test_element],
               eps_rho,eps_mu;
             for (int i=0;i<nDOF_test_element;i++)
               {
-                elementResidual_mesh[i]=0.0;
-                elementResidual_p[i]=0.0;
                 elementResidual_u[i]=0.0;
                 elementResidual_v[i]=0.0;
                 elementResidual_w[i]=0.0;
@@ -2429,8 +2389,8 @@ namespace proteus
                   boundaryJac[nSpace*(nSpace-1)],
                   metricTensor[(nSpace-1)*(nSpace-1)],
                   metricTensorDetSqrt,
-                  dS,p_test_dS[nDOF_test_element],vel_test_dS[nDOF_test_element],
-                  p_grad_trial_trace[nDOF_trial_element*nSpace],vel_grad_trial_trace[nDOF_trial_element*nSpace],
+                  dS,vel_test_dS[nDOF_test_element],
+                  vel_grad_trial_trace[nDOF_trial_element*nSpace],
                   vel_grad_test_dS[nDOF_trial_element*nSpace],
                   normal[3],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
                   //VRANS
@@ -3260,19 +3220,12 @@ namespace proteus
           {
             register double eps_rho,eps_mu;
 
-            register double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
-              elementJacobian_p_u[nDOF_test_element][nDOF_trial_element],
-              elementJacobian_p_v[nDOF_test_element][nDOF_trial_element],
-              elementJacobian_p_w[nDOF_test_element][nDOF_trial_element],
-              elementJacobian_u_p[nDOF_test_element][nDOF_trial_element],
-              elementJacobian_u_u[nDOF_test_element][nDOF_trial_element],
+            register double elementJacobian_u_u[nDOF_test_element][nDOF_trial_element],
               elementJacobian_u_v[nDOF_test_element][nDOF_trial_element],
               elementJacobian_u_w[nDOF_test_element][nDOF_trial_element],
-              elementJacobian_v_p[nDOF_test_element][nDOF_trial_element],
               elementJacobian_v_u[nDOF_test_element][nDOF_trial_element],
               elementJacobian_v_v[nDOF_test_element][nDOF_trial_element],
               elementJacobian_v_w[nDOF_test_element][nDOF_trial_element],
-              elementJacobian_w_p[nDOF_test_element][nDOF_trial_element],
               elementJacobian_w_u[nDOF_test_element][nDOF_trial_element],
               elementJacobian_w_v[nDOF_test_element][nDOF_trial_element],
               elementJacobian_w_w[nDOF_test_element][nDOF_trial_element];
@@ -3280,19 +3233,12 @@ namespace proteus
               for (int j=0;j<nDOF_trial_element;j++)
 
                 {
-                  elementJacobian_p_p[i][j]=0.0;
-                  elementJacobian_p_u[i][j]=0.0;
-                  elementJacobian_p_v[i][j]=0.0;
-                  elementJacobian_p_w[i][j]=0.0;
-                  elementJacobian_u_p[i][j]=0.0;
                   elementJacobian_u_u[i][j]=0.0;
                   elementJacobian_u_v[i][j]=0.0;
                   elementJacobian_u_w[i][j]=0.0;
-                  elementJacobian_v_p[i][j]=0.0;
                   elementJacobian_v_u[i][j]=0.0;
                   elementJacobian_v_v[i][j]=0.0;
                   elementJacobian_v_w[i][j]=0.0;
-                  elementJacobian_w_p[i][j]=0.0;
                   elementJacobian_w_u[i][j]=0.0;
                   elementJacobian_w_v[i][j]=0.0;
                   elementJacobian_w_w[i][j]=0.0;
@@ -3306,7 +3252,6 @@ namespace proteus
 
                 //declare local storage
                 register double p=0.0,u=0.0,v=0.0,w=0.0,
-                  one_by_vos=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],grad_vos[nSpace],
                   mom_u_acc=0.0,
                   dmom_u_acc_u=0.0,
@@ -3365,15 +3310,9 @@ namespace proteus
                   dpdeResidual_u_p[nDOF_trial_element],dpdeResidual_u_u[nDOF_trial_element],
                   dpdeResidual_v_p[nDOF_trial_element],dpdeResidual_v_v[nDOF_trial_element],
                   dpdeResidual_w_p[nDOF_trial_element],dpdeResidual_w_w[nDOF_trial_element],
-                  Lstar_u_p[nDOF_test_element],
-                  Lstar_v_p[nDOF_test_element],
-                  Lstar_w_p[nDOF_test_element],
                   Lstar_u_u[nDOF_test_element],
                   Lstar_v_v[nDOF_test_element],
                   Lstar_w_w[nDOF_test_element],
-                  Lstar_p_u[nDOF_test_element],
-                  Lstar_p_v[nDOF_test_element],
-                  Lstar_p_w[nDOF_test_element],
                   subgridError_p=0.0,
                   subgridError_u=0.0,
                   subgridError_v=0.0,
@@ -3394,8 +3333,8 @@ namespace proteus
                   jacInv[nSpace*nSpace],
                   p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
                   dV,
-                  p_test_dV[nDOF_test_element],vel_test_dV[nDOF_test_element],
-                  p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
+                  vel_test_dV[nDOF_test_element],
+                  vel_grad_test_dV[nDOF_test_element*nSpace],
                   x,y,z,xt,yt,zt,
                   //VRANS
                   vos,
@@ -3459,7 +3398,6 @@ namespace proteus
                 ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w);
                 //VRANS
                 vos = q_vos[eN_k];//sed fraction - gco check
-                one_by_vos = 2.0*vos / (vos*vos + fmax(1.0e-8,vos*vos));
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -3831,15 +3769,9 @@ namespace proteus
                 for (int i=0;i<nDOF_test_element;i++)
                   {
                     register int i_nSpace = i*nSpace;
-                    Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]);
-                    Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]);
-                    Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]);
                     Lstar_u_u[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
                     Lstar_v_v[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
                     Lstar_w_w[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
-                    Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-                    Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-                    Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
                     //VRANS account for drag terms, diagonal only here ... decide if need off diagonal terms too
                     Lstar_u_u[i]+=ck.Reaction_adjoint(dmom_u_source[0],vel_test_dV[i]);
                     Lstar_v_v[i]+=ck.Reaction_adjoint(dmom_v_source[1],vel_test_dV[i]);
@@ -4120,19 +4052,12 @@ namespace proteus
                   bc_mom_w_ham_ext=0.0,
                   bc_dmom_w_ham_grad_p_ext[nSpace],
                   bc_dmom_w_ham_grad_w_ext[nSpace],
-                  fluxJacobian_p_p[nDOF_trial_element],
-                  fluxJacobian_p_u[nDOF_trial_element],
-                  fluxJacobian_p_v[nDOF_trial_element],
-                  fluxJacobian_p_w[nDOF_trial_element],
-                  fluxJacobian_u_p[nDOF_trial_element],
                   fluxJacobian_u_u[nDOF_trial_element],
                   fluxJacobian_u_v[nDOF_trial_element],
                   fluxJacobian_u_w[nDOF_trial_element],
-                  fluxJacobian_v_p[nDOF_trial_element],
                   fluxJacobian_v_u[nDOF_trial_element],
                   fluxJacobian_v_v[nDOF_trial_element],
                   fluxJacobian_v_w[nDOF_trial_element],
-                  fluxJacobian_w_p[nDOF_trial_element],
                   fluxJacobian_w_u[nDOF_trial_element],
                   fluxJacobian_w_v[nDOF_trial_element],
                   fluxJacobian_w_w[nDOF_trial_element],
@@ -4142,10 +4067,8 @@ namespace proteus
                   boundaryJac[nSpace*(nSpace-1)],
                   metricTensor[(nSpace-1)*(nSpace-1)],
                   metricTensorDetSqrt,
-                  p_grad_trial_trace[nDOF_trial_element*nSpace],
                   vel_grad_trial_trace[nDOF_trial_element*nSpace],
                   dS,
-                  p_test_dS[nDOF_test_element],
                   vel_test_dS[nDOF_test_element],
                   normal[3],
                   x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,

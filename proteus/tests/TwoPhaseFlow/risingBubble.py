@@ -9,6 +9,7 @@ from proteus.Profiling import logEvent
 from proteus.mprans.SpatialTools import Tank2D
 from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import os
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -71,9 +72,9 @@ else:
                                                   regions=regions,
                                                   regionFlags=regionFlags)
     domain.boundaryTags = boundaryTags
-    domain.writePoly("mesh")
-    domain.writePLY("mesh")
-    domain.writeAsymptote("mesh")
+    #domain.polyfile="meshMarin"
+    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshRisingBubble"
+    #domain.writePoly("meshRisingBubble")
     he = old_div(tank_dim[0], float(4 * refinement - 1))
     domain.MeshOptions.he = he
     triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
@@ -193,11 +194,11 @@ else: #test_case=2
 
 myTpFlowProblem.useBoundaryConditionsModule = False
 m = myTpFlowProblem.Parameters.Models
-m.rans3p.p.CoefficientsOptions.useVF=1.0
-m.rans3p.p.CoefficientsOptions.weak_bc_penalty_constant = 1e6
+m.rans3p.p.coefficients.useVF=1.0
+m.rans3p.p.coefficients.eb_penalty_constant = 1e6
 m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
-m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
-m.clsvof.p.CoefficientsOptions.disc_ICs = True
-m.clsvof.p.CoefficientsOptions.computeMetricsForBubble = True
+m.rans3p.p.coefficients.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.clsvof.p.coefficients.disc_ICs = True
+m.clsvof.p.coefficients.computeMetricsForBubble = True
 
 myTpFlowProblem.outputStepping.systemStepExact = True

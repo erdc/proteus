@@ -145,7 +145,6 @@ namespace proteus
         {
           elementResidual_u[i]=0.0;
         }//i
-      double epsHeaviside,epsDirac,epsDiffusion,norm;
       //loop over quadrature points and compute integrands
       for  (int k=0;k<nQuadraturePoints_element;k++)
         {
@@ -155,7 +154,7 @@ namespace proteus
             //eN_nDOF_trial_element = eN*nDOF_trial_element;
           register double u=0.0,grad_u[nSpace],
             f[nSpace],
-            r=0.0,dr=0.0,
+            r=0.0,
             jac[nSpace*nSpace],
             jacDet,
             jacInv[nSpace*nSpace],
@@ -349,11 +348,7 @@ namespace proteus
                 ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                 ebN_local_kb_nSpace = ebN_local_kb*nSpace;
               register double u_ext=0.0,
-                bc_u_ext=0.0,
                 adv_flux_ext=0.0,
-                diff_flux_ext=0.0,
-                a_ext,
-                f_ext[nSpace],
                 grad_u_ext[nSpace],
                 jac_ext[nSpace*nSpace],
                 jacDet_ext,
@@ -364,7 +359,6 @@ namespace proteus
                 dS,
                 u_test_dS[nDOF_test_element],
                 u_grad_trial_trace[nDOF_trial_element*nSpace],
-                u_grad_test_dS[nDOF_test_element*nSpace],
                 normal[nSpace],x_ext,y_ext,z_ext,
                 G[nSpace*nSpace],G_dd_G,tr_G;
               //
@@ -461,25 +455,15 @@ namespace proteus
           {
             elementJacobian_u_u[i*nDOF_trial_element+j]=0.0;
           }
-      double epsHeaviside,epsDirac,epsDiffusion;
       for  (int k=0;k<nQuadraturePoints_element;k++)
         {
-          int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
-            eN_k_nSpace = eN_k*nSpace;
-            //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
-
           //declare local storage
-          register double u=0.0,
-            grad_u[nSpace],
-            r=0.0,dr=0.0,
-            jac[nSpace*nSpace],
+          register double jac[nSpace*nSpace],
             jacDet,
             jacInv[nSpace*nSpace],
-            u_grad_trial[nDOF_trial_element*nSpace],
             dV,
             u_test_dV[nDOF_test_element],
-            x,y,z,
-            G[nSpace*nSpace],G_dd_G,tr_G;
+            x,y,z;
           //
           //calculate solution and gradients at quadrature points
           //
@@ -501,14 +485,8 @@ namespace proteus
             }
           for(int i=0;i<nDOF_test_element;i++)
             {
-              //int eN_k_i=eN_k*nDOF_test_element+i;
-              //int eN_k_i_nSpace=eN_k_i*nSpace;
-              int i_nSpace=i*nSpace;
               for(int j=0;j<nDOF_trial_element;j++)
                 {
-                  //int eN_k_j=eN_k*nDOF_trial_element+j;
-                  //int eN_k_j_nSpace = eN_k_j*nSpace;
-                  int j_nSpace = j*nSpace;
                   elementJacobian_u_u[i*nDOF_trial_element+j] += ck.ReactionJacobian_weak(1.0,
                                                                                           u_trial_ref[k*nDOF_trial_element+j],
                                                                                           u_test_dV[i]);
@@ -547,10 +525,6 @@ namespace proteus
       for(int eN=0;eN<nElements_global;eN++)
         {
           register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element];
-          for (int j=0;j<nDOF_trial_element;j++)
-            {
-              register int eN_j = eN*nDOF_trial_element+j;
-            }
           calculateElementJacobian(mesh_trial_ref,
                                    mesh_grad_trial_ref,
                                    mesh_dof,

@@ -5,6 +5,7 @@ from proteus.mprans import SW2D,SW2DCV
 from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
 import math
+import os
 
 opts=Context.Options([
     ("T", 30.0, "Length of simulation in seconds"),
@@ -51,9 +52,12 @@ domainRect = RectangularDomain(L=L)
 if opts.structured:
     domain=domainRect
 else:
-    domainRect.writePoly("hump")
-    domain = PlanarStraightLineGraphDomain("hump")
+    pathfile = os.path.dirname(os.path.abspath(__file__))+"/"+"hump"
+    domain = PlanarStraightLineGraphDomain(pathfile)
     domain.boundaryTags = domainRect.boundaryTags
+    domain.polyfile= pathfile
+    #domainRect.writePoly(domain.polyfile)
+
 #
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
@@ -61,11 +65,13 @@ bt['back'] = bt['top']
 if opts.structured:
     domain.writePoly("tank2d")
 
+
 ################
 ##### MESH #####
 ################
+genMesh=False
 nnx0=6
-nnx = (nnx0-1)*(2**refinement)+1
+nnx = 5#(nnx0-1)*(2**refinement)+1
 nny = old_div((nnx-1),2)+1
 nnz = 1
 he = old_div(L[0],float(nnx-1))
