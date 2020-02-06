@@ -26,7 +26,6 @@ notifications:
 after_success:
   - conda install codecov
   - codecov
-  - bash ./scripts/deploy.sh docs
 
 jobs:
   include:
