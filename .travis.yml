@@ -57,7 +57,7 @@ jobs:
       - PROTEUS_OPT="-w -O2 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
       - export SSL_CERT_DIR=/etc/ssl/certs
       - #./linux/bin/pip3 install matplotlib
-  - stage: compie
+  - stage: compile
     name: "Conda compile"
     python: 3.7
     env: TEST_PROFILE="proteus-conda"
