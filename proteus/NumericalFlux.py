@@ -1807,9 +1807,6 @@ class NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
             for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
                                         list(self.DOFBoundaryConditionsDictList[ci].values()),
                                         list(self.DOFBoundaryPointDictList[ci].values())):
-                print(str("Numerical Flux "))
-                print(str(numpy.array(self.vt.ebqe['n'][ebNE,k])))
-                print(str("\n"))
                 self.ebqe[('u',ci)][ebNE,k]=g(x, self.vt.timeIntegration.t, numpy.array(self.vt.ebqe['n'][ebNE,k]))
                     #print("used normal ",self.vt.ebqe['n'][ebNE,k])
 #            except:

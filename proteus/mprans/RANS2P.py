@@ -1822,7 +1822,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.phisField,
                                       self.coefficients.useExact,
                                       self.isActiveDOF)
-        print("l2 norm of pressure ",np.linalg.norm(self.u[0].dof,2))
         #assert((self.isActiveDOF ==1.0).all())
         try:
             #is sensitive to inactive DOF at velocity due to time derivative

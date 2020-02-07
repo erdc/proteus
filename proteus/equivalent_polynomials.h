@@ -20,6 +20,10 @@ namespace equivalent_polynomials
     {
       return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0, isBoundary, false);
     }
+    inline double* get_normal()
+    {
+      return NULL;
+    }
     inline void set_quad(unsigned int q)
     {}
     inline void set_boundary_quad(unsigned int ebq)
@@ -77,6 +81,9 @@ namespace equivalent_polynomials
       else
         assert(false);
       _set_Ainv<nSpace,nP>(Ainv);
+      for (int i=0;i<nSpace;i++)
+        level_set_normal[i]=0.0;
+      level_set_normal[0]=1.0;
     }
     
     inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, double ma, double mb, bool isBoundary, bool scale);
@@ -146,6 +153,10 @@ namespace equivalent_polynomials
     inline double VB_x(int i){return _vb_x[i];};
     inline double VB_y(int i){return _vb_y[i];};
     inline double VB_z(int i){return _vb_z[i];};
+    inline double* get_normal()
+    {
+      return level_set_normal;
+    }
     bool inside_out;
     static const unsigned int nN=nSpace+1;
     double phi_dof_corrected[nN];
@@ -615,6 +626,14 @@ namespace equivalent_polynomials
     inline int calculate(const double* phi_dof, const double* phi_nodes, const double* xi_r, bool isBoundary)
     {
       return calculate(phi_dof, phi_nodes, xi_r, 1.0,1.0,isBoundary, false);
+    }
+
+    inline double* get_normal()
+    {
+      if(useExact)
+        return exact.get_normal();
+      else
+        return regularized.get_normal();
     }
     
     inline void set_quad(unsigned int q)
