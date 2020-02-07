@@ -33,7 +33,7 @@ jobs:
     name: "Hashdist compile"
     python: 2.7
     env: TEST_PROFILE="proteus-hashdist"
-    install:
+    script:
       - git lfs pull
       - ./stack/hit/bin/hit init-home
       - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
@@ -61,7 +61,7 @@ jobs:
     name: "Conda compile"
     python: 3.7
     env: TEST_PROFILE="proteus-conda"
-    install:
+    script:
       - git lfs pull
       - sudo apt-get update
       - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
