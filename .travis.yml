@@ -80,6 +80,7 @@ jobs:
     name: "Hashdist tests"
     python: 2.7
     env: TEST_PROFILE="proteus-hashdist"
+    install: skip
     script:
       - export MPLBACKEND="AGG"
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
@@ -87,6 +88,7 @@ jobs:
     name: "Conda tests"
     python: 3.7
     env: TEST_PROFILE="proteus-conda"
+    install: skip
     script:
       - export MPLBACKEND="AGG"
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
@@ -94,6 +96,7 @@ jobs:
     name: "Deploy documentation"
     python: 3.7
     env: TEST_PROFILE="proteus-conda"
+    install: skip
     script: skip
     deploy:
       provider: script
