@@ -29,8 +29,8 @@ after_success:
 
 jobs:
   include:
-  - stage: compile
-    name: "proteus-hashdist install"
+  - stage: test
+    name: "hashdist"
     python: 2.7
     env: TEST_PROFILE="proteus-hashdist"
     install:
@@ -57,12 +57,11 @@ jobs:
       - PROTEUS_OPT="-w -O2 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
       - export SSL_CERT_DIR=/etc/ssl/certs
       - #./linux/bin/pip3 install matplotlib
-    script: skip
-    workspaces:
-      create:
-        name: hashdist-build
-  - stage: compile
-    name: "proteus-conda install"
+    script:
+      - export MPLBACKEND="AGG"
+      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
+  - stage: test
+    name: "conda"
     python: 3.7
     env: TEST_PROFILE="proteus-conda"
     install:
@@ -78,44 +77,12 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install -v -e .
-    script: skip
-    workspaces:
-      create:
-        name: conda-build
-  - stage: test
-    name: "proteus-hashdist tests"
-    python: 2.7
-    env: TEST_PROFILE="proteus-hashdist"
-    workspaces:
-      use:
-        - hashdist-build
     script:
-      - export PATH=$PWD/linux/bin:$PATH
-      - export LD_LIBRARY_PATH=$PWD/linux/lib:$LD_LIBRARY_PATH
-      - export MPLBACKEND="AGG"
-      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
-  - stage: test
-    name: "proteus-conda tests"
-    python: 3.7
-    env: TEST_PROFILE="proteus-conda"
-    workspaces:
-      use:
-        - conda-build
-    script:
-      - source "$HOME/miniconda/etc/profile.d/conda.sh"
-      - conda activate proteus-dev
       - export MPLBACKEND="AGG"
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
-  - stage: deploy
-    name: "deploy documentation"
-    python: 3.7
-    env: TEST_PROFILE="proteus-conda"
-    workspaces:
-      use:
-        - conda-build
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
       skip_cleanup: true
-      #on:
-      #  branch: master
+      on:
+        branch: master
