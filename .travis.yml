@@ -29,8 +29,8 @@ after_success:
 
 jobs:
   include:
-  - stage: compile
-    name: "Hashdist compile"
+  - stage: test
+    name: "hashdist"
     python: 2.7
     env: TEST_PROFILE="proteus-hashdist"
     install:
@@ -57,9 +57,11 @@ jobs:
       - PROTEUS_OPT="-w -O2 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
       - export SSL_CERT_DIR=/etc/ssl/certs
       - #./linux/bin/pip3 install matplotlib
-    script: skip
-  - stage: compile
-    name: "Conda compile"
+    script:
+      - export MPLBACKEND="AGG"
+      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
+  - stage: test
+    name: "conda"
     python: 3.7
     env: TEST_PROFILE="proteus-conda"
     install:
@@ -75,32 +77,13 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install -v -e .
-    script: skip
-  - stage: test
-    name: "Hashdist tests"
-    python: 2.7
-    env: TEST_PROFILE="proteus-hashdist"
-    install: skip
-    script:
-      - export MPLBACKEND="AGG"
-      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
-  - stage: test
-    name: "Conda tests"
-    python: 3.7
-    env: TEST_PROFILE="proteus-conda"
-    install: skip
     script:
       - export MPLBACKEND="AGG"
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
-  - stage: deploy docs
-    name: "Deploy documentation"
-    python: 3.7
-    env: TEST_PROFILE="proteus-conda"
-    install: skip
     script: skip
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
       skip_cleanup: true
-      on:
-        branch: master
+      #on:
+      #  branch: master
