@@ -227,7 +227,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ball_velocity=None,
                  ball_angular_velocity=None,
                  particles=None,
-                 useExact=False):
+                 useExact=False,
+                 initialize=True):
         self.useExact=useExact
         self.outputQuantDOFs=outputQuantDOFs
         self.INT_BY_PARTS_PRESSURE=INT_BY_PARTS_PRESSURE
@@ -276,10 +277,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sd = sd
         self.vos_limiter = vos_limiter
         self.mu_fr_limiter = mu_fr_limiter
-        if epsFact_density is not None:
-            self.epsFact_density = epsFact_density
-        else:
-            self.epsFact_density = epsFact
+        self.epsFact_density = epsFact_density
         self.stokes = stokes
         self.ME_model = ME_model
         self.PRESSURE_model = PRESSURE_model
@@ -326,38 +324,37 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.killNonlinearDrag = int(killNonlinearDrag)
         self.linearDragFactor = 1.0
         self.nonlinearDragFactor = 1.0
-        if self.killNonlinearDrag:
-            self.nonlinearDragFactor = 0.0
         #
         self.use_sbm = use_sbm
 
-        self.use_ball_as_particle = use_ball_as_particle
-        if ball_center is None:
-            self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
-        else:
-            self.ball_center = ball_center
-
-        if ball_radius is None:
-            self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
-        else:
-            self.ball_radius = ball_radius
-
-        if ball_velocity is None:
-            self.ball_velocity = numpy.zeros((self.nParticles,3),'d')
-        else:
-            self.ball_velocity = ball_velocity
-
-        if ball_angular_velocity is None:
-            self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
-        else:
-            self.ball_angular_velocity = ball_angular_velocity
-        #
-
         self.particles = particles
+        self.use_ball_as_particle = use_ball_as_particle
+        self.ball_center = ball_center
+        self.ball_radius = ball_radius
+        self.ball_velocity = ball_velocity
+        self.ball_angular_velocity = ball_angular_velocity
+        self.forceTerms = None
+        if initialize:
+            self.initialize()
 
+    def initialize(self):
+        if self.epsFact_density is None:
+            self.epsFact_density = self.epsFact
+        if self.killNonlinearDrag:
+            self.nonlinearDragFactor = 0.0
         if self.particles:
             self.nParticles = self.particles.size();
-
+        if self.ball_center is None:
+            self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
+        if self.ball_radius is None:
+            self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
+        if self.ball_velocity is None:
+            self.ball_velocity = numpy.zeros((self.nParticles,3),'d')
+        if self.ball_angular_velocity is None:
+            self.ball_angular_velocity = numpy.zeros((self.nParticles,3),'d')
+        #
+        nd = self.nd
+        sd = self.sd
         mass = {}
         advection = {}
         diffusion = {}
@@ -399,7 +396,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              variableNames,
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=sd,
-                             movingDomain=movingDomain)
+                             movingDomain=self.movingDomain)
             self.vectorComponents = [0, 1]
             self.vectorName = "velocity"
         elif nd == 3:
@@ -455,7 +452,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              variableNames,
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=sd,
-                             movingDomain=movingDomain)
+                             movingDomain=self.movingDomain)
             self.vectorComponents = [0, 1, 2]
             self.vectorName = "velocity"
 

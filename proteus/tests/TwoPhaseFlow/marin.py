@@ -13,6 +13,7 @@ from proteus.mprans import SpatialTools as st
 from proteus.Profiling import logEvent
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 import math
+import os
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -132,9 +133,11 @@ domain = Domain.PiecewiseLinearComplexDomain(vertices=vertices,
                                              holes=holes)
 domain.MeshOptions.setParallelPartitioningType('node')
 domain.boundaryTags = boundaryTags
-domain.writePoly("mesh")
-domain.writePLY("mesh")
-domain.writeAsymptote("mesh")
+#domain.polyfile="meshMarin"
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshMarin"
+#domain.writePoly("meshMarin")
+#domain.writePLY("mesh")
+#domain.writeAsymptote("mesh")
 domain.MeshOptions.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 
 # ****************************** #
@@ -318,11 +321,12 @@ myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,0.0,-9.8])
 
 myTpFlowProblem.useBoundaryConditionsModule = False
 m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.CoefficientsOptions.disc_ICs = disc_ICs
-m.rans3p.p.CoefficientsOptions.useVF = 1.0
-m.rans3p.p.CoefficientsOptions.weak_bc_penalty_constant = 1e6
-m.rans3p.p.CoefficientsOptions.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
+m.clsvof.p.coefficients.disc_ICs = disc_ICs
+m.rans3p.p.coefficients.useVF = 1.0
+m.rans3p.p.coefficients.eb_bc_penalty_constant = 1e6
+m.rans3p.p.coefficients.ARTIFICIAL_VISCOSITY = opts.ARTIFICIAL_VISCOSITY
 m.clsvof.auxiliaryVariables = [point_height_gauges, height_gauges]
 m.pressure.auxiliaryVariables = [pressure_gauges]
 
 myTpFlowProblem.Parameters.mesh.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
+myTpFlowProblem.Parameters.mesh.genMesh=False

@@ -8,6 +8,7 @@ from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import os
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -71,9 +72,8 @@ else:
                                                   regions=regions,
                                                   regionFlags=regionFlags)
     domain.boundaryTags = boundaryTags
-    domain.writePoly("mesh")
-    domain.writePLY("mesh")
-    domain.writeAsymptote("mesh")
+    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshFilling"
+    #domain.writePoly("meshFilling")
     he = opts.he
     domain.MeshOptions.he = he
     domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
@@ -248,9 +248,9 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
                                              boundaryConditions=boundaryConditions,
                                              useSuperlu=True)
 m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.CoefficientsOptions['disc_ICs']=False if IC_type==0 else True
-m.rans3p.p.CoefficientsOptions['forceStrongDirichlet']=True
-m.rans3p.p.CoefficientsOptions['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+m.clsvof.p.coefficients['disc_ICs']=False if IC_type==0 else True
+m.rans3p.p.coefficients['forceStrongDirichlet']=True
+m.rans3p.p.coefficients['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
 if opts.test_case==1:
     physical_parameters=myTpFlowProblem.Parameters.physical
     physical_parameters['densityA'] = 1000.0
@@ -261,3 +261,4 @@ if opts.test_case==1:
     physical_parameters['gravity'] = [0.0, -1.0, 0.0]
 
 myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+myTpFlowProblem.Parameters.mesh.genMesh=False

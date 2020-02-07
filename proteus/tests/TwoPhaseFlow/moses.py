@@ -7,6 +7,7 @@ import numpy as np
 from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import os
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -133,9 +134,8 @@ domain = Domain.PiecewiseLinearComplexDomain(vertices=vertices,
 #go ahead and add a boundary tags member
 domain.MeshOptions.setParallelPartitioningType('node')
 domain.boundaryTags = boundaryTags
-domain.writePoly("mesh")
-domain.writePLY("mesh")
-domain.writeAsymptote("mesh")
+domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshMarin"
+#domain.writePoly("meshMoses")
 domain.MeshOptions.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 
 # ****************************** #
@@ -314,12 +314,13 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
 myTpFlowProblem.useBoundaryConditionsModule = False
 myTpFlowProblem.Parameters.physical['gravity'] = [0.0,0.0,-9.8]
 m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.CoefficientsOptions['disc_ICs']=True
-m.rans3p.p.CoefficientsOptions['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
-m.rans3p.p.CoefficientsOptions.forceTerms = forceTerms
-m.rans3p.p.CoefficientsOptions.useVF = 1.0
-m.rans3p.p.CoefficientsOptions.weak_bc_penalty_constant = 1e6
+m.clsvof.p.coefficients['disc_ICs']=True
+m.rans3p.p.coefficients['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+m.rans3p.p.coefficients.forceTerms = forceTerms
+m.rans3p.p.coefficients.useVF = 1.0
+m.rans3p.p.coefficients.eb_penalty_constant = 1e6
 m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
 
 myTpFlowProblem.Parameters.mesh.setParallelPartitioningType('node')
 myTpFlowProblem.Parameters.mesh.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
+myTpFlowProblem.Parameters.mesh.genMesh=False

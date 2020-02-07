@@ -35,7 +35,7 @@ cMax = 0.0
 
 Refinement = ct.Refinement
 sedimentDynamics=False
-genMesh = True
+genMesh = False#True
 movingDomain = False
 applyRedistancing = True
 useOldPETSc = False
@@ -175,9 +175,10 @@ else:
                                                       regionFlags=regionFlags)
         #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
-        domain.writePoly("mesh")
-        domain.writePLY("mesh")
-        domain.writeAsymptote("mesh")
+        #domain.writePoly("mesh")
+        #domain.writePLY("mesh")
+        #domain.writeAsymptote("mesh")
+        domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh"
         triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
 #logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
