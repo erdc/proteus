@@ -1141,7 +1141,7 @@ namespace proteus
             if (NONCONSERVATIVE_FORM > 0.0)
               {
                 //upwinded advective flux
-                if ((fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s) < 0.0)
+                if (!UPWIND_DIRICHLET || (fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s) < 0.0)
                 {
                     mom_u_source += rho*D_s*(u_s - u)*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
                     mom_v_source += rho*D_s*(v_s - v)*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
@@ -1182,7 +1182,7 @@ namespace proteus
               {
                 //divided through by rho...
                 //upwinded advective flux
-                if ((fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s) < 0.0)
+                if (!UPWIND_DIRICHLET || (fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s) < 0.0)
                   {
                     mom_u_source += D_s*u_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
                     mom_v_source += D_s*v_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s);
