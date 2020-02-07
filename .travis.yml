@@ -6,6 +6,8 @@ addons:
     - libssl-dev
     - python-lzma
     - python3
+    - doxygen
+    - graphviz
 
 cache:
   - timeout: 1000
@@ -21,7 +23,9 @@ after_success:
 
 jobs:
   include:
-  - os: linux
+  - stage: test
+    name: "hashdist linux"
+    os: linux
     dist: xenial
     language: python
     python: 2.7
@@ -53,7 +57,9 @@ jobs:
     script:
       - export MPLBACKEND="AGG"
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
-  - os: linux
+  - stage: test
+    name: "conda linux"
+    os: linux
     dist: xenial
     language: python
     python: 3.7
@@ -74,7 +80,15 @@ jobs:
     script:
       - export MPLBACKEND="AGG"
       - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
-  - os: osx
+    deploy:
+      provider: script
+      script: bash ./scripts/deploy.sh docs
+      skip_cleanup: true
+      on:
+        branch: master
+  - stage: test
+    name: "conda osx"
+    os: osx
     osx_image: xcode11.3
     env: TEST_PROFILE="proteus-conda-osx"
     install:
