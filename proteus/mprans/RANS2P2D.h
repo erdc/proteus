@@ -12,6 +12,8 @@
 #define IFEM
 #define IFEMGALERKIN
 #define DEBUG
+const bool UPWIND_DIRICHLET=false;
+
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
@@ -1588,7 +1590,7 @@ namespace proteus
         {
           flux_mass += n[0] * f_mass[0];
           velocity[0] = f_mass[0];
-          if (flowSpeedNormal >= 0.0)
+          if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
           {
             flux_umom += n[0] * f_umom[0];
             flux_vmom += n[0] * f_vmom[0];
@@ -1627,7 +1629,7 @@ namespace proteus
         {
           flux_mass += n[1] * f_mass[1];
           velocity[1] = f_mass[1];
-          if (flowSpeedNormal >= 0.0)
+          if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
           {
             flux_umom += n[1] * f_umom[1];
             flux_vmom += n[1] * f_vmom[1];
@@ -1779,7 +1781,7 @@ namespace proteus
         {
           //cek still upwind the advection for Dirichlet?
           dflux_mass_du += n[0] * df_mass_du[0];
-          if (flowSpeedNormal >= 0.0)
+          if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
           {
             dflux_umom_du += n[0] * df_umom_du[0];
             dflux_umom_dv += n[0] * df_umom_dv[0];
@@ -1825,7 +1827,7 @@ namespace proteus
         {
           //cek still upwind the advection for Dirichlet?
           dflux_mass_dv += n[1] * df_mass_dv[1];
-          if (flowSpeedNormal >= 0.0)
+          if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
           {
             dflux_umom_du += n[1] * df_umom_du[1];
             dflux_umom_dv += n[1] * df_umom_dv[1];
