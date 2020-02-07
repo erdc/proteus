@@ -82,13 +82,12 @@ class TestMCorr(object):
                                                opts)
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
-        expected_path = 'comparison_files/cons_ls_level_3_supg.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('cons_ls_level_3_supg.h5','r')
-        assert np.allclose(expected.root.vof_t2,
-                           actual.root.vof_t2,
-                           atol=1e-5)
-        expected.close()
+        actual = tables.open_file('cons_ls_level_0_supg.h5','r')
+        #expected.close()
+        expected_path = 'comparison_files/' + 'comparison_' + 'cons_ls_level_0' + '_vof_t2.csv'
+        #write comparison file
+        #np.array(actual.root.vof_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.vof_t2).flatten(),decimal=10)
         actual.close()
 
     @pytest.mark.skip(reason="results can't be reproduced reliably")

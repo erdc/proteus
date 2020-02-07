@@ -7,7 +7,7 @@ ct=Context.Options([
     # General parameters #
     ("T",0.1,"Final time"),
     ("nDTout",1,"Number of time steps to archive"),
-    ("refinement",3,"Level of refinement"),
+    ("refinement",0,"Level of refinement"),
     ("unstructured",False,"Use unstructured mesh. Set to false for periodic BCs"),
     ("SSPOrder",2,"SSP method of order 1, 2 or 3") ,
     ("cfl",0.5,"Target cfl"),

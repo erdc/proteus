@@ -87,7 +87,6 @@ cdef class ProtChBody:
         self.acceleration = np.zeros(3)
         self.acceleration_last = np.zeros(3)
         self.velocity = np.zeros(3)
-        self.velocity_fluid = np.zeros(3)
         self.velocity_last = np.zeros(3)
         self.ang_velocity = np.zeros(3)
         self.position = np.zeros(3)
@@ -278,7 +277,7 @@ cdef class ProtChBody:
         """
         self.boundaryFlags = np.array(flags, 'i')
 
-    def setIBM(self, useIBM=True, radiusIBM=0.):
+    def setIBM(self, useIBM=True, radiusIBM=0., sdfIBM=None):
         """Sets IBM mode for retrieving fluid forces
 
         Parameters
@@ -287,9 +286,12 @@ cdef class ProtChBody:
             set if IBM should be used
         radiusIBM: double
             radius of the particle for IBM
+        radiusIBM: double
+            sdf relative to barycentre of body for IBM
         """
         self.useIBM = useIBM
         self.radiusIBM = radiusIBM
+        self.sdfIBM = sdfIBM
 
     def setWidth2D(self, width):
         """Sets width of 2D body (for forces and moments calculation)
@@ -794,18 +796,7 @@ cdef class ProtChBody:
         cdef ch.ChVector pos_last
         cdef double e0, e1, e2, e3, e0_last, e1_last, e2_last, e3_last
         cdef double posx, posy, posz, posx_last, posy_last, posz_last
-        if self.ProtChSystem.parallel_mode is True:
-            # need to broadcast values to all processors on the C++ side
-            # comm.Barrier()
-            self.rotq = comm.bcast(self.rotq,
-                                   self.ProtChSystem.chrono_processor)
-            self.rotq_last = comm.bcast(self.rotq_last,
-                                        self.ProtChSystem.chrono_processor)
-            self.position = comm.bcast(self.position,
-                                       self.ProtChSystem.chrono_processor)
-            self.position_last = comm.bcast(self.position_last,
-                                            self.ProtChSystem.chrono_processor)
-        if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
+        if comm.rank == 0 and self.ProtChSystem.record_values is True:
             self._recordValues()
             if self.thisptr.has_trimesh:
                 self._recordH5()
@@ -828,12 +819,15 @@ cdef class ProtChBody:
             am = self.ProtChSystem.model_addedmass.levelModelList[-1]
             for flag in self.boundaryFlags:
                 am.barycenters[flag] = pyvec2array(self.ChBody.GetPos())
-        self.velocity_fluid = (self.position-self.position_last)/self.ProtChSystem.dt_fluid
         if self.useIBM and self.ProtChSystem.model is not None:
+            self.updateIBM()
+
+    def updateIBM(self):
+        c = self.ProtChSystem.model.levelModelList[-1].coefficients
+        if c.use_ball_as_particle:
             chpos = self.ChBody.GetPos()
             chvel = self.ChBody.GetPos_dt()
             chvel_ang = self.ChBody.GetWvel_loc()
-            c = self.ProtChSystem.model.levelModelList[-1].coefficients
             for flag in self.boundaryFlags:
                 c.ball_radius[flag] = self.radiusIBM
                 c.ball_center[flag, 0] = chpos.x
@@ -845,7 +839,23 @@ cdef class ProtChBody:
                 c.ball_angular_velocity[flag, 0] = chvel_ang.x
                 c.ball_angular_velocity[flag, 1] = chvel_ang.y
                 c.ball_angular_velocity[flag, 2] = chvel_ang.z
+        else:
+            for flag in self.boundaryFlags:
+                c.particle_sdfList[flag] = self.getDynamicSDF
+                c.particle_velocityList[flag] = lambda x, t: self.getVelocity()
 
+    def getDynamicSDF(self, t, x):
+        chpos = self.ChBody.GetPos()
+        relative_x = x-np.array([chpos.x, chpos.y, chpos.z])
+        return self.sdfIBM(t, relative_x)
+
+    def getPosition(self):
+        chpos = self.ChBody.GetPos()
+        return np.array([chpos.x, chpos.y, chpos.z])
+
+    def getVelocity(self):
+        chvel = self.ChBody.GetPos_dt()
+        return np.array([chvel.x, chvel.y, chvel.z])
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
@@ -915,7 +925,7 @@ cdef class ProtChBody:
         self.position[:] = pyvec2array(self.ChBody.GetPos())
         # check if IBM and set index if not set previously by user
         if self.useIBM:
-            if self.boundaryFlags is None:
+            if not self.boundaryFlags:
                 self.setBoundaryFlags([self.ProtChSystem.nBodiesIBM])
             self.ProtChSystem.nBodiesIBM += 1
         # get the initial values for F and M
@@ -932,7 +942,6 @@ cdef class ProtChBody:
         # set mass matrix with no added mass
         self.setAddedMass(np.zeros((6,6)))
         self.thisptr.calculate_init()
-        #
 
     def calculate(self):
         pass
@@ -1063,34 +1072,6 @@ cdef class ProtChBody:
         self.M_applied_last = np.array(self.M_applied)
         self.F_Aij_last = np.array(self.F_Aij)
         self.M_Aij_last = np.array(self.M_Aij)
-        if self.ProtChSystem.parallel_mode is True:
-            comm = Comm.get().comm.tompi4py()
-            self.position_last = comm.bcast(self.position_last,
-                                            self.ProtChSystem.chrono_processor)
-            self.velocity_last = comm.bcast(self.velocity_last,
-                                            self.ProtChSystem.chrono_processor)
-            self.acceleration_last = comm.bcast(self.acceleration_last,
-                                                self.ProtChSystem.chrono_processor)
-            self.rotq_last = comm.bcast(self.rotq_last,
-                                        self.ProtChSystem.chrono_processor)
-            # self.rotm_last = comm.bcast(self.rotm_last,
-            #                             self.ProtChSystem.chrono_processor)
-            self.ang_velocity_last = comm.bcast(self.ang_velocity_last,
-                                                self.ProtChSystem.chrono_processor)
-            self.ang_acceleration_last = comm.bcast(self.ang_acceleration_last,
-                                                    self.ProtChSystem.chrono_processor)
-            self.ang_vel_norm_last = comm.bcast(self.ang_vel_norm_last,
-                                                self.ProtChSystem.chrono_processor)
-            self.F_prot_last = comm.bcast(self.F_prot_last,
-                                          self.ProtChSystem.chrono_processor)
-            self.M_prot_last = comm.bcast(self.M_prot_last,
-                                          self.ProtChSystem.chrono_processor)
-            self.F_applied_last = comm.bcast(self.F_applied_last,
-                                             self.ProtChSystem.chrono_processor)
-            self.M_applied_last = comm.bcast(self.M_applied_last,
-                                             self.ProtChSystem.chrono_processor)
-            self.F_Aij_last = comm.bcast(self.F_Aij_last,
-                                         self.ProtChSystem.chrono_processor)
 
     def getValues(self):
         """Get values (pos, vel, acc, etc.) from C++ to python
@@ -1120,16 +1101,6 @@ cdef class ProtChBody:
         self.M = np.array([self.thisptr.M.x(),
                            self.thisptr.M.y(),
                            self.thisptr.M.z()])
-        if self.ProtChSystem.parallel_mode is True:
-            comm = Comm.get().comm.tompi4py()
-            self.position = comm.bcast(self.position, self.ProtChSystem.chrono_processor)
-            self.velocity = comm.bcast(self.velocity, self.ProtChSystem.chrono_processor)
-            self.acceleration = comm.bcast(self.acceleration, self.ProtChSystem.chrono_processor)
-            self.rotq = comm.bcast(self.rotq, self.ProtChSystem.chrono_processor)
-            # self.rotm = comm.bcast(self.rotm, self.ProtChSystem.chrono_processor)
-            self.ang_velocity = comm.bcast(self.ang_velocity, self.ProtChSystem.chrono_processor)
-            self.ang_acceleration = comm.bcast(self.ang_acceleration, self.ProtChSystem.chrono_processor)
-            self.ang_vel_norm = comm.bcast(self.ang_vel_norm, self.ProtChSystem.chrono_processor)
 
 
     def setRecordValues(self, all_values=False, pos=False,
@@ -1433,15 +1404,6 @@ cdef class ProtChSystem:
         self.nd = nd
         self.build_kdtree = True
         self.dist_search = True
-        comm = Comm.get().comm.tompi4py()
-        if comm.Get_size() > 1:
-            parallel_mode = True
-            chrono_processor = 1
-        else:
-            parallel_mode = False
-            chrono_processor = 0
-        self.parallel_mode = parallel_mode
-        self.chrono_processor = chrono_processor
         self.min_nb_steps = 1  # minimum number of chrono substeps
         self.proteus_dt = 1.
         self.first_step = True  # just to know if first step
@@ -1459,8 +1421,13 @@ cdef class ProtChSystem:
         self.chrono_dt = 1.
         self.ProtChAddedMass = ProtChAddedMass(self)
         self.tCount = 0
-        self.initialised = False
+        self.initialized = False
         self.update_substeps = False
+
+        # Set the chrono logging values
+        self.log_chrono_format = 'h5'
+        self.log_chrono_bodies = None
+        self.log_chrono_springs = None
 
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
@@ -1532,12 +1499,12 @@ cdef class ProtChSystem:
         self.step_nb += 1
         # self.thisptr.system.setChTime()
         comm = Comm.get().comm.tompi4py()
-        t = comm.bcast(self.ChSystem.GetChTime(), self.chrono_processor)
+        t = self.ChSystem.GetChTime()
         Profiling.logEvent('Solving Chrono system from t='
                         +str(t)
                         +' with dt='+str(self.dt)
                         +'('+str(nb_steps)+' substeps)')
-        if comm.rank == self.chrono_processor and dt > 0:
+        if dt > 0:
             if self.update_substeps is False:
                 self.thisptr.step(<double> self.dt, nb_steps)
             else:
@@ -1549,7 +1516,7 @@ cdef class ProtChSystem:
                         if type(s) is ProtChMoorings:
                             # update forces keeping same fluid vel/acc
                             s.updateForces()
-        t = comm.bcast(self.ChSystem.GetChTime(), self.chrono_processor)
+        t = self.ChSystem.GetChTime()
         Profiling.logEvent('Solved Chrono system to t='+str(t))
         if self.scheme == "ISS":
             Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
@@ -1595,6 +1562,23 @@ cdef class ProtChSystem:
         Profiling.logEvent("Chrono poststep")
         for s in self.subcomponents:
             s.poststep()
+
+        # Log the chrono phyics of interest
+        if self.log_chrono_bodies:
+            if self.log_chrono_format == 'h5':
+                self.log_bodies_h5(self.log_chrono_bodies)
+            else:
+                self.log_bodies_text(self.t + self.proteus_dt, self.log_chrono_bodies)
+
+        if self.log_chrono_springs:
+            if self.log_chrono_format == 'h5':
+                self.log_springs_h5(self.log_chrono_springs)
+            else:
+                self.log_springs_text(self.t + self.proteus_dt, self.log_chrono_springs)
+
+        if (self.log_chrono_bodies or self.log_chrono_springs) and self.log_chrono_format == 'h5':
+            self.log_times_h5(self.t + self.proteus_dt)
+
         self.record_values = False
         self.first_step = False  # first step passed
         self.tCount += 1
@@ -1615,24 +1599,28 @@ cdef class ProtChSystem:
                 self.femSpace_velocity = self.u[1].femSpace
                 self.femSpace_pressure = self.u[0].femSpace
                 self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
-        if not self.initialised:
+        if not self.initialized:
             self.nBodiesIBM = 0  # will be incremented by bodies calculate_init()
-            Profiling.logEvent("Starting init"+str(self.next_sample))
-            self.directory = bytes(Profiling.logDir+str("/"),'utf-8')
-            self.thisptr.setDirectory(self.directory)
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
             self.ChSystem.SetupInitial()
             Profiling.logEvent("Finished init"+str(self.next_sample))
-            if self.nBodiesIBM > 0:
-                assert self.model is not None, 'IBM set to be used in bodies but model is not attached. Attach rans model BEFORE calling calculate_init() on chrono system'
-                c = self.model.levelModelList[-1].coefficients
-                # set it only if it was not set manually before
-                if not c.nParticles:
-                    c.nParticles = self.nBodiesIBM
-                else:
-                    assert c.nParticles == self.nBodiesIBM, 'number of RANS particles {nP} != number of IBM bodies {nB}'.format(nP=c.nParticles, nB=self.nBodiesIBM)
+            self.initialized = True
+        else:
+            Profiling.logEvent("Warning: Chrono system was already initialized")
+        Profiling.logEvent("Starting init"+str(self.next_sample))
+        self.directory = bytes(Profiling.logDir+str("/"),'utf-8')
+        self.thisptr.setDirectory(self.directory)
+        if self.nBodiesIBM > 0:
+            assert self.model is not None, 'IBM set to be used in bodies but model is not attached. Attach rans model BEFORE calling calculate_init() on chrono system'
+            c = self.model.levelModelList[-1].coefficients
+            # set it only if it was not set manually before
+            if not c.nParticles:
+                c.nParticles = self.nBodiesIBM
+            else:
+                assert c.nParticles == self.nBodiesIBM, 'number of RANS particles {nP} != number of IBM bodies {nB}'.format(nP=c.nParticles, nB=self.nBodiesIBM)
+            if c.use_ball_as_particle:
                 if c.ball_radius is None:
                     c.ball_radius = np.zeros(self.nBodiesIBM, 'd')
                 if c.ball_center is None:
@@ -1641,11 +1629,13 @@ cdef class ProtChSystem:
                     c.ball_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
                 if c.ball_angular_velocity is None:
                     c.ball_angular_velocity = np.zeros((self.nBodiesIBM, 3), 'd')
-            for s in self.subcomponents:
-                s.poststep()
-            self.initialised = True
-        else:
-            Profiling.logEvent("Warning: Chrono system was already initialised")
+            else:
+                if c.particle_sdfList is None:
+                    c.particle_sdfList = [None for i in range(self.nBodiesIBM)]
+                if c.particle_velocityList is None:
+                    c.particle_velocityList = [None for i in range(self.nBodiesIBM)]
+        for s in self.subcomponents:
+            s.poststep()
 
     def setTimestepperType(self, string tstype, bool verbose=False):
         """Change timestepper (default: Euler)
@@ -1868,6 +1858,339 @@ cdef class ProtChSystem:
 
     def setCollisionEnvelopeMargin(self, double envelope, double margin):
         self.thisptr.setCollisionEnvelopeMargin(envelope, margin)
+
+    def log_bodies_text(self, d_time, l_logging_info):
+        """
+        Logs the chrono information into a text file at each timestep
+                Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Simulation time
+        l_logging_info: list
+            Contains the information to be logged. Structure is [body number, type]
+            with multiple entries being included as a 2d list. Valid types are
+            'position', 'rotation', 'force', and 'torque'.
+        Returns
+        -------
+        None. Data is logged to a text file
+        """
+
+        # Open the file
+        s_filename = 'chrono_log_body.txt'
+        o_file = open(s_filename, 'a+')
+
+        # Loop and write the body information
+        for i_entry_body in range(0, len(l_logging_info), 1):
+            # Extract the coordinate positions
+            o_body = self.subcomponents[l_logging_info[i_entry_body][0]].ChBody
+
+            if l_logging_info[i_entry_body][1] == 'position':
+                o_body_position = o_body.GetPos()
+
+                o_file.write(str(d_time) + '\t' + 'position' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_position.x) + '\t' +
+                             str(o_body_position.y) + '\t' + str(o_body_position.z) + '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'rotation':
+                o_body_rotation = o_body.GetRot()
+
+                o_file.write(str(d_time) + '\t' + 'rotation' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_rotation.e0) + '\t' +
+                             str(o_body_rotation.e1) + '\t' + str(o_body_rotation.e2) + '\t' + str(o_body_rotation.e3) +
+                             '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'force':
+                o_body_force = o_body.Get_XForce()
+
+                o_file.write(str(d_time) + '\t' + 'force' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_force.x) + '\t' +
+                             str(o_body_force.y) + '\t' + str(o_body_force.z) + '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'torque':
+                o_body_torque = o_body.Get_Xtorque()
+
+                o_file.write(str(d_time) + '\t' + 'torque' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_torque.x) + '\t' +
+                             str(o_body_torque.y) + '\t' + str(o_body_torque.z) + '\n')
+
+            else:
+                raise NotImplementedError('Chrono body log not understood.')
+
+        # Close the log file
+        o_file.close()
+
+
+    def log_bodies_h5(self, l_logging_info):
+        """
+        Logs the chrono information into a h5 file at each timestep
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        l_logging_info: list
+            Contains the information to be logged. Structure is [body number, type]
+            with multiple entries being included as a 2d list. Valid types are
+            'position', 'rotation', 'force', and 'torque'.
+        Returns
+        -------
+        None. Data is saved to an h5 file.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Create the empty data holders
+        l_position = []
+        l_rotation = []
+        l_force = []
+        l_torque = []
+
+        # Loop and write the body information
+        for i_entry_body in range(0, len(l_logging_info), 1):
+            # Extract the coordinate positions
+            o_body = self.subcomponents[l_logging_info[i_entry_body][0]].ChBody
+
+            if l_logging_info[i_entry_body][1] == 'position':
+                o_body_position = o_body.GetPos()
+                l_position.append([o_body_position.x, o_body_position.y, o_body_position.z])
+
+            elif l_logging_info[i_entry_body][1] == 'rotation':
+                o_body_rotation = o_body.GetRot()
+                l_rotation.append([o_body_rotation.e0, o_body_rotation.e1, o_body_rotation.e2, o_body_rotation.e3])
+
+            elif l_logging_info[i_entry_body][1] == 'force':
+                o_body_force = o_body.Get_XForce()
+                l_force.append([o_body_force.x, o_body_force.y, o_body_force.z])
+
+            elif l_logging_info[i_entry_body][1] == 'torque':
+                o_body_torque = o_body.Get_Xtorque()
+                l_torque.append([o_body_torque.x, o_body_torque.y, o_body_torque.z])
+
+            else:
+                raise NotImplementedError('Chrono body log not understood.')
+
+        # Log the position data
+        if len(l_position) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_position = o_file['position']
+
+                # Resize the dataset
+                i_index = dm_position.shape[0]
+                dm_position.resize(dm_position.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_position[i_index, :, :] = np.array(l_position)
+
+            except:
+                # Create the initial dataset
+                dm_position = o_file.create_dataset('position', (1, len(l_position), 3), compression="gzip",
+                                                    maxshape=(None, len(l_position), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_position[0, :, :] = np.array(l_position)
+
+        # Log the rotation data
+        if len(l_rotation) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_rotation = o_file['rotation']
+
+                # Resize the dataset
+                i_index = dm_rotation.shape[0]
+                dm_rotation.resize(dm_rotation.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_rotation[i_index, :, :] = np.array(l_rotation)
+
+            except:
+                # Create the initial dataset
+                dm_rotation = o_file.create_dataset('rotation', (1, len(l_rotation), 4), compression="gzip",
+                                                    maxshape=(None, len(l_rotation), 4), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_rotation[0, :, :] = np.array(l_rotation)
+
+        # Log the force data
+        if len(l_force) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_force = o_file['force']
+
+                # Resize the dataset
+                i_index = dm_force.shape[0]
+                dm_force.resize(dm_force.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_force[i_index, :, :] = np.array(l_force)
+
+            except:
+                # Create the initial dataset
+                dm_force = o_file.create_dataset('force', (1, len(l_force), 3), compression="gzip",
+                                                 maxshape=(None, len(l_force), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_force[0, :, :] = np.array(l_force)
+
+        # Log the torque data
+        if len(l_torque) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_torque = o_file['torque']
+
+                # Resize the dataset
+                i_index = dm_torque.shape[0]
+                dm_torque.resize(dm_torque.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_torque[i_index, :, :] = np.array(l_torque)
+
+            except:
+                # Create the initial dataset
+                dm_torque = o_file.create_dataset('torque', (1, len(l_torque), 3), compression="gzip",
+                                                  maxshape=(None, len(l_torque), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_torque[0, :, :] = np.array(l_torque)
+
+        # Close the log file
+        o_file.close()
+
+
+    def log_springs_text(self, d_time, l_springs):
+        """
+        Logs the chrono information into a text file at each timestep
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Current simulation time
+        l_springs: list
+            Spring objects for which data is being stored
+        Returns
+        -------
+        None. Data is saved to a text file.
+        """
+
+        # Open the file
+        s_filename = 'chrono_log_spring.txt'
+        o_file = open(s_filename, 'a+')
+
+        # Loop and write the body information
+        for i_entry_spring in range(0, len(l_springs), 1):
+            # Get the current state of the spring
+            d_internal_force = l_springs[i_entry_spring].GetSpringReact()
+            d_spring_velocity = l_springs[i_entry_spring].GetSpringVelocity()
+            d_spring_length = l_springs[i_entry_spring].GetSpringLength()
+
+            # Write to the file
+            o_file.write(str(d_time) + '\t' + str(i_entry_spring) + '\t' + str(d_internal_force) + '\t' +
+                         str(d_spring_velocity) + '\t' + str(d_spring_length) + '\n')
+
+        # Close the output file
+        o_file.close()
+
+
+    def log_springs_h5(self, l_springs):
+        """
+        Logs chrono spring information to an h5 file
+        Parameters
+        ----------
+        self: object
+            ProtChSystem object being referenced.
+        l_springs: list
+            Spring objects for which the data is being logged
+        Returns
+        -------
+        None. Data is logged to an h5 file.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Create the empty data holders
+        l_spring_data = []
+
+        # Loop and write the body information
+        for i_entry_spring in range(0, len(l_springs), 1):
+            # Get the current state of the spring
+            d_internal_force = l_springs[i_entry_spring].GetSpringReact()
+            d_spring_velocity = l_springs[i_entry_spring].GetSpringVelocity()
+            d_spring_length = l_springs[i_entry_spring].GetSpringLength()
+
+            # Write to the file
+            l_spring_data.append([d_internal_force, d_spring_velocity, d_spring_length])
+
+        # Log the spring data
+        try:
+            # Open the dataset
+            dm_springs = o_file['springs']
+
+            # Resize the dataset
+            i_index = dm_springs.shape[0]
+            dm_springs.resize(dm_springs.shape[0] + 1, axis=0)
+
+            # Store the values into the dataset
+            dm_springs[i_index, :, :] = np.array(l_spring_data)
+
+        except:
+            # Create the initial dataset
+            dm_springs = o_file.create_dataset('springs', (1, len(l_spring_data), 3), compression="gzip",
+                                               maxshape=(None, len(l_spring_data), 3), dtype=float)
+
+            # Store the first entry into the dataset
+            dm_springs[0, :, :] = np.array(l_spring_data)
+
+        # Close the output file
+        o_file.close()
+
+
+    def log_times_h5(self, d_time):
+        """
+        Creates a log of the Proteus timestep within the h5 log file
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Time within the simulation
+        Returns
+        -------
+        None. Data is logged to the disk.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Log the time data
+        try:
+            # Open the dataset
+            dm_time = o_file['time']
+
+            # Resize the dataset
+            i_index = dm_time.shape[0]
+            dm_time.resize(dm_time.shape[0] + 1, axis=0)
+
+            # Store the values into the dataset
+            dm_time[i_index] = np.array(d_time)
+
+        except:
+            # Create the initial dataset
+            dm_time = o_file.create_dataset('time', (1,), compression="gzip",
+                                            maxshape=(None,), dtype=float)
+
+            # Store the first entry into the dataset
+            dm_time[0] = d_time
+
+        # Close the file
+        o_file.close()
 
     # def findFluidVelocityAtCoords(self, coords):
     #     """Finds solution from NS for velocity of fluid at given coordinates
@@ -2401,7 +2724,7 @@ cdef class ProtChMoorings:
         if self.initialized is False:
             self.initialized = True
         comm = Comm.get().comm.tompi4py()
-        if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
+        if comm.rank == 0 and self.ProtChSystem.record_values is True:
             self._recordValues()
             self._recordH5()
             self._recordXML()
@@ -2815,10 +3138,6 @@ cdef class ProtChMoorings:
             x = vec.x()
             y = vec.y()
             z = vec.z()
-            if self.ProtChSystem.parallel_mode is True:
-                x = comm.bcast(x, self.ProtChSystem.chrono_processor)
-                y = comm.bcast(y, self.ProtChSystem.chrono_processor)
-                z = comm.bcast(z, self.ProtChSystem.chrono_processor)
             coords = np.array([x, y, z])
             vel_arr = np.zeros(3)
             if mesh_search is True:

@@ -163,7 +163,8 @@ independently and lagged in time
                  sc_beta=1.0,
                  default_dissipation=1.0e-3,
                  closure=None,
-                 nullSpace='NoNullSpace'):
+                 nullSpace='NoNullSpace',
+                 initialize=True):
 
         self.useMetrics = useMetrics
         self.variableNames = ['kappa']
@@ -177,29 +178,6 @@ independently and lagged in time
         self.c_mu = c_mu
         self.sigma_k = sigma_k
         self.g = g
-        #
-        mass = {0: {0: 'linear'}}
-        advection = {0: {0: 'linear'}}
-        hamiltonian = {}
-        potential = {0: {0: 'u'}}
-        diffusion = {0: {0: {0: 'nonlinear', }}}
-        reaction = {0: {0: 'nonlinear'}}
-        if self.nd == 2:
-            sdInfo = {(0, 0): (numpy.array([0, 1, 2], dtype='i'),
-                               numpy.array([0, 1], dtype='i'))}
-        else:
-            sdInfo = {(0, 0): (numpy.array([0, 1, 2, 3], dtype='i'),
-                               numpy.array([0, 1, 2], dtype='i'))}
-        TC_base.__init__(self,
-                         nc,
-                         mass,
-                         advection,
-                         diffusion,
-                         potential,
-                         reaction,
-                         hamiltonian,
-                         self.variableNames,
-                         sparseDiffusionTensors=sdInfo)
         self.epsFact = epsFact
         self.flowModelIndex = V_model
         self.modelIndex = ME_model
@@ -214,6 +192,12 @@ independently and lagged in time
         self.nullSpace = nullSpace
         # for debugging model
         self.default_dissipation = default_dissipation
+        self.closure = closure
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        closure = self.closure
         try:
             self.aDarcy=closure.aDarcy
             self.betaForch=closure.betaForch
@@ -256,6 +240,30 @@ independently and lagged in time
             assert VOS_model == None
             assert SED_model == None
             logEvent("Sediment module is off. Loading dummy parameters",2)
+        #
+        mass = {0: {0: 'linear'}}
+        advection = {0: {0: 'linear'}}
+        hamiltonian = {}
+        potential = {0: {0: 'u'}}
+        diffusion = {0: {0: {0: 'nonlinear', }}}
+        reaction = {0: {0: 'nonlinear'}}
+        if self.nd == 2:
+            sdInfo = {(0, 0): (numpy.array([0, 1, 2], dtype='i'),
+                               numpy.array([0, 1], dtype='i'))}
+        else:
+            sdInfo = {(0, 0): (numpy.array([0, 1, 2, 3], dtype='i'),
+                               numpy.array([0, 1, 2], dtype='i'))}
+        TC_base.__init__(self,
+                         nc,
+                         mass,
+                         advection,
+                         diffusion,
+                         potential,
+                         reaction,
+                         hamiltonian,
+                         self.variableNames,
+                         sparseDiffusionTensors=sdInfo)
+
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
 
