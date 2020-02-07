@@ -2,6 +2,10 @@
 cimport numpy as np
 from libcpp cimport bool
 
+cdef extern from "FullDataFile.h" namespace "Daetk":
+    cdef cppclass FullDataFile:
+        FullDataFile(const double t0, const char* filename)
+
 cdef extern from "DaetkPetscSys.h" namespace "Daetk::Petsc::Sys":
     cdef bool initialized
 
@@ -23,10 +27,6 @@ cdef extern from "DaetkPetscVec.h" namespace "Daetk::Petsc":
         int ldim_
         double* p_
 
-cdef extern from "FullDataFile.h" namespace "Daetk":
-    cdef cppclass FullDataFile:
-        FullDataFile(const double t0, const char* filename)
-
 cdef extern from "WeightedRMSNorm.h" namespace "Daetk":
     cdef cppclass VectorNorm:
         pass
@@ -43,7 +43,7 @@ cdef extern from "FLCBDF_lite.h" namespace "Daetk":
         void useFixedOrder(const int order)
         double chooseDT(const double& , const double& )
         double setDT(const double& hin)
-        double chooseInitialStepSize(const double& t, 
+        double chooseInitialStepSize(const double& t,
                                    const double& tout,
                                    const Vec& y,
                                    const Vec& yPrime)
