@@ -116,17 +116,19 @@ modulus of the cable/segment.
    my_mooring = fsi.ProtChMoorings(system=my_system,
                                    mesh=my_mesh,
                                    length=np.array([10.]),
-                                   nb_elems=np.array([10], dtype=np.int_32),
+                                   nb_elems=np.array([10], dtype=np.int32),
                                    d=np.array([0.01]),
                                    rho=np.array([300.2]),
                                    E=np.array([1e9]))
    # set function to place the nodes along cable ('s' is the position along the 1D cable)
    fpos = lambda s: np.array([s, 1., 0.])  # position along cable
    ftan = lambda s: np.array([1., 0., 0.])  # tangent of cable along cable
-   my_mooring.setNodesPositionFunction(function_position=fpos,
-                                       function_tangent=ftan)
+   my_mooring.setNodesPositionFunction(fpos, ftan)
    # set the nodes position from the function
    my_mooring.setNodesPosition()
+   # build nodes (automatic with fpos/ftan)
+   # nodes are equally spaced according to the number of elements (nb_elems)
+   my_mooring.buildNodes()
    # add a body as fairlead
    my_mooring.attachBackNodeToBody(my_body)
    # fix front node as anchor
