@@ -29,6 +29,7 @@ from proteus.mprans.SpatialTools import (Rectangle as RectangleRANS,
                                          Tank3D,
                                          ShapeSTL)
 from proteus.mprans.BodyDynamics import RigidBody
+import pytest
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
