@@ -156,6 +156,7 @@ def load_medium_step_matrix(request):
     yield A
 
 @pytest.mark.amg
+@pytest.mark.skip(reason="need to redo after history revision")
 def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
     mat_A = load_saddle_point_matrix_1
     petsc_options = initialize_velocity_block_petsc_options()
@@ -202,6 +203,7 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
 #    F_ksp.solve(b,x)
 #    assert F_ksp.its == 231
 
+@pytest.mark.skip(reason="need to redo after history revision")
 def test_amg_iteration_matrix_2(load_saddle_point_matrix_1):
     mat_A = load_saddle_point_matrix_1
     petsc_options = initialize_velocity_block_petsc_options_2()
