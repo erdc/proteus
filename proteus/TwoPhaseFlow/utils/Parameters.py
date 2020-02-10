@@ -437,7 +437,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
         else:
             raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(scheme=self.timeDiscretization))
- 
+
         self.n.stepController = StepControl.Min_dt_cfl_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
@@ -1005,11 +1005,11 @@ class ParametersModelKappa(ParametersModelBase):
             self.p.diffusiveFluxBoundaryConditions = {0: {0: boundaryConditions['k_DFBC']}}
         else:
             self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].k_dirichlet.init_cython()}
-            
+
             self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].k_advective.init_cython()}
-            
+
             self.p.diffusiveFluxBoundaryConditions = {0: {0:lambda x, flag: domain.bc[flag].k_diffusive.init_cython()}}
-            
+
 
     def _initializeNumerics(self):
         nd = self._Problem.domain.nd
@@ -1373,7 +1373,7 @@ class ParametersModelVOF(ParametersModelBase):
             self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
             self.OptDB.setValue(prefix+'ksp_knoll', 1)
             self.OptDB.setValue(prefix+'ksp_max_it', 2000)
-            
+
 
 class ParametersModelNCLS(ParametersModelBase):
     """
@@ -1641,6 +1641,7 @@ class ParametersModelMCorr(ParametersModelBase):
         coeffs.flowModelIndex = V_model
         coeffs.me_model = ME_model
         coeffs.VOFModelIndex = VOF_model
+        coeffs.levelSetModelIndex = LS_model
         coeffs.nd = nd
         coeffs.initialize()
         # INITIAL CONDITIONS
