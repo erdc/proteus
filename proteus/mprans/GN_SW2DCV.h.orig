@@ -6,9 +6,13 @@
 #include <cmath>
 #include <iostream>
 #include <valarray>
+<<<<<<< HEAD
+#include <vector>
+=======
 #include "xtensor-python/pyarray.hpp"
 
 namespace py = pybind11;
+>>>>>>> dceecb29d... GN_SW2DCV
 
 // cek todo
 // 2. Get stabilization right
@@ -186,6 +190,34 @@ public:
           xt::pyarray<double>& dH_minus_dL, xt::pyarray<double>& muH_minus_muL, double hEps, xt::pyarray<double>& hReg,
           int LUMPED_MASS_MATRIX,
           // LOCAL LIMITING
+<<<<<<< HEAD
+          double *dLow, double *hBT, double *huBT, double *hvBT, double *hetaBT,
+          double *hwBT) = 0;
+  virtual void convexLimiting(
+      double dt,
+      int NNZ,     // number on non-zero entries on sparsity pattern
+      int numDOFs, // number of DOFs
+      double *lumped_mass_matrix, // lumped mass matrix (as vector)
+      double *h_old,              // DOFs of solution at last stage
+      double *hu_old, double *hv_old, double *heta_old, double *hw_old,
+      double *b_dof,
+      double *high_order_hnp1, // DOFs of high order solution at tnp1
+      double *high_order_hunp1, double *high_order_hvnp1,
+      double *high_order_hetanp1, double *high_order_hwnp1,
+      double *extendedSourceTerm_hu, double *extendedSourceTerm_hv,
+      double *extendedSourceTerm_heta, double *extendedSourceTerm_hw,
+      double *limited_hnp1, double *limited_hunp1, double *limited_hvnp1,
+      double *limited_hetanp1, double *limited_hwnp1,
+      int *csrRowIndeces_DofLoops,    // csr row indeces
+      int *csrColumnOffsets_DofLoops, // csr column offsets
+      double *MassMatrix,             // mass matrix
+      double *dH_minus_dL, double *muH_minus_muL, double hEps, double *hReg,
+      int LUMPED_MASS_MATRIX,
+      // LOCAL LIMITING
+      double *dLow, double *hBT, double *huBT, double *hvBT, double *hetaBT,
+      double *hwBT, double *new_SourceTerm_hu, double *new_SourceTerm_hv,
+      double *new_SourceTerm_heta, double *new_SourceTerm_hw) = 0;
+=======
           xt::pyarray<double>& dLow, xt::pyarray<double>& hBT, xt::pyarray<double>& huBT, xt::pyarray<double>& hvBT, xt::pyarray<double>& hetaBT,
           xt::pyarray<double>& hwBT) = 0;
   virtual void
@@ -211,11 +243,8 @@ public:
                  xt::pyarray<double>& hReg, int LUMPED_MASS_MATRIX,
                  // LOCAL LIMITING
                  xt::pyarray<double>& dLow, xt::pyarray<double>& hBT, xt::pyarray<double>& huBT, xt::pyarray<double>& hvBT,
-                 xt::pyarray<double>& hetaBT, xt::pyarray<double>& hwBT,
-                 xt::pyarray<double>& new_SourceTerm_hu,
-                 xt::pyarray<double>& new_SourceTerm_hv,
-                 xt::pyarray<double>& new_SourceTerm_heta,
-                 xt::pyarray<double>& new_SourceTerm_hw) = 0;
+                 xt::pyarray<double>& hetaBT, xt::pyarray<double>& hwBT) = 0;
+>>>>>>> dceecb29d... GN_SW2DCV
   virtual double calculateEdgeBasedCFL(
       double g,
       int numDOFsPerEqn,          // number of DOFs
@@ -292,14 +321,16 @@ public:
       // Quant of interests
       xt::pyarray<double>& quantDOFs, int SECOND_CALL_CALCULATE_RESIDUAL,
       // NORMAL COMPONENTS
+<<<<<<< HEAD
+      int COMPUTE_NORMALS, double *normalx, double *normaly, double *dLow,
+      double *hBT, double *huBT, double *hvBT, double *hetaBT, double *hwBT,
+      int lstage, double *new_SourceTerm_hu, double *new_SourceTerm_hv,
+      double *new_SourceTerm_heta, double *new_SourceTerm_hw) = 0;
+=======
       int COMPUTE_NORMALS, xt::pyarray<double>& normalx, xt::pyarray<double>& normaly, xt::pyarray<double>& dLow,
       xt::pyarray<double>& hBT, xt::pyarray<double>& huBT, xt::pyarray<double>& hvBT, xt::pyarray<double>& hetaBT, xt::pyarray<double>& hwBT,
-      int lstage,
-      xt::pyarray<double>& new_SourceTerm_hu,
-      xt::pyarray<double>& new_SourceTerm_hv,
-      xt::pyarray<double>& new_SourceTerm_heta,
-      xt::pyarray<double>& new_SourceTerm_hw
-      ) = 0;
+      int lstage) = 0;
+>>>>>>> dceecb29d... GN_SW2DCV
   virtual void calculateMassMatrix( // element
       xt::pyarray<double>& mesh_trial_ref, xt::pyarray<double>& mesh_grad_trial_ref, xt::pyarray<double>& mesh_dof,
       xt::pyarray<double>& mesh_velocity_dof, double MOVING_DOMAIN, xt::pyarray<int>& mesh_l2g,
@@ -1036,6 +1067,28 @@ public:
       double dt,
       int NNZ,     // number on non-zero entries on sparsity pattern
       int numDOFs, // number of DOFs
+<<<<<<< HEAD
+      double *lumped_mass_matrix, // lumped mass matrix (as vector))
+      double *h_old,              // DOFs of solution at last stage
+      double *hu_old, double *hv_old, double *heta_old, double *hw_old,
+      double *b_dof,
+      double *high_order_hnp1, // DOFs of high order solution at tnp1
+      double *high_order_hunp1, double *high_order_hvnp1,
+      double *high_order_hetanp1, double *high_order_hwnp1,
+      double *extendedSourceTerm_hu, double *extendedSourceTerm_hv,
+      double *extendedSourceTerm_heta, double *extendedSourceTerm_hw,
+      double *limited_hnp1, double *limited_hunp1, double *limited_hvnp1,
+      double *limited_hetanp1, double *limited_hwnp1,
+      int *csrRowIndeces_DofLoops,    // csr row indeces
+      int *csrColumnOffsets_DofLoops, // csr column offsets
+      double *MassMatrix,             // mass matrix
+      double *dH_minus_dL, double *muH_minus_muL, double hEps, double *hReg,
+      int LUMPED_MASS_MATRIX, double *dLow, double *hBT, double *huBT,
+      double *hvBT, double *hetaBT, double *hwBT, double *new_SourceTerm_hu,
+      double *new_SourceTerm_hv, double *new_SourceTerm_heta,
+      double *new_SourceTerm_hw) {
+
+=======
       xt::pyarray<double>& lumped_mass_matrix, // lumped mass matrix (as vector))
       xt::pyarray<double>& h_old,              // DOFs of solution at last stage
       xt::pyarray<double>& hu_old, xt::pyarray<double>& hv_old, xt::pyarray<double>& heta_old, xt::pyarray<double>& hw_old,
@@ -1052,11 +1105,8 @@ public:
       xt::pyarray<double>& MassMatrix,             // mass matrix
       xt::pyarray<double>& dH_minus_dL, xt::pyarray<double>& muH_minus_muL, double hEps, xt::pyarray<double>& hReg,
       int LUMPED_MASS_MATRIX, xt::pyarray<double>& dLow, xt::pyarray<double>& hBT, xt::pyarray<double>& huBT,
-      xt::pyarray<double>& hvBT, xt::pyarray<double>& hetaBT, xt::pyarray<double>& hwBT,
-      xt::pyarray<double>& new_SourceTerm_hu,
-      xt::pyarray<double>& new_SourceTerm_hv,
-      xt::pyarray<double>& new_SourceTerm_heta,
-      xt::pyarray<double>& new_SourceTerm_hw) {
+      xt::pyarray<double>& hvBT, xt::pyarray<double>& hetaBT, xt::pyarray<double>& hwBT) {
+>>>>>>> dceecb29d... GN_SW2DCV
     Rneg.resize(numDOFs, 0.0);
     Rpos.resize(numDOFs, 0.0);
     Rneg_heta.resize(numDOFs, 0.0);
@@ -1656,12 +1706,15 @@ public:
       // NORMAL COMPONENTS
       int COMPUTE_NORMALS, xt::pyarray<double>& normalx, xt::pyarray<double>& normaly, xt::pyarray<double>& dLow,
       // LOCAL LIMITING
+<<<<<<< HEAD
+      double *hBT, double *huBT, double *hvBT, double *hetaBT, double *hwBT,
+      int lstage, double *new_SourceTerm_hu, double *new_SourceTerm_hv,
+      double *new_SourceTerm_heta, double *new_SourceTerm_hw) {
+
+=======
       xt::pyarray<double>& hBT, xt::pyarray<double>& huBT, xt::pyarray<double>& hvBT, xt::pyarray<double>& hetaBT, xt::pyarray<double>& hwBT,
-      int lstage,
-      xt::pyarray<double>& new_SourceTerm_hu,
-      xt::pyarray<double>& new_SourceTerm_hv,
-      xt::pyarray<double>& new_SourceTerm_heta,
-      xt::pyarray<double>& new_SourceTerm_hw) {
+      int lstage) {
+>>>>>>> dceecb29d... GN_SW2DCV
     // FOR FRICTION//
     double n2 = std::pow(mannings, 2.);
     double gamma = 4. / 3;
