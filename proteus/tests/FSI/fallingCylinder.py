@@ -179,7 +179,7 @@ initialConditions = {'pressure': P_IC(),
 domain.MeshOptions.use_gmsh = False
 domain.MeshOptions.genMesh = False
 domain.MeshOptions.he = he
-mesh_fileprefix='mesh'+str(int(1000*he))
+mesh_fileprefix='meshFallingCylinder'
 domain.MeshOptions.setOutputFiles(mesh_fileprefix)
 st.assembleDomain(domain)
 domain.use_gmsh = False
