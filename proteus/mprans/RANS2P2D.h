@@ -900,6 +900,7 @@ namespace proteus
           }
           return index;
       }
+
       void get_distance_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
                                   int I,
                                   const double x, const double y, const double z,
@@ -2670,10 +2671,11 @@ namespace proteus
                 q_velocity[eN_k_nSpace+1]=v;
                 q_x[eN_k_3d + 0] = x;
                 q_x[eN_k_3d + 1] = y;
-
+                double ball_n[nSpace];
                 if (use_ball_as_particle == 1)
                   {
-                    get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance_to_solids[eN_k]);
+                    int ball_index=get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance_to_solids[eN_k]);
+                    get_normal_to_ith_ball(nParticles, ball_center, ball_radius,ball_index,x,y,z,ball_n[0],ball_n[1]);
                   }
                 else
                   {
@@ -3082,12 +3084,25 @@ namespace proteus
                     if (gf_s.useExact)
                       {
                         double norm_exact=0.0,norm_cut=0.0;
-                        for (int I=0;I<nSpace;I++)
+                        if (use_ball_as_particle)
                           {
-                            sign += particle_signed_distance_normals[eN_k_3d+I]*gf_s.get_normal()[I];
-                            level_set_normal[I] = gf_s.get_normal()[I];
-                            norm_cut += level_set_normal[I]*level_set_normal[I];
-                            norm_exact += particle_signed_distance_normals[eN_k_3d+I]*particle_signed_distance_normals[eN_k_3d+I];
+                            for (int I=0;I<nSpace;I++)
+                              {
+                                sign += ball_n[I]*gf_s.get_normal()[I];
+                                level_set_normal[I] = gf_s.get_normal()[I];
+                                norm_cut += level_set_normal[I]*level_set_normal[I];
+                                norm_exact += ball_n[I]*ball_n[I];
+                              }
+                          }
+                        else
+                          {
+                            for (int I=0;I<nSpace;I++)
+                              {
+                                sign += particle_signed_distance_normals[eN_k_3d+I]*gf_s.get_normal()[I];
+                                level_set_normal[I] = gf_s.get_normal()[I];
+                                norm_cut += level_set_normal[I]*level_set_normal[I];
+                                norm_exact += particle_signed_distance_normals[eN_k_3d+I]*particle_signed_distance_normals[eN_k_3d+I];
+                              }
                           }
                         assert(std::fabs(1.0-norm_cut) < 1.0e-8);
                         assert(std::fabs(1.0-norm_exact) < 1.0e-8);
@@ -4375,91 +4390,95 @@ namespace proteus
               }//i
           }//ebNE
 
-        /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
-        /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
-        /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
-        /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
-        std::cout<<"Pressure Integral "<<p_dv<<std::endl
-                 <<"Analytical Pressure Integral "<<pa_dv<<std::endl
-                 <<"Total Boundary Flux "<<total_flux<<std::endl;
-        int nDOF_pressure=0;
-        for(int eN=0;eN<nElements_global;eN++)
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-              int eN_i = eN*nDOF_test_element+i;
-              if (p_l2g[eN_i] > nDOF_pressure)
-                nDOF_pressure=p_l2g[eN_i];
-            }
-        nDOF_pressure +=1;
-        std::cout<<"nDOF_pressure "<<nDOF_pressure<<std::endl;
-        for (int I=0;I<nDOF_pressure;I++)
-          p_dof[I] += (pa_dv - p_dv)/total_volume;
-        double p_dv_new=0.0, pa_dv_new=0.0;
-        p_L1=0.0;
-        p_L2=0.0;
-        p_Linfty=0.0;
-        for (int eN=0 ; eN < nElements_global ; ++eN)
+        const bool normalize_pressure=false;
+        if (normalize_pressure)
           {
-            double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
-	    for (int j=0;j<nDOF_mesh_trial_element;j++)
-	      {
-		register int eN_j = eN*nDOF_mesh_trial_element+j;
-		element_phi[j] = phi_nodes[p_l2g[eN_j]];
-		element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
-	      }
-            double element_nodes[nDOF_mesh_trial_element*3];
-	    for (int i=0;i<nDOF_mesh_trial_element;i++)
-	      {
-		register int eN_i=eN*nDOF_mesh_trial_element+i;
-                for(int I=0;I<3;I++)
-                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
-	      }//i
-            int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref, false);
-            for (int k=0 ; k < nQuadraturePoints_element ; ++k)
+            /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
+            /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
+            /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
+            /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
+            std::cout<<"Pressure Integral "<<p_dv<<std::endl
+                     <<"Analytical Pressure Integral "<<pa_dv<<std::endl
+                     <<"Total Boundary Flux "<<total_flux<<std::endl;
+            int nDOF_pressure=0;
+            for(int eN=0;eN<nElements_global;eN++)
+              for (int i=0;i<nDOF_test_element;i++)
+                {
+                  int eN_i = eN*nDOF_test_element+i;
+                  if (p_l2g[eN_i] > nDOF_pressure)
+                    nDOF_pressure=p_l2g[eN_i];
+                }
+            nDOF_pressure +=1;
+            std::cout<<"nDOF_pressure "<<nDOF_pressure<<std::endl;
+            for (int I=0;I<nDOF_pressure;I++)
+              p_dof[I] += (pa_dv - p_dv)/total_volume;
+            double p_dv_new=0.0, pa_dv_new=0.0;
+            p_L1=0.0;
+            p_L2=0.0;
+            p_Linfty=0.0;
+            for (int eN=0 ; eN < nElements_global ; ++eN)
               {
-                int eN_k = eN*nQuadraturePoints_element + k;
-                int eN_nDOF_trial_element = eN*nDOF_trial_element;
+                double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
+                for (int j=0;j<nDOF_mesh_trial_element;j++)
+                  {
+                    register int eN_j = eN*nDOF_mesh_trial_element+j;
+                    element_phi[j] = phi_nodes[p_l2g[eN_j]];
+                    element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
+                  }
+                double element_nodes[nDOF_mesh_trial_element*3];
+                for (int i=0;i<nDOF_mesh_trial_element;i++)
+                  {
+                    register int eN_i=eN*nDOF_mesh_trial_element+i;
+                    for(int I=0;I<3;I++)
+                      element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+                  }//i
+                int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref, false);
+                for (int k=0 ; k < nQuadraturePoints_element ; ++k)
+                  {
+                    int eN_k = eN*nQuadraturePoints_element + k;
+                    int eN_nDOF_trial_element = eN*nDOF_trial_element;
                 
-                double jac[nSpace*nSpace];
-                double jacInv[nSpace*nSpace];
-                double p=0.0,pe=0.0;
-                double jacDet, x, y, z, dV, h_phi;
-                gf_s.set_quad(k);
-                double H_s = gf_s.H(0.,0.);
-                ck.calculateMapping_element(eN,
-                                            k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
-                                            jac,
-                                            jacDet,
-                                            jacInv,
-                                            x,y,z);
-                dV = fabs(jacDet)*dV_ref[k];
-                ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
-                p_dv_new += p*H_s*dV;
-                pa_dv_new += q_u_0[eN_k]*H_s*dV;
-                pe = p-q_u_0[eN_k];
-                p_L1 += fabs(pe)*H_s*dV;
-                p_L2 += pe*pe*H_s*dV;
-                if (fabs(pe) > p_Linfty)
-                  p_Linfty = fabs(pe);
+                    double jac[nSpace*nSpace];
+                    double jacInv[nSpace*nSpace];
+                    double p=0.0,pe=0.0;
+                    double jacDet, x, y, z, dV, h_phi;
+                    gf_s.set_quad(k);
+                    double H_s = gf_s.H(0.,0.);
+                    ck.calculateMapping_element(eN,
+                                                k,
+                                                mesh_dof,
+                                                mesh_l2g,
+                                                mesh_trial_ref,
+                                                mesh_grad_trial_ref,
+                                                jac,
+                                                jacDet,
+                                                jacInv,
+                                                x,y,z);
+                    dV = fabs(jacDet)*dV_ref[k];
+                    ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
+                    p_dv_new += p*H_s*dV;
+                    pa_dv_new += q_u_0[eN_k]*H_s*dV;
+                    pe = p-q_u_0[eN_k];
+                    p_L1 += fabs(pe)*H_s*dV;
+                    p_L2 += pe*pe*H_s*dV;
+                    if (fabs(pe) > p_Linfty)
+                      p_Linfty = fabs(pe);
+                  }
               }
+            p_L2 = sqrt(p_L2);
+            std::cout<<"p_1.append("<<p_L1<<")"<<std::endl
+                     <<"u_1.append("<<u_L1<<")"<<std::endl
+                     <<"v_1.append("<<v_L1<<")"<<std::endl
+                     <<"p_2.append("<<p_L2<<")"<<std::endl
+                     <<"u_2.append("<<u_L2<<")"<<std::endl
+                     <<"v_2.append("<<v_L2<<")"<<std::endl
+                     <<"p_I.append("<<p_Linfty<<")"<<std::endl
+                     <<"u_I.append("<<u_Linfty<<")"<<std::endl
+                     <<"v_I.append("<<v_Linfty<<")"<<std::endl;
+            //        std::cout<<"Pressure Integral Shifted"<<p_dv_new<<std::endl
+            //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
+            //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_Linfty<<std::endl;
           }
-        p_L2 = sqrt(p_L2);
-        std::cout<<"p_1.append("<<p_L1<<")"<<std::endl
-                 <<"u_1.append("<<u_L1<<")"<<std::endl
-                 <<"v_1.append("<<v_L1<<")"<<std::endl
-                 <<"p_2.append("<<p_L2<<")"<<std::endl
-                 <<"u_2.append("<<u_L2<<")"<<std::endl
-                 <<"v_2.append("<<v_L2<<")"<<std::endl
-                 <<"p_I.append("<<p_Linfty<<")"<<std::endl
-                 <<"u_I.append("<<u_Linfty<<")"<<std::endl
-                 <<"v_I.append("<<v_Linfty<<")"<<std::endl;
-        //        std::cout<<"Pressure Integral Shifted"<<p_dv_new<<std::endl
-        //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
-        //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_Linfty<<std::endl;
       }
 
       void calculateJacobian(double NONCONSERVATIVE_FORM,
@@ -5120,6 +5139,16 @@ namespace proteus
                 //VRANS
                 porosity = q_porosity[eN_k];
                 //
+                double ball_n[nSpace];
+                if (use_ball_as_particle == 1)
+                  {
+                    int ball_index=get_distance_to_ball(nParticles, ball_center, ball_radius,x,y,z,distance_to_solids[eN_k]);
+                    get_normal_to_ith_ball(nParticles, ball_center, ball_radius,ball_index,x,y,z,ball_n[0],ball_n[1]);
+                  }
+                else
+                  {
+                    //distance_to_solids is given in Prestep
+                  }
                 //
                 //calculate pde coefficients and derivatives at quadrature points
                 //
@@ -5539,12 +5568,25 @@ namespace proteus
                     if (gf_s.useExact)
                       {
                         double norm_exact=0.0,norm_cut=0.0;
-                        for (int I=0;I<nSpace;I++)
+                        if (use_ball_as_particle)
                           {
-                            sign += particle_signed_distance_normals[eN_k_3d+I]*gf_s.get_normal()[I];
-                            level_set_normal[I] = gf_s.get_normal()[I];
-                            norm_cut += level_set_normal[I]*level_set_normal[I];
-                            norm_exact += particle_signed_distance_normals[eN_k_3d+I]*particle_signed_distance_normals[eN_k_3d+I];
+                            for (int I=0;I<nSpace;I++)
+                              {
+                                sign += ball_n[I]*gf_s.get_normal()[I];
+                                level_set_normal[I] = gf_s.get_normal()[I];
+                                norm_cut += level_set_normal[I]*level_set_normal[I];
+                                norm_exact += ball_n[I]*ball_n[I];
+                              }
+                          }
+                        else
+                          {
+                            for (int I=0;I<nSpace;I++)
+                              {
+                                sign += particle_signed_distance_normals[eN_k_3d+I]*gf_s.get_normal()[I];
+                                level_set_normal[I] = gf_s.get_normal()[I];
+                                norm_cut += level_set_normal[I]*level_set_normal[I];
+                                norm_exact += particle_signed_distance_normals[eN_k_3d+I]*particle_signed_distance_normals[eN_k_3d+I];
+                              }
                           }
                         assert(std::fabs(1.0-norm_cut) < 1.0e-8);
                         assert(std::fabs(1.0-norm_exact) < 1.0e-8);
