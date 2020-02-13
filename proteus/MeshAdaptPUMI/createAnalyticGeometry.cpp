@@ -640,7 +640,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   }
   m->end(it);
 
-  gradeMesh();
+  gradeMesh(1.5);
    
 
   ma::Input* in = ma::configure(m,size_iso);
@@ -668,7 +668,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   }
   m->end(it);
 
-  gradeMesh();
+  gradeMesh(1.5);
    
   in = ma::configure(m,size_iso);
   in->maximumIterations = 10;

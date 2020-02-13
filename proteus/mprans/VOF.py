@@ -320,6 +320,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.VOS_model=VOS_model
         self.checkMass = checkMass
         self.epsFact = epsFact
+        self.flowModelIndex = V_model
+        self.modelIndex = ME_model
+        self.RD_modelIndex = RD_model
+        self.LS_modelIndex = LS_model
+        self.V_model = V_model
+        self.RD_modelIndex = RD_model
+        self.modelIndex = ME_model
+        self.VOS_model=VOS_model
+        self.checkMass = checkMass
+        self.epsFact = epsFact
         self.useMetrics = useMetrics
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
