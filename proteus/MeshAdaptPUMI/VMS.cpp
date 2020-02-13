@@ -270,7 +270,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     for(int i=0; i<nsd; i++)
       qpt[i] = 1./(nsd+1.0);
 
-    double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
+    //double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
+    double density = rho[localNumber(ent)];
     Inputs info;
     info.element = element;
     info.pres_elem = pres_elem;
@@ -308,6 +309,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
       apf::Vector3 tempResidual = (tempConv + grad_pres/density);
       double tempVal = tempResidual.getLength();
 */
+    info.visc_val = nu[localNumber(ent)];
     apf::Vector3 tempResidual = getResidual(qpt,info);
     double tempVal = tempResidual.getLength();
     apf::getJacobian(element,qpt,J);
@@ -363,7 +365,7 @@ double get_nu_err(struct Inputs info){
 apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
     apf::Vector3 grad_pres;
     apf::getGrad(info.pres_elem,qpt,grad_pres);
-    double visc_val = apf::getScalar(info.visc_elem,qpt);
+    //double visc_val = apf::getScalar(info.visc_elem,qpt);
     apf::Vector3 vel_vect;
     apf::getVector(info.velo_elem,qpt,vel_vect);
     apf::Vector3 vel_vect_old;
@@ -389,7 +391,7 @@ apf::Vector3 getResidual(apf::Vector3 qpt,struct Inputs &info){
 
     info.vel_vect = vel_vect;
     info.grad_vel = grad_vel;
-    info.visc_val = visc_val;
+    //info.visc_val = visc_val;
     info.grad_pres = grad_pres;
 
   return tempResidual;
