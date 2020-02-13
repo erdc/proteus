@@ -4,6 +4,10 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cRDLS import *
 from proteus.Comm import globalMax
+import numpy	
+from proteus import *	
+from proteus.Transport import *	
+from proteus.Transport import OneLevelTransport
 
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd):
@@ -1164,8 +1168,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.freezeLevelSet,
             useTimeIntegration,
             self.shockCapturing.lag,
-            self.stabilization.lag,
-            self.shockCapturing.shockCapturingFactor,
+            int(self.stabilization.lag),
+            int(self.shockCapturing.shockCapturingFactor),
             self.u[0].femSpace.dofMap.l2g,
             self.elementDiameter,  # self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
@@ -1180,7 +1184,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.numDiff_last[0],
             self.weakDirichletConditionFlags,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
@@ -1192,7 +1196,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # elliptic re-distancing
             self.coefficients.ELLIPTIC_REDISTANCING,
             self.coefficients.backgroundDissipationEllipticRedist,
-            self.coefficients.alpha/self.elementDiameter.min(),
+            float(self.coefficients.alpha/self.elementDiameter.min()),
             self.coefficients.useExact)
 
         # FREEZING INTERFACE #

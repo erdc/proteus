@@ -6,6 +6,10 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cSW2D import *
 from proteus.Comm import globalMax
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd, lag=False, nStepsToDelay=0, hFactor=1.0):
@@ -875,7 +879,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(2, 0)], self.csrColumnOffsets[(2, 0)],
             self.csrRowIndeces[(2, 1)], self.csrColumnOffsets[(2, 1)],
             self.csrRowIndeces[(2, 2)], self.csrColumnOffsets[(2, 2)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,

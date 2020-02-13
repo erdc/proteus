@@ -5,6 +5,10 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from .cElastoPlastic import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
@@ -794,7 +798,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(2,0)],self.csrColumnOffsets[(2,0)],
             self.csrRowIndeces[(2,1)],self.csrColumnOffsets[(2,1)],
             self.csrRowIndeces[(2,2)],self.csrColumnOffsets[(2,2)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,

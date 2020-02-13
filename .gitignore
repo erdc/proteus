@@ -31,11 +31,11 @@ linux2/
 garnet.gnu/
 Cygwin
 proteus.egg-info/
-proteus/ADR.cpp
 proteus/subsurfaceTransportFunctions.c
 cygwin_bootstrap.done
 matlab_setup.done
 dist/
+tmp/
 
 # Generated files
 
@@ -58,14 +58,12 @@ proteus/csparsity.cpp
 proteus/csubgridError.c
 proteus/ctimeIntegration.c
 proteus/ctransportCoefficients.c
-proteus/elastoplastic/cElastoPlastic.cpp
 proteus/equivalent_polynomials.cpp
 proteus/fenton/Fenton.cpp
 proteus/flcbdfWrappers.cpp
 proteus/mbd/CouplingFSI.cpp
 proteus/mprans/BoundaryConditions.cpp
 proteus/mprans/MeshSmoothing.cpp
-proteus/mprans/SedClosure.cpp
 proteus/mprans/cAddedMass.cpp
 proteus/mprans/cCLSVOF.cpp
 proteus/mprans/cGN_SW2DCV.cpp
@@ -79,5 +77,4 @@ proteus/mprans/cRANS3PF.cpp
 proteus/mprans/cRANS3PSed.cpp
 proteus/mprans/cVOF3P.cpp
 proteus/mprans/cVOS3P.cpp
-proteus/richards/cRichards.cpp
 proteus/superluWrappers.c

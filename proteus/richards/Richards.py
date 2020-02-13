@@ -3,6 +3,10 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from .cRichards import *
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
@@ -732,7 +736,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('cfl',0)],
             self.q[('cfl',0)],#cek hack self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,

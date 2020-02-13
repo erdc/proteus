@@ -24,8 +24,7 @@ from proteus.ShockCapturing import ShockCapturing_base
 from proteus.LinearAlgebraTools import SparseMat
 from proteus.NonlinearSolvers import ExplicitLumpedMassMatrix,ExplicitConsistentMassMatrixForVOF,TwoStageNewton
 from proteus import TimeIntegration
-from proteus.mprans.cVOF3P import *
-#from . import cVOF3P
+from . import cVOF3P
 
 class SubgridError(SGE_base):
     def __init__(self, coefficients, nd):
@@ -868,7 +867,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag = 0
-        self.vof = VOF3P(
+        self.vof = cVOF3P.newVOF3P(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1152,7 +1151,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nElements_global,
             self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
-            self.shockCapturing.lag,
+            int(self.shockCapturing.lag),
             self.shockCapturing.shockCapturingFactor,
             self.coefficients.sc_uref,
             self.coefficients.sc_beta,
@@ -1163,7 +1162,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
-            self.degree_polynomial,
+            float(self.degree_polynomial),
             self.u[0].dof,
             self.u_dof_old,  # For Backward Euler this is un, for SSP this is the lstage
             self.coefficients.q_v,
@@ -1247,6 +1246,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
 
+        (rowptr, colind, globalJacobian) = jacobian.getCSRrepresentation()
         self.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1287,7 +1287,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            globalJacobian,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,

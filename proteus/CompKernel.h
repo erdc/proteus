@@ -1,6 +1,8 @@
 #ifndef COMPKERNEL_H
 #define COMPKERNEL_H
 #include <cmath>
+//#include "xtensor-python/pyarray.hpp"
+//#include "xtensor-python/pyvectorize.hpp"
 /**
  *   A class to provide indexing into Euclidean vectors and tensors.
  */
@@ -80,6 +82,7 @@ public:
 				       const int k,
 				       double* mesh_dof,
 				       int* mesh_l2g,
+				       //xt::pyarray<double>& mesh_trial_ref,
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* jac,
@@ -92,12 +95,14 @@ public:
 				 const int k,
 				 double* h_dof,
 				 int* mesh_l2g,
+				 //xt::pyarray<double>& mesh_trial_ref,
 				 double* mesh_trial_ref,
 				 double& h);
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* mesh_velocity_dof,
 					       int* mesh_l2g,
+					       //xt::pyarray<double>& mesh_trial_ref,
 					       double* mesh_trial_ref,
 					       double& xt,
 					       double& yt,
@@ -205,6 +210,7 @@ public:
 				       const int k,
 				       double* mesh_dof,
 				       int* mesh_l2g,
+				       //xt::pyarray<double>& mesh_trial_ref,
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* jac,
@@ -227,9 +233,12 @@ public:
     for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
       {
 	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
-	x += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	//x += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref(k, j);
+	//y += mesh_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref(k, j);
+	//z += mesh_dof[mesh_l2g[eN_j]*3+2]*mesh_trial_ref(k, j);	      
+        x += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
 	y += mesh_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
-	z += mesh_dof[mesh_l2g[eN_j]*3+2]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];	      
+	z += mesh_dof[mesh_l2g[eN_j]*3+2]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
 	for (int I=0;I<3;I++)
 	  {
 	    Grad_x[I] += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_grad_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT*3+j*3+I];
@@ -266,6 +275,7 @@ public:
 				 const int k,
 				 double* h_dof,
 				 int* mesh_l2g,
+				 //xt::pyarray<double>& mesh_trial_ref,
 				 double* mesh_trial_ref,
 				 double& h)
   {
@@ -273,7 +283,8 @@ public:
     for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
       {
 	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
-	h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	//h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref(k, j);
+        h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
       }
   }
 
@@ -281,6 +292,7 @@ public:
 					       const int k,
 					       double* mesh_velocity_dof,
 					       int* mesh_l2g,
+					       //xt::pyarray<double>& mesh_trial_ref,
 					       double* mesh_trial_ref,
 					       double& xt,
 					       double& yt,
@@ -293,9 +305,12 @@ public:
     for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
       {
 	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
-	xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	//xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref(k, j);
+	//yt += mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref(k, j);
+	//zt += mesh_velocity_dof[mesh_l2g[eN_j]*3+2]*mesh_trial_ref(k, j);	      
+        xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
 	yt += mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
-	zt += mesh_velocity_dof[mesh_l2g[eN_j]*3+2]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];	      
+	zt += mesh_velocity_dof[mesh_l2g[eN_j]*3+2]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
       }
   }
 
@@ -487,6 +502,7 @@ public:
 				       const int k,
 				       double* mesh_dof,
 				       int* mesh_l2g,
+				       //xt::pyarray<double>& mesh_trial_ref,
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* jac,
@@ -513,6 +529,7 @@ public:
 					       const int k,
 					       double* mesh_velocity_dof,
 					       int* mesh_l2g,
+					       //xt::pyarray<double>& mesh_trial_ref,
 					       double* mesh_trial_ref,
 					       double& xt,
 					       double& yt)
@@ -629,6 +646,7 @@ public:
 				       const int k,
 				       double* mesh_dof,
 				       int* mesh_l2g,
+				       //xt::pyarray<double>& mesh_trial_ref,
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* jac,
@@ -657,7 +675,9 @@ public:
 	/*     Grad_x[I] += mesh_dof[mesh_l2g[eN_j]*2+0]*mesh_grad_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT*2+j*2+I]; */
 	/*     Grad_y[I] += mesh_dof[mesh_l2g[eN_j]*2+1]*mesh_grad_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT*2+j*2+I]; */
 	/*   } */
-	x += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	//x += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref(k, j);
+	//y += mesh_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref(k, j);
+        x += mesh_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
 	y += mesh_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
 	for (int I=0;I<2;I++)
 	  {
@@ -681,6 +701,7 @@ public:
 				 const int k,
 				 double* h_dof,
 				 int* mesh_l2g,
+				 //xt::pyarray<double>& mesh_trial_ref,
 				 double* mesh_trial_ref,
 				 double& h)
   {
@@ -688,7 +709,8 @@ public:
     for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
       {
 	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
-	h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	//h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref(k, j);
+        h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
       }
   }
   
@@ -696,6 +718,7 @@ public:
 					       const int k,
 					       double* mesh_velocity_dof,
 					       int* mesh_l2g,
+					       //xt::pyarray<double>& mesh_trial_ref,
 					       double* mesh_trial_ref,
 					       double& xt,
 					       double& yt)
@@ -709,7 +732,9 @@ public:
 	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
 	/* xt += mesh_velocity_dof[mesh_l2g[eN_j]*2+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j]; */
 	/* yt += mesh_velocity_dof[mesh_l2g[eN_j]*2+1]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j]; */
-	xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	//xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref(k, j);
+	//yt += mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref(k, j);
+        xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
 	yt += mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
       }
   }
@@ -875,6 +900,7 @@ public:
 				       const int k,
 				       double* mesh_dof,
 				       int* mesh_l2g,
+				       //xt::pyarray<double>& mesh_trial_ref,
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* jac,
@@ -900,6 +926,7 @@ public:
 					       const int k,
 					       double* mesh_velocity_dof,
 					       int* mesh_l2g,
+					       //xt::pyarray<double>& mesh_trial_ref,
 					       double* mesh_trial_ref,
 					       double& xt,
 					       double& yt,
@@ -1573,6 +1600,7 @@ public:
 				       const int k,
 				       double* mesh_dof,
 				       int* mesh_l2g,
+				       //xt::pyarray<double>& mesh_trial_ref,
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* jac,
@@ -1589,6 +1617,7 @@ public:
 				 const int k,
 				 double* h_dof,
 				 int* mesh_l2g,
+				 //xt::pyarray<double>& mesh_trial_ref,
 				 double* mesh_trial_ref,
 				 double& h)
   {
@@ -1604,6 +1633,7 @@ public:
 					       const int k,
 					       double* meshVelocity_dof,
 					       int* mesh_l2g,
+					       //xt::pyarray<double>& mesh_trial_ref,
 					       double* mesh_trial_ref,
 					       double& xt,
 					       double& yt,
@@ -2401,6 +2431,7 @@ public:
 				       const int k,
 				       double* mesh_dof,
 				       int* mesh_l2g,
+				       //xt::pyarray<double>& mesh_trial_ref,
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* jac,
@@ -2416,6 +2447,7 @@ public:
 				 const int k,
 				 double* h_dof,
 				 int* mesh_l2g,
+				 //xt::pyarray<double>& mesh_trial_ref,
 				 double* mesh_trial_ref,
 				 double& h)
   {
@@ -2431,6 +2463,7 @@ public:
 				       const int k,
 				       double* mesh_dof,
 				       int* mesh_l2g,
+				       //xt::pyarray<double>& mesh_trial_ref,
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* jac,
@@ -2447,6 +2480,7 @@ public:
 					       const int k,
 					       double* meshVelocity_dof,
 					       int* mesh_l2g,
+					       //xt::pyarray<double>& mesh_trial_ref,
 					       double* mesh_trial_ref,
 					       double& xt,
 					       double& yt)
@@ -2458,6 +2492,7 @@ public:
 					       const int k,
 					       double* meshVelocity_dof,
 					       int* mesh_l2g,
+					       //xt::pyarray<double>& mesh_trial_ref,
 					       double* mesh_trial_ref,
 					       double& xt,
 					       double& yt,

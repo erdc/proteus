@@ -28,7 +28,7 @@ int logEvent(char* logString,int logLevel)
     // pValue reference stolen here:
     PyTuple_SetItem(pArgs, 0, pValue);
 
-    pValue = PyInt_FromLong(logLevel);
+    pValue = PyLong_FromLong(logLevel);
     // pValue reference stolen here:
     PyTuple_SetItem(pArgs, 1, pValue);
 */

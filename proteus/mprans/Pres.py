@@ -704,7 +704,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.mesh.nElements_global,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian)
+            jacobian.getCSRrepresentation()[2])
         for dofN in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys()):
             global_dofN = self.offset[0] + self.stride[0] * dofN
             self.nzval[numpy.where(self.colind == global_dofN)] = 0.0  # column

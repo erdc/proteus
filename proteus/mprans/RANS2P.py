@@ -14,6 +14,10 @@ from proteus import Profiling
 from proteus import LinearAlgebraTools as LAT
 from proteus.Comm import (globalSum,
                           globalMax)
+import numpy
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 
 class SubgridError(proteus.SubgridError.SGE_base):
     """
@@ -1537,8 +1541,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.mesh.nodeDiametersArray,
                                       self.stabilization.hFactor,
                                       self.mesh.nElements_global,
-                                      self.mesh.nElementBoundaries_owned,
-                                      self.coefficients.useRBLES,
+                                      int(self.mesh.nElementBoundaries_owned),
+                                      float(self.coefficients.useRBLES),
                                       self.coefficients.useMetrics,
                                       self.timeIntegration.alpha_bdf,
                                       self.coefficients.epsFact_density,
@@ -1675,7 +1679,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.q[('force', 0)],
                                       self.q[('force', 1)],
                                       self.q[('force', 2)],
-                                      self.coefficients.use_ball_as_particle,
+                                      int(self.coefficients.use_ball_as_particle),
                                       self.coefficients.ball_center,
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
@@ -1694,7 +1698,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.particle_netForces,
                                       self.coefficients.particle_netMoments,
                                       self.coefficients.particle_surfaceArea,
-                                      self.mesh.nElements_owned,
+                                      int(self.mesh.nElements_owned),
                                       self.coefficients.particle_nitsche,
                                       self.coefficients.particle_epsFact,
                                       self.coefficients.particle_alpha,
@@ -1810,7 +1814,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.mesh.nodeDiametersArray,
                                       self.stabilization.hFactor,
                                       self.mesh.nElements_global,
-                                      self.coefficients.useRBLES,
+                                      float(self.coefficients.useRBLES),
                                       self.coefficients.useMetrics,
                                       self.timeIntegration.alpha_bdf,
                                       self.coefficients.epsFact_density,
@@ -1893,7 +1897,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.csrRowIndeces[(3, 1)], self.csrColumnOffsets[(3, 1)],
                                       self.csrRowIndeces[(3, 2)], self.csrColumnOffsets[(3, 2)],
                                       self.csrRowIndeces[(3, 3)], self.csrColumnOffsets[(3, 3)],
-                                      jacobian,
+                                      jacobian.getCSRrepresentation()[2],
                                       self.mesh.nExteriorElementBoundaries_global,
                                       self.mesh.exteriorElementBoundariesArray,
                                       self.mesh.elementBoundaryElementsArray,
@@ -1950,7 +1954,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.csrColumnOffsets_eb[(3, 3)],
                                       self.mesh.elementMaterialTypes,
                                       self.mesh.elementBoundaryMaterialTypes,
-                                      self.coefficients.use_ball_as_particle,
+                                      int(self.coefficients.use_ball_as_particle),
                                       self.coefficients.ball_center,
                                       self.coefficients.ball_radius,
                                       self.coefficients.ball_velocity,
@@ -1968,7 +1972,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.phi_s,
                                       self.coefficients.phisField,
                                       self.coefficients.nParticles,
-                                      self.mesh.nElements_owned,
+                                      int(self.mesh.nElements_owned),
                                       self.coefficients.particle_nitsche,
                                       self.coefficients.particle_epsFact,
                                       self.coefficients.particle_alpha,

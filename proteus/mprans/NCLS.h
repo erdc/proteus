@@ -5,6 +5,9 @@
 #include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include "xtensor-python/pyarray.hpp"
+
+namespace py = pybind11;
 
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define IS_BETAij_ONE 0
@@ -45,27 +48,27 @@ namespace proteus
     virtual ~NCLS_base(){}
     virtual void calculateResidual(//element
                                    double dt,
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   double* meshVelocity_dof,
+                                   xt::pyarray<double>& mesh_trial_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_ref,
+                                   xt::pyarray<double>& mesh_dof,
+                                   xt::pyarray<double>& meshVelocity_dof,
                                    double MOVING_DOMAIN,
-                                   int* mesh_l2g,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
+                                   xt::pyarray<int>& mesh_l2g,
+                                   xt::pyarray<double>& dV_ref,
+                                   xt::pyarray<double>& u_trial_ref,
+                                   xt::pyarray<double>& u_grad_trial_ref,
+                                   xt::pyarray<double>& u_test_ref,
+                                   xt::pyarray<double>& u_grad_test_ref,
                                    //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
+                                   xt::pyarray<double>& mesh_trial_trace_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                                   xt::pyarray<double>& dS_ref,
+                                   xt::pyarray<double>& u_trial_trace_ref,
+                                   xt::pyarray<double>& u_grad_trial_trace_ref,
+                                   xt::pyarray<double>& u_test_trace_ref,
+                                   xt::pyarray<double>& u_grad_test_trace_ref,
+                                   xt::pyarray<double>& normal_ref,
+                                   xt::pyarray<double>& boundaryJac_ref,
                                    //physics
                                    int nElements_global,
                                    double useMetrics,
@@ -73,53 +76,53 @@ namespace proteus
                                    int lag_shockCapturing, /*mwf not used yet*/
                                    double shockCapturingDiffusion,
                                    double sc_uref, double sc_alpha,
-                                   int* u_l2g,
-                                   int* r_l2g,
-                                   double* elementDiameter,
-                                   double* nodeDiametersArray,
+                                   xt::pyarray<int>& u_l2g,
+                                   xt::pyarray<int>& r_l2g,
+                                   xt::pyarray<double>& elementDiameter,
+                                   xt::pyarray<double>& nodeDiametersArray,
                                    int degree_polynomial,
-                                   double* u_dof,
-                                   double* u_dof_old,
-                                   double* uStar_dof,
-                                   double* velocity,
-                                   double* q_m,
-                                   double* q_u,
-                                   double* q_n,
-                                   double* q_dH,
-                                   double* q_m_betaBDF,
-                                   double* q_dV,
-                                   double* q_dV_last,
-                                   double* cfl,
-                                   double* edge_based_cfl,
-                                   double* q_numDiff_u,
-                                   double* q_numDiff_u_last,
+                                   xt::pyarray<double>& u_dof,
+                                   xt::pyarray<double>& u_dof_old,
+                                   xt::pyarray<double>& uStar_dof,
+                                   xt::pyarray<double>& velocity,
+                                   xt::pyarray<double>& q_m,
+                                   xt::pyarray<double>& q_u,
+                                   xt::pyarray<double>& q_n,
+                                   xt::pyarray<double>& q_dH,
+                                   xt::pyarray<double>& q_m_betaBDF,
+                                   xt::pyarray<double>& q_dV,
+                                   xt::pyarray<double>& q_dV_last,
+                                   xt::pyarray<double>& cfl,
+                                   xt::pyarray<double>& edge_based_cfl,
+                                   xt::pyarray<double>& q_numDiff_u,
+                                   xt::pyarray<double>& q_numDiff_u_last,
                                    int offset_u, int stride_u,
-                                   double* globalResidual,
+                                   xt::pyarray<double>& globalResidual,
                                    int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_velocity_ext,
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_rd_u_ext,
-                                   double* ebqe_bc_u_ext,
-                                   double* ebqe_u,
-                                   double* ebqe_grad_u,
-				   double* interface_locator,
+                                   xt::pyarray<int>& exteriorElementBoundariesArray,
+                                   xt::pyarray<int>& elementBoundaryElementsArray,
+                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                                   xt::pyarray<double>& ebqe_velocity_ext,
+                                   xt::pyarray<int>& isDOFBoundary_u,
+                                   xt::pyarray<double>& ebqe_rd_u_ext,
+                                   xt::pyarray<double>& ebqe_bc_u_ext,
+                                   xt::pyarray<double>& ebqe_u,
+                                   xt::pyarray<double>& ebqe_grad_u,
+				   xt::pyarray<double>& interface_locator,
 				   // TO KILL SUPG AND SHOCK CAPTURING 
 				   int PURE_BDF,
                                    // PARAMETERS FOR EDGE VISCOSITY
                                    int numDOFs,
                                    int NNZ,
-                                   int* csrRowIndeces_DofLoops,
-                                   int* csrColumnOffsets_DofLoops,
-                                   int* csrRowIndeces_CellLoops,
-                                   int* csrColumnOffsets_CellLoops,
-                                   int* csrColumnOffsets_eb_CellLoops,
+                                   xt::pyarray<int>& csrRowIndeces_DofLoops,
+                                   xt::pyarray<int>& csrColumnOffsets_DofLoops,
+                                   xt::pyarray<int>& csrRowIndeces_CellLoops,
+                                   xt::pyarray<int>& csrColumnOffsets_CellLoops,
+                                   xt::pyarray<int>& csrColumnOffsets_eb_CellLoops,
                                    // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
                                    int LUMPED_MASS_MATRIX,
                                    // AUX QUANTITIES OF INTEREST
-                                   double* quantDOFs,
+                                   xt::pyarray<double>& quantDOFs,
                                    // COUPEZ
                                    double lambda_coupez,
                                    double epsCoupez,
@@ -127,90 +130,90 @@ namespace proteus
                                    int COUPEZ,
                                    int SATURATED_LEVEL_SET,
                                    // C-Matrices
-                                   double* Cx,
-                                   double* Cy,
-                                   double* Cz,
-                                   double* ML,
+                                   xt::pyarray<double>& Cx,
+                                   xt::pyarray<double>& Cy,
+                                   xt::pyarray<double>& Cz,
+                                   xt::pyarray<double>& ML,
                                    int STABILIZATION_TYPE,
                                    int ENTROPY_TYPE,
                                    double cE
                                    )=0;
     virtual void calculateJacobian(//element
                                    double dt,
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   double* mesh_velocity_dof,
+                                   xt::pyarray<double>& mesh_trial_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_ref,
+                                   xt::pyarray<double>& mesh_dof,
+                                   xt::pyarray<double>& mesh_velocity_dof,
                                    double MOVING_DOMAIN,
-                                   int* mesh_l2g,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
+                                   xt::pyarray<int>& mesh_l2g,
+                                   xt::pyarray<double>& dV_ref,
+                                   xt::pyarray<double>& u_trial_ref,
+                                   xt::pyarray<double>& u_grad_trial_ref,
+                                   xt::pyarray<double>& u_test_ref,
+                                   xt::pyarray<double>& u_grad_test_ref,
                                    //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
+                                   xt::pyarray<double>& mesh_trial_trace_ref,
+                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                                   xt::pyarray<double>& dS_ref,
+                                   xt::pyarray<double>& u_trial_trace_ref,
+                                   xt::pyarray<double>& u_grad_trial_trace_ref,
+                                   xt::pyarray<double>& u_test_trace_ref,
+                                   xt::pyarray<double>& u_grad_test_trace_ref,
+                                   xt::pyarray<double>& normal_ref,
+                                   xt::pyarray<double>& boundaryJac_ref,
                                    //physics
                                    int nElements_global,
                                    double useMetrics,
                                    double alphaBDF,
                                    int lag_shockCapturing,/*mwf not used yet*/
                                    double shockCapturingDiffusion,
-                                   int* u_l2g,
-                                   int* r_l2g,
-                                   double* elementDiameter,
+                                   xt::pyarray<int>& u_l2g,
+                                   xt::pyarray<int>& r_l2g,
+                                   xt::pyarray<double>& elementDiameter,
                                    int degree_polynomial,
-                                   double* u_dof,
-                                   double* velocity,
-                                   double* q_m_betaBDF,
-                                   double* cfl,
-                                   double* q_numDiff_u_last,
-                                   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                   double* globalJacobian,
+                                   xt::pyarray<double>& u_dof,
+                                   xt::pyarray<double>& velocity,
+                                   xt::pyarray<double>& q_m_betaBDF,
+                                   xt::pyarray<double>& cfl,
+                                   xt::pyarray<double>& q_numDiff_u_last,
+                                   xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+                                   xt::pyarray<double>& globalJacobian,
                                    int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_velocity_ext,
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_rd_u_ext,
-                                   double* ebqe_bc_u_ext,
-                                   int* csrColumnOffsets_eb_u_u,
+                                   xt::pyarray<int>& exteriorElementBoundariesArray,
+                                   xt::pyarray<int>& elementBoundaryElementsArray,
+                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                                   xt::pyarray<double>& ebqe_velocity_ext,
+                                   xt::pyarray<int>& isDOFBoundary_u,
+                                   xt::pyarray<double>& ebqe_rd_u_ext,
+                                   xt::pyarray<double>& ebqe_bc_u_ext,
+                                   xt::pyarray<int>& csrColumnOffsets_eb_u_u,
 				   int PURE_BDF,
                                    int LUMPED_MASS_MATRIX
                                    )=0;
     virtual void calculateWaterline(//element
-				    int* wlc,
-				    double* waterline,
-				    double* mesh_trial_ref,
-				    double* mesh_grad_trial_ref,
-				    double* mesh_dof,
-				    double* meshVelocity_dof,
+				    xt::pyarray<int>& wlc,
+				    xt::pyarray<double>& waterline,
+				    xt::pyarray<double>& mesh_trial_ref,
+				    xt::pyarray<double>& mesh_grad_trial_ref,
+				    xt::pyarray<double>& mesh_dof,
+				    xt::pyarray<double>& meshVelocity_dof,
 				    double MOVING_DOMAIN,
-				    int* mesh_l2g,
-				    double* dV_ref,
-				    double* u_trial_ref,
-				    double* u_grad_trial_ref,
-				    double* u_test_ref,
-				    double* u_grad_test_ref,
+				    xt::pyarray<int>& mesh_l2g,
+				    xt::pyarray<double>& dV_ref,
+				    xt::pyarray<double>& u_trial_ref,
+				    xt::pyarray<double>& u_grad_trial_ref,
+				    xt::pyarray<double>& u_test_ref,
+				    xt::pyarray<double>& u_grad_test_ref,
 				    //element boundary
-				    double* mesh_trial_trace_ref,
-				    double* mesh_grad_trial_trace_ref,
-				    double* dS_ref,
-				    double* u_trial_trace_ref,
-				    double* u_grad_trial_trace_ref,
-				    double* u_test_trace_ref,
-				    double* u_grad_test_trace_ref,
-				    double* normal_ref,
-				    double* boundaryJac_ref,
+				    xt::pyarray<double>& mesh_trial_trace_ref,
+				    xt::pyarray<double>& mesh_grad_trial_trace_ref,
+				    xt::pyarray<double>& dS_ref,
+				    xt::pyarray<double>& u_trial_trace_ref,
+				    xt::pyarray<double>& u_grad_trial_trace_ref,
+				    xt::pyarray<double>& u_test_trace_ref,
+				    xt::pyarray<double>& u_grad_test_trace_ref,
+				    xt::pyarray<double>& normal_ref,
+				    xt::pyarray<double>& boundaryJac_ref,
 				    //physics
 				    int nElements_global,
 				    double useMetrics,
@@ -218,111 +221,111 @@ namespace proteus
 				    int lag_shockCapturing, /*mwf not used yet*/
 				    double shockCapturingDiffusion,
 				    double sc_uref, double sc_alpha,
-				    int* u_l2g,
-				    int* r_l2g,
-				    double* elementDiameter,
-				    double* u_dof,double* u_dof_old,
-				    double* velocity,
-				    double* q_m,
-				    double* q_u,
-				    double* q_n,
-				    double* q_dH,
-				    double* q_m_betaBDF,
-				    double* cfl,
-				    double* q_numDiff_u,
-				    double* q_numDiff_u_last,
+				    xt::pyarray<int>& u_l2g,
+				    xt::pyarray<int>& r_l2g,
+				    xt::pyarray<double>& elementDiameter,
+				    xt::pyarray<double>& u_dof,xt::pyarray<double>& u_dof_old,
+				    xt::pyarray<double>& velocity,
+				    xt::pyarray<double>& q_m,
+				    xt::pyarray<double>& q_u,
+				    xt::pyarray<double>& q_n,
+				    xt::pyarray<double>& q_dH,
+				    xt::pyarray<double>& q_m_betaBDF,
+				    xt::pyarray<double>& cfl,
+				    xt::pyarray<double>& q_numDiff_u,
+				    xt::pyarray<double>& q_numDiff_u_last,
 				    int offset_u, int stride_u,
 				    int nExteriorElementBoundaries_global,
-				    int* exteriorElementBoundariesArray,
-				    int* elementBoundaryElementsArray,
-				    int* elementBoundaryLocalElementBoundariesArray,
-				    int* elementBoundaryMaterialTypes,
-				    double* ebqe_velocity_ext,
-				    int* isDOFBoundary_u,
-				    double* ebqe_bc_u_ext,
-				    double* ebqe_u)=0;
+				    xt::pyarray<int>& exteriorElementBoundariesArray,
+				    xt::pyarray<int>& elementBoundaryElementsArray,
+				    xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+				    xt::pyarray<int>& elementBoundaryMaterialTypes,
+				    xt::pyarray<double>& ebqe_velocity_ext,
+				    xt::pyarray<int>& isDOFBoundary_u,
+				    xt::pyarray<double>& ebqe_bc_u_ext,
+				    xt::pyarray<double>& ebqe_u)=0;
     virtual double calculateRedistancingResidual(
                                                  double dt,
-                                                 double* mesh_trial_ref,
-                                                 double* mesh_grad_trial_ref,
-                                                 double* mesh_dof,
-                                                 int* mesh_l2g,
-                                                 double* dV_ref,
-                                                 double* u_trial_ref,
-                                                 double* u_grad_trial_ref,
-                                                 double* u_test_ref,
+                                                 xt::pyarray<double>& mesh_trial_ref,
+                                                 xt::pyarray<double>& mesh_grad_trial_ref,
+                                                 xt::pyarray<double>& mesh_dof,
+                                                 xt::pyarray<int>& mesh_l2g,
+                                                 xt::pyarray<double>& dV_ref,
+                                                 xt::pyarray<double>& u_trial_ref,
+                                                 xt::pyarray<double>& u_grad_trial_ref,
+                                                 xt::pyarray<double>& u_test_ref,
                                                  //physics
                                                  int nElements_global,
-                                                 int* u_l2g,
-                                                 int* r_l2g,
-                                                 double* elementDiameter,
-                                                 double* nodeDiametersArray,
-                                                 double* u_dof,
-                                                 double* u_dof_old,
-                                                 double* uStar_dof,
+                                                 xt::pyarray<int>& u_l2g,
+                                                 xt::pyarray<int>& r_l2g,
+                                                 xt::pyarray<double>& elementDiameter,
+                                                 xt::pyarray<double>& nodeDiametersArray,
+                                                 xt::pyarray<double>& u_dof,
+                                                 xt::pyarray<double>& u_dof_old,
+                                                 xt::pyarray<double>& uStar_dof,
                                                  int offset_u, int stride_u,
-                                                 double* globalResidual,
+                                                 xt::pyarray<double>& globalResidual,
                                                  // PARAMETERS FOR EDGE BASED STABILIZATION
                                                  int numDOFs,
                                                  int NNZ,
-                                                 int* csrRowIndeces_DofLoops,
-                                                 int* csrColumnOffsets_DofLoops,
-                                                 int* csrRowIndeces_CellLoops,
-                                                 int* csrColumnOffsets_CellLoops,
+                                                 xt::pyarray<int>& csrRowIndeces_DofLoops,
+                                                 xt::pyarray<int>& csrColumnOffsets_DofLoops,
+                                                 xt::pyarray<int>& csrRowIndeces_CellLoops,
+                                                 xt::pyarray<int>& csrColumnOffsets_CellLoops,
                                                  // COUPEZ
                                                  double lambda_coupez,
                                                  double epsCoupez,
                                                  double epsFactRedistancing,
-                                                 double* edge_based_cfl,
+                                                 xt::pyarray<double>& edge_based_cfl,
                                                  int SATURATED_LEVEL_SET,
                                                  // C-Matrices
-                                                 double* Cx,
-                                                 double* Cy,
-                                                 double* Cz,
-                                                 double* ML
+                                                 xt::pyarray<double>& Cx,
+                                                 xt::pyarray<double>& Cy,
+                                                 xt::pyarray<double>& Cz,
+                                                 xt::pyarray<double>& ML
                                                  )=0;
     virtual double calculateRhsSmoothing(
-                                         double* mesh_trial_ref,
-                                         double* mesh_grad_trial_ref,
-                                         double* mesh_dof,
-                                         int* mesh_l2g,
-                                         double* dV_ref,
-                                         double* u_trial_ref,
-                                         double* u_grad_trial_ref,
-                                         double* u_test_ref,
+                                         xt::pyarray<double>& mesh_trial_ref,
+                                         xt::pyarray<double>& mesh_grad_trial_ref,
+                                         xt::pyarray<double>& mesh_dof,
+                                         xt::pyarray<int>& mesh_l2g,
+                                         xt::pyarray<double>& dV_ref,
+                                         xt::pyarray<double>& u_trial_ref,
+                                         xt::pyarray<double>& u_grad_trial_ref,
+                                         xt::pyarray<double>& u_test_ref,
                                          //physics
                                          int nElements_global,
-                                         int* u_l2g,
-                                         int* r_l2g,
-                                         double* elementDiameter,
-                                         double* nodeDiametersArray,
-                                         double* u_dof_old,
+                                         xt::pyarray<int>& u_l2g,
+                                         xt::pyarray<int>& r_l2g,
+                                         xt::pyarray<double>& elementDiameter,
+                                         xt::pyarray<double>& nodeDiametersArray,
+                                         xt::pyarray<double>& u_dof_old,
                                          int offset_u, int stride_u,
-                                         double* globalResidual
+                                         xt::pyarray<double>& globalResidual
                                          )=0;
     virtual void calculateResidual_entropy_viscosity(//element
                                                      double dt,
-                                                     double* mesh_trial_ref,
-                                                     double* mesh_grad_trial_ref,
-                                                     double* mesh_dof,
-                                                     double* meshVelocity_dof,
+                                                     xt::pyarray<double>& mesh_trial_ref,
+                                                     xt::pyarray<double>& mesh_grad_trial_ref,
+                                                     xt::pyarray<double>& mesh_dof,
+                                                     xt::pyarray<double>& meshVelocity_dof,
                                                      double MOVING_DOMAIN,
-                                                     int* mesh_l2g,
-                                                     double* dV_ref,
-                                                     double* u_trial_ref,
-                                                     double* u_grad_trial_ref,
-                                                     double* u_test_ref,
-                                                     double* u_grad_test_ref,
+                                                     xt::pyarray<int>& mesh_l2g,
+                                                     xt::pyarray<double>& dV_ref,
+                                                     xt::pyarray<double>& u_trial_ref,
+                                                     xt::pyarray<double>& u_grad_trial_ref,
+                                                     xt::pyarray<double>& u_test_ref,
+                                                     xt::pyarray<double>& u_grad_test_ref,
                                                      //element boundary
-                                                     double* mesh_trial_trace_ref,
-                                                     double* mesh_grad_trial_trace_ref,
-                                                     double* dS_ref,
-                                                     double* u_trial_trace_ref,
-                                                     double* u_grad_trial_trace_ref,
-                                                     double* u_test_trace_ref,
-                                                     double* u_grad_test_trace_ref,
-                                                     double* normal_ref,
-                                                     double* boundaryJac_ref,
+                                                     xt::pyarray<double>& mesh_trial_trace_ref,
+                                                     xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                                                     xt::pyarray<double>& dS_ref,
+                                                     xt::pyarray<double>& u_trial_trace_ref,
+                                                     xt::pyarray<double>& u_grad_trial_trace_ref,
+                                                     xt::pyarray<double>& u_test_trace_ref,
+                                                     xt::pyarray<double>& u_grad_test_trace_ref,
+                                                     xt::pyarray<double>& normal_ref,
+                                                     xt::pyarray<double>& boundaryJac_ref,
                                                      //physics
                                                      int nElements_global,
                                                      double useMetrics,
@@ -330,53 +333,53 @@ namespace proteus
                                                      int lag_shockCapturing, /*mwf not used yet*/
                                                      double shockCapturingDiffusion,
                                                      double sc_uref, double sc_alpha,
-                                                     int* u_l2g,
-                                                     int* r_l2g,
-                                                     double* elementDiameter,
-                                                     double* nodeDiametersArray,
+                                                     xt::pyarray<int>& u_l2g,
+                                                     xt::pyarray<int>& r_l2g,
+                                                     xt::pyarray<double>& elementDiameter,
+                                                     xt::pyarray<double>& nodeDiametersArray,
                                                      int degree_polynomial,
-                                                     double* u_dof,
-                                                     double* u_dof_old,
-                                                     double* uStar_dof,
-                                                     double* velocity,
-                                                     double* q_m,
-                                                     double* q_u,
-                                                     double* q_n,
-                                                     double* q_dH,
-                                                     double* q_m_betaBDF,
-                                                     double* q_dV,
-                                                     double* q_dV_last,
-                                                     double* cfl,
-                                                     double* edge_based_cfl,
-                                                     double* q_numDiff_u,
-                                                     double* q_numDiff_u_last,
+                                                     xt::pyarray<double>& u_dof,
+                                                     xt::pyarray<double>& u_dof_old,
+                                                     xt::pyarray<double>& uStar_dof,
+                                                     xt::pyarray<double>& velocity,
+                                                     xt::pyarray<double>& q_m,
+                                                     xt::pyarray<double>& q_u,
+                                                     xt::pyarray<double>& q_n,
+                                                     xt::pyarray<double>& q_dH,
+                                                     xt::pyarray<double>& q_m_betaBDF,
+                                                     xt::pyarray<double>& q_dV,
+                                                     xt::pyarray<double>& q_dV_last,
+                                                     xt::pyarray<double>& cfl,
+                                                     xt::pyarray<double>& edge_based_cfl,
+                                                     xt::pyarray<double>& q_numDiff_u,
+                                                     xt::pyarray<double>& q_numDiff_u_last,
                                                      int offset_u, int stride_u,
-                                                     double* globalResidual,
+                                                     xt::pyarray<double>& globalResidual,
                                                      int nExteriorElementBoundaries_global,
-                                                     int* exteriorElementBoundariesArray,
-                                                     int* elementBoundaryElementsArray,
-                                                     int* elementBoundaryLocalElementBoundariesArray,
-                                                     double* ebqe_velocity_ext,
-                                                     int* isDOFBoundary_u,
-                                                     double* ebqe_rd_u_ext,
-                                                     double* ebqe_bc_u_ext,
-                                                     double* ebqe_u,
-                                                     double* ebqe_grad_u,
-						     double* interface_locator,
+                                                     xt::pyarray<int>& exteriorElementBoundariesArray,
+                                                     xt::pyarray<int>& elementBoundaryElementsArray,
+                                                     xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                                                     xt::pyarray<double>& ebqe_velocity_ext,
+                                                     xt::pyarray<int>& isDOFBoundary_u,
+                                                     xt::pyarray<double>& ebqe_rd_u_ext,
+                                                     xt::pyarray<double>& ebqe_bc_u_ext,
+                                                     xt::pyarray<double>& ebqe_u,
+                                                     xt::pyarray<double>& ebqe_grad_u,
+						     xt::pyarray<double>& interface_locator,
 						     // TO KILL SUPG AND SHOCK CAPTURING 
 						     int PURE_BDF,
                                                      // PARAMETERS FOR EDGE VISCOSITY
                                                      int numDOFs,
                                                      int NNZ,
-                                                     int* csrRowIndeces_DofLoops,
-                                                     int* csrColumnOffsets_DofLoops,
-                                                     int* csrRowIndeces_CellLoops,
-                                                     int* csrColumnOffsets_CellLoops,
-                                                     int* csrColumnOffsets_eb_CellLoops,
+                                                     xt::pyarray<int>& csrRowIndeces_DofLoops,
+                                                     xt::pyarray<int>& csrColumnOffsets_DofLoops,
+                                                     xt::pyarray<int>& csrRowIndeces_CellLoops,
+                                                     xt::pyarray<int>& csrColumnOffsets_CellLoops,
+                                                     xt::pyarray<int>& csrColumnOffsets_eb_CellLoops,
                                                      // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
                                                      int LUMPED_MASS_MATRIX,
                                                      // AUX QUANTITIES OF INTEREST
-                                                     double* quantDOFs,
+                                                     xt::pyarray<double>& quantDOFs,
                                                      // COUPEZ
                                                      double lambda_coupez,
                                                      double epsCoupez,
@@ -384,115 +387,115 @@ namespace proteus
                                                      int COUPEZ,
                                                      int SATURATED_LEVEL_SET,
                                                      // C-Matrices
-                                                     double* Cx,
-                                                     double* Cy,
-                                                     double* Cz,
-                                                     double* ML,
+                                                     xt::pyarray<double>& Cx,
+                                                     xt::pyarray<double>& Cy,
+                                                     xt::pyarray<double>& Cz,
+                                                     xt::pyarray<double>& ML,
                                                      int STABILIZATION_TYPE,
                                                      int ENTROPY_TYPE,
                                                      double cE
                                                      )=0;
     virtual void calculateMassMatrix(//element
                                      double dt,
-                                     double* mesh_trial_ref,
-                                     double* mesh_grad_trial_ref,
-                                     double* mesh_dof,
-                                     double* mesh_velocity_dof,
+                                     xt::pyarray<double>& mesh_trial_ref,
+                                     xt::pyarray<double>& mesh_grad_trial_ref,
+                                     xt::pyarray<double>& mesh_dof,
+                                     xt::pyarray<double>& mesh_velocity_dof,
                                      double MOVING_DOMAIN,
-                                     int* mesh_l2g,
-                                     double* dV_ref,
-                                     double* u_trial_ref,
-                                     double* u_grad_trial_ref,
-                                     double* u_test_ref,
-                                     double* u_grad_test_ref,
+                                     xt::pyarray<int>& mesh_l2g,
+                                     xt::pyarray<double>& dV_ref,
+                                     xt::pyarray<double>& u_trial_ref,
+                                     xt::pyarray<double>& u_grad_trial_ref,
+                                     xt::pyarray<double>& u_test_ref,
+                                     xt::pyarray<double>& u_grad_test_ref,
                                      //element boundary
-                                     double* mesh_trial_trace_ref,
-                                     double* mesh_grad_trial_trace_ref,
-                                     double* dS_ref,
-                                     double* u_trial_trace_ref,
-                                     double* u_grad_trial_trace_ref,
-                                     double* u_test_trace_ref,
-                                     double* u_grad_test_trace_ref,
-                                     double* normal_ref,
-                                     double* boundaryJac_ref,
+                                     xt::pyarray<double>& mesh_trial_trace_ref,
+                                     xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                                     xt::pyarray<double>& dS_ref,
+                                     xt::pyarray<double>& u_trial_trace_ref,
+                                     xt::pyarray<double>& u_grad_trial_trace_ref,
+                                     xt::pyarray<double>& u_test_trace_ref,
+                                     xt::pyarray<double>& u_grad_test_trace_ref,
+                                     xt::pyarray<double>& normal_ref,
+                                     xt::pyarray<double>& boundaryJac_ref,
                                      //physics
                                      int nElements_global,
                                      double useMetrics,
                                      double alphaBDF,
                                      int lag_shockCapturing,/*mwf not used yet*/
                                      double shockCapturingDiffusion,
-                                     int* u_l2g,
-                                     int* r_l2g,
-                                     double* elementDiameter,
+                                     xt::pyarray<int>& u_l2g,
+                                     xt::pyarray<int>& r_l2g,
+                                     xt::pyarray<double>& elementDiameter,
                                      int degree_polynomial,
-                                     double* u_dof,
-                                     double* velocity,
-                                     double* q_m_betaBDF,
-                                     double* cfl,
-                                     double* q_numDiff_u_last,
-                                     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                     double* globalJacobian,
+                                     xt::pyarray<double>& u_dof,
+                                     xt::pyarray<double>& velocity,
+                                     xt::pyarray<double>& q_m_betaBDF,
+                                     xt::pyarray<double>& cfl,
+                                     xt::pyarray<double>& q_numDiff_u_last,
+                                     xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+                                     xt::pyarray<double>& globalJacobian,
                                      int nExteriorElementBoundaries_global,
-                                     int* exteriorElementBoundariesArray,
-                                     int* elementBoundaryElementsArray,
-                                     int* elementBoundaryLocalElementBoundariesArray,
-                                     double* ebqe_velocity_ext,
-                                     int* isDOFBoundary_u,
-                                     double* ebqe_rd_u_ext,
-                                     double* ebqe_bc_u_ext,
-                                     int* csrColumnOffsets_eb_u_u,
+                                     xt::pyarray<int>& exteriorElementBoundariesArray,
+                                     xt::pyarray<int>& elementBoundaryElementsArray,
+                                     xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                                     xt::pyarray<double>& ebqe_velocity_ext,
+                                     xt::pyarray<int>& isDOFBoundary_u,
+                                     xt::pyarray<double>& ebqe_rd_u_ext,
+                                     xt::pyarray<double>& ebqe_bc_u_ext,
+                                     xt::pyarray<int>& csrColumnOffsets_eb_u_u,
 				     int PURE_BDF,
                                      int LUMPED_MASS_MATRIX
                                      )=0;
     virtual void calculateSmoothingMatrix(//element
                                           double dt,
-                                          double* mesh_trial_ref,
-                                          double* mesh_grad_trial_ref,
-                                          double* mesh_dof,
-                                          double* mesh_velocity_dof,
+                                          xt::pyarray<double>& mesh_trial_ref,
+                                          xt::pyarray<double>& mesh_grad_trial_ref,
+                                          xt::pyarray<double>& mesh_dof,
+                                          xt::pyarray<double>& mesh_velocity_dof,
                                           double MOVING_DOMAIN,
-                                          int* mesh_l2g,
-                                          double* dV_ref,
-                                          double* u_trial_ref,
-                                          double* u_grad_trial_ref,
-                                          double* u_test_ref,
-                                          double* u_grad_test_ref,
+                                          xt::pyarray<int>& mesh_l2g,
+                                          xt::pyarray<double>& dV_ref,
+                                          xt::pyarray<double>& u_trial_ref,
+                                          xt::pyarray<double>& u_grad_trial_ref,
+                                          xt::pyarray<double>& u_test_ref,
+                                          xt::pyarray<double>& u_grad_test_ref,
                                           //element boundary
-                                          double* mesh_trial_trace_ref,
-                                          double* mesh_grad_trial_trace_ref,
-                                          double* dS_ref,
-                                          double* u_trial_trace_ref,
-                                          double* u_grad_trial_trace_ref,
-                                          double* u_test_trace_ref,
-                                          double* u_grad_test_trace_ref,
-                                          double* normal_ref,
-                                          double* boundaryJac_ref,
+                                          xt::pyarray<double>& mesh_trial_trace_ref,
+                                          xt::pyarray<double>& mesh_grad_trial_trace_ref,
+                                          xt::pyarray<double>& dS_ref,
+                                          xt::pyarray<double>& u_trial_trace_ref,
+                                          xt::pyarray<double>& u_grad_trial_trace_ref,
+                                          xt::pyarray<double>& u_test_trace_ref,
+                                          xt::pyarray<double>& u_grad_test_trace_ref,
+                                          xt::pyarray<double>& normal_ref,
+                                          xt::pyarray<double>& boundaryJac_ref,
                                           //physics
                                           int nElements_global,
                                           double useMetrics,
                                           double alphaBDF,
                                           int lag_shockCapturing,/*mwf not used yet*/
                                           double shockCapturingDiffusion,
-                                          int* u_l2g,
-                                          int* r_l2g,
-                                          double* elementDiameter,
+                                          xt::pyarray<int>& u_l2g,
+                                          xt::pyarray<int>& r_l2g,
+                                          xt::pyarray<double>& elementDiameter,
                                           int degree_polynomial,
-                                          double* u_dof,
-                                          double* velocity,
-                                          double* q_m_betaBDF,
-                                          double* cfl,
-                                          double* q_numDiff_u_last,
-                                          int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                          double* globalJacobian,
+                                          xt::pyarray<double>& u_dof,
+                                          xt::pyarray<double>& velocity,
+                                          xt::pyarray<double>& q_m_betaBDF,
+                                          xt::pyarray<double>& cfl,
+                                          xt::pyarray<double>& q_numDiff_u_last,
+                                          xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+                                          xt::pyarray<double>& globalJacobian,
                                           int nExteriorElementBoundaries_global,
-                                          int* exteriorElementBoundariesArray,
-                                          int* elementBoundaryElementsArray,
-                                          int* elementBoundaryLocalElementBoundariesArray,
-                                          double* ebqe_velocity_ext,
-                                          int* isDOFBoundary_u,
-                                          double* ebqe_rd_u_ext,
-                                          double* ebqe_bc_u_ext,
-                                          int* csrColumnOffsets_eb_u_u,
+                                          xt::pyarray<int>& exteriorElementBoundariesArray,
+                                          xt::pyarray<int>& elementBoundaryElementsArray,
+                                          xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+                                          xt::pyarray<double>& ebqe_velocity_ext,
+                                          xt::pyarray<int>& isDOFBoundary_u,
+                                          xt::pyarray<double>& ebqe_rd_u_ext,
+                                          xt::pyarray<double>& ebqe_bc_u_ext,
+                                          xt::pyarray<int>& csrColumnOffsets_eb_u_u,
                                           double he
                                           )=0;
   };
@@ -649,27 +652,27 @@ namespace proteus
 
       void calculateResidual(//element
 			     double dt,
-			     double* mesh_trial_ref,
-			     double* mesh_grad_trial_ref,
-			     double* mesh_dof,
-			     double* mesh_velocity_dof,
+			     xt::pyarray<double>& mesh_trial_ref,
+			     xt::pyarray<double>& mesh_grad_trial_ref,
+			     xt::pyarray<double>& mesh_dof,
+			     xt::pyarray<double>& mesh_velocity_dof,
 			     double MOVING_DOMAIN,
-			     int* mesh_l2g,
-			     double* dV_ref,
-			     double* u_trial_ref,
-			     double* u_grad_trial_ref,
-			     double* u_test_ref,
-			     double* u_grad_test_ref,
+			     xt::pyarray<int>& mesh_l2g,
+			     xt::pyarray<double>& dV_ref,
+			     xt::pyarray<double>& u_trial_ref,
+			     xt::pyarray<double>& u_grad_trial_ref,
+			     xt::pyarray<double>& u_test_ref,
+			     xt::pyarray<double>& u_grad_test_ref,
 			     //element boundary
-			     double* mesh_trial_trace_ref,
-			     double* mesh_grad_trial_trace_ref,
-			     double* dS_ref,
-			     double* u_trial_trace_ref,
-			     double* u_grad_trial_trace_ref,
-			     double* u_test_trace_ref,
-			     double* u_grad_test_trace_ref,
-			     double* normal_ref,
-			     double* boundaryJac_ref,
+			     xt::pyarray<double>& mesh_trial_trace_ref,
+			     xt::pyarray<double>& mesh_grad_trial_trace_ref,
+			     xt::pyarray<double>& dS_ref,
+			     xt::pyarray<double>& u_trial_trace_ref,
+			     xt::pyarray<double>& u_grad_trial_trace_ref,
+			     xt::pyarray<double>& u_test_trace_ref,
+			     xt::pyarray<double>& u_grad_test_trace_ref,
+			     xt::pyarray<double>& normal_ref,
+			     xt::pyarray<double>& boundaryJac_ref,
 			     //physics
 			     int nElements_global,
 			     double useMetrics,
@@ -677,53 +680,53 @@ namespace proteus
 			     int lag_shockCapturing, /*mwf not used yet*/
 			     double shockCapturingDiffusion,
 			     double sc_uref, double sc_alpha,
-			     int* u_l2g,
-			     int* r_l2g,
-			     double* elementDiameter,
-			     double* nodeDiametersArray,
+			     xt::pyarray<int>& u_l2g,
+			     xt::pyarray<int>& r_l2g,
+			     xt::pyarray<double>& elementDiameter,
+			     xt::pyarray<double>& nodeDiametersArray,
 			     int degree_polynomial,
-			     double* u_dof,
-			     double* u_dof_old,
-			     double* uStar_dof,
-			     double* velocity,
-			     double* q_m,
-			     double* q_u,
-			     double* q_n,
-			     double* q_dH,
-			     double* q_m_betaBDF,
-			     double* q_dV,
-			     double* q_dV_last,
-			     double* cfl,
-			     double* edge_based_cfl,
-			     double* q_numDiff_u,
-			     double* q_numDiff_u_last,
+			     xt::pyarray<double>& u_dof,
+			     xt::pyarray<double>& u_dof_old,
+			     xt::pyarray<double>& uStar_dof,
+			     xt::pyarray<double>& velocity,
+			     xt::pyarray<double>& q_m,
+			     xt::pyarray<double>& q_u,
+			     xt::pyarray<double>& q_n,
+			     xt::pyarray<double>& q_dH,
+			     xt::pyarray<double>& q_m_betaBDF,
+			     xt::pyarray<double>& q_dV,
+			     xt::pyarray<double>& q_dV_last,
+			     xt::pyarray<double>& cfl,
+			     xt::pyarray<double>& edge_based_cfl,
+			     xt::pyarray<double>& q_numDiff_u,
+			     xt::pyarray<double>& q_numDiff_u_last,
 			     int offset_u, int stride_u,
-			     double* globalResidual,
+			     xt::pyarray<double>& globalResidual,
 			     int nExteriorElementBoundaries_global,
-			     int* exteriorElementBoundariesArray,
-			     int* elementBoundaryElementsArray,
-			     int* elementBoundaryLocalElementBoundariesArray,
-			     double* ebqe_velocity_ext,
-			     int* isDOFBoundary_u,
-			     double* ebqe_rd_u_ext,
-			     double* ebqe_bc_u_ext,
-			     double* ebqe_u,
-           double* ebqe_grad_u,
-			     double* interface_locator,
+			     xt::pyarray<int>& exteriorElementBoundariesArray,
+			     xt::pyarray<int>& elementBoundaryElementsArray,
+			     xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+			     xt::pyarray<double>& ebqe_velocity_ext,
+			     xt::pyarray<int>& isDOFBoundary_u,
+			     xt::pyarray<double>& ebqe_rd_u_ext,
+			     xt::pyarray<double>& ebqe_bc_u_ext,
+			     xt::pyarray<double>& ebqe_u,
+           xt::pyarray<double>& ebqe_grad_u,
+			     xt::pyarray<double>& interface_locator,
 			     // TO KILL SUPG AND SHOCK CAPTURING 
 			     int PURE_BDF,
 			     // PARAMETERS FOR EDGE VISCOSITY
 			     int numDOFs,
 			     int NNZ,
-			     int* csrRowIndeces_DofLoops,
-			     int* csrColumnOffsets_DofLoops,
-			     int* csrRowIndeces_CellLoops,
-			     int* csrColumnOffsets_CellLoops,
-			     int* csrColumnOffsets_eb_CellLoops,
+			     xt::pyarray<int>& csrRowIndeces_DofLoops,
+			     xt::pyarray<int>& csrColumnOffsets_DofLoops,
+			     xt::pyarray<int>& csrRowIndeces_CellLoops,
+			     xt::pyarray<int>& csrColumnOffsets_CellLoops,
+			     xt::pyarray<int>& csrColumnOffsets_eb_CellLoops,
 			     // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
 			     int LUMPED_MASS_MATRIX,
 			     // AUX QUANTITIES OF INTEREST
-			     double* quantDOFs,
+			     xt::pyarray<double>& quantDOFs,
 			     // COUPEZ
 			     double lambda_coupez,
 			     double epsCoupez,
@@ -731,10 +734,10 @@ namespace proteus
 			     int COUPEZ,
 			     int SATURATED_LEVEL_SET,
 			     // C-Matrices
-			     double* Cx,
-			     double* Cy,
-			     double* Cz,
-			     double* ML,
+			     xt::pyarray<double>& Cx,
+			     xt::pyarray<double>& Cy,
+			     xt::pyarray<double>& Cz,
+			     xt::pyarray<double>& ML,
 			     int STABILIZATION_TYPE,
 			     int ENTROPY_TYPE,
 			     double cE
@@ -790,46 +793,46 @@ namespace proteus
 		//
 		ck.calculateMapping_element(eN,
 					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
+					    mesh_dof.data(),
+					    mesh_l2g.data(),
+					    mesh_trial_ref.data(),
+					    mesh_grad_trial_ref.data(),
 					    jac,
 					    jacDet,
 					    jacInv,
 					    x,y,z);
 		ck.calculateMappingVelocity_element(eN,
 						    k,
-						    mesh_velocity_dof,
-						    mesh_l2g,
-						    mesh_trial_ref,
+						    mesh_velocity_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_ref.data(),
 						    xt,yt,zt);
 		//get the physical integration weight
-		dV = fabs(jacDet)*dV_ref[k];
+		dV = fabs(jacDet)*dV_ref.data()[k];
 		ck.calculateG(jacInv,G,G_dd_G,tr_G);
 		//get the trial function gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		//get the solution
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
 		//get the solution gradients
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
-		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		    u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 		    for (int I=0;I<nSpace;I++)
 		      {
 			u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
 		      }
 		  }
 		//save solution at quadrature points for other models to use
-		q_u[eN_k]=u;
+		q_u.data()[eN_k]=u;
 		for (int I=0;I<nSpace;I++)
-		  q_n[eN_k_nSpace+I]  = grad_u[I];
+		  q_n.data()[eN_k_nSpace+I]  = grad_u[I];
 		//
 		//calculate pde coefficients at quadrature points
 		//
-		evaluateCoefficients(&velocity[eN_k_nSpace],
+		evaluateCoefficients(&velocity.data()[eN_k_nSpace],
 				     u,
 				     grad_u,
 				     m,
@@ -851,11 +854,11 @@ namespace proteus
 		//
 		//calculate time derivative at quadrature points
 		//
-		if (q_dV_last[eN_k] <= -100)
-		  q_dV_last[eN_k] = dV;
-		q_dV[eN_k] = dV;
+		if (q_dV_last.data()[eN_k] <= -100)
+		  q_dV_last.data()[eN_k] = dV;
+		q_dV.data()[eN_k] = dV;
 		ck.bdf(alphaBDF,
-		       q_m_betaBDF[eN_k],
+		       q_m_betaBDF.data()[eN_k],
 		       m,
 		       dm,
 		       m_t,
@@ -882,10 +885,10 @@ namespace proteus
 		for (int I=0;I<nSpace;I++)
 		  subgridErrorVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
 
-		calculateSubgridError_tau(elementDiameter[eN],
+		calculateSubgridError_tau(elementDiameter.data()[eN],
 					  dm_t,
 					  subgridErrorVelocity,//dH,
-					  cfl[eN_k],
+					  cfl.data()[eN_k],
 					  tau0);
 
 		calculateSubgridError_tau(Ct_sge,
@@ -893,7 +896,7 @@ namespace proteus
 					  dm_t,
 					  subgridErrorVelocity,//dH,
 					  tau1,
-					  cfl[eN_k]);
+					  cfl.data()[eN_k]);
 
 		tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
 
@@ -901,9 +904,9 @@ namespace proteus
 		//
 		//calculate shock capturing diffusion
 		//
-		ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);
+		ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter.data()[eN],pdeResidual_u,grad_u,numDiff0);
 		ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
-		q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
+		q_numDiff_u.data()[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
 
 		//
 		//update element residual
@@ -912,13 +915,13 @@ namespace proteus
 		int same_sign=1;
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
-		    int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
+		    int gi = offset_u+stride_u*u_l2g.data()[eN*nDOF_test_element+i];
 		    if (i==0)
-		      sign = Sign(u_dof[gi]);
+		      sign = Sign(u_dof.data()[gi]);
 		    else if (same_sign==1)
 		      {
-			same_sign = sign == Sign(u_dof[gi]) ? 1 : 0;
-			sign = Sign(u_dof[gi]);
+			same_sign = sign == Sign(u_dof.data()[gi]) ? 1 : 0;
+			sign = Sign(u_dof.data()[gi]);
 		      }		    
 		    //register int eN_k_i=eN_k*nDOF_test_element+i,
 		    // eN_k_i_nSpace = eN_k_i*nSpace;
@@ -930,27 +933,27 @@ namespace proteus
 		      MOVING_DOMAIN*ck.Advection_weak(f,&u_grad_test_dV[i_nSpace])+
 		      (PURE_BDF == 1 ? 0. : 1.)*
 		      (ck.SubgridError(subgridError_u,Lstar_u[i]) +
-		       ck.NumericalDiffusion(q_numDiff_u_last[eN_k],
+		       ck.NumericalDiffusion(q_numDiff_u_last.data()[eN_k],
 					     grad_u,
 					     &u_grad_test_dV[i_nSpace]));
 		  }//i
 		if (same_sign == 0) // This cell contains the interface
 		  for(int i=0;i<nDOF_test_element;i++)
 		    {
-		      int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
-		      interface_locator[gi] = 1.0;
+		      int gi = offset_u+stride_u*u_l2g.data()[eN*nDOF_test_element+i];
+		      interface_locator.data()[gi] = 1.0;
 		    }
 		//
 		//cek/ido todo, get rid of m, since u=m
 		//save momentum for time history and velocity for subgrid error
 		//save solution for other models
 		//
-		q_m[eN_k] = m;
-		q_u[eN_k] = u;
+		q_m.data()[eN_k] = m;
+		q_u.data()[eN_k] = u;
 		for (int I=0;I<nSpace;I++)
 		  {
 		    int eN_k_I = eN_k*nSpace+I;
-		    q_dH[eN_k_I] = dH[I];
+		    q_dH.data()[eN_k_I] = dH[I];
 		  }
 	      }
 	    //
@@ -959,7 +962,7 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		register int eN_i=eN*nDOF_test_element+i;
-		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
+		globalResidual.data()[offset_u+stride_u*r_l2g.data()[eN_i]] += elementResidual_u[i];
 	      }//i
 	  }//elements
 	//
@@ -971,9 +974,9 @@ namespace proteus
 	//std::cout <<nExteriorElementBoundaries_global<<std::endl;
 	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	  {
-	    register int ebN = exteriorElementBoundariesArray[ebNE],
-	      eN  = elementBoundaryElementsArray[ebN*2+0],
-	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+	    register int ebN = exteriorElementBoundariesArray.data()[ebNE],
+	      eN  = elementBoundaryElementsArray.data()[ebN*2+0],
+	      ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
 	      eN_nDOF_trial_element = eN*nDOF_trial_element;
 	    register double elementResidual_u[nDOF_test_element];
 	    for (int i=0;i<nDOF_test_element;i++)
@@ -1020,62 +1023,62 @@ namespace proteus
 						    ebN_local,
 						    kb,
 						    ebN_local_kb,
-						    mesh_dof,
-						    mesh_l2g,
-						    mesh_trial_trace_ref,
-						    mesh_grad_trial_trace_ref,
-						    boundaryJac_ref,
+						    mesh_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_trace_ref.data(),
+						    mesh_grad_trial_trace_ref.data(),
+						    boundaryJac_ref.data(),
 						    jac_ext,
 						    jacDet_ext,
 						    jacInv_ext,
 						    boundaryJac,
 						    metricTensor,
 						    metricTensorDetSqrt,
-						    normal_ref,
+						    normal_ref.data(),
 						    normal,
 						    x_ext,y_ext,z_ext);
 		ck.calculateMappingVelocity_elementBoundary(eN,
 							    ebN_local,
 							    kb,
 							    ebN_local_kb,
-							    mesh_velocity_dof,
-							    mesh_l2g,
-							    mesh_trial_trace_ref,
+							    mesh_velocity_dof.data(),
+							    mesh_l2g.data(),
+							    mesh_trial_trace_ref.data(),
 							    xt_ext,yt_ext,zt_ext,
 							    normal,
 							    boundaryJac,
 							    metricTensor,
 							    integralScaling);
-		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref.data()[kb];
 		//get the metric tensor
 		//cek todo use symmetry
 		ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
 		//compute shape and solution information
 		//shape
-		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+		ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
 		//solution and gradients
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_ext);
+		ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
-		    u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		    u_test_dS[j] = u_test_trace_ref.data()[ebN_local_kb*nDOF_test_element+j]*dS;
 		  }
 		//
 		//load the boundary values
 		//
-		bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*ebqe_rd_u_ext[ebNE_kb];
+		bc_u_ext = isDOFBoundary_u.data()[ebNE_kb]*ebqe_bc_u_ext.data()[ebNE_kb]+(1-isDOFBoundary_u.data()[ebNE_kb])*ebqe_rd_u_ext.data()[ebNE_kb];
 		//
 		//calculate the pde coefficients using the solution and the boundary values for the solution
 		//
-		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+		evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
 				     u_ext,
 				     grad_u_ext,
 				     m_ext,
 				     dm_ext,
 				     H_ext,
 				     dH_ext);
-		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+		evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
 				     bc_u_ext,
 				     bc_grad_u_ext,
 				     bc_m_ext,
@@ -1101,7 +1104,7 @@ namespace proteus
 				      dH_ext,
 				      velocity_ext,
 				      flux_ext);
-		ebqe_u[ebNE_kb] = u_ext;
+		ebqe_u.data()[ebNE_kb] = u_ext;
 
 		// gradient //
 
@@ -1110,7 +1113,7 @@ namespace proteus
 		  norm += grad_u_ext[I]*grad_u_ext[I];
 		norm = sqrt(norm);
 		for (int I=0;I<nSpace;I++)
-		  ebqe_grad_u[ebNE_kb_nSpace+I]  = grad_u_ext[I]/norm;
+		  ebqe_grad_u.data()[ebNE_kb_nSpace+I]  = grad_u_ext[I]/norm;
 
 		//
 		//update residuals
@@ -1127,8 +1130,8 @@ namespace proteus
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
-		//globalResidual[offset_u+stride_u*u_l2g[eN_i]] += MOVING_DOMAIN*elementResidual_u[i];
-		globalResidual[offset_u+stride_u*r_l2g[eN_i]] += elementResidual_u[i];
+		//globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]] += MOVING_DOMAIN*elementResidual_u[i];
+		globalResidual.data()[offset_u+stride_u*r_l2g.data()[eN_i]] += elementResidual_u[i];
 
 	      }//i
 	  }//ebNE
@@ -1136,53 +1139,53 @@ namespace proteus
 
       void calculateJacobian(//element
 			     double dt,
-			     double* mesh_trial_ref,
-			     double* mesh_grad_trial_ref,
-			     double* mesh_dof,
-			     double* mesh_velocity_dof,
+			     xt::pyarray<double>& mesh_trial_ref,
+			     xt::pyarray<double>& mesh_grad_trial_ref,
+			     xt::pyarray<double>& mesh_dof,
+			     xt::pyarray<double>& mesh_velocity_dof,
 			     double MOVING_DOMAIN,
-			     int* mesh_l2g,
-			     double* dV_ref,
-			     double* u_trial_ref,
-			     double* u_grad_trial_ref,
-			     double* u_test_ref,
-			     double* u_grad_test_ref,
+			     xt::pyarray<int>& mesh_l2g,
+			     xt::pyarray<double>& dV_ref,
+			     xt::pyarray<double>& u_trial_ref,
+			     xt::pyarray<double>& u_grad_trial_ref,
+			     xt::pyarray<double>& u_test_ref,
+			     xt::pyarray<double>& u_grad_test_ref,
 			     //element boundary
-			     double* mesh_trial_trace_ref,
-			     double* mesh_grad_trial_trace_ref,
-			     double* dS_ref,
-			     double* u_trial_trace_ref,
-			     double* u_grad_trial_trace_ref,
-			     double* u_test_trace_ref,
-			     double* u_grad_test_trace_ref,
-			     double* normal_ref,
-			     double* boundaryJac_ref,
+			     xt::pyarray<double>& mesh_trial_trace_ref,
+			     xt::pyarray<double>& mesh_grad_trial_trace_ref,
+			     xt::pyarray<double>& dS_ref,
+			     xt::pyarray<double>& u_trial_trace_ref,
+			     xt::pyarray<double>& u_grad_trial_trace_ref,
+			     xt::pyarray<double>& u_test_trace_ref,
+			     xt::pyarray<double>& u_grad_test_trace_ref,
+			     xt::pyarray<double>& normal_ref,
+			     xt::pyarray<double>& boundaryJac_ref,
 			     //physics
 			     int nElements_global,
 			     double useMetrics,
 			     double alphaBDF,
 			     int lag_shockCapturing,/*mwf not used yet*/
 			     double shockCapturingDiffusion,
-			     int* u_l2g,
-			     int* r_l2g,
-			     double* elementDiameter,
+			     xt::pyarray<int>& u_l2g,
+			     xt::pyarray<int>& r_l2g,
+			     xt::pyarray<double>& elementDiameter,
 			     int degree_polynomial,
-			     double* u_dof,
-			     double* velocity,
-			     double* q_m_betaBDF,
-			     double* cfl,
-			     double* q_numDiff_u_last,
-			     int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-			     double* globalJacobian,
+			     xt::pyarray<double>& u_dof,
+			     xt::pyarray<double>& velocity,
+			     xt::pyarray<double>& q_m_betaBDF,
+			     xt::pyarray<double>& cfl,
+			     xt::pyarray<double>& q_numDiff_u_last,
+			     xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+			     xt::pyarray<double>& globalJacobian,
 			     int nExteriorElementBoundaries_global,
-			     int* exteriorElementBoundariesArray,
-			     int* elementBoundaryElementsArray,
-			     int* elementBoundaryLocalElementBoundariesArray,
-			     double* ebqe_velocity_ext,
-			     int* isDOFBoundary_u,
-			     double* ebqe_rd_u_ext,
-			     double* ebqe_bc_u_ext,
-			     int* csrColumnOffsets_eb_u_u,
+			     xt::pyarray<int>& exteriorElementBoundariesArray,
+			     xt::pyarray<int>& elementBoundaryElementsArray,
+			     xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+			     xt::pyarray<double>& ebqe_velocity_ext,
+			     xt::pyarray<int>& isDOFBoundary_u,
+			     xt::pyarray<double>& ebqe_rd_u_ext,
+			     xt::pyarray<double>& ebqe_bc_u_ext,
+			     xt::pyarray<int>& csrColumnOffsets_eb_u_u,
 			     int PURE_BDF,
 			     int LUMPED_MASS_MATRIX)
       {
@@ -1231,33 +1234,33 @@ namespace proteus
 		//get jacobian, etc for mapping reference element
 		ck.calculateMapping_element(eN,
 					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
+					    mesh_dof.data(),
+					    mesh_l2g.data(),
+					    mesh_trial_ref.data(),
+					    mesh_grad_trial_ref.data(),
 					    jac,
 					    jacDet,
 					    jacInv,
 					    x,y,z);
 		ck.calculateMappingVelocity_element(eN,
 						    k,
-						    mesh_velocity_dof,
-						    mesh_l2g,
-						    mesh_trial_ref,
+						    mesh_velocity_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_ref.data(),
 						    xt,yt,zt);
 		//get the physical integration weight
-		dV = fabs(jacDet)*dV_ref[k];
+		dV = fabs(jacDet)*dV_ref.data()[k];
 		ck.calculateG(jacInv,G,G_dd_G,tr_G);
 		//get the trial function gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		//get the solution
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
 		//get the solution gradients
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
-		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		    u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 		    for (int I=0;I<nSpace;I++)
 		      {
 			u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -1266,7 +1269,7 @@ namespace proteus
 		//
 		//calculate pde coefficients and derivatives at quadrature points
 		//
-		evaluateCoefficients(&velocity[eN_k_nSpace],
+		evaluateCoefficients(&velocity.data()[eN_k_nSpace],
 				     u,
 				     grad_u,
 				     m,
@@ -1289,7 +1292,7 @@ namespace proteus
 		//calculate time derivatives
 		//
 		ck.bdf(alphaBDF,
-		       q_m_betaBDF[eN_k],
+		       q_m_betaBDF.data()[eN_k],
 		       m,
 		       dm,
 		       m_t,
@@ -1312,7 +1315,7 @@ namespace proteus
 		    //int eN_k_j=eN_k*nDOF_trial_element+j;
 		    //int eN_k_j_nSpace = eN_k_j*nSpace;
 		    int j_nSpace = j*nSpace;
-		    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+		    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j]) +
 		      ck.HamiltonianJacobian_strong(dH,&u_grad_trial[j_nSpace]) +
 		      MOVING_DOMAIN*ck.AdvectionJacobian_strong(df,&u_grad_trial[j_nSpace]);
 
@@ -1322,10 +1325,10 @@ namespace proteus
 		for (int I=0;I<nSpace;I++)
 		  subgridErrorVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
 
-		calculateSubgridError_tau(elementDiameter[eN],
+		calculateSubgridError_tau(elementDiameter.data()[eN],
 					  dm_t,
 					  subgridErrorVelocity,//dH,
-					  cfl[eN_k],
+					  cfl.data()[eN_k],
 					  tau0);
 
 		calculateSubgridError_tau(Ct_sge,
@@ -1333,7 +1336,7 @@ namespace proteus
 					  dm_t,
 					  subgridErrorVelocity,//dH,
 					  tau1,
-					  cfl[eN_k]);
+					  cfl.data()[eN_k]);
 		tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
 
 		for(int j=0;j<nDOF_trial_element;j++)
@@ -1350,15 +1353,15 @@ namespace proteus
 			int i_nSpace = i*nSpace;
 			elementJacobian_u_u[i][j] +=
 			  ck.MassJacobian_weak(dm_t,
-					       u_trial_ref[k*nDOF_trial_element+j],
+					       u_trial_ref.data()[k*nDOF_trial_element+j],
 					       u_test_dV[i]) +
 			  ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
 			  MOVING_DOMAIN*ck.AdvectionJacobian_weak(df,
-								  u_trial_ref[k*nDOF_trial_element+j],
+								  u_trial_ref.data()[k*nDOF_trial_element+j],
 								  &u_grad_test_dV[i_nSpace]) +
 			  (PURE_BDF == 1 ? 0. : 1.)*
 			  (ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
-			   ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],
+			   ck.NumericalDiffusionJacobian(q_numDiff_u_last.data()[eN_k],
 							 &u_grad_trial[j_nSpace],
 							 &u_grad_test_dV[i_nSpace]));
 		      }//j
@@ -1373,7 +1376,7 @@ namespace proteus
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
-		    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		    globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i][j];
 		  }//j
 	      }//i
 	  }//elements
@@ -1382,9 +1385,9 @@ namespace proteus
 	//
 	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	  {
-	    register int ebN = exteriorElementBoundariesArray[ebNE];
-	    register int eN  = elementBoundaryElementsArray[ebN*2+0],
-	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+	    register int ebN = exteriorElementBoundariesArray.data()[ebNE];
+	    register int eN  = elementBoundaryElementsArray.data()[ebN*2+0],
+	      ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
 	      eN_nDOF_trial_element = eN*nDOF_trial_element;
 	    for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
 	      {
@@ -1437,72 +1440,72 @@ namespace proteus
 		//     register int eN_j = eN*nDOF_trial_element+j,
 		//       ebNE_kb_j = ebNE_kb*nDOF_trial_element+j,
 		//       ebNE_kb_j_nSpace= ebNE_kb_j*nSpace;
-		//     u_ext += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial_ext[ebNE_kb_j]);
+		//     u_ext += valFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_trial_ext[ebNE_kb_j]);
 
 		//     for (int I=0;I<nSpace;I++)
 		//       {
-		//         grad_u_ext[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial_ext[ebNE_kb_j_nSpace+I]);
+		//         grad_u_ext[I] += gradFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_grad_trial_ext[ebNE_kb_j_nSpace+I]);
 		//       }
 		//   }
 		ck.calculateMapping_elementBoundary(eN,
 						    ebN_local,
 						    kb,
 						    ebN_local_kb,
-						    mesh_dof,
-						    mesh_l2g,
-						    mesh_trial_trace_ref,
-						    mesh_grad_trial_trace_ref,
-						    boundaryJac_ref,
+						    mesh_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_trace_ref.data(),
+						    mesh_grad_trial_trace_ref.data(),
+						    boundaryJac_ref.data(),
 						    jac_ext,
 						    jacDet_ext,
 						    jacInv_ext,
 						    boundaryJac,
 						    metricTensor,
 						    metricTensorDetSqrt,
-						    normal_ref,
+						    normal_ref.data(),
 						    normal,
 						    x_ext,y_ext,z_ext);
 		ck.calculateMappingVelocity_elementBoundary(eN,
 							    ebN_local,
 							    kb,
 							    ebN_local_kb,
-							    mesh_velocity_dof,
-							    mesh_l2g,
-							    mesh_trial_trace_ref,
+							    mesh_velocity_dof.data(),
+							    mesh_l2g.data(),
+							    mesh_trial_trace_ref.data(),
 							    xt_ext,yt_ext,zt_ext,
 							    normal,
 							    boundaryJac,
 							    metricTensor,
 							    integralScaling);
-		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
-		//dS = metricTensorDetSqrt*dS_ref[kb];
+		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref.data()[kb];
+		//dS = metricTensorDetSqrt*dS_ref.data()[kb];
 		ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
 		//compute shape and solution information
 		//shape
-		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+		ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
 		//solution and gradients
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_ext);
+		ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
-		    u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		    u_test_dS[j] = u_test_trace_ref.data()[ebN_local_kb*nDOF_test_element+j]*dS;
 		  }
 		//
 		//load the boundary values
 		//
-		bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*ebqe_rd_u_ext[ebNE_kb];
+		bc_u_ext = isDOFBoundary_u.data()[ebNE_kb]*ebqe_bc_u_ext.data()[ebNE_kb]+(1-isDOFBoundary_u.data()[ebNE_kb])*ebqe_rd_u_ext.data()[ebNE_kb];
 		//
 		//calculate the internal and external trace of the pde coefficients
 		//
-		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+		evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
 				     u_ext,
 				     grad_u_ext,
 				     m_ext,
 				     dm_ext,
 				     H_ext,
 				     dH_ext);
-		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+		evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
 				     bc_u_ext,
 				     bc_grad_u_ext,
 				     bc_m_ext,
@@ -1535,7 +1538,7 @@ namespace proteus
 		  {
 		    //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
 		    register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-		    fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		    fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref.data()[ebN_local_kb_j]);
 		  }//j
 		//
 		//update the global Jacobian from the flux Jacobian
@@ -1547,8 +1550,8 @@ namespace proteus
 		    for (int j=0;j<nDOF_trial_element;j++)
 		      {
 			register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
-			globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
-			//globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += MOVING_DOMAIN*fluxJacobian_u_u[j]*u_test_dS[i];
+			globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
+			//globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] += MOVING_DOMAIN*fluxJacobian_u_u[j]*u_test_dS[i];
 		      }//j
 		  }//i
 	      }//kb
@@ -1556,29 +1559,29 @@ namespace proteus
       }//computeJacobian
 
       void calculateWaterline(//element
-			      int* wlc,
-			      double* waterline,
-			      double* mesh_trial_ref,
-			      double* mesh_grad_trial_ref,
-			      double* mesh_dof,
-			      double* mesh_velocity_dof,
+			      xt::pyarray<int>& wlc,
+			      xt::pyarray<double>& waterline,
+			      xt::pyarray<double>& mesh_trial_ref,
+			      xt::pyarray<double>& mesh_grad_trial_ref,
+			      xt::pyarray<double>& mesh_dof,
+			      xt::pyarray<double>& mesh_velocity_dof,
 			      double MOVING_DOMAIN,
-			      int* mesh_l2g,
-			      double* dV_ref,
-			      double* u_trial_ref,
-			      double* u_grad_trial_ref,
-			      double* u_test_ref,
-			      double* u_grad_test_ref,
+			      xt::pyarray<int>& mesh_l2g,
+			      xt::pyarray<double>& dV_ref,
+			      xt::pyarray<double>& u_trial_ref,
+			      xt::pyarray<double>& u_grad_trial_ref,
+			      xt::pyarray<double>& u_test_ref,
+			      xt::pyarray<double>& u_grad_test_ref,
 			      //element boundary
-			      double* mesh_trial_trace_ref,
-			      double* mesh_grad_trial_trace_ref,
-			      double* dS_ref,
-			      double* u_trial_trace_ref,
-			      double* u_grad_trial_trace_ref,
-			      double* u_test_trace_ref,
-			      double* u_grad_test_trace_ref,
-			      double* normal_ref,
-			      double* boundaryJac_ref,
+			      xt::pyarray<double>& mesh_trial_trace_ref,
+			      xt::pyarray<double>& mesh_grad_trial_trace_ref,
+			      xt::pyarray<double>& dS_ref,
+			      xt::pyarray<double>& u_trial_trace_ref,
+			      xt::pyarray<double>& u_grad_trial_trace_ref,
+			      xt::pyarray<double>& u_test_trace_ref,
+			      xt::pyarray<double>& u_grad_test_trace_ref,
+			      xt::pyarray<double>& normal_ref,
+			      xt::pyarray<double>& boundaryJac_ref,
 			      //physics
 			      int nElements_global,
 			      double useMetrics,
@@ -1586,29 +1589,29 @@ namespace proteus
 			      int lag_shockCapturing, /*mwf not used yet*/
 			      double shockCapturingDiffusion,
 			      double sc_uref, double sc_alpha,
-			      int* u_l2g,
-			      int* r_l2g,
-			      double* elementDiameter,
-			      double* u_dof,double* u_dof_old,
-			      double* velocity,
-			      double* q_m,
-			      double* q_u,
-			      double* q_n,
-			      double* q_dH,
-			      double* q_m_betaBDF,
-			      double* cfl,
-			      double* q_numDiff_u,
-			      double* q_numDiff_u_last,
+			      xt::pyarray<int>& u_l2g,
+			      xt::pyarray<int>& r_l2g,
+			      xt::pyarray<double>& elementDiameter,
+			      xt::pyarray<double>& u_dof,xt::pyarray<double>& u_dof_old,
+			      xt::pyarray<double>& velocity,
+			      xt::pyarray<double>& q_m,
+			      xt::pyarray<double>& q_u,
+			      xt::pyarray<double>& q_n,
+			      xt::pyarray<double>& q_dH,
+			      xt::pyarray<double>& q_m_betaBDF,
+			      xt::pyarray<double>& cfl,
+			      xt::pyarray<double>& q_numDiff_u,
+			      xt::pyarray<double>& q_numDiff_u_last,
 			      int offset_u, int stride_u,
 			      int nExteriorElementBoundaries_global,
-			      int* exteriorElementBoundariesArray,
-			      int* elementBoundaryElementsArray,
-			      int* elementBoundaryLocalElementBoundariesArray,
-			      int* elementBoundaryMaterialTypes,
-			      double* ebqe_velocity_ext,
-			      int* isDOFBoundary_u,
-			      double* ebqe_bc_u_ext,
-			      double* ebqe_u)
+			      xt::pyarray<int>& exteriorElementBoundariesArray,
+			      xt::pyarray<int>& elementBoundaryElementsArray,
+			      xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+			      xt::pyarray<int>& elementBoundaryMaterialTypes,
+			      xt::pyarray<double>& ebqe_velocity_ext,
+			      xt::pyarray<int>& isDOFBoundary_u,
+			      xt::pyarray<double>& ebqe_bc_u_ext,
+			      xt::pyarray<double>& ebqe_u)
       {
 
 	//  Tetrehedral elements specific extraction routine for waterline extraction
@@ -1620,11 +1623,11 @@ namespace proteus
 
 	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	  {
-	    register int ebN = exteriorElementBoundariesArray[ebNE];
-	    register int eN  = elementBoundaryElementsArray[ebN*2+0];
-	    register int bN  = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
+	    register int ebN = exteriorElementBoundariesArray.data()[ebNE];
+	    register int eN  = elementBoundaryElementsArray.data()[ebN*2+0];
+	    register int bN  = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0];
 
-	    if (elementBoundaryMaterialTypes[ebN] >6)
+	    if (elementBoundaryMaterialTypes.data()[ebN] >6)
 	      {
 
 		double val,x,y,z;
@@ -1637,10 +1640,10 @@ namespace proteus
 		    if (j != bN) {
 		      int eN_nDOF_trial_element_j      = eN*nDOF_trial_element + j;
 		      int eN_nDOF_mesh_trial_element_j = eN*nDOF_mesh_trial_element + j;
-		      val = u_dof[u_l2g[eN_nDOF_trial_element_j]];
-		      x = mesh_dof[mesh_l2g[eN_nDOF_mesh_trial_element_j]*3+0];
-		      y = mesh_dof[mesh_l2g[eN_nDOF_mesh_trial_element_j]*3+1];
-		      z = mesh_dof[mesh_l2g[eN_nDOF_mesh_trial_element_j]*3+2];
+		      val = u_dof.data()[u_l2g.data()[eN_nDOF_trial_element_j]];
+		      x = mesh_dof.data()[mesh_l2g.data()[eN_nDOF_mesh_trial_element_j]*3+0];
+		      y = mesh_dof.data()[mesh_l2g.data()[eN_nDOF_mesh_trial_element_j]*3+1];
+		      z = mesh_dof.data()[mesh_l2g.data()[eN_nDOF_mesh_trial_element_j]*3+2];
 
 		      if (val < 0.0)
 			{
@@ -1669,10 +1672,10 @@ namespace proteus
 
 		    double alpha = vp/(vp -vn);
 
-		    waterline[wlc[0]*3 + 0] =  alpha*(xn/neg) + (1.0-alpha)*(xp/pos);
-		    waterline[wlc[0]*3 + 1] =  alpha*(yn/neg) + (1.0-alpha)*(yp/pos);
-		    waterline[wlc[0]*3 + 2] =  alpha*(zn/neg) + (1.0-alpha)*(zp/pos);
-		    wlc[0]++;
+		    waterline.data()[wlc.data()[0]*3 + 0] =  alpha*(xn/neg) + (1.0-alpha)*(xp/pos);
+		    waterline.data()[wlc.data()[0]*3 + 1] =  alpha*(yn/neg) + (1.0-alpha)*(yp/pos);
+		    waterline.data()[wlc.data()[0]*3 + 2] =  alpha*(zn/neg) + (1.0-alpha)*(zp/pos);
+		    wlc.data()[0]++;
 
 		  } // end value if
 
@@ -1680,48 +1683,48 @@ namespace proteus
 
 	  }//ebNE
 
-	//std::cout<<"CPP WLC "<<wlc[0]<<std::endl;
+	//std::cout<<"CPP WLC "<<wlc.data()[0]<<std::endl;
       } // calcWaterline
 
       double calculateRedistancingResidual(
 					   double dt,
-					   double* mesh_trial_ref,
-					   double* mesh_grad_trial_ref,
-					   double* mesh_dof,
-					   int* mesh_l2g,
-					   double* dV_ref,
-					   double* u_trial_ref,
-					   double* u_grad_trial_ref,
-					   double* u_test_ref,
+					   xt::pyarray<double>& mesh_trial_ref,
+					   xt::pyarray<double>& mesh_grad_trial_ref,
+					   xt::pyarray<double>& mesh_dof,
+					   xt::pyarray<int>& mesh_l2g,
+					   xt::pyarray<double>& dV_ref,
+					   xt::pyarray<double>& u_trial_ref,
+					   xt::pyarray<double>& u_grad_trial_ref,
+					   xt::pyarray<double>& u_test_ref,
 					   //physics
 					   int nElements_global,
-					   int* u_l2g,
-					   int* r_l2g,
-					   double* elementDiameter,
-					   double* nodeDiametersArray,
-					   double* u_dof,
-					   double* u_dof_old,
-					   double* uStar_dof,
+					   xt::pyarray<int>& u_l2g,
+					   xt::pyarray<int>& r_l2g,
+					   xt::pyarray<double>& elementDiameter,
+					   xt::pyarray<double>& nodeDiametersArray,
+					   xt::pyarray<double>& u_dof,
+					   xt::pyarray<double>& u_dof_old,
+					   xt::pyarray<double>& uStar_dof,
 					   int offset_u, int stride_u,
-					   double* globalResidual,
+					   xt::pyarray<double>& globalResidual,
 					   // PARAMETERS FOR EDGE BASED STABILIZATION
 					   int numDOFs,
 					   int NNZ,
-					   int* csrRowIndeces_DofLoops,
-					   int* csrColumnOffsets_DofLoops,
-					   int* csrRowIndeces_CellLoops,
-					   int* csrColumnOffsets_CellLoops,
+					   xt::pyarray<int>& csrRowIndeces_DofLoops,
+					   xt::pyarray<int>& csrColumnOffsets_DofLoops,
+					   xt::pyarray<int>& csrRowIndeces_CellLoops,
+					   xt::pyarray<int>& csrColumnOffsets_CellLoops,
 					   // COUPEZ
 					   double lambda_coupez, //
 					   double epsCoupez,
 					   double epsFactRedistancing,
-					   double* edge_based_cfl,
+					   xt::pyarray<double>& edge_based_cfl,
 					   int SATURATED_LEVEL_SET,
 					   // C-Matrices
-					   double* Cx,
-					   double* Cy,
-					   double* Cz,
-					   double* ML
+					   xt::pyarray<double>& Cx,
+					   xt::pyarray<double>& Cy,
+					   xt::pyarray<double>& Cz,
+					   xt::pyarray<double>& ML
 					   )
       {
 	L2_norm_per_node.resize(numDOFs,0.0);
@@ -1772,23 +1775,23 @@ namespace proteus
 		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
 		  dV,x,y,z;
 		//get the physical integration weight
-		ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
-		dV = fabs(jacDet)*dV_ref[k];
+		ck.calculateMapping_element(eN,k,mesh_dof.data(),mesh_l2g.data(),mesh_trial_ref.data(),mesh_grad_trial_ref.data(),jac,jacDet,jacInv,x,y,z);
+		dV = fabs(jacDet)*dV_ref.data()[k];
 		// get h at quad points
-		ck.valFromDOF(nodeDiametersArray,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],hquad);
+		ck.valFromDOF(nodeDiametersArray.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],hquad);
 		// get the star solution at quad points
-		ck.valFromDOF(uStar_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],uStar);
+		ck.valFromDOF(uStar_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],uStar);
 		//get the solution at quad points
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
 		//get the solution at quad point at tn
-		ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		ck.valFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],un);
 		// solution and grads at old times at quad points
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
-		ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+		ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_un);
 		//precalculate test function products with integration weights for mass matrix terms
 		for (int j=0;j<nDOF_trial_element;j++)
-		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		  u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 
 		double norm_grad_un = std::sqrt(std::pow(grad_un[0],2) + std::pow(grad_un[1],2)) + 1E-10;
 		double norm_grad_u = std::sqrt(std::pow(grad_u[0],2) + std::pow(grad_u[1],2));
@@ -1830,19 +1833,19 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*r_l2g.data()[eN_i]; //global i-th index
 
 		// distribute global residual for (lumped) mass matrix
-		globalResidual[gi] += elementResidual_u[i];
+		globalResidual.data()[gi] += elementResidual_u[i];
 		// distribute L2 norm per node
 		L2_norm_per_node[gi] += element_L2_norm_per_node[i];
 		// distribute transport matrices
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
-		    TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]]
+		    TransportMatrix[csrRowIndeces_CellLoops.data()[eN_i] + csrColumnOffsets_CellLoops.data()[eN_i_j]]
 		      += elementTransport[i][j];
-		    TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]]
+		    TransposeTransportMatrix[csrRowIndeces_CellLoops.data()[eN_i] + csrColumnOffsets_CellLoops.data()[eN_i_j]]
 		      += elementTransposeTransport[i][j];
 		  }//j
 	      }//i
@@ -1857,14 +1860,14 @@ namespace proteus
 	for (int i=0; i<numDOFs; i++)
 	  {
 	    double alphai;
-	    double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	    double solni = u_dof_old.data()[i]; // solution at time tn for the ith DOF
 	    // for smoothness indicator
 	    double alpha_numi=0;
 	    double alpha_deni=0;
-	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
 	      { //loop in j (sparsity pattern)
-		int j = csrColumnOffsets_DofLoops[offset];
-		double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		int j = csrColumnOffsets_DofLoops.data()[offset];
+		double solnj = u_dof_old.data()[j]; // solution at time tn for the jth DOF
 		alpha_numi += solnj-solni;
 		alpha_deni += fabs(solnj-solni);
 	      }
@@ -1885,16 +1888,16 @@ namespace proteus
 	int ij=0;
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	    double solni = u_dof_old.data()[i]; // solution at time tn for the ith DOF
 	    double ith_dissipative_term = 0;
 	    double ith_flux_term = 0;
 	    double dLii = 0.;
 
 	    // loop over the sparsity pattern of the i-th DOF
-	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
 	      {
-		int j = csrColumnOffsets_DofLoops[offset];
-		double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		int j = csrColumnOffsets_DofLoops.data()[offset];
+		double solnj = u_dof_old.data()[j]; // solution at time tn for the jth DOF
 		double dLij=0.;
 
 		ith_flux_term += TransportMatrix[ij]*solnj;
@@ -1911,32 +1914,32 @@ namespace proteus
 		ij+=1;
 	      }
 	    // update residual
-	    double mi = ML[i];
+	    double mi = ML.data()[i];
 	    // compute edge_based_cfl
-	    edge_based_cfl[i] = 2*fabs(dLii)/mi;
-	    globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
+	    edge_based_cfl.data()[i] = 2*fabs(dLii)/mi;
+	    globalResidual.data()[i] += dt*(ith_flux_term - ith_dissipative_term);
 	  }
 	return L2_norm;
       }
 
       double calculateRhsSmoothing(
-				   double* mesh_trial_ref,
-				   double* mesh_grad_trial_ref,
-				   double* mesh_dof,
-				   int* mesh_l2g,
-				   double* dV_ref,
-				   double* u_trial_ref,
-				   double* u_grad_trial_ref,
-				   double* u_test_ref,
+				   xt::pyarray<double>& mesh_trial_ref,
+				   xt::pyarray<double>& mesh_grad_trial_ref,
+				   xt::pyarray<double>& mesh_dof,
+				   xt::pyarray<int>& mesh_l2g,
+				   xt::pyarray<double>& dV_ref,
+				   xt::pyarray<double>& u_trial_ref,
+				   xt::pyarray<double>& u_grad_trial_ref,
+				   xt::pyarray<double>& u_test_ref,
 				   //physics
 				   int nElements_global,
-				   int* u_l2g,
-				   int* r_l2g,
-				   double* elementDiameter,
-				   double* nodeDiametersArray,
-				   double* u_dof_old,
+				   xt::pyarray<int>& u_l2g,
+				   xt::pyarray<int>& r_l2g,
+				   xt::pyarray<double>& elementDiameter,
+				   xt::pyarray<double>& nodeDiametersArray,
+				   xt::pyarray<double>& u_dof_old,
 				   int offset_u, int stride_u,
-				   double* globalResidual)
+				   xt::pyarray<double>& globalResidual)
       {
 	//////////////////////////////////////////////
 	// ** LOOP IN CELLS FOR CELL BASED TERMS ** //
@@ -1962,13 +1965,13 @@ namespace proteus
 		  jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
 		  dV,x,y,z;
 		//get the physical integration weight
-		ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
-		dV = fabs(jacDet)*dV_ref[k];
+		ck.calculateMapping_element(eN,k,mesh_dof.data(),mesh_l2g.data(),mesh_trial_ref.data(),mesh_grad_trial_ref.data(),jac,jacDet,jacInv,x,y,z);
+		dV = fabs(jacDet)*dV_ref.data()[k];
 		//get the solution at quad point at tn
-		ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		ck.valFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],un);
 		//precalculate test function products with integration weights for mass matrix terms
 		for (int j=0;j<nDOF_trial_element;j++)
-		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		  u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 
 		//////////////
 		// ith-LOOP //
@@ -1983,37 +1986,37 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*r_l2g.data()[eN_i]; //global i-th index
 
 		// distribute global residual
-		globalResidual[gi] += elementResidual_u[i];
+		globalResidual.data()[gi] += elementResidual_u[i];
 	      }//i
 	  }//elements
       }
 
       void calculateResidual_entropy_viscosity(//element
 					       double dt,
-					       double* mesh_trial_ref,
-					       double* mesh_grad_trial_ref,
-					       double* mesh_dof,
-					       double* mesh_velocity_dof,
+					       xt::pyarray<double>& mesh_trial_ref,
+					       xt::pyarray<double>& mesh_grad_trial_ref,
+					       xt::pyarray<double>& mesh_dof,
+					       xt::pyarray<double>& mesh_velocity_dof,
 					       double MOVING_DOMAIN,
-					       int* mesh_l2g,
-					       double* dV_ref,
-					       double* u_trial_ref,
-					       double* u_grad_trial_ref,
-					       double* u_test_ref,
-					       double* u_grad_test_ref,
+					       xt::pyarray<int>& mesh_l2g,
+					       xt::pyarray<double>& dV_ref,
+					       xt::pyarray<double>& u_trial_ref,
+					       xt::pyarray<double>& u_grad_trial_ref,
+					       xt::pyarray<double>& u_test_ref,
+					       xt::pyarray<double>& u_grad_test_ref,
 					       //element boundary
-					       double* mesh_trial_trace_ref,
-					       double* mesh_grad_trial_trace_ref,
-					       double* dS_ref,
-					       double* u_trial_trace_ref,
-					       double* u_grad_trial_trace_ref,
-					       double* u_test_trace_ref,
-					       double* u_grad_test_trace_ref,
-					       double* normal_ref,
-					       double* boundaryJac_ref,
+					       xt::pyarray<double>& mesh_trial_trace_ref,
+					       xt::pyarray<double>& mesh_grad_trial_trace_ref,
+					       xt::pyarray<double>& dS_ref,
+					       xt::pyarray<double>& u_trial_trace_ref,
+					       xt::pyarray<double>& u_grad_trial_trace_ref,
+					       xt::pyarray<double>& u_test_trace_ref,
+					       xt::pyarray<double>& u_grad_test_trace_ref,
+					       xt::pyarray<double>& normal_ref,
+					       xt::pyarray<double>& boundaryJac_ref,
 					       //physics
 					       int nElements_global,
 					       double useMetrics,
@@ -2021,53 +2024,53 @@ namespace proteus
 					       int lag_shockCapturing,
 					       double shockCapturingDiffusion,
 					       double sc_uref, double sc_alpha,
-					       int* u_l2g,
-					       int* r_l2g,
-					       double* elementDiameter,
-					       double* nodeDiametersArray,
+					       xt::pyarray<int>& u_l2g,
+					       xt::pyarray<int>& r_l2g,
+					       xt::pyarray<double>& elementDiameter,
+					       xt::pyarray<double>& nodeDiametersArray,
 					       int degree_polynomial,
-					       double* u_dof,
-					       double* u_dof_old,
-					       double* uStar_dof,
-					       double* velocity,
-					       double* q_m,
-					       double* q_u,
-					       double* q_n,
-					       double* q_dH,
-					       double* q_m_betaBDF,
-					       double* q_dV,
-					       double* q_dV_last,
-					       double* cfl,
-					       double* edge_based_cfl,
-					       double* q_numDiff_u,
-					       double* q_numDiff_u_last,
+					       xt::pyarray<double>& u_dof,
+					       xt::pyarray<double>& u_dof_old,
+					       xt::pyarray<double>& uStar_dof,
+					       xt::pyarray<double>& velocity,
+					       xt::pyarray<double>& q_m,
+					       xt::pyarray<double>& q_u,
+					       xt::pyarray<double>& q_n,
+					       xt::pyarray<double>& q_dH,
+					       xt::pyarray<double>& q_m_betaBDF,
+					       xt::pyarray<double>& q_dV,
+					       xt::pyarray<double>& q_dV_last,
+					       xt::pyarray<double>& cfl,
+					       xt::pyarray<double>& edge_based_cfl,
+					       xt::pyarray<double>& q_numDiff_u,
+					       xt::pyarray<double>& q_numDiff_u_last,
 					       int offset_u, int stride_u,
-					       double* globalResidual,
+					       xt::pyarray<double>& globalResidual,
 					       int nExteriorElementBoundaries_global,
-					       int* exteriorElementBoundariesArray,
-					       int* elementBoundaryElementsArray,
-					       int* elementBoundaryLocalElementBoundariesArray,
-					       double* ebqe_velocity_ext,
-					       int* isDOFBoundary_u,
-					       double* ebqe_rd_u_ext,
-					       double* ebqe_bc_u_ext,
-					       double* ebqe_u,
-					       double* ebqe_grad_u,
-					       double* interface_locator,
+					       xt::pyarray<int>& exteriorElementBoundariesArray,
+					       xt::pyarray<int>& elementBoundaryElementsArray,
+					       xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+					       xt::pyarray<double>& ebqe_velocity_ext,
+					       xt::pyarray<int>& isDOFBoundary_u,
+					       xt::pyarray<double>& ebqe_rd_u_ext,
+					       xt::pyarray<double>& ebqe_bc_u_ext,
+					       xt::pyarray<double>& ebqe_u,
+					       xt::pyarray<double>& ebqe_grad_u,
+					       xt::pyarray<double>& interface_locator,
 					       // TO KILL SUPG AND SHOCK CAPTURING 
 					       int PURE_BDF,
 					       // PARAMETERS FOR EDGE VISCOSITY
 					       int numDOFs,
 					       int NNZ,
-					       int* csrRowIndeces_DofLoops,
-					       int* csrColumnOffsets_DofLoops,
-					       int* csrRowIndeces_CellLoops,
-					       int* csrColumnOffsets_CellLoops,
-					       int* csrColumnOffsets_eb_CellLoops,
+					       xt::pyarray<int>& csrRowIndeces_DofLoops,
+					       xt::pyarray<int>& csrColumnOffsets_DofLoops,
+					       xt::pyarray<int>& csrRowIndeces_CellLoops,
+					       xt::pyarray<int>& csrColumnOffsets_CellLoops,
+					       xt::pyarray<int>& csrColumnOffsets_eb_CellLoops,
 					       // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
 					       int LUMPED_MASS_MATRIX,
 					       // AUX QUANTITIES OF INTEREST
-					       double* quantDOFs,
+					       xt::pyarray<double>& quantDOFs,
 					       // COPUEZ
 					       double lambda_coupez,
 					       double epsCoupez,
@@ -2075,10 +2078,10 @@ namespace proteus
 					       int COUPEZ,
 					       int SATURATED_LEVEL_SET,
 					       // C-Matrices
-					       double* Cx,
-					       double* Cy,
-					       double* Cz,
-					       double* ML,
+					       xt::pyarray<double>& Cx,
+					       xt::pyarray<double>& Cy,
+					       xt::pyarray<double>& Cz,
+					       xt::pyarray<double>& ML,
 					       int STABILIZATION_TYPE,
 					       int ENTROPY_TYPE,
 					       double cE)
@@ -2161,35 +2164,35 @@ namespace proteus
 		//get the physical integration weight
 		ck.calculateMapping_element(eN,
 					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
+					    mesh_dof.data(),
+					    mesh_l2g.data(),
+					    mesh_trial_ref.data(),
+					    mesh_grad_trial_ref.data(),
 					    jac,
 					    jacDet,
 					    jacInv,x,y,z);
 		ck.calculateMappingVelocity_element(eN,
 						    k,
-						    mesh_velocity_dof,
-						    mesh_l2g,
-						    mesh_trial_ref,
+						    mesh_velocity_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_ref.data(),
 						    xt,yt,zt);
-		dV = fabs(jacDet)*dV_ref[k];
+		dV = fabs(jacDet)*dV_ref.data()[k];
 		JacDet = fabs(jacDet);
 		// get h at quad points
-		ck.valFromDOF(nodeDiametersArray,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],hquad);
+		ck.valFromDOF(nodeDiametersArray.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],hquad);
 		//get the solution (of Newton's solver). To compute time derivative term
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-		ck.valFromDOF(uStar_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],uStar);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
+		ck.valFromDOF(uStar_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],uStar);
 		//get the solution at quad point at tn and tnm1 for entropy viscosity
 		// solution and grads at old times at quad points
-		ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		ck.valFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],un);
 		//get the solution gradients at tn for entropy viscosity
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-		ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+		ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_un);
 		//precalculate test function products with integration weights for mass matrix terms
 		for (int j=0;j<nDOF_trial_element;j++)
-		  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		  u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 
 		//
 		//moving mesh
@@ -2208,13 +2211,13 @@ namespace proteus
 
 		// get velocity
 		for (int I=0;I<nSpace;I++)
-		  vn[I] = (velocity[eN_k_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]
+		  vn[I] = (velocity.data()[eN_k_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]
 			   + dist_error*COUPEZ*lambda_coupez*sgn*grad_un[I]/norm_grad_un);
 
 		//////////////////////////////
 		// CALCULATE CELL BASED CFL //
 		//////////////////////////////
-		calculateCFL(elementDiameter[eN]/degree_polynomial,vn,cfl[eN_k]);
+		calculateCFL(elementDiameter.data()[eN]/degree_polynomial,vn,cfl.data()[eN_k]);
 
 		//////////////////////////////////////////////
 		// CALCULATE ENTROPY RESIDUAL AT QUAD POINT //
@@ -2237,11 +2240,11 @@ namespace proteus
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
 		    int eN_i=eN*nDOF_test_element+i;
-		    int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		    int gi = offset_u+stride_u*u_l2g.data()[eN_i]; //global i-th index
 		    // entropy residual
 		    if (STABILIZATION_TYPE==1) // EV Stab
 		      {
-			DENTROPY_uni = ENTROPY_TYPE == 1 ? DENTROPY(u_dof_old[gi],-epsCoupez,epsCoupez) : DENTROPY_LOG(u_dof_old[gi],-epsCoupez,epsCoupez);
+			DENTROPY_uni = ENTROPY_TYPE == 1 ? DENTROPY(u_dof_old.data()[gi],-epsCoupez,epsCoupez) : DENTROPY_LOG(u_dof_old.data()[gi],-epsCoupez,epsCoupez);
 			element_entropy_residual[i] += (DENTROPY_un - DENTROPY_uni)*aux_entropy_residual*u_test_dV[i];
 		      }
 		    // element residual
@@ -2261,10 +2264,10 @@ namespace proteus
 		      }
 		  }//i
 		//save solution at quadrature points for other models to use
-		q_u[eN_k]=u;
-		q_m[eN_k] = u;
+		q_u.data()[eN_k]=u;
+		q_m.data()[eN_k] = u;
 		for (int I=0;I<nSpace;I++)
-		  q_n[eN_k_nSpace+I]  = grad_u[I];
+		  q_n.data()[eN_k_nSpace+I]  = grad_u[I];
 	      }
 	    // MULTIPLY Transport Matrix times preconditioner//
 	    //if (false)
@@ -2292,10 +2295,10 @@ namespace proteus
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i=eN*nDOF_test_element+i;
-		int gi = offset_u+stride_u*r_l2g[eN_i]; //global i-th index
+		int gi = offset_u+stride_u*r_l2g.data()[eN_i]; //global i-th index
 
 		// distribute global residual for (lumped) mass matrix
-		globalResidual[gi] += elementResidual_u[i];
+		globalResidual.data()[gi] += elementResidual_u[i];
 		// distribute entropy_residual
 		if (STABILIZATION_TYPE==1) // EV Stab
 		  global_entropy_residual[gi] += element_entropy_residual[i];
@@ -2304,9 +2307,9 @@ namespace proteus
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
-		    TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]]
+		    TransportMatrix[csrRowIndeces_CellLoops.data()[eN_i] + csrColumnOffsets_CellLoops.data()[eN_i_j]]
 		      += elementTransport[i][j];
-		    TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]]
+		    TransposeTransportMatrix[csrRowIndeces_CellLoops.data()[eN_i] + csrColumnOffsets_CellLoops.data()[eN_i_j]]
 		      += elementTransposeTransport[i][j];
 		  }//j
 	      }//i
@@ -2327,7 +2330,7 @@ namespace proteus
 	int ij = 0;
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    double solni = u_dof_old[i];
+	    double solni = u_dof_old.data()[i];
 	    if (STABILIZATION_TYPE==1) //EV Stab
 	      eta[i] = ENTROPY_TYPE == 1 ? ENTROPY(solni,-epsCoupez,epsCoupez) : ENTROPY_LOG(solni,-epsCoupez,epsCoupez);
 	    else // smoothness based stab
@@ -2341,16 +2344,16 @@ namespace proteus
 		alpha_denominator_pos[i] = 0.;
 		alpha_denominator_neg[i] = 0.;
 
-		for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
 		  {
-		    int j = csrColumnOffsets_DofLoops[offset];
-		    double solnj = u_dof_old[j];
+		    int j = csrColumnOffsets_DofLoops.data()[offset];
+		    double solnj = u_dof_old.data()[j];
 
 		    // for gi vector
-		    gx[i] += Cx[ij]*solnj;
-		    gy[i] += Cy[ij]*solnj;
+		    gx[i] += Cx.data()[ij]*solnj;
+		    gy[i] += Cy.data()[ij]*solnj;
 #if nSpace==3
-		    gz[i] += Cz[ij]*solnj;
+		    gz[i] += Cz.data()[ij]*solnj;
 #endif
 		    double alpha_num = solni - solnj;
 		    if (alpha_num >= 0.)
@@ -2366,10 +2369,10 @@ namespace proteus
 		    //update ij
 		    ij+=1;
 		  }
-		gx[i] /= ML[i];
-		gy[i] /= ML[i];
+		gx[i] /= ML.data()[i];
+		gy[i] /= ML.data()[i];
 #if nSpace==3
-		gz[i] /= ML[i];
+		gz[i] /= ML.data()[i];
 #endif
 	      }
 	  }
@@ -2393,15 +2396,15 @@ namespace proteus
 	      }
 	    else //smoothness based stab
 	      {
-		xi = mesh_dof[i*3+0];
-		yi = mesh_dof[i*3+1];
+		xi = mesh_dof.data()[i*3+0];
+		yi = mesh_dof.data()[i*3+1];
 #if nSpace==3
-		zi = mesh_dof[i*3+2];
+		zi = mesh_dof.data()[i*3+2];
 #endif
 	      }
-	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
 	      { //loop in j (sparsity pattern)
-		int j = csrColumnOffsets_DofLoops[offset];
+		int j = csrColumnOffsets_DofLoops.data()[offset];
 		if (STABILIZATION_TYPE==1) //EV stab
 		  {
 		    /////////////////////////////////
@@ -2412,11 +2415,11 @@ namespace proteus
 		  }
 		else //smoothness based sta
 		  {
-		    double xj = mesh_dof[j*3+0];
-		    double yj = mesh_dof[j*3+1];
+		    double xj = mesh_dof.data()[j*3+0];
+		    double yj = mesh_dof.data()[j*3+1];
 		    double zj = 0;
 #if nSpace==3
-		    zj = mesh_dof[j*3+2];
+		    zj = mesh_dof.data()[j*3+2];
 #endif
 		    //////////////////////////////
 		    // FOR SMOOTHNESS INDICATOR //
@@ -2433,7 +2436,7 @@ namespace proteus
 	      {
 		// Normalize entropy residual
 		global_entropy_residual[i] *= etaMin[i] == etaMax[i] ? 0. : 2*cE/(etaMax[i]-etaMin[i]);
-		quantDOFs[i] = fabs(global_entropy_residual[i]);
+		quantDOFs.data()[i] = fabs(global_entropy_residual[i]);
 	      }
 	    else // smoothness based stab
 	      {
@@ -2448,7 +2451,7 @@ namespace proteus
 		    alpha_deni = alpha_denominator_pos[i] + alpha_denominator_neg[i];
 		  }
 		double alphai = alpha_numi/(alpha_deni+1E-15);
-		quantDOFs[i] = alphai;
+		quantDOFs.data()[i] = alphai;
 
 		if (POWER_SMOOTHNESS_INDICATOR==0)
 		  psi[i] = 1.0;
@@ -2464,16 +2467,16 @@ namespace proteus
 	ij=0;
 	for (int i=0; i<numDOFs; i++)
 	  {
-	    double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	    double solni = u_dof_old.data()[i]; // solution at time tn for the ith DOF
 	    double ith_dissipative_term = 0;
 	    double ith_flux_term = 0;
 	    double dLowii = 0.;
 
 	    // loop over the sparsity pattern of the i-th DOF
-	    for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
 	      {
-		int j = csrColumnOffsets_DofLoops[offset];
-		double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		int j = csrColumnOffsets_DofLoops.data()[offset];
+		double solnj = u_dof_old.data()[j]; // solution at time tn for the jth DOF
 		double dLowij, dHij, dEVij;
 
 		ith_flux_term += TransportMatrix[ij]*solnj;
@@ -2498,17 +2501,17 @@ namespace proteus
 		ij+=1;
 	      }
 	    // update residual
-	    double mi = ML[i];
+	    double mi = ML.data()[i];
 	    // compute edge_based_cfl
-	    edge_based_cfl[i] = 2.*fabs(dLowii)/mi;
+	    edge_based_cfl.data()[i] = 2.*fabs(dLowii)/mi;
 
 	    if (LUMPED_MASS_MATRIX==1)
 	      {
-		//globalResidual[i] = mi*(u_dof[i] - u_dof_old[i]) + dt*(ith_flux_term - ith_dissipative_term);
-		globalResidual[i] = u_dof_old[i] - dt/mi*(ith_flux_term - ith_dissipative_term);
+		//globalResidual.data()[i] = mi*(u_dof.data()[i] - u_dof_old.data()[i]) + dt*(ith_flux_term - ith_dissipative_term);
+		globalResidual.data()[i] = u_dof_old.data()[i] - dt/mi*(ith_flux_term - ith_dissipative_term);
 	      }
 	    else
-	      globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term);
+	      globalResidual.data()[i] += dt*(ith_flux_term - ith_dissipative_term);
 	  }
 
 	/////////////////////////
@@ -2516,9 +2519,9 @@ namespace proteus
 	/////////////////////////
 	for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	  {
-	    register int ebN = exteriorElementBoundariesArray[ebNE],
-	      eN  = elementBoundaryElementsArray[ebN*2+0],
-	      ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+	    register int ebN = exteriorElementBoundariesArray.data()[ebNE],
+	      eN  = elementBoundaryElementsArray.data()[ebN*2+0],
+	      ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
 	      eN_nDOF_trial_element = eN*nDOF_trial_element;
 	    register double elementResidual_u[nDOF_test_element];
 	    for (int i=0;i<nDOF_test_element;i++)
@@ -2560,60 +2563,60 @@ namespace proteus
 						    ebN_local,
 						    kb,
 						    ebN_local_kb,
-						    mesh_dof,
-						    mesh_l2g,
-						    mesh_trial_trace_ref,
-						    mesh_grad_trial_trace_ref,
-						    boundaryJac_ref,
+						    mesh_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_trace_ref.data(),
+						    mesh_grad_trial_trace_ref.data(),
+						    boundaryJac_ref.data(),
 						    jac_ext,
 						    jacDet_ext,
 						    jacInv_ext,
 						    boundaryJac,
 						    metricTensor,
 						    metricTensorDetSqrt,
-						    normal_ref,
+						    normal_ref.data(),
 						    normal,
 						    x_ext,y_ext,z_ext);
 		ck.calculateMappingVelocity_elementBoundary(eN,
 							    ebN_local,
 							    kb,
 							    ebN_local_kb,
-							    mesh_velocity_dof,
-							    mesh_l2g,
-							    mesh_trial_trace_ref,
+							    mesh_velocity_dof.data(),
+							    mesh_l2g.data(),
+							    mesh_trial_trace_ref.data(),
 							    xt_ext,yt_ext,zt_ext,
 							    normal,
 							    boundaryJac,
 							    metricTensor,
 							    integralScaling);
-		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+		dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref.data()[kb];
 		//get the metric tensor
 		//cek todo use symmetry
 		ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
 		//compute shape and solution information
 		//shape
-		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+		ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
 		//solution and gradients
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_ext);
+		ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
-		  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		  u_test_dS[j] = u_test_trace_ref.data()[ebN_local_kb*nDOF_test_element+j]*dS;
 		//
 		//load the boundary values
 		//
-		bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*ebqe_rd_u_ext[ebNE_kb];
+		bc_u_ext = isDOFBoundary_u.data()[ebNE_kb]*ebqe_bc_u_ext.data()[ebNE_kb]+(1-isDOFBoundary_u.data()[ebNE_kb])*ebqe_rd_u_ext.data()[ebNE_kb];
 		//
 		//calculate the pde coefficients using the solution and the boundary values for the solution
 		//
-		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+		evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
 				     u_ext,
 				     grad_u_ext,
 				     m_ext,
 				     dm_ext,
 				     H_ext,
 				     dH_ext);
-		evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+		evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
 				     bc_u_ext,
 				     bc_grad_u_ext,
 				     bc_m_ext,
@@ -2639,7 +2642,7 @@ namespace proteus
 				      dH_ext,
 				      velocity_ext,
 				      flux_ext);
-		ebqe_u[ebNE_kb] = u_ext;
+		ebqe_u.data()[ebNE_kb] = u_ext;
 
 		// gradient //
 
@@ -2648,7 +2651,7 @@ namespace proteus
 		  norm += grad_u_ext[I]*grad_u_ext[I];
 		norm = sqrt(norm);
 		for (int I=0;I<nSpace;I++)
-		  ebqe_grad_u[ebNE_kb_nSpace+I]  = grad_u_ext[I]/norm;
+		  ebqe_grad_u.data()[ebNE_kb_nSpace+I]  = grad_u_ext[I]/norm;
 
 
 		//
@@ -2666,11 +2669,11 @@ namespace proteus
 	    for (int i=0;i<nDOF_test_element;i++)
 	      {
 		int eN_i = eN*nDOF_test_element+i;
-		double mi = ML[offset_u+stride_u*u_l2g[eN_i]];
+		double mi = ML.data()[offset_u+stride_u*u_l2g.data()[eN_i]];
 		if (LUMPED_MASS_MATRIX==1)
-		  globalResidual[offset_u+stride_u*r_l2g[eN_i]] -= dt/mi*elementResidual_u[i];
+		  globalResidual.data()[offset_u+stride_u*r_l2g.data()[eN_i]] -= dt/mi*elementResidual_u[i];
 		else
-		  globalResidual[offset_u+stride_u*r_l2g[eN_i]] += dt*elementResidual_u[i];
+		  globalResidual.data()[offset_u+stride_u*r_l2g.data()[eN_i]] += dt*elementResidual_u[i];
 	      }//i
 	  }//ebNE
 	/////////////////////////
@@ -2678,53 +2681,53 @@ namespace proteus
 
       void calculateMassMatrix(//element
 			       double dt,
-			       double* mesh_trial_ref,
-			       double* mesh_grad_trial_ref,
-			       double* mesh_dof,
-			       double* mesh_velocity_dof,
+			       xt::pyarray<double>& mesh_trial_ref,
+			       xt::pyarray<double>& mesh_grad_trial_ref,
+			       xt::pyarray<double>& mesh_dof,
+			       xt::pyarray<double>& mesh_velocity_dof,
 			       double MOVING_DOMAIN,
-			       int* mesh_l2g,
-			       double* dV_ref,
-			       double* u_trial_ref,
-			       double* u_grad_trial_ref,
-			       double* u_test_ref,
-			       double* u_grad_test_ref,
+			       xt::pyarray<int>& mesh_l2g,
+			       xt::pyarray<double>& dV_ref,
+			       xt::pyarray<double>& u_trial_ref,
+			       xt::pyarray<double>& u_grad_trial_ref,
+			       xt::pyarray<double>& u_test_ref,
+			       xt::pyarray<double>& u_grad_test_ref,
 			       //element boundary
-			       double* mesh_trial_trace_ref,
-			       double* mesh_grad_trial_trace_ref,
-			       double* dS_ref,
-			       double* u_trial_trace_ref,
-			       double* u_grad_trial_trace_ref,
-			       double* u_test_trace_ref,
-			       double* u_grad_test_trace_ref,
-			       double* normal_ref,
-			       double* boundaryJac_ref,
+			       xt::pyarray<double>& mesh_trial_trace_ref,
+			       xt::pyarray<double>& mesh_grad_trial_trace_ref,
+			       xt::pyarray<double>& dS_ref,
+			       xt::pyarray<double>& u_trial_trace_ref,
+			       xt::pyarray<double>& u_grad_trial_trace_ref,
+			       xt::pyarray<double>& u_test_trace_ref,
+			       xt::pyarray<double>& u_grad_test_trace_ref,
+			       xt::pyarray<double>& normal_ref,
+			       xt::pyarray<double>& boundaryJac_ref,
 			       //physics
 			       int nElements_global,
 			       double useMetrics,
 			       double alphaBDF,
 			       int lag_shockCapturing,/*mwf not used yet*/
 			       double shockCapturingDiffusion,
-			       int* u_l2g,
-			       int* r_l2g,
-			       double* elementDiameter,
+			       xt::pyarray<int>& u_l2g,
+			       xt::pyarray<int>& r_l2g,
+			       xt::pyarray<double>& elementDiameter,
 			       int degree_polynomial,
-			       double* u_dof,
-			       double* velocity,
-			       double* q_m_betaBDF,
-			       double* cfl,
-			       double* q_numDiff_u_last,
-			       int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-			       double* globalJacobian,
+			       xt::pyarray<double>& u_dof,
+			       xt::pyarray<double>& velocity,
+			       xt::pyarray<double>& q_m_betaBDF,
+			       xt::pyarray<double>& cfl,
+			       xt::pyarray<double>& q_numDiff_u_last,
+			       xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+			       xt::pyarray<double>& globalJacobian,
 			       int nExteriorElementBoundaries_global,
-			       int* exteriorElementBoundariesArray,
-			       int* elementBoundaryElementsArray,
-			       int* elementBoundaryLocalElementBoundariesArray,
-			       double* ebqe_velocity_ext,
-			       int* isDOFBoundary_u,
-			       double* ebqe_rd_u_ext,
-			       double* ebqe_bc_u_ext,
-			       int* csrColumnOffsets_eb_u_u,
+			       xt::pyarray<int>& exteriorElementBoundariesArray,
+			       xt::pyarray<int>& elementBoundaryElementsArray,
+			       xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+			       xt::pyarray<double>& ebqe_velocity_ext,
+			       xt::pyarray<int>& isDOFBoundary_u,
+			       xt::pyarray<double>& ebqe_rd_u_ext,
+			       xt::pyarray<double>& ebqe_bc_u_ext,
+			       xt::pyarray<int>& csrColumnOffsets_eb_u_u,
 			       int PURE_BDF,
 			       int LUMPED_MASS_MATRIX)
       {
@@ -2773,33 +2776,33 @@ namespace proteus
 		//get jacobian, etc for mapping reference element
 		ck.calculateMapping_element(eN,
 					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
+					    mesh_dof.data(),
+					    mesh_l2g.data(),
+					    mesh_trial_ref.data(),
+					    mesh_grad_trial_ref.data(),
 					    jac,
 					    jacDet,
 					    jacInv,
 					    x,y,z);
 		ck.calculateMappingVelocity_element(eN,
 						    k,
-						    mesh_velocity_dof,
-						    mesh_l2g,
-						    mesh_trial_ref,
+						    mesh_velocity_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_ref.data(),
 						    xt,yt,zt);
 		//get the physical integration weight
-		dV = fabs(jacDet)*dV_ref[k];
+		dV = fabs(jacDet)*dV_ref.data()[k];
 		ck.calculateG(jacInv,G,G_dd_G,tr_G);
 		//get the trial function gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		//get the solution
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
 		//get the solution gradients
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
-		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		    u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 		    for (int I=0;I<nSpace;I++)
 		      {
 			u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -2808,7 +2811,7 @@ namespace proteus
 		//
 		//calculate pde coefficients and derivatives at quadrature points
 		//
-		evaluateCoefficients(&velocity[eN_k_nSpace],
+		evaluateCoefficients(&velocity.data()[eN_k_nSpace],
 				     u,
 				     grad_u,
 				     m,
@@ -2831,7 +2834,7 @@ namespace proteus
 		//calculate time derivatives
 		//
 		ck.bdf(alphaBDF,
-		       q_m_betaBDF[eN_k],
+		       q_m_betaBDF.data()[eN_k],
 		       m,
 		       dm,
 		       m_t,
@@ -2854,7 +2857,7 @@ namespace proteus
 		    //int eN_k_j=eN_k*nDOF_trial_element+j;
 		    //int eN_k_j_nSpace = eN_k_j*nSpace;
 		    int j_nSpace = j*nSpace;
-		    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+		    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j]) +
 		      ck.HamiltonianJacobian_strong(dH,&u_grad_trial[j_nSpace]) +
 		      MOVING_DOMAIN*ck.AdvectionJacobian_strong(df,&u_grad_trial[j_nSpace]);
 
@@ -2864,10 +2867,10 @@ namespace proteus
 		for (int I=0;I<nSpace;I++)
 		  subgridErrorVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
 
-		calculateSubgridError_tau(elementDiameter[eN],
+		calculateSubgridError_tau(elementDiameter.data()[eN],
 					  dm_t,
 					  subgridErrorVelocity,//dH,
-					  cfl[eN_k],
+					  cfl.data()[eN_k],
 					  tau0);
 
 		calculateSubgridError_tau(Ct_sge,
@@ -2875,7 +2878,7 @@ namespace proteus
 					  dm_t,
 					  subgridErrorVelocity,//dH,
 					  tau1,
-					  cfl[eN_k]);
+					  cfl.data()[eN_k]);
 		tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
 
 		for(int j=0;j<nDOF_trial_element;j++)
@@ -2899,7 +2902,7 @@ namespace proteus
 			else
 			  {
 			    elementJacobian_u_u[i][j] +=
-			      dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
+			      dt*ck.MassJacobian_weak(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j],u_test_dV[i]);
 			  }
 		      }//j
 		  }//i
@@ -2913,7 +2916,7 @@ namespace proteus
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
-		    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		    globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i][j];
 		  }//j
 	      }//i
 	  }//elements
@@ -2921,53 +2924,53 @@ namespace proteus
 
       void calculateSmoothingMatrix(//element
 				    double dt,
-				    double* mesh_trial_ref,
-				    double* mesh_grad_trial_ref,
-				    double* mesh_dof,
-				    double* mesh_velocity_dof,
+				    xt::pyarray<double>& mesh_trial_ref,
+				    xt::pyarray<double>& mesh_grad_trial_ref,
+				    xt::pyarray<double>& mesh_dof,
+				    xt::pyarray<double>& mesh_velocity_dof,
 				    double MOVING_DOMAIN,
-				    int* mesh_l2g,
-				    double* dV_ref,
-				    double* u_trial_ref,
-				    double* u_grad_trial_ref,
-				    double* u_test_ref,
-				    double* u_grad_test_ref,
+				    xt::pyarray<int>& mesh_l2g,
+				    xt::pyarray<double>& dV_ref,
+				    xt::pyarray<double>& u_trial_ref,
+				    xt::pyarray<double>& u_grad_trial_ref,
+				    xt::pyarray<double>& u_test_ref,
+				    xt::pyarray<double>& u_grad_test_ref,
 				    //element boundary
-				    double* mesh_trial_trace_ref,
-				    double* mesh_grad_trial_trace_ref,
-				    double* dS_ref,
-				    double* u_trial_trace_ref,
-				    double* u_grad_trial_trace_ref,
-				    double* u_test_trace_ref,
-				    double* u_grad_test_trace_ref,
-				    double* normal_ref,
-				    double* boundaryJac_ref,
+				    xt::pyarray<double>& mesh_trial_trace_ref,
+				    xt::pyarray<double>& mesh_grad_trial_trace_ref,
+				    xt::pyarray<double>& dS_ref,
+				    xt::pyarray<double>& u_trial_trace_ref,
+				    xt::pyarray<double>& u_grad_trial_trace_ref,
+				    xt::pyarray<double>& u_test_trace_ref,
+				    xt::pyarray<double>& u_grad_test_trace_ref,
+				    xt::pyarray<double>& normal_ref,
+				    xt::pyarray<double>& boundaryJac_ref,
 				    //physics
 				    int nElements_global,
 				    double useMetrics,
 				    double alphaBDF,
 				    int lag_shockCapturing,/*mwf not used yet*/
 				    double shockCapturingDiffusion,
-				    int* u_l2g,
-				    int* r_l2g,
-				    double* elementDiameter,
+				    xt::pyarray<int>& u_l2g,
+				    xt::pyarray<int>& r_l2g,
+				    xt::pyarray<double>& elementDiameter,
 				    int degree_polynomial,
-				    double* u_dof,
-				    double* velocity,
-				    double* q_m_betaBDF,
-				    double* cfl,
-				    double* q_numDiff_u_last,
-				    int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-				    double* globalJacobian,
+				    xt::pyarray<double>& u_dof,
+				    xt::pyarray<double>& velocity,
+				    xt::pyarray<double>& q_m_betaBDF,
+				    xt::pyarray<double>& cfl,
+				    xt::pyarray<double>& q_numDiff_u_last,
+				    xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
+				    xt::pyarray<double>& globalJacobian,
 				    int nExteriorElementBoundaries_global,
-				    int* exteriorElementBoundariesArray,
-				    int* elementBoundaryElementsArray,
-				    int* elementBoundaryLocalElementBoundariesArray,
-				    double* ebqe_velocity_ext,
-				    int* isDOFBoundary_u,
-				    double* ebqe_rd_u_ext,
-				    double* ebqe_bc_u_ext,
-				    int* csrColumnOffsets_eb_u_u,
+				    xt::pyarray<int>& exteriorElementBoundariesArray,
+				    xt::pyarray<int>& elementBoundaryElementsArray,
+				    xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
+				    xt::pyarray<double>& ebqe_velocity_ext,
+				    xt::pyarray<int>& isDOFBoundary_u,
+				    xt::pyarray<double>& ebqe_rd_u_ext,
+				    xt::pyarray<double>& ebqe_bc_u_ext,
+				    xt::pyarray<int>& csrColumnOffsets_eb_u_u,
 				    double he)
       {
 	double Ct_sge = 4.0;
@@ -3015,33 +3018,33 @@ namespace proteus
 		//get jacobian, etc for mapping reference element
 		ck.calculateMapping_element(eN,
 					    k,
-					    mesh_dof,
-					    mesh_l2g,
-					    mesh_trial_ref,
-					    mesh_grad_trial_ref,
+					    mesh_dof.data(),
+					    mesh_l2g.data(),
+					    mesh_trial_ref.data(),
+					    mesh_grad_trial_ref.data(),
 					    jac,
 					    jacDet,
 					    jacInv,
 					    x,y,z);
 		ck.calculateMappingVelocity_element(eN,
 						    k,
-						    mesh_velocity_dof,
-						    mesh_l2g,
-						    mesh_trial_ref,
+						    mesh_velocity_dof.data(),
+						    mesh_l2g.data(),
+						    mesh_trial_ref.data(),
 						    xt,yt,zt);
 		//get the physical integration weight
-		dV = fabs(jacDet)*dV_ref[k];
+		dV = fabs(jacDet)*dV_ref.data()[k];
 		ck.calculateG(jacInv,G,G_dd_G,tr_G);
 		//get the trial function gradients
-		ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		//get the solution
-		ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
+		ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
 		//get the solution gradients
-		ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+		ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
 		//precalculate test function products with integration weights
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
-		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		    u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 		    for (int I=0;I<nSpace;I++)
 		      {
 			u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -3050,7 +3053,7 @@ namespace proteus
 		//
 		//calculate pde coefficients and derivatives at quadrature points
 		//
-		evaluateCoefficients(&velocity[eN_k_nSpace],
+		evaluateCoefficients(&velocity.data()[eN_k_nSpace],
 				     u,
 				     grad_u,
 				     m,
@@ -3073,7 +3076,7 @@ namespace proteus
 		//calculate time derivatives
 		//
 		ck.bdf(alphaBDF,
-		       q_m_betaBDF[eN_k],
+		       q_m_betaBDF.data()[eN_k],
 		       m,
 		       dm,
 		       m_t,
@@ -3096,7 +3099,7 @@ namespace proteus
 		    //int eN_k_j=eN_k*nDOF_trial_element+j;
 		    //int eN_k_j_nSpace = eN_k_j*nSpace;
 		    int j_nSpace = j*nSpace;
-		    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+		    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j]) +
 		      ck.HamiltonianJacobian_strong(dH,&u_grad_trial[j_nSpace]) +
 		      MOVING_DOMAIN*ck.AdvectionJacobian_strong(df,&u_grad_trial[j_nSpace]);
 
@@ -3106,10 +3109,10 @@ namespace proteus
 		for (int I=0;I<nSpace;I++)
 		  subgridErrorVelocity[I] = dH[I] - MOVING_DOMAIN*df[I];
 
-		calculateSubgridError_tau(elementDiameter[eN],
+		calculateSubgridError_tau(elementDiameter.data()[eN],
 					  dm_t,
 					  subgridErrorVelocity,//dH,
-					  cfl[eN_k],
+					  cfl.data()[eN_k],
 					  tau0);
 
 		calculateSubgridError_tau(Ct_sge,
@@ -3117,7 +3120,7 @@ namespace proteus
 					  dm_t,
 					  subgridErrorVelocity,//dH,
 					  tau1,
-					  cfl[eN_k]);
+					  cfl.data()[eN_k]);
 		tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
 
 		for(int j=0;j<nDOF_trial_element;j++)
@@ -3134,7 +3137,7 @@ namespace proteus
 			int j_nSpace = j*nSpace;
 			int i_nSpace = i*nSpace;
 			elementJacobian_u_u[i][j] +=
-			  dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
+			  dt*ck.MassJacobian_weak(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j],u_test_dV[i]) +
 			  ck.NumericalDiffusionJacobian(std::pow(he,2),&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
 		      }//j
 		  }//i
@@ -3148,7 +3151,7 @@ namespace proteus
 		for (int j=0;j<nDOF_trial_element;j++)
 		  {
 		    int eN_i_j = eN_i*nDOF_trial_element+j;
-		    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+		    globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i][j];
 		  }//j
 	      }//i
 	  }//elements

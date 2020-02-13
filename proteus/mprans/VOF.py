@@ -25,6 +25,9 @@ from proteus.LinearAlgebraTools import SparseMat
 from proteus.NonlinearSolvers import ExplicitLumpedMassMatrix,ExplicitConsistentMassMatrixForVOF,TwoStageNewton
 from proteus import TimeIntegration
 from proteus.mprans.cVOF import *
+from proteus import *
+from proteus.Transport import *
+from proteus.Transport import OneLevelTransport
 #from . import cVOF3P
 
 class SubgridError(SGE_base):
@@ -1304,7 +1307,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
