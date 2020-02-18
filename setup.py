@@ -6,12 +6,11 @@ for key, value in cfg_vars.items():
     if type(value) == str:
         cfg_vars[key] = cfg_vars[key].replace("-Wstrict-prototypes", "")
         cfg_vars[key] = cfg_vars[key].replace("-Wall", "-w")
-        cfg_vars[key] = cfg_vars[key].replace("-Wl,-O3","")
-        cfg_vars[key] = cfg_vars[key].replace("-Wl,-O2","")
-        cfg_vars[key] = cfg_vars[key].replace("-O3", "")
-        cfg_vars[key] = cfg_vars[key].replace("-O2", "")
+        cfg_vars[key] = cfg_vars[key].replace("-Wl,-O3","-g")
+        cfg_vars[key] = cfg_vars[key].replace("-Wl,-O2","-g")
+        cfg_vars[key] = cfg_vars[key].replace("-O3", "-g")
+        cfg_vars[key] = cfg_vars[key].replace("-O2", "-g")
         cfg_vars[key] = cfg_vars[key].replace("-DNDEBUG", "-UNDEBUG")
-        cfg_vars[key] = cfg_vars[key] + " -g"
 
 from distutils.core import setup
 from Cython.Build import cythonize
