@@ -4,11 +4,11 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cNCLS import *
-import numpy
-from proteus import *
-from proteus.Transport import *
-from proteus.Transport import OneLevelTransport
-
+import numpy as np
+from proteus.Transport import OneLevelTransport, cfemIntegrals, SparseMat
+from proteus.Transport import TC_base, logEvent, NonlinearEquation, Quadrature, Comm
+from proteus.Transport import memory, FluxBoundaryConditions, ExplicitLumpedMassMatrix
+from proteus.Transport import globalMax, SSP, ExplicitConsistentMassMatrixWithRedistancing
 
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd):
@@ -119,8 +119,8 @@ class RKEV(proteus.TimeIntegration.SSP):
         beta are all 1's here
         mwf not used right now
         """
-        self.alpha = numpy.zeros((self.nStages, self.nStages), 'd')
-        self.dcoefs = numpy.zeros((self.nStages), 'd')
+        self.alpha = np.zeros((self.nStages, self.nStages), 'd')
+        self.dcoefs = np.zeros((self.nStages), 'd')
 
     def updateStage(self):
         """
@@ -340,8 +340,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 self.ebq_v = None
             if ('u', 0) not in self.model.ebq and ('u', 0) in self.flowModel.ebq:
-                self.model.ebq[('u', 0)] = numpy.zeros(self.flowModel.ebq[('u', 0)].shape, 'd')
-                self.model.ebq[('grad(u)', 0)] = numpy.zeros(self.flowModel.ebq[('grad(u)', 0)].shape, 'd')
+                self.model.ebq[('u', 0)] = np.zeros(self.flowModel.ebq[('u', 0)].shape, 'd')
+                self.model.ebq[('grad(u)', 0)] = np.zeros(self.flowModel.ebq[('grad(u)', 0)].shape, 'd')
             if ('v', 1) in self.flowModel.ebq:
                 self.model.u[0].getValuesTrace(self.flowModel.ebq[('v', 1)], self.model.ebq[('u', 0)])
                 self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)', 1)], self.model.ebq[('grad(u)', 0)])
@@ -352,15 +352,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def initializeElementQuadrature(self, t, cq):
         if self.flowModelIndex is None:
-            self.q_v = numpy.ones(cq[('grad(u)', 0)].shape, 'd')
+            self.q_v = np.ones(cq[('grad(u)', 0)].shape, 'd')
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         if self.flowModelIndex is None:
-            self.ebq_v = numpy.ones(cebq[('grad(u)', 0)].shape, 'd')
+            self.ebq_v = np.ones(cebq[('grad(u)', 0)].shape, 'd')
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         if self.flowModelIndex is None:
-            self.ebqe_v = numpy.ones(cebqe[('grad(u)', 0)].shape, 'd')
+            self.ebqe_v = np.ones(cebqe[('grad(u)', 0)].shape, 'd')
         if self.RD_modelIndex is None:
             self.ebqe_rd_u = cebqe[('u',0)]
 
@@ -661,32 +661,32 @@ class LevelModel(OneLevelTransport):
         self.ebq_global = {}
         self.ebqe = {}
         self.phi_ip = {}
-        self.edge_based_cfl = numpy.zeros(self.u[0].dof.shape)
+        self.edge_based_cfl = np.zeros(self.u[0].dof.shape)
         # mesh
-        self.q['x'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
-        self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary, 3), 'd')
-        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('u', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('grad(u)', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q[('m_last', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('mt', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q['dV'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q['dV_last'] = -1000 * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('m_tmp', 0)] = self.q[('u', 0)]  # numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('m', 0)] = self.q[('u', 0)]  # numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q['x'] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
+        self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary, 3), 'd')
+        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('grad(u)', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        self.q[('m_last', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('mt', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['dV'] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['dV_last'] = -1000 * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('m_tmp', 0)] = self.q[('u', 0)]  # np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('m', 0)] = self.q[('u', 0)]  # np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         # cek todo for NCLS we really don't need dH because it's just q_v from the flow model
-        self.q[('dH', 0, 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q[('dH_sge', 0, 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q[('cfl', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('numDiff', 0, 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('grad(u)', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+        self.q[('dH', 0, 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        self.q[('dH_sge', 0, 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        self.q[('cfl', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('numDiff', 0, 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.ebqe[('u', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('grad(u)', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                  self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
         # mwf for running as standalone
-        self.ebqe[('dH', 0, 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+        self.ebqe[('dH', 0, 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
-        self.q[('dm', 0, 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('H', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dm', 0, 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('H', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set([('u', ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature = set()
@@ -703,9 +703,9 @@ class LevelModel(OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,), 'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
-            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+            self.inflowBoundaryBC[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,), 'i')
+            self.inflowBoundaryBC_values[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
+            self.inflowFlux[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.internalNodes = set(range(self.mesh.nNodes_global))
         # identify the internal nodes this is ought to be in mesh
         # \todo move this to mesh
@@ -718,7 +718,7 @@ class LevelModel(OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global, i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray = numpy.zeros((self.nNodes_internal,), 'i')
+        self.internalNodesArray = np.zeros((self.nNodes_internal,), 'i')
         for nI, n in enumerate(self.internalNodes):
             self.internalNodesArray[nI] = n
         #
@@ -768,7 +768,7 @@ class LevelModel(OneLevelTransport):
         self.SmoothingMatrix_a = None
         self.SmoothingMatrix_sparseFactor = None
         self.Jacobian_sparseFactor = None
-        self.uStar_dof = numpy.copy(self.u[0].dof)
+        self.uStar_dof = np.copy(self.u[0].dof)
         # Mass matrices
         self.ML = None  # lumped mass matrix
         self.MC_global = None  # consistent mass matrix
@@ -776,9 +776,9 @@ class LevelModel(OneLevelTransport):
         self.cterm_global = None
 
         # interface locator
-        self.interface_locator = numpy.zeros(self.u[0].dof.shape,'d')        
+        self.interface_locator = np.zeros(self.u[0].dof.shape,'d')        
         # Aux quantity at DOFs to be filled by optimized code (MQL)
-        self.quantDOFs = numpy.zeros(self.u[0].dof.shape, 'd')
+        self.quantDOFs = np.zeros(self.u[0].dof.shape, 'd')
 
         comm = Comm.get()
         self.comm = comm
@@ -827,7 +827,7 @@ class LevelModel(OneLevelTransport):
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         # TODO get rid of this
 #        for ci,fbcObject  in self.fluxBoundaryConditionsObjectsDict.iteritems():
-#            self.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
+#            self.ebqe[('advectiveFlux_bc_flag',ci)] = np.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
 #            for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
 #                if self.coefficients.advection.has_key(ci):
 #                    self.ebqe[('advectiveFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
@@ -836,9 +836,9 @@ class LevelModel(OneLevelTransport):
         if hasattr(self.numericalFlux, 'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
         if not hasattr(self.numericalFlux, 'isDOFBoundary'):
-            self.numericalFlux.isDOFBoundary = {0: numpy.zeros(self.ebqe[('u', 0)].shape, 'i')}
+            self.numericalFlux.isDOFBoundary = {0: np.zeros(self.ebqe[('u', 0)].shape, 'i')}
         if not hasattr(self.numericalFlux, 'ebqe'):
-            self.numericalFlux.ebqe = {('u', 0): numpy.zeros(self.ebqe[('u', 0)].shape, 'd')}
+            self.numericalFlux.ebqe = {('u', 0): np.zeros(self.ebqe[('u', 0)].shape, 'd')}
         # TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag = 0
@@ -859,7 +859,7 @@ class LevelModel(OneLevelTransport):
         else:
             self.MOVING_DOMAIN = 0.0
         if self.mesh.nodeVelocityArray is None:
-            self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape, 'd')
+            self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape, 'd')
 
         self.waterline_calls = 0
         self.waterline_prints = 0
@@ -904,7 +904,7 @@ class LevelModel(OneLevelTransport):
         self.setUnknowns(self.timeIntegration.u)
 
         rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
-        edge_based_cfl = numpy.zeros(len(rowptr) - 1)
+        edge_based_cfl = np.zeros(len(rowptr) - 1)
 
         assert (self.cterm_global is not None), "C matrices have not been computed"
         rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
@@ -912,12 +912,12 @@ class LevelModel(OneLevelTransport):
         if (self.nSpace_global == 3):
             rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
-            Cz = numpy.zeros(Cx.shape, 'd')
+            Cz = np.zeros(Cx.shape, 'd')
 
         if (self.coefficients.pure_redistancing == True):
-            u_dof_old = numpy.copy(self.u_dof_old)
+            u_dof_old = np.copy(self.u_dof_old)
         else:
-            u_dof_old = numpy.copy(self.u[0].dof)
+            u_dof_old = np.copy(self.u[0].dof)
 
         L2_norm = self.ncls.calculateRedistancingResidual(  # element
             self.timeIntegration.dt * (self.coefficients.cfl_redistancing if self.coefficients.pure_redistancing == False else 1.),
@@ -1029,7 +1029,7 @@ class LevelModel(OneLevelTransport):
             self.free_u = u.copy()
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
-            self.u_dof_old = numpy.copy(self.u[0].dof)
+            self.u_dof_old = np.copy(self.u[0].dof)
         ########################
         ### COMPUTE C MATRIX ###
         ########################
@@ -1130,7 +1130,7 @@ class LevelModel(OneLevelTransport):
                                           self.nDOF_test_element[0],
                                           self.nDOF_trial_element[0]), 'd')
                 self.cterm_a[d] = nzval.copy()
-                #self.cterm_a[d] = numpy.zeros(nzval.size)
+                #self.cterm_a[d] = np.zeros(nzval.size)
                 self.cterm_global[d] = SparseMat(self.nFreeDOF_global[0],
                                                  self.nFreeDOF_global[0],
                                                  nnz,
@@ -1157,7 +1157,7 @@ class LevelModel(OneLevelTransport):
         if (self.nSpace_global == 3):
             rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
         else:
-            Cz = numpy.zeros(Cx.shape, 'd')
+            Cz = np.zeros(Cx.shape, 'd')
 
         # zero out residual
         r.fill(0.0)
@@ -1301,11 +1301,11 @@ class LevelModel(OneLevelTransport):
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape, 'd')
+            self.globalResidualDummy = np.zeros(r.shape, 'd')
 
     def getSmoothingMatrix(self):
         #import superluWrappers
-        #import numpy
+        #import np
         import pdb
 
         if (self.SmoothingMatrix is None):
@@ -1378,7 +1378,7 @@ class LevelModel(OneLevelTransport):
 
     def getJacobian(self, jacobian):
         #import superluWrappers
-        #import numpy
+        #import np
         import pdb
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
@@ -1518,8 +1518,8 @@ class LevelModel(OneLevelTransport):
     def computeWaterline(self, t):
         self.waterline_calls += 1
         if self.coefficients.waterline_interval > 0 and self.waterline_calls % self.coefficients.waterline_interval == 0:
-            self.waterline_npoints = numpy.zeros((1,), 'i')
-            self.waterline_data = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nSpace_global), 'd')
+            self.waterline_npoints = np.zeros((1,), 'i')
+            self.waterline_data = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nSpace_global), 'd')
             self.ncls.calculateWaterline(  # element
                 self.waterline_npoints,
                 self.waterline_data,
@@ -1579,7 +1579,7 @@ class LevelModel(OneLevelTransport):
             from proteus import Comm
             comm = Comm.get()
             filename = os.path.join(self.coefficients.opts.dataDir,  "waterline." + str(comm.rank()) + "." + str(self.waterline_prints))
-            numpy.save(filename, self.waterline_data[0:self.waterline_npoints[0]])
+            np.save(filename, self.waterline_data[0:self.waterline_npoints[0]])
             self.waterline_prints += 1
 
     def updateAfterMeshMotion(self):
