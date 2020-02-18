@@ -219,9 +219,9 @@ namespace proteus
                                    xt::pyarray<double>& ebq_global_grad_phi_s,
                                    xt::pyarray<double>& ebq_particle_velocity_s,
                                    int     nParticles,
-                                   xt::pyarray<double> &particle_netForces,
-                                   xt::pyarray<double> &particle_netMoments,
-                                   xt::pyarray<double> &particle_surfaceArea,
+                                   xt::pyarray<double>& particle_netForces,
+                                   xt::pyarray<double>& particle_netMoments,
+                                   xt::pyarray<double>& particle_surfaceArea,
                                    int    nElements_owned,
                                    double particle_nitsche,
                                    double particle_epsFact,
@@ -232,7 +232,7 @@ namespace proteus
                                    xt::pyarray<double>& phi_solid_nodes,
                                    xt::pyarray<double>& distance_to_solids,
                                    bool useExact,
-                                   double* isActiveDOF) = 0;
+                                   xt::pyarray<double>& isActiveDOF) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -434,7 +434,7 @@ namespace proteus
                                    double particle_penalty_constant,
                                    double ghost_penalty_constant,
                                    bool useExact,
-                                   double* isActiveDOF) = 0;
+                                   xt::pyarray<double>& isActiveDOF) = 0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           xt::pyarray<int>& exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -2602,9 +2602,9 @@ namespace proteus
                              xt::pyarray<double>& ebq_global_grad_phi_s,
                              xt::pyarray<double>& ebq_particle_velocity_s,
                              int nParticles,
-                             xt::pyarray<double> &particle_netForces,
-                             xt::pyarray<double> &particle_netMoments,
-                             xt::pyarray<double> &particle_surfaceArea,
+                             xt::pyarray<double>& particle_netForces,
+                             xt::pyarray<double>& particle_netMoments,
+                             xt::pyarray<double>& particle_surfaceArea,
                              int nElements_owned,
                              double particle_nitsche,
                              double particle_epsFact,
@@ -2615,7 +2615,7 @@ namespace proteus
                              xt::pyarray<double>& phi_solid_nodes,
                              xt::pyarray<double>& distance_to_solids,
                              bool useExact,
-                             double* isActiveDOF)
+                             xt::pyarray<double>& isActiveDOF)
       {
         logEvent("Entered mprans calculateResidual",6);
         gf.useExact = useExact;
@@ -4679,7 +4679,7 @@ namespace proteus
                              double particle_penalty_constant,
                              double ghost_penalty_constant,
                              bool useExact,
-                             double* isActiveDOF)
+                             xt::pyarray<double>& isActiveDOF)
       {
           const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
           std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);

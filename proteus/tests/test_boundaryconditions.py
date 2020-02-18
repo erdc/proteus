@@ -905,8 +905,8 @@ class TestBC(unittest.TestCase):
 #        npt.assert_allclose(BC.u_dirichlet.uOfXT(x, t), uDir[0], atol=1e-10)
 #        npt.assert_allclose(BC.v_dirichlet.uOfXT(x, t), uDir[1], atol=1e-10)
 #        npt.assert_allclose(BC.w_dirichlet.uOfXT(x, t), uDir[2], atol=1e-10)
-        npt.assert_allclose(BC.k_dirichlet.uOfXT(x, t), kappaP, atol=1e-10)
-        npt.assert_allclose(BC.dissipation_dirichlet.uOfXT(x, t), dissipationP, atol=1e-10)
+        npt.assert_allclose(BC.k_dirichlet.uOfXT(x, t, uDir), kappaP, atol=1e-10)
+        npt.assert_allclose(BC.dissipation_dirichlet.uOfXT(x, t, uDir), dissipationP, atol=1e-10)
         
 
 

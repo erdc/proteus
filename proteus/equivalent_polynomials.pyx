@@ -50,55 +50,55 @@ cdef class Simplex:
     def calculate(self, np.ndarray phi_dof, np.ndarray phi_nodes, np.ndarray xi):
         self.xiBuffer[:xi.shape[0]]=xi
         if (self.nSpace,self.nP) == (1,1):
-            icase = self.s11.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s11.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s11.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s11.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s11.get_D())
             self.inside_out = self.s11.inside_out
         elif (self.nSpace,self.nP) == (1,2):
-            icase = self.s12.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s12.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s12.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s12.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s12.get_D())
             self.inside_out = self.s12.inside_out
         elif (self.nSpace,self.nP) == (1,3):
-            icase = self.s13.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s13.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s13.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s13.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s13.get_D())
             self.inside_out = self.s13.inside_out
         elif (self.nSpace,self.nP) == (2,1):
-            icase = self.s21.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s21.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s21.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s21.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s21.get_D())
             self.inside_out = self.s21.inside_out
         elif (self.nSpace,self.nP) == (2,2):
-            icase = self.s22.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s22.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s22.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s22.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s22.get_D())
             self.inside_out = self.s22.inside_out
         elif (self.nSpace,self.nP) == (2,3):
-            icase = self.s23.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s23.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s23.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s23.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s23.get_D())
             self.inside_out = self.s23.inside_out
         if (self.nSpace,self.nP) == (3,1):
-            icase = self.s31.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s31.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s31.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s31.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s31.get_D())
             self.inside_out = self.s31.inside_out
         elif (self.nSpace,self.nP) == (3,2):
-            icase = self.s32.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s32.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s32.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s32.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s32.get_D())
             self.inside_out = self.s32.inside_out
         elif (self.nSpace,self.nP) == (3,3):
-            icase = self.s33.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),True)
+            icase = self.s33.calculate(<double*>(phi_dof.data), <double*>(phi_nodes.data), <double*>(self.xiBuffer.data),False)
             self._H = np.asarray(<double[:self.nQ]>self.s33.get_H())
             self._ImH = np.asarray(<double[:self.nQ]>self.s33.get_ImH())
             self._D = np.asarray(<double[:self.nQ]>self.s33.get_D())

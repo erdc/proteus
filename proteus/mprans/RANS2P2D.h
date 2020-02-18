@@ -241,7 +241,7 @@ namespace proteus
                                    xt::pyarray<double>& phi_solid_nodes,
                                    xt::pyarray<double>& distance_to_solids,
                                    bool useExact,
-                                   double* isActiveDOF) = 0;
+                                   xt::pyarray<double>& isActiveDOF) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -445,7 +445,7 @@ namespace proteus
                                    double particle_penalty_constant,
                                    double ghost_penalty_constant,
                                    bool useExact,
-                                   double* isActiveDOF) = 0;
+                                   xt::pyarray<double>& isActiveDOF) = 0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                           xt::pyarray<int>& exteriorElementBoundariesArray,
                                           int nInteriorElementBoundaries_global,
@@ -2181,7 +2181,7 @@ namespace proteus
                              xt::pyarray<double>& phi_solid_nodes,
                              xt::pyarray<double>& distance_to_solids,
                              bool useExact,
-                             double* isActiveDOF)
+                             xt::pyarray<double>& isActiveDOF)
       {
         logEvent("Entered mprans calculateResidual",6);
         gf.useExact = useExact;
@@ -3361,7 +3361,7 @@ namespace proteus
                   }
                 globalResidual.data()[offset_p+stride_p*rp_l2g.data()[eN_i]]+=elementResidual_p[i];
                 if (element_active)
-                  isActiveDOF[offset_p+stride_p*rp_l2g.data()[eN_i]] = 1.0;
+                  isActiveDOF.data()[offset_p+stride_p*rp_l2g.data()[eN_i]] = 1.0;
               }
             for(int i=0;i<nDOF_v_test_element;i++)
               {
@@ -3375,8 +3375,8 @@ namespace proteus
                 globalResidual.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]]+=elementResidual_v[i];
                 if (element_active)
                   {
-                    isActiveDOF[offset_u+stride_u*rvel_l2g.data()[eN_i]] = 1.0;
-                    isActiveDOF[offset_v+stride_v*rvel_l2g.data()[eN_i]] = 1.0;
+                    isActiveDOF.data()[offset_u+stride_u*rvel_l2g.data()[eN_i]] = 1.0;
+                    isActiveDOF.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]] = 1.0;
                   }
               }//i
             mesh_volume_conservation += mesh_volume_conservation_element;
@@ -4688,7 +4688,7 @@ namespace proteus
                              double particle_penalty_constant,
                              double ghost_penalty_constant,
                              bool useExact,
-                             double* isActiveDOF)
+                             xt::pyarray<double>& isActiveDOF)
       {
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
