@@ -777,77 +777,6 @@ class NS_base(object):  # (HasTraits):
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
-    def PUMI_adaptMesh(self,inputString=b""):
-        """
-        Uses a computed error field to construct a size field and adapts
-        the mesh using SCOREC tools (a.k.a. MeshAdapt)
-        """
-        ##
-        ## zhang-alvin's BC communication for N-S error estimation
-        ##
-        #  #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
-        #    #if idx>0:
-        #    #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
-        #    #else:
-        #    #    diff_flux = numpy.empty([2,2]) #dummy diff flux
-        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
-        #    #    idx,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-        #    #    diff_flux)
-        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
-        #    #    idx,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-        #    #    diff_flux)
-
-        p0 = self.pList[0]#.ct
-        n0 = self.nList[0]#.ct
-
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-        else:
-            domain = p0.domain
-
-        sfConfig = domain.PUMIMesh.size_field_config()
-        if(hasattr(self,"nSolveSteps")):
-          logEvent("h-adapt mesh by calling AdaptPUMIMesh at step %s" % self.nSolveSteps)
-        if(sfConfig==b"pseudo"):
-            logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
-        else:
-            domain.PUMIMesh.adaptPUMIMesh(inputString)
-
-        #code to suggest adapting until error is reduced;
-        #not fully baked and can lead to infinite loops of adaptation
-        #if(sfConfig=="ERM"):
-        #  domain.PUMIMesh.get_local_error()
-        #  while(domain.PUMIMesh.willAdapt()):
-        #    domain.PUMIMesh.adaptPUMIMesh()
-        #    domain.PUMIMesh.get_local_error()
-
-        logEvent("Converting PUMI mesh to Proteus")
-        #ibaned: PUMI conversion #2
-        #TODO: this code is nearly identical to
-        #PUMI conversion #1, they should be merged
-        #into a function
-        if domain.nd == 3:
-          mesh = MeshTools.TetrahedralMesh()
-        else:
-          mesh = MeshTools.TriangularMesh()
-
-        mesh.convertFromPUMI(domain,
-                             domain.PUMIMesh,
-                             domain.faceList,
-                             domain.regList,
-                             parallel = self.comm.size() > 1,
-                             dim = domain.nd)
-
-        Adapt.PUMI_reallocate(self,mesh)
-        Adapt.PUMI2Proteus(self,domain)
-      ##chitak end Adapt
-
     ## compute the solution
 
     def hotstartWithPUMI(self):
@@ -1126,10 +1055,10 @@ class NS_base(object):  # (HasTraits):
 
             Adapt.PUMI_transferFields(self)
             logEvent("Initial Adapt before Solve")
-            self.PUMI_adaptMesh(b"interface")
+            Adapt.PUMI_adaptMesh(self,b"interface")
             Adapt.PUMI_transferFields(self)
             logEvent("Initial Adapt 2 before Solve")
-            self.PUMI_adaptMesh(b"interface")
+            Adapt.PUMI_adaptMesh(self,b"interface")
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1381,7 +1310,7 @@ class NS_base(object):  # (HasTraits):
                 self.nSolveSteps += 1
                 import gc; gc.collect()
                 if(Adapt.PUMI_estimateError(self)):
-                    self.PUMI_adaptMesh()
+                    Adapt.PUMI_adaptMesh(self)
                 #
                 if measureSpeed and startToMeasureSpeed and self.comm.isMaster():
                     numTimeSteps += 1

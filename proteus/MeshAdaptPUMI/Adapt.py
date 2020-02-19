@@ -648,3 +648,49 @@ def PUMI_estimateError(solver):
                    lm.u[0].dof[:]=lm.u_store[0].dof
 
    return adaptMeshNow
+
+def PUMI_adaptMesh(solver,inputString=b""):
+   """
+   Uses a computed error field to construct a size field and adapts
+   the mesh using SCOREC tools (a.k.a. MeshAdapt)
+   """
+   ##
+
+   p0 = solver.pList[0]#.ct
+   n0 = solver.nList[0]#.ct
+
+   if solver.TwoPhaseFlow:
+       domain = p0.myTpFlowProblem.domain
+   else:
+       domain = p0.domain
+
+   sfConfig = domain.PUMIMesh.size_field_config()
+   if(hasattr(solver,"nSolveSteps")):
+     logEvent("h-adapt mesh by calling AdaptPUMIMesh at step %s" % solver.nSolveSteps)
+   if(sfConfig==b"pseudo"):
+       logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
+   else:
+       domain.PUMIMesh.adaptPUMIMesh(inputString)
+
+   logEvent("Converting PUMI mesh to Proteus")
+   #ibaned: PUMI conversion #2
+   #TODO: this code is nearly identical to
+   #PUMI conversion #1, they should be merged
+   #into a function
+   if domain.nd == 3:
+     mesh = MeshTools.TetrahedralMesh()
+   else:
+     mesh = MeshTools.TriangularMesh()
+
+   mesh.convertFromPUMI(domain,
+                        domain.PUMIMesh,
+                        domain.faceList,
+                        domain.regList,
+                        parallel = solver.comm.size() > 1,
+                        dim = domain.nd)
+
+   PUMI_reallocate(solver,mesh)
+   PUMI2Proteus(solver,domain)
+ ##chitak end Adapt
+
+
