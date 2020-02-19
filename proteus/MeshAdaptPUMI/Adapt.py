@@ -4,14 +4,16 @@ from builtins import range
 import proteus
 import sys
 import numpy
-from proteus import Profiling
+from proteus.Profiling import logEvent
+from proteus import MeshTools
+from proteus import SimTools
 
 
 def reconstructMesh(domain,mesh):
 
    if hasattr(domain,"PUMIMesh") and not isinstance(domain,proteus.Domain.PUMIDomain) :
 
-     Profiling.logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
+     logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
 
      nd = domain.nd
      from scipy import spatial
@@ -40,6 +42,55 @@ def reconstructMesh(domain,mesh):
          meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
 
      domain.PUMIMesh.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
+
+def PUMI_reallocate(solver,mesh):
+   p0 = solver.pList[0]
+   n0 = solver.nList[0]
+   if solver.TwoPhaseFlow:
+       nLevels = p0.myTpFlowProblem.general['nLevels']
+       nLayersOfOverlapForParallel = p0.myTpFlowProblem.general['nLayersOfOverlapForParallel']
+       parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+       domain = p0.myTpFlowProblem.domain
+       domain.MeshOptions.setParallelPartitioningType('element')
+   else:
+       nLevels = n0.nLevels
+       nLayersOfOverlapForParallel = n0.nLayersOfOverlapForParallel
+       parallelPartitioningType = n0.parallelPartitioningType
+       domain = p0.domain
+
+   logEvent("Generating %i-level mesh from PUMI mesh" % (nLevels,))
+   if domain.nd == 3:
+     mlMesh = MeshTools.MultilevelTetrahedralMesh(
+         0,0,0,skipInit=True,
+         nLayersOfOverlap=nLayersOfOverlapForParallel,
+         parallelPartitioningType=parallelPartitioningType)
+   if domain.nd == 2:
+     mlMesh = MeshTools.MultilevelTriangularMesh(
+         0,0,0,skipInit=True,
+         nLayersOfOverlap=nLayersOfOverlapForParallel,
+         parallelPartitioningType=parallelPartitioningType)
+   if solver.comm.size()==1:
+       mlMesh.generateFromExistingCoarseMesh(
+           mesh,nLevels,
+           nLayersOfOverlap=nLayersOfOverlapForParallel,
+           parallelPartitioningType=parallelPartitioningType)
+   else:
+       mlMesh.generatePartitionedMeshFromPUMI(
+           mesh,nLevels,
+           nLayersOfOverlap=nLayersOfOverlapForParallel)
+   solver.mlMesh_nList=[]
+   for p in solver.pList:
+       solver.mlMesh_nList.append(mlMesh)
+   if (domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+       mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
+   if (domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+       mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
+       mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
+
+   #may want to trigger garbage collection here
+   solver.modelListOld = solver.modelList
+   logEvent("Allocating models on new mesh")
+   solver.allocateModels()
 
 def PUMI_recomputeStructures(solver,modelListOld):
 
@@ -151,4 +202,213 @@ def PUMI_recomputeStructures(solver,modelListOld):
          #update the eddy-viscosity history
          lm.calculateAuxiliaryQuantitiesAfterStep()
 
+def PUMI2Proteus(solver,domain):
+   #p0 = solver.pList[0] #This can probably be cleaned up somehow
+   #n0 = solver.nList[0]
+   p0 = solver.pList[0]
+   n0 = solver.nList[0]
 
+   modelListOld = solver.modelListOld
+   logEvent("Attach auxiliary variables to new models")
+   #(cut and pasted from init, need to cleanup)
+   solver.simOutputList = []
+   solver.auxiliaryVariables = {}
+   solver.newAuxiliaryVariables = {}
+   if solver.simFlagsList is not None:
+       for p, n, simFlags, model, index in zip(
+               solver.pList,
+               solver.nList,
+               solver.simFlagsList,
+               solver.modelList,
+               list(range(len(solver.pList)))):
+           solver.simOutputList.append(
+               SimTools.SimulationProcessor(
+                   flags=simFlags,
+                   nLevels=n.nLevels,
+                   pFile=p,
+                   nFile=n,
+                   analyticalSolution=p.analyticalSolution))
+           model.simTools = solver.simOutputList[-1]
+
+           #Code to refresh attached gauges. The goal is to first purge
+           #existing point gauge node associations as that may have changed
+           #If there is a line gauge, then all the points must be deleted
+           #and remade.
+           from collections import OrderedDict
+           for av in n.auxiliaryVariables:
+             if hasattr(av,'adapted'):
+               av.adapted=True
+               for point, l_d in av.points.items():
+                 if 'nearest_node' in l_d:
+                   l_d.pop('nearest_node')
+               if(av.isLineGauge or av.isLineIntegralGauge): #if line gauges, need to remove all points
+                 av.points = OrderedDict()
+               if(av.isGaugeOwner):
+                 if(solver.comm.rank()==0 and not av.file.closed):
+                   av.file.close()
+                 for item in av.pointGaugeVecs:
+                   item.destroy()
+                 for item in av.pointGaugeMats:
+                   item.destroy()
+                 for item in av.dofsVecs:
+                   item.destroy()
+
+                 av.pointGaugeVecs = []
+                 av.pointGaugeMats = []
+                 av.dofsVecs = []
+                 av.field_ids=[]
+                 av.isGaugeOwner=False
+           ##reinitialize auxiliaryVariables
+           solver.auxiliaryVariables[model.name]= [av.attachModel(model,solver.ar[index]) for av in n.auxiliaryVariables]
+   else:
+       for p,n,s,model,index in zip(
+               solver.pList,
+               solver.nList,
+               solver.sList,
+               solver.modelList,
+               list(range(len(solver.pList)))):
+           solver.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
+           model.simTools = solver.simOutputList[-1]
+           model.viewer = Viewers.V_base(p,n,s)
+           solver.auxiliaryVariables[model.name]= [av.attachModel(model,solver.ar[index]) for av in n.auxiliaryVariables]
+   for avList in list(solver.auxiliaryVariables.values()):
+       for av in avList:
+           av.attachAuxiliaryVariables(solver.auxiliaryVariables)
+
+   logEvent("Transfering fields from PUMI to Proteus")
+   for m in solver.modelList:
+     for lm in m.levelModelList:
+       coef = lm.coefficients
+       if coef.vectorComponents is not None:
+         vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+         domain.PUMIMesh.transferFieldToProteus(
+                coef.vectorName.encode('utf-8'), vector)
+         for vci in range(len(coef.vectorComponents)):
+           lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
+         domain.PUMIMesh.transferFieldToProteus(
+                coef.vectorName.encode('utf-8')+b"_old", vector)
+         for vci in range(len(coef.vectorComponents)):
+           lm.u[coef.vectorComponents[vci]].dof_last[:] = vector[:,vci]
+         domain.PUMIMesh.transferFieldToProteus(
+                coef.vectorName.encode('utf-8')+b"_old_old", vector)
+         for vci in range(len(coef.vectorComponents)):
+           lm.u[coef.vectorComponents[vci]].dof_last_last[:] = vector[:,vci]
+
+         del vector
+       for ci in range(coef.nc):
+         if coef.vectorComponents is None or \
+            ci not in coef.vectorComponents:
+           scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+           domain.PUMIMesh.transferFieldToProteus(
+               coef.variableNames[ci].encode('utf-8'), scalar)
+           lm.u[ci].dof[:] = scalar[:,0]
+           domain.PUMIMesh.transferFieldToProteus(
+               coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
+           lm.u[ci].dof_last[:] = scalar[:,0]
+           domain.PUMIMesh.transferFieldToProteus(
+               coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
+           lm.u[ci].dof_last_last[:] = scalar[:,0]
+
+           del scalar
+
+   logEvent("Attaching models on new mesh to each other")
+   for m,ptmp,mOld in zip(solver.modelList, solver.pList, modelListOld):
+       for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
+           #save_dof=[]
+           #for ci in range(lm.coefficients.nc):
+           #    save_dof.append( lm.u[ci].dof.copy())
+           #    lm.u[ci].dof_last = lm.u[ci].dof.copy()
+           lm.setFreeDOF(lu)
+           #for ci in range(lm.coefficients.nc):
+           #    assert((save_dof[ci] == lm.u[ci].dof).all())
+           lm.calculateSolutionAtQuadrature()
+           lm.timeIntegration.tLast = lmOld.timeIntegration.tLast
+           lm.timeIntegration.t = lmOld.timeIntegration.t
+           lm.timeIntegration.dt = lmOld.timeIntegration.dt
+           assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+           assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+           assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+       m.stepController.dt_model = mOld.stepController.dt_model
+       m.stepController.t_model = mOld.stepController.t_model
+       m.stepController.t_model_last = mOld.stepController.t_model_last
+       m.stepController.substeps = mOld.stepController.substeps
+
+   #if first time-step / initial adapt & not hotstarted
+   if(abs(solver.systemStepController.t_system_last - solver.tnList[0])< 1e-12 and not solver.opts.hotStart):
+       for index,p,n,m,simOutput in zip(range(len(solver.modelList)),solver.pList,solver.nList,solver.modelList,solver.simOutputList):
+           if p.initialConditions is not None:
+               logEvent("Setting initial conditions for "+p.name)
+               m.setInitialConditions(p.initialConditions,solver.tnList[0])
+
+
+   #Attach models and do sample residual calculation. The results are usually irrelevant.
+   #What's important right now is to re-establish the relationships between data structures.
+   #The necessary values will be written in later.
+   for m,ptmp,mOld in zip(solver.modelList, solver.pList, modelListOld):
+       logEvent("Attaching models to model "+ptmp.name)
+       m.attachModels(solver.modelList)
+   logEvent("Evaluating residuals and time integration")
+
+   for m,ptmp,mOld in zip(solver.modelList, solver.pList, modelListOld):
+       for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+           lm.timeTerm=True
+           lm.getResidual(lu,lr)
+           lm.timeIntegration.initializeTimeHistory(resetFromDOF=True)
+           lm.initializeTimeHistory()
+           lm.timeIntegration.initializeSpaceHistory()
+           lm.getResidual(lu,lr)
+           #lm.estimate_mt() #function is empty in all models
+       assert(m.stepController.dt_model == mOld.stepController.dt_model)
+       assert(m.stepController.t_model == mOld.stepController.t_model)
+       assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
+       logEvent("Initializing time history for model step controller")
+       if(not solver.opts.hotStart):
+         m.stepController.initializeTimeHistory()
+   #p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+
+       #m.stepController.initializeTimeHistory()
+   #domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+
+   solver.systemStepController.modelList = solver.modelList
+   solver.systemStepController.exitModelStep = {}
+   solver.systemStepController.controllerList = []
+   for model in solver.modelList:
+       solver.systemStepController.exitModelStep[model] = False
+       if model.levelModelList[-1].timeIntegration.isAdaptive:
+           solver.systemStepController.controllerList.append(model)
+           solver.systemStepController.maxFailures = model.stepController.maxSolverFailures
+
+   #this sets the timeIntegration time, which might be unnecessary for restart
+   if(solver.opts.hotStart):
+     solver.systemStepController.stepSequence=[(solver.systemStepController.t_system,m) for m in solver.systemStepController.modelList]
+   else:
+     solver.systemStepController.choose_dt_system()
+
+   #Don't do anything if this is the initial adapt
+   if(abs(solver.systemStepController.t_system_last - solver.tnList[0])> 1e-12  or
+     (abs(solver.systemStepController.t_system_last - solver.tnList[0]) < 1e-12 and solver.opts.hotStart)):
+       PUMI_recomputeStructures(solver,modelListOld)
+
+       #something different is needed for initial conditions
+       #do nothing if archive sequence step because there will be an archive
+       #if solver.archiveFlag != ArchiveFlags.EVERY_SEQUENCE_STEP:
+       #  solver.tCount+=1
+       #  for index,model in enumerate(solver.modelList):
+       #    #import pdb; pdb.set_trace()
+       #    solver.archiveSolution(
+       #      model,
+       #      index,
+       #      #solver.systemStepController.t_system_last+1.0e-6)
+       #      solver.systemStepController.t_system)
+
+       #This logic won't account for if final step doesn't match frequency or if adapt isn't being called
+       if((solver.PUMIcheckpointer.frequency>0) and ( (domain.PUMIMesh.nAdapt()!=0) and (domain.PUMIMesh.nAdapt() % solver.PUMIcheckpointer.frequency==0 ) or solver.systemStepController.t_system_last==solver.tnList[-1])):
+
+         solver.PUMIcheckpointer.checkpoint(solver.systemStepController.t_system_last)
+
+   #del modelListOld to free up memory
+   del modelListOld
+   import gc;
+   gc.disable()
+   gc.collect()
+   solver.comm.barrier()
