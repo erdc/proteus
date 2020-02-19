@@ -779,28 +779,6 @@ class NS_base(object):  # (HasTraits):
 
     ## compute the solution
 
-    def hotstartWithPUMI(self):
-      #Call restart functions
-      logEvent("Converting PUMI mesh to Proteus")
-      if self.pList[0].domain.nd == 3:
-        mesh = MeshTools.TetrahedralMesh()
-      else:
-        mesh = MeshTools.TriangularMesh()
-
-      mesh.convertFromPUMI(self.pList[0].domain.PUMIMesh,
-                             self.pList[0].domain.faceList,
-                             self.pList[0].domain.regList,
-                             parallel = self.comm.size() > 1,
-                             dim = self.pList[0].domain.nd)
-
-      if(self.pList[0].domain.checkpointInfo==None):
-        sys.exit("Need to specify checkpointInfo file in inputs")
-      else:
-        self.PUMIcheckpointer.DecodeModel(self.pList[0].domain.checkpointInfo)
-
-      self.PUMI_reallocate(mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
-      self.PUMI2Proteus(self.pList[0].domain)
-
     def calculateSolution(self,runName):
         """ Cacluate the PDEs numerical solution.
 

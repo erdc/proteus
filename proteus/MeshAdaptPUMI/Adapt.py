@@ -693,4 +693,27 @@ def PUMI_adaptMesh(solver,inputString=b""):
    PUMI2Proteus(solver,domain)
  ##chitak end Adapt
 
+def hotstartWithPUMI(solver):
+    #Call restart functions
+    logEvent("Converting PUMI mesh to Proteus")
+    if solver.pList[0].domain.nd == 3:
+        mesh = MeshTools.TetrahedralMesh()
+    else:
+        mesh = MeshTools.TriangularMesh()
+
+    mesh.convertFromPUMI(solver.pList[0].domain.PUMIMesh,
+                        solver.pList[0].domain.faceList,
+                        solver.pList[0].domain.regList,
+                        parallel = solver.comm.size() > 1,
+                        dim = solver.pList[0].domain.nd)
+
+    if(solver.pList[0].domain.checkpointInfo==None):
+        sys.exit("Need to specify checkpointInfo file in inputs")
+    else:
+        solver.PUMIcheckpointer.DecodeModel(solver.pList[0].domain.checkpointInfo)
+
+    PUMI_reallocate(solver,mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
+    PUMI2Proteus(solver,solver.pList[0].domain)
+
+
 
