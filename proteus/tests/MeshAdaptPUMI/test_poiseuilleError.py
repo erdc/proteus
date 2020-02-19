@@ -41,7 +41,7 @@ def test_poiseuilleError(verbose=0):
     g = numpy.asarray([0.0,0.0,0.0])
     deltaT = 1.0 #dummy number 
     epsFact = 1.0 #dummy number 
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
 
     #Poiseuille Flow
     Ly=0.2

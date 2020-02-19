@@ -52,21 +52,21 @@ nd = 3
 if spaceOrder == 1:
     hFactor=1.0
     if useHex:
-	 basis=C0_AffineLinearOnCubeWithNodalBasis
-         elementQuadrature = CubeGaussQuadrature(nd,2)
-         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)
+        basis=C0_AffineLinearOnCubeWithNodalBasis
+        elementQuadrature = CubeGaussQuadrature(nd,2)
+        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)
     else:
-    	 basis=C0_AffineLinearOnSimplexWithNodalBasis
-         elementQuadrature = SimplexGaussQuadrature(nd,3)
-         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+        basis=C0_AffineLinearOnSimplexWithNodalBasis
+        elementQuadrature = SimplexGaussQuadrature(nd,3)
+        elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 elif spaceOrder == 2:
     hFactor=0.5
     if useHex:
-	basis=C0_AffineLagrangeOnCubeWithNodalBasis
+        basis=C0_AffineLagrangeOnCubeWithNodalBasis
         elementQuadrature = CubeGaussQuadrature(nd,4)
         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)
     else:
-	basis=C0_AffineQuadraticOnSimplexWithNodalBasis
+        basis=C0_AffineQuadraticOnSimplexWithNodalBasis
         elementQuadrature = SimplexGaussQuadrature(nd,4)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
@@ -113,18 +113,19 @@ else:
         #which means that the geometric edge or vertex which lies on 2 or more geometric faces will be set with the boundaries tag of
         #the geomtric face which is latter in the order (email: chitak2@rpi.edu for any questions)
         domain.faceList=[[41],[46],[42],[44],[45],[43]]
+        domain.boundaryLabels=[1,2,3,4,5,6]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
         he =0.5
         adaptMesh = True
         adaptMesh_nSteps = 10
         adaptMesh_numIter = 2
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic',targetError=0.1,targetElementCount=1000)
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'ERM',maType=b'isotropic',targetError=0.1,targetElementCount=1000)
         #domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='isotropic')
         #read the geometry and mesh
         testDir=os.path.dirname(os.path.abspath(__file__))
         Model = testDir + '/../Couette.null'
         Mesh = testDir + '/../Couette.msh'
-        domain.PUMIMesh.loadModelAndMesh(Model,Mesh)
+        domain.PUMIMesh.loadModelAndMesh(Model.encode(),Mesh.encode())
 
 # Time stepping
 T=1.0
@@ -134,7 +135,7 @@ runCFL=0.33
 nDTout = int(round(old_div(T,dt_fixed)))
 
 # Numerical parameters
-ns_forceStrongDirichlet = False
+ns_forceStrongDirichlet = True#False
 if useMetrics:
     ns_shockCapturingFactor  = 0.25
     ns_lag_shockCapturing = True
