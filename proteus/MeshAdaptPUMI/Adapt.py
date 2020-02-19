@@ -558,3 +558,93 @@ def PUMI_transferFields(solver):
 
    del rho, nu, g, epsFact
 
+def PUMI_estimateError(solver):
+   """
+   Estimate the error using the classical element residual method by
+   Ainsworth and Oden and generates a corresponding error field.
+   """
+
+   p0 = solver.pList[0]
+   n0 = solver.nList[0]
+   #p0 = solver.pList[0].ct
+   #n0 = solver.nList[0].ct
+
+   adaptMeshNow = False
+
+   if solver.TwoPhaseFlow:
+       domain = p0.myTpFlowProblem.domain
+   else:
+       domain = p0.domain
+
+   if (hasattr(domain, 'PUMIMesh') and
+       domain.PUMIMesh.adaptMesh() and
+       solver.so.useOneMesh): #and
+       #solver.nSolveSteps%domain.PUMIMesh.numAdaptSteps()==0):
+       if (domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+           domain.PUMIMesh.transferFieldToPUMI("proteus_size",
+                                                  solver.modelList[0].levelModelList[0].mesh.size_field)
+       if (domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+           #Insert a function to define the size_scale/size_frame fields here.
+           #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
+           for i in range(len(solver.modelList[0].levelModelList[0].mesh.size_scale)):
+             solver.modelList[0].levelModelList[0].mesh.size_scale[i,0] =  1e-1
+             solver.modelList[0].levelModelList[0].mesh.size_scale[i,1] =  (old_div(solver.modelList[0].levelModelList[0].mesh.nodeArray[i,1],0.584))*1e-1
+             for j in range(3):
+               for k in range(3):
+                 if(j==k):
+                   solver.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 1.0
+                 else:
+                   solver.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 0.0
+           solver.modelList[0].levelModelList[0].mesh.size_scale
+           domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", solver.modelList[0].levelModelList[0].mesh.size_scale)
+           domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", solver.modelList[0].levelModelList[0].mesh.size_frame)
+
+       PUMI_transferFields(solver)
+
+
+       logEvent("Estimate Error")
+       sfConfig = domain.PUMIMesh.size_field_config()
+       if(sfConfig=="ERM"):
+         errorTotal= domain.PUMIMesh.get_local_error()
+         if(domain.PUMIMesh.willAdapt()):
+           adaptMeshNow=True
+           logEvent("Need to Adapt")
+       elif(sfConfig==b"VMS" or sfConfig==b"combined"):
+         errorTotal = p0.domain.PUMIMesh.get_VMS_error()
+         if(p0.domain.PUMIMesh.willAdapt()):
+           adaptMeshNow=True
+           logEvent("Need to Adapt")
+         if(solver.nSolveSteps <= 5): #the first few time steps are ignored for adaptivity
+           adaptMeshNow=False
+       elif(sfConfig=='interface' ):
+         adaptMeshNow=True
+         logEvent("Need to Adapt")
+       elif(sfConfig==b'isotropic'):
+         if(p0.domain.PUMIMesh.willInterfaceAdapt()):
+             adaptMeshNow=True
+             logEvent("Need to Adapt")
+             logEvent('numSolveSteps %f ' % solver.nSolveSteps)
+       elif(sfConfig=='meshQuality'):
+         minQual = domain.PUMIMesh.getMinimumQuality()
+         logEvent('The quality is %f ' % (minQual**(1./3.)))
+         #adaptMeshNow=True
+         if(minQual**(1./3.)<0.25):
+           adaptMeshNow=True
+           logEvent("Need to Adapt")
+
+         if (solver.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
+           sphereCoords = numpy.asarray(solver.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
+           domain.PUMIMesh.updateSphereCoordinates(sphereCoords)
+           logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
+         else:
+           sys.exit("Haven't been implemented code yet to cover this behavior.")
+       else:
+         adaptMeshNow=True
+         logEvent("Need to Adapt")
+       #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
+       if(adaptMeshNow == False):
+           for m in solver.modelList:
+               for lm in m.levelModelList:
+                   lm.u[0].dof[:]=lm.u_store[0].dof
+
+   return adaptMeshNow
