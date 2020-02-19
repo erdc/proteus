@@ -28,7 +28,7 @@ from . import Archiver
 from . import Viewers
 from .Archiver import ArchiveFlags
 from . import Domain
-from .MeshAdaptPUMI import Checkpoint
+from .MeshAdaptPUMI import Checkpoint,Adapt
 from .Profiling import logEvent
 
 # Global to control whether the kernel starting is active.
@@ -575,38 +575,13 @@ class NS_base(object):  # (HasTraits):
         nCT = self.nList[0]#self.nList[0].ct
         theDomain = pCT.domain
 
-        if hasattr(theDomain,"PUMIMesh") and not isinstance(theDomain,Domain.PUMIDomain) :
-          logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
-
-          from scipy import spatial
-          meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
-          meshVertex2Model= [0]*theMesh.nNodes_owned
-
-          assert theDomain.vertices, "model vertices (domain.vertices) were not specified"
-          assert theDomain.vertexFlags, "model classification (domain.vertexFlags) needs to be specified"
-
-          for idx,vertex in enumerate(theDomain.vertices):
-            if(pCT.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
-              vertex.append(0.0) #need to make a 3D coordinate
-            closestVertex = meshVertexTree.query(vertex)
-            meshVertex2Model[closestVertex[1]] = 1
-
-          isModelVert = numpy.asarray(meshVertex2Model).astype("i")
-
-          meshBoundaryConnectivity = numpy.zeros((theMesh.nExteriorElementBoundaries_global,2+pCT.nd),dtype=numpy.int32)
-          for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
-            exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
-            meshBoundaryConnectivity[elementBdyIdx][0] =  theMesh.elementBoundaryMaterialTypes[exteriorIdx]
-            meshBoundaryConnectivity[elementBdyIdx][1] = theMesh.elementBoundaryElementsArray[exteriorIdx][0]
-            meshBoundaryConnectivity[elementBdyIdx][2] = theMesh.elementBoundaryNodesArray[exteriorIdx][0]
-            meshBoundaryConnectivity[elementBdyIdx][3] = theMesh.elementBoundaryNodesArray[exteriorIdx][1]
-            if(pCT.nd==3):
-              meshBoundaryConnectivity[elementBdyIdx][4] = theMesh.elementBoundaryNodesArray[exteriorIdx][2]
-
-          pCT.domain.PUMIMesh.reconstructFromProteus2(theMesh.cmesh,isModelVert,meshBoundaryConnectivity)
+        Adapt.reconstructMesh(theDomain,theMesh)
 
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
+
+        #TODO: this needs to be isolated
+        if so.useOneMesh:
             try:
                 if (nList[0].MeshAdaptMesh.size_field_config() == 'isotropicProteus'):
                     mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
