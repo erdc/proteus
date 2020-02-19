@@ -1844,7 +1844,7 @@ class NS_base(object):  # (HasTraits):
 
         if (hasattr(self.pList[0].domain, 'PUMIMesh') and
             self.pList[0].domain.PUMIMesh.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.size_field_config() == "pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == b"isotropic") and
+            (self.pList[0].domain.PUMIMesh.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.size_field_config() == b"pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == b"isotropic") and
             self.so.useOneMesh and not self.opts.hotStart):
 
             self.PUMI_transferFields()
