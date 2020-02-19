@@ -11,6 +11,7 @@ from tables import *
 from proteus import Comm
 import os
 comm = Comm.init()
+from proteus import Context
 
 Profiling.verbose=True
 Profiling.logLevel=7
@@ -117,9 +118,9 @@ else:
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
         he =0.5
         adaptMesh = True
-        adaptMesh_nSteps = 10
+        adaptMesh_nSteps = 2#5
         adaptMesh_numIter = 2
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'ERM',maType=b'isotropic',targetError=0.1,targetElementCount=1000)
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'VMS',maType=b'isotropic',targetError=0.1,targetElementCount=1000,adaptMesh=adaptMesh)
         #domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='isotropic')
         #read the geometry and mesh
         testDir=os.path.dirname(os.path.abspath(__file__))
