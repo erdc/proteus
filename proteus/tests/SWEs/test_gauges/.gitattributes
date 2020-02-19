@@ -1,0 +1,6 @@
+hump.poly filter=lfs diff=lfs merge=lfs -text
+hump.1.neigh filter=lfs diff=lfs merge=lfs -text
+hump.1.poly filter=lfs diff=lfs merge=lfs -text
+hump.edge filter=lfs diff=lfs merge=lfs -text
+hump.ele filter=lfs diff=lfs merge=lfs -text
+hump.node filter=lfs diff=lfs merge=lfs -text
