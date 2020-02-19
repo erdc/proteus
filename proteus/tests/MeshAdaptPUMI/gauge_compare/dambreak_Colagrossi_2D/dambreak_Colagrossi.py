@@ -181,8 +181,8 @@ elif usePUMI and not genMesh:
     hmax = he;
     hmin = he/4.0;
     hPhi = he/2.0;#/4.0
-    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax, hmin=hmin, hPhi = hPhi, adaptMesh=adaptMeshFlag, numIter=adaptMesh_numIter, numAdaptSteps=adaptMesh_nSteps,  sfConfig="pseudo",logType="off",reconstructedFlag=2,gradingFact=1.2)
-    domain.PUMIMesh.loadModelAndMesh("Reconstructed.dmg", "Reconstructed.smb")
+    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax, hmin=hmin, hPhi = hPhi, adaptMesh=adaptMeshFlag, numIter=adaptMesh_numIter, numAdaptSteps=adaptMesh_nSteps,  sfConfig=b"pseudo",logType=b"off",reconstructedFlag=2,gradingFact=1.2)
+    domain.PUMIMesh.loadModelAndMesh(b"Reconstructed.dmg", b"Reconstructed.smb")
 
 else:
     domain = Domain.PlanarStraightLineGraphDomain()

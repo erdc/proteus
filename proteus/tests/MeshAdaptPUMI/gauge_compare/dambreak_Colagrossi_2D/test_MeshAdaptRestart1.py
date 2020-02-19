@@ -6,13 +6,19 @@ import subprocess
 import os
 import pytest
 
-@pytest.mark.slowTest
+#@pytest.mark.slowTest
+
+def test_MeshAdaptRestart_generateMesh(verbose=0):
+    """Get baseline data"""
+    currentPath = os.path.dirname(os.path.abspath(__file__))
+    runCommand = "cd "+currentPath+"; parun -C \"gen_mesh=True usePUMI=True adapt=0 fixedTimeStep=False\" -D \"baseline\" dambreak_Colagrossi_so.py;"
+    subprocess.check_call(runCommand,shell=True)
 
 def test_MeshAdaptRestart_adaptiveTime_BackwardEuler_baseline(verbose=0):
     """Get baseline data"""
     currentPath = os.path.dirname(os.path.abspath(__file__))
     runCommand = "cd "+currentPath+"; parun -C \"gen_mesh=False usePUMI=True adapt=0 fixedTimeStep=False\" -D \"baseline\" dambreak_Colagrossi_so.py;"
-    subprocess.call(runCommand,shell=True)
+    subprocess.check_call(runCommand,shell=True)
     assert(True)
 
 
@@ -20,7 +26,7 @@ def test_MeshAdaptRestart_adaptiveTime_BackwardEuler(verbose=0):
     """Test restart workflow"""
     currentPath = os.path.dirname(os.path.abspath(__file__))
     runCommand = "cd "+currentPath+"; parun -C \"gen_mesh=False usePUMI=True adapt=1 fixedTimeStep=False\" -D \"adapt_0\" dambreak_Colagrossi_so.py;"
-    subprocess.call(runCommand,shell=True)
+    subprocess.check_call(runCommand,shell=True)
     assert(True)
 
 def test_MeshAdaptRestart(verbose=0):
@@ -33,5 +39,5 @@ def test_MeshAdaptRestart(verbose=0):
             
 if __name__ == '__main__':
     import nose
-    nose.main(defaultTest='test_MeshAdaptRestart:test_MeshAdaptRestart_adaptiveTime_BackwardEuler_baseline, test_MeshAdaptRestart:test_MeshAdaptRestart_adaptiveTime_BackwardEuler, test_MeshAdaptRestart:test_MeshAdaptRestart')
+    nose.main(defaultTest='test_MeshAdaptRestart1:test_MeshAdaptRestart_generateMesh,test_MeshAdaptRestart1:test_MeshAdaptRestart_adaptiveTime_BackwardEuler_baseline, test_MeshAdaptRestart1:test_MeshAdaptRestart_adaptiveTime_BackwardEuler, test_MeshAdaptRestart1:test_MeshAdaptRestart')
 
