@@ -412,3 +412,149 @@ def PUMI2Proteus(solver,domain):
    gc.disable()
    gc.collect()
    solver.comm.barrier()
+
+def PUMI_transferFields(solver):
+   p0 = solver.pList[0].ct
+   n0 = solver.nList[0].ct
+
+   if solver.TwoPhaseFlow:
+       domain = p0.myTpFlowProblem.domain
+       rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
+       nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
+       rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
+       nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
+       g = p0.myTpFlowProblem.physical_parameters['gravity']
+       epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
+   else:
+       domain = p0.domain
+       rho_0  = p0.rho_0
+       nu_0   = p0.nu_0
+       rho_1  = p0.rho_1
+       nu_1   = p0.nu_1
+       g      = p0.g
+       epsFact_density = p0.epsFact_density
+   logEvent("Copying coordinates to PUMI")
+   domain.PUMIMesh.transferFieldToPUMI(b"coordinates",
+       solver.modelList[0].levelModelList[0].mesh.nodeArray)
+
+   #I want to compute the density and viscosity arrays here
+   #arrays are length = number of elements and will correspond to density at center of element
+   rho_transfer = numpy.zeros((solver.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
+   nu_transfer = numpy.zeros((solver.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
+   #get quadrature points at element centroid and evaluate at shape functions
+   from proteus import Quadrature
+   transferQpt = Quadrature.SimplexGaussQuadrature(p0.domain.nd,1)
+   qpt_centroid = numpy.asarray([transferQpt.points[0]])
+   materialSpace = solver.nList[0].femSpaces[0](solver.modelList[0].levelModelList[0].mesh.subdomainMesh,p0.domain.nd)
+   materialSpace.getBasisValuesRef(qpt_centroid)
+   
+   #obtain the level-set or vof value at each element centroid
+   #pass through heaviside function to get material property
+   from proteus.ctransportCoefficients import smoothedHeaviside
+   
+   IEN = solver.modelList[2].levelModelList[0].u[0].femSpace.dofMap.l2g
+   for (eID, dofs) in enumerate(IEN):
+       phi_val = 0.0
+       for idx in range(len(dofs)):
+           phi_val += materialSpace.psi[0][idx]*solver.modelList[2].levelModelList[0].u[0].dof[dofs[idx]]
+       #rho_transfer[eID] = phi_val
+       
+       #heaviside
+       h_phi=0.0;
+       for idx in range(len(dofs)):
+           h_phi += (materialSpace.psi[0][idx])*(solver.modelList[2].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
+       eps_rho = p0.epsFact_density*h_phi
+       smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
+
+       rho_transfer[eID] = (1.0-smoothed_phi_val)*solver.pList[0].ct.rho_0 + smoothed_phi_val*solver.pList[0].ct.rho_1
+       nu_transfer[eID] = (1.0-smoothed_phi_val)*solver.pList[0].ct.nu_0 + smoothed_phi_val*solver.pList[0].ct.nu_1
+
+   solver.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((solver.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
+   solver.modelList[0].levelModelList[0].mesh.elementMaterial[:] = rho_transfer[:]
+
+   #put the solution field as uList
+   #VOF and LS needs to reset the u.dof array for proper transfer
+   #but needs to be returned to the original form if not actually adapting....be careful with the following statements, unsure if this doesn't break something else
+   import copy
+   for m in solver.modelList:
+       for lm in m.levelModelList:
+           lm.u_store = lm.u.copy()
+           for ci in range(0,lm.coefficients.nc):
+               lm.u_store[ci] = lm.u[ci].copy()
+
+   solver.modelList[1].levelModelList[0].setUnknowns(solver.modelList[1].uList[0])
+   solver.modelList[2].levelModelList[0].setUnknowns(solver.modelList[2].uList[0])
+
+   logEvent("Copying DOF and parameters to PUMI")
+   for m in solver.modelList:
+     for lm in m.levelModelList:
+       coef = lm.coefficients
+       if coef.vectorComponents is not None:
+         vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+         for vci in range(len(coef.vectorComponents)):
+           vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+
+         domain.PUMIMesh.transferFieldToPUMI(
+             coef.vectorName.encode('utf-8'), vector)
+         #Transfer dof_last
+         for vci in range(len(coef.vectorComponents)):
+           vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
+         domain.PUMIMesh.transferFieldToPUMI(
+                coef.vectorName.encode('utf-8')+b"_old", vector)
+         #Transfer dof_last_last
+         for vci in range(len(coef.vectorComponents)):
+           vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
+         p0.domain.PUMIMesh.transferFieldToPUMI(
+                coef.vectorName.encode('utf-8')+b"_old_old", vector)
+
+         del vector
+       for ci in range(coef.nc):
+         if coef.vectorComponents is None or \
+            ci not in coef.vectorComponents:
+           scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+           scalar[:,0] = lm.u[ci].dof[:]
+           domain.PUMIMesh.transferFieldToPUMI(
+               coef.variableNames[ci].encode('utf-8'), scalar)
+
+           #Transfer dof_last
+           scalar[:,0] = lm.u[ci].dof_last[:]
+           domain.PUMIMesh.transferFieldToPUMI(
+                coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
+           #Transfer dof_last_last
+           scalar[:,0] = lm.u[ci].dof_last_last[:]
+           p0.domain.PUMIMesh.transferFieldToPUMI(
+                coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
+
+           del scalar
+
+   scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+
+   del scalar
+   #Get Physical Parameters
+   #Can we do this in a problem-independent  way?
+
+   rho = numpy.array([rho_0,
+                      rho_1])
+   nu = numpy.array([nu_0,
+                     nu_1])
+   g = numpy.asarray(g)
+
+   #This condition is to account for adapting before the simulation started
+   if(hasattr(solver,"tn")):
+       #deltaT = solver.tn-solver.tn_last
+       #is actually the time step for next step, solver.tn and solver.tn_last refer to entries in tnList
+       #deltaT = solver.systemStepController.dt_system 
+       deltaT=solver.modelList[0].levelModelList[0].timeIntegration.dtLast
+       T_current = solver.systemStepController.t_system_last
+       deltaT_next = solver.systemStepController.dt_system 
+   else:
+       deltaT = 0
+       deltaT_next = 0.0
+       T_current = 0.0
+
+   epsFact = epsFact_density
+   #domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+   domain.PUMIMesh.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,deltaT_next,T_current,epsFact)
+
+   del rho, nu, g, epsFact
+
