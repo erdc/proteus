@@ -1,0 +1,7 @@
+gl_6_3d.edge filter=lfs diff=lfs merge=lfs -text
+gl_6_3d.ele filter=lfs diff=lfs merge=lfs -text
+gl_6_3d.face filter=lfs diff=lfs merge=lfs -text
+gl_6_3d.neigh filter=lfs diff=lfs merge=lfs -text
+gl_6_3d.node filter=lfs diff=lfs merge=lfs -text
+gl_6_3d.ply filter=lfs diff=lfs merge=lfs -text
+gl_6_3d.poly filter=lfs diff=lfs merge=lfs -text

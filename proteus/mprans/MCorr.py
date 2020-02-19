@@ -3,13 +3,12 @@ from builtins import zip
 from builtins import range
 from past.utils import old_div
 import proteus
+from proteus import cfemIntegrals, Norms, Quadrature
 from proteus.Comm import globalSum
 from proteus.mprans.cMCorr import *
-import numpy
-from proteus import *
-from proteus.Transport import *
-from proteus.Transport import OneLevelTransport
-
+import numpy as np
+from proteus.Transport import OneLevelTransport, logEvent, memory, fabs
+from proteus.Transport import TC_base, l2Norm, NonlinearEquation
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import levelSetConservationCoefficientsEvaluate
@@ -78,8 +77,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         nd = self.nd
         if self.sd:
             assert nd is not None, "You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
-            sdInfo = {(0, 0): (numpy.arange(start=0, stop=nd + 1, step=1, dtype='i'),
-                               numpy.arange(start=0, stop=nd, step=1, dtype='i'))}
+            sdInfo = {(0, 0): (np.arange(start=0, stop=nd + 1, step=1, dtype='i'),
+                               np.arange(start=0, stop=nd, step=1, dtype='i'))}
         else:
             sdInfo = {}
         TC_base.__init__(self,
@@ -475,13 +474,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi_ip = {}
         # mesh
         # uncomment this to store q arrays, see calculateElementQuadrature below
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.q[('u', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('grad(u)', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q[('r', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('grad(u)', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        self.q[('r', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
-        self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('grad(u)', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+        self.ebqe[('u', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('grad(u)', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                  self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
 
         self.points_elementBoundaryQuadrature = set()
@@ -493,9 +492,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,), 'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
-            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+            self.inflowBoundaryBC[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,), 'i')
+            self.inflowBoundaryBC_values[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
+            self.inflowFlux[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.internalNodes = set(range(self.mesh.nNodes_global))
         # identify the internal nodes this is ought to be in mesh
         # \todo move this to mesh
@@ -508,7 +507,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global, i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray = numpy.zeros((self.nNodes_internal,), 'i')
+        self.internalNodesArray = np.zeros((self.nNodes_internal,), 'i')
         for nI, n in enumerate(self.internalNodes):
             self.internalNodesArray[nI] = n
         #
@@ -606,7 +605,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
         if (self.limited_L2p_vof_mass_correction is None):
-            self.limited_L2p_vof_mass_correction = numpy.zeros(self.LumpedMassMatrix.size, 'd')
+            self.limited_L2p_vof_mass_correction = np.zeros(self.LumpedMassMatrix.size, 'd')
 
         self.mcorr.FCTStep(
             self.nnz,  # number of non zero entries
@@ -694,7 +693,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("   Mass Conservation Error: ", level=3, data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape, 'd')
+            self.globalResidualDummy = np.zeros(r.shape, 'd')
 
     # GET MASS MATRIX # (MQL)
     def getMassMatrix(self):
@@ -710,7 +709,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                            colind,
                                                            rowptr)
             # Lumped mass matrix
-            self.LumpedMassMatrix = numpy.zeros(rowptr.size - 1, 'd')
+            self.LumpedMassMatrix = np.zeros(rowptr.size - 1, 'd')
         else:
             self.LumpedMassMatrix.fill(0.0)
 
@@ -1099,9 +1098,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Compute mass matrix
         # Set rhs of mass correction to zero
         if self.rhs_mass_correction is None:
-            self.rhs_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
-            self.lumped_L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
-            self.L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
+            self.rhs_mass_correction = np.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
+            self.lumped_L2p_vof_mass_correction = np.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
+            self.L2p_vof_mass_correction = np.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
         else:
             self.rhs_mass_correction.fill(0.0)
 
@@ -1264,7 +1263,7 @@ class DummyNewton(proteus.NonlinearSolvers.NonlinearSolver):
             self.dJ_t_dJ = copy.deepcopy(self.J)
             self.JLsolver = LU(self.J_t_J, computeEigenvalues=True)
             self.dJLsolver = LU(self.dJ_t_dJ, computeEigenvalues=True)
-            self.u0 = numpy.zeros(self.F.dim, 'd')
+            self.u0 = np.zeros(self.F.dim, 'd')
 
     def info(self):
         return "Not Implemented"
@@ -1322,7 +1321,7 @@ class ElementNewton(proteus.NonlinearSolvers.NonlinearSolver):
             self.dJ_t_dJ = copy.deepcopy(self.J)
             self.JLsolver = LU(self.J_t_J, computeEigenvalues=True)
             self.dJLsolver = LU(self.dJ_t_dJ, computeEigenvalues=True)
-            self.u0 = numpy.zeros(self.F.dim, 'd')
+            self.u0 = np.zeros(self.F.dim, 'd')
 
     def info(self):
         return "Not Implemented"
@@ -1382,7 +1381,7 @@ class ElementConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
             self.dJ_t_dJ = copy.deepcopy(self.J)
             self.JLsolver = LU(self.J_t_J, computeEigenvalues=True)
             self.dJLsolver = LU(self.dJ_t_dJ, computeEigenvalues=True)
-            self.u0 = numpy.zeros(self.F.dim, 'd')
+            self.u0 = np.zeros(self.F.dim, 'd')
 
     def info(self):
         return "Not Implemented"
@@ -1442,7 +1441,7 @@ class GlobalConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
             self.dJ_t_dJ = copy.deepcopy(self.J)
             self.JLsolver = LU(self.J_t_J, computeEigenvalues=True)
             self.dJLsolver = LU(self.dJ_t_dJ, computeEigenvalues=True)
-            self.u0 = numpy.zeros(self.F.dim, 'd')
+            self.u0 = np.zeros(self.F.dim, 'd')
 
     def info(self):
         return "Not Implemented"

@@ -3,9 +3,7 @@ from __future__ import division
 from builtins import range
 from past.utils import old_div
 import proteus
-import numpy
-from proteus import *
-from proteus.Transport import *
+import numpy as np
 from proteus.Transport import OneLevelTransport
 import os
 from proteus import cfemIntegrals, Quadrature, Norms, Comm
@@ -496,161 +494,161 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe = {}
         self.phi_ip = {}
         # mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.ebqe['x'] = numpy.zeros(
+        #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.ebqe['x'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.q[('u', 0)] = numpy.zeros(
+        self.q[('u', 0)] = np.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q['a'] = numpy.zeros(
+        self.q['a'] = np.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
             ('grad(u)',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global),
             'd')
         self.ebqe[
             ('u',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-        self.ebqe['a'] = numpy.zeros(
+        self.ebqe['a'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
         self.ebqe[
             ('grad(u)',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
 
-        self.q[('v', 0)] = numpy.zeros(
+        self.q[('v', 0)] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nDOF_trial_element[0]),
             'd')
-        self.q['J'] = numpy.zeros(
+        self.q['J'] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.q['det(J)'] = numpy.zeros(
+        self.q['det(J)'] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element),
             'd')
-        self.q['inverse(J)'] = numpy.zeros(
+        self.q['inverse(J)'] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.ebq[('v', 0)] = numpy.zeros(
+        self.ebq[('v', 0)] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nDOF_trial_element[0]),
             'd')
-        self.ebq[('w', 0)] = numpy.zeros(
+        self.ebq[('w', 0)] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nDOF_trial_element[0]),
             'd')
-        self.ebq['x'] = numpy.zeros(
+        self.ebq['x'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.ebq['hat(x)'] = numpy.zeros(
+        self.ebq['hat(x)'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.ebq['inverse(J)'] = numpy.zeros(
+        self.ebq['inverse(J)'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.ebq['g'] = numpy.zeros(
+        self.ebq['g'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global - 1,
              self.nSpace_global - 1),
             'd')
-        self.ebq['sqrt(det(g))'] = numpy.zeros(
+        self.ebq['sqrt(det(g))'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-        self.ebq['n'] = numpy.zeros(
+        self.ebq['n'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-        self.ebq[('dS_u', 0)] = numpy.zeros(
+        self.ebq[('dS_u', 0)] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-        self.ebqe['dS'] = numpy.zeros(
+        self.ebqe['dS'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
         self.ebqe[('dS_u', 0)] = self.ebqe['dS']
-        self.ebqe['n'] = numpy.zeros(
+        self.ebqe['n'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-        self.ebqe['inverse(J)'] = numpy.zeros(
+        self.ebqe['inverse(J)'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.ebqe['g'] = numpy.zeros(
+        self.ebqe['g'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global - 1,
              self.nSpace_global - 1),
             'd')
-        self.ebqe['sqrt(det(g))'] = numpy.zeros(
+        self.ebqe['sqrt(det(g))'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-        self.ebq_global['n'] = numpy.zeros(
+        self.ebq_global['n'] = np.zeros(
             (self.mesh.nElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-        self.ebq_global['x'] = numpy.zeros(
+        self.ebq_global['x'] = np.zeros(
             (self.mesh.nElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.ebqe[('advectiveFlux_bc_flag', 0)] = numpy.zeros(
+        self.ebqe[('advectiveFlux_bc_flag', 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
-        self.ebqe[('diffusiveFlux_bc_flag', 0, 0)] = numpy.zeros(
+        self.ebqe[('diffusiveFlux_bc_flag', 0, 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
-        self.ebqe[('advectiveFlux_bc', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('diffusiveFlux_bc', 0, 0)] = numpy.zeros(
+        self.ebqe[('advectiveFlux_bc', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('diffusiveFlux_bc', 0, 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('advectiveFlux', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('diffusiveFlux', 0, 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('advectiveFlux', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('diffusiveFlux', 0, 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set(
             [('u', ci) for ci in range(self.nc)])
@@ -662,11 +660,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros(
+            self.inflowBoundaryBC[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global,), 'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros(
+            self.inflowBoundaryBC_values[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
-            self.inflowFlux[cj] = numpy.zeros(
+            self.inflowFlux[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global,
                  self.nElementBoundaryQuadraturePoints_elementBoundary),
                 'd')
@@ -683,7 +681,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global, i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray = numpy.zeros((self.nNodes_internal,), 'i')
+        self.internalNodesArray = np.zeros((self.nNodes_internal,), 'i')
         for nI, n in enumerate(self.internalNodes):
             self.internalNodesArray[nI] = n
         #
@@ -762,13 +760,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.globalResidualDummy = None
         log("flux bc objects")
         for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
-            self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
+            self.ebqe[('advectiveFlux_bc_flag', ci)] = np.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
             for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
                 if ci in self.coefficients.advection:
                     self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                     self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
             for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
-                self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
+                self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = np.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
                 for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
                     self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                     self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1

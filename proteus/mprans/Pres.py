@@ -3,9 +3,7 @@ from __future__ import division
 from builtins import range
 from past.utils import old_div
 import proteus
-import numpy
-from proteus import *
-from proteus.Transport import *
+import numpy as np
 from proteus.Transport import OneLevelTransport
 import os
 from proteus import cfemIntegrals, Quadrature, Norms, Comm
@@ -200,7 +198,7 @@ class Coefficients(TC_base):
             # mql. This is to allow the pressure model to exist without increment.
             # This is handy for studying convergence of only momentum equation.
             # NOTE: We assume the useRotationalForm = False.
-            phi = numpy.zeros(c[('r', 0)][:].shape, 'd')
+            phi = np.zeros(c[('r', 0)][:].shape, 'd')
         else:
             if u_shape == self.pressureIncrementModel.q[('u', 0)].shape:
                 phi = self.pressureIncrementModel.q[('u', 0)]
@@ -459,33 +457,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe = {}
         self.phi_ip = {}
         # mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.ebqe['x'] = numpy.zeros(
+        #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.ebqe['x'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.q[('u', 0)] = numpy.zeros(
+        self.q[('u', 0)] = np.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
             ('grad(u)',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global),
             'd')
-        self.q[('r', 0)] = numpy.zeros(
+        self.q[('r', 0)] = np.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
         self.ebqe[
             ('u',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
         self.ebqe[
             ('grad(u)',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
@@ -502,11 +500,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros(
+            self.inflowBoundaryBC[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global,), 'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros(
+            self.inflowBoundaryBC_values[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
-            self.inflowFlux[cj] = numpy.zeros(
+            self.inflowFlux[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global,
                  self.nElementBoundaryQuadraturePoints_elementBoundary),
                 'd')
@@ -523,7 +521,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global, i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray = numpy.zeros((self.nNodes_internal,), 'i')
+        self.internalNodesArray = np.zeros((self.nNodes_internal,), 'i')
         for nI, n in enumerate(self.internalNodes):
             self.internalNodesArray[nI] = n
         #
@@ -634,7 +632,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.coefficients.pressureIncrementModelIndex is not None:
             coefficients_pressureIncrementModel_q_u = self.coefficients.pressureIncrementModel.q[('u', 0)]
         else:
-            coefficients_pressureIncrementModel_q_u = numpy.zeros(self.q[('u', 0)].shape, 'd')
+            coefficients_pressureIncrementModel_q_u = np.zeros(self.q[('u', 0)].shape, 'd')
         # no flux boundary conditions
         self.pres.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
@@ -707,7 +705,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             jacobian.getCSRrepresentation()[2])
         for dofN in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys()):
             global_dofN = self.offset[0] + self.stride[0] * dofN
-            self.nzval[numpy.where(self.colind == global_dofN)] = 0.0  # column
+            self.nzval[np.where(self.colind == global_dofN)] = 0.0  # column
             self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN + 1]] = 0.0  # row
             zeroRow = True
             for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):  # row
