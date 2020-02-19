@@ -80,8 +80,8 @@ jobs:
       - make develop-conda N=1
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
-      - mpirun -np 2 pytest --forked -v proteus/tests/MeshAdaptPUMI/test_parallelMeshLoad.py --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --cov=proteus
+      - mpirun -np 2 pytest --forked -v proteus/tests/MeshAdaptPUMI/test_parallelMeshLoad.py
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
