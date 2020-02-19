@@ -229,7 +229,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  nullSpace='NoNullSpace',
                  useExact=False,
                  analyticalSolution=None,
-                 initialize=True):
+                 initialize=True,
+                 force_x=None,
+                 force_y=None,
+                 force_z=None,
+                 normalize_pressure=False):
+        self.normalize_pressure=normalize_pressure
+        self.force_x=force_x
+        self.force_y=force_y
+        self.force_z=force_z        
         self.analyticalSolution=analyticalSolution
         self.useExact=useExact
         self.use_ball_as_particle = use_ball_as_particle
@@ -1530,13 +1538,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('force', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        x = self.q['x'][...,0]
-        y = self.q['x'][...,1]
-        dt=1.0
-        pi = math.pi
-        nu = self.coefficients.nu_0
-        #self.q[('force', 0)][:] = (4.0*pi**2*dt*nu*(np.sin(pi*(2*x - 2*y)) - np.sin(pi*(2*x + 2*y))) - np.sin(2*pi*y)*np.cos(2*pi*x))/dt
-        #self.q[('force', 1)][:] = (4.0*pi**2*dt*nu*(np.sin(pi*(2*x - 2*y)) + np.sin(pi*(2*x + 2*y))) + np.sin(2*pi*x)*np.cos(2*pi*y))/dt
+        for eN in range(self.q['x'].shape[0]):
+            for k in range(self.q['x'].shape[1]):
+                if self.coefficients.force_x:
+                    self.q[('force', 0)][eN,k] = self.coefficients.force_x(self.q['x'][eN,k])
+                if self.coefficients.force_y:
+                    self.q[('force', 1)][eN,k] = self.coefficients.force_y(self.q['x'][eN,k])
+                if self.coefficients.force_z:
+                    self.q[('force', 1)][eN,k] = self.coefficients.force_z(self.q['x'][eN,k])
 
     def getResidual(self, u, r):
         """
@@ -1835,7 +1844,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                       self.coefficients.phi_s,
                                       self.coefficients.phisField,
                                       self.coefficients.useExact,
-                                      self.isActiveDOF)
+                                      self.isActiveDOF,
+                                      self.coefficients.normalize_pressure)
         #assert((self.isActiveDOF ==1.0).all())
         try:
             #is sensitive to inactive DOF at velocity due to time derivative

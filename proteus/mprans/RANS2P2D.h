@@ -241,7 +241,8 @@ namespace proteus
                                    xt::pyarray<double>& phi_solid_nodes,
                                    xt::pyarray<double>& distance_to_solids,
                                    bool useExact,
-                                   xt::pyarray<double>& isActiveDOF) = 0;
+                                   xt::pyarray<double>& isActiveDOF,
+                                   const bool normalize_pressure) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -2181,7 +2182,8 @@ namespace proteus
                              xt::pyarray<double>& phi_solid_nodes,
                              xt::pyarray<double>& distance_to_solids,
                              bool useExact,
-                             xt::pyarray<double>& isActiveDOF)
+                             xt::pyarray<double>& isActiveDOF,
+                             const bool normalize_pressure)
       {
         logEvent("Entered mprans calculateResidual",6);
         gf.useExact = useExact;
@@ -4393,7 +4395,6 @@ namespace proteus
               }//i
           }//ebNE
 
-        const bool normalize_pressure=false;
         if (normalize_pressure)
           {
             /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
@@ -4469,19 +4470,19 @@ namespace proteus
                   }
               }
             p_L2 = sqrt(p_L2);
-            std::cout<<"p_1.append("<<p_L1<<")"<<std::endl
-                     <<"u_1.append("<<u_L1<<")"<<std::endl
-                     <<"v_1.append("<<v_L1<<")"<<std::endl
-                     <<"p_2.append("<<p_L2<<")"<<std::endl
-                     <<"u_2.append("<<u_L2<<")"<<std::endl
-                     <<"v_2.append("<<v_L2<<")"<<std::endl
-                     <<"p_I.append("<<p_Linfty<<")"<<std::endl
-                     <<"u_I.append("<<u_Linfty<<")"<<std::endl
-                     <<"v_I.append("<<v_Linfty<<")"<<std::endl;
             //        std::cout<<"Pressure Integral Shifted"<<p_dv_new<<std::endl
             //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
             //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_Linfty<<std::endl;
           }
+        std::cout<<"p_1.append("<<p_L1<<")"<<std::endl
+                 <<"u_1.append("<<u_L1<<")"<<std::endl
+                 <<"v_1.append("<<v_L1<<")"<<std::endl
+                 <<"p_2.append("<<p_L2<<")"<<std::endl
+                 <<"u_2.append("<<u_L2<<")"<<std::endl
+                 <<"v_2.append("<<v_L2<<")"<<std::endl
+                 <<"p_I.append("<<p_Linfty<<")"<<std::endl
+                 <<"u_I.append("<<u_Linfty<<")"<<std::endl
+                 <<"v_I.append("<<v_Linfty<<")"<<std::endl;
       }
 
       void calculateJacobian(double NONCONSERVATIVE_FORM,

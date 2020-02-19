@@ -232,7 +232,8 @@ namespace proteus
                                    xt::pyarray<double>& phi_solid_nodes,
                                    xt::pyarray<double>& distance_to_solids,
                                    bool useExact,
-                                   xt::pyarray<double>& isActiveDOF) = 0;
+                                   xt::pyarray<double>& isActiveDOF,
+                                   const bool normalize_pressure) = 0;
     virtual void calculateJacobian(double NONCONSERVATIVE_FORM,
                                    double MOMENTUM_SGE,
                                    double PRESSURE_SGE,
@@ -2615,7 +2616,8 @@ namespace proteus
                              xt::pyarray<double>& phi_solid_nodes,
                              xt::pyarray<double>& distance_to_solids,
                              bool useExact,
-                             xt::pyarray<double>& isActiveDOF)
+                             xt::pyarray<double>& isActiveDOF,
+                             const bool normalize_pressure)
       {
         logEvent("Entered mprans calculateResidual",6);
         gf.useExact = useExact;
