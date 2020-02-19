@@ -9,7 +9,7 @@ import pytest
 @pytest.mark.slowTest
 
 def test_MeshAdaptRestart_generateMesh(verbose=0):
-    """Get baseline data"""
+    """Generate Mesh for PUMI"""
     currentPath = os.path.dirname(os.path.abspath(__file__))
     runCommand = "cd "+currentPath+"; parun -C \"gen_mesh=True usePUMI=True adapt=0 fixedTimeStep=False\" -D \"baseline\" dambreak_Colagrossi_so.py;"
     subprocess.check_call(runCommand,shell=True)
