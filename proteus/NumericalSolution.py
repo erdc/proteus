@@ -788,50 +788,6 @@ class NS_base(object):  # (HasTraits):
             A name for the calculated solution.
         """
 
-        #Get mesh entities for reconstruction
-        #theMesh = self.modelList[0].levelModelList[0].mesh
-        #from scipy import spatial
-        #meshVertexTree = spatial.cKDTree(theMesh.nodeArray)
-        #meshVertex2Model= [0]*theMesh.nNodes_owned
-        #file0 = open('modelNodeArray.csv','w')
-        #file0.write('%i\n' % len(self.pList[0].domain.vertices))
-        #for idx,vertex in enumerate(self.pList[0].domain.vertices):
-        #  #if(self.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
-        #  #  vertex.append(0.0) #need to make a 3D coordinate
-        #  closestVertex = meshVertexTree.query(vertex)
-        #  #file0.write('%i, %i\n' % (closestVertex[1],theMesh.nodeMaterialTypes[closestVertex[1]]))
-        #  file0.write('%i, %i\n' % (closestVertex[1],idx))
-        #file0.close()
-
-        #file1 = open('meshNodeArray.csv','w')
-        #file1.write('%i\n' % theMesh.nNodes_owned)
-        #for nodeIdx in range(len(theMesh.nodeArray)):
-        #  file1.write('%i, %.15f, %.15f, %.15f\n' % (nodeIdx,
-        #     theMesh.nodeArray[nodeIdx][0],
-        #     theMesh.nodeArray[nodeIdx][1],
-        #     theMesh.nodeArray[nodeIdx][2]))
-        #file1.close()
-        #file2 = open('meshConnectivity.csv','w')
-        #file2.write('%i\n' % theMesh.nElements_owned)
-        #for elementIdx in range(len(theMesh.elementNodesArray)):
-        #  file2.write('%i, %i, %i, %i, %i\n' % (elementIdx, theMesh.elementNodesArray[elementIdx][0],
-        #     theMesh.elementNodesArray[elementIdx][1], theMesh.elementNodesArray[elementIdx][2],
-        #     theMesh.elementNodesArray[elementIdx][3]))
-        #file2.close()
-        #file3 = open('meshBoundaryConnectivity.csv','w')
-        #file3.write('%i\n' % theMesh.nExteriorElementBoundaries_global)
-        #for elementBdyIdx in range(len(theMesh.exteriorElementBoundariesArray)):
-        #  exteriorIdx = theMesh.exteriorElementBoundariesArray[elementBdyIdx]
-        #  file3.write('%i, %i, %i, %i, %i, %i\n' % (exteriorIdx,
-        #     theMesh.elementBoundaryMaterialTypes[exteriorIdx],
-        #     theMesh.elementBoundaryElementsArray[exteriorIdx][0], #should be adjacent to only one boundary
-        #     theMesh.elementBoundaryNodesArray[exteriorIdx][0],
-        #     theMesh.elementBoundaryNodesArray[exteriorIdx][1],
-        #     theMesh.elementBoundaryNodesArray[exteriorIdx][2],
-        #      ))
-        #file3.close()
-        #exit()
-
         logEvent("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(list(range(len(self.modelList))),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
@@ -1088,7 +1044,7 @@ class NS_base(object):  # (HasTraits):
           previousInfo = json.load(f)
           f.close()
           if(previousInfo["checkpoint_status"]=="endsystem"):
-            self.hotstartWithPUMI()
+            Adapt.hotstartWithPUMI(self)
             self.opts.hotStart = False
             #Need to clean mesh for output again
             self.pList[0].domain.PUMIMesh.cleanMesh()
@@ -1366,15 +1322,7 @@ class NS_base(object):  # (HasTraits):
 
             if systemStepFailed:
                 break
-            #
-            #h-adapt mesh, cekees modified from chitak
-            #
-            #assuming same for all physics and numerics  for now
 
-            #can only handle PUMIDomain's for now
-            #self.nSolveSteps += 1
-            #if(self.PUMI_estimateError()):
-            #  self.PUMI_adaptMesh()
             if measureSpeed and self.comm.isMaster():
                 startToMeasureSpeed = True
             if measureSpeed==False and append==True:
