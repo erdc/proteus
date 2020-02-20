@@ -575,7 +575,8 @@ class NS_base(object):  # (HasTraits):
         nCT = self.nList[0]#self.nList[0].ct
         theDomain = pCT.domain
 
-        Adapt.reconstructMesh(theDomain,theMesh)
+        self.Adapter = Adapt.PUMIAdapt(self)
+        self.Adapter.reconstructMesh(theDomain,theMesh)
 
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
@@ -982,7 +983,7 @@ class NS_base(object):  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        Adapt.initialAdapt(self)
+        self.Adapter.initialAdapt()
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1034,7 +1035,7 @@ class NS_base(object):  # (HasTraits):
           previousInfo = json.load(f)
           f.close()
           if(previousInfo["checkpoint_status"]=="endsystem"):
-            Adapt.hotstartWithPUMI(self)
+            self.Adapter.hotstartWithPUMI()
             self.opts.hotStart = False
             #Need to clean mesh for output again
             self.pList[0].domain.PUMIMesh.cleanMesh()
@@ -1233,8 +1234,8 @@ class NS_base(object):  # (HasTraits):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 import gc; gc.collect()
-                if(Adapt.PUMI_estimateError(self)):
-                    Adapt.PUMI_adaptMesh(self)
+                if(self.Adapter.PUMI_estimateError()):
+                    self.Adapter.PUMI_adaptMesh()
                 #
                 if measureSpeed and startToMeasureSpeed and self.comm.isMaster():
                     numTimeSteps += 1
