@@ -982,17 +982,7 @@ class NS_base(object):  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
-            self.pList[0].domain.PUMIMesh.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.size_field_config() == b"pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == b"isotropic") and
-            self.so.useOneMesh and not self.opts.hotStart):
-
-            Adapt.PUMI_transferFields(self)
-            logEvent("Initial Adapt before Solve")
-            Adapt.PUMI_adaptMesh(self,b"interface")
-            Adapt.PUMI_transferFields(self)
-            logEvent("Initial Adapt 2 before Solve")
-            Adapt.PUMI_adaptMesh(self,b"interface")
+        Adapt.initialAdapt(self)
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The

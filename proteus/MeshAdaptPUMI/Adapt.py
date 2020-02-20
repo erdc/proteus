@@ -715,5 +715,19 @@ def hotstartWithPUMI(solver):
     PUMI_reallocate(solver,mesh) #need to double check if this call is necessaryor if it can be simplified to a shorter call
     PUMI2Proteus(solver,solver.pList[0].domain)
 
+def initialAdapt(solver):
+
+   if (hasattr(solver.pList[0].domain, 'PUMIMesh') and
+       solver.pList[0].domain.PUMIMesh.adaptMesh() and
+       (solver.pList[0].domain.PUMIMesh.size_field_config() == b"combined" or solver.pList[0].domain.PUMIMesh.size_field_config() == b"pseudo" or solver.pList[0].domain.PUMIMesh.size_field_config() == b"isotropic") and
+       solver.so.useOneMesh and not solver.opts.hotStart):
+
+       PUMI_transferFields(solver)
+       logEvent("Initial Adapt before Solve")
+       PUMI_adaptMesh(solver,b"interface")
+       PUMI_transferFields(solver)
+       logEvent("Initial Adapt 2 before Solve")
+       PUMI_adaptMesh(solver,b"interface")
+
 
 
