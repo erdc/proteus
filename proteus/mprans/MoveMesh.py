@@ -6,8 +6,10 @@ import proteus
 from proteus.mprans.cMoveMesh import *
 from proteus.mprans.cMoveMesh2D import *
 import numpy as np
-from proteus.Transport import OneLevelTransport, sqrt
-
+from math import sqrt
+from proteus.Transport import OneLevelTransport, TC_base, NonlinearEquation
+from proteus import Quadrature, FemTools, Comm, Archiver, cfemIntegrals
+from proteus.Profiling import logEvent, memory
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
@@ -200,7 +202,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phiTrialIsTrial = True
         self.u = uDict
         self.Hess = False
-        if isinstance(self.u[0].femSpace, C0_AffineQuadraticOnSimplexWithNodalBasis):
+        if isinstance(self.u[0].femSpace, FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis):
             self.Hess = True
         self.ua = {}  # analytical solutions
         self.phi = phiDict
@@ -538,7 +540,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
-                self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(
+                self.dirichletConditionsForceDOF[cj] = FemTools.DOFBoundaryConditions(
                     self.u[cj].femSpace, dofBoundaryConditionsSetterDict[cj], weakDirichletConditions=False)
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
@@ -761,10 +763,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
-        self.stressFluxBoundaryConditionsObjectsDict = dict([(cj, FluxBoundaryConditions(self.mesh,
-                                                                                         self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                                         self.ebqe[('x')],
-                                                                                         self.stressFluxBoundaryConditionsSetterDict[cj]))
+        self.stressFluxBoundaryConditionsObjectsDict = dict([(cj, FemTools.FluxBoundaryConditions(self.mesh,
+                                                                                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                                                  self.ebqe[('x')],
+                                                                                                  self.stressFluxBoundaryConditionsSetterDict[cj]))
                                                              for cj in list(self.stressFluxBoundaryConditionsSetterDict.keys())])
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t, self.ebqe)
 
