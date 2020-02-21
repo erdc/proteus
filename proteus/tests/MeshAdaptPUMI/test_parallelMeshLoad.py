@@ -38,7 +38,7 @@ def test_3DparallelLoadPUMI(verbose=0):
     #    eq(mesh.nEdges_owned,8729)
     #    eq(mesh.nElementBoundaries_owned,5648)
 
-#@pytest.mark.skip(reason="need to run in parallel")
+@pytest.mark.skip(reason="need to run in parallel")
 def test_2DparallelLoadPUMI(verbose=0):
     """Test to load 2D parallel PUMI model and mesh"""
     comm = Comm.init()
