@@ -9,8 +9,6 @@ import numpy as np
 import numpy.testing as npt
 from importlib import import_module
 from petsc4py import PETSc
-from . import fallingCylinder
-from . import floatingCylinder
 import importlib
 
 modulepath = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +46,7 @@ class TestIBM(unittest.TestCase):
                 pass
 
     def test_fallingCylinderIBM_ball(self):
+        from . import fallingCylinder
         from proteus import defaults
         case = fallingCylinder
         case.m.rans2p.p.coefficients.use_ball_as_particle = 1.
@@ -95,6 +94,7 @@ class TestIBM(unittest.TestCase):
 
     def test_fallingCylinderIBM_sdf(self):
         from proteus import defaults
+        from . import fallingCylinder
         importlib.reload(fallingCylinder)
         case = fallingCylinder
         case.m.rans2p.p.coefficients.use_ball_as_particle = 0.
@@ -141,6 +141,7 @@ class TestIBM(unittest.TestCase):
 
     def test_floatingCylinderALE(self):
         from proteus import defaults
+        from . import floatingCylinder
         case = floatingCylinder
         case.myTpFlowProblem.initializeAll()
         so = case.myTpFlowProblem.so
