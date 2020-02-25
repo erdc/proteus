@@ -21,7 +21,7 @@
 #include "chrono/fea/ChLoadsBeam.h"
 #include "chrono/fea/ChContactSurfaceNodeCloud.h"
 #include "chrono/timestepper/ChTimestepper.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChSolverPMINRES.h"
 #include "chrono/core/ChTransform.h"
 
 
@@ -39,14 +39,14 @@ class ChElementCableANCFmod : public ChElementCableANCF {
     assert(section);
 
     // Compute rest length, mass:
-    double length2 = (nodes[1]->GetX0() - nodes[0]->GetX0()).Length();
-    this->mass = this->length * this->section->Area * this->section->density;
+    //double length2 = (nodes[1]->GetX0() - nodes[0]->GetX0()).Length();
+    this->mass = this->length * GetSection()->Area * GetSection()->density;
 
     // Here we calculate the internal forces in the initial configuration
     // Contribution of initial configuration in elastic forces is automatically subtracted
     ChMatrixDynamic<> FVector0(12, 1);
-    FVector0.FillElem(0.0);
-    this->m_GenForceVec0.FillElem(0.0);
+    FVector0.setZero();
+    this->m_GenForceVec0.setZero();
     ComputeInternalForces(FVector0);
     this->m_GenForceVec0 = FVector0;
 
@@ -60,7 +60,7 @@ class ChElementBeamEulermod : public ChElementBeamEuler {
     assert(section);
 
     //this->length = (nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos()).Length();
-    this->mass = this->length * this->section->Area * this->section->density;
+    this->mass = this->length * GetSection()->Area * GetSection()->density;
 
     // Compute initial rotation
     ChMatrix33<> A0;

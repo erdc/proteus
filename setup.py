@@ -243,6 +243,7 @@ EXTENSIONS_TO_BUILD = [
                             'proteus',
                             PROTEUS_INCLUDE_DIR,
                             PROTEUS_CHRONO_INCLUDE_DIR,
+                            PROTEUS_CHRONO_INCLUDE_DIR+'/eigen3',
                             PROTEUS_CHRONO_INCLUDE_DIR+'/chrono',
                             PROTEUS_CHRONO_INCLUDE_DIR+'/chrono/collision/bullet',],
               library_dirs=[PROTEUS_CHRONO_LIB_DIR],

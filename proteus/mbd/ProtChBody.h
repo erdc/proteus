@@ -3,7 +3,7 @@
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/timestepper/ChTimestepper.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChSolverPMINRES.h"
 #include "chrono/core/ChTransform.h"
 #include <iostream>
 #include <fstream>
