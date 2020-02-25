@@ -5,7 +5,7 @@ import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 from proteus import WaveTools as wt
 from proteus.Profiling import logEvent
 from proteus.mbd import CouplingFSI as fsi
-from math import *
+import os
 import pychrono
 
 rho_0 = 998.2
@@ -167,7 +167,8 @@ domain.MeshOptions.use_gmsh = genMesh
 domain.MeshOptions.genMesh = genMesh
 he = he
 domain.MeshOptions.he = he
-mesh_fileprefix='meshFloatingCylinder'
+modulepath = os.path.dirname(os.path.abspath(__file__))
+mesh_fileprefix=modulepath+'/meshFloatingCylinder'
 domain.MeshOptions.setOutputFiles(mesh_fileprefix)
 st.assembleDomain(domain)
 domain.use_gmsh = False
