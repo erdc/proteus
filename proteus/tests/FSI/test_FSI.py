@@ -87,7 +87,6 @@ class TestIBM(unittest.TestCase):
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         ns.calculateSolution('fallingCylinderIBM')
         pos = case.body.getPosition()
-        print("POSITION!!", pos)
 
         npt.assert_almost_equal(pos, np.array([1.5, 1.98645, 0.]), decimal=5)
         #self.teardown_method(self)
@@ -178,9 +177,8 @@ class TestIBM(unittest.TestCase):
                     OptDB.setValue(all[i].strip('-'),True)
                     i=i+1
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
-        ns.calculateSolution('fallingCylinderIBM')
+        ns.calculateSolution('floatingCylinderALE')
         pos = case.body.getPosition()
-        print("POSITION!!", pos)
 
         npt.assert_almost_equal(pos, np.array([0.5, 0.5074055958, 0.]), decimal=5)
         #self.teardown_method(self)
