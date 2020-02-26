@@ -46,15 +46,10 @@ ChVariablesBodyAddedMass& ChVariablesBodyAddedMass::operator=(const ChVariablesB
 }
 
 void ChVariablesBodyAddedMass::SetMfullmass(ChMatrixDynamic<>& Mfullmass_in) {
-  GetLog() << "M" << GetMfullmass() << "\n";
-  GetLog() << "inv_M" << GetInvMfullmass() << "\n";
     assert(Mfullmass_in.GetRows() == Get_ndof());
     assert(Mfullmass_in.GetColumns() == Get_ndof());
     GetMfullmass() = Mfullmass_in;
     GetInvMfullmass() = Mfullmass_in.inverse();
-    GetLog() << "M_in" << Mfullmass_in << "\n";
-    GetLog() << "M" << GetMfullmass() << "\n";
-    GetLog() << "inv_M" << GetInvMfullmass() << "\n";
 }
 
   // Set the inertia matrix
@@ -136,20 +131,8 @@ void ChVariablesBodyAddedMass::Compute_inc_Mb_v(ChVectorRef result, const ChVect
 void ChVariablesBodyAddedMass::MultiplyAndAdd(ChVectorRef result,
     const ChVectorConstRef vect,
     const double c_a) const {
-    ChMatrixDynamic<> tot = ChMatrixDynamic<>(6, 1);
-    tot(0, 0) = vect(this->offset+0);
-    tot(1, 0) = vect(this->offset+1);
-    tot(2, 0) = vect(this->offset+2);
-    tot(3, 0) = vect(this->offset+3);
-    tot(4, 0) = vect(this->offset+4);
-    tot(5, 0) = vect(this->offset+5);
-    tot = Mfullmass*tot*c_a;
-    result(this->offset+0) = tot(1, 0);
-    result(this->offset+1) = tot(2, 0);
-    result(this->offset+2) = tot(3, 0);
-    result(this->offset+3) = tot(4, 0);
-    result(this->offset+4) = tot(5, 0);
-    result(this->offset+5) = tot(6, 0);
+    int off = this->offset;
+    result.segment(off, 6) += Mfullmass*vect.segment(off, 6)*c_a;
 }
 
 // Add the diagonal of the mass matrix scaled by c_a to 'result'.
