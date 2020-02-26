@@ -595,14 +595,12 @@ cdef class ProtChBody:
                 chFM.setitem(i, j, FM[i, j])
 
         # hack for swig
-        cdef shared_ptr[ch.ChMatrixDynamic]* pt_to_shp
-        # chFM
-        cdef SwigPyObject* swig_obj = <SwigPyObject*> chFM.this
-        cdef shared_ptr[ch.ChMatrixDynamic]* sp = <shared_ptr[ch.ChMatrixDynamic]*> swig_obj.ptr;
-        cdef ch.ChMatrixDynamic mat = sp.get()[0]
+        cdef SwigPyObject *swig_obj = <SwigPyObject*> chFM.this
+        cdef ch.ChMatrixDynamic *mycpp_ptr = <ch.ChMatrixDynamic*?>swig_obj.ptr
+        cdef ch.ChMatrixDynamic my_instance = deref(mycpp_ptr)
 
         # set full mass matrix
-        self.ChBodyAddedMass.SetMfullmass(mat)
+        self.ChBodyAddedMass.SetMfullmass(my_instance)
 
         aa = np.zeros(6)
 
@@ -1603,7 +1601,7 @@ cdef class ProtChSystem:
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
-            self.ChSystem.SetupInitial()
+            self.ChSystem.Setup()
             Profiling.logEvent("Finished init"+str(self.next_sample))
             self.initialized = True
         else:
@@ -3476,8 +3474,8 @@ cdef class ChBodyAddedMass:
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
         self.thisptr.SetMfullmass(Mfullmass_in)
 
-    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
-        self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
+    # cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
+    #     self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
 
 
 

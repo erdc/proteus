@@ -58,24 +58,19 @@ namespace chrono {
     void ChBodyAddedMass::SetMfullmass(ChMatrixDynamic<> Mfullmass_in) {
         assert(Mfullmass_in.GetRows() == variables.Get_ndof());
         assert(Mfullmass_in.GetColumns() == variables.Get_ndof());
-        ChMatrixDynamic<>& Mm = variables.GetMfullmass();
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-                Mm(i, j) = Mfullmass_in(i, j);
-            }
-        }
+        variables.SetMfullmass(Mfullmass_in);
     }
 
-    void ChBodyAddedMass::SetInvMfullmass(ChMatrixDynamic<> inv_Mfullmass_in) {
-        assert(inv_Mfullmass_in.GetRows() == variables.Get_ndof());
-        assert(inv_Mfullmass_in.GetColumns() == variables.Get_ndof());
-        ChMatrixDynamic<>& Mm = variables.GetInvMfullmass();
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-                Mm(i, j) = inv_Mfullmass_in(i, j);
-            }
-        }
-    }
+    // void ChBodyAddedMass::SetInvMfullmass(ChMatrixDynamic<> inv_Mfullmass_in) {
+    //     assert(inv_Mfullmass_in.GetRows() == variables.Get_ndof());
+    //     assert(inv_Mfullmass_in.GetColumns() == variables.Get_ndof());
+    //     ChMatrixDynamic<>& Mm = variables.GetInvMfullmass();
+    //     for (int i = 0; i < 6; i++) {
+    //         for (int j = 0; j < 6; j++) {
+    //             Mm(i, j) = inv_Mfullmass_in(i, j);
+    //         }
+    //     }
+    // }
 //// STATE BOOKKEEPING FUNCTIONS
 
 

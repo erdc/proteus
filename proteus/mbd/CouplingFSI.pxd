@@ -365,4 +365,4 @@ cdef class ChBodyAddedMass:
     cdef public:
         object ChBodySWIG
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
-    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in)
+    # cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in)
