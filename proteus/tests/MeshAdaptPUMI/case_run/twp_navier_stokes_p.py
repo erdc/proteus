@@ -5,6 +5,9 @@ from couette import *
 from proteus.mprans import RANS2P
 from decimal import *
 
+from proteus import Context
+ct = Context.get()
+
 LevelModelType = RANS2P.LevelModel
 if useOnlyVF:
     LS_model = None
