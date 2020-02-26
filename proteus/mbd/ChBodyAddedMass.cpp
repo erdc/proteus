@@ -188,17 +188,11 @@ void ChBodyAddedMass::IntLoadResidual_Mv(const unsigned int off,      // offset 
                                 const ChVectorDynamic<>& w,  // the w vector
                                 const double c               // a scaling factor
                                 ) {
-  R(off + 0) += c * GetMass() * w(off + 0);
-  R(off + 1) += c * GetMass() * w(off + 1);
-  R(off + 2) += c * GetMass() * w(off + 2);
-  ChVector<> Iw = GetInertia() * ChVector<>(w.segment(off + 3, 3));
-  Iw *= c;
-  R.segment(off + 3, 3) += Iw.eigen();
   ChMatrixDynamic<> ww = ChMatrixDynamic<>(6, 1);
   for (int i=0; i < 6; i++) {
     ww(i, 0) = w(off+i);
   }
-  R.segment(off, 6) = variables.GetMfullmass()*ww*c;
+  R.segment(off, 6) += variables.GetMfullmass()*ww*c;
 }
 }  // end namespace chrono
 
