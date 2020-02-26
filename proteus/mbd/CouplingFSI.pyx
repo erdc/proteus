@@ -530,94 +530,87 @@ cdef class ProtChBody:
             Added mass matrix (must be 6x6 array!)
         """
 
-        # assert Aij.shape[0] == Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
-        # cdef double mass = self.ChBody.GetMass()
-        # cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
-        # cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
-        # cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
+        assert Aij.shape[0] == Aij.shape[1] == 6, 'Added mass matrix must be 6x6 (np)'
+        cdef double mass = self.ChBody.GetMass()
+        cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
+        cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
+        cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
 
-        # # added mass matrix
-        # cdef np.ndarray rotMarr_big
-        # cdef np.ndarray rotMarrT_big
-        # # store Aij in global frame
-        # cdef np.ndarray Aij_global = np.zeros((6, 6))
-        # Aij_global[:] = Aij[:]
-        # # transform Aij in local frame
-        # if self.Aij_updated_global is True and self.Aij_transform_local is True:
-        #     # converting from global to local: Rot*Aij*RotT*v
-        #     rot = self.ChBodyAddedMass.GetRot()
-        #     rotch = chrono.ChMatrix33D(rot)
-        #     rotMarr_big = np.zeros((6, 6))
-        #     rotMarrT_big = np.zeros((6, 6))
-        #     for i in range(6):
-        #         for j in range(6):
-        #             if i < 3 and j < 3 :
-        #                 rotMarr_big[i, j] = rotch.getitem(i, j)
-        #                 rotMarrT_big[i, j] = rotch.getitem(j, i)
-        #             elif i >=3 and j >= 3:
-        #                 rotMarr_big[i, j] = rotch.getitem(i-3, j-3)
-        #                 rotMarrT_big[i, j] = rotch.getitem(j-3, i-3)
-        #     # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
-        #     self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
-        # else:
-        #     self.Aij[:] = Aij
-        # # remove terms from restrained DOFs
-        # self.Aij[0, 1:] *= self.thisptr.free_x.x()
-        # self.Aij[1, 0] *= self.thisptr.free_x.y()
-        # self.Aij[1, 2:] *= self.thisptr.free_x.y()
-        # self.Aij[2, :2] *= self.thisptr.free_x.z()
-        # self.Aij[2, 3:] *= self.thisptr.free_x.z()
-        # self.Aij[3, :3] *= self.thisptr.free_r.x()
-        # self.Aij[3, 4:] *= self.thisptr.free_r.x()
-        # self.Aij[4, :4] *= self.thisptr.free_r.y()
-        # self.Aij[4, 5] *= self.thisptr.free_r.y()
-        # self.Aij[5, :5] *= self.thisptr.free_r.z()
-        # # mass matrix
-        # MM[0,0] = mass
-        # MM[1,1] = mass
-        # MM[2,2] = mass
-        # for i in range(3):
-        #     for j in range(3):
-        #         MM[i+3, j+3] = iner[i, j]
-        # # full mass
-        # FM += self.Aij
-        # FM += MM
-        # Profiling.logEvent('Mass Matrix:\n'+str(MM))
-        # Profiling.logEvent('Added Mass Matrix:\n'+str(self.Aij))
-        # Profiling.logEvent('Full Mass Matrix:\n'+str(FM))
-        # # inverse of full mass matrix
-        # inv_FM = np.linalg.inv(FM)
-        # #set it to chrono variable
-        # chFM = chrono.ChMatrixDynamicD(6, 6)
-        # inv_chFM = chrono.ChMatrixDynamicD(6, 6)
-        # for i in range(6):
-        #     for j in range(6):
-        #         chFM.setitem(i, j, FM[i, j])
-        #         inv_chFM.setitem(i, j, inv_FM[i, j])
+        # added mass matrix
+        cdef np.ndarray rotMarr_big
+        cdef np.ndarray rotMarrT_big
+        # store Aij in global frame
+        cdef np.ndarray Aij_global = np.zeros((6, 6))
+        Aij_global[:] = Aij[:]
+        # transform Aij in local frame
+        if self.Aij_updated_global is True and self.Aij_transform_local is True:
+            # converting from global to local: Rot*Aij*RotT*v
+            rot = self.ChBodyAddedMass.GetRot()
+            rotch = chrono.ChMatrix33D(rot)
+            rotMarr_big = np.zeros((6, 6))
+            rotMarrT_big = np.zeros((6, 6))
+            for i in range(6):
+                for j in range(6):
+                    if i < 3 and j < 3 :
+                        rotMarr_big[i, j] = rotch.getitem(i, j)
+                        rotMarrT_big[i, j] = rotch.getitem(j, i)
+                    elif i >=3 and j >= 3:
+                        rotMarr_big[i, j] = rotch.getitem(i-3, j-3)
+                        rotMarrT_big[i, j] = rotch.getitem(j-3, i-3)
+            # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
+            self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
+        else:
+            self.Aij[:] = Aij
+        # remove terms from restrained DOFs
+        self.Aij[0, 1:] *= self.thisptr.free_x.x()
+        self.Aij[1, 0] *= self.thisptr.free_x.y()
+        self.Aij[1, 2:] *= self.thisptr.free_x.y()
+        self.Aij[2, :2] *= self.thisptr.free_x.z()
+        self.Aij[2, 3:] *= self.thisptr.free_x.z()
+        self.Aij[3, :3] *= self.thisptr.free_r.x()
+        self.Aij[3, 4:] *= self.thisptr.free_r.x()
+        self.Aij[4, :4] *= self.thisptr.free_r.y()
+        self.Aij[4, 5] *= self.thisptr.free_r.y()
+        self.Aij[5, :5] *= self.thisptr.free_r.z()
+        # mass matrix
+        MM[0,0] = mass
+        MM[1,1] = mass
+        MM[2,2] = mass
+        for i in range(3):
+            for j in range(3):
+                MM[i+3, j+3] = iner[i, j]
+        # full mass
+        FM += self.Aij
+        FM += MM
+        Profiling.logEvent('Mass Matrix:\n'+str(MM))
+        Profiling.logEvent('Added Mass Matrix:\n'+str(self.Aij))
+        Profiling.logEvent('Full Mass Matrix:\n'+str(FM))
+        # inverse of full mass matrix
+        inv_FM = np.linalg.inv(FM)
+        #set it to chrono variable
+        chFM = chrono.ChMatrixDynamicD(6, 6)
+        inv_chFM = chrono.ChMatrixDynamicD(6, 6)
+        for i in range(6):
+            for j in range(6):
+                chFM.setitem(i, j, FM[i, j])
 
-        # # hack for swig
-        # cdef SwigPyObject *swig_obj
-        # cdef shared_ptr[ch.ChMatrixDynamic]* pt_to_shp
-        # cdef ch.ChMatrixDynamic mat
-        # # chFM
-        # swig_obj = <SwigPyObject*> chFM.this
-        # pt_to_sp = <shared_ptr[ch.ChMatrixDynamic]*> swig_obj.ptr;
-        # matp = <ch.ChMatrixDynamic> pt_to_shp[0].get()
-        # self.ChBodyAddedMass.SetMfullmass(matp)
-        # # inv_chFM
-        # swig_obj = <SwigPyObject*> inv_chFM.this
-        # pt_to_sp = <shared_ptr[ch.ChMatrixDynamic]*> swig_obj.ptr;
-        # matp = <ch.ChMatrixDynamic> pt_to_shp[0].get()
-        # self.ChBodyAddedMass.SetInvMfullmass(matp)
-        # # end hack
+        # hack for swig
+        cdef shared_ptr[ch.ChMatrixDynamic]* pt_to_shp
+        # chFM
+        cdef SwigPyObject* swig_obj = <SwigPyObject*> chFM.this
+        cdef shared_ptr[ch.ChMatrixDynamic]* sp = <shared_ptr[ch.ChMatrixDynamic]*> swig_obj.ptr;
+        cdef ch.ChMatrixDynamic mat = sp.get()[0]
 
-        # aa = np.zeros(6)
+        # set full mass matrix
+        self.ChBodyAddedMass.SetMfullmass(mat)
 
-        # aa[:3] = pyvec2array(self.ChBody.GetPos_dtdt())
-        # aa[3:] = pyvec2array(self.ChBody.GetWacc_par())
-        # Aija = np.dot(Aij_global, aa)
-        # self.F_Aij = Aija[:3]
-        # self.M_Aij = Aija[3:]
+        aa = np.zeros(6)
+
+        aa[:3] = pyvec2array(self.ChBody.GetPos_dtdt())
+        aa[3:] = pyvec2array(self.ChBody.GetWacc_par())
+        Aija = np.dot(Aij_global, aa)
+        self.F_Aij = Aija[:3]
+        self.M_Aij = Aija[3:]
 
     def getPressureForces(self):
         """Gives pressure forces from fluid (Proteus) acting on body.

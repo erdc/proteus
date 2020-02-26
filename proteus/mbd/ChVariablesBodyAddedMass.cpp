@@ -45,6 +45,13 @@ ChVariablesBodyAddedMass& ChVariablesBodyAddedMass::operator=(const ChVariablesB
     return *this;
 }
 
+void ChVariablesBodyAddedMass::SetMfullmass(ChMatrixDynamic<>& Mfullmass_in) {
+    assert(Mfullmass_in.GetRows() == Get_ndof());
+    assert(Mfullmass_in.GetColumns() == Get_ndof());
+    Mfullmass = Mfullmass_in;
+    inv_Mfullmass = Mfullmass_in.inverse();
+}
+
   // Set the inertia matrix
   // void ChVariablesBodyAddedMass::SetBodyInertia(const ChMatrix33<>& minertia) {
   //   ChVariablesBodyOwnMass::SetBodyInertia(minertia);

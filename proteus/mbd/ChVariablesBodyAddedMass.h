@@ -50,6 +50,9 @@ namespace chrono {
 		/* /// Access the inertia matrix */
 		/* ChMatrix<>& GetMmass() { return Mmass; } */
 
+		/// Set the inertia matrix
+		void SetMfullmass(ChMatrixDynamic<>& Mfullmass_in);
+
 		/// Access the inertia matrix
 		ChMatrixDynamic<>& GetMfullmass() { return Mfullmass; }
 
