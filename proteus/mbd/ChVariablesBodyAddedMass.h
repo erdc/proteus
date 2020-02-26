@@ -73,15 +73,15 @@ namespace chrono {
     
 		/// Computes the product of the inverse mass matrix by a
 		/// vector, and set in result: result = [invMb]*vect
-		virtual void Compute_invMb_v(ChMatrix<double>& result, const ChMatrix<double>& vect) const override;
+		virtual void Compute_invMb_v(ChVectorRef result, const ChVectorConstRef vect) const override;
 
 		/// Computes the product of the inverse mass matrix by a
 		/// vector, and increment result: result += [invMb]*vect
-		virtual void Compute_inc_invMb_v(ChMatrix<double>& result, const ChMatrix<double>& vect) const override;
+		virtual void Compute_inc_invMb_v(ChVectorRef result, const ChVectorConstRef vect) const override;
 
 		/// Computes the product of the mass matrix by a
 		/// vector, and set in result: result = [Mb]*vect
-		virtual void Compute_inc_Mb_v(ChMatrix<double>& result, const ChMatrix<double>& vect) const override;
+		virtual void Compute_inc_Mb_v(ChVectorRef result, const ChVectorConstRef vect) const override;
 
 		/// Computes the product of the corresponding block in the
 		/// system matrix (ie. the mass matrix) by 'vect', scale by c_a, and add to 'result'.
@@ -89,15 +89,15 @@ namespace chrono {
 		/// the size of the total variables&constraints in the system; the procedure
 		/// will use the ChVariable offsets (that must be already updated) to know the
 		/// indexes in result and vect.
-		virtual void MultiplyAndAdd(ChMatrix<double>& result,
-			const ChMatrix<double>& vect,
+		virtual void MultiplyAndAdd(ChVectorRef result,
+			const ChVectorConstRef vect,
 			const double c_a) const override;
 
 		/// Add the diagonal of the mass matrix scaled by c_a, to 'result'.
 		/// NOTE: the 'result' vector must already have the size of system unknowns, ie
 		/// the size of the total variables&constraints in the system; the procedure
 		/// will use the ChVariable offset (that must be already updated) as index.
-		virtual void DiagonalAdd(ChMatrix<double>& result, const double c_a) const override;
+		virtual void DiagonalAdd(ChVectorRef result, const double c_a) const override;
 
 		/// Build the mass matrix (for these variables) scaled by c_a, storing
 		/// it in 'storage' sparse matrix, at given column/row offset.

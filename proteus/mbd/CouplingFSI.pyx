@@ -161,50 +161,50 @@ cdef class ProtChBody:
                                               is_convex=is_convex,
                                               sphereswept_thickness=sphereswept_thickness)
 
-    def addTriangleMeshFromVerticesFaces(self,
-                                         double[:,:] vertices,
-                                         int[:,:,:] facets,
-                                         double[:] pos=None,
-                                         double[:,:] rot=None,
-                                         bool is_static=False,
-                                         bool is_convex=False,
-                                         double sphereswept_thickness=0.005):
-        """Adds triangle mesh to collision model and for IBM calculations
-        """
-        self.thisptr.trimesh = make_shared[ch.ChTriangleMeshConnected]()
-        self.trimesh_nodes.clear()
-        self.trimesh_triangles.clear()
-        for v in vertices:
-            self.trimesh_nodes.push_back(ch.ChVector(v[0], v[1], v[2]))
-        for f_i, facet in enumerate(facets):
-            f = facet[0]
-            assert len(f) == 3, 'Facets must be triangles for triangle mesh but facet '+str(f_i)+' is not of length 3'
-            self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
-                                                           self.trimesh_nodes.at(f[1]),
-                                                           self.trimesh_nodes.at(f[2])))
-            deref(self.thisptr.trimesh).addTriangle(self.trimesh_triangles.at(f_i))
-        if pos is None:
-            pos = np.zeros(3)
-        cdef ch.ChMatrix33 rotmat
-        if rot is None:
-            rot = np.eye(3)
-        for i in range(rot.shape[0]):
-            for j in range(rot.shape[1]):
-                rotmat.SetElement(i, j, rot[i, j])
-        # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
-        deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(<shared_ptr[ch.ChTriangleMesh]> self.thisptr.trimesh,
-                                                                            is_static,
-                                                                            is_convex,
-                                                                            ch.ChVector(pos[0],
-                                                                                        pos[1],
-                                                                                        pos[2]),
-                                                                            rotmat,
-                                                                            sphereswept_thickness)
-        self.thisptr.has_trimesh = True
-        cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
-        self.thisptr.pos0_trimesh = pos0
-        cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
-        self.thisptr.rotq0_trimesh = rot0
+    # def addTriangleMeshFromVerticesFaces(self,
+    #                                      double[:,:] vertices,
+    #                                      int[:,:,:] facets,
+    #                                      double[:] pos=None,
+    #                                      double[:,:] rot=None,
+    #                                      bool is_static=False,
+    #                                      bool is_convex=False,
+    #                                      double sphereswept_thickness=0.005):
+    #     """Adds triangle mesh to collision model and for IBM calculations
+    #     """
+    #     self.thisptr.trimesh = make_shared[ch.ChTriangleMeshConnected]()
+    #     self.trimesh_nodes.clear()
+    #     self.trimesh_triangles.clear()
+    #     for v in vertices:
+    #         self.trimesh_nodes.push_back(ch.ChVector(v[0], v[1], v[2]))
+    #     for f_i, facet in enumerate(facets):
+    #         f = facet[0]
+    #         assert len(f) == 3, 'Facets must be triangles for triangle mesh but facet '+str(f_i)+' is not of length 3'
+    #         self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
+    #                                                        self.trimesh_nodes.at(f[1]),
+    #                                                        self.trimesh_nodes.at(f[2])))
+    #         deref(self.thisptr.trimesh).addTriangle(self.trimesh_triangles.at(f_i))
+    #     if pos is None:
+    #         pos = np.zeros(3)
+    #     cdef ch.ChMatrix33 rotmat
+    #     if rot is None:
+    #         rot = np.eye(3)
+    #     for i in range(rot.shape[0]):
+    #         for j in range(rot.shape[1]):
+    #             rotmat.SetElement(i, j, rot[i, j])
+    #     # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
+    #     deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(<shared_ptr[ch.ChTriangleMesh]> self.thisptr.trimesh,
+    #                                                                         is_static,
+    #                                                                         is_convex,
+    #                                                                         ch.ChVector(pos[0],
+    #                                                                                     pos[1],
+    #                                                                                     pos[2]),
+    #                                                                         rotmat,
+    #                                                                         sphereswept_thickness)
+    #     self.thisptr.has_trimesh = True
+    #     cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
+    #     self.thisptr.pos0_trimesh = pos0
+    #     cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
+    #     self.thisptr.rotq0_trimesh = rot0
 
     # # (!) # cannot use right now because of cython error when C++ function has default
     # # (!) # arguments (known bug in cython community, silent error)
@@ -551,19 +551,16 @@ cdef class ProtChBody:
         if self.Aij_updated_global is True and self.Aij_transform_local is True:
             # converting from global to local: Rot*Aij*RotT*v
             rot = deref(self.thisptr.body).GetRot()
-            rotch = ch.ChMatrix33[double](rot)
-            rotchT = ch.ChMatrix33[double]()
             rotMarr_big = np.zeros((6, 6))
             rotMarrT_big = np.zeros((6, 6))
-            rotchT.CopyFromMatrixT(rotch)
             for i in range(6):
                 for j in range(6):
                     if i < 3 and j < 3 :
-                        rotMarr_big[i, j] = rotch.GetElement(i, j)
-                        rotMarrT_big[i, j] = rotchT.GetElement(i, j)
+                        rotMarr_big[i, j] = rot(i, j)
+                        rotMarrT_big[i, j] = rot(j, i)
                     elif i >=3 and j >= 3:
-                        rotMarr_big[i, j] = rotch.GetElement(i-3, j-3)
-                        rotMarrT_big[i, j] = rotchT.GetElement(i-3, j-3)
+                        rotMarr_big[i, j] = rot(i-3, j-3)
+                        rotMarrT_big[i, j] = rot(j-3, i-3)
             # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
             self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
         else:

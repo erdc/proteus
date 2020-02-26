@@ -5,6 +5,8 @@
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverPMINRES.h"
 #include "chrono/core/ChTransform.h"
+#include "chrono/physics/ChLinkSpring.h"
+#include "chrono/geometry/ChTriangleMeshConnected.h"
 #include <iostream>
 #include <fstream>
 
@@ -24,7 +26,6 @@ class cppSystem {
   void setTimestepperType(std::string tstype, bool verbose);
   void setCollisionEnvelopeMargin(double envelope, double margin);
   void addMesh(std::shared_ptr<ChMesh> mesh);
-  void setSolverDiagonalPreconditioning(bool boolval);
 };
 
 
@@ -127,11 +128,6 @@ cppSystem::cppSystem()
   /* if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper())) { */
   /*   mystepper->SetAlpha(-0.2); */
   /* } */
-}
-
-void cppSystem::setSolverDiagonalPreconditioning(bool boolval) {
-  auto msolver = std::static_pointer_cast<ChSolverMINRES>(system->GetSolver());
-  msolver->SetDiagonalPreconditioning(true);
 }
 
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
@@ -606,30 +602,24 @@ void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
                       double limit_Rz=0.) {
   auto mylink = std::make_shared<ChLinkLock>();
   system->AddLink(mylink);
-  auto chlimit_X = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_X.Set_max(limit_X);
-  auto chlimit_Y = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_Y.Set_max(limit_Y);
-  auto chlimit_Z = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_Z.Set_max(limit_Z);
-  auto chlimit_Rx = ChLinkLimit();
-  chlimit_Rx.Set_max(limit_Rx);
-  chlimit_X.Set_active(true);
-  auto chlimit_Ry = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_Ry.Set_max(limit_Ry);
-  auto chlimit_Rz = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_Rz.Set_max(limit_Rz);
-  mylink->SetLimit_X(&chlimit_X);
-  mylink->SetLimit_Y(&chlimit_Y);
-  mylink->SetLimit_Z(&chlimit_Z);
-  mylink->SetLimit_Rx(&chlimit_Rx);
-  mylink->SetLimit_Ry(&chlimit_Ry);
-  mylink->SetLimit_Rz(&chlimit_Rz);
+  auto chlimit_X = mylink->GetLimit_X();
+  chlimit_X.SetActive(true);
+  chlimit_X.SetMax(limit_X);
+  auto chlimit_Y = mylink->GetLimit_Y();
+  chlimit_Y.SetActive(true);
+  chlimit_Y.SetMax(limit_Y);
+  auto chlimit_Z = mylink->GetLimit_Z();
+  chlimit_Z.SetActive(true);
+  chlimit_Z.SetMax(limit_Z);
+  auto chlimit_Rx = mylink->GetLimit_Rx();
+  chlimit_Rx.SetMax(limit_Rx);
+  chlimit_Rx.SetActive(true);
+  auto chlimit_Ry = mylink->GetLimit_Ry();
+  chlimit_Ry.SetActive(true);
+  chlimit_Ry.SetMax(limit_Ry);
+  auto chlimit_Rz = mylink->GetLimit_Rz();
+  chlimit_Rz.SetActive(true);
+  chlimit_Rz.SetMax(limit_Rz);
   mylink->Initialize(body1, body2, coordsys);
 }
 

@@ -35,6 +35,8 @@ using namespace chrono::geometry;
 // override some functions of ChElement
 
 class ChElementCableANCFmod : public ChElementCableANCF {
+private:
+  ChVectorN<double, 12> m_GenForceVec0;
   virtual void SetupInitial(ChSystem* system) override {
     assert(section);
 
@@ -44,11 +46,11 @@ class ChElementCableANCFmod : public ChElementCableANCF {
 
     // Here we calculate the internal forces in the initial configuration
     // Contribution of initial configuration in elastic forces is automatically subtracted
-    ChMatrixDynamic<> FVector0(12, 1);
+    ChVectorDynamic<> FVector0(12);
     FVector0.setZero();
-    this->m_GenForceVec0.setZero();
+    m_GenForceVec0.setZero();
     ComputeInternalForces(FVector0);
-    this->m_GenForceVec0 = FVector0;
+    m_GenForceVec0 = FVector0;
 
     // Compute mass matrix
     ComputeMassMatrix();
@@ -56,16 +58,21 @@ class ChElementCableANCFmod : public ChElementCableANCF {
 };
 
 class ChElementBeamEulermod : public ChElementBeamEuler {
+private:
+  ChQuaternion<> q_element_ref_rot;
   virtual void SetupInitial(ChSystem* system) override {
     assert(section);
 
+    // Compute rest length, mass:
     //this->length = (nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos()).Length();
     this->mass = this->length * GetSection()->Area * GetSection()->density;
 
     // Compute initial rotation
     ChMatrix33<> A0;
-    ChVector<> mXele = nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos();
-    ChVector<> myele = nodes[0]->GetX0().GetA().Get_A_Yaxis();
+    auto node0 = GetNodeA();
+    auto node1 = GetNodeB();
+    ChVector<> mXele = node1->GetX0().GetPos() - node0->GetX0().GetPos();
+    ChVector<> myele = node0->GetX0().GetA().Get_A_Yaxis();
     A0.Set_A_Xdir(mXele, myele);
     q_element_ref_rot = A0.Get_A_quaternion();
 
@@ -96,7 +103,9 @@ class MyLoaderTriangular : public ChLoaderUdistributed {
                         ) {
     double Fy_max = 0.005;
     ChVector<> force = Fa*abs(-1+U)/2.+Fb*(1+U)/2.;
-    F.PasteVector(force,0.,0.);  // load, force part; hardwired for brevity
+    F(0) = force.x();
+    F(1) = force.y();
+    F(2) = force.z();
   }
   void SetF(ChVector<> Fa_in, ChVector<> Fb_in) {
     Fa = Fa_in;

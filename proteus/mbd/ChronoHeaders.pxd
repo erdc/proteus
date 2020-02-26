@@ -197,7 +197,7 @@ cdef extern from "ProtChMoorings.h":
         double GetMass()
         void SetMass(double mm)
         void SetForce(ChVector mf)
-        ChVector& GetForce() 
+        ChVector& GetForce()
 
     cdef cppclass ChNodeFEAxyzD(ChNodeFEAxyz):
         const ChVector& GetD()
@@ -207,9 +207,9 @@ cdef extern from "ProtChMoorings.h":
 
     cdef cppclass ChNodeFEAxyzrot(ChNodeFEAbase, ChBodyFrame):
         void SetForce(ChVector mf)
-        ChVector& GetForce() 
+        ChVector& GetForce()
         void SetTorque(ChVector mf)
-        ChVector& GetTorque() 
+        ChVector& GetTorque()
 
     cdef cppclass ChNodeFEAxyzP(ChNodeFEAbase)
 
@@ -330,25 +330,25 @@ cdef extern from "ProtChMoorings.h":
 
     cdef cppclass ChLinkBase:
         ChVector Get_react_force()
-    
+
     cdef cppclass ChLink(ChLinkBase)
-    
+
     cdef cppclass ChLinkMate(ChLink)
-    
+
     cdef cppclass ChLinkMateGeneric(ChLinkMate)
-        
+
     cdef cppclass ChLinkPointFrame(ChLinkBase):
         int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector* pos)
         ChVector GetReactionOnNode()
         ChVector GetReactionOnBody()
-        #virtual 
+        #virtual
         #int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector[double] *pos=0)
 
     cdef cppclass ChLinkPointPoint(ChLinkBase):
-        #virtual 
+        #virtual
         ChLinkPointPoint()
         int Initialize(shared_ptr[ChNodeFEAxyz] anodeA, shared_ptr[ChNodeFEAxyz] anodeB)
-    
+
 
 cdef extern from "ChBodyAddedMass.h":
     cdef cppclass ChBodyAddedMass(ChBody):
