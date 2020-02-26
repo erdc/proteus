@@ -44,27 +44,20 @@ cdef extern from "ProtChMoorings.h":
                    double Alpha,
                    ChVector &mu)
 
-    cdef cppclass ChMatrix:
-        double GetElement(int row,
-                          int col)
-        double SetElement(int row,
-                          int col,
-                          double element)
-
-    cdef cppclass ChMatrix33[double](ChMatrix):
+    cdef cppclass ChMatrix33[double]:
         ChVector Get_A_Xaxis()
         ChVector Get_A_Yaxis()
         ChVector Get_A_Zaxis()
-        void CopyFromMatrixT(ChMatrix matra)
-        ChMatrix33()
-        ChMatrix33(ChQuaternion quat)
+        # void CopyFromMatrixT(ChMatrix matra)
+        # ChMatrix33()
+        # ChMatrix33(ChQuaternion quat)
 
-    cdef cppclass ChMatrixDynamic[double](ChMatrix):
+    cdef cppclass ChMatrixDynamic[double]:
         ChMatrixDynamic()
         ChMatrixDynamic(const int row,
                         const int col)
-        ChMatrixDynamic operator=(const ChMatrix& matbis)
-        ChMatrixDynamic operator+(const ChMatrix& matbis)
+        # ChMatrixDynamic operator=(const ChMatrix& matbis)
+        # ChMatrixDynamic operator+(const ChMatrix& matbis)
         ChVector Get_A_Xaxis()
         ChVector Get_A_Yaxis()
         ChVector Get_A_Zaxis()
@@ -224,21 +217,21 @@ cdef extern from "ProtChMoorings.h":
         ChElementGeneric()
 
     cdef cppclass ChElementBeam(ChElementGeneric):
-        void EvaluateSectionDisplacement(const double eta,
-                                         const ChMatrix &displ,
-                                         ChVector &u_displ,
-                                         ChVector &u_rotaz)
-        void EvaluateSectionFrame(const double eta,
-                                  const ChMatrix &displ,
-                                  ChVector &u_displ,
-                                  ChQuaternion &rot)
-        void EvaluateSectionForceTorque(const double eta,
-                                        const ChMatrix &displ,
-                                        ChVector &Fforce,
-                                        ChVector &Mtorque)
-        void EvaluateSectionStrain(const double eta,
-                                   const ChMatrix &displ,
-                                   ChVector &StrainV)
+        # void EvaluateSectionDisplacement(const double eta,
+        #                                  const ChMatrix &displ,
+        #                                  ChVector &u_displ,
+        #                                  ChVector &u_rotaz)
+        # void EvaluateSectionFrame(const double eta,
+        #                           const ChMatrix &displ,
+        #                           ChVector &u_displ,
+        #                           ChQuaternion &rot)
+        # void EvaluateSectionForceTorque(const double eta,
+        #                                 const ChMatrix &displ,
+        #                                 ChVector &Fforce,
+        #                                 ChVector &Mtorque)
+        # void EvaluateSectionStrain(const double eta,
+        #                            const ChMatrix &displ,
+        #                            ChVector &StrainV)
         double GetMass()
         double GetRestLength()
         void SetRestLength(double ml)
