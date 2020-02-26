@@ -43,3 +43,4 @@ dependencies:
   - recordtype
   - xtensor-python
   - git-lfs
+  - eigen
