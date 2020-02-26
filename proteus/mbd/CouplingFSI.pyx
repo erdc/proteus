@@ -949,7 +949,7 @@ cdef class ProtChBody:
         self.getValues()
         self.storeValues()
         # set mass matrix with no added mass
-        self.setAddedMass(np.zeros((6,6)))
+        self.setAddedMass(self.Aij)
         self.thisptr.calculate_init()
 
     def calculate(self):

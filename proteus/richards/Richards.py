@@ -3,10 +3,11 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from .cRichards import *
-import numpy
-from proteus import *
-from proteus.Transport import *
+import numpy as np
 from proteus.Transport import OneLevelTransport
+from proteus.Transport import TC_base, NonlinearEquation, logEvent, memory
+from proteus.Transport import FluxBoundaryConditions, Comm, cfemIntegrals
+from proteus.Transport import DOFBoundaryConditions, Quadrature
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
@@ -54,23 +55,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.diagonal_conductivity = diagonal_conductivity
         self.Ksw_types_in = Ksw_types
         if self.diagonal_conductivity:
-            sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd+1,dtype='i'),
-                                             numpy.arange(self.nd,dtype='i'))}
+            sparseDiffusionTensors = {(0,0):(np.arange(self.nd+1,dtype='i'),
+                                             np.arange(self.nd,dtype='i'))}
 
             assert len(Ksw_types.shape) in [1,2], "if diagonal conductivity true then Ksw_types scalar or vector of diagonal entries"
             #allow scalar input Ks
             if len(Ksw_types.shape)==1:
-                self.Ksw_types = numpy.zeros((self.nMaterialTypes,self.nd),'d')
+                self.Ksw_types = np.zeros((self.nMaterialTypes,self.nd),'d')
                 for I in range(self.nd):
                     self.Ksw_types[:,I] = Ksw_types
             else:
                 self.Ksw_types = Ksw_types
         else: #full
-            sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
-                                             numpy.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
+            sparseDiffusionTensors = {(0,0):(np.arange(self.nd**2+1,step=self.nd,dtype='i'),
+                                             np.array([list(range(self.nd)) for row in range(self.nd)],dtype='i'))}
             assert len(Ksw_types.shape) in [1,2], "if full tensor conductivity true then Ksw_types scalar or 'flattened' row-major representation of entries"
             if len(Ksw_types.shape)==1:
-                self.Ksw_types = numpy.zeros((self.nMaterialTypes,self.nd**2),'d')
+                self.Ksw_types = np.zeros((self.nMaterialTypes,self.nd**2),'d')
                 for I in range(self.nd):
                     self.Ksw_types[:,I*self.nd+I] = Ksw_types
             else:
@@ -95,7 +96,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
         #want element boundary material types for evaluating heterogeneity
         #not boundary conditions
-        self.isSeepageFace = numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
+        self.isSeepageFace = np.zeros((mesh.nExteriorElementBoundaries_global),'i')
         if self.getSeepageFace != None:
             for ebNE in range(mesh.nExteriorElementBoundaries_global):
                 #mwf missing ebNE-->ebN?
@@ -107,21 +108,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeElementQuadrature(self,t,cq):
         self.materialTypes_q = self.elementMaterialTypes
         self.q_shape = cq[('u',0)].shape
-#        cq['Ks'] = numpy.zeros(self.q_shape,'d')
+#        cq['Ks'] = np.zeros(self.q_shape,'d')
 #        for k in range(self.q_shape[1]):
 #            cq['Ks'][:,k] = self.Ksw_types[self.elementMaterialTypes,0]
-        self.q[('vol_frac',0)] = numpy.zeros(self.q_shape,'d')
+        self.q[('vol_frac',0)] = np.zeros(self.q_shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        self.materialTypes_ebq = numpy.zeros(cebq[('u',0)].shape[0:2],'i')
+        self.materialTypes_ebq = np.zeros(cebq[('u',0)].shape[0:2],'i')
         self.ebq_shape = cebq[('u',0)].shape
         for ebN_local in range(self.ebq_shape[1]):
             self.materialTypes_ebq[:,ebN_local] = self.elementMaterialTypes
-        self.ebq[('vol_frac',0)] = numpy.zeros(self.ebq_shape,'d')
+        self.ebq[('vol_frac',0)] = np.zeros(self.ebq_shape,'d')
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         self.materialTypes_ebqe = self.exteriorElementBoundaryTypes
         self.ebqe_shape = cebqe[('u',0)].shape
-        self.ebqe[('vol_frac',0)] = numpy.zeros(self.ebqe_shape,'d')
+        self.ebqe[('vol_frac',0)] = np.zeros(self.ebqe_shape,'d')
         #
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
@@ -174,13 +175,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 #                                                                      c[('a',0,0)],
 #                                                                      c[('da',0,0,0)])
         #mwf debug
-        if (numpy.isnan(c[('da',0,0,0)]).any() or
-            numpy.isnan(c[('a',0,0)]).any() or
-            numpy.isnan(c[('df',0,0)]).any() or
-            numpy.isnan(c[('f',0)]).any() or
-            numpy.isnan(c[('u',0)]).any() or
-            numpy.isnan(c[('m',0)]).any() or
-            numpy.isnan(c[('dm',0,0)]).any()):
+        if (np.isnan(c[('da',0,0,0)]).any() or
+            np.isnan(c[('a',0,0)]).any() or
+            np.isnan(c[('df',0,0)]).any() or
+            np.isnan(c[('f',0)]).any() or
+            np.isnan(c[('u',0)]).any() or
+            np.isnan(c[('m',0)]).any() or
+            np.isnan(c[('dm',0,0)]).any()):
             import pdb
             pdb.set_trace()
 
@@ -409,25 +410,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-        self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('grad(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
-        self.q['velocity'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
+        #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        self.q[('u',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('grad(u)',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
+        self.q['velocity'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('m',0)] = self.q[('u',0)].copy()
         self.q[('mt',0)] = self.q[('u',0)].copy()
         self.q[('m_last',0)] = self.q[('u',0)].copy()
         self.q[('m_tmp',0)] = self.q[('u',0)].copy()
-        self.q[('cfl',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('numDiff',0,0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.ebqe[('u',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('grad(u)',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
-        self.ebqe['velocity'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
-        self.ebqe[('advectiveFlux_bc_flag',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
-        self.ebqe[('advectiveFlux_bc',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('advectiveFlux',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('penalty')] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.q[('cfl',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('numDiff',0,0)] =  np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.ebqe[('u',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('grad(u)',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
+        self.ebqe['velocity'] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
+        self.ebqe[('advectiveFlux_bc_flag',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
+        self.ebqe[('advectiveFlux_bc',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('advectiveFlux',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('penalty')] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
@@ -436,9 +437,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
-            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+            self.inflowBoundaryBC[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
         #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
@@ -451,7 +452,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global,i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray=numpy.zeros((self.nNodes_internal,),'i')
+        self.internalNodesArray=np.zeros((self.nNodes_internal,),'i')
         for nI,n in enumerate(self.internalNodes):
             self.internalNodesArray[nI]=n
         #
@@ -528,7 +529,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         #TODO get rid of this
         for ci,fbcObject  in list(self.fluxBoundaryConditionsObjectsDict.items()):
-            self.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
+            self.ebqe[('advectiveFlux_bc_flag',ci)] = np.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
             for t,g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
                 if ci in self.coefficients.advection:
                     self.ebqe[('advectiveFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
@@ -537,9 +538,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if hasattr(self.numericalFlux,'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
         if not hasattr(self.numericalFlux,'isDOFBoundary'):
-            self.numericalFlux.isDOFBoundary = {0:numpy.zeros(self.ebqe[('u',0)].shape,'i')}
+            self.numericalFlux.isDOFBoundary = {0:np.zeros(self.ebqe[('u',0)].shape,'i')}
         if not hasattr(self.numericalFlux,'ebqe'):
-            self.numericalFlux.ebqe = {('u',0):numpy.zeros(self.ebqe[('u',0)].shape,'d')}
+            self.numericalFlux.ebqe = {('u',0):np.zeros(self.ebqe[('u',0)].shape,'d')}
         #TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag=0
@@ -558,7 +559,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.movingDomain=False
         self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
-            self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')        
+            self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')        
         self.forceStrongConditions=False
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
@@ -684,7 +685,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape,'d')
+            self.globalResidualDummy = np.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
