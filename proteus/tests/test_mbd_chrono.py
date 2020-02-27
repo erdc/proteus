@@ -11,6 +11,9 @@ class TestCable(unittest.TestCase):
         system = fsi.ProtChSystem()
         system.ChSystem.Set_G_acc(chrono.ChVectorD(g[0], g[1], g[2]))
         system.setTimeStep(1e-1)
+
+        # timestepper = chrono.ChTimestepperEulerImplicitLinearized()
+        # system.ChSystem.SetTimestepper(timestepper)
         solver = chrono.ChSolverMINRES()
         system.ChSystem.SetSolver(solver)
         solver.SetMaxIterations(100)
@@ -26,11 +29,11 @@ class TestCable(unittest.TestCase):
         rho = np.array([1000.])
         E = np.array([1e10])
         cable_type = b"CableANCF"
+        fairlead_body = fsi.ProtChBody(system)
+        fairlead_body.ChBody.SetBodyFixed(True)
         mooring = fsi.ProtChMoorings(system=system, mesh=mesh, length=L, nb_elems=nb_elems, d=d, rho=rho, E=E, beam_type=cable_type)
         mooring.external_forces_manual = True # tri: should work without this line
         # vertical cable
-        fairlead_body = fsi.ProtChBody(system)
-        fairlead_body.ChBody.SetBodyFixed(True)
         mooring.setNodesPositionFunction(lambda s: np.array([0., 0., s]), lambda s: np.array([0., 0., 1.]))
         mooring.setNodesPosition()
         mooring.buildNodes()
