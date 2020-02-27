@@ -89,7 +89,7 @@ class TestBDM2Reference1(object):
         #    np.savetxt('bdm2_ref_proj_mat.txt', bdm2_obj.BDMprojectionMat_element[0])
         rel_path = "comparison_files/bdm2_ref_proj_mat.txt"
         comparison_matrix = np.loadtxt(os.path.join(self.scriptdir,rel_path), dtype = float)
-        assert np.allclose(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element)
+        np.testing.assert_almost_equal(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element,decimal=6)
 
         # ******************** TEST RHS CONSTRUCTION *************************
 
@@ -113,7 +113,7 @@ class TestBDM2Reference1(object):
                                    -1.66666667e-01, -1.66666667e-01, -6.66666667e-01,
                                    -1.66666667e-01, -1.66666667e-01, -6.66666667e-01,
                                    -1.00000000e+00,  5.00000000e-01,  4.33680869e-19])
-        assert np.allclose(comparison_rhs,test_rhs)
+        np.testing.assert_almost_equal(comparison_rhs,test_rhs,decimal=6)
 
     def test_BDM2_reference_triangle_full_in_space(self):
         rel_path_1 = "comparison_files/bdm_bdy_func_values.npy"
