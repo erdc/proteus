@@ -11,8 +11,8 @@ timeIntegration = NoIntegration
 runCFL = 0.9
 
 femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
-elementQuadrature = SimplexGaussQuadrature(nd,3)
-elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+elementQuadrature = SimplexGaussQuadrature(nd,5)
+elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,5)
 #femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
 #femSpaces = {0:DG_AffineP0_OnSimplexWithMonomialBasis}
 #femSpaces = {0:DG_AffineP1_OnSimplexWithMonomialBasis}
@@ -63,9 +63,9 @@ shockCapturing = ADR.ShockCapturing(coefficients,nd,shockCapturingFactor=0.0,lag
 
 numericalFluxType = ADR.NumericalFlux
 
-multilevelNonlinearSolver  = NLNI
+multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = Newton
-nonlinearSmoother = NLStarILU
+nonlinearSmoother = None#NLStarILU
 
 fullNewtonFlag = True
 
@@ -78,7 +78,7 @@ maxNonlinearIts =1001
 matrix = SparseMatrix
 multilevelLinearSolver = LU
 levelLinearSolver = LU
-linearSmoother = GaussSeidel
+linearSmoother = None#GaussSeidel
 
 linTolFac = 0.001
 

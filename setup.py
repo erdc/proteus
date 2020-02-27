@@ -277,7 +277,7 @@ EXTENSIONS_TO_BUILD = [
               libraries=['ncurses','stdc++','m'],
               extra_compile_args=["-std=c++11"]),
     Extension(
-        'ADR',
+        'cppADR',
         ['proteus/ADR.cpp'],
         depends=['proteus/ADR.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
@@ -723,7 +723,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.2.dev0',
+          version='1.7.3',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',

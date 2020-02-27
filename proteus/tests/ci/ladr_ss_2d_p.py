@@ -39,7 +39,24 @@ def f(x):
 
 aOfX = {0:a}; fOfX = {0:f}
 
-coefficients = ADR.Coefficients(aOfX=aOfX,fOfX=fOfX,velocity=B0_1c[0],nc=1,nd=nd,forceStrongDirichlet=False)
+center = (0.5,0.5)
+radius = 0.45
+
+def embeddedBoundary_sdf(x,t):
+    xr = x[0] - center[0]
+    yr = x[1] - center[1]
+    r = max(math.sqrt(xr**2 + yr**2),1.0e-16)
+    n = (-xr/r,-yr/r,0.)
+    sdf = radius - r
+    return sdf,n
+
+def embeddedBoundary_u(x,t):
+    return ans.uOfX(x)
+
+coefficients = ADR.Coefficients(aOfX=aOfX,fOfX=fOfX,velocity=B0_1c[0],nc=1,nd=nd,forceStrongDirichlet=False,
+                                embeddedBoundary=True,
+                                embeddedBoundary_sdf=embeddedBoundary_sdf,
+                                embeddedBoundary_u=embeddedBoundary_u)
 
 def getDBC(x,flag):
     if x[0] <= 1.0e-8 or x[1] <= 1.0e-8:
