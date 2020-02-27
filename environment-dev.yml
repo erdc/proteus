@@ -22,7 +22,6 @@ dependencies:
   - superlu
   - superlu_dist
   - triangle
-  - pychrono
   - mpi4py
   - gmsh
   - matplotlib
