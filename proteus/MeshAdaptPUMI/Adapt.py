@@ -16,9 +16,33 @@ class PUMIAdapt:
      def __getattr__(self, attr):
         return getattr(self.solver, attr)
 
+     def getModels(self,modelDict):
+        #indices are better than models since during adaptation, models are destroyed and recreated
+        #using indices avoids having to call this function multiple times
+        try:
+            self.flowIdx = modelDict['flow']
+            self.phaseIdx = modelDict['phase']
+            #i should make this a list of correction indices where order matters
+            self.correctionsIdxs = modelDict['corrections']
+            #self.rdIdx = modelDict['redistance']
+            #self.mcIdx = modelDict['mcorr']
+        except:
+            print("Not all indices are defined properly")
+        
+    
+     #def attachManager(self,domain):
+     #   try:
+     #       self.manager = domain.PUMIMesh
+     #       try:
+     #           self.getModels(self.manager.modelDict)
+     #       except:
+     #           sys.exit("Model indices don't correspond to models")
+     #   except:
+     #       print("No adaptation manager to attach")
+
      def reconstructMesh(self,domain,mesh):
 
-        if hasattr(domain,"PUMIMesh.PUMIAdapter") and not isinstance(domain,proteus.Domain.PUMIDomain) :
+        if hasattr(domain,"PUMIMesh") and not isinstance(domain,proteus.Domain.PUMIDomain) :
 
           logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
 
@@ -134,9 +158,9 @@ class PUMIAdapt:
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and ((modelListOld[0].levelModelList[0].stabilization.nSteps - 1) > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+                if(modelListOld[self.flowIdx].levelModelList[0].stabilization.lag and ((modelListOld[self.flowIdx].levelModelList[0].stabilization.nSteps - 1) > modelListOld[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay) ):
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.nSteps = self.modelList[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
@@ -148,6 +172,7 @@ class PUMIAdapt:
         if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 )
           or self.opts.hotStart):
 
+            #for idx in self.correctionsIdxs:
             for idx in [3,4]:
                 model = self.modelList[idx]
                 self.preStep(model)
@@ -177,13 +202,15 @@ class PUMIAdapt:
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+                if(modelListOld[self.flowIdx].levelModelList[0].stabilization.lag and ((modelListOld[self.flowIdx].levelModelList[0].stabilization.nSteps - 1) > modelListOld[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay) ):
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.nSteps = self.modelList[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.updateSubgridErrorHistory()
+
         ###
 
         ###need to re-distance and mass correct
         if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12) or self.opts.hotStart  ):
+            #for idx in self.correctionsIdxs:
             for idx in [3,4]:
                 model = self.modelList[idx]
                 self.preStep(model)
@@ -583,7 +610,7 @@ class PUMIAdapt:
         else:
             domain = p0.domain
 
-        if (hasattr(domain, 'PUMIMesh.PUMIAdapter') and
+        if (hasattr(domain, 'PUMIMesh') and
             domain.PUMIMesh.PUMIAdapter.adaptMesh() and
             self.so.useOneMesh): #and
             #self.nSolveSteps%domain.PUMIMesh.PUMIAdapter.numAdaptSteps()==0):

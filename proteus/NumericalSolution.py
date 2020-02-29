@@ -576,6 +576,8 @@ class NS_base(object):  # (HasTraits):
         theDomain = pCT.domain
 
         self.Adapter = Adapt.PUMIAdapt(self)
+        #self.Adapter.attachManager(theDomain)
+        self.Adapter.getModels(theDomain.PUMIMesh.modelDict)
         self.Adapter.reconstructMesh(theDomain,theMesh)
 
         if so.useOneMesh:
@@ -1328,7 +1330,7 @@ class NS_base(object):  # (HasTraits):
 
         if(hasattr(self.pList[0].domain,"PUMIMesh")):
         #Transfer solution to PUMI mesh for output
-          self.pList[0].domain.PUMIMesh.transferFieldToPUMI(b"coordinates",
+          self.pList[0].domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(b"coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
           for m in self.modelList:
@@ -1338,17 +1340,17 @@ class NS_base(object):  # (HasTraits):
                 vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
-                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                self.pList[0].domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
                    coef.vectorName.encode('utf-8'), vector)
                 #Transfer dof_last
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
-                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                self.pList[0].domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
                      coef.vectorName.encode('utf-8')+b"_old", vector)
                 #Transfer dof_last_last
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
-                self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                self.pList[0].domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
                      coef.vectorName.encode('utf-8')+b"_old_old", vector)
                 del vector
 
@@ -1357,19 +1359,19 @@ class NS_base(object):  # (HasTraits):
                   ci not in coef.vectorComponents:
                   scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                   scalar[:,0] = lm.u[ci].dof[:]
-                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                  self.pList[0].domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
                       coef.variableNames[ci].encode('utf-8'), scalar)
                   #Transfer dof_last
                   scalar[:,0] = lm.u[ci].dof_last[:]
-                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                  self.pList[0].domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
                      coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
                   #Transfer dof_last_last
                   scalar[:,0] = lm.u[ci].dof_last_last[:]
-                  self.pList[0].domain.PUMIMesh.transferFieldToPUMI(
+                  self.pList[0].domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
                      coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
                   del scalar
 
-          self.pList[0].domain.PUMIMesh.writeMesh(b"finalMesh.smb")
+          self.pList[0].domain.PUMIMesh.PUMIAdapter.writeMesh(b"finalMesh.smb")
           if((self.PUMIcheckpointer.frequency>0) ):
             self.modelListOld = self.modelList
             self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
