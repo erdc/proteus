@@ -401,7 +401,7 @@ class NS_base(object):  # (HasTraits):
                 else:
                   mesh = MeshTools.TriangularMesh()
                 logEvent("Converting PUMI mesh to Proteus")
-                mesh.convertFromPUMI(p.domain,p.domain.PUMIMesh, p.domain.faceList,
+                mesh.convertFromPUMI(p.domain,p.domain.PUMIMesh.PUMIAdapter, p.domain.faceList,
                     p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
                 if p.domain.nd == 3:

@@ -169,3 +169,9 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.writeMesh(meshName)
     def cleanMesh(self):
         return self.thisptr.cleanMesh()
+
+class AdaptManager():
+   def __init__(self):
+       self.modelDict = {}
+       self.PUMIAdapter=None
+
