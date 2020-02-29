@@ -172,8 +172,7 @@ class PUMIAdapt:
         if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 )
           or self.opts.hotStart):
 
-            #for idx in self.correctionsIdxs:
-            for idx in [3,4]:
+            for idx in self.correctionsIdxs:
                 model = self.modelList[idx]
                 self.preStep(model)
                 self.setWeakDirichletConditions(model)
@@ -202,16 +201,14 @@ class PUMIAdapt:
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(modelListOld[self.flowIdx].levelModelList[0].stabilization.lag and ((modelListOld[self.flowIdx].levelModelList[0].stabilization.nSteps - 1) > modelListOld[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay) ):
-                    self.modelList[self.flowIdx].levelModelList[0].stabilization.nSteps = self.modelList[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay
+                if(modelListOld[self.flowIdx].levelModelList[0].stabilization.lag and modelListOld[self.flowIdx].levelModelList[0].stabilization.nSteps > modelListOld[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[self.flowIdx].levelModelList[0].stabilization.updateSubgridErrorHistory()
-
         ###
 
         ###need to re-distance and mass correct
         if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12) or self.opts.hotStart  ):
-            #for idx in self.correctionsIdxs:
-            for idx in [3,4]:
+            for idx in self.correctionsIdxs:
                 model = self.modelList[idx]
                 self.preStep(model)
                 self.setWeakDirichletConditions(model)
