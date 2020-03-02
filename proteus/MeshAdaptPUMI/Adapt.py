@@ -12,7 +12,6 @@ from proteus import SimTools
 class PUMIAdapt:
      def __init__(self,NS_Base):
         self.solver = NS_Base
-
      def __getattr__(self, attr):
         return getattr(self.solver, attr)
 
@@ -109,7 +108,9 @@ class PUMIAdapt:
             mlMesh.generatePartitionedMeshFromPUMI(
                 mesh,nLevels,
                 nLayersOfOverlap=nLayersOfOverlapForParallel)
-        self.mlMesh_nList=[]
+        
+        #need to remove old mlMesh references to ensure the number of mesh entities is properly updated
+        self.mlMesh_nList.clear()
         for p in self.pList:
             self.mlMesh_nList.append(mlMesh)
         if (domain.PUMIMesh.PUMIAdapter.size_field_config() == "isotropicProteus"):
@@ -202,7 +203,7 @@ class PUMIAdapt:
 
                 #This gets the subgrid error history correct
                 if(modelListOld[self.flowIdx].levelModelList[0].stabilization.lag and modelListOld[self.flowIdx].levelModelList[0].stabilization.nSteps > modelListOld[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay):
-                    self.modelList[self.flowIdx].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.nSteps = self.modelList[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay
                     self.modelList[self.flowIdx].levelModelList[0].stabilization.updateSubgridErrorHistory()
         ###
 
@@ -465,6 +466,8 @@ class PUMIAdapt:
             g      = p0.g
             epsFact_density = p0.epsFact_density
         logEvent("Copying coordinates to PUMI")
+        
+        #might be an arbitrary choice in terms of which model to use, but guaranteed that the 0th model exists
         domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(b"coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
@@ -701,7 +704,7 @@ class PUMIAdapt:
         if(sfConfig==b"pseudo"):
             logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
         else:
-            domain.PUMIMesh.PUMIAdapter.adaptPUMIMesh.PUMIAdapter(inputString)
+            domain.PUMIMesh.PUMIAdapter.adaptPUMIMesh(inputString)
 
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
