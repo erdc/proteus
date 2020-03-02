@@ -516,8 +516,13 @@ class PUMIAdapt:
                 for ci in range(0,lm.coefficients.nc):
                     lm.u_store[ci] = lm.u[ci].copy()
 
-        self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
-        self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
+        #for each type of phase tracking model, this will need to be done
+        for m in self.modelList:
+            for lm in m.levelModelList:
+                if(isinstance(lm,proteus.mprans.VOF.LevelModel) or 
+                   isinstance(lm,proteus.mprans.NCLS.LevelModel)
+                ):
+                    lm.setUnknowns(m.uList[0])
 
         logEvent("Copying DOF and parameters to PUMI")
         for m in self.modelList:
