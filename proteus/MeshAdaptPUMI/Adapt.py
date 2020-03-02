@@ -486,25 +486,21 @@ class PUMIAdapt:
         #pass through heaviside function to get material property
         from proteus.ctransportCoefficients import smoothedHeaviside
         
-        IEN = self.modelList[2].levelModelList[0].u[0].femSpace.dofMap.l2g
+        IEN = self.modelList[self.phaseIdx].levelModelList[0].u[0].femSpace.dofMap.l2g
         for (eID, dofs) in enumerate(IEN):
             phi_val = 0.0
             for idx in range(len(dofs)):
-                phi_val += materialSpace.psi[0][idx]*self.modelList[2].levelModelList[0].u[0].dof[dofs[idx]]
-            #rho_transfer[eID] = phi_val
+                phi_val += materialSpace.psi[0][idx]*self.modelList[self.phaseIdx].levelModelList[0].u[0].dof[dofs[idx]]
             
             #heaviside
             h_phi=0.0;
             for idx in range(len(dofs)):
-                h_phi += (materialSpace.psi[0][idx])*(self.modelList[2].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
+                h_phi += (materialSpace.psi[0][idx])*(self.modelList[self.phaseIdx].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
             eps_rho = p0.epsFact_density*h_phi
             smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
 
             rho_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.rho_0 + smoothed_phi_val*self.pList[0].ct.rho_1
             nu_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.nu_0 + smoothed_phi_val*self.pList[0].ct.nu_1
-
-        self.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
-        self.modelList[0].levelModelList[0].mesh.elementMaterial[:] = rho_transfer[:]
 
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
