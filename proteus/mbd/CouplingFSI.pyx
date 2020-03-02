@@ -2190,14 +2190,15 @@ cdef class ProtChSystem:
 
             for i_entry_residual in range(0, 6, 1):
                 try:
-                    # Attemp to extract the value from the Chrono matrix
+                    # Attempt to extract the value from the Chrono matrix
                     s_residuals += str(o_linkage_residual.GetElement(0, i_entry_residual)) + '\t'
+
                 except:
                     # Residual doesn't exist. Keep the zero in the array.
                     s_residuals += str(0.000) + '\t'
 
             # Add the new line to the code, replacing the last tab
-            s_residuals[-1] = '\n'
+            s_residuals += '\n'
 
             # Write to the file
             o_file.write(s_residuals)
