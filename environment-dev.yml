@@ -35,7 +35,7 @@ dependencies:
   - scipy
   - tetgen
   - ncurses
-  - pychrono
+  - pychrono =4.0.*
   - python=3
   - future
   - ipyparallel
