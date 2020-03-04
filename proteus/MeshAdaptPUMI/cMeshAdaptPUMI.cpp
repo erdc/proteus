@@ -594,7 +594,7 @@ int MeshAdaptPUMIDrvr::willAdapt()
 //Master function that calls other adapt-trigger functions
 {
   int adaptFlag = 0;
-  if(size_field_config == "combined" or size_field_config == "isotropic")
+  if(size_field_config == "combined" or size_field_config == "isotropic" or size_field_config == "ibm")
   {
     adaptFlag += willInterfaceAdapt(); 
     std::cout<<"willInterfaceAdapt "<<adaptFlag<<std::endl;
@@ -713,7 +713,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     //size_iso = samSz::isoSize(m);
     setSphereSizeField();
   }
-  else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
+  else if (size_field_config == "isotropic" || std::string(inputString)=="interface" || size_field_config == "ibm")
   {
     double L_band = (N_interface_band+1)*hPhi;
     calculateSizeField(L_band);

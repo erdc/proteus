@@ -20,13 +20,16 @@ class PUMIAdapt:
         #using indices avoids having to call this function multiple times
         try:
             self.flowIdx = modelDict['flow']
-            self.phaseIdx = modelDict['phase']
-            #i should make this a list of correction indices where order matters
-            self.correctionsIdxs = modelDict['corrections']
-            #self.rdIdx = modelDict['redistance']
-            #self.mcIdx = modelDict['mcorr']
         except:
-            print("Not all indices are defined properly")
+            print("flow index not defined properly")
+        try:
+            self.phaseIdx = modelDict['phase']
+        except:
+            print("phase index not defined properly")
+        try:
+            self.correctionsIdxs = modelDict['corrections']
+        except:
+            self.correctionsIdxs=[]
         
     
      #def attachManager(self,domain):
@@ -74,8 +77,13 @@ class PUMIAdapt:
           domain.PUMIMesh.PUMIAdapter.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
 
      def PUMI_reallocate(self,mesh):
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+        try:
+            p0 = self.pList[0].ct
+            n0 = self.nList[0].ct
+        except:
+            p0 = self.pList[0]
+            n0 = self.nList[0]
+
         if self.TwoPhaseFlow:
             nLevels = p0.myTpFlowProblem.general['nLevels']
             nLayersOfOverlapForParallel = p0.myTpFlowProblem.general['nLayersOfOverlapForParallel']
@@ -235,10 +243,13 @@ class PUMIAdapt:
               lm.calculateAuxiliaryQuantitiesAfterStep()
 
      def PUMI2Proteus(self,domain):
-        #p0 = self.pList[0] #This can probably be cleaned up somehow
-        #n0 = self.nList[0]
-        p0 = self.pList[0]
-        n0 = self.nList[0]
+
+        try:
+            p0 = self.pList[0].ct
+            n0 = self.nList[0].ct
+        except:
+            p0 = self.pList[0]
+            n0 = self.nList[0]
 
         modelListOld = self.modelListOld
         logEvent("Attach auxiliary variables to new models")
@@ -307,6 +318,12 @@ class PUMIAdapt:
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
 
+        #just added, need to initialize structures?
+        for model in self.modelList:
+            logEvent("Auxiliary variable calculate_init for model %s" % (model.name,))
+            for av in self.auxiliaryVariables[model.name]:
+                av.calculate_init()
+
         logEvent("Transfering fields from PUMI to Proteus")
         for m in self.modelList:
           for lm in m.levelModelList:
@@ -342,6 +359,14 @@ class PUMIAdapt:
                 lm.u[ci].dof_last_last[:] = scalar[:,0]
 
                 del scalar
+
+        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibm'):
+
+            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+            domain.PUMIMesh.PUMIAdapter.transferFieldToProteus(
+                b'phi', scalar)
+            self.modelList[self.flowIdx].levelModelList[0].coefficients.phi_s[:]=scalar[:,0]
+            del scalar
 
         logEvent("Attaching models on new mesh to each other")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
@@ -446,8 +471,12 @@ class PUMIAdapt:
         self.comm.barrier()
 
      def PUMI_transferFields(self):
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
+        try:
+            p0 = self.pList[0].ct
+            n0 = self.nList[0].ct
+        except:
+            p0 = self.pList[0]
+            n0 = self.nList[0]
 
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
@@ -475,32 +504,13 @@ class PUMIAdapt:
         #arrays are length = number of elements and will correspond to density at center of element
         rho_transfer = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
         nu_transfer = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
-        #get quadrature points at element centroid and evaluate at shape functions
-        from proteus import Quadrature
-        transferQpt = Quadrature.SimplexGaussQuadrature(p0.domain.nd,1)
-        qpt_centroid = numpy.asarray([transferQpt.points[0]])
-        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,p0.domain.nd)
-        materialSpace.getBasisValuesRef(qpt_centroid)
         
         #obtain the level-set or vof value at each element centroid
         #pass through heaviside function to get material property
-        from proteus.ctransportCoefficients import smoothedHeaviside
-        
-        IEN = self.modelList[self.phaseIdx].levelModelList[0].u[0].femSpace.dofMap.l2g
-        for (eID, dofs) in enumerate(IEN):
-            phi_val = 0.0
-            for idx in range(len(dofs)):
-                phi_val += materialSpace.psi[0][idx]*self.modelList[self.phaseIdx].levelModelList[0].u[0].dof[dofs[idx]]
-            
-            #heaviside
-            h_phi=0.0;
-            for idx in range(len(dofs)):
-                h_phi += (materialSpace.psi[0][idx])*(self.modelList[self.phaseIdx].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
-            eps_rho = p0.epsFact_density*h_phi
-            smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
+        #only need to do this if using combined adapt
 
-            rho_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.rho_0 + smoothed_phi_val*self.pList[0].ct.rho_1
-            nu_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.nu_0 + smoothed_phi_val*self.pList[0].ct.nu_1
+        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'combined'):
+            self.computeElementMaterials(rho_0,rho_1,nu_0,nu_1,rho_transfer,nu_transfer)
 
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
@@ -562,9 +572,17 @@ class PUMIAdapt:
 
                 del scalar
 
-        scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+        #if chrono solid phi_s field is present this needs to have a corresponding mirror transfer back function
+        #also should maybe rely on a separate sf config scheme
+        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibm'):
 
-        del scalar
+            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+            scalar[:,0] = self.modelList[self.flowIdx].levelModelList[0].coefficients.phi_s[:]
+            domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
+                b'phi', scalar)
+
+            del scalar
+
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
 
@@ -599,10 +617,13 @@ class PUMIAdapt:
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        p0 = self.pList[0]
-        n0 = self.nList[0]
-        #p0 = self.pList[0].ct
-        #n0 = self.nList[0].ct
+        try:
+            p0 = self.pList[0].ct
+            n0 = self.nList[0].ct
+        except:
+            p0 = self.pList[0]
+            n0 = self.nList[0]
+
 
         adaptMeshNow = False
 
@@ -691,8 +712,13 @@ class PUMIAdapt:
         """
         ##
 
-        p0 = self.pList[0]#.ct
-        n0 = self.nList[0]#.ct
+        try:
+            p0 = self.pList[0].ct
+            n0 = self.nList[0].ct
+        except:
+            p0 = self.pList[0]
+            n0 = self.nList[0]
+
 
         if self.TwoPhaseFlow:
             domain = p0.myTpFlowProblem.domain
@@ -764,5 +790,32 @@ class PUMIAdapt:
             logEvent("Initial Adapt 2 before Solve")
             self.PUMI_adaptMesh(b"interface")
 
+     def computeElementMaterials(self,rho_0,rho_1,nu_0,nu_1,rho_transfer,nu_transfer):
+
+        #get quadrature points at element centroid and evaluate at shape functions
+        from proteus import Quadrature
+        transferQpt = Quadrature.SimplexGaussQuadrature(p0.domain.nd,1)
+        qpt_centroid = numpy.asarray([transferQpt.points[0]])
+        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,p0.domain.nd)
+        materialSpace.getBasisValuesRef(qpt_centroid)
 
 
+        from proteus.ctransportCoefficients import smoothedHeaviside
+        
+        IEN = self.modelList[self.phaseIdx].levelModelList[0].u[0].femSpace.dofMap.l2g
+        for (eID, dofs) in enumerate(IEN):
+            phi_val = 0.0
+            for idx in range(len(dofs)):
+                phi_val += materialSpace.psi[0][idx]*self.modelList[self.phaseIdx].levelModelList[0].u[0].dof[dofs[idx]]
+            
+            #heaviside
+            h_phi=0.0;
+            for idx in range(len(dofs)):
+                h_phi += (materialSpace.psi[0][idx])*(self.modelList[self.phaseIdx].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
+            eps_rho = p0.epsFact_density*h_phi
+            smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
+
+            rho_transfer[eID] = (1.0-smoothed_phi_val)*rho_0 + smoothed_phi_val*rho_1
+            nu_transfer[eID] = (1.0-smoothed_phi_val)*nu_0 + smoothed_phi_val*nu_1
+
+        #return rho_transfer,nu_transfer

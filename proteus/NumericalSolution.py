@@ -571,13 +571,19 @@ class NS_base(object):  # (HasTraits):
                         logEvent("NumericalSolution ViewMesh failed for mesh level %s" % l)
 
         theMesh = mlMesh.meshList[0].subdomainMesh
-        pCT = self.pList[0]#self.pList[0].ct
-        nCT = self.nList[0]#self.nList[0].ct
+
+        try:
+            pCT = self.pList[0].ct
+            nCT = self.nList[0].ct
+        except:
+            pCT = self.pList[0]
+            nCT = self.nList[0]
+
         theDomain = pCT.domain
 
         self.Adapter = Adapt.PUMIAdapt(self)
-        #self.Adapter.attachManager(theDomain)
-        self.Adapter.getModels(theDomain.PUMIMesh.modelDict)
+        if(hasattr(theDomain,'PUMIMesh')):
+            self.Adapter.getModels(theDomain.PUMIMesh.modelDict)
         self.Adapter.reconstructMesh(theDomain,theMesh)
 
         if so.useOneMesh:
