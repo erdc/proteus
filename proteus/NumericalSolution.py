@@ -572,19 +572,12 @@ class NS_base(object):  # (HasTraits):
 
         theMesh = mlMesh.meshList[0].subdomainMesh
 
-        try:
-            pCT = self.pList[0].ct
-            nCT = self.nList[0].ct
-        except:
-            pCT = self.pList[0]
-            nCT = self.nList[0]
+        theDomain = self.pList[0].domain
 
-        theDomain = pCT.domain
-
-        self.Adapter = Adapt.PUMIAdapt(self)
         if(hasattr(theDomain,'PUMIMesh')):
+            self.Adapter = Adapt.PUMIAdapt(self)
             self.Adapter.getModels(theDomain.PUMIMesh.modelDict)
-        self.Adapter.reconstructMesh(theDomain,theMesh)
+            self.Adapter.reconstructMesh(theDomain,theMesh)
 
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
@@ -991,7 +984,8 @@ class NS_base(object):  # (HasTraits):
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        self.Adapter.initialAdapt()
+        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+            self.Adapter.initialAdapt()
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1242,8 +1236,9 @@ class NS_base(object):  # (HasTraits):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 import gc; gc.collect()
-                if(self.Adapter.PUMI_estimateError()):
-                    self.Adapter.PUMI_adaptMesh()
+                if(hasattr(self.pList[0].domain,"PUMIMesh")):
+                    if(self.Adapter.PUMI_estimateError()):
+                        self.Adapter.PUMI_adaptMesh()
                 #
                 if measureSpeed and startToMeasureSpeed and self.comm.isMaster():
                     numTimeSteps += 1

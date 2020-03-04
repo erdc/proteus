@@ -181,15 +181,19 @@ elif usePUMI and not genMesh:
     hmax = he;
     hmin = he/4.0;
     hPhi = he/2.0;#/4.0
-    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax, hmin=hmin, hPhi = hPhi, adaptMesh=adaptMeshFlag, numIter=adaptMesh_numIter, numAdaptSteps=adaptMesh_nSteps,  sfConfig=b"pseudo",logType=b"off",reconstructedFlag=2,gradingFact=1.2)
-    domain.PUMIMesh.loadModelAndMesh(b"Reconstructed.dmg", b"Reconstructed.smb")
+    domain.PUMIMesh=MeshAdaptPUMI.AdaptManager()
+    domain.PUMIMesh.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax, hmin=hmin, hPhi = hPhi, adaptMesh=adaptMeshFlag, numIter=adaptMesh_numIter, numAdaptSteps=adaptMesh_nSteps,  sfConfig=b"pseudo",logType=b"off",reconstructedFlag=2,gradingFact=1.2)
+    domain.PUMIMesh.PUMIAdapter.loadModelAndMesh(b"Reconstructed.dmg", b"Reconstructed.smb")
+    modelDict = {'flow':0,'phase':2,'corrections':[3,4]}
+    domain.PUMIMesh.modelDict = modelDict
 
 else:
     domain = Domain.PlanarStraightLineGraphDomain()
 
 if genMesh and usePUMI:
   from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-  domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI()
+  domain.PUMIMesh=MeshAdaptPUMI.AdaptManager()
+  domain.PUMIMesh.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
 
 
 # ----- TANK ----- #
