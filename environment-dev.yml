@@ -3,10 +3,10 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - pip
-  - compilers
+  - pip =20.0.2
+  - compilers =1.0.4
   - make
-  - setuptools
+  - setuptools =45.2.0
   - cython =0.29.15
   - daetk =1.0.1
   - hdf5 =1.10.5=*mpich*
@@ -23,7 +23,7 @@ dependencies:
   - superlu_dist =6.2.0
   - triangle =1.6
   - pychrono =4.0.0
-  - gmsh =4.5.3
+  - gmsh =4.5.2
   - matplotlib =3.1.3
   - mpi4py =3.0.3
   - nose
@@ -34,11 +34,11 @@ dependencies:
   - scipy =1.4.1
   - tetgen =1.5.1
   - ncurses =6.1
-  - python =3
-  - future
-  - ipyparallel
+  - python =3.7.6
+  - future =0.18.2
+  - ipyparallel =6.2.4
   - pillow =7.0.0
-  - recordtype
+  - recordtype =1.3
   - xtensor-python
   - git-lfs
   - zoltan =3.83
