@@ -22,7 +22,6 @@ dependencies:
   - superlu
   - superlu_dist
   - triangle
-  - pychrono
   - mpi4py
   - gmsh
   - matplotlib
@@ -35,7 +34,7 @@ dependencies:
   - scipy
   - tetgen
   - ncurses
-  - pychrono
+  - pychrono =4.0.0
   - python=3
   - future
   - ipyparallel
