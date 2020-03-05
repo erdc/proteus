@@ -24,7 +24,7 @@ dependencies:
   - triangle =1.6
   - pychrono =4.0.0
   - gmsh =4.5.3
-  - matplotlib
+  - matplotlib =3.1.3
   - mpi4py =3.0.3
   - nose
   - pytables =3.6.1
@@ -47,3 +47,10 @@ dependencies:
   - numexpr =2.7.1
   - ptscotch =6.0.8
   - scalapack =2.0.2
+  - tbb =2019.9
+  - zipp =3.0.0
+  - parso =0.6.1
+  - pycparser =2.19
+  - ipython =7.12.0
+  - decorator =4.4.1
+  - cffi =1.13.2
