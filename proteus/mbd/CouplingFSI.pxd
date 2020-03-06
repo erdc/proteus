@@ -298,6 +298,7 @@ cdef class ProtChSystem:
         int nBodiesIBM
         object log_chrono_bodies
         object log_chrono_springs
+        object log_chrono_residuals
         string log_chrono_format
 
 

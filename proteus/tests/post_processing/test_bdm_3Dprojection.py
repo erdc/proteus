@@ -83,7 +83,7 @@ class TestBDM2Reference1(object):
 
         rel_path = "comparison_files/bdm2_reference_simplex_mat.data"
         comparison_matrix = np.load(os.path.join(self.scriptdir,rel_path))
-        assert np.allclose(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element)
+        np.testing.assert_almost_equal(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element,decimal=6)
 
         # # # ******************** TEST RHS CONSTRUCTION *************************
 
@@ -106,7 +106,7 @@ class TestBDM2Reference1(object):
 
         rel_path = "comparison_files/bdm2_reference_simplex_rhs.data"
         comparison_rhs = np.load(os.path.join(self.scriptdir,rel_path))
-        assert np.allclose(comparison_rhs,test_rhs)
+        np.testing.assert_almost_equal(comparison_rhs,test_rhs,decimal=6)
 
     def test_BDM2_reference_triangle_full_in_space(self):
         rel_path_1 = "import_modules/bdm2_3d_face_func_vals.data"
@@ -118,7 +118,7 @@ class TestBDM2Reference1(object):
         self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
         self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
 
-        assert np.allclose(self.bdm2_obj.q[('velocity',0)],bdm_values)
+        np.testing.assert_almost_equal(self.bdm2_obj.q[('velocity',0)],bdm_values,decimal=6)
 
     # def test_BDM2_reference_triangle_full_not_in_space(self):
     #     rel_path_1 = "comparison_files/bdm_bdy_func_values_trig.npy"

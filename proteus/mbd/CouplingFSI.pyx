@@ -1428,6 +1428,7 @@ cdef class ProtChSystem:
         self.log_chrono_format = 'h5'
         self.log_chrono_bodies = None
         self.log_chrono_springs = None
+        self.log_chrono_residuals = None
 
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
@@ -1573,7 +1574,14 @@ cdef class ProtChSystem:
             else:
                 self.log_springs_text(self.t + self.proteus_dt, self.log_chrono_springs)
 
-        if (self.log_chrono_bodies or self.log_chrono_springs) and self.log_chrono_format == 'h5':
+        if self.log_chrono_residuals:
+            if self.log_chrono_format == 'h5':
+                self.log_residuals_h5(self.log_chrono_residuals)
+            else:
+                self.log_residuals_text(self.t + self.proteus_dt, self.log_chrono_residuals)
+
+        if (self.log_chrono_bodies or self.log_chrono_springs or self.log_chrono_residuals) \
+                and self.log_chrono_format == 'h5':
             self.log_times_h5(self.t + self.proteus_dt)
 
         self.record_values = False
@@ -2144,6 +2152,110 @@ cdef class ProtChSystem:
 
             # Store the first entry into the dataset
             dm_springs[0, :, :] = np.array(l_spring_data)
+
+        # Close the output file
+        o_file.close()
+
+    def log_residuals_text(self, d_time, l_linklocks):
+        """
+        Logs the chrono information into a text file at each timestep
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Current simulation time
+        l_linklocks: list
+            Link lock objects for which the residual information is desired.
+        Returns
+        -------
+        None. Data is saved to a text file.
+        """
+
+        # Loop and write the body information
+        for i_entry_linkage in range(0, len(l_linklocks), 1):
+            # Open the file
+            s_filename = 'chrono_' + str(i_entry_linkage) + '.txt'
+            o_file = open(s_filename, 'a+')
+
+            # Get the residual matrix from the linkage
+            o_linkage_residual = l_linklocks[i_entry_linkage].GetC()
+
+            # The number of residual components will vary based on the the number of active dimensions in the domain.
+            # Attempt to get each component and write zeros for the remainder for consistency of the code.
+            s_residuals = str(d_time) + '\t'
+
+            for i_entry_residual in range(0, 6, 1):
+                try:
+                    # Attempt to extract the value from the Chrono matrix
+                    s_residuals += str(o_linkage_residual.GetElement(0, i_entry_residual)) + '\t'
+
+                except:
+                    # Residual doesn't exist. Keep the zero in the array.
+                    s_residuals += str(0.000) + '\t'
+
+            # Add the new line to the code, replacing the last tab
+            s_residuals += '\n'
+
+            # Write to the file
+            o_file.write(s_residuals)
+
+        # Close the output file
+        o_file.close()
+
+    def log_residuals_h5(self, l_linklocks):
+        """
+        Logs chrono spring information to an h5 file
+        Parameters
+        ----------
+        self: object
+            ProtChSystem object being referenced.
+        l_linklocks: list
+            Link lock objects for which the residual information is desired.
+        Returns
+        -------
+        None. Data is logged to an h5 file.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # The number of residual components will vary based on the the number of active dimensions in the domain.
+        # Attempt to get each component and write zeros for the remainder for consistency of the code.
+        dm_residuals = np.zeros((len(l_linklocks), 6))
+
+        for i_entry_linkage in range(0, len(l_linklocks), 1):
+                        # Get the residual matrix from the linkage
+            o_linkage_residual = l_linklocks[i_entry_linkage].GetC()
+
+             # Extract the data from the Chrono matrix
+            for i_entry_residual in range(0, 6, 1):
+                try:
+                    # Attemp to extract the value from the Chrono matrix
+                    dm_residuals[i_entry_linkage, i_entry_residual] = o_linkage_residual.GetElement(0, i_entry_residual)
+                except:
+                    # Residual doesn't exist. Keep the zero in the array.
+                    dm_residuals[i_entry_linkage, i_entry_residual] = 0
+
+        # Log the spring data
+        try:
+            # Open the dataset
+            dm_residuals_h5 = o_file['residuals']
+
+            # Resize the dataset in the h5 file to expand it by an entry
+            i_index = dm_residuals_h5.shape[0]
+            dm_residuals_h5.resize(dm_residuals_h5.shape[0] + 1, axis=0)
+
+            # Store the values into the dataset
+            dm_residuals_h5[i_index, :, :] = dm_residuals
+
+        except:
+            # Create the initial dataset
+            dm_residuals_h5 = o_file.create_dataset('residuals', (1, len(l_linklocks), 6), compression="gzip",
+                                                    maxshape=(None, len(l_linklocks), 6), dtype=float)
+
+            # Store the first entry into the dataset
+            dm_residuals_h5[0, :, :] = dm_residuals
 
         # Close the output file
         o_file.close()
