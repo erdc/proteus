@@ -3,43 +3,54 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - pip
-  - compilers
+  - pip =20.0.2
+  - compilers =1.0.4
   - make
-  - setuptools
-  - cython
-  - daetk
-  - hdf5 =*=*mpich*
-  - h5py =*=*mpich*
-  - metis
-  - mpich
-  - numpy =1.14.*
+  - setuptools =45.2.0
+  - cython =0.29.15
+  - daetk =1.0.1
+  - hdf5 =1.10.5=*mpich*
+  - h5py =2.10.0=*mpich*
+  - metis =5.1.0
+  - mpich =3.3.2
+  - numpy =1.14.6
   - openblas =0.3.7=*_7
-  - parmetis
-  - petsc4py
-  - petsc =3.12.*
-  - scorec
-  - superlu
-  - superlu_dist
-  - triangle
-  - pychrono
-  - mpi4py
+  - parmetis =4.0.3
+  - petsc4py =3.12.0
+  - petsc =3.12.4
+  - scorec =2.2.2
+  - superlu =5.2.1
+  - superlu_dist =6.2.0
+  - triangle =1.6
+  - pychrono =4.0.0
   - gmsh
-  - matplotlib
-  - mpi4py
+  - matplotlib =3.1.3
+  - mpi4py =3.0.3
   - nose
-  - pytables
+  - pytables =3.6.1
   - pytest
   - pytest-cov
   - pytest-xdist
-  - scipy
-  - tetgen
-  - ncurses
-  - pychrono =4.0.*
-  - python=3
-  - future
-  - ipyparallel
-  - pillow
-  - recordtype
+  - scipy =1.4.1
+  - tetgen =1.5.1
+  - ncurses =6.1
+  - python =3.7.6
+  - future =0.18.2
+  - ipyparallel =6.2.4
+  - pillow =7.0.0
+  - recordtype =1.3
   - xtensor-python
   - git-lfs
+  - zoltan =3.83
+  - hypre =2.18.2
+  - mumps-mpi =5.2.1
+  - numexpr =2.7.1
+  - ptscotch =6.0.8
+  - scalapack =2.0.2
+  - tbb =2019.9
+  - zipp =3.0.0
+  - parso =0.6.1
+  - pycparser =2.19
+  - ipython =7.12.0
+  - decorator =4.4.1
+  - cffi =1.13.2

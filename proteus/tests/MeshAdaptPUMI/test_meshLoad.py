@@ -6,7 +6,9 @@ from proteus.MeshAdaptPUMI import MeshAdaptPUMI
 from nose.tools import eq_ as eq
 from nose.tools import ok_ as ok
 import os
+import pytest
 
+@pytest.mark.skip
 def test_meshLoadPUMI(verbose=0):
     """Test to load serial PUMI model and mesh"""
     testDir=os.path.dirname(os.path.abspath(__file__))

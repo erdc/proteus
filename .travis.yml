@@ -79,7 +79,7 @@ jobs:
       - make develop-conda N=1
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --cov=proteus
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs

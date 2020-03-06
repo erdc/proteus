@@ -4,6 +4,7 @@ from proteus import Context
 from proteus.mprans import SpatialTools as st
 from proteus.mbd import CouplingFSI as fsi
 import pychrono
+import os
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 
 addedMass = False
@@ -179,7 +180,8 @@ initialConditions = {'pressure': P_IC(),
 domain.MeshOptions.use_gmsh = False
 domain.MeshOptions.genMesh = False
 domain.MeshOptions.he = he
-mesh_fileprefix='mesh'+str(int(1000*he))
+modulepath = os.path.dirname(os.path.abspath(__file__))
+mesh_fileprefix=modulepath+'/meshFallingCylinder'
 domain.MeshOptions.setOutputFiles(mesh_fileprefix)
 st.assembleDomain(domain)
 domain.use_gmsh = False
@@ -231,7 +233,7 @@ myTpFlowProblem.movingDomain = False
 params = myTpFlowProblem.Parameters
 
 # MESH PARAMETERS
-params.mesh.genMesh = True
+params.mesh.genMesh = False
 params.mesh.he = he
 
 # PHYSICAL PARAMETERS
