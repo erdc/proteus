@@ -97,5 +97,5 @@ class Test_rans2p(object):
         expected_path = 'comparison_files/' + 'comparison_' + self.compare_name + '_u_t2.csv'
         #write comparison file
         #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=6)
         actual.close()

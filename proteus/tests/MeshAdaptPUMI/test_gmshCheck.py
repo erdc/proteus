@@ -8,6 +8,7 @@ from petsc4py import PETSc
 from nose.tools import eq_ as eq
 from nose.tools import ok_ as ok
 import os
+import pytest
 
 def test_gmshLoadAndAdapt(verbose=0):
     """Test for loading gmsh mesh through PUMI, estimating error and adapting for 
@@ -36,7 +37,8 @@ def test_gmshLoadAndAdapt(verbose=0):
     g = numpy.asarray([0.0,0.0,0.0])
     deltaT = 1.0 #dummy number
     epsFact = 1.0 #dummy number
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
+
 
     #Couette Flow
     Lz = 0.05
@@ -66,7 +68,7 @@ def test_gmshLoadAndAdapt(verbose=0):
 
     #ok(domain.PUMIMesh.willAdapt(),1)
 
-    domain.PUMIMesh.adaptPUMIMesh()
+    domain.PUMIMesh.adaptPUMIMesh(b"")
     
     mesh = MeshTools.TetrahedralMesh()
     mesh.convertFromPUMI(domain,domain.PUMIMesh,
@@ -103,7 +105,8 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     g = numpy.asarray([0.0,0.0])
     deltaT = 1.0 #dummy number
     epsFact = 1.0 #dummy number
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+    #domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
 
     #Couette Flow
     Lz = 0.05
@@ -133,7 +136,7 @@ def test_2DgmshLoadAndAdapt(verbose=0):
 
     #ok(domain.PUMIMesh.willAdapt(),1)
 
-    domain.PUMIMesh.adaptPUMIMesh()
+    domain.PUMIMesh.adaptPUMIMesh(b"")
     
     mesh = MeshTools.TriangularMesh()
     mesh.convertFromPUMI(domain,domain.PUMIMesh,
