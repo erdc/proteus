@@ -12,8 +12,42 @@ from proteus import SimTools
 class PUMIAdapt:
      def __init__(self,NS_Base):
         self.solver = NS_Base
+        self.rho_0=None
+        self.rho_1=None
+        self.nu_0=None
+        self.nu_1=None
+        self.g = None
+        self.domain=None
+        self.epsFact_density=None
      def __getattr__(self, attr):
         return getattr(self.solver, attr)
+
+     def setProperties(self):
+        self.domain = self.pList[0].domain
+        self.rho_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_0
+        self.rho_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_1
+        self.nu_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_0
+        self.nu_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_1
+        self.g = self.modelList[self.flowIdx].levelModelList[0].coefficients.g
+        self.epsFact_density = self.modelList[self.flowIdx].levelModelList[0].coefficients.epsFact_density
+
+        #if self.TwoPhaseFlow:
+        #    domain = p0.myTpFlowProblem.domain
+        #    rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
+        #    nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
+        #    rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
+        #    nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
+        #    g = p0.myTpFlowProblem.physical_parameters['gravity']
+        #    epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
+        #else:
+        #    domain = p0.domain
+        #    rho_0  = p0.rho_0
+        #    nu_0   = p0.nu_0
+        #    rho_1  = p0.rho_1
+        #    nu_1   = p0.nu_1
+        #    g      = p0.g
+        #    epsFact_density = p0.epsFact_density
+
 
      def getModels(self,modelDict):
         #indices are better than models since during adaptation, models are destroyed and recreated
@@ -77,12 +111,8 @@ class PUMIAdapt:
           domain.PUMIMesh.PUMIAdapter.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
 
      def PUMI_reallocate(self,mesh):
-        try:
-            p0 = self.pList[0].ct
-            n0 = self.nList[0].ct
-        except:
-            p0 = self.pList[0]
-            n0 = self.nList[0]
+        p0 = self.pList[0]
+        n0 = self.nList[0]
 
         if self.TwoPhaseFlow:
             nLevels = p0.myTpFlowProblem.general['nLevels']
@@ -471,29 +501,15 @@ class PUMIAdapt:
         self.comm.barrier()
 
      def PUMI_transferFields(self):
-        try:
-            p0 = self.pList[0].ct
-            n0 = self.nList[0].ct
-        except:
-            p0 = self.pList[0]
-            n0 = self.nList[0]
 
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-            rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
-            nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
-            rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
-            nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
-            g = p0.myTpFlowProblem.physical_parameters['gravity']
-            epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
-        else:
-            domain = p0.domain
-            rho_0  = p0.rho_0
-            nu_0   = p0.nu_0
-            rho_1  = p0.rho_1
-            nu_1   = p0.nu_1
-            g      = p0.g
-            epsFact_density = p0.epsFact_density
+        domain = self.domain
+        rho_0  = self.rho_0
+        nu_0   = self.nu_0
+        rho_1  = self.rho_1
+        nu_1   = self.nu_1
+        g      = self.g
+        epsFact_density = self.epsFact_density
+       
         logEvent("Copying coordinates to PUMI")
         
         #might be an arbitrary choice in terms of which model to use, but guaranteed that the 0th model exists
@@ -509,7 +525,7 @@ class PUMIAdapt:
         #pass through heaviside function to get material property
         #only need to do this if using combined adapt
 
-        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'combined'):
+        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'combined' or domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibmCombined'):
             self.computeElementMaterials(rho_0,rho_1,nu_0,nu_1,rho_transfer,nu_transfer)
 
         #put the solution field as uList
@@ -525,10 +541,13 @@ class PUMIAdapt:
         #for each type of phase tracking model, this will need to be done
         for m in self.modelList:
             for lm in m.levelModelList:
-                if(isinstance(lm,proteus.mprans.VOF.LevelModel) or 
-                   isinstance(lm,proteus.mprans.NCLS.LevelModel)
-                ):
-                    lm.setUnknowns(m.uList[0])
+                try:
+                    if(isinstance(lm,proteus.mprans.VOF.LevelModel) or 
+                        isinstance(lm,proteus.mprans.NCLS.LevelModel)
+                    ):
+                        lm.setUnknowns(m.uList[0])
+                except:
+                    pass
 
         logEvent("Copying DOF and parameters to PUMI")
         for m in self.modelList:
@@ -549,7 +568,7 @@ class PUMIAdapt:
               #Transfer dof_last_last
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
-              p0.domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
+                domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
                      coef.vectorName.encode('utf-8')+b"_old_old", vector)
 
               del vector
@@ -567,7 +586,7 @@ class PUMIAdapt:
                      coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
                 #Transfer dof_last_last
                 scalar[:,0] = lm.u[ci].dof_last_last[:]
-                p0.domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
+                domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
                      coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
 
                 del scalar
@@ -617,20 +636,8 @@ class PUMIAdapt:
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        try:
-            p0 = self.pList[0].ct
-            n0 = self.nList[0].ct
-        except:
-            p0 = self.pList[0]
-            n0 = self.nList[0]
-
-
         adaptMeshNow = False
-
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-        else:
-            domain = p0.domain
+        domain = self.domain
 
         if (hasattr(domain, 'PUMIMesh') and
             domain.PUMIMesh.PUMIAdapter.adaptMesh() and
@@ -665,9 +672,9 @@ class PUMIAdapt:
               if(domain.PUMIMesh.PUMIAdapter.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
-            elif(sfConfig==b"VMS" or sfConfig==b"combined"):
-              errorTotal = p0.domain.PUMIMesh.PUMIAdapter.get_VMS_error()
-              if(p0.domain.PUMIMesh.PUMIAdapter.willAdapt()):
+            elif(sfConfig==b"VMS" or sfConfig==b"combined" or sfConfig==b"ibmCombined"):
+              errorTotal = domain.PUMIMesh.PUMIAdapter.get_VMS_error()
+              if(domain.PUMIMesh.PUMIAdapter.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
               if(self.nSolveSteps <= 5): #the first few time steps are ignored for adaptivity
@@ -675,8 +682,8 @@ class PUMIAdapt:
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
-            elif(sfConfig==b'isotropic'):
-              if(p0.domain.PUMIMesh.PUMIAdapter.willInterfaceAdapt()):
+            elif(sfConfig==b'isotropic' or sfConfig==b'ibm'):
+              if(domain.PUMIMesh.PUMIAdapter.willInterfaceAdapt()):
                   adaptMeshNow=True
                   logEvent("Need to Adapt")
                   logEvent('numSolveSteps %f ' % self.nSolveSteps)
@@ -712,18 +719,7 @@ class PUMIAdapt:
         """
         ##
 
-        try:
-            p0 = self.pList[0].ct
-            n0 = self.nList[0].ct
-        except:
-            p0 = self.pList[0]
-            n0 = self.nList[0]
-
-
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-        else:
-            domain = p0.domain
+        domain = self.domain
 
         sfConfig = domain.PUMIMesh.PUMIAdapter.size_field_config()
         if(hasattr(self,"nSolveSteps")):
@@ -780,7 +776,7 @@ class PUMIAdapt:
 
         if (hasattr(self.pList[0].domain, 'PUMIMesh.PUMIAdapter') and
             self.pList[0].domain.PUMIMesh.PUMIAdapter.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"pseudo" or self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"isotropic") and
+            (self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"ibmCombined" or  self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"pseudo" or self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"isotropic") and
             self.so.useOneMesh and not self.opts.hotStart):
 
             self.PUMI_transferFields()
@@ -794,9 +790,9 @@ class PUMIAdapt:
 
         #get quadrature points at element centroid and evaluate at shape functions
         from proteus import Quadrature
-        transferQpt = Quadrature.SimplexGaussQuadrature(p0.domain.nd,1)
+        transferQpt = Quadrature.SimplexGaussQuadrature(domain.nd,1)
         qpt_centroid = numpy.asarray([transferQpt.points[0]])
-        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,p0.domain.nd)
+        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,domain.nd)
         materialSpace.getBasisValuesRef(qpt_centroid)
 
 
@@ -812,7 +808,7 @@ class PUMIAdapt:
             h_phi=0.0;
             for idx in range(len(dofs)):
                 h_phi += (materialSpace.psi[0][idx])*(self.modelList[self.phaseIdx].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
-            eps_rho = p0.epsFact_density*h_phi
+            eps_rho = self.epsFact_density*h_phi
             smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
 
             rho_transfer[eID] = (1.0-smoothed_phi_val)*rho_0 + smoothed_phi_val*rho_1

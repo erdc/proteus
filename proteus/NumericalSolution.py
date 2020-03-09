@@ -980,6 +980,8 @@ class NS_base(object):  # (HasTraits):
         stepFailed=False
 
 
+        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+            self.Adapter.setProperties()
         #### Perform an initial adapt after applying initial conditions ####
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
@@ -1235,7 +1237,7 @@ class NS_base(object):  # (HasTraits):
                 #if(self.tn < 0.05):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
-                import gc; gc.collect()
+                #import gc; gc.collect()
                 if(hasattr(self.pList[0].domain,"PUMIMesh")):
                     if(self.Adapter.PUMI_estimateError()):
                         self.Adapter.PUMI_adaptMesh()
