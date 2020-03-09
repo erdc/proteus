@@ -65,17 +65,6 @@ class PUMIAdapt:
         except:
             self.correctionsIdxs=[]
         
-    
-     #def attachManager(self,domain):
-     #   try:
-     #       self.manager = domain.PUMIMesh
-     #       try:
-     #           self.getModels(self.manager.modelDict)
-     #       except:
-     #           sys.exit("Model indices don't correspond to models")
-     #   except:
-     #       print("No adaptation manager to attach")
-
      def reconstructMesh(self,domain,mesh):
 
         if hasattr(domain,"PUMIMesh") and not isinstance(domain,proteus.Domain.PUMIDomain) :
@@ -273,13 +262,6 @@ class PUMIAdapt:
               lm.calculateAuxiliaryQuantitiesAfterStep()
 
      def PUMI2Proteus(self,domain):
-
-        try:
-            p0 = self.pList[0].ct
-            n0 = self.nList[0].ct
-        except:
-            p0 = self.pList[0]
-            n0 = self.nList[0]
 
         modelListOld = self.modelListOld
         logEvent("Attach auxiliary variables to new models")
@@ -503,12 +485,6 @@ class PUMIAdapt:
      def PUMI_transferFields(self):
 
         domain = self.domain
-        rho_0  = self.rho_0
-        nu_0   = self.nu_0
-        rho_1  = self.rho_1
-        nu_1   = self.nu_1
-        g      = self.g
-        epsFact_density = self.epsFact_density
        
         logEvent("Copying coordinates to PUMI")
         
@@ -526,7 +502,7 @@ class PUMIAdapt:
         #only need to do this if using combined adapt
 
         if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'combined' or domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibmCombined'):
-            self.computeElementMaterials(rho_0,rho_1,nu_0,nu_1,rho_transfer,nu_transfer)
+            self.computeElementMaterials(rho_transfer,nu_transfer)
 
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
@@ -605,11 +581,7 @@ class PUMIAdapt:
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
 
-        rho = numpy.array([rho_0,
-                           rho_1])
-        nu = numpy.array([nu_0,
-                          nu_1])
-        g = numpy.asarray(g)
+        g = numpy.asarray(self.g)
 
         #This condition is to account for adapting before the simulation started
         if(hasattr(self,"tn")):
@@ -624,11 +596,7 @@ class PUMIAdapt:
             deltaT_next = 0.0
             T_current = 0.0
 
-        epsFact = epsFact_density
-        #domain.PUMIMesh.PUMIAdapter.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
-        domain.PUMIMesh.PUMIAdapter.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,deltaT_next,T_current,epsFact)
-
-        del rho, nu, g, epsFact
+        domain.PUMIMesh.PUMIAdapter.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,deltaT_next,T_current,self.epsFact_density)
 
      def PUMI_estimateError(self):
         """
@@ -786,7 +754,7 @@ class PUMIAdapt:
             logEvent("Initial Adapt 2 before Solve")
             self.PUMI_adaptMesh(b"interface")
 
-     def computeElementMaterials(self,rho_0,rho_1,nu_0,nu_1,rho_transfer,nu_transfer):
+     def computeElementMaterials(self,rho_transfer,nu_transfer):
 
         #get quadrature points at element centroid and evaluate at shape functions
         from proteus import Quadrature
@@ -811,7 +779,5 @@ class PUMIAdapt:
             eps_rho = self.epsFact_density*h_phi
             smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
 
-            rho_transfer[eID] = (1.0-smoothed_phi_val)*rho_0 + smoothed_phi_val*rho_1
-            nu_transfer[eID] = (1.0-smoothed_phi_val)*nu_0 + smoothed_phi_val*nu_1
-
-        #return rho_transfer,nu_transfer
+            rho_transfer[eID] = (1.0-smoothed_phi_val)*self.rho_0 + smoothed_phi_val*self.rho_1
+            nu_transfer[eID] = (1.0-smoothed_phi_val)*self.nu_0 + smoothed_phi_val*self.nu_1
