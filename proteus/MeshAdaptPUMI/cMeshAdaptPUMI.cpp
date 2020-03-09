@@ -594,12 +594,12 @@ int MeshAdaptPUMIDrvr::willAdapt()
 //Master function that calls other adapt-trigger functions
 {
   int adaptFlag = 0;
-  if(size_field_config == "combined" or size_field_config == "isotropic" or size_field_config == "ibm")
+  if(size_field_config == "combined" or size_field_config == "isotropic" or size_field_config == "ibm" or size_field_config == "ibmCombined")
   {
     adaptFlag += willInterfaceAdapt(); 
     std::cout<<"willInterfaceAdapt "<<adaptFlag<<std::endl;
   }
-  if(size_field_config == "combined" or size_field_config == "VMS")
+  if(size_field_config == "combined" or size_field_config == "VMS" or size_field_config == "ibmCombined")
   {
     //adaptFlag += willErrorAdapt();
     adaptFlag += willErrorAdapt_reference();
@@ -735,7 +735,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
-  else if(size_field_config == "combined" && std::string(inputString)==""){
+  else if((size_field_config == "combined" or size_field_config =="ibmCombined") && std::string(inputString)==""){
     assert(vmsErrH1);
     //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
     //calculateSizeField(L_band);
@@ -766,7 +766,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
-  if(size_field_config=="VMS" || size_field_config=="combined"){
+  if(size_field_config=="VMS" || size_field_config=="combined" || size_field_config=="ibmCombined"){
     freeField(vmsErrH1);
     if(PCU_Comm_Self()==0) std::cout<<"cleared VMS field\n";
   }
