@@ -4,6 +4,7 @@ from builtins import range
 from past.utils import old_div
 import proteus
 from proteus.mprans.cMoveMesh2D import cMoveMesh2D_base
+from proteus.mprans.cMoveMesh import cMoveMesh_base
 import numpy as np
 from math import sqrt
 from proteus.Transport import OneLevelTransport, TC_base, NonlinearEquation
