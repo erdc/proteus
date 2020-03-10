@@ -27,9 +27,9 @@ struct Inputs{
   int nsd;
   apf::MeshElement* element;
   apf::Element* pres_elem;
-  apf::Element* visc_elem;
+  //apf::Element* visc_elem;
   apf::Element* velo_elem;
-  apf::Element* vof_elem;
+  //apf::Element* vof_elem;
   apf::Element* velo_elem_old;
   apf::Matrix3x3 KJ;
   double* g;
@@ -77,8 +77,8 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
   nsd = m->getDimension();
 
   //***** Get Solution Fields First *****//
-  apf::Field* voff = m->findField("vof");
-  assert(voff);
+  //apf::Field* voff = m->findField("vof");
+  //assert(voff);
   apf::Field* velf = m->findField("velocity");
   assert(velf);
   apf::Field* pref = m->findField("p");
@@ -97,9 +97,11 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
   if(PCU_Comm_Self()==0)
     std::cout<<"Got the solution fields\n";
   //***** Compute the viscosity field *****//
+/*
   apf::Field* visc = getViscosityField(voff);
   if(PCU_Comm_Self()==0)
     std::cout<<"Got viscosity fields \n";
+*/
   freeField(vmsErrH1);
 
   apf::Field* vmsErr = apf::createField(m,"VMSL2",apf::SCALAR,apf::getVoronoiShape(nsd,1));
@@ -133,7 +135,7 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
 
   int count = 0 ; //for debugging purposes
   //Loop over elements and compute the VMS error in the L_2 norm
-  double VMSerrTotalL2 = 0.0;
+  //double VMSerrTotalL2 = 0.0;
   double VMSerrTotalH1 = 0.0;
   while( (ent = m->iterate(iter)) ){
 
@@ -141,14 +143,15 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     pres_elem = apf::createElement(pref,element);
     velo_elem = apf::createElement(velf,element);
     velo_elem_old = apf::createElement(velf_old,element);
-    visc_elem = apf::createElement(visc,element);
-    vof_elem = apf::createElement(voff,element);
+    //visc_elem = apf::createElement(visc,element);
+    //vof_elem = apf::createElement(voff,element);
     
     double strongResidualTauL2;
     double tau_m;
     double areaCheck=0.0;
     numqpt=apf::countIntPoints(element,int_order);
 
+/*
     //Start the quadrature loop
     for(int k=0;k<numqpt;k++){
       apf::getIntPoint(element,int_order,k,qpt); //get a quadrature point and store in qpt
@@ -160,48 +163,6 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
       invJ = invert(J);
       Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
       gij = apf::transpose(invJ)*(KJ*invJ);
-      
-/*
-    if(count == 10 && k==0){
-      apf::Adjacent adj;
-      m->getAdjacent(ent,0,adj);
-      for(int i=0;i<adj.getSize();i++){
-        apf::Vector3 pt;
-        m->getPoint(adj[i],0,pt);
-        std::cout<<std::setprecision(15)<<std::scientific;
-        std::cout<<"The point is "<<pt[0]<<" "<<pt[1]<<" "<<pt[2]<<std::endl;
-      }
-      apf::Matrix3x3 testJ;
-      apf::Vector3 pt1,pt2,pt3;
-      m->getPoint(adj[0],0,pt1);
-      m->getPoint(adj[1],0,pt2);
-      m->getPoint(adj[2],0,pt3);
-      testJ[0][0] = pt2[0]-pt1[0]; 
-      testJ[0][1] = pt3[0]-pt1[0]; 
-      testJ[1][0] = pt2[1]-pt1[1]; 
-      testJ[1][1] = pt3[1]-pt1[1]; 
-      testJ[2][2] = 1;
-     
-      std::cout<<"Jacobian "<<J<<" inverse "<<invJ<<" testJ "<<testJ<<std::endl;
-      std::cout<<"Jdet "<<Jdet<<" area "<<apf::measure(m,ent)<<std::endl;
-      for(int i=0;i<adj.getSize();i++){
-        double presCheck = apf::getScalar(pref,adj[i],0);
-        std::cout<<"Pressure is "<<presCheck<<std::endl;
-      }
-      apf::Vector3 gradCheck;
-      apf::getGrad(pres_elem,qpt,gradCheck);
-      std::cout<<"grad pres is "<<gradCheck<<std::endl;
-
-      for(int i=0;i<adj.getSize();i++){
-        apf::Vector3 velCheck; 
-        apf::getVector(velf,adj[i],0,velCheck);
-        std::cout<<"velocity is "<<velCheck<<std::endl;
-      }
-      apf::Matrix3x3 gradVelCheck;
-      apf::getVectorGrad(velo_elem,qpt,gradVelCheck);
-      std::cout<<"grad vel is "<<gradVelCheck<<std::endl;
-    }
-*/
       
       double pressure = apf::getScalar(pres_elem,qpt);
       apf::Vector3 grad_pres;
@@ -227,13 +188,6 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
       stabTerm2 = C2*visc_val*visc_val*stabTerm2;
       tau_m = 1/sqrt(stabTerm1 + stabTerm2);
 
-/*      
-      if(count == 0){
-        //std::cout<<"This is the tau "<<tau_m<<" velocity "<<vel_vect<<" grad vel "<<grad_vel<<" metric "<<gij<<" numdim "<<nsd<<" viscosity "<<visc_val<<" "<<KJ<<" gradP"<< grad_pres<<" stabTerms "<<stabTerm1<<" "<<stabTerm2<<std::endl;
-        areaCheck += weight*Jdet;
-      }
-*/
-
       //compute residual
       apf::Vector3 tempConv;
       apf::Vector3 tempDiff;
@@ -248,21 +202,11 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
       apf::Vector3 tempResidual = (tempConv + grad_pres/density);
       double tempVal = tempResidual.getLength();
       strongResidualTauL2 = tau_m*tau_m*tempVal*tempVal*weight*Jdet;
-/*
-      if(count == 10 && k==0){
-        std::cout<<" tempConv "<<tempConv<<" density "<<density<<" tempResidual "<<tempResidual<<" tempVal "<<tempVal<<std::endl;
-      }
-*/
 
     } //end qpt loop
 
     double VMSerrL2 = sqrt(strongResidualTauL2);
     apf::setScalar(vmsErr,ent,0,VMSerrL2);
-/*
-    if(count == 10){
-      std::cout<<"This is the error "<< sqrt(strongResidualTauL2)<<std::endl;
-      std::cout<<"This is the area check "<<areaCheck<<" true area is "<<apf::measure(m,ent);
-    }
 */
     
     //H1 error compute nu_err at centroid and compute residual
@@ -275,40 +219,15 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     Inputs info;
     info.element = element;
     info.pres_elem = pres_elem;
-    info.visc_elem = visc_elem;
+    //info.visc_elem = visc_elem;
     info.velo_elem = velo_elem;
-    info.vof_elem = vof_elem;
+    //info.vof_elem = vof_elem;
     info.velo_elem_old = velo_elem_old;
     info.KJ = KJ;
     info.nsd = nsd;
     info.density = density;
     info.g = &g[0];
 
-/*
-    double pressure = apf::getScalar(pres_elem,qpt);
-    apf::Vector3 grad_pres;
-    apf::getGrad(pres_elem,qpt,grad_pres);
-    double visc_val = apf::getScalar(visc_elem,qpt);
-
-    apf::Vector3 vel_vect;
-    apf::getVector(velo_elem,qpt,vel_vect);
-    apf::Matrix3x3 grad_vel;
-    apf::getVectorGrad(velo_elem,qpt,grad_vel);
-    grad_vel = apf::transpose(grad_vel);
-      //compute residual
-      apf::Vector3 tempConv;
-      apf::Vector3 tempDiff;
-      tempConv.zero();
-      tempDiff.zero();
-      for(int i=0;i<nsd;i++){
-        for(int j=0;j<nsd;j++){
-          tempConv[i] = tempConv[i] + vel_vect[j]*grad_vel[i][j];
-        }
-      }
-      double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
-      apf::Vector3 tempResidual = (tempConv + grad_pres/density);
-      double tempVal = tempResidual.getLength();
-*/
     info.visc_val = nu[localNumber(ent)];
     apf::Vector3 tempResidual = getResidual(qpt,info);
     double tempVal = tempResidual.getLength();
@@ -325,26 +244,26 @@ void MeshAdaptPUMIDrvr::get_VMS_error(double &total_error_out)
     //std::cout<<std::scientific<<std::setprecision(15)<<"H1 error for element "<<count<<" nu_err "<<nu_err<<" error "<<VMSerrH1<<std::endl;
     apf::setScalar(vmsErrH1,ent,0,VMSerrH1);
 
-    VMSerrTotalL2 = VMSerrTotalL2+VMSerrL2*VMSerrL2;
+    //VMSerrTotalL2 = VMSerrTotalL2+VMSerrL2*VMSerrL2;
     VMSerrTotalH1 = VMSerrTotalH1+VMSerrH1*VMSerrH1;
 
-    apf::destroyElement(visc_elem);
+    //apf::destroyElement(visc_elem);
     apf::destroyElement(pres_elem);
     apf::destroyElement(velo_elem);
     apf::destroyElement(velo_elem_old);
-    apf::destroyElement(vof_elem);
+    //apf::destroyElement(vof_elem);
     apf::destroyMeshElement(element);
     count++;
   } //end loop over elements
   
-    PCU_Add_Doubles(&VMSerrTotalL2,1);
+    //PCU_Add_Doubles(&VMSerrTotalL2,1);
     PCU_Add_Doubles(&VMSerrTotalH1,1);
     if(PCU_Comm_Self()==0)
-      std::cout<<std::scientific<<std::setprecision(15)<<"Total Error L2 "<<sqrt(VMSerrTotalL2)<<" H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
+      std::cout<<std::scientific<<std::setprecision(15)<<"Total Error H1 "<<sqrt(VMSerrTotalH1)<<std::endl;
     total_error = sqrt(VMSerrTotalH1);
     total_error_out = sqrt(VMSerrTotalH1);
     apf::destroyField(vmsErr);
-    apf::destroyField(visc);
+    //apf::destroyField(visc);
 } //end function
 
 double get_nu_err(struct Inputs info){

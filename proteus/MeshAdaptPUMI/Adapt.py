@@ -56,10 +56,12 @@ class PUMIAdapt:
             self.flowIdx = modelDict['flow']
         except:
             print("flow index not defined properly")
-        try:
-            self.phaseIdx = modelDict['phase']
+        try:    
+            #phaseIdx used for determining material properties
+            self.phaseIdx = modelDict['phase'] 
         except:
-            print("phase index not defined properly")
+            print("phase index not defined, using flowIdx")
+            self.phaseIdx = self.flowIdx
         try:
             self.correctionsIdxs = modelDict['corrections']
         except:
@@ -372,7 +374,7 @@ class PUMIAdapt:
 
                 del scalar
 
-        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibm'):
+        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibm' or domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibmCombined'):
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
             domain.PUMIMesh.PUMIAdapter.transferFieldToProteus(
@@ -569,7 +571,7 @@ class PUMIAdapt:
 
         #if chrono solid phi_s field is present this needs to have a corresponding mirror transfer back function
         #also should maybe rely on a separate sf config scheme
-        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibm'):
+        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibm' or domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibmCombined'):
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
             scalar[:,0] = self.modelList[self.flowIdx].levelModelList[0].coefficients.phi_s[:]
@@ -741,8 +743,7 @@ class PUMIAdapt:
          PUMI2Proteus(self,self.pList[0].domain)
 
      def initialAdapt(self):
-
-        if (hasattr(self.pList[0].domain, 'PUMIMesh.PUMIAdapter') and
+        if (hasattr(self.pList[0].domain.PUMIMesh, 'PUMIAdapter') and
             self.pList[0].domain.PUMIMesh.PUMIAdapter.adaptMesh() and
             (self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"ibmCombined" or  self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"pseudo" or self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"isotropic") and
             self.so.useOneMesh and not self.opts.hotStart):
@@ -758,9 +759,9 @@ class PUMIAdapt:
 
         #get quadrature points at element centroid and evaluate at shape functions
         from proteus import Quadrature
-        transferQpt = Quadrature.SimplexGaussQuadrature(domain.nd,1)
+        transferQpt = Quadrature.SimplexGaussQuadrature(self.domain.nd,1)
         qpt_centroid = numpy.asarray([transferQpt.points[0]])
-        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,domain.nd)
+        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,self.domain.nd)
         materialSpace.getBasisValuesRef(qpt_centroid)
 
 
