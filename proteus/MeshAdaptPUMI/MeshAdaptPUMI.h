@@ -51,6 +51,7 @@ class MeshAdaptPUMIDrvr{
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
   int transferElementFieldToProteus(const char* name, double* outArray, int nVar, int nN);
   int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double deltaT_next,double T_simulation,double interfaceBandSize);
+  int setAdaptProperties(std::vector<std::string> sizeInputs);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 

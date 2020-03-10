@@ -6,6 +6,7 @@ import numpy as np
 from ..Profiling import logEvent
 from proteus cimport cmeshTools 
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 
 cdef extern from "mesh.h":
     struct Mesh:
@@ -34,6 +35,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int transferFieldToProteus(char*, double*, int, int)
         int transferElementFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*,double,double,double,double)
+        int setAdaptProperties(vector[string])
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
@@ -120,6 +122,13 @@ cdef class MeshAdaptPUMI:
         g = np.ascontiguousarray(g)
         #return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0],deltaT,interfaceBandSize)
         return self.thisptr.transferPropertiesToPUMI(<double*> rho.data,<double*>nu.data,<double*>g.data,deltaT,deltaT_next,T_simulation,interfaceBandSize)
+    def setAdaptProperties(self,list sizeConfig):
+        cdef vector[string] sizeInputs
+        for entry in sizeConfig:
+            sizeInputs.push_back(entry)
+        return self.thisptr.setAdaptProperties(sizeInputs)
+        #return None
+
     def transferModelInfo(self, np.ndarray[int,ndim=1,mode="c"] numModelEntities,
                                 np.ndarray[int,ndim=2,mode="c"] edges,
                                 np.ndarray[int,ndim=2,mode="c"] faces,
@@ -173,5 +182,6 @@ cdef class MeshAdaptPUMI:
 class AdaptManager():
    def __init__(self):
        self.modelDict = {}
+       self.sizeInputs = []
        self.PUMIAdapter=None
 

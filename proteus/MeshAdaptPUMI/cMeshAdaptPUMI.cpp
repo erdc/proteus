@@ -1017,3 +1017,9 @@ void MeshAdaptPUMIDrvr::set_nAdapt(int numberAdapt)
   nAdapt = numberAdapt;
   return;
 }
+
+int MeshAdaptPUMIDrvr::setAdaptProperties(std::vector<std::string> sizeInputs)
+{
+  std::cout<<"size inputs "<<sizeInputs[0]<<" "<<sizeInputs[1]<<std::endl;
+  return 0;
+}
