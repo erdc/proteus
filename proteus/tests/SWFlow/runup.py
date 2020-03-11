@@ -1,10 +1,7 @@
 from __future__ import division
 from builtins import object
 from past.utils import old_div
-from proteus import *
-from proteus.default_p import *
-from proteus.mprans import SW2DCV
-from proteus.mprans import GN_SW2DCV
+from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context,
@@ -15,8 +12,7 @@ from proteus import WaveTools as wt
 
 """
 This is the problem of a solitary wave run-up on a sloping beach.
-Experiments were reported in Synolakas 1987, 'The runup of solitary waves'.
-We use the probelm set up seen in http://basilisk.fr/src/test/beach.c
+Experiments were reported in 'The runup of solitary waves' [Synolakas, 1987].
 """
 
 # *************************** #
@@ -37,15 +33,14 @@ opts = Context.Options([
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.2, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs",False,"Use reflecting BCs")
-])
+    ("reflecting_BCs", False, "Use reflecting BCs")])
 
 ###################
 # DOMAIN AND MESH #
 ###################
 L = (50.0, 1.0)
 refinement = opts.refinement
-domain = RectangularDomain(L=L, x=[-35.0, 0, 0])
+domain = RectangularDomain(L=L, x=[-35.0, 0, 0]) # x is origin
 
 # CREATE REFINEMENT #
 nnx0 = 6

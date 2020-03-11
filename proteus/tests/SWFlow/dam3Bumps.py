@@ -1,11 +1,7 @@
 from __future__ import division
 from builtins import object
 from past.utils import old_div
-from proteus import *
-from proteus.default_p import *
-from proteus.mprans import SW2D
-from proteus.mprans import SW2DCV
-from proteus.mprans import GN_SW2DCV
+from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context,
@@ -75,9 +71,6 @@ class water_height_at_t0(object):
 class Zero(object):
     def uOfXT(self, x, t):
         return 0.0
-
-# heta and hw are needed for the modified Green-Naghdi equations,
-# ie dispersive shallow water equations
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):
