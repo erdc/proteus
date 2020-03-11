@@ -1,10 +1,7 @@
 from __future__ import division
 from builtins import object
 from past.utils import old_div
-from proteus import *
-from proteus.default_p import *
-from proteus.mprans import SW2DCV
-from proteus.mprans import GN_SW2DCV
+from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context,
@@ -86,67 +83,35 @@ def bathymetry_function(X):
     cone = np.maximum(
         hcone - np.sqrt(((x - 17.0)**2 + (y - yc)**2) / (rcone / hcone)**2), 0.0)
 
-    # initialize base with shape of x array
+    # define piecewise function for base
     base = 0. * x
+    conds = [x < 10.2, (10.2 < x) & (x <= 17.5), (17.5 <= x) & (x <= 32.5),
+                        32.5 < x]
+    base_values = [lambda x: 0.0,
+                   lambda x: (0.5 - 0.0) / (17.5 - 10.20) * (x - 10.2),
+                   lambda x:  1.0 + (1.0 - 0.5)/(32.5 - 17.5) * (x - 32.5),
+                   lambda x: 1.]
 
-    # silly hack because X switches from list to array of
-    # length 3 (x,y,z) when called in initial conditions
-    if (isinstance(X, list)):
-        for i, value in enumerate(X[0]):
-            if value < 10.2:
-                base[i] = 0.
-            if ((10.2 <= value) & (value <= 17.5)):
-                base[i] = (0.5 - 0.0) / (17.5 - 10.20) * (value - 10.2)
-            if ((17.5 <= value) & (value <= 32.5)):
-                base[i] = 1.0 + (1.0 - 0.5) / \
-                    (32.5 - 17.5) * (value - 32.5)
-            if (32.5 < value):
-                base[i] = 1.
-    else:
-        if x < 10.2:
-            base = 0.0
-        if ((10.2 < x) & (x <= 17.5)):
-            base = (0.5 - 0.0) / (17.5 - 10.20) * (x - 10.2)
-        if ((17.5 <= x) & (x <= 32.5)):
-            base = 1.0 + (1.0 - 0.5) / \
-                (32.5 - 17.5) * (x - 32.5)
-        if (32.5 < x):
-            base = 1.
+    base = np.piecewise(x, conds, base_values)
 
-    # define stuff for shelf
+    # define  piecewise function for shelf
     shelf = 0. * x
     dist = 1.0 - np.minimum(1.0, np.abs(y - yc) / yc)
     aux_x = 12.50 + 12.4999 * (1.0 - dist)
     aux_z = 0.70 + 0.050 * (1.0 - dist)
 
-    if (isinstance(X, list)):
-        for i, value in enumerate(X[0]):
-            if value < 10.2:
-                shelf[i] = 0.
-            if ((10.2 <= value) & (value <= aux_x[i])):
-                shelf[i] = aux_z[i] / (aux_x[i] - 10.20) * (value - 10.2)
-            if ((aux_x[i] <= value) & (value <= 25.)):
-                shelf[i] = 0.75 + (aux_z[i] - 0.75) / \
-                    (aux_x[i] - 25.) * (value - 25.)
-            if ((25. < value) & (value <= 32.5)):
-                shelf[i] = 1. + (1. - 0.5) / (32.5 - 17.5) * (value - 32.5)
-            if (32.5 < value):
-                shelf[i] = 1.
-    else:
-        if x < 10.2:
-            shelf = 0.0
-        if ((10.2 < x) & (x <= aux_x)):
-            shelf = aux_z / (aux_x - 10.20) * (x - 10.2)
-        if ((aux_x <= x) & (x <= 25.)):
-            shelf = 0.75 + (aux_z - 0.75) / \
-                (aux_x - 25.) * (x - 25.)
-        if ((25. < x) & (x <= 32.5)):
-            shelf = 1. + (1. - 0.5) / (32.5 - 17.5) * (x - 32.5)
-        if (32.5 < x):
-            shelf = 1.
+    conds = [x < 10.2, (10.2 <= x) & (x <= aux_x), (aux_x <= x) & (x <= 25.),
+            (25. < x) & (x <= 32.5), 32.5 < x]
+    shelf_values = [0.0,
+                    aux_z / (aux_x - 10.20) * (x - 10.2),
+                    0.75 + (aux_z - 0.75) / (aux_x - 25.) * (x - 25.),
+                    1. + (1. - 0.5) / (32.5 - 17.5) * (x - 32.5),
+                    1.]
+    shelf = np.select(conds, shelf_values)
 
     bath = np.maximum(base, shelf) + cone
     return bath
+
 
 ######################
 # INITIAL CONDITIONS #

@@ -1,17 +1,15 @@
 from __future__ import division
 from builtins import object
 from past.utils import old_div
-from proteus import *
-from proteus.default_p import *
-from proteus.mprans import SW2DCV
-from proteus.mprans import GN_SW2DCV
+from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain
-import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 from proteus.Gauges import PointGauges
+import numpy as np
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
+
 
 """
 We consider the 1995 laboratory experiments conducted by
@@ -80,7 +78,6 @@ def bathymetry_function(X):
     y = X[1]
     radius = np.sqrt((x - 12.96)**2 + (y - 13.80)**2)
 
-    # need to do this annoying thing for piecewise functions
     conds = [radius <= rcone, radius > rcone]
     bath = [lambda radius: np.minimum(
         htop, hcone - radius / scone), lambda radius: 0.0]
