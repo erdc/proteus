@@ -3,8 +3,10 @@
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/timestepper/ChTimestepper.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChSolverPMINRES.h"
 #include "chrono/core/ChTransform.h"
+#include "chrono/physics/ChLinkSpring.h"
+#include "chrono/geometry/ChTriangleMeshConnected.h"
 #include <iostream>
 #include <fstream>
 
@@ -24,7 +26,6 @@ class cppSystem {
   void setTimestepperType(std::string tstype, bool verbose);
   void setCollisionEnvelopeMargin(double envelope, double margin);
   void addMesh(std::shared_ptr<ChMesh> mesh);
-  void setSolverDiagonalPreconditioning(bool boolval);
 };
 
 
@@ -105,7 +106,7 @@ class cppRigidBody {
 
 cppSystem::cppSystem()
 {
-  /* systemSMC_sharedptr = std::make_shared<ChSystemSMC>(); */
+  /* systemSMC_sharedptr = chrono_types::make_shared<ChSystemSMC>(); */
   /* systemSMC = systemSMC_sharedptr.get(); */
   /* system = systemSMC; */
   chrono_dt = 0.000001;
@@ -127,11 +128,6 @@ cppSystem::cppSystem()
   /* if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper())) { */
   /*   mystepper->SetAlpha(-0.2); */
   /* } */
-}
-
-void cppSystem::setSolverDiagonalPreconditioning(bool boolval) {
-  auto msolver = std::static_pointer_cast<ChSolverMINRES>(system->GetSolver());
-  msolver->SetDiagonalPreconditioning(true);
 }
 
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
@@ -170,7 +166,7 @@ cppRigidBody::cppRigidBody(cppSystem* system):
   system(system)
 {
 
-  body = std::make_shared<ChBody>();
+  body = chrono_types::make_shared<ChBody>();
   // add body to system
   /* system->system->AddBody(body); */ // now added externally in cython
   // basic attributes of body
@@ -330,16 +326,16 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
                                              std::vector<double> ang2,
                                              std::vector<double> ang3,
                                              double t_max) {
-  auto fixed_body = std::make_shared<ChBody>();
+  auto fixed_body = chrono_types::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
   fixed_body->SetBodyFixed(true);
   system->system->Add(fixed_body);
-  lock_motion = std::make_shared<ChLinkLockLock>();
+  lock_motion = chrono_types::make_shared<ChLinkLockLock>();
   lock_motion_t_max = t_max;
   lock_motion->Initialize(body, fixed_body, fixed_body->GetCoord());
   system->system->Add(lock_motion);
   if (x.size() > 0) {
-    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
     for (int i = 0; i < x.size(); i++) {
       forced_motion->AddPoint(t[i], x[i]);
     }
@@ -347,7 +343,7 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
     lock_motion->SetMotion_X(forced_ptr);
   }
   if (y.size() > 0) {
-    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
     for (int i = 0; i < y.size(); i++) {
       forced_motion->AddPoint(t[i], y[i]);
     }
@@ -355,7 +351,7 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
     lock_motion->SetMotion_Y(forced_ptr);
   }
   if (z.size() > 0) {
-    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
     for (int i = 0; i < z.size(); i++) {
       forced_motion->AddPoint(t[i], z[i]);
     }
@@ -363,7 +359,7 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
     lock_motion->SetMotion_Z(forced_ptr);
   }
   if (ang.size() > 0) {
-    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
     for (int i = 0; i < ang.size(); i++) {
       forced_motion->AddPoint(t[i], ang[i]);
     }
@@ -371,7 +367,7 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
     lock_motion->SetMotion_ang(forced_ptr);
   }
   if (ang2.size() > 0) {
-    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
     for (int i = 0; i < ang2.size(); i++) {
       forced_motion->AddPoint(t[i], ang2[i]);
     }
@@ -379,7 +375,7 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
     lock_motion->SetMotion_ang2(forced_ptr);
   }
   if (ang3.size() > 0) {
-    auto forced_motion = std::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
     for (int i = 0; i < ang3.size(); i++) {
       forced_motion->AddPoint(t[i], ang3[i]);
     }
@@ -389,14 +385,14 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
 }
 
 void cppRigidBody::setPrescribedMotionPoly(double coeff1) {
-  auto fixed_body = std::make_shared<ChBody>();
+  auto fixed_body = chrono_types::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
   fixed_body->SetBodyFixed(true);
   system->system->Add(fixed_body);
-  auto lock = std::make_shared<ChLinkLockLock>();
+  auto lock = chrono_types::make_shared<ChLinkLockLock>();
   lock->Initialize(body, fixed_body, fixed_body->GetCoord());
   system->system->Add(lock);
-  auto forced_motion = std::make_shared<ChFunction_Poly>();
+  auto forced_motion = chrono_types::make_shared<ChFunction_Poly>();
   forced_motion->Set_order(1);
   forced_motion->Set_coeff(coeff1, 1);
   std::shared_ptr<ChFunction> forced_ptr = forced_motion;
@@ -405,14 +401,14 @@ void cppRigidBody::setPrescribedMotionPoly(double coeff1) {
 
 
 void cppRigidBody::setPrescribedMotionSine(double a, double f) {
-  auto fixed_body = std::make_shared<ChBody>();
+  auto fixed_body = chrono_types::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
   fixed_body->SetBodyFixed(true);
   system->system->Add(fixed_body);
-  auto lock = std::make_shared<ChLinkLockLock>();
+  auto lock = chrono_types::make_shared<ChLinkLockLock>();
   lock->Initialize(body, fixed_body, fixed_body->GetCoord());
   system->system->Add(lock);
-  auto forced_motion = std::make_shared<ChFunction_Sine>();
+  auto forced_motion = chrono_types::make_shared<ChFunction_Sine>();
   forced_motion->Set_amp(a);
   forced_motion->Set_freq(f);
   std::shared_ptr<ChFunction> forced_ptr = forced_motion;
@@ -431,8 +427,8 @@ void cppRigidBody::addSpring(double stiffness,
                              double rest_length)
 {
   mooring_restlength = rest_length;
-  spring = std::make_shared<ChLinkSpring>();
-  std::shared_ptr<ChBody> anchor_body = std::make_shared<ChBody>();
+  spring = chrono_types::make_shared<ChLinkSpring>();
+  std::shared_ptr<ChBody> anchor_body = chrono_types::make_shared<ChBody>();
   anchor_body->SetPos(ChVector<>(anchor[0], anchor[1], anchor[2]));
   anchor_body->SetBodyFixed(true);
   system->system->AddBody(anchor_body);
@@ -450,13 +446,13 @@ void cppRigidBody::addSpring(double stiffness,
 
 void cppRigidBody::addPrismaticLinkX(double* pris1)
 {
-  auto mybod2 = std::make_shared<ChBody>();
+  auto mybod2 = chrono_types::make_shared<ChBody>();
   mybod2->SetName("PRIS1");
   mybod2->SetPos(ChVector<>(pris1[0], pris1[1], pris1[2]));
   mybod2->SetMass(0.00001);
   mybod2->SetBodyFixed(true);
   system->system->AddBody(mybod2);
-  auto mylink1 = std::make_shared<ChLinkLockPrismatic>();
+  auto mylink1 = chrono_types::make_shared<ChLinkLockPrismatic>();
   auto mycoordsys1 = ChCoordsys<>(mybod2->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_Y));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   mylink1->Initialize(mybod2, body, mycoordsys1);
   system->system->AddLink(mylink1);
@@ -469,45 +465,45 @@ void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
                                                double rest_length)
 {
   mooring_restlength = rest_length;
-  auto fairlead = std::make_shared<ChBody>();
+  auto fairlead = chrono_types::make_shared<ChBody>();
   fairlead->SetName("PRIS3");
   fairlead->SetPos(body->GetPos());
   fairlead->SetMass(0.00001);
   system->system->AddBody(fairlead);
-  auto mybod2 = std::make_shared<ChBody>();
+  auto mybod2 = chrono_types::make_shared<ChBody>();
   mybod2->SetName("PRIS1");
   mybod2->SetPos(ChVector<>(pris1[0], pris1[1], pris1[2]));
   mybod2->SetMass(0.00001);
   //mybod2->AddForce(-system->system->Get_G_acc());
   //mybod2->SetBodyFixed(true);
   system->system->AddBody(mybod2);
-  auto mybod3 = std::make_shared<ChBody>();
+  auto mybod3 = chrono_types::make_shared<ChBody>();
   mybod3->SetName("PRIS2");
   mybod3->SetPos(ChVector<>(pris2[0], pris2[1], pris2[2]));
   mybod3->SetBodyFixed(true);
   system->system->AddBody(mybod3);
 
-  auto mylink1 = std::make_shared<ChLinkLockPrismatic>();
+  auto mylink1 = chrono_types::make_shared<ChLinkLockPrismatic>();
   system->system->AddLink(mylink1);
   auto mycoordsys1 = ChCoordsys<>(mybod2->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_Y));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   mylink1->Initialize(fairlead, mybod2, mycoordsys1);
 
 
 
-  auto mylink2 = std::make_shared<ChLinkLockPrismatic>();
+  auto mylink2 = chrono_types::make_shared<ChLinkLockPrismatic>();
   system->system->AddLink(mylink2);
   auto mycoordsys2 = ChCoordsys<>(mybod3->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_X));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   mylink2->Initialize(mybod2, mybod3,mycoordsys2);
 
-  auto mylink3 = std::make_shared<ChLinkLockSpherical>();
-  //auto mylink3 = std::make_shared<ChLinkLockRevolute>();
+  auto mylink3 = chrono_types::make_shared<ChLinkLockSpherical>();
+  //auto mylink3 = chrono_types::make_shared<ChLinkLockRevolute>();
   //mylink3->SetMotion_axis(ChVector<>(0.,1.,0.));
   system->system->AddLink(mylink3);
   mylink3->Initialize(fairlead, body, false, fairlead->GetCoord(), body->GetCoord());
 
 
 
-  spring = std::make_shared<ChLinkSpring>();
+  spring = chrono_types::make_shared<ChLinkSpring>();
   spring->Initialize(fairlead,
                      mybod2,
                      true, // true for pos relative to bodies
@@ -604,32 +600,26 @@ void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
                       double limit_Rx=0.,
                       double limit_Ry=0.,
                       double limit_Rz=0.) {
-  auto mylink = std::make_shared<ChLinkLock>();
+  auto mylink = chrono_types::make_shared<ChLinkLock>();
   system->AddLink(mylink);
-  auto chlimit_X = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_X.Set_max(limit_X);
-  auto chlimit_Y = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_Y.Set_max(limit_Y);
-  auto chlimit_Z = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_Z.Set_max(limit_Z);
-  auto chlimit_Rx = ChLinkLimit();
-  chlimit_Rx.Set_max(limit_Rx);
-  chlimit_X.Set_active(true);
-  auto chlimit_Ry = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_Ry.Set_max(limit_Ry);
-  auto chlimit_Rz = ChLinkLimit();
-  chlimit_X.Set_active(true);
-  chlimit_Rz.Set_max(limit_Rz);
-  mylink->SetLimit_X(&chlimit_X);
-  mylink->SetLimit_Y(&chlimit_Y);
-  mylink->SetLimit_Z(&chlimit_Z);
-  mylink->SetLimit_Rx(&chlimit_Rx);
-  mylink->SetLimit_Ry(&chlimit_Ry);
-  mylink->SetLimit_Rz(&chlimit_Rz);
+  auto chlimit_X = mylink->GetLimit_X();
+  chlimit_X.SetActive(true);
+  chlimit_X.SetMax(limit_X);
+  auto chlimit_Y = mylink->GetLimit_Y();
+  chlimit_Y.SetActive(true);
+  chlimit_Y.SetMax(limit_Y);
+  auto chlimit_Z = mylink->GetLimit_Z();
+  chlimit_Z.SetActive(true);
+  chlimit_Z.SetMax(limit_Z);
+  auto chlimit_Rx = mylink->GetLimit_Rx();
+  chlimit_Rx.SetMax(limit_Rx);
+  chlimit_Rx.SetActive(true);
+  auto chlimit_Ry = mylink->GetLimit_Ry();
+  chlimit_Ry.SetActive(true);
+  chlimit_Ry.SetMax(limit_Ry);
+  auto chlimit_Rz = mylink->GetLimit_Rz();
+  chlimit_Rz.SetActive(true);
+  chlimit_Rz.SetMax(limit_Rz);
   mylink->Initialize(body1, body2, coordsys);
 }
 

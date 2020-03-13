@@ -100,7 +100,6 @@ cdef extern from "ProtChBody.h":
         void setTimestepperType(string tstype, bool verbose)
         void setCollisionEnvelopeMargin(double envelope, double margin)
         void addMesh(shared_ptr[ch.ChMesh] mesh)
-        void setSolverDiagonalPreconditioning(bool boolval)
     cppSystem * newSystem()
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
@@ -367,4 +366,4 @@ cdef class ChBodyAddedMass:
     cdef public:
         object ChBodySWIG
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
-    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in)
+    # cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in)
