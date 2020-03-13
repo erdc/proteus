@@ -1613,10 +1613,10 @@ class Mesh(object):
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
-          if(PUMIMesh.isReconstructed()==1):
+          if(domain.PUMIManager.reconstructedFlag==1):
             logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
-          elif(PUMIMesh.isReconstructed()==2):
+          elif(domain.PUMIManager.reconstructedFlag==2):
             logEvent("Material arrays updating based on better reconstructed model.\n")
             PUMIMesh.updateMaterialArrays2(self.subdomainMesh.cmesh);
           else:
@@ -1674,10 +1674,10 @@ class Mesh(object):
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          if(PUMIMesh.isReconstructed()==1):
+          if(domain.PUMIManager.reconstructedFlag==1):
             logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.cmesh);
-          elif(PUMIMesh.isReconstructed()==2):
+          elif(domain.PUMIManager.reconstructedFlag==2):
             logEvent("Material arrays updating based on better reconstructed model.\n")
             PUMIMesh.updateMaterialArrays2(self.cmesh);
           else:
