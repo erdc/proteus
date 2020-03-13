@@ -38,7 +38,8 @@ extern double dt_err;
  * \ingroup MeshAdaptPUMI 
  @{ 
 */
-MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int AdaptMesh, int NumIter, int NumAdaptSteps,const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio, double gradingFact)
+//MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int AdaptMesh, int NumIter, int NumAdaptSteps,const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio, double gradingFact)
+MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr()
 /**
  * MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
  * See MeshAdaptPUMI.h for the list of class variables/functions/objects
@@ -54,16 +55,9 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   SimModel_start();
   gmi_register_sim();
 #endif
-  hmin=Hmin; hmax=Hmax; hPhi=HPhi;
-  numIter=NumIter;
-  adaptMesh = AdaptMesh;
   nAdapt=0;
   nTriggers=0;
-  numAdaptSteps = NumAdaptSteps;
   nEstimate=0;
-  if(PCU_Comm_Self()==0)
-     printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
-       hmax, hmin, numIter);
   global[0] = global[1] = global[2] = global[3] = 0;
   local[0] = local[1] = local[2] = local[3] = 0;
   size_iso = 0;
@@ -82,19 +76,14 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   errRho_max = 0.0;
   rel_err_total = 0.0;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
-  size_field_config = sfConfig;
   modelFileName = NULL; 
-  adapt_type_config = maType;
-  logging_config = logType;
+  adapt_type_config = "test"; //refers to isotropic or anisotropic, feature effectively turned off for now
   has_gBC = false;
-  target_error = targetError;
-  target_element_count = targetElementCount;
+  target_element_count = 0;//targetElementCount;
   domainVolume = 0.0;
   THRESHOLD = 0.0;
-  isReconstructed = reconstructedFlag;
   initialReconstructed = 0;
-  maxAspect = maxAspectRatio;
-  gradingFactor = gradingFact;
+  maxAspect = 2.0;//maxAspectRatio;
   hasIBM=hasInterface=hasVMS=hasERM=hasAniso=hasAnalyticSphere=useProteus=useProteusAniso=0;
 }
 
@@ -1010,7 +999,7 @@ void MeshAdaptPUMIDrvr::set_nAdapt(int numberAdapt)
   return;
 }
 
-int MeshAdaptPUMIDrvr::setAdaptProperties(std::vector<std::string> sizeInputs)
+int MeshAdaptPUMIDrvr::setAdaptProperties(std::vector<std::string> sizeInputs,bool in_adapt, double in_hmax,double in_hmin,double in_hphi, int in_numAdaptSteps, double in_targetError, double in_gradingFactor, bool in_logging, int in_numIterations)
 {
     for (std::vector<std::string>::iterator it = sizeInputs.begin() ; it != sizeInputs.end(); ++it)
     {
@@ -1021,5 +1010,18 @@ int MeshAdaptPUMIDrvr::setAdaptProperties(std::vector<std::string> sizeInputs)
         if(*it == "error_vms")
             hasVMS=1;
     }
+    hmin=in_hmin; 
+    hmax=in_hmax; 
+    hPhi=in_hphi;
+    numIter=in_numIterations;
+    adaptMesh = in_adapt;
+    numAdaptSteps = in_numAdaptSteps;
+    if(PCU_Comm_Self()==0)
+        printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
+         hmax, hmin, numIter);
+    logging_config = in_logging;
+    target_error = in_targetError;
+    gradingFactor = in_gradingFactor;
+   
     return 0;
 }

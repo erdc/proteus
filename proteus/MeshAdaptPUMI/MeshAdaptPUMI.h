@@ -18,7 +18,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, double, int, int, int, const char*, const char*,const char*,double,double,int,double,double); 
+  MeshAdaptPUMIDrvr(); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
@@ -51,7 +51,8 @@ class MeshAdaptPUMIDrvr{
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
   int transferElementFieldToProteus(const char* name, double* outArray, int nVar, int nN);
   int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double deltaT_next,double T_simulation,double interfaceBandSize);
-  int setAdaptProperties(std::vector<std::string> sizeInputs);
+  //int setAdaptProperties(std::vector<std::string> sizeInputs,double hmax);
+  int setAdaptProperties(std::vector<std::string> sizeInputs,bool in_adapt, double in_hmax,double in_hmin,double in_hphi, int in_numAdaptSteps, double in_targetError, double in_gradingFactor, bool in_logging, int in_numIterations);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 

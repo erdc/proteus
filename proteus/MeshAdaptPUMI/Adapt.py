@@ -30,7 +30,7 @@ class PUMIAdapt:
         self.nu_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_1
         self.g = self.modelList[self.flowIdx].levelModelList[0].coefficients.g
         self.epsFact_density = self.modelList[self.flowIdx].levelModelList[0].coefficients.epsFact_density
-        self.domain.PUMIMesh.PUMIAdapter.setAdaptProperties(self.domain.PUMIMesh.sizeInputs)
+        self.domain.PUMIMesh.PUMIAdapter.setAdaptProperties(self.domain.PUMIMesh)
         #if self.TwoPhaseFlow:
         #    domain = p0.myTpFlowProblem.domain
         #    rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
