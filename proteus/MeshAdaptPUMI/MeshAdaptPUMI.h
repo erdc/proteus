@@ -97,6 +97,16 @@ class MeshAdaptPUMIDrvr{
   int numAdaptSteps; //Number adaptivity
   double N_interface_band; //number of elements in half-band around interface
   double gradingFactor;
+  bool hasIBM;
+  bool hasInterface;
+  bool hasVMS;
+  bool hasERM;
+  bool hasAniso;
+  bool hasAnalyticSphere;
+  bool useProteus; 
+  bool useProteusAniso;
+
+  
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic

@@ -142,9 +142,9 @@ class PUMIAdapt:
         self.mlMesh_nList.clear()
         for p in self.pList:
             self.mlMesh_nList.append(mlMesh)
-        if (domain.PUMIMesh.PUMIAdapter.size_field_config() == "isotropicProteus"):
+        if (b"isotropicProteus" in self.domain.PUMIMesh.sizeInputs):
             mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
-        if (domain.PUMIMesh.PUMIAdapter.size_field_config() == 'anisotropicProteus'):
+        if (b'anisotropicProteus' in self.domain.PUMIMesh.sizeInputs):
             mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
             mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
 
@@ -374,8 +374,7 @@ class PUMIAdapt:
 
                 del scalar
 
-        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibm' or domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibmCombined'):
-
+        if(b'ibm' in self.domain.PUMIMesh.sizeInputs):
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
             domain.PUMIMesh.PUMIAdapter.transferFieldToProteus(
                 b'phi', scalar)
@@ -503,7 +502,7 @@ class PUMIAdapt:
         #pass through heaviside function to get material property
         #only need to do this if using combined adapt
 
-        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'combined' or domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibmCombined'):
+        if(b'error_vms' in self.domain.PUMIMesh.sizeInputs or b'error_erm' in self.domain.PUMIMesh.sizeInputs):
             self.computeElementMaterials(rho_transfer,nu_transfer)
 
         #put the solution field as uList
@@ -571,8 +570,7 @@ class PUMIAdapt:
 
         #if chrono solid phi_s field is present this needs to have a corresponding mirror transfer back function
         #also should maybe rely on a separate sf config scheme
-        if(domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibm' or domain.PUMIMesh.PUMIAdapter.size_field_config()==b'ibmCombined'):
-
+        if(b'ibm' in self.domain.PUMIMesh.sizeInputs):
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
             scalar[:,0] = self.modelList[self.flowIdx].levelModelList[0].coefficients.phi_s[:]
             domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI(
@@ -613,10 +611,10 @@ class PUMIAdapt:
             domain.PUMIMesh.PUMIAdapter.adaptMesh() and
             self.so.useOneMesh): #and
             #self.nSolveSteps%domain.PUMIMesh.PUMIAdapter.numAdaptSteps()==0):
-            if (domain.PUMIMesh.PUMIAdapter.size_field_config() == "isotropicProteus"):
+            if (b"isotropicProteus" in self.domain.PUMIMesh.sizeInputs):
                 domain.PUMIMesh.PUMIAdapter.transferFieldToPUMI("proteus_size",
                                                        self.modelList[0].levelModelList[0].mesh.size_field)
-            if (domain.PUMIMesh.PUMIAdapter.size_field_config() == 'anisotropicProteus'):
+            if (b'anisotropicProteus' in self.domain.PUMIMesh.sizeInputs):
                 #Insert a function to define the size_scale/size_frame fields here.
                 #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
                 for i in range(len(self.modelList[0].levelModelList[0].mesh.size_scale)):
@@ -636,28 +634,24 @@ class PUMIAdapt:
 
 
             logEvent("Estimate Error")
-            sfConfig = domain.PUMIMesh.PUMIAdapter.size_field_config()
-            if(sfConfig=="ERM"):
+            if(b"error_erm" in self.domain.PUMIMesh.sizeInputs):
               errorTotal= domain.PUMIMesh.PUMIAdapter.get_local_error()
               if(domain.PUMIMesh.PUMIAdapter.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
-            elif(sfConfig==b"VMS" or sfConfig==b"combined" or sfConfig==b"ibmCombined"):
+            if(b"error_vms" in self.domain.PUMIMesh.sizeInputs):
               errorTotal = domain.PUMIMesh.PUMIAdapter.get_VMS_error()
               if(domain.PUMIMesh.PUMIAdapter.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
               if(self.nSolveSteps <= 5): #the first few time steps are ignored for adaptivity
                 adaptMeshNow=False
-            elif(sfConfig=='interface' ):
-              adaptMeshNow=True
-              logEvent("Need to Adapt")
-            elif(sfConfig==b'isotropic' or sfConfig==b'ibm'):
+            if(b"interface" in self.domain.PUMIMesh.sizeInputs or b"ibm" in self.domain.PUMIMesh.sizeInputs):
               if(domain.PUMIMesh.PUMIAdapter.willInterfaceAdapt()):
                   adaptMeshNow=True
                   logEvent("Need to Adapt")
                   logEvent('numSolveSteps %f ' % self.nSolveSteps)
-            elif(sfConfig=='meshQuality'):
+            if(b'meshQuality' in self.domain.PUMIMesh.sizeInputs):
               minQual = domain.PUMIMesh.PUMIAdapter.getMinimumQuality()
               logEvent('The quality is %f ' % (minQual**(1./3.)))
               #adaptMeshNow=True
@@ -671,9 +665,7 @@ class PUMIAdapt:
                 logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
               else:
                 sys.exit("Haven't been implemented code yet to cover this behavior.")
-            else:
-              adaptMeshNow=True
-              logEvent("Need to Adapt")
+
             #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
             if(adaptMeshNow == False):
                 for m in self.modelList:
@@ -691,10 +683,9 @@ class PUMIAdapt:
 
         domain = self.domain
 
-        sfConfig = domain.PUMIMesh.PUMIAdapter.size_field_config()
         if(hasattr(self,"nSolveSteps")):
           logEvent("h-adapt mesh by calling AdaptPUMIMesh.PUMIAdapter at step %s" % self.nSolveSteps)
-        if(sfConfig==b"pseudo"):
+        if(b"pseudo" in self.domain.PUMIMesh.sizeInputs):
             logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
         else:
             domain.PUMIMesh.PUMIAdapter.adaptPUMIMesh(inputString)
@@ -745,7 +736,7 @@ class PUMIAdapt:
      def initialAdapt(self):
         if (hasattr(self.pList[0].domain.PUMIMesh, 'PUMIAdapter') and
             self.pList[0].domain.PUMIMesh.PUMIAdapter.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"ibmCombined" or  self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"pseudo" or self.pList[0].domain.PUMIMesh.PUMIAdapter.size_field_config() == b"isotropic") and
+            (b"pseudo" in self.domain.PUMIMesh.sizeInputs or b"interface" in self.domain.PUMIMesh.sizeInputs or b"ibm" in self.domain.PUMIMesh.sizeInputs) and
             self.so.useOneMesh and not self.opts.hotStart):
 
             self.PUMI_transferFields()
