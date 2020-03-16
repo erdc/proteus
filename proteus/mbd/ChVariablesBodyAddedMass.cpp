@@ -46,8 +46,8 @@ ChVariablesBodyAddedMass& ChVariablesBodyAddedMass::operator=(const ChVariablesB
 }
 
 void ChVariablesBodyAddedMass::SetMfullmass(ChMatrixDynamic<>& Mfullmass_in) {
-    assert(Mfullmass_in.GetRows() == Get_ndof());
-    assert(Mfullmass_in.GetColumns() == Get_ndof());
+    assert(Mfullmass_in.rows() == Get_ndof());
+    assert(Mfullmass_in.cols() == Get_ndof());
     GetMfullmass() = Mfullmass_in;
     GetInvMfullmass() = Mfullmass_in.inverse();
 }
@@ -140,7 +140,7 @@ void ChVariablesBodyAddedMass::MultiplyAndAdd(ChVectorRef result,
 // the size of the total variables&constraints in the system; the procedure
 // will use the ChVariable offset (that must be already updated) as index.
 void ChVariablesBodyAddedMass::DiagonalAdd(ChVectorRef result, const double c_a) const {
-    assert(result.GetColumns() == 1);
+    assert(result.size() == 1);
     for (int i = 0; i < Get_ndof(); i++) {
         result(this->offset + i) += c_a * Mfullmass(i, i);
     }
