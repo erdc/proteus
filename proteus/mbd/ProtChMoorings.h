@@ -38,7 +38,7 @@ class ChElementCableANCFmod : public ChElementCableANCF {
 private:
   ChVectorN<double, 12> m_GenForceVec0;
   virtual void SetupInitial(ChSystem* system) override {
-    assert(section);
+    assert(GetSection());
 
     // Compute rest length, mass:
     //double length2 = (nodes[1]->GetX0() - nodes[0]->GetX0()).Length();
@@ -61,7 +61,7 @@ class ChElementBeamEulermod : public ChElementBeamEuler {
 private:
   ChQuaternion<> q_element_ref_rot;
   virtual void SetupInitial(ChSystem* system) override {
-    assert(section);
+    assert(GetSection());
 
     // Compute rest length, mass:
     //this->length = (nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos()).Length();
