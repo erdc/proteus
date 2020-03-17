@@ -10,12 +10,6 @@
 
 namespace py = pybind11;
 
-// cek todo
-// 2. Get stabilization right
-// 3. Add Riemann solvers for external flux
-// 4. Add Riemann solvers for internal flux and DG terms
-// 5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
-
 #define GLOBAL_FCT 0
 #define POWER_SMOOTHNESS_INDICATOR 4
 #define VEL_FIX_POWER 2.
@@ -1898,6 +1892,11 @@ public:
         double ith_flux_term1 = 0., ith_flux_term2 = 0., ith_flux_term3 = 0.;
         double ith_flux_term4 = 0., ith_flux_term5 = 0.;
         double entropy_flux = 0.;
+        double sum_entprime_flux = 0.;
+        // NOTE: FLAT BOTTOM
+        double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0., one_over_hiReg);
+        double eta_prime2 = DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);
+        double eta_prime3 = DENTROPY_DHV(g, hi, hui, hvi, 0., one_over_hiReg);
 
         // FOR SMOOTHNESS INDICATOR //
         double alphai; // smoothness indicator of solution
@@ -1991,21 +1990,20 @@ public:
           ij += 1;
         } // end j loop
 
+        // For new rescale -EJT, 03-03-2020
+        sum_entprime_flux = -(ith_flux_term1 * eta_prime1 + ith_flux_term2 *
+            eta_prime2 + ith_flux_term3 * eta_prime3);
+
         // Change rescaling to match TAMU code -EJT, 12/9/2019
-        // Here we divide by eps = 1E-5 so that small recale = 1/2 g eps
-        // H_{0,max}^2
+        // small_recale=0.5*g*eps*H_{0,max}^2
         double small_rescale = g * hEps * hEps / 1E-5;
         double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
 
+        // new rescale factor = max(|ent_flux_sum| + |-ent'*flux|, 0.0)
+        double new_rescale = fmax(fabs(entropy_flux) + fabs(sum_entprime_flux), 1E-300);
+
         // COMPUTE ENTROPY RESIDUAL //
         double one_over_entNormFactori = 1.0 / rescale;
-        // double one_over_entNormFactori = 2. / (etaMax[i] - etaMin[i] +
-        // 1E-15);
-
-        double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0.,
-                                        one_over_hiReg); // NOTE: FLAT BOTTOM
-        double eta_prime2 = DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);
-        double eta_prime3 = DENTROPY_DHV(g, hi, hui, hvi, 0., one_over_hiReg);
         global_entropy_residual[i] =
             one_over_entNormFactori *
             fabs(entropy_flux -
@@ -2016,7 +2014,7 @@ public:
         if (hi <= hEps) {
           alphai = 1.0;
           psi[i] = 1.0;
-          global_entropy_residual[i] = 1E10;
+          global_entropy_residual[i] = 1.0;
         } else {
           // Force alphai=0 in constant states
           if (fabs(alpha_numerator) <= hEps) {

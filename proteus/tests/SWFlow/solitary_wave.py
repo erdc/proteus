@@ -1,10 +1,7 @@
 from __future__ import division
 from builtins import object
 from past.utils import old_div
-from proteus import *
-from proteus.default_p import *
-from proteus.mprans import SW2DCV
-from proteus.mprans import GN_SW2DCV
+from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context, MeshTools as mt)
@@ -13,10 +10,7 @@ import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 
 
 """
-This test uses the definition of a solitary wave from eqn 31
-in the the paper 'A rapid numerical method for solving Serre Green Naghdi
-equations describing long free surface gravity waves' by
-Favrie and Gavrilyuk.
+This is a simple benchmark of a solitary wave propagating over a flat bottom.
 """
 
 # *************************** #
@@ -35,7 +29,6 @@ opts = Context.Options([
 # DOMAIN AND MESH #
 ###################
 L = (10.0, 1.0)
-X_coords = (0.0, 10.0)  # this is domain, used in BCs
 domain = RectangularDomain(L=L, x=[0, 0, 0])
 
 # CREATE REFINEMENT #
@@ -50,9 +43,12 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 # SOLITARY WAVE FUCTIONS AND BATH #
 ###################################
 g = 9.81
-h1 = .10
-h2 = .11
-x0 = 2.0 # initial location of solitary wave
+h1 = 0.10
+h2 = 0.11
+
+# initial location of solitary wave
+x0 = 2.0
+
 # solitary wave celerity and width
 c = np.sqrt(g * h2)
 r = np.sqrt(old_div(3.0 * (h2 - h1), 4 * h2 * h1**2))
@@ -73,19 +69,6 @@ def bathymetry_function(X):
     return x * 0.0
 
 
-###################################
-#    FOR ANALYTICAL SOLUTIONS     #
-###################################
-class Zero(object):
-    def uOfXT(self, x, t):
-        return 0.0
-
-
-class water_height_at_tfinal(object):
-    def uOfXT(self, X, t):
-        return solitary_wave(X[0], opts.final_time)
-
-
 ##############################
 #    INITIAL CONDITIONS      #
 ##############################
@@ -104,8 +87,7 @@ class x_mom_at_t0(object):
 
 class y_mom_at_t0(object):
     def uOfXT(self, X, t):
-        h = water_height_at_t0().uOfXT(X, t)
-        return 0. * h
+        return 0.0
 
 
 """
@@ -125,9 +107,6 @@ class heta_at_t0(object):
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        # since there is no bathymetry, waterHeight = htilde
-        # hw = -waterHeight^2 * div(vel)
-        #    = -h^2 * (c * h1 * hTildePrime/hTilde^2) = -c * h1 * hTildePrime
         x = X[0]
         phase = x - c * t - x0
         sechSqd = old_div(1.0, np.cosh(r * phase)**2)
@@ -135,16 +114,30 @@ class hw_at_t0(object):
         hw = -c * h1 * hprime
         return hw
 
+###################################
+#    FOR ANALYTICAL SOLUTIONS     #
+###################################
+class Zero(object):
+    def uOfXT(self, x, t):
+        return 0.0
+
+
+class water_height_at_tfinal(object):
+    def uOfXT(self, X, t):
+        return solitary_wave(X[0], opts.final_time)
 
 ###############################
 #     BOUNDARY CONDITIONS     #
 ###############################
-
+X_coords = (0.0, L[0])
+Y_coords = (0.0, L[1])
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0] or X[0] == X_coords[1]:
         return lambda x, t: 0.0
-
+def y_mom_DBC(X, flag):
+    if X[1] == Y_coords[0] or X[1] == X_coords[1]:
+        return lambda x, t: 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -170,7 +163,7 @@ analytical_Solution = {'h_exact': water_height_at_tfinal(),
                        'hw_exact': Zero()}
 
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
-                                              cfl=0.25,
+                                              cfl=opts.cfl,
                                               outputStepping=outputStepping,
                                               structured=True,
                                               he=he,

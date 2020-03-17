@@ -1,6 +1,6 @@
 .. _SWFlows:
 
-Shallow Water Flows
+Shallow Water Flow
 *******************
 
 
@@ -12,9 +12,9 @@ There are currently 2 different models that describe shallow water flow in Prote
 * Classical Saint-Venant equations (e.g. Shallow Water equations)
 * Dispersive shallow water model based on the Green-Naghdi equations (e.g. mGN equations)
 
-Shallow Water equations
+Shallow Water Equations
 =======================
-The Shallow Water equations are a set of partial differential equations that form a
+The Shallow Water Equations are a set of partial differential equations that form a
 hyperbolic system. They can be used to describe a body of water evolving under
 the action of gravity under the assumption that the deformations of the free surface
 are small compared to the water height.
@@ -37,4 +37,4 @@ available here: :py:mod:`proteus.mprans.GN_SW2DCV`.
 
 Running the tests
 =================
-All tests that concern shallow water flows can be found at :py:mod:`proteus.SWFlows.tests`.
+All tests that concern shallow water flows can be found at :py:mod:`proteus.tests.SWFlow`.

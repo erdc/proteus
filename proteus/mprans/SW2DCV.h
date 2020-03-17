@@ -10,12 +10,6 @@
 
 namespace py = pybind11;
 
-// cek todo
-// 2. Get stabilization right
-// 3. Add Riemann solvers for external flux
-// 4. Add Riemann solvers for internal flux and DG terms
-// 5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
-
 #define GLOBAL_FCT 0
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
