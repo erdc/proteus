@@ -245,6 +245,7 @@ EXTENSIONS_TO_BUILD = [
               include_dirs=[numpy.get_include(),
                             'proteus',
                             PROTEUS_INCLUDE_DIR,
+                            PROTEUS_INCLUDE_DIR+'/eigen3',
                             PROTEUS_CHRONO_INCLUDE_DIR,
                             PROTEUS_CHRONO_INCLUDE_DIR+'/chrono',
                             PROTEUS_CHRONO_INCLUDE_DIR+'/chrono/collision/bullet',],

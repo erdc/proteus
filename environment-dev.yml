@@ -22,7 +22,7 @@ dependencies:
   - superlu =5.2.1
   - superlu_dist =6.2.0
   - triangle =1.6
-  - pychrono =4.0.0
+  - pychrono =5.0.0
   - gmsh
   - matplotlib =3.1.3
   - mpi4py =3.0.3
@@ -41,6 +41,7 @@ dependencies:
   - recordtype =1.3
   - xtensor-python
   - git-lfs
+  - eigen
   - zoltan =3.83
   - hypre =2.18.2
   - mumps-mpi =5.2.1

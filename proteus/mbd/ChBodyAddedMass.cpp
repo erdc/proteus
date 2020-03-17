@@ -21,21 +21,21 @@ namespace chrono {
   }
 
   void ChBodyAddedMass::SetInertiaXX(const ChVector<>& iner) {
-    variables.GetBodyInertia().SetElement(0, 0, iner.x());
-    variables.GetBodyInertia().SetElement(1, 1, iner.y());
-    variables.GetBodyInertia().SetElement(2, 2, iner.z());
-    variables.GetBodyInertia().FastInvert(variables.GetBodyInvInertia());
+    variables.GetBodyInertia()(0, 0) = iner.x();
+    variables.GetBodyInertia()(1, 1) = iner.y();
+    variables.GetBodyInertia()(2, 2) = iner.z();
+    variables.GetBodyInvInertia() = variables.GetBodyInertia().inverse();
     ChBody::SetInertiaXX(iner);
   }
 
   void ChBodyAddedMass::SetInertiaXY(const ChVector<>& iner) {
-    variables.GetBodyInertia().SetElement(0, 1, iner.x());
-    variables.GetBodyInertia().SetElement(0, 2, iner.y());
-    variables.GetBodyInertia().SetElement(1, 2, iner.z());
-    variables.GetBodyInertia().SetElement(1, 0, iner.x());
-    variables.GetBodyInertia().SetElement(2, 0, iner.y());
-    variables.GetBodyInertia().SetElement(2, 1, iner.z());
-    variables.GetBodyInertia().FastInvert(variables.GetBodyInvInertia());
+    variables.GetBodyInertia()(0, 1) = iner.x();
+    variables.GetBodyInertia()(0, 2) = iner.y();
+    variables.GetBodyInertia()(1, 2) = iner.z();
+    variables.GetBodyInertia()(1, 0) = iner.x();
+    variables.GetBodyInertia()(2, 0) = iner.y();
+    variables.GetBodyInertia()(2, 1) = iner.z();
+    variables.GetBodyInvInertia() = variables.GetBodyInertia().inverse();
     ChBody::SetInertiaXY(iner);
   }
 
@@ -58,24 +58,19 @@ namespace chrono {
     void ChBodyAddedMass::SetMfullmass(ChMatrixDynamic<> Mfullmass_in) {
         assert(Mfullmass_in.GetRows() == variables.Get_ndof());
         assert(Mfullmass_in.GetColumns() == variables.Get_ndof());
-        ChMatrix<>& Mm = variables.GetMfullmass();
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-                Mm.SetElement(i, j, Mfullmass_in.GetElement(i, j));
-            }
-        }
+        variables.SetMfullmass(Mfullmass_in);
     }
 
-    void ChBodyAddedMass::SetInvMfullmass(ChMatrixDynamic<> inv_Mfullmass_in) {
-        assert(inv_Mfullmass_in.GetRows() == variables.Get_ndof());
-        assert(inv_Mfullmass_in.GetColumns() == variables.Get_ndof());
-        ChMatrix<>& Mm = variables.GetInvMfullmass();
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-                Mm(i, j) = inv_Mfullmass_in.GetElement(i, j);
-            }
-        }
-    }
+    // void ChBodyAddedMass::SetInvMfullmass(ChMatrixDynamic<> inv_Mfullmass_in) {
+    //     assert(inv_Mfullmass_in.GetRows() == variables.Get_ndof());
+    //     assert(inv_Mfullmass_in.GetColumns() == variables.Get_ndof());
+    //     ChMatrixDynamic<>& Mm = variables.GetInvMfullmass();
+    //     for (int i = 0; i < 6; i++) {
+    //         for (int j = 0; j < 6; j++) {
+    //             Mm(i, j) = inv_Mfullmass_in(i, j);
+    //         }
+    //     }
+    // }
 //// STATE BOOKKEEPING FUNCTIONS
 
 
@@ -86,15 +81,15 @@ void ChBodyAddedMass::IntToDescriptor(const unsigned int off_v,  // offset in v,
                              const unsigned int off_L,  // offset in L, Qc
                              const ChVectorDynamic<>& L,
                              const ChVectorDynamic<>& Qc) {
-    this->variables.Get_qb().PasteClippedMatrix(v, off_v, 0, 6, 1, 0, 0);  // for solver warm starting only
-    this->variables.Get_fb().PasteClippedMatrix(R, off_v, 0, 6, 1, 0, 0);  // solver known term
+    this->variables.Get_qb() = v.segment(off_v, 6);
+    this->variables.Get_fb() = R.segment(off_v, 6);
 }
 
 void ChBodyAddedMass::IntFromDescriptor(const unsigned int off_v,  // offset in v
                                ChStateDelta& v,
                                const unsigned int off_L,  // offset in L
                                ChVectorDynamic<>& L) {
-    v.PasteMatrix(this->variables.Get_qb(), off_v, 0);
+    v.segment(off_v, 6) = this->variables.Get_qb();
 }
 
 ////
@@ -105,18 +100,18 @@ void ChBodyAddedMass::InjectVariables(ChSystemDescriptor& mdescriptor) {
 }
 
 void ChBodyAddedMass::VariablesFbReset() {
-    this->variables.Get_fb().FillElem(0.0);
+    this->variables.Get_fb().setZero();
 }
 
 void ChBodyAddedMass::VariablesFbLoadForces(double factor) {
     // add applied forces to 'fb' vector
-    this->variables.Get_fb().PasteSumVector(Xforce * factor, 0, 0);
+    this->variables.Get_fb().segment(0, 3) += factor * Xforce.eigen();
 
     // add applied torques to 'fb' vector, including gyroscopic torque
     if (this->GetNoGyroTorque())
-        this->variables.Get_fb().PasteSumVector((Xtorque)*factor, 3, 0);
+        this->variables.Get_fb().segment(3, 3) += factor * Xtorque.eigen();
     else
-        this->variables.Get_fb().PasteSumVector((Xtorque - gyro) * factor, 3, 0);
+        this->variables.Get_fb().segment(3, 3) += factor * (Xtorque - gyro).eigen();
 }
 
 void ChBodyAddedMass::VariablesFbIncrementMq() {
@@ -125,16 +120,16 @@ void ChBodyAddedMass::VariablesFbIncrementMq() {
 
 void ChBodyAddedMass::VariablesQbLoadSpeed() {
     // set current speed in 'qb', it can be used by the solver when working in incremental mode
-    this->variables.Get_qb().PasteVector(GetCoord_dt().pos, 0, 0);
-    this->variables.Get_qb().PasteVector(GetWvel_loc(), 3, 0);
+    this->variables.Get_qb().segment(0, 3) = GetCoord_dt().pos.eigen();
+    this->variables.Get_qb().segment(3, 3) = GetWvel_loc().eigen();
 }
 
 void ChBodyAddedMass::VariablesQbSetSpeed(double step) {
     ChCoordsys<> old_coord_dt = this->GetCoord_dt();
 
     // from 'qb' vector, sets body speed, and updates auxiliary data
-    this->SetPos_dt(this->variables.Get_qb().ClipVector(0, 0));
-    this->SetWvel_loc(this->variables.Get_qb().ClipVector(3, 0));
+    this->SetPos_dt(this->variables.Get_qb().segment(0, 3));
+    this->SetWvel_loc(this->variables.Get_qb().segment(3, 3));
 
     // apply limits (if in speed clamping mode) to speeds.
     ClampSpeed();
@@ -156,8 +151,8 @@ void ChBodyAddedMass::VariablesQbIncrementPosition(double dt_step) {
     // Updates position with incremental action of speed contained in the
     // 'qb' vector:  pos' = pos + dt * speed   , like in an Eulero step.
 
-    ChVector<> newspeed = variables.Get_qb().ClipVector(0, 0);
-    ChVector<> newwel = variables.Get_qb().ClipVector(3, 0);
+    ChVector<> newspeed(variables.Get_qb().segment(0, 3));
+    ChVector<> newwel(variables.Get_qb().segment(3, 3));
 
     // ADVANCE POSITION: pos' = pos + dt * vel
     this->SetPos(this->GetPos() + newspeed * dt_step);
@@ -172,17 +167,20 @@ void ChBodyAddedMass::VariablesQbIncrementPosition(double dt_step) {
     ChQuaternion<> mnewrot = mdeltarot % moldrot;
     this->SetRot(mnewrot);
 }
+
 void ChBodyAddedMass::IntLoadResidual_F(const unsigned int off,  // offset in R residual
                                ChVectorDynamic<>& R,    // result: the R residual, R += c*F
                                const double c           // a scaling factor
                                ) {
+
     // add applied forces to 'fb' vector
-    R.PasteSumVector(Xforce * c, off, 0);
+    R.segment(off, 3) += c * Xforce.eigen();
+
     // add applied torques to 'fb' vector, including gyroscopic torque
     if (this->GetNoGyroTorque())
-        R.PasteSumVector((Xtorque)*c, off + 3, 0);
+        R.segment(off + 3, 3) += c * Xtorque.eigen();
     else
-        R.PasteSumVector((Xtorque - gyro) * c, off + 3, 0);
+        R.segment(off + 3, 3) += c * (Xtorque - gyro).eigen();
 }
 
 void ChBodyAddedMass::IntLoadResidual_Mv(const unsigned int off,      // offset in R residual
@@ -192,9 +190,9 @@ void ChBodyAddedMass::IntLoadResidual_Mv(const unsigned int off,      // offset 
                                 ) {
   ChMatrixDynamic<> ww = ChMatrixDynamic<>(6, 1);
   for (int i=0; i < 6; i++) {
-    ww.SetElement(i, 0, w(off+i));
+    ww(i, 0) = w(off+i);
   }
-  R.PasteSumMatrix(variables.GetMfullmass()*ww*c, off, 0);
+  R.segment(off, 6) += variables.GetMfullmass()*ww*c;
 }
 }  // end namespace chrono
 
