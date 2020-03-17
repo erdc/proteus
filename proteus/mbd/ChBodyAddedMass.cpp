@@ -56,8 +56,8 @@ namespace chrono {
   //   }
 
     void ChBodyAddedMass::SetMfullmass(ChMatrixDynamic<> Mfullmass_in) {
-        assert(Mfullmass_in.GetRows() == variables.Get_ndof());
-        assert(Mfullmass_in.GetColumns() == variables.Get_ndof());
+        assert(Mfullmass_in.rows() == variables.Get_ndof());
+        assert(Mfullmass_in.cols() == variables.Get_ndof());
         variables.SetMfullmass(Mfullmass_in);
     }
 
