@@ -574,10 +574,10 @@ class NS_base(object):  # (HasTraits):
 
         theDomain = self.pList[0].domain
 
-        if(hasattr(theDomain,'PUMIMesh')):
+        if(hasattr(theDomain,'PUMIManager')):
             self.Adapter = Adapt.PUMIAdapt(self)
-            self.Adapter.getModels(theDomain.PUMIManager.modelDict)
             self.Adapter.reconstructMesh(theDomain,theMesh)
+            self.Adapter.getModels(theDomain.PUMIManager.modelDict)
 
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
@@ -980,13 +980,13 @@ class NS_base(object):  # (HasTraits):
         stepFailed=False
 
 
-        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+        if(hasattr(self.pList[0].domain,"PUMIManager")):
             self.Adapter.setProperties()
         #### Perform an initial adapt after applying initial conditions ####
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+        if(hasattr(self.pList[0].domain,"PUMIManager")):
             self.Adapter.initialAdapt()
 
         #NS_base has a fairly complicated time stepping loop structure
@@ -1033,7 +1033,7 @@ class NS_base(object):  # (HasTraits):
         #### If PUMI and hotstarting then decode info and proceed with restart ####
         #### This has to be done after the dof histories are saved because DOF histories are already present on the mesh ####
 
-        if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
+        if (hasattr(self.pList[0].domain, 'PUMIManager') and self.opts.hotStart):
           f = open(self.pList[0].domain.checkpointInfo, 'r')
           import json
           previousInfo = json.load(f)
@@ -1078,7 +1078,7 @@ class NS_base(object):  # (HasTraits):
                        not systemStepFailed):
 
 
-                    if (hasattr(self.pList[0].domain, 'PUMIMesh') and self.opts.hotStart):
+                    if (hasattr(self.pList[0].domain, 'PUMIManager') and self.opts.hotStart):
                       self.hotstartWithPUMI()
                       self.opts.hotStart = False
                       #Need to clean mesh for output again
@@ -1238,7 +1238,7 @@ class NS_base(object):  # (HasTraits):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 #import gc; gc.collect()
-                if(hasattr(self.pList[0].domain,"PUMIMesh")):
+                if(hasattr(self.pList[0].domain,"PUMIManager")):
                     if(self.Adapter.PUMI_estimateError()):
                         self.Adapter.PUMI_adaptMesh()
                 #
@@ -1331,7 +1331,7 @@ class NS_base(object):  # (HasTraits):
             if hasattr(model.levelModelList[-1],'runAtEOS'):
                 model.levelModelList[-1].runAtEOS()
 
-        if(hasattr(self.pList[0].domain,"PUMIMesh")):
+        if(hasattr(self.pList[0].domain,"PUMIManager")):
         #Transfer solution to PUMI mesh for output
           self.pList[0].domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)

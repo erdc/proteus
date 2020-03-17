@@ -981,7 +981,7 @@ class PUMIDomain(D_base):
       D_base.__init__(self,dim,name)
       self.faceList=[]
       self.regList=[]
-      self.PUMIMesh=None
+      self.PUMIManager=None
       self.checkpointInfo=None
       self.checkpointFrequency=0 #default never checkpoint
       #

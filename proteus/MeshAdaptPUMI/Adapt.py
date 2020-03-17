@@ -588,7 +588,7 @@ class PUMIAdapt:
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
             #deltaT = self.systemStepController.dt_system 
-            deltaT=self.modelList[0].levelModelList[0].timeIntegration.dtLast
+            deltaT=self.modelList[self.flowIdx].levelModelList[0].timeIntegration.dtLast
             T_current = self.systemStepController.t_system_last
             deltaT_next = self.systemStepController.dt_system 
         else:
