@@ -44,27 +44,20 @@ cdef extern from "ProtChMoorings.h":
                    double Alpha,
                    ChVector &mu)
 
-    cdef cppclass ChMatrix:
-        double GetElement(int row,
-                          int col)
-        double SetElement(int row,
-                          int col,
-                          double element)
-
-    cdef cppclass ChMatrix33[double](ChMatrix):
+    cdef cppclass ChMatrix33[double]:
         ChVector Get_A_Xaxis()
         ChVector Get_A_Yaxis()
         ChVector Get_A_Zaxis()
-        void CopyFromMatrixT(ChMatrix matra)
-        ChMatrix33()
-        ChMatrix33(ChQuaternion quat)
+        # void CopyFromMatrixT(ChMatrix matra)
+        # ChMatrix33()
+        # ChMatrix33(ChQuaternion quat)
 
-    cdef cppclass ChMatrixDynamic[double](ChMatrix):
+    cdef cppclass ChMatrixDynamic[double]:
         ChMatrixDynamic()
         ChMatrixDynamic(const int row,
                         const int col)
-        ChMatrixDynamic operator=(const ChMatrix& matbis)
-        ChMatrixDynamic operator+(const ChMatrix& matbis)
+        # ChMatrixDynamic operator=(const ChMatrix& matbis)
+        # ChMatrixDynamic operator+(const ChMatrix& matbis)
         ChVector Get_A_Xaxis()
         ChVector Get_A_Yaxis()
         ChVector Get_A_Zaxis()
@@ -197,7 +190,7 @@ cdef extern from "ProtChMoorings.h":
         double GetMass()
         void SetMass(double mm)
         void SetForce(ChVector mf)
-        ChVector& GetForce() 
+        ChVector& GetForce()
 
     cdef cppclass ChNodeFEAxyzD(ChNodeFEAxyz):
         const ChVector& GetD()
@@ -207,9 +200,9 @@ cdef extern from "ProtChMoorings.h":
 
     cdef cppclass ChNodeFEAxyzrot(ChNodeFEAbase, ChBodyFrame):
         void SetForce(ChVector mf)
-        ChVector& GetForce() 
+        ChVector& GetForce()
         void SetTorque(ChVector mf)
-        ChVector& GetTorque() 
+        ChVector& GetTorque()
 
     cdef cppclass ChNodeFEAxyzP(ChNodeFEAbase)
 
@@ -224,21 +217,21 @@ cdef extern from "ProtChMoorings.h":
         ChElementGeneric()
 
     cdef cppclass ChElementBeam(ChElementGeneric):
-        void EvaluateSectionDisplacement(const double eta,
-                                         const ChMatrix &displ,
-                                         ChVector &u_displ,
-                                         ChVector &u_rotaz)
-        void EvaluateSectionFrame(const double eta,
-                                  const ChMatrix &displ,
-                                  ChVector &u_displ,
-                                  ChQuaternion &rot)
-        void EvaluateSectionForceTorque(const double eta,
-                                        const ChMatrix &displ,
-                                        ChVector &Fforce,
-                                        ChVector &Mtorque)
-        void EvaluateSectionStrain(const double eta,
-                                   const ChMatrix &displ,
-                                   ChVector &StrainV)
+        # void EvaluateSectionDisplacement(const double eta,
+        #                                  const ChMatrix &displ,
+        #                                  ChVector &u_displ,
+        #                                  ChVector &u_rotaz)
+        # void EvaluateSectionFrame(const double eta,
+        #                           const ChMatrix &displ,
+        #                           ChVector &u_displ,
+        #                           ChQuaternion &rot)
+        # void EvaluateSectionForceTorque(const double eta,
+        #                                 const ChMatrix &displ,
+        #                                 ChVector &Fforce,
+        #                                 ChVector &Mtorque)
+        # void EvaluateSectionStrain(const double eta,
+        #                            const ChMatrix &displ,
+        #                            ChVector &StrainV)
         double GetMass()
         double GetRestLength()
         void SetRestLength(double ml)
@@ -330,25 +323,25 @@ cdef extern from "ProtChMoorings.h":
 
     cdef cppclass ChLinkBase:
         ChVector Get_react_force()
-    
+
     cdef cppclass ChLink(ChLinkBase)
-    
+
     cdef cppclass ChLinkMate(ChLink)
-    
+
     cdef cppclass ChLinkMateGeneric(ChLinkMate)
-        
+
     cdef cppclass ChLinkPointFrame(ChLinkBase):
         int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector* pos)
         ChVector GetReactionOnNode()
         ChVector GetReactionOnBody()
-        #virtual 
+        #virtual
         #int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector[double] *pos=0)
 
     cdef cppclass ChLinkPointPoint(ChLinkBase):
-        #virtual 
+        #virtual
         ChLinkPointPoint()
         int Initialize(shared_ptr[ChNodeFEAxyz] anodeA, shared_ptr[ChNodeFEAxyz] anodeB)
-    
+
 
 cdef extern from "ChBodyAddedMass.h":
     cdef cppclass ChBodyAddedMass(ChBody):

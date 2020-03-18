@@ -242,6 +242,7 @@ EXTENSIONS_TO_BUILD = [
               include_dirs=[numpy.get_include(),
                             'proteus',
                             PROTEUS_INCLUDE_DIR,
+                            PROTEUS_INCLUDE_DIR+'/eigen3',
                             PROTEUS_CHRONO_INCLUDE_DIR,
                             PROTEUS_CHRONO_INCLUDE_DIR+'/chrono',
                             PROTEUS_CHRONO_INCLUDE_DIR+'/chrono/collision/bullet',],
@@ -720,7 +721,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.3',
+          version='1.7.3.dev0',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',

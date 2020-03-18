@@ -1,17 +1,16 @@
 from __future__ import division
 from builtins import object
 from past.utils import old_div
-from proteus import *
-from proteus.default_p import *
-from proteus.mprans import SW2D
-from proteus.mprans import SW2DCV
-from proteus.mprans import GN_SW2DCV
+from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain
 import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
+
+"""This is a dam-break problem with three obstacles.  The computation domain is
+D = [0,75m]x[0,30m]. The dam is located at x = 16m and is of height 1.875m. """
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
@@ -73,9 +72,6 @@ class Zero(object):
     def uOfXT(self, x, t):
         return 0.0
 
-# heta and hw are needed for the modified Green-Naghdi equations,
-# ie dispersive shallow water equations
-
 class heta_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
@@ -85,6 +81,22 @@ class heta_at_t0(object):
 class hw_at_t0(object):
     def uOfXT(self, X, t):
         return 0.0
+
+###############################
+##### BOUNDARY CONDITIONS #####
+###############################
+# If we want other BCs instead of reflecting
+X_coords = (0.0, L[0])  # this is x domain, used in BCs
+Y_coords = (0.0, L[1])  # this is y domain, used in BCs
+
+def x_mom_DBC(X, flag):
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
+        return lambda X, t: 0.0
+
+
+def y_mom_DBC(X, flag):
+    if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
+        return lambda X, t: 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
