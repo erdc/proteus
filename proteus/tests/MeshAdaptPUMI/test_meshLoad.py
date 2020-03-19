@@ -9,6 +9,7 @@ from nose.tools import ok_ as ok
 import os
 import pytest
 
+@pytest.mark.skip(reason=".smb file was removed during cleaning")
 def test_meshLoadPUMI(verbose=0):
     """Test to load serial PUMI model and mesh"""
     testDir=os.path.dirname(os.path.abspath(__file__))
