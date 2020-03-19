@@ -21,8 +21,24 @@ def test_poiseuilleError(verbose=0):
     Mesh=testDir + '/Couette.msh'
 
     domain = Domain.PUMIDomain() #initialize the domain
-    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'ERM',maType=b'isotropic',logType=b'off')
-    domain.PUMIMesh.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
+
+    domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
+    domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
+
+    domain.PUMIManager.modelDict = {'flow':0}
+    domain.PUMIManager.sizeInputs = [b'error_erm']
+    domain.PUMIManager.adapt = 1
+    domain.PUMIManager.hmax = 0.01
+    domain.PUMIManager.hmin= 0.008
+    domain.PUMIManager.hphi= 0.008
+    domain.PUMIManager.numIterations= 1
+    domain.PUMIManager.targetError= 1
+
+
+    domain.PUMIManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
+    domain.PUMIManager.PUMIAdapter.setAdaptProperties(domain.PUMIManager)
+
+
     domain.faceList=[[80],[76],[42],[24],[82],[78]]
     domain.boundaryLabels = [1,2,3,4,5,6]
 
@@ -31,9 +47,9 @@ def test_poiseuilleError(verbose=0):
     comm = Comm.init()
 
     nElements_initial = mesh.nElements_global
-    mesh.convertFromPUMI(domain,domain.PUMIMesh, domain.faceList, domain.regList,parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain,domain.PUMIManager.PUMIAdapter, domain.faceList, domain.regList,parallel = comm.size() > 1, dim = domain.nd)
 
-    domain.PUMIMesh.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
+    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
 
 
     rho = numpy.array([998.2,998.2])
@@ -41,7 +57,7 @@ def test_poiseuilleError(verbose=0):
     g = numpy.asarray([0.0,0.0,0.0])
     deltaT = 1.0 #dummy number 
     epsFact = 1.0 #dummy number 
-    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
+    domain.PUMIManager.PUMIAdapter.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
 
     #Poiseuille Flow
     Ly=0.2
@@ -61,19 +77,19 @@ def test_poiseuilleError(verbose=0):
     vector[:,0] = dummy
     vector[:,1] = 4*Umax/(Lz**2)*(mesh.nodeArray[:,2])*(Lz-mesh.nodeArray[:,2]) #v-velocity
     vector[:,2] = dummy
-    domain.PUMIMesh.transferFieldToPUMI(b"velocity", vector)
+    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"velocity", vector)
 
     scalar=numpy.zeros((mesh.nNodes_global,1),'d')
-    domain.PUMIMesh.transferFieldToPUMI(b"p", scalar)
+    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"p", scalar)
 
     scalar[:,0] = mesh.nodeArray[:,2]
-    domain.PUMIMesh.transferFieldToPUMI(b"phi", scalar)
+    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"phi", scalar)
     del scalar
 
     scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
-    domain.PUMIMesh.transferFieldToPUMI(b"vof", scalar)
+    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
 
-    errorTotal=domain.PUMIMesh.get_local_error()
+    errorTotal=domain.PUMIManager.PUMIAdapter.get_local_error()
 
 
     # load the femspace with linear basis and get the quadrature points on a reference element
