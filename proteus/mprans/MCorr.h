@@ -2059,7 +2059,7 @@ namespace proteus
 
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
-		q_H.data()[eN_k] = q_porosity.data()[eN_k]*gf.H(epsHeaviside,q_phi.data()[eN_k]);
+		q_H.data()[eN_k] = gf.H(epsHeaviside,q_phi.data()[eN_k]);
 	      }//k
 	    // distribute rhs for mass correction
 	    for (int i=0;i<nDOF_trial_element;i++)
