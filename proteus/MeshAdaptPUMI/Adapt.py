@@ -332,11 +332,15 @@ class PUMIAdapt:
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
 
-        #just added, need to initialize structures?
+        #just added, need to initialize structures
         for model in self.modelList:
             logEvent("Auxiliary variable calculate_init for model %s" % (model.name,))
             for av in self.auxiliaryVariables[model.name]:
-                av.calculate_init()
+                #gauges do not need to have aux variables recomputed as this would add additional lines to the output unnecessarily
+                if hasattr(av,"isGaugeOwner"):
+                    pass
+                else:
+                    av.calculate_init()
 
         logEvent("Transfering fields from PUMI to Proteus")
         for m in self.modelList:
