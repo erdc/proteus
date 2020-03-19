@@ -585,9 +585,9 @@ class NS_base(object):  # (HasTraits):
         #TODO: this needs to be isolated MeshAdaptPUMI
         if so.useOneMesh:
             try:
-                if (nList[0].MeshAdaptMesh.size_field_config() == 'isotropicProteus'):
+                if (b"isotropicProteus" in theDomain.PUMIManager.sizeInputs):
                     mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
-                if (nList[0].MeshAdaptMesh.size_field_config() == 'anisotropicProteus'):
+                if (b"anisotropicProteus" in theDomain.PUMIManager.sizeInputs):
                     mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
                     mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
             except:
