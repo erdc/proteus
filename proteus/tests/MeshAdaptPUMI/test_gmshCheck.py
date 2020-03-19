@@ -22,8 +22,6 @@ def test_gmshLoadAndAdapt(verbose=0):
     domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
     domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
 
-    #hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'ERM',maType=b'isotropic',targetError=1)
-
     modelDict = {'flow':0}
     domain.PUMIManager.modelDict = modelDict
     domain.PUMIManager.sizeInputs = [b'error_erm']

@@ -120,19 +120,29 @@ else:
         adaptMesh = True
         adaptMesh_nSteps = 2#5
         adaptMesh_numIter = 2
-        #domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'VMS',maType=b'isotropic',targetError=0.1,targetElementCount=1000,adaptMesh=adaptMesh)
-        #domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='isotropic')
-        domain.PUMIMesh=MeshAdaptPUMI.AdaptManager()
-        domain.PUMIMesh.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'VMS',maType=b'isotropic',targetError=0.1,targetElementCount=1000,adaptMesh=adaptMesh)
+        domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
+        domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'VMS',maType=b'isotropic',targetError=0.1,targetElementCount=1000,adaptMesh=adaptMesh)
         #read the geometry and mesh
         testDir=os.path.dirname(os.path.abspath(__file__))
         Model = testDir + '/../Couette.null'
         Mesh = testDir + '/../Couette.msh'
         #domain.PUMIMesh.loadModelAndMesh(Model.encode(),Mesh.encode())
 
-        domain.PUMIMesh.PUMIAdapter.loadModelAndMesh(Model.encode(),Mesh.encode())
+        domain.PUMIManager.PUMIAdapter.loadModelAndMesh(Model.encode(),Mesh.encode())
+
+        domain.PUMIManager.sizeInputs = [b'error_vms']
+        domain.PUMIManager.adapt = 1
+        domain.PUMIManager.hmax = 0.01
+        domain.PUMIManager.hmin= 0.008
+        domain.PUMIManager.hphi= 0.008
+        domain.PUMIManager.numIterations= 1
+        domain.PUMIManager.targetError= 0.1
+
+
+        domain.PUMIManager.PUMIAdapter.setAdaptProperties(domain.PUMIManager)
+
         modelDict = {'flow':0,'phase':2,'corrections':[3,4]}
-        domain.PUMIMesh.modelDict = modelDict
+        domain.PUMIManager.modelDict = modelDict
 
 
 

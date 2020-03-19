@@ -697,7 +697,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
         myfile.close();
       }
   } 
-  if(hasVMS && std::string(inputString)==""){
+  if((hasVMS) && std::string(inputString)==""){
     assert(vmsErrH1);
     getERMSizeField(total_error);
   }
@@ -732,8 +732,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       freeField(errRel_reg); 
   }
 */
-
+  std::cout<<"before problem\n";
   isotropicIntersect();
+  std::cout<<"after problem\n";
 
   if(logging_config=="on"){
     char namebuffer[50];
@@ -1009,6 +1010,8 @@ int MeshAdaptPUMIDrvr::setAdaptProperties(std::vector<std::string> sizeInputs,bo
             hasInterface=1;
         if(*it == "error_vms")
             hasVMS=1;
+        if(*it == "error_erm")
+            hasERM=1;
     }
     hmin=in_hmin; 
     hmax=in_hmax; 
