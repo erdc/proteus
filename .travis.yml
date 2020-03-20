@@ -46,7 +46,7 @@ jobs:
       - pushd stack
       - echo $PWD
       - ls -l
-      - travis_wait 30 ./hit/bin/hit build -j 1 -v default.yaml
+      - ./hit/bin/hit build -j 2 -v default.yaml
       - popd
       - export PATHSAVE=$PATH
       - export PATH=$PWD/linux/bin:$PATH
