@@ -2,7 +2,7 @@ from builtins import range
 import numpy
 from proteus import MeshTools
 from proteus import cmeshTools
-from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+from proteus.MeshAdaptPUMI import MeshAdapt
 from proteus import Domain
 from proteus import Comm
 from petsc4py import PETSc
@@ -20,23 +20,19 @@ def test_poiseuilleError(verbose=0):
     Model=testDir + '/Couette.null'
     Mesh=testDir + '/Couette.msh'
 
-    domain = Domain.PUMIDomain() #initialize the domain
-
-    domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
-    domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
-
-    domain.PUMIManager.modelDict = {'flow':0}
-    domain.PUMIManager.sizeInputs = [b'error_erm']
-    domain.PUMIManager.adapt = 1
-    domain.PUMIManager.hmax = 0.01
-    domain.PUMIManager.hmin= 0.008
-    domain.PUMIManager.hphi= 0.008
-    domain.PUMIManager.numIterations= 1
-    domain.PUMIManager.targetError= 1
+    domain = Domain.PUMIDomain(manager=MeshAdapt.AdaptManager()) #initialize the domain
+    domain.AdaptManager.modelDict = {'flow':0}
+    domain.AdaptManager.sizeInputs = [b'error_erm']
+    domain.AdaptManager.adapt = 1
+    domain.AdaptManager.hmax = 0.01
+    domain.AdaptManager.hmin= 0.008
+    domain.AdaptManager.hphi= 0.008
+    domain.AdaptManager.numIterations= 1
+    domain.AdaptManager.targetError= 1
 
 
-    domain.PUMIManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
-    domain.PUMIManager.PUMIAdapter.setAdaptProperties(domain.PUMIManager)
+    domain.AdaptManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
+    domain.AdaptManager.PUMIAdapter.setAdaptProperties(domain.AdaptManager)
 
 
     domain.faceList=[[80],[76],[42],[24],[82],[78]]
@@ -47,9 +43,9 @@ def test_poiseuilleError(verbose=0):
     comm = Comm.init()
 
     nElements_initial = mesh.nElements_global
-    mesh.convertFromPUMI(domain,domain.PUMIManager.PUMIAdapter, domain.faceList, domain.regList,parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter, domain.faceList, domain.regList,parallel = comm.size() > 1, dim = domain.nd)
 
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
 
 
     rho = numpy.array([998.2,998.2])
@@ -57,7 +53,7 @@ def test_poiseuilleError(verbose=0):
     g = numpy.asarray([0.0,0.0,0.0])
     deltaT = 1.0 #dummy number 
     epsFact = 1.0 #dummy number 
-    domain.PUMIManager.PUMIAdapter.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
+    domain.AdaptManager.PUMIAdapter.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
 
     #Poiseuille Flow
     Ly=0.2
@@ -77,19 +73,19 @@ def test_poiseuilleError(verbose=0):
     vector[:,0] = dummy
     vector[:,1] = 4*Umax/(Lz**2)*(mesh.nodeArray[:,2])*(Lz-mesh.nodeArray[:,2]) #v-velocity
     vector[:,2] = dummy
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"velocity", vector)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"velocity", vector)
 
     scalar=numpy.zeros((mesh.nNodes_global,1),'d')
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"p", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"p", scalar)
 
     scalar[:,0] = mesh.nodeArray[:,2]
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"phi", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"phi", scalar)
     del scalar
 
     scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
 
-    errorTotal=domain.PUMIManager.PUMIAdapter.get_local_error()
+    errorTotal=domain.AdaptManager.PUMIAdapter.get_local_error()
 
 
     # load the femspace with linear basis and get the quadrature points on a reference element

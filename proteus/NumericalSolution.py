@@ -28,7 +28,7 @@ from . import Archiver
 from . import Viewers
 from .Archiver import ArchiveFlags
 from . import Domain
-from .MeshAdaptPUMI import Checkpoint,Adapt
+from .MeshAdaptPUMI import Checkpoint,AdaptHelper
 from .Profiling import logEvent
 
 # Global to control whether the kernel starting is active.
@@ -401,7 +401,7 @@ class NS_base(object):  # (HasTraits):
                 else:
                   mesh = MeshTools.TriangularMesh()
                 logEvent("Converting PUMI mesh to Proteus")
-                mesh.convertFromPUMI(p.domain,p.domain.PUMIManager.PUMIAdapter, p.domain.faceList,
+                mesh.convertFromPUMI(p.domain,p.domain.AdaptManager.PUMIAdapter, p.domain.faceList,
                     p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
                 if p.domain.nd == 3:
@@ -574,10 +574,10 @@ class NS_base(object):  # (HasTraits):
 
         theDomain = self.pList[0].domain
 
-        if(hasattr(theDomain,'PUMIManager')):
-            self.Adapter = Adapt.PUMIAdapt(self)
-            self.Adapter.reconstructMesh(theDomain,theMesh)
-            self.Adapter.getModels(theDomain.PUMIManager.modelDict)
+        if(hasattr(theDomain,'AdaptManager')):
+            self.AdaptHelper = AdaptHelper.PUMI_helper(self)
+            self.AdaptHelper.reconstructMesh(theDomain,theMesh)
+            self.AdaptHelper.getModels(theDomain.AdaptManager.modelDict)
 
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
@@ -585,9 +585,9 @@ class NS_base(object):  # (HasTraits):
         #TODO: this needs to be isolated MeshAdaptPUMI
         if so.useOneMesh:
             try:
-                if (b"isotropicProteus" in theDomain.PUMIManager.sizeInputs):
+                if (b"isotropicProteus" in theDomain.AdaptManager.sizeInputs):
                     mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
-                if (b"anisotropicProteus" in theDomain.PUMIManager.sizeInputs):
+                if (b"anisotropicProteus" in theDomain.AdaptManager.sizeInputs):
                     mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
                     mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
             except:
@@ -980,14 +980,14 @@ class NS_base(object):  # (HasTraits):
         stepFailed=False
 
 
-        if(hasattr(self.pList[0].domain,"PUMIManager")):
-            self.Adapter.setProperties()
+        if(hasattr(self.pList[0].domain,"AdaptManager")):
+            self.AdaptHelper.setProperties()
         #### Perform an initial adapt after applying initial conditions ####
         # The initial adapt is based on interface, but will eventually be generalized to any sort of initialization
         # Needs to be placed here at this time because of the post-adapt routine requirements
 
-        if(hasattr(self.pList[0].domain,"PUMIManager")):
-            self.Adapter.initialAdapt()
+        if(hasattr(self.pList[0].domain,"AdaptManager")):
+            self.AdaptHelper.initialAdapt()
 
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
@@ -1033,16 +1033,16 @@ class NS_base(object):  # (HasTraits):
         #### If PUMI and hotstarting then decode info and proceed with restart ####
         #### This has to be done after the dof histories are saved because DOF histories are already present on the mesh ####
 
-        if (hasattr(self.pList[0].domain, 'PUMIManager') and self.opts.hotStart):
+        if (hasattr(self.pList[0].domain, 'AdaptManager') and self.opts.hotStart):
           f = open(self.pList[0].domain.checkpointInfo, 'r')
           import json
           previousInfo = json.load(f)
           f.close()
           if(previousInfo["checkpoint_status"]=="endsystem"):
-            self.Adapter.hotstartWithPUMI()
+            self.AdaptHelper.hotstartWithPUMI()
             self.opts.hotStart = False
             #Need to clean mesh for output again
-            self.pList[0].domain.PUMIManager.cleanMesh()
+            self.pList[0].domain.AdaptManager.cleanMesh()
         ####
 
         import time
@@ -1078,11 +1078,11 @@ class NS_base(object):  # (HasTraits):
                        not systemStepFailed):
 
 
-                    if (hasattr(self.pList[0].domain, 'PUMIManager') and self.opts.hotStart):
+                    if (hasattr(self.pList[0].domain, 'AdaptManager') and self.opts.hotStart):
                       self.hotstartWithPUMI()
                       self.opts.hotStart = False
                       #Need to clean mesh for output again
-                      self.pList[0].domain.PUMIManager.cleanMesh()
+                      self.pList[0].domain.AdaptManager.cleanMesh()
 
                     #This should be the only place dofs are saved otherwise there might be a double-shift for last_last
                     self.opts.save_dof = True
@@ -1238,9 +1238,9 @@ class NS_base(object):  # (HasTraits):
                 #  self.nSolveSteps=0#self.nList[0].adaptMesh_nSteps-2
                 self.nSolveSteps += 1
                 #import gc; gc.collect()
-                if(hasattr(self.pList[0].domain,"PUMIManager")):
-                    if(self.Adapter.PUMI_estimateError()):
-                        self.Adapter.PUMI_adaptMesh()
+                if(hasattr(self.pList[0].domain,"AdaptManager")):
+                    if(self.AdaptHelper.PUMI_estimateError()):
+                        self.AdaptHelper.PUMI_adaptMesh()
                 #
                 if measureSpeed and startToMeasureSpeed and self.comm.isMaster():
                     numTimeSteps += 1
@@ -1331,9 +1331,9 @@ class NS_base(object):  # (HasTraits):
             if hasattr(model.levelModelList[-1],'runAtEOS'):
                 model.levelModelList[-1].runAtEOS()
 
-        if(hasattr(self.pList[0].domain,"PUMIManager")):
+        if(hasattr(self.pList[0].domain,"AdaptManager")):
         #Transfer solution to PUMI mesh for output
-          self.pList[0].domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",
+          self.pList[0].domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
           for m in self.modelList:
@@ -1343,17 +1343,17 @@ class NS_base(object):  # (HasTraits):
                 vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
-                self.pList[0].domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(
+                self.pList[0].domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                    coef.vectorName.encode('utf-8'), vector)
                 #Transfer dof_last
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
-                self.pList[0].domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(
+                self.pList[0].domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                      coef.vectorName.encode('utf-8')+b"_old", vector)
                 #Transfer dof_last_last
                 for vci in range(len(coef.vectorComponents)):
                   vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
-                self.pList[0].domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(
+                self.pList[0].domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                      coef.vectorName.encode('utf-8')+b"_old_old", vector)
                 del vector
 
@@ -1362,19 +1362,19 @@ class NS_base(object):  # (HasTraits):
                   ci not in coef.vectorComponents:
                   scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                   scalar[:,0] = lm.u[ci].dof[:]
-                  self.pList[0].domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(
+                  self.pList[0].domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                       coef.variableNames[ci].encode('utf-8'), scalar)
                   #Transfer dof_last
                   scalar[:,0] = lm.u[ci].dof_last[:]
-                  self.pList[0].domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(
+                  self.pList[0].domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                      coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
                   #Transfer dof_last_last
                   scalar[:,0] = lm.u[ci].dof_last_last[:]
-                  self.pList[0].domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(
+                  self.pList[0].domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                      coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
                   del scalar
 
-          self.pList[0].domain.PUMIManager.PUMIAdapter.writeMesh(b"finalMesh.smb")
+          self.pList[0].domain.AdaptManager.PUMIAdapter.writeMesh(b"finalMesh.smb")
           if((self.PUMIcheckpointer.frequency>0) ):
             self.modelListOld = self.modelList
             self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)

@@ -16,6 +16,7 @@ import sys
 import numpy as np
 from proteus.Profiling import logEvent
 from proteus import MeshTools
+from proteus.MeshAdaptPUMI import MeshAdapt
 
 class D_base(object):
     """
@@ -977,11 +978,11 @@ class PUMIDomain(D_base):
   faceList -- defines face classification in simmetrix  mesh
   PUMIMesh -- the MeshAdapt object
   """
-  def __init__(self, name="PUMIDomain", dim=3):
+  def __init__(self, name="PUMIDomain", dim=3,manager=MeshAdapt.AdaptManager()):
       D_base.__init__(self,dim,name)
       self.faceList=[]
       self.regList=[]
-      self.PUMIManager=None
+      self.AdaptManager=manager
       self.checkpointInfo=None
       self.checkpointFrequency=0 #default never checkpoint
       #

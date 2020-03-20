@@ -171,30 +171,26 @@ elif structured:
     boundaryTags = domain.boundaryTags
 
 elif usePUMI and not genMesh:
-    from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-    domain = Domain.PUMIDomain(dim=nd) #initialize the domain
+    from proteus.MeshAdaptPUMI import MeshAdapt
+    domain = Domain.PUMIDomain(dim=nd,manager=MeshAdapt.AdaptManager()) #initialize the domain
     he = 0.06
-    domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
-    domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
-    domain.PUMIManager.PUMIAdapter.loadModelAndMesh(b"Reconstructed.dmg", b"Reconstructed.smb")
+    domain.AdaptManager.PUMIAdapter.loadModelAndMesh(b"Reconstructed.dmg", b"Reconstructed.smb")
     modelDict = {'flow':0,'phase':2,'corrections':[3,4]}
-    domain.PUMIManager.modelDict = modelDict
-    domain.PUMIManager.sizeInputs = [b'pseudo']
-    domain.PUMIManager.adapt = opts.adapt
-    domain.PUMIManager.hmax = he
-    domain.PUMIManager.hmin= he/4.0
-    domain.PUMIManager.hphi= he/2.0
-    domain.PUMIManager.numIterations= 5
-    domain.PUMIManager.PUMIAdapter.setAdaptProperties(domain.PUMIManager)
+    domain.AdaptManager.modelDict = modelDict
+    domain.AdaptManager.sizeInputs = [b'pseudo']
+    domain.AdaptManager.adapt = opts.adapt
+    domain.AdaptManager.hmax = he
+    domain.AdaptManager.hmin= he/4.0
+    domain.AdaptManager.hphi= he/2.0
+    domain.AdaptManager.numIterations= 5
+    domain.AdaptManager.PUMIAdapter.setAdaptProperties(domain.AdaptManager)
 
 else:
     domain = Domain.PlanarStraightLineGraphDomain()
 
 if genMesh and usePUMI:
-  from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-  domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
-  domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
-
+  from proteus.MeshAdaptPUMI import MeshAdapt
+  domain.AdaptManager=MeshAdapt.AdaptManager()
 
 
 # ----- TANK ----- #

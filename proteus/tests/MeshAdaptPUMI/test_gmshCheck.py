@@ -1,8 +1,7 @@
 import numpy
 from proteus import MeshTools
 from proteus import cmeshTools
-from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-from proteus.MeshAdaptPUMI import Adapt
+from proteus.MeshAdaptPUMI import MeshAdapt
 from proteus import Domain
 from proteus import Comm
 from petsc4py import PETSc
@@ -18,23 +17,20 @@ def test_gmshLoadAndAdapt(verbose=0):
     Model=testDir + '/Couette.null'
     Mesh=testDir + '/Couette.msh'
 
-    domain = Domain.PUMIDomain() #initialize the domain
-    domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
-    domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
+    domain = Domain.PUMIDomain(manager=MeshAdapt.AdaptManager()) #initialize the domain
 
-    modelDict = {'flow':0}
-    domain.PUMIManager.modelDict = modelDict
-    domain.PUMIManager.sizeInputs = [b'error_erm']
-    domain.PUMIManager.adapt = 1
-    domain.PUMIManager.hmax = 0.01
-    domain.PUMIManager.hmin= 0.008
-    domain.PUMIManager.hphi= 0.008
-    domain.PUMIManager.numIterations= 1
-    domain.PUMIManager.targetError= 1
+    domain.AdaptManager.modelDict = {'flow':0}
+    domain.AdaptManager.sizeInputs = [b'error_erm']
+    domain.AdaptManager.adapt = 1
+    domain.AdaptManager.hmax = 0.01
+    domain.AdaptManager.hmin= 0.008
+    domain.AdaptManager.hphi= 0.008
+    domain.AdaptManager.numIterations= 1
+    domain.AdaptManager.targetError= 1
 
 
-    domain.PUMIManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
-    domain.PUMIManager.PUMIAdapter.setAdaptProperties(domain.PUMIManager)
+    domain.AdaptManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
+    domain.AdaptManager.PUMIAdapter.setAdaptProperties(domain.AdaptManager)
 
     domain.faceList=[[80],[76],[42],[24],[82],[78]]
     domain.boundaryLabels=[1,2,3,4,5,6]
@@ -44,16 +40,16 @@ def test_gmshLoadAndAdapt(verbose=0):
     comm = Comm.init()
 
     nElements_initial = mesh.nElements_global
-    mesh.convertFromPUMI(domain,domain.PUMIManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
 
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
 
     rho = numpy.array([998.2,998.2])
     nu = numpy.array([1.004e-6, 1.004e-6])
     g = numpy.asarray([0.0,0.0,0.0])
     deltaT = 1.0 #dummy number
     epsFact = 1.0 #dummy number
-    domain.PUMIManager.PUMIAdapter.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
+    domain.AdaptManager.PUMIAdapter.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
 
 
     #Couette Flow
@@ -65,28 +61,28 @@ def test_gmshLoadAndAdapt(verbose=0):
     vector[:,0] = dummy
     vector[:,1] = Uinf*mesh.nodeArray[:,2]/Lz #v-velocity
     vector[:,2] = dummy
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"velocity", vector)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"velocity", vector)
     del vector
     del dummy
 
     scalar=numpy.zeros((mesh.nNodes_global,1),'d')
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"p", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"p", scalar)
 
     scalar[:,0] = mesh.nodeArray[:,2]
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"phi", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"phi", scalar)
     del scalar
 
     scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
 
-    errorTotal=domain.PUMIManager.PUMIAdapter.get_local_error()
+    errorTotal=domain.AdaptManager.PUMIAdapter.get_local_error()
     ok(errorTotal<1e-14)
 
-    #ok(domain.PUMIManager.willAdapt(),1)
-    domain.PUMIManager.PUMIAdapter.adaptPUMIMesh(b"")
+    #ok(domain.AdaptManager.willAdapt(),1)
+    domain.AdaptManager.PUMIAdapter.adaptPUMIMesh(b"")
     
     mesh = MeshTools.TetrahedralMesh()
-    mesh.convertFromPUMI(domain,domain.PUMIManager.PUMIAdapter,
+    mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter,
                      domain.faceList,
                      domain.regList,
                      parallel = comm.size() > 1,
@@ -100,23 +96,20 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     testDir=os.path.dirname(os.path.abspath(__file__))
     Model=testDir + '/Couette2D.null'
     Mesh=testDir + '/Couette2D.msh'
-    domain = Domain.PUMIDomain(dim=2) #initialize the domain
-
-    domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
-    domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
+    domain = Domain.PUMIDomain(dim=2,manager=MeshAdapt.AdaptManager()) #initialize the domain
 
     modelDict = {'flow':0}
-    domain.PUMIManager.modelDict = modelDict
-    domain.PUMIManager.sizeInputs = [b'error_erm']
-    domain.PUMIManager.adapt = 1
-    domain.PUMIManager.hmax = 0.01
-    domain.PUMIManager.hmin= 0.008
-    domain.PUMIManager.hphi= 0.008
-    domain.PUMIManager.numIterations= 1
-    domain.PUMIManager.targetError= 1
+    domain.AdaptManager.modelDict = modelDict
+    domain.AdaptManager.sizeInputs = [b'error_erm']
+    domain.AdaptManager.adapt = 1
+    domain.AdaptManager.hmax = 0.01
+    domain.AdaptManager.hmin= 0.008
+    domain.AdaptManager.hphi= 0.008
+    domain.AdaptManager.numIterations= 1
+    domain.AdaptManager.targetError= 1
 
-    domain.PUMIManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
-    domain.PUMIManager.PUMIAdapter.setAdaptProperties(domain.PUMIManager)
+    domain.AdaptManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
+    domain.AdaptManager.PUMIAdapter.setAdaptProperties(domain.AdaptManager)
 
     domain.faceList=[[14],[12],[11],[13]]
     domain.boundaryLabels=[1,2,3,4]
@@ -126,16 +119,16 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     comm = Comm.init()
 
     nElements_initial = mesh.nElements_global
-    mesh.convertFromPUMI(domain,domain.PUMIManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
 
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
 
     rho = numpy.array([998.2,998.2])
     nu = numpy.array([1.004e-6, 1.004e-6])
     g = numpy.asarray([0.0,0.0])
     deltaT = 1.0 #dummy number
     epsFact = 1.0 #dummy number
-    domain.PUMIManager.PUMIAdapter.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
+    domain.AdaptManager.PUMIAdapter.transferPropertiesToPUMI(rho,nu,g,deltaT,deltaT,deltaT,epsFact)
 
     #Couette Flow
     Lz = 0.05
@@ -146,29 +139,29 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     vector[:,0] = Uinf*mesh.nodeArray[:,1]/Lz #v-velocity
     vector[:,1] = dummy
     vector[:,2] = dummy
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"velocity", vector)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"velocity", vector)
     del vector
     del dummy
 
     scalar=numpy.zeros((mesh.nNodes_global,1),'d')
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"p", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"p", scalar)
 
     scalar[:,0] = mesh.nodeArray[:,1]
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"phi", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"phi", scalar)
     del scalar
 
     scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
-    domain.PUMIManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
+    domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
 
-    errorTotal=domain.PUMIManager.PUMIAdapter.get_local_error()
+    errorTotal=domain.AdaptManager.PUMIAdapter.get_local_error()
     ok(errorTotal<1e-14)
 
-    #ok(domain.PUMIManager.willAdapt(),1)
+    #ok(domain.AdaptManager.willAdapt(),1)
 
-    domain.PUMIManager.PUMIAdapter.adaptPUMIMesh(b"")
+    domain.AdaptManager.PUMIAdapter.adaptPUMIMesh(b"")
     
     mesh = MeshTools.TriangularMesh()
-    mesh.convertFromPUMI(domain,domain.PUMIManager.PUMIAdapter,
+    mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter,
                      domain.faceList,
                      domain.regList,
                      parallel = comm.size() > 1,
@@ -181,12 +174,10 @@ def test_2DmultiRegion(verbose=0):
     testDir=os.path.dirname(os.path.abspath(__file__))
     Model=testDir + '/TwoQuads.dmg'
     Mesh=testDir + '/TwoQuads.smb'
-    domain = Domain.PUMIDomain(dim=2) #initialize the domain
+    domain = Domain.PUMIDomain(dim=2,manager=MeshAdapt.AdaptManager()) #initialize the domain
 
-    domain.PUMIManager=MeshAdaptPUMI.AdaptManager()
-    domain.PUMIManager.PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
-    domain.PUMIManager.reconstructedFlag=0 #this is used to indicate that no mesh reconstruction is being done.
-    domain.PUMIManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
+    domain.AdaptManager.reconstructedFlag=0 #this is used to indicate that no mesh reconstruction is being done.
+    domain.AdaptManager.PUMIAdapter.loadModelAndMesh(bytes(Model,'utf-8'), bytes(Mesh,'utf-8'))
     domain.faceList=[[14],[12],[11],[13],[15],[16]]
     domain.boundaryLabels=[1,2,3,4,5,6]
     domain.regList=[[41],[42]]
@@ -194,7 +185,7 @@ def test_2DmultiRegion(verbose=0):
     mesh = MeshTools.TriangularMesh()
     mesh.cmesh = cmeshTools.CMesh()
     comm = Comm.init()
-    mesh.convertFromPUMI(domain,domain.PUMIManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
     ok(mesh.elementMaterialTypes[0]==1)
     ok(mesh.elementMaterialTypes[-1]==2)
 

@@ -53,7 +53,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         void cleanMesh()
         void set_nAdapt(int)
 
-cdef class MeshAdaptPUMI:
+cdef class MeshAdapt:
     cdef MeshAdaptPUMIDrvr *thisptr
     cdef double hmax, hmin, hPhi
     cdef int numIter, numAdaptSteps
@@ -190,10 +190,10 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.cleanMesh()
 
 class AdaptManager():
-   def __init__(self):
+   def __init__(self,adapter=MeshAdapt()):
        self.modelDict = {}
        self.sizeInputs = []
-       self.PUMIAdapter=None
+       self.PUMIAdapter=adapter
        self.adapt = 0
        self.hmax = 100.0
        self.hmin= 1e-8

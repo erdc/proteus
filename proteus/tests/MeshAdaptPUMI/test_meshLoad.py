@@ -2,7 +2,7 @@
 from ctypes import *
 from proteus import MeshTools
 from proteus import cmeshTools
-from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+from proteus.MeshAdaptPUMI import MeshAdapt
 from proteus import Domain
 from nose.tools import eq_ as eq
 from nose.tools import ok_ as ok
@@ -16,7 +16,7 @@ def test_meshLoadPUMI(verbose=0):
     cubeMdl=testDir + '/cube.dmg'
     cube670p1=testDir + '/cube.smb'
 
-    PUMIAdapter=MeshAdaptPUMI.MeshAdaptPUMI()
+    PUMIAdapter=MeshAdaptPUMI.MeshAdapt()
     PUMIAdapter.loadModelAndMesh(bytes(cubeMdl,'utf-8'), bytes(cube670p1,'utf-8'))
 
     mesh = MeshTools.TetrahedralMesh()
