@@ -669,6 +669,9 @@ class PUMI_helper:
                 logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
               else:
                 sys.exit("Haven't been implemented code yet to cover this behavior.")
+            
+            if(b'pseudo' in self.domain.AdaptManager.sizeInputs):
+                adaptMeshNow=True
 
             #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
             if(adaptMeshNow == False):
