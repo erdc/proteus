@@ -476,10 +476,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                     self.model.q[('m', 0)],
                                                     self.model.mesh.nElements_owned)
             logEvent("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,), level=2)
-        #     self.m_last = Norms.scalarDomainIntegral(self.model.q['dV'],
-        #                                              self.model.timeIntegration.m_last[0],
-        #                                              self.model.mesh.nElements_owned)
-        #     logEvent("Phase  0 mass before VOF (m_last) step = %12.5e" % (self.m_last,),level=2)
         copyInstructions = {}
         return copyInstructions
 
@@ -764,12 +760,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('grad(u)', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q[('m', 0)] = self.q[('u', 0)]
         self.q[('m_last', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('mt', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['dV'] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['dV_last'] = -1000 * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_tmp', 0)] = self.q[('u', 0)].copy()
+        self.q[('m', 0)] = self.q[('m_tmp', 0)]
         self.q[('cfl', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('numDiff', 0, 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.ebqe[('u', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')

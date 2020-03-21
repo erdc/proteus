@@ -3707,6 +3707,8 @@ namespace proteus
                                                flux_mom_v_adv_ext,
                                                flux_mom_w_adv_ext,
                                                &ebqe_velocity.data()[ebNE_kb_nSpace]);
+	      for (int I=0;I<nSpace;I++)
+		ebqe_velocity.data()[ebNE_kb_nSpace+I]/=porosity_ext;
                 exteriorNumericalDiffusiveFlux(eps_rho,
                                                ebqe_phi_ext.data()[ebNE_kb],
                                                sdInfo_u_u_rowptr.data(),
