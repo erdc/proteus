@@ -79,7 +79,8 @@ class Test_Adapt_ibm():
 
         #load initial mesh and extract element count
         domain = Domain.PUMIDomain(manager=MeshAdapt.AdaptManager()) #initialize the domain
-        domain.AdaptManager.PUMIAdapter.loadModelAndMesh(b"Reconstructed.dmg", b"Reconstructed.smb")
+        filePath=bytes(currentPath+'/','utf-8')
+        domain.AdaptManager.PUMIAdapter.loadModelAndMesh(filePath+b"Reconstructed.dmg", filePath+b"Reconstructed.smb")
         mesh = MeshTools.TetrahedralMesh()
         mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter,
                      [1],
@@ -89,7 +90,7 @@ class Test_Adapt_ibm():
         nElements_initial = mesh.nElements_global
 
         #load final mesh and extract element count
-        domain.AdaptManager.PUMIAdapter.loadModelAndMesh(b"Reconstructed.dmg", b"finalMesh.smb")
+        domain.AdaptManager.PUMIAdapter.loadModelAndMesh(filePath+b"Reconstructed.dmg", filePath+b"finalMesh.smb")
         mesh2 = MeshTools.TetrahedralMesh()
         mesh2.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter,
                      [1],
