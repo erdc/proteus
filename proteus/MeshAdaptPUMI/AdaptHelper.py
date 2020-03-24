@@ -9,16 +9,67 @@ from proteus import MeshTools
 from proteus import SimTools
 
 #try making a class that's build on top of NS_base for these functions 
-class PUMIAdapt:
+class PUMI_helper:
      def __init__(self,NS_Base):
         self.solver = NS_Base
-
+        self.rho_0=None
+        self.rho_1=None
+        self.nu_0=None
+        self.nu_1=None
+        self.g = None
+        self.domain=None
+        self.epsFact_density=None
      def __getattr__(self, attr):
         return getattr(self.solver, attr)
 
+     def setProperties(self):
+        self.domain = self.pList[0].domain
+        self.rho_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_0
+        self.rho_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_1
+        self.nu_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_0
+        self.nu_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_1
+        self.g = self.modelList[self.flowIdx].levelModelList[0].coefficients.g
+        self.epsFact_density = self.modelList[self.flowIdx].levelModelList[0].coefficients.epsFact_density
+        self.domain.AdaptManager.PUMIAdapter.setAdaptProperties(self.domain.AdaptManager)
+        #if self.TwoPhaseFlow:
+        #    domain = p0.myTpFlowProblem.domain
+        #    rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
+        #    nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
+        #    rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
+        #    nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
+        #    g = p0.myTpFlowProblem.physical_parameters['gravity']
+        #    epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
+        #else:
+        #    domain = p0.domain
+        #    rho_0  = p0.rho_0
+        #    nu_0   = p0.nu_0
+        #    rho_1  = p0.rho_1
+        #    nu_1   = p0.nu_1
+        #    g      = p0.g
+        #    epsFact_density = p0.epsFact_density
+
+
+     def getModels(self,modelDict):
+        #indices are better than models since during adaptation, models are destroyed and recreated
+        #using indices avoids having to call this function multiple times
+        try:
+            self.flowIdx = modelDict['flow']
+        except:
+            print("flow index not defined properly")
+        try:    
+            #phaseIdx used for determining material properties
+            self.phaseIdx = modelDict['phase'] 
+        except:
+            print("phase index not defined, using flowIdx")
+            self.phaseIdx = self.flowIdx
+        try:
+            self.correctionsIdxs = modelDict['corrections']
+        except:
+            self.correctionsIdxs=[]
+        
      def reconstructMesh(self,domain,mesh):
 
-        if hasattr(domain,"PUMIMesh") and not isinstance(domain,proteus.Domain.PUMIDomain) :
+        if hasattr(domain,"AdaptManager") and not isinstance(domain,proteus.Domain.PUMIDomain) :
 
           logEvent("Reconstruct based on Proteus, convert PUMI mesh to Proteus")
 
@@ -48,11 +99,12 @@ class PUMIAdapt:
             if(nd==3):
               meshBoundaryConnectivity[elementBdyIdx][4] = mesh.elementBoundaryNodesArray[exteriorIdx][2]
 
-          domain.PUMIMesh.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
+          domain.AdaptManager.PUMIAdapter.reconstructFromProteus2(mesh.cmesh,isModelVert,meshBoundaryConnectivity)
 
      def PUMI_reallocate(self,mesh):
         p0 = self.pList[0]
         n0 = self.nList[0]
+
         if self.TwoPhaseFlow:
             nLevels = p0.myTpFlowProblem.general['nLevels']
             nLayersOfOverlapForParallel = p0.myTpFlowProblem.general['nLayersOfOverlapForParallel']
@@ -85,12 +137,14 @@ class PUMIAdapt:
             mlMesh.generatePartitionedMeshFromPUMI(
                 mesh,nLevels,
                 nLayersOfOverlap=nLayersOfOverlapForParallel)
-        self.mlMesh_nList=[]
+        
+        #need to remove old mlMesh references to ensure the number of mesh entities is properly updated
+        self.mlMesh_nList.clear()
         for p in self.pList:
             self.mlMesh_nList.append(mlMesh)
-        if (domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+        if (b"isotropicProteus" in self.domain.AdaptManager.sizeInputs):
             mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
-        if (domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+        if (b'anisotropicProteus' in self.domain.AdaptManager.sizeInputs):
             mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
             mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
 
@@ -134,9 +188,9 @@ class PUMIAdapt:
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and ((modelListOld[0].levelModelList[0].stabilization.nSteps - 1) > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay) ):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+                if(modelListOld[self.flowIdx].levelModelList[0].stabilization.lag and ((modelListOld[self.flowIdx].levelModelList[0].stabilization.nSteps - 1) > modelListOld[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay) ):
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.nSteps = self.modelList[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.updateSubgridErrorHistory()
 
                 #update the eddy-viscosity history
                 lm.calculateAuxiliaryQuantitiesAfterStep()
@@ -148,7 +202,7 @@ class PUMIAdapt:
         if( (abs(self.systemStepController.t_system_last - self.tnList[1])> 1e-12 and  abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12 )
           or self.opts.hotStart):
 
-            for idx in [3,4]:
+            for idx in self.correctionsIdxs:
                 model = self.modelList[idx]
                 self.preStep(model)
                 self.setWeakDirichletConditions(model)
@@ -177,14 +231,14 @@ class PUMIAdapt:
                 lm.getResidual(lu,lr)
 
                 #This gets the subgrid error history correct
-                if(modelListOld[0].levelModelList[0].stabilization.lag and modelListOld[0].levelModelList[0].stabilization.nSteps > modelListOld[0].levelModelList[0].stabilization.nStepsToDelay):
-                    self.modelList[0].levelModelList[0].stabilization.nSteps = self.modelList[0].levelModelList[0].stabilization.nStepsToDelay
-                    self.modelList[0].levelModelList[0].stabilization.updateSubgridErrorHistory()
+                if(modelListOld[self.flowIdx].levelModelList[0].stabilization.lag and modelListOld[self.flowIdx].levelModelList[0].stabilization.nSteps > modelListOld[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay):
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.nSteps = self.modelList[self.flowIdx].levelModelList[0].stabilization.nStepsToDelay
+                    self.modelList[self.flowIdx].levelModelList[0].stabilization.updateSubgridErrorHistory()
         ###
 
         ###need to re-distance and mass correct
         if( (abs(self.systemStepController.t_system_last - self.tnList[0])> 1e-12) or self.opts.hotStart  ):
-            for idx in [3,4]:
+            for idx in self.correctionsIdxs:
                 model = self.modelList[idx]
                 self.preStep(model)
                 self.setWeakDirichletConditions(model)
@@ -210,10 +264,6 @@ class PUMIAdapt:
               lm.calculateAuxiliaryQuantitiesAfterStep()
 
      def PUMI2Proteus(self,domain):
-        #p0 = self.pList[0] #This can probably be cleaned up somehow
-        #n0 = self.nList[0]
-        p0 = self.pList[0]
-        n0 = self.nList[0]
 
         modelListOld = self.modelListOld
         logEvent("Attach auxiliary variables to new models")
@@ -282,21 +332,31 @@ class PUMIAdapt:
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
 
+        #just added, need to initialize structures
+        for model in self.modelList:
+            logEvent("Auxiliary variable calculate_init for model %s" % (model.name,))
+            for av in self.auxiliaryVariables[model.name]:
+                #gauges do not need to have aux variables recomputed as this would add additional lines to the output unnecessarily
+                if hasattr(av,"isGaugeOwner"):
+                    pass
+                else:
+                    av.calculate_init()
+
         logEvent("Transfering fields from PUMI to Proteus")
         for m in self.modelList:
           for lm in m.levelModelList:
             coef = lm.coefficients
             if coef.vectorComponents is not None:
               vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-              domain.PUMIMesh.transferFieldToProteus(
+              domain.AdaptManager.PUMIAdapter.transferFieldToProteus(
                      coef.vectorName.encode('utf-8'), vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
-              domain.PUMIMesh.transferFieldToProteus(
+              domain.AdaptManager.PUMIAdapter.transferFieldToProteus(
                      coef.vectorName.encode('utf-8')+b"_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last[:] = vector[:,vci]
-              domain.PUMIMesh.transferFieldToProteus(
+              domain.AdaptManager.PUMIAdapter.transferFieldToProteus(
                      coef.vectorName.encode('utf-8')+b"_old_old", vector)
               for vci in range(len(coef.vectorComponents)):
                 lm.u[coef.vectorComponents[vci]].dof_last_last[:] = vector[:,vci]
@@ -306,17 +366,24 @@ class PUMIAdapt:
               if coef.vectorComponents is None or \
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                domain.PUMIMesh.transferFieldToProteus(
+                domain.AdaptManager.PUMIAdapter.transferFieldToProteus(
                     coef.variableNames[ci].encode('utf-8'), scalar)
                 lm.u[ci].dof[:] = scalar[:,0]
-                domain.PUMIMesh.transferFieldToProteus(
+                domain.AdaptManager.PUMIAdapter.transferFieldToProteus(
                     coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
                 lm.u[ci].dof_last[:] = scalar[:,0]
-                domain.PUMIMesh.transferFieldToProteus(
+                domain.AdaptManager.PUMIAdapter.transferFieldToProteus(
                     coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
                 lm.u[ci].dof_last_last[:] = scalar[:,0]
 
                 del scalar
+
+        if(b'ibm' in self.domain.AdaptManager.sizeInputs):
+            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+            domain.AdaptManager.PUMIAdapter.transferFieldToProteus(
+                b'phi', scalar)
+            self.modelList[self.flowIdx].levelModelList[0].coefficients.phi_s[:]=scalar[:,0]
+            del scalar
 
         logEvent("Attaching models on new mesh to each other")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
@@ -409,7 +476,7 @@ class PUMIAdapt:
             #      self.systemStepController.t_system)
 
             #This logic won't account for if final step doesn't match frequency or if adapt isn't being called
-            if((self.PUMIcheckpointer.frequency>0) and ( (domain.PUMIMesh.nAdapt()!=0) and (domain.PUMIMesh.nAdapt() % self.PUMIcheckpointer.frequency==0 ) or self.systemStepController.t_system_last==self.tnList[-1])):
+            if((self.PUMIcheckpointer.frequency>0) and ( (domain.AdaptManager.PUMIAdapter.nAdapt()!=0) and (domain.AdaptManager.PUMIAdapter.nAdapt() % self.PUMIcheckpointer.frequency==0 ) or self.systemStepController.t_system_last==self.tnList[-1])):
 
               self.PUMIcheckpointer.checkpoint(self.systemStepController.t_system_last)
 
@@ -421,63 +488,26 @@ class PUMIAdapt:
         self.comm.barrier()
 
      def PUMI_transferFields(self):
-        p0 = self.pList[0].ct
-        n0 = self.nList[0].ct
 
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-            rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
-            nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
-            rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
-            nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
-            g = p0.myTpFlowProblem.physical_parameters['gravity']
-            epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
-        else:
-            domain = p0.domain
-            rho_0  = p0.rho_0
-            nu_0   = p0.nu_0
-            rho_1  = p0.rho_1
-            nu_1   = p0.nu_1
-            g      = p0.g
-            epsFact_density = p0.epsFact_density
+        domain = self.domain
+       
         logEvent("Copying coordinates to PUMI")
-        domain.PUMIMesh.transferFieldToPUMI(b"coordinates",
+        
+        #might be an arbitrary choice in terms of which model to use, but guaranteed that the 0th model exists
+        domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",
             self.modelList[0].levelModelList[0].mesh.nodeArray)
 
         #I want to compute the density and viscosity arrays here
         #arrays are length = number of elements and will correspond to density at center of element
         rho_transfer = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
         nu_transfer = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d')      
-        #get quadrature points at element centroid and evaluate at shape functions
-        from proteus import Quadrature
-        transferQpt = Quadrature.SimplexGaussQuadrature(p0.domain.nd,1)
-        qpt_centroid = numpy.asarray([transferQpt.points[0]])
-        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,p0.domain.nd)
-        materialSpace.getBasisValuesRef(qpt_centroid)
         
         #obtain the level-set or vof value at each element centroid
         #pass through heaviside function to get material property
-        from proteus.ctransportCoefficients import smoothedHeaviside
-        
-        IEN = self.modelList[2].levelModelList[0].u[0].femSpace.dofMap.l2g
-        for (eID, dofs) in enumerate(IEN):
-            phi_val = 0.0
-            for idx in range(len(dofs)):
-                phi_val += materialSpace.psi[0][idx]*self.modelList[2].levelModelList[0].u[0].dof[dofs[idx]]
-            #rho_transfer[eID] = phi_val
-            
-            #heaviside
-            h_phi=0.0;
-            for idx in range(len(dofs)):
-                h_phi += (materialSpace.psi[0][idx])*(self.modelList[2].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
-            eps_rho = p0.epsFact_density*h_phi
-            smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
+        #only need to do this if using combined adapt
 
-            rho_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.rho_0 + smoothed_phi_val*self.pList[0].ct.rho_1
-            nu_transfer[eID] = (1.0-smoothed_phi_val)*self.pList[0].ct.nu_0 + smoothed_phi_val*self.pList[0].ct.nu_1
-
-        self.modelList[0].levelModelList[0].mesh.elementMaterial = numpy.zeros((self.modelList[0].levelModelList[0].mesh.nElements_owned),'d') 
-        self.modelList[0].levelModelList[0].mesh.elementMaterial[:] = rho_transfer[:]
+        if(b'error_vms' in self.domain.AdaptManager.sizeInputs or b'error_erm' in self.domain.AdaptManager.sizeInputs):
+            self.computeElementMaterials(rho_transfer,nu_transfer)
 
         #put the solution field as uList
         #VOF and LS needs to reset the u.dof array for proper transfer
@@ -489,8 +519,16 @@ class PUMIAdapt:
                 for ci in range(0,lm.coefficients.nc):
                     lm.u_store[ci] = lm.u[ci].copy()
 
-        self.modelList[1].levelModelList[0].setUnknowns(self.modelList[1].uList[0])
-        self.modelList[2].levelModelList[0].setUnknowns(self.modelList[2].uList[0])
+        #for each type of phase tracking model, this will need to be done
+        for m in self.modelList:
+            for lm in m.levelModelList:
+                try:
+                    if(isinstance(lm,proteus.mprans.VOF.LevelModel) or 
+                        isinstance(lm,proteus.mprans.NCLS.LevelModel)
+                    ):
+                        lm.setUnknowns(m.uList[0])
+                except:
+                    pass
 
         logEvent("Copying DOF and parameters to PUMI")
         for m in self.modelList:
@@ -501,17 +539,17 @@ class PUMIAdapt:
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
 
-              domain.PUMIMesh.transferFieldToPUMI(
+              domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                   coef.vectorName.encode('utf-8'), vector)
               #Transfer dof_last
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last[:]
-              domain.PUMIMesh.transferFieldToPUMI(
+              domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                      coef.vectorName.encode('utf-8')+b"_old", vector)
               #Transfer dof_last_last
               for vci in range(len(coef.vectorComponents)):
                 vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof_last_last[:]
-              p0.domain.PUMIMesh.transferFieldToPUMI(
+                domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                      coef.vectorName.encode('utf-8')+b"_old_old", vector)
 
               del vector
@@ -520,38 +558,41 @@ class PUMIAdapt:
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                 scalar[:,0] = lm.u[ci].dof[:]
-                domain.PUMIMesh.transferFieldToPUMI(
+                domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                     coef.variableNames[ci].encode('utf-8'), scalar)
 
                 #Transfer dof_last
                 scalar[:,0] = lm.u[ci].dof_last[:]
-                domain.PUMIMesh.transferFieldToPUMI(
+                domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                      coef.variableNames[ci].encode('utf-8')+b"_old", scalar)
                 #Transfer dof_last_last
                 scalar[:,0] = lm.u[ci].dof_last_last[:]
-                p0.domain.PUMIMesh.transferFieldToPUMI(
+                domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
                      coef.variableNames[ci].encode('utf-8')+b"_old_old", scalar)
 
                 del scalar
 
-        scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+        #if chrono solid phi_s field is present this needs to have a corresponding mirror transfer back function
+        #also should maybe rely on a separate sf config scheme
+        if(b'ibm' in self.domain.AdaptManager.sizeInputs):
+            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+            scalar[:,0] = self.modelList[self.flowIdx].levelModelList[0].coefficients.phi_s[:]
+            domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
+                b'phi', scalar)
 
-        del scalar
+            del scalar
+
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
 
-        rho = numpy.array([rho_0,
-                           rho_1])
-        nu = numpy.array([nu_0,
-                          nu_1])
-        g = numpy.asarray(g)
+        g = numpy.asarray(self.g)
 
         #This condition is to account for adapting before the simulation started
         if(hasattr(self,"tn")):
             #deltaT = self.tn-self.tn_last
             #is actually the time step for next step, self.tn and self.tn_last refer to entries in tnList
             #deltaT = self.systemStepController.dt_system 
-            deltaT=self.modelList[0].levelModelList[0].timeIntegration.dtLast
+            deltaT=self.modelList[self.flowIdx].levelModelList[0].timeIntegration.dtLast
             T_current = self.systemStepController.t_system_last
             deltaT_next = self.systemStepController.dt_system 
         else:
@@ -559,11 +600,7 @@ class PUMIAdapt:
             deltaT_next = 0.0
             T_current = 0.0
 
-        epsFact = epsFact_density
-        #domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT,epsFact)
-        domain.PUMIMesh.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,deltaT_next,T_current,epsFact)
-
-        del rho, nu, g, epsFact
+        domain.AdaptManager.PUMIAdapter.transferPropertiesToPUMI(rho_transfer,nu_transfer,g,deltaT,deltaT_next,T_current,self.epsFact_density)
 
      def PUMI_estimateError(self):
         """
@@ -571,26 +608,17 @@ class PUMIAdapt:
         Ainsworth and Oden and generates a corresponding error field.
         """
 
-        p0 = self.pList[0]
-        n0 = self.nList[0]
-        #p0 = self.pList[0].ct
-        #n0 = self.nList[0].ct
-
         adaptMeshNow = False
+        domain = self.domain
 
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-        else:
-            domain = p0.domain
-
-        if (hasattr(domain, 'PUMIMesh') and
-            domain.PUMIMesh.adaptMesh() and
+        if (hasattr(domain, 'AdaptManager') and
+            domain.AdaptManager.PUMIAdapter.adaptMesh() and
             self.so.useOneMesh): #and
-            #self.nSolveSteps%domain.PUMIMesh.numAdaptSteps()==0):
-            if (domain.PUMIMesh.size_field_config() == "isotropicProteus"):
-                domain.PUMIMesh.transferFieldToPUMI("proteus_size",
+            #self.nSolveSteps%domain.AdaptManager.PUMIAdapter.numAdaptSteps()==0):
+            if (b"isotropicProteus" in self.domain.AdaptManager.sizeInputs):
+                domain.AdaptManager.PUMIAdapter.transferFieldToPUMI("proteus_size",
                                                        self.modelList[0].levelModelList[0].mesh.size_field)
-            if (domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+            if (b'anisotropicProteus' in self.domain.AdaptManager.sizeInputs):
                 #Insert a function to define the size_scale/size_frame fields here.
                 #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
                 for i in range(len(self.modelList[0].levelModelList[0].mesh.size_scale)):
@@ -603,36 +631,32 @@ class PUMIAdapt:
                       else:
                         self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 0.0
                 self.modelList[0].levelModelList[0].mesh.size_scale
-                domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
-                domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
+                domain.AdaptManager.PUMIAdapter.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
+                domain.AdaptManager.PUMIAdapter.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
 
             self.PUMI_transferFields()
 
 
             logEvent("Estimate Error")
-            sfConfig = domain.PUMIMesh.size_field_config()
-            if(sfConfig=="ERM"):
-              errorTotal= domain.PUMIMesh.get_local_error()
-              if(domain.PUMIMesh.willAdapt()):
+            if(b"error_erm" in self.domain.AdaptManager.sizeInputs):
+              errorTotal= domain.AdaptManager.PUMIAdapter.get_local_error()
+              if(domain.AdaptManager.PUMIAdapter.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
-            elif(sfConfig==b"VMS" or sfConfig==b"combined"):
-              errorTotal = p0.domain.PUMIMesh.get_VMS_error()
-              if(p0.domain.PUMIMesh.willAdapt()):
+            if(b"error_vms" in self.domain.AdaptManager.sizeInputs):
+              errorTotal = domain.AdaptManager.PUMIAdapter.get_VMS_error()
+              if(domain.AdaptManager.PUMIAdapter.willAdapt()):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
               if(self.nSolveSteps <= 5): #the first few time steps are ignored for adaptivity
                 adaptMeshNow=False
-            elif(sfConfig=='interface' ):
-              adaptMeshNow=True
-              logEvent("Need to Adapt")
-            elif(sfConfig==b'isotropic'):
-              if(p0.domain.PUMIMesh.willInterfaceAdapt()):
+            if(b"interface" in self.domain.AdaptManager.sizeInputs or b"ibm" in self.domain.AdaptManager.sizeInputs):
+              if(domain.AdaptManager.PUMIAdapter.willInterfaceAdapt()):
                   adaptMeshNow=True
                   logEvent("Need to Adapt")
                   logEvent('numSolveSteps %f ' % self.nSolveSteps)
-            elif(sfConfig=='meshQuality'):
-              minQual = domain.PUMIMesh.getMinimumQuality()
+            if(b'meshQuality' in self.domain.AdaptManager.sizeInputs):
+              minQual = domain.AdaptManager.PUMIAdapter.getMinimumQuality()
               logEvent('The quality is %f ' % (minQual**(1./3.)))
               #adaptMeshNow=True
               if(minQual**(1./3.)<0.25):
@@ -641,13 +665,14 @@ class PUMIAdapt:
 
               if (self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
                 sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
-                domain.PUMIMesh.updateSphereCoordinates(sphereCoords)
+                domain.AdaptManager.PUMIAdapter.updateSphereCoordinates(sphereCoords)
                 logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
               else:
                 sys.exit("Haven't been implemented code yet to cover this behavior.")
-            else:
-              adaptMeshNow=True
-              logEvent("Need to Adapt")
+            
+            if(b'pseudo' in self.domain.AdaptManager.sizeInputs):
+                adaptMeshNow=True
+
             #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
             if(adaptMeshNow == False):
                 for m in self.modelList:
@@ -663,21 +688,14 @@ class PUMIAdapt:
         """
         ##
 
-        p0 = self.pList[0]#.ct
-        n0 = self.nList[0]#.ct
+        domain = self.domain
 
-        if self.TwoPhaseFlow:
-            domain = p0.myTpFlowProblem.domain
-        else:
-            domain = p0.domain
-
-        sfConfig = domain.PUMIMesh.size_field_config()
         if(hasattr(self,"nSolveSteps")):
-          logEvent("h-adapt mesh by calling AdaptPUMIMesh at step %s" % self.nSolveSteps)
-        if(sfConfig==b"pseudo"):
+          logEvent("h-adapt mesh by calling AdaptAdaptManager.PUMIAdapter at step %s" % self.nSolveSteps)
+        if(b"pseudo" in self.domain.AdaptManager.sizeInputs):
             logEvent("Testing solution transfer and restart feature of adaptation. No actual mesh adaptation!")
         else:
-            domain.PUMIMesh.adaptPUMIMesh(inputString)
+            domain.AdaptManager.PUMIAdapter.adaptPUMIMesh(inputString)
 
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
@@ -690,7 +708,7 @@ class PUMIAdapt:
           mesh = MeshTools.TriangularMesh()
 
         mesh.convertFromPUMI(domain,
-                             domain.PUMIMesh,
+                             domain.AdaptManager.PUMIAdapter,
                              domain.faceList,
                              domain.regList,
                              parallel = self.comm.size() > 1,
@@ -708,7 +726,7 @@ class PUMIAdapt:
          else:
              mesh = MeshTools.TriangularMesh()
 
-         mesh.convertFromPUMI(self.pList[0].domain.PUMIMesh,
+         mesh.convertFromPUMI(self.pList[0].domain.AdaptManager.PUMIAdapter,
                              self.pList[0].domain.faceList,
                              self.pList[0].domain.regList,
                              parallel = self.comm.size() > 1,
@@ -723,10 +741,9 @@ class PUMIAdapt:
          PUMI2Proteus(self,self.pList[0].domain)
 
      def initialAdapt(self):
-
-        if (hasattr(self.pList[0].domain, 'PUMIMesh') and
-            self.pList[0].domain.PUMIMesh.adaptMesh() and
-            (self.pList[0].domain.PUMIMesh.size_field_config() == b"combined" or self.pList[0].domain.PUMIMesh.size_field_config() == b"pseudo" or self.pList[0].domain.PUMIMesh.size_field_config() == b"isotropic") and
+        if (hasattr(self.pList[0].domain.AdaptManager, 'PUMIAdapter') and
+            self.pList[0].domain.AdaptManager.PUMIAdapter.adaptMesh() and
+            (b"pseudo" in self.domain.AdaptManager.sizeInputs or b"interface" in self.domain.AdaptManager.sizeInputs or b"ibm" in self.domain.AdaptManager.sizeInputs) and
             self.so.useOneMesh and not self.opts.hotStart):
 
             self.PUMI_transferFields()
@@ -736,5 +753,30 @@ class PUMIAdapt:
             logEvent("Initial Adapt 2 before Solve")
             self.PUMI_adaptMesh(b"interface")
 
+     def computeElementMaterials(self,rho_transfer,nu_transfer):
+
+        #get quadrature points at element centroid and evaluate at shape functions
+        from proteus import Quadrature
+        transferQpt = Quadrature.SimplexGaussQuadrature(self.domain.nd,1)
+        qpt_centroid = numpy.asarray([transferQpt.points[0]])
+        materialSpace = self.nList[0].femSpaces[0](self.modelList[0].levelModelList[0].mesh.subdomainMesh,self.domain.nd)
+        materialSpace.getBasisValuesRef(qpt_centroid)
 
 
+        from proteus.ctransportCoefficients import smoothedHeaviside
+        
+        IEN = self.modelList[self.phaseIdx].levelModelList[0].u[0].femSpace.dofMap.l2g
+        for (eID, dofs) in enumerate(IEN):
+            phi_val = 0.0
+            for idx in range(len(dofs)):
+                phi_val += materialSpace.psi[0][idx]*self.modelList[self.phaseIdx].levelModelList[0].u[0].dof[dofs[idx]]
+            
+            #heaviside
+            h_phi=0.0;
+            for idx in range(len(dofs)):
+                h_phi += (materialSpace.psi[0][idx])*(self.modelList[self.phaseIdx].levelModelList[0].mesh.nodeDiametersArray[dofs[idx]]);
+            eps_rho = self.epsFact_density*h_phi
+            smoothed_phi_val = smoothedHeaviside(eps_rho,phi_val)
+
+            rho_transfer[eID] = (1.0-smoothed_phi_val)*self.rho_0 + smoothed_phi_val*self.rho_1
+            nu_transfer[eID] = (1.0-smoothed_phi_val)*self.nu_0 + smoothed_phi_val*self.nu_1

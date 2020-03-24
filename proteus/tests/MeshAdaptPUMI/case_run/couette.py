@@ -6,7 +6,7 @@ import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus import Profiling
-from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+from proteus.MeshAdaptPUMI import MeshAdapt
 from tables import *
 from proteus import Comm
 import os
@@ -104,7 +104,7 @@ else:
         nnx=4*Refinement
         nny=2*Refinement
     else:
-        domain = Domain.PUMIDomain() #initialize the domain
+        domain = Domain.PUMIDomain(manager=MeshAdapt.AdaptManager()) #initialize the domain
         #domain.numBC=6 #set number of BCs
 #        domain.numAdaptSteps=1 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags,
@@ -115,18 +115,28 @@ else:
         #the geomtric face which is latter in the order (email: chitak2@rpi.edu for any questions)
         domain.faceList=[[41],[46],[42],[44],[45],[43]]
         domain.boundaryLabels=[1,2,3,4,5,6]
-        #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
-        he =0.5
-        adaptMesh = True
-        adaptMesh_nSteps = 2#5
-        adaptMesh_numIter = 2
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig=b'VMS',maType=b'isotropic',targetError=0.1,targetElementCount=1000,adaptMesh=adaptMesh)
-        #domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='isotropic')
         #read the geometry and mesh
         testDir=os.path.dirname(os.path.abspath(__file__))
         Model = testDir + '/../Couette.null'
         Mesh = testDir + '/../Couette.msh'
-        domain.PUMIMesh.loadModelAndMesh(Model.encode(),Mesh.encode())
+
+        domain.AdaptManager.PUMIAdapter.loadModelAndMesh(Model.encode(),Mesh.encode())
+
+        domain.AdaptManager.sizeInputs = [b'error_vms']
+        domain.AdaptManager.adapt = 1
+        domain.AdaptManager.hmax = 0.01
+        domain.AdaptManager.hmin= 0.008
+        domain.AdaptManager.hphi= 0.008
+        domain.AdaptManager.numIterations= 1
+        domain.AdaptManager.targetError= 0.1
+
+
+        domain.AdaptManager.PUMIAdapter.setAdaptProperties(domain.AdaptManager)
+
+        modelDict = {'flow':0,'phase':2,'corrections':[3,4]}
+        domain.AdaptManager.modelDict = modelDict
+
+
 
 # Time stepping
 T=1.0

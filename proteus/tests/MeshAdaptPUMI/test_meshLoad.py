@@ -2,23 +2,26 @@
 from ctypes import *
 from proteus import MeshTools
 from proteus import cmeshTools
-from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+from proteus.MeshAdaptPUMI import MeshAdapt
+from proteus import Domain
 from nose.tools import eq_ as eq
 from nose.tools import ok_ as ok
 import os
 import pytest
 
-@pytest.mark.skip
+@pytest.mark.skip(reason=".smb file was removed during cleaning")
 def test_meshLoadPUMI(verbose=0):
     """Test to load serial PUMI model and mesh"""
     testDir=os.path.dirname(os.path.abspath(__file__))
     cubeMdl=testDir + '/cube.dmg'
     cube670p1=testDir + '/cube.smb'
-    meshAdaptInstance = MeshAdaptPUMI.MeshAdaptPUMI()
-    meshAdaptInstance.loadModelAndMesh(bytes(cubeMdl,'utf-8'), bytes(cube670p1,'utf-8'))
+
+    PUMIAdapter=MeshAdaptPUMI.MeshAdapt()
+    PUMIAdapter.loadModelAndMesh(bytes(cubeMdl,'utf-8'), bytes(cube670p1,'utf-8'))
+
     mesh = MeshTools.TetrahedralMesh()
     mesh.cmesh = cmeshTools.CMesh()
-    meshAdaptInstance.constructFromSerialPUMIMesh(mesh.cmesh)
+    PUMIAdapter.constructFromSerialPUMIMesh(mesh.cmesh)
     cmeshTools.allocateGeometricInfo_tetrahedron(mesh.cmesh)
     cmeshTools.computeGeometricInfo_tetrahedron(mesh.cmesh)
     mesh.buildFromC(mesh.cmesh)
