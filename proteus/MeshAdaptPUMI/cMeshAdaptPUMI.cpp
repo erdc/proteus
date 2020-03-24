@@ -38,7 +38,8 @@ extern double dt_err;
  * \ingroup MeshAdaptPUMI 
  @{ 
 */
-MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int AdaptMesh, int NumIter, int NumAdaptSteps,const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio, double gradingFact)
+//MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int AdaptMesh, int NumIter, int NumAdaptSteps,const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount,int reconstructedFlag,double maxAspectRatio, double gradingFact)
+MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr()
 /**
  * MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
  * See MeshAdaptPUMI.h for the list of class variables/functions/objects
@@ -54,16 +55,9 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   SimModel_start();
   gmi_register_sim();
 #endif
-  hmin=Hmin; hmax=Hmax; hPhi=HPhi;
-  numIter=NumIter;
-  adaptMesh = AdaptMesh;
   nAdapt=0;
   nTriggers=0;
-  numAdaptSteps = NumAdaptSteps;
   nEstimate=0;
-  if(PCU_Comm_Self()==0)
-     printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
-       hmax, hmin, numIter);
   global[0] = global[1] = global[2] = global[3] = 0;
   local[0] = local[1] = local[2] = local[3] = 0;
   size_iso = 0;
@@ -82,19 +76,15 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, double HPhi,int A
   errRho_max = 0.0;
   rel_err_total = 0.0;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
-  size_field_config = sfConfig;
   modelFileName = NULL; 
-  adapt_type_config = maType;
-  logging_config = logType;
+  adapt_type_config = "test"; //refers to isotropic or anisotropic, feature effectively turned off for now
   has_gBC = false;
-  target_error = targetError;
-  target_element_count = targetElementCount;
+  target_element_count = 0;//targetElementCount;
   domainVolume = 0.0;
   THRESHOLD = 0.0;
-  isReconstructed = reconstructedFlag;
   initialReconstructed = 0;
-  maxAspect = maxAspectRatio;
-  gradingFactor = gradingFact;
+  maxAspect = 2.0;//maxAspectRatio;
+  hasIBM=hasInterface=hasVMS=hasERM=hasAniso=hasAnalyticSphere=useProteus=useProteusAniso=0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -594,17 +584,18 @@ int MeshAdaptPUMIDrvr::willAdapt()
 //Master function that calls other adapt-trigger functions
 {
   int adaptFlag = 0;
-  if(size_field_config == "combined" or size_field_config == "isotropic")
+  //TODO: need to separate IBM from interface to allow for two-phase with IBM
+  if(hasInterface or hasIBM)
   {
     adaptFlag += willInterfaceAdapt(); 
     std::cout<<"willInterfaceAdapt "<<adaptFlag<<std::endl;
   }
-  if(size_field_config == "combined" or size_field_config == "VMS")
+  if(hasVMS)
   {
-    //adaptFlag += willErrorAdapt();
     adaptFlag += willErrorAdapt_reference();
     std::cout<<"willErrorAdapt "<<adaptFlag<<std::endl;
   }
+  //TODO: need to do AllReduce here instead of in each function
   if(adaptFlag > 0)
     adaptFlag = 1;
 
@@ -690,67 +681,60 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
  *  The nAdapt counter is iterated to track how many times a mesh is adapted
  */
 {
-  if (size_field_config == "interface")
+  if (hasAniso)
       calculateAnisoSizeField();
-  else if (size_field_config == "ERM"){
+  if(hasERM)
+  {
       assert(err_reg);
       removeBCData();
       double t1 = PCU_Time();
       getERMSizeField(total_error);
       double t2 = PCU_Time();
-    if(comm_rank==0 && logging_config == "on"){
-      std::ofstream myfile;
-      myfile.open("error_estimator_timing.txt", std::ios::app );
-      myfile << t2-t1<<std::endl;
-      myfile.close();
-    }
+      if(comm_rank==0 && logging_config == "on"){
+        std::ofstream myfile;
+        myfile.open("error_estimator_timing.txt", std::ios::app );
+        myfile << t2-t1<<std::endl;
+        myfile.close();
+      }
   } 
-  else if(size_field_config == "VMS"){
+  if((hasVMS) && std::string(inputString)==""){
     assert(vmsErrH1);
     getERMSizeField(total_error);
   }
-  else if (size_field_config == "meshQuality"){
-    //size_iso = samSz::isoSize(m);
+  if(hasAnalyticSphere)
+  {
     setSphereSizeField();
   }
-  else if (size_field_config == "isotropic" || std::string(inputString)=="interface")
+  if(hasInterface || hasIBM)
   {
     double L_band = (N_interface_band+1)*hPhi;
     calculateSizeField(L_band);
-    if(nAdapt>1)
+    if(nAdapt>1 && std::string(inputString)=="interface")
+        predictiveInterfacePropagation();
+    else if(nAdapt > 2 && std::string(inputString)=="")
         predictiveInterfacePropagation();
   }
-  else if (size_field_config == "isotropicProteus")
+  if (useProteus)
     size_iso = m->findField("proteus_size");
-  else if (size_field_config == "anisotropicProteus"){
-      size_frame = m->findField("proteus_sizeFrame");
-      size_scale = m->findField("proteus_sizeScale");
-      adapt_type_config = "anisotropic";
+  if (useProteusAniso){
+    size_frame = m->findField("proteus_sizeFrame");
+    size_scale = m->findField("proteus_sizeScale");
+    adapt_type_config = "anisotropic";
   }
-  else if (size_field_config == "test"){
+/*
+  if (hasTest)
     testIsotropicSizeField();
-  }
-  else if(size_field_config == "uniform"){
+*/
+/*
+  if(size_field_config == "uniform"){
       //special situation where I only care about err_reg
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
-  else if(size_field_config == "combined" && std::string(inputString)==""){
-    assert(vmsErrH1);
-    //double L_band = (numAdaptSteps+N_interface_band)*hPhi;
-    //calculateSizeField(L_band);
-    double L_band = (N_interface_band+1)*hPhi;
-    calculateSizeField(L_band);
-    if(nAdapt>2)
-        predictiveInterfacePropagation();
-    getERMSizeField(total_error);
-  }
-  else {
-    std::cerr << "unknown size field config " << size_field_config << '\n';
-    abort();
-  }
-
+*/
+  std::cout<<"before problem\n";
   isotropicIntersect();
+  std::cout<<"after problem\n";
 
   if(logging_config=="on"){
     char namebuffer[50];
@@ -760,13 +744,13 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     //m->writeNative(namebuffer);
   }
 
-  if(size_field_config=="ERM"){
+  if(hasERM){
       //MeshAdapt error will be thrown if region fields are not freed
       freeField(err_reg); 
       freeField(errRho_reg); 
       freeField(errRel_reg); 
   }
-  if(size_field_config=="VMS" || size_field_config=="combined"){
+  if(hasVMS){
     freeField(vmsErrH1);
     if(PCU_Comm_Self()==0) std::cout<<"cleared VMS field\n";
   }
@@ -810,8 +794,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->shouldRunPreZoltan = true;
   in->shouldRunMidZoltan = true;
   in->shouldRunPostZoltan = true;
-  //in->shouldRunMidParma = true;
-  //in->shouldRunPostParma = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   if(size_field_config == "meshQuality")
@@ -849,7 +831,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 */
   }
 
-  if(size_field_config=="ERM"){
+  if(hasERM){
     if (has_gBC)
       getSimmetrixBC();
   }
@@ -1016,4 +998,33 @@ void MeshAdaptPUMIDrvr::set_nAdapt(int numberAdapt)
 {
   nAdapt = numberAdapt;
   return;
+}
+
+int MeshAdaptPUMIDrvr::setAdaptProperties(std::vector<std::string> sizeInputs,bool in_adapt, double in_hmax,double in_hmin,double in_hphi, int in_numAdaptSteps, double in_targetError, double in_gradingFactor, bool in_logging, int in_numIterations)
+{
+    for (std::vector<std::string>::iterator it = sizeInputs.begin() ; it != sizeInputs.end(); ++it)
+    {
+        if(*it == "ibm")
+            hasIBM=1;
+        if(*it == "interface")
+            hasInterface=1;
+        if(*it == "error_vms")
+            hasVMS=1;
+        if(*it == "error_erm")
+            hasERM=1;
+    }
+    hmin=in_hmin; 
+    hmax=in_hmax; 
+    hPhi=in_hphi;
+    numIter=in_numIterations;
+    adaptMesh = in_adapt;
+    numAdaptSteps = in_numAdaptSteps;
+    if(PCU_Comm_Self()==0)
+        printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
+         hmax, hmin, numIter);
+    logging_config = in_logging;
+    target_error = in_targetError;
+    gradingFactor = in_gradingFactor;
+   
+    return 0;
 }
