@@ -128,7 +128,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # correction
         self.massCorrModel = modelList[self.me_model]
         self.massCorrModel.setMassQuadrature()
-        self.vofModel.q[('m_last', 0)][:] = self.vofModel.q[('m', 0)]
+        self.vofModel.q[('m_last', 0)][:] = self.q_porosity*self.q_H_vof
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r', 0)])
             if self.checkMass:
