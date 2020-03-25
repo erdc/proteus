@@ -23,31 +23,25 @@ class PUMI_helper:
         return getattr(self.solver, attr)
 
      def setProperties(self):
-        self.domain = self.pList[0].domain
-        self.rho_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_0
-        self.rho_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_1
-        self.nu_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_0
-        self.nu_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_1
-        self.g = self.modelList[self.flowIdx].levelModelList[0].coefficients.g
-        self.epsFact_density = self.modelList[self.flowIdx].levelModelList[0].coefficients.epsFact_density
-        self.domain.AdaptManager.PUMIAdapter.setAdaptProperties(self.domain.AdaptManager)
-        #if self.TwoPhaseFlow:
-        #    domain = p0.myTpFlowProblem.domain
-        #    rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
-        #    nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
-        #    rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
-        #    nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
-        #    g = p0.myTpFlowProblem.physical_parameters['gravity']
-        #    epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
-        #else:
-        #    domain = p0.domain
-        #    rho_0  = p0.rho_0
-        #    nu_0   = p0.nu_0
-        #    rho_1  = p0.rho_1
-        #    nu_1   = p0.nu_1
-        #    g      = p0.g
-        #    epsFact_density = p0.epsFact_density
+        if self.TwoPhaseFlow:
+            p0 = self.pList[0]
+            self.domain = p0.myTpFlowProblem.domain
+            self.rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
+            self.nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
+            self.rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
+            self.nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
+            self.g = p0.myTpFlowProblem.physical_parameters['gravity']
+            self.epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
+        else:
+            self.domain = self.pList[0].domain
+            self.rho_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_0
+            self.rho_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_1
+            self.nu_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_0
+            self.nu_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_1
+            self.g = self.modelList[self.flowIdx].levelModelList[0].coefficients.g
+            self.epsFact_density = self.modelList[self.flowIdx].levelModelList[0].coefficients.epsFact_density
 
+        self.domain.AdaptManager.PUMIAdapter.setAdaptProperties(self.domain.AdaptManager)
 
      def getModels(self,modelDict):
         #indices are better than models since during adaptation, models are destroyed and recreated
