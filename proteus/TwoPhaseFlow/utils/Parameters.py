@@ -336,6 +336,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.n.linear_solver_options_prefix = 'rans2p_'
         self.n.linearSolverConvergenceTest = 'r-true'
         self.n.linearSmoother = LinearSolvers.SimpleNavierStokes3D
+        self.n.conservativeFlux= {0:'pwl-bdm-opt'}
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
