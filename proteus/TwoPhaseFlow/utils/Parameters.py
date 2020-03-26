@@ -1438,6 +1438,7 @@ class ParametersModelNCLS(ParametersModelBase):
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['ncls']}
         # BOUNDARY CONDITIONS
+        BC = self._Problem.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
                 if 'phi_DBC' in BC:

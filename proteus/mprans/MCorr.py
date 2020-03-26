@@ -128,7 +128,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # correction
         self.massCorrModel = modelList[self.me_model]
         self.massCorrModel.setMassQuadrature()
-        self.vofModel.q[('m_last', 0)][:] = self.vofModel.q[('m', 0)]
+        self.vofModel.q[('m_last', 0)][:] = self.q_porosity*self.q_H_vof
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r', 0)])
             if self.checkMass:
@@ -175,7 +175,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                                                                       self.massCorrModel.mesh.nElements_owned),), level=2)
             logEvent("Phase 0 mass (primitive) before mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
                                                                                                                                   self.massCorrModel.elementDiameter,
-                                                                                                                                  self.vofModel.q['dV'],
+                                                                                                                                  self.q_porosity*self.vofModel.q['dV'],
                                                                                                                                   self.lsModel.q[('m', 0)],
                                                                                                                                   self.massCorrModel.mesh.nElements_owned),), level=2)
             logEvent("Phase 0 mass (consistent) before mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
@@ -208,7 +208,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                                                                      self.massCorrModel.mesh.nElements_owned),), level=2)
             logEvent("Phase 0 mass (primitive) after mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
                                                                                                                                  self.massCorrModel.elementDiameter,
-                                                                                                                                 self.vofModel.q['dV'],
+                                                                                                                                 self.q_porosity*self.vofModel.q['dV'],
                                                                                                                                  self.lsModel.q[('m', 0)],
                                                                                                                                  self.massCorrModel.mesh.nElements_owned),), level=2)
             logEvent("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)

@@ -1931,7 +1931,7 @@ namespace proteus
 		/*        dir[I] = q_normal_phi.data()[eN_k_nSpace+I]/norm; */
 		/* ck.calculateGScale(G,dir,h_phi); */
 		epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
-		globalMass += gf.H(epsHeaviside,q_phi.data()[eN_k])*dV;
+		globalMass += q_porosity[eN_k]*gf.H(epsHeaviside,q_phi.data()[eN_k])*dV;
 	      }//k
 	  }//elements
           return globalMass;
