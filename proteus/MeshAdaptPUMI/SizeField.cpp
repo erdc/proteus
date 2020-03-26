@@ -1214,9 +1214,9 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //Initialize fields and needed types/variables
   apf::Field* errField;
   //apf::Mesh* m;
-  if(size_field_config=="ERM")
+  if(hasERM)
     errField = m->findField("ErrorRegion");
-  else if(size_field_config=="VMS" || size_field_config=="combined")
+  else if(hasVMS)
     errField = m->findField("VMSH1");
   assert(errField); 
   //apf::Mesh *m = apf::getMesh(vmsErrH1);

@@ -2,7 +2,7 @@ from ctypes import *
 from proteus import MeshTools
 from proteus import cmeshTools
 from proteus import Domain
-from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+from proteus.MeshAdaptPUMI import MeshAdapt
 from proteus import Comm
 from nose.tools import eq_ as eq
 from nose.tools import ok_ as ok
