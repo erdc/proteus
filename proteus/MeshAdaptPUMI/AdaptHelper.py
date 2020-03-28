@@ -164,7 +164,6 @@ class PUMI_helper:
         #Mimic the self stagger with a new loop to repopulate the nodal fields with u^{n} solution. This is necessary because NS relies on the u^{n-1} field for VOF/LS
 
         ###This loop stores the current solution (u^n) and loads in the previous timestep solution (u^{n-1}
-
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 #lm.coefficients.postAdaptStep() #MCorr needs this at the moment
@@ -243,16 +242,23 @@ class PUMI_helper:
                                                             par_rList=model.par_rList)
                 self.postStep(model)
 
+            #clsvof needs to call poststep as well once, disc_ICs need to be turned off after initial time step
+            if(isinstance(self.modelList[self.phaseIdx].levelModelList[0],proteus.mprans.CLSVOF.LevelModel)):
+                model = self.modelList[self.phaseIdx]
+                self.postStep(model)
+                model.levelModelList[0].coefficients.disc_ICs = modelListOld[self.phaseIdx].levelModelList[0].coefficients.disc_ICs
+
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
 
               lm.timeIntegration.postAdaptUpdate(lmOld.timeIntegration)
               lm.timeIntegration.dt = lm.dt_store
-
+              
         ###Shock capturing update happens with the time history update
               if(lmOld.shockCapturing and lmOld.shockCapturing.nStepsToDelay is not None and lmOld.shockCapturing.nSteps > lmOld.shockCapturing.nStepsToDelay):
                     lm.shockCapturing.nSteps=lm.shockCapturing.nStepsToDelay
                     lm.shockCapturing.updateShockCapturingHistory()
+
 
               #update the eddy-viscosity history
               lm.calculateAuxiliaryQuantitiesAfterStep()
