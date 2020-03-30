@@ -411,14 +411,6 @@ class KSP_petsc4py(LinearSolver):
 
         self.setResTol(rtol_r,atol_r)
 
-        convergenceTest = 'r-true'
-        if convergenceTest == 'r-true':
-            self.r_work = self.petsc_L.getVecLeft()
-            self.rnorm0 = None
-            self.ksp.setConvergenceTest(self._converged_trueRes)
-        else:
-            self.r_work = None
-
         if prefix is not None:
             self.ksp.setOptionsPrefix(prefix)
         if Preconditioner is not None:
@@ -429,6 +421,13 @@ class KSP_petsc4py(LinearSolver):
         # set null space class
         self.null_space = self._set_null_space_class()
 
+        if convergenceTest == 'r-true':
+            self.r_work = self.petsc_L.getVecLeft()
+            self.rnorm0 = None
+            self.ksp.setConvergenceTest(self._converged_trueRes)
+        else:
+            self.r_work = None
+            
     def setResTol(self,rtol,atol):
         """ Set the ksp object's residual and maximum interations. """
         self.rtol_r = rtol
