@@ -336,6 +336,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.n.linear_solver_options_prefix = 'rans2p_'
         self.n.linearSolverConvergenceTest = 'r-true'
         self.n.linearSmoother = LinearSolvers.SimpleNavierStokes3D
+        self.n.conservativeFlux= {0:'pwl-bdm-opt'}
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
@@ -1439,6 +1440,7 @@ class ParametersModelNCLS(ParametersModelBase):
         IC = self._Problem.initialConditions
         self.p.initialConditions = {0: IC['ncls']}
         # BOUNDARY CONDITIONS
+        BC = self._Problem.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
                 if 'phi_DBC' in BC:

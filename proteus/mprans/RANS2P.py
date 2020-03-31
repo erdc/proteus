@@ -2289,6 +2289,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def calculateAuxiliaryQuantitiesAfterStep(self):
         if self.postProcessing and self.conservativeFlux:
+            if self.coefficients.porosityTypes is None:
+                self.coefficients.porosityTypes = np.ones((self.mesh.elementMaterialTypes.max()+1,),'d')
             self.rans2p.calculateVelocityAverage(self.mesh.nExteriorElementBoundaries_global,
                                                  self.mesh.exteriorElementBoundariesArray,
                                                  self.mesh.nInteriorElementBoundaries_global,
@@ -2309,8 +2311,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.u[3].dof,
                                                  self.u[1].femSpace.psi_trace,
                                                  self.ebqe[('velocity', 0)],
-                                                 self.ebq_global[('velocityAverage', 0)])
-            #assert((self.u[0].femSpace.dofMap.l2g == self.mesh.elementNodesArray).all())
+                                                 self.ebq_global[('velocityAverage', 0)],
+                                                 self.mesh.elementMaterialTypes,
+                                                 self.coefficients.porosityTypes)
             if self.movingDomain:
                 logEvent("Element Quadrature", level=3)
                 self.calculateElementQuadrature(domainMoved=True)
