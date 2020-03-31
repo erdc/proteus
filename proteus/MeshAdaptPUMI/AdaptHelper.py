@@ -243,10 +243,13 @@ class PUMI_helper:
                 self.postStep(model)
 
             #clsvof needs to call poststep as well once, disc_ICs need to be turned off after initial time step
-            if(isinstance(self.modelList[self.phaseIdx].levelModelList[0],proteus.mprans.CLSVOF.LevelModel)):
-                model = self.modelList[self.phaseIdx]
-                self.postStep(model)
-                model.levelModelList[0].coefficients.disc_ICs = modelListOld[self.phaseIdx].levelModelList[0].coefficients.disc_ICs
+            try:
+                if(isinstance(self.modelList[self.phaseIdx].levelModelList[0],proteus.mprans.CLSVOF.LevelModel)):
+                    model = self.modelList[self.phaseIdx]
+                    self.postStep(model)
+                    model.levelModelList[0].coefficients.disc_ICs = modelListOld[self.phaseIdx].levelModelList[0].coefficients.disc_ICs
+            except:
+                pass
 
         for m,mOld in zip(self.modelList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
