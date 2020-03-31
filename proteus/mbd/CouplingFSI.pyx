@@ -161,50 +161,50 @@ cdef class ProtChBody:
                                               is_convex=is_convex,
                                               sphereswept_thickness=sphereswept_thickness)
 
-    def addTriangleMeshFromVerticesFaces(self,
-                                         double[:,:] vertices,
-                                         int[:,:,:] facets,
-                                         double[:] pos=None,
-                                         double[:,:] rot=None,
-                                         bool is_static=False,
-                                         bool is_convex=False,
-                                         double sphereswept_thickness=0.005):
-        """Adds triangle mesh to collision model and for IBM calculations
-        """
-        self.thisptr.trimesh = make_shared[ch.ChTriangleMeshConnected]()
-        self.trimesh_nodes.clear()
-        self.trimesh_triangles.clear()
-        for v in vertices:
-            self.trimesh_nodes.push_back(ch.ChVector(v[0], v[1], v[2]))
-        for f_i, facet in enumerate(facets):
-            f = facet[0]
-            assert len(f) == 3, 'Facets must be triangles for triangle mesh but facet '+str(f_i)+' is not of length 3'
-            self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
-                                                           self.trimesh_nodes.at(f[1]),
-                                                           self.trimesh_nodes.at(f[2])))
-            deref(self.thisptr.trimesh).addTriangle(self.trimesh_triangles.at(f_i))
-        if pos is None:
-            pos = np.zeros(3)
-        cdef ch.ChMatrix33 rotmat
-        if rot is None:
-            rot = np.eye(3)
-        for i in range(rot.shape[0]):
-            for j in range(rot.shape[1]):
-                rotmat.SetElement(i, j, rot[i, j])
-        # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
-        deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(<shared_ptr[ch.ChTriangleMesh]> self.thisptr.trimesh,
-                                                                            is_static,
-                                                                            is_convex,
-                                                                            ch.ChVector(pos[0],
-                                                                                        pos[1],
-                                                                                        pos[2]),
-                                                                            rotmat,
-                                                                            sphereswept_thickness)
-        self.thisptr.has_trimesh = True
-        cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
-        self.thisptr.pos0_trimesh = pos0
-        cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
-        self.thisptr.rotq0_trimesh = rot0
+    # def addTriangleMeshFromVerticesFaces(self,
+    #                                      double[:,:] vertices,
+    #                                      int[:,:,:] facets,
+    #                                      double[:] pos=None,
+    #                                      double[:,:] rot=None,
+    #                                      bool is_static=False,
+    #                                      bool is_convex=False,
+    #                                      double sphereswept_thickness=0.005):
+    #     """Adds triangle mesh to collision model and for IBM calculations
+    #     """
+    #     self.thisptr.trimesh = make_shared[ch.ChTriangleMeshConnected]()
+    #     self.trimesh_nodes.clear()
+    #     self.trimesh_triangles.clear()
+    #     for v in vertices:
+    #         self.trimesh_nodes.push_back(ch.ChVector(v[0], v[1], v[2]))
+    #     for f_i, facet in enumerate(facets):
+    #         f = facet[0]
+    #         assert len(f) == 3, 'Facets must be triangles for triangle mesh but facet '+str(f_i)+' is not of length 3'
+    #         self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
+    #                                                        self.trimesh_nodes.at(f[1]),
+    #                                                        self.trimesh_nodes.at(f[2])))
+    #         deref(self.thisptr.trimesh).addTriangle(self.trimesh_triangles.at(f_i))
+    #     if pos is None:
+    #         pos = np.zeros(3)
+    #     cdef ch.ChMatrix33 rotmat
+    #     if rot is None:
+    #         rot = np.eye(3)
+    #     for i in range(rot.shape[0]):
+    #         for j in range(rot.shape[1]):
+    #             rotmat.SetElement(i, j, rot[i, j])
+    #     # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
+    #     deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(<shared_ptr[ch.ChTriangleMesh]> self.thisptr.trimesh,
+    #                                                                         is_static,
+    #                                                                         is_convex,
+    #                                                                         ch.ChVector(pos[0],
+    #                                                                                     pos[1],
+    #                                                                                     pos[2]),
+    #                                                                         rotmat,
+    #                                                                         sphereswept_thickness)
+    #     self.thisptr.has_trimesh = True
+    #     cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
+    #     self.thisptr.pos0_trimesh = pos0
+    #     cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
+    #     self.thisptr.rotq0_trimesh = rot0
 
     # # (!) # cannot use right now because of cython error when C++ function has default
     # # (!) # arguments (known bug in cython community, silent error)
@@ -535,13 +535,8 @@ cdef class ProtChBody:
         cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
         cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
-        cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
-        cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
 
         # added mass matrix
-        cdef ch.ChQuaternion rot
-        cdef ch.ChMatrix33 rotch
-        cdef ch.ChMatrix33 rotchT
         cdef np.ndarray rotMarr_big
         cdef np.ndarray rotMarrT_big
         # store Aij in global frame
@@ -550,20 +545,18 @@ cdef class ProtChBody:
         # transform Aij in local frame
         if self.Aij_updated_global is True and self.Aij_transform_local is True:
             # converting from global to local: Rot*Aij*RotT*v
-            rot = deref(self.thisptr.body).GetRot()
-            rotch = ch.ChMatrix33[double](rot)
-            rotchT = ch.ChMatrix33[double]()
+            rot = self.ChBodyAddedMass.GetRot()
+            rotch = chrono.ChMatrix33D(rot)
             rotMarr_big = np.zeros((6, 6))
             rotMarrT_big = np.zeros((6, 6))
-            rotchT.CopyFromMatrixT(rotch)
             for i in range(6):
                 for j in range(6):
                     if i < 3 and j < 3 :
-                        rotMarr_big[i, j] = rotch.GetElement(i, j)
-                        rotMarrT_big[i, j] = rotchT.GetElement(i, j)
+                        rotMarr_big[i, j] = rotch.getitem(i, j)
+                        rotMarrT_big[i, j] = rotch.getitem(j, i)
                     elif i >=3 and j >= 3:
-                        rotMarr_big[i, j] = rotch.GetElement(i-3, j-3)
-                        rotMarrT_big[i, j] = rotchT.GetElement(i-3, j-3)
+                        rotMarr_big[i, j] = rotch.getitem(i-3, j-3)
+                        rotMarrT_big[i, j] = rotch.getitem(j-3, i-3)
             # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
             self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
         else:
@@ -595,12 +588,19 @@ cdef class ProtChBody:
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
         #set it to chrono variable
+        chFM = chrono.ChMatrixDynamicD(6, 6)
+        inv_chFM = chrono.ChMatrixDynamicD(6, 6)
         for i in range(6):
             for j in range(6):
-                chFM.SetElement(i, j, FM[i, j])
-                inv_chFM.SetElement(i, j, inv_FM[i, j])
-        self.ChBodyAddedMass.SetMfullmass(chFM)
-        self.ChBodyAddedMass.SetInvMfullmass(inv_chFM)
+                chFM.setitem(i, j, FM[i, j])
+
+        # hack for swig
+        cdef SwigPyObject *swig_obj = <SwigPyObject*> chFM.this
+        cdef ch.ChMatrixDynamic *mycpp_ptr = <ch.ChMatrixDynamic*?>swig_obj.ptr
+        cdef ch.ChMatrixDynamic my_instance = deref(mycpp_ptr)
+
+        # set full mass matrix
+        self.ChBodyAddedMass.SetMfullmass(my_instance)
 
         aa = np.zeros(6)
 
@@ -1452,9 +1452,6 @@ cdef class ProtChSystem:
         self.thisptr.addMesh(mesh.mesh)
         mesh.ProtChSystem = self
 
-    def setSolverDiagonalPreconditioning(self, bool boolval):
-        self.thisptr.setSolverDiagonalPreconditioning(boolval)
-
     def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
         assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
         assert prediction == "backwardEuler" or prediction == "forwardEuler" or prediction == "implicitOrder2", "Prediction requested unknown"
@@ -1612,7 +1609,7 @@ cdef class ProtChSystem:
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
-            self.ChSystem.SetupInitial()
+            self.ChSystem.Setup()
             Profiling.logEvent("Finished init"+str(self.next_sample))
             self.initialized = True
         else:
@@ -3589,8 +3586,8 @@ cdef class ChBodyAddedMass:
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
         self.thisptr.SetMfullmass(Mfullmass_in)
 
-    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
-        self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
+    # cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
+    #     self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
 
 
 

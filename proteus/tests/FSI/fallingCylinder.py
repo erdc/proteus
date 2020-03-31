@@ -124,13 +124,13 @@ chbod.SetInertiaXX(inertia)
 body.setConstraints(free_x=np.array([0., 1., 0.]), free_r=np.array([0., 0., 0.]))
 body.setRecordValues(all_values=True)
 
-
 def sdf(t, x):
     dist = np.sqrt((x[0]**2+x[1]**2+x[2]**2))
     if dist < radius:
-        return -dist, (0., -1., 0.)
+        return -(radius-dist), (0., -1., 0.)
     else:
-        return dist, (0., 1., 0.)
+        return dist-radius, (0., 1., 0.)
+
 
 body.setIBM(True,
             radiusIBM=radius,  # used only when particle are balls

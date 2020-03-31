@@ -226,7 +226,7 @@ class TestIBM(unittest.TestCase):
         ns.calculateSolution('floatingCubeALE')
         pos = case.body.getPosition()
 
-        npt.assert_almost_equal(pos, np.array([0.49937, 0.50042, 0.50773]), decimal=5)
+        npt.assert_almost_equal(pos, np.array([0.49937, 0.50039, 0.50774]), decimal=5)
         #self.teardown_method(self)
 
 if __name__ == "__main__":

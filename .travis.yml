@@ -26,7 +26,7 @@ jobs:
   - stage: test
     name: "hashdist linux"
     os: linux
-    dist: xenial
+    dist: bionic
     language: python
     python: 2.7
     env: TEST_PROFILE="proteus-hashdist"
@@ -34,7 +34,7 @@ jobs:
       - git lfs pull
       - ./stack/hit/bin/hit init-home
       - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
-      - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_ubuntu_16_04 --objects="build"
+      - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_stack --objects="build"
       - make stack/default.yaml
       - pushd $HOME
       - mkdir -p hashdist_src
@@ -56,7 +56,7 @@ jobs:
       - #./linux/bin/pip3 install matplotlib
     script:
       - export MPLBACKEND="AGG"
-      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI -k 'not test_damBreak_solver_options' --cov=proteus
+      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD -k 'not test_damBreak_solver_options' --cov=proteus
   - stage: test
     name: "conda linux"
     os: linux

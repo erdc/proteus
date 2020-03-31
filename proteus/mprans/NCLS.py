@@ -9,6 +9,7 @@ from proteus.Transport import OneLevelTransport, cfemIntegrals, SparseMat
 from proteus.Transport import TC_base, logEvent, NonlinearEquation, Quadrature, Comm
 from proteus.Transport import memory, FluxBoundaryConditions, ExplicitLumpedMassMatrix
 from proteus.Transport import globalMax, SSP, ExplicitConsistentMassMatrixWithRedistancing
+from proteus import Norms
 
 class SubgridError(proteus.SubgridError.SGE_base):
     def __init__(self, coefficients, nd):
@@ -375,13 +376,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.checkMass:
             self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
                                                                      self.model.mesh.elementDiametersArray,
-                                                                     self.model.q['dV'],
+                                                                     self.flowModel.coefficients.q_porosity*self.model.q['dV'],
                                                                      self.model.q[('m',0)],
                                                                      self.model.mesh.nElements_owned)
             logEvent("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
             self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
                                                                       self.model.mesh.elementDiametersArray,
-                                                                      self.model.q['dV'],
+                                                                      self.flowModel.coefficients.q_porosity*self.model.q['dV'],
                                                                       self.model.timeIntegration.m_last[0],
                                                                       self.model.mesh.nElements_owned)
             logEvent("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
@@ -393,7 +394,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.checkMass:
             self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
                                                                       self.model.mesh.elementDiametersArray,
-                                                                      self.model.q['dV'],
+                                                                      self.flowModel.coefficients.q_porosity*self.model.q['dV'],
                                                                       self.model.q[('u',0)],
                                                                       self.model.mesh.nElements_owned)
             logEvent("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)

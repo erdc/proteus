@@ -6,6 +6,7 @@ import numpy as np
 from ..Profiling import logEvent
 from proteus cimport cmeshTools 
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 
 cdef extern from "mesh.h":
     struct Mesh:
@@ -13,7 +14,7 @@ cdef extern from "mesh.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr(double, double, double, int, int, int, char*, char*,char*,double,double,int,double,double)
+        MeshAdaptPUMIDrvr()
         int numIter, numAdaptSteps
         int nAdapt
         string size_field_config, adapt_type_config
@@ -34,6 +35,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int transferFieldToProteus(char*, double*, int, int)
         int transferElementFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*,double,double,double,double)
+        int setAdaptProperties(vector[string],bint, double,double,double,int,double,double,bint,int)
         int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
@@ -51,15 +53,14 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         void cleanMesh()
         void set_nAdapt(int)
 
-cdef class MeshAdaptPUMI:
+cdef class MeshAdapt:
     cdef MeshAdaptPUMIDrvr *thisptr
     cdef double hmax, hmin, hPhi
     cdef int numIter, numAdaptSteps
     cdef int isReconstructed
     cdef int adaptMesh 
-    def __cinit__(self, hmax=100.0, hmin=1e-8, hPhi=1e-2, adaptMesh=0, numIter=10, numAdaptSteps=10 ,sfConfig=b"ERM",maType=b"test",logType=b"off",targetError=0,targetElementCount=0,reconstructedFlag=0,maxAspectRatio=100.0,gradingFact=1.5):
-        logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, hPhi, adaptMesh, numIter, numAdaptSteps, sfConfig,maType,logType,targetError,targetElementCount,reconstructedFlag,maxAspectRatio,gradingFact)
+    def __cinit__(self):
+        self.thisptr = new MeshAdaptPUMIDrvr()
     def __dealloc__(self):
         del self.thisptr
     def size_field_config(self):
@@ -118,8 +119,26 @@ cdef class MeshAdaptPUMI:
         rho = np.ascontiguousarray(rho)
         nu = np.ascontiguousarray(nu)
         g = np.ascontiguousarray(g)
-        #return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0],deltaT,interfaceBandSize)
         return self.thisptr.transferPropertiesToPUMI(<double*> rho.data,<double*>nu.data,<double*>g.data,deltaT,deltaT_next,T_simulation,interfaceBandSize)
+
+    def setAdaptProperties(self,manager):
+        cdef vector[string] sizeInputs
+        for entry in manager.sizeInputs:
+            sizeInputs.push_back(entry)
+        return self.thisptr.setAdaptProperties(
+                    sizeInputs,
+                    manager.adapt,
+                    manager.hmax,
+                    manager.hmin,
+                    manager.hphi,
+                    manager.numAdaptSteps,
+                    manager.targetError,
+                    manager.gradingFactor,
+                    manager.logging,
+                    manager.numIterations
+        )
+
+
     def transferModelInfo(self, np.ndarray[int,ndim=1,mode="c"] numModelEntities,
                                 np.ndarray[int,ndim=2,mode="c"] edges,
                                 np.ndarray[int,ndim=2,mode="c"] faces,
@@ -169,3 +188,22 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.writeMesh(meshName)
     def cleanMesh(self):
         return self.thisptr.cleanMesh()
+
+class AdaptManager():
+   def __init__(self,adapter=MeshAdapt()):
+       self.modelDict = {}
+       self.sizeInputs = []
+       self.PUMIAdapter=adapter
+       self.adapt = 0
+       self.hmax = 100.0
+       self.hmin= 1e-8
+       self.hphi= 1e-2
+       self.numAdaptSteps= 10
+       self.numIterations= 5
+       self.targetError= 0
+       self.gradingFactor= 1.5
+       self.logging= 0
+       self.maxAspectRatio=100.0
+       self.maType = "" 
+       self.reconstructedFlag = 2
+
