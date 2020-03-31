@@ -446,7 +446,9 @@ namespace proteus
                                           xt::pyarray<double>& w_dof,
                                           xt::pyarray<double>& vel_trial_trace_ref,
                                           xt::pyarray<double>& ebqe_velocity,
-                                          xt::pyarray<double>& velocityAverage)=0;
+                                          xt::pyarray<double>& velocityAverage,
+					  xt::pyarray<int>& elementMaterialTypes,
+					  xt::pyarray<double>& porosityTypes)=0;
     virtual void getTwoPhaseAdvectionOperator(xt::pyarray<double>& mesh_trial_ref,
                                               xt::pyarray<double>& mesh_grad_trial_ref,
                                               xt::pyarray<double>& mesh_dof,
@@ -3707,6 +3709,8 @@ namespace proteus
                                                flux_mom_v_adv_ext,
                                                flux_mom_w_adv_ext,
                                                &ebqe_velocity.data()[ebNE_kb_nSpace]);
+                for (int I=0;I<nSpace;I++)
+		              ebqe_velocity.data()[ebNE_kb_nSpace+I]/=porosity_ext;
                 exteriorNumericalDiffusiveFlux(eps_rho,
                                                ebqe_phi_ext.data()[ebNE_kb],
                                                sdInfo_u_u_rowptr.data(),
@@ -5791,7 +5795,9 @@ namespace proteus
                                     xt::pyarray<double>& w_dof,
                                     xt::pyarray<double>& vel_trial_trace_ref,
                                     xt::pyarray<double>& ebqe_velocity,
-                                    xt::pyarray<double>& velocityAverage)
+                                    xt::pyarray<double>& velocityAverage,
+				    xt::pyarray<int>& elementMaterialTypes,
+				    xt::pyarray<double>& porosityTypes)
       {
         int permutations[nQuadraturePoints_elementBoundary];
         double xArray_left[nQuadraturePoints_elementBoundary*2],
@@ -5826,7 +5832,9 @@ namespace proteus
               metricTensorDetSqrt,
               normal[2],
               x,y,z,
-              xt,yt,zt,integralScaling;
+              xt,yt,zt,integralScaling,
+	      left_porosity  = porosityTypes[elementMaterialTypes[left_eN_global]],
+	      right_porosity = porosityTypes[elementMaterialTypes[right_eN_global]];
 
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
@@ -5924,8 +5932,8 @@ namespace proteus
                 ck.valFromDOF(u_dof.data(),&vel_l2g.data()[right_eN_nDOF_trial_element],&vel_trial_trace_ref.data()[right_ebN_element_kb_nDOF_test_element],u_right);
                 ck.valFromDOF(v_dof.data(),&vel_l2g.data()[right_eN_nDOF_trial_element],&vel_trial_trace_ref.data()[right_ebN_element_kb_nDOF_test_element],v_right);
                 //
-                velocityAverage.data()[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
-                velocityAverage.data()[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
+                velocityAverage.data()[ebN_kb_nSpace+0]=0.5*(left_porosity*u_left + right_porosity*u_right);
+                velocityAverage.data()[ebN_kb_nSpace+1]=0.5*(left_porosity*v_left + right_porosity*v_right);
               }//ebNI
           }
       }
