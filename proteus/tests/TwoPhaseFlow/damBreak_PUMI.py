@@ -178,9 +178,13 @@ m.clsvof.auxiliaryVariables = [height_gauges1, height_gauges2]
 m.pressure.auxiliaryVariables = [pressure_gauges]
 m.rans2p.n.ShockCapturingOptions.shockCapturingFactor = 0.0
 m.clsvof.n.ShockCapturingOptions.shockCapturingFactor = 0.0
+
 #m.rans3p.p.coefficients.useVF=1.0
 #m.rans3p.p.coefficients.eb_penalty_constant = 1e6
 
 myTpFlowProblem.Parameters.mesh.he = he
 myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 myTpFlowProblem.Parameters.mesh.genMesh=False#True
+
+#adaptivity currently relies on element-based partitioning which will not work with conservativeFlux right now
+m.rans2p.n.conservativeFlux= None
