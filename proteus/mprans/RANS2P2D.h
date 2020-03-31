@@ -2488,9 +2488,9 @@ namespace proteus
                 //xt=0.0;yt=0.0;zt=0.0;
                 //std::cout<<"xt "<<xt<<'\t'<<yt<<'\t'<<zt<<std::endl;
                 //get the physical integration weight
-                dV = fabs(jacDet)*dV_ref[k];
+                dV = fabs(jacDet)*dV_ref.data()[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
-                //ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
+                //ck.calculateGScale(G,&normal_phi.data()[eN_k_nSpace],h_phi);
 
                 eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
                 eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
