@@ -320,7 +320,6 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/widgets"
 ifdef CONDA_PREFIX
-	continue
 else
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
 endif
