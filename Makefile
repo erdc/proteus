@@ -323,7 +323,6 @@ ifdef CONDA_PREFIX
 else
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
 endif
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
 	pip install configparser ipyparallel ipython terminado jupyter ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
 	jupyter nbextension enable --py --sys-prefix ipysheet
