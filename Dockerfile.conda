@@ -17,16 +17,13 @@ RUN rm -rf proteus && \
     git checkout master && \
     pip install -v -e . && \ 
     CC=gcc CXX=g++ pip install matplotlib && \
-    PATH=/home/$NB_USER/proteus/linux/bin:$PATH make jupyter && \
-    CC=gcc CXX=g++ PATH=/home/$NB_USER/proteus/linux/bin:$PATH pip install jupyterhub && \
+    make jupyter && \
+    CC=gcc CXX=g++ pip install jupyterhub && \
     rm -rf build && \
     rm -rf air-water-vv && \
     rm -rf .git && \
     rm -rf stack/.git && \
     rm -rf /home/$NB_USER/.cache 
-
-#ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
-#ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
 
 USER root
 
