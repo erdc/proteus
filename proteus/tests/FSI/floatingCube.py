@@ -142,7 +142,7 @@ chbod.SetPos(pos)
 chbod.SetMass(mass)
 chbod.SetInertiaXX(inertia)
 #chbod.SetBodyFixed(True)
-body.setConstraints(free_x=np.array([0.,0.,1.]), free_r=np.array([1.,1.,0.]))
+body.setConstraints(free_x=np.array([1.,1.,1.]), free_r=np.array([1.,1.,1.]))
 
 # body.setInitialRot(rotation_init)
 # body.rotation_init=np.array([np.cos(ang/2.), 0., 0., np.sin(ang/2.)*1.])
