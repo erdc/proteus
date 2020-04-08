@@ -15,10 +15,12 @@ RUN rm -rf proteus && \
     git clone https://github.com/erdc/proteus && \
     cd proteus && \
     git checkout master && \
-    make N=4 develop && \
-    CC=gcc CXX=g++ ./linux/bin/pip3 install matplotlib && \
-    PATH=/home/$NB_USER/proteus/linux/bin:$PATH make jupyter && \
-    CC=gcc CXX=g++ PATH=/home/$NB_USER/proteus/linux/bin:$PATH ./linux/bin/pip3 install jupyterhub && \
+    git submodule update --init --recursive && \
+    make N=1 develop && \
+    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:${PATH} CC=gcc CXX=g++ ./linux/bin/pip3 install pandas && \
+    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=${PATH}:/home/${NB_USER}/proteus/linux/bin CC=gcc CXX=g++ ./linux/bin/pip3 install matplotlib && \
+    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:$PATH make jupyter && \
+    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:$PATH CC=gcc CXX=g++ ./linux/bin/pip3 install jupyterhub && \
     rm -rf build && \
     rm -rf air-water-vv && \
     rm -rf .git && \
