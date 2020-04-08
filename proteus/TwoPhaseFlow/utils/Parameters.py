@@ -1770,8 +1770,7 @@ class ParametersModelAddedMass(ParametersModelBase):
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
         else:
             self.OptDB.setValue(prefix+'ksp_type', 'cg')
-            self.OptDB.setValue(prefix+'pc_type', 'hypre')
-            self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+            self.OptDB.setValue(prefix+'pc_type', 'gamg')
             self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
@@ -1891,6 +1890,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
         self.n.tolFac = 0.
+        self.n.linTolFac = 0.
         self.n.maxNonlinearIts = 4
         self.n.maxLineSearches = 0
         # freeze attributes
@@ -1968,7 +1968,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         if self.n.nl_atol_res is None:
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = 0.001*self.n.nl_atol_res
+            self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
