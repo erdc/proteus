@@ -1559,7 +1559,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ('u', 2)] = self.numericalFlux.ebqe[
                 ('u', 1)].copy()
             log("calling RANS3PSed2D ctor")
-            self.rans3psed = cRANS3PSed.RANS3PSed2D(
+            self.rans3psed = cRANS3PSed.cppRANS3PSed2D_base(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1587,7 +1587,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 )
         else:
             log("calling  RANS3PSed ctor")
-            self.rans3psed = cRANS3PSed.RANS3PSed(
+            self.rans3psed = cRANS3PSed.cppRANS3PSed_base(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
