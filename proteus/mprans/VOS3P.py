@@ -1144,7 +1144,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.globalResidualDummy = None
         compKernelFlag = 0
         self.delta_x_ij=None
-        self.vos = cVOS3P.VOS3P(
+        self.vos = cVOS3P.cppVOS3P_base(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,

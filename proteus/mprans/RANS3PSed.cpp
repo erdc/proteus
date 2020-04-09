@@ -24,7 +24,7 @@ PYBIND11_MODULE(RANS3PSed, m)
 {
     xt::import_numpy();
 
-    py::class_<cppRANS3PSed_base>(m, "RANS3PSed")
+    py::class_<cppRANS3PSed_base>(m, "cppRANS3PSed_base")
         .def(py::init(&proteus::newRANS3PSed))
         .def("calculateResidual", &cppRANS3PSed_base::calculateResidual)
         .def("calculateJacobian", &cppRANS3PSed_base::calculateJacobian)
@@ -35,7 +35,7 @@ PYBIND11_MODULE(RANS3PSed2D, m)
 {
     xt::import_numpy();
 
-    py::class_<cppRANS3PSed2D_base>(m, "RANS3PSed2D")
+    py::class_<cppRANS3PSed2D_base>(m, "cppRANS3PSed2D_base")
         .def(py::init(&proteus::newRANS3PSed2D))
         .def("calculateResidual", &cppRANS3PSed2D_base::calculateResidual)
         .def("calculateJacobian", &cppRANS3PSed2D_base::calculateJacobian)
