@@ -22,6 +22,7 @@ from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 from . import cRANS3PSed
+from . import cRANS3PSed2D
 
 
 class SubgridError(proteus.SubgridError.SGE_base):
@@ -1559,7 +1560,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ('u', 2)] = self.numericalFlux.ebqe[
                 ('u', 1)].copy()
             log("calling RANS3PSed2D ctor")
-            self.rans3psed = cRANS3PSed.cppRANS3PSed2D_base(
+            self.rans3psed = cRANS3PSed2D.cppRANS3PSed2D_base(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,

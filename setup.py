@@ -170,9 +170,16 @@ EXTENSIONS_TO_BUILD = [
                          PROTEUS_BLAS_LIB],
               ),
     Extension(
-        'mprans.RANS3PSed',
-        ['proteus/mprans/RANS3PSed.cpp'],
-        depends=['proteus/mprans/RANS3PSed.h','proteus/mprans/RANS3PSed2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        'mprans.cRANS3PSed',
+        ['proteus/mprans/cRANS3PSed.cpp'],
+        depends=['proteus/mprans/RANS3PSed.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++'),
+    Extension(
+        'mprans.cRANS3PSed2D',
+        ['proteus/mprans/cRANS3PSed2D.cpp'],
+        depends=['proteus/mprans/RANS3PSed2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
@@ -945,7 +952,7 @@ def setup_extensions_in_parallel():
     logger = multiprocessing.log_to_stderr()
     logger.setLevel(logging.INFO)
     multiprocessing.log_to_stderr()
-    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    pool = multiprocessing.Pool(processes=int(os.getenv('N')))
     EXTENSIONS=[[e] for e in EXTENSIONS_TO_BUILD]
     pool.imap(setup_given_extensions, EXTENSIONS)
     pool.close()

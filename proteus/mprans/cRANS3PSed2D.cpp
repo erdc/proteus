@@ -17,21 +17,9 @@
 #endif
 
 namespace py = pybind11;
-using proteus::cppRANS3PSed_base;
 using proteus::cppRANS3PSed2D_base;
 
-PYBIND11_MODULE(RANS3PSed, m)
-{
-    xt::import_numpy();
-
-    py::class_<cppRANS3PSed_base>(m, "cppRANS3PSed_base")
-        .def(py::init(&proteus::newRANS3PSed))
-        .def("calculateResidual", &cppRANS3PSed_base::calculateResidual)
-        .def("calculateJacobian", &cppRANS3PSed_base::calculateJacobian)
-        .def("calculateVelocityAverage", &cppRANS3PSed_base::calculateVelocityAverage);
-}
-
-PYBIND11_MODULE(RANS3PSed2D, m)
+PYBIND11_MODULE(cRANS3PSed2D, m)
 {
     xt::import_numpy();
 
