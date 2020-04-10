@@ -17,11 +17,6 @@ RUN rm -rf proteus && \
     git checkout master && \
     git submodule update --init --recursive && \
     make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
-    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:${PATH} CC=gcc CXX=g++ ./linux/bin/pip3 install pandas && \
-    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=${PATH}:/home/${NB_USER}/proteus/linux/bin CC=gcc CXX=g++ ./linux/bin/pip3 install matplotlib && \
-    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:$PATH make jupyter && \
-    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:$PATH CC=gcc CXX=g++ ./linux/bin/pip3 install jupyterhub && \
-    rm -rf build && \
     rm -rf air-water-vv && \
     rm -rf .git && \
     rm -rf stack/.git && \
