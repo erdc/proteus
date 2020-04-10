@@ -20,7 +20,7 @@ namespace py = pybind11;
 using proteus::cppRANS3PF_base;
 using proteus::cppRANS3PF2D_base;
 
-PYBIND11_MODULE(RANS3PF, m)
+PYBIND11_MODULE(cRANS3PF, m)
 {
     xt::import_numpy();
 
@@ -30,11 +30,6 @@ PYBIND11_MODULE(RANS3PF, m)
         .def("calculateJacobian", &cppRANS3PF_base::calculateJacobian)
         .def("calculateVelocityAverage", &cppRANS3PF_base::calculateVelocityAverage)
         .def("getBoundaryDOFs", &cppRANS3PF_base::getBoundaryDOFs);
-}
-
-PYBIND11_MODULE(RANS3PF2D, m)
-{
-    xt::import_numpy();
 
     py::class_<cppRANS3PF2D_base>(m, "cppRANS3PF2D_base")
         .def(py::init(&proteus::newRANS3PF2D))

@@ -26,7 +26,6 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 from . import cRANS3PF
 
-
 class SubgridError(proteus.SubgridError.SGE_base):
 
     def __init__(
@@ -2050,7 +2049,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ('u', 2)] = self.numericalFlux.ebqe[
                 ('u', 1)].copy()
             log("calling RANS3PF2D ctor")
-            self.rans3pf = cRANS3PF.RANS3PF2D(
+            self.rans3pf = cRANS3PF.cppRANS3PF2D_base(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -2078,7 +2077,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 )
         else:
             log("calling  RANS3PF_base ctor")
-            self.rans3pf = cRANS3PF.RANS3PF(
+            self.rans3pf = cRANS3PF.cppRANS3PF_base(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -2284,7 +2283,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.isBoundary_1D)
             self.isBoundary_1D[:] = 1.0*(self.isBoundary_1D > 0)
             self.quantDOFs[:] = self.isBoundary_1D
-        #
         self.rans3pf.calculateResidual(
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2304,10 +2302,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.q_grad_p_sharp,
             self.pressureModel.ebqe_p_sharp,
             self.pressureModel.ebqe_grad_p_sharp,
-            # self.pressureModel.q[('u',0)],
-            # self.pressureModel.q[('grad(u)',0)],
-            # self.pressureModel.ebqe[('u',0)],
-            # self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.Hessian_psi,
@@ -2331,10 +2325,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeDiametersArray,
             self.stabilization.hFactor,
             self.mesh.nElements_global,
-            self.mesh.nElements_owned,
+            int(self.mesh.nElements_owned),
             self.mesh.nElementBoundaries_global,
-            self.mesh.nElementBoundaries_owned,
-            self.mesh.nNodes_owned,
+            int(self.mesh.nElementBoundaries_owned),
+            int(self.mesh.nNodes_owned),
             self.coefficients.useRBLES,
             self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
@@ -2381,7 +2375,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u_dof_old_old,
             self.v_dof_old_old,
             self.w_dof_old_old,
-            [self.uStar_dof, self.vStar_dof, self.wStar_dof],
+            self.uStar_dof,
+            self.vStar_dof,
+            self.wStar_dof,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
@@ -2514,7 +2510,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ball_angular_velocity,
             self.q['phisError'],
             self.phisErrorNodal,
-            self.coefficients.USE_SUPG,
+            int(self.coefficients.USE_SUPG),
             self.coefficients.ARTIFICIAL_VISCOSITY,
             self.coefficients.cMax,
             self.coefficients.cE,
@@ -2522,15 +2518,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('force', 0)],
             self.q[('force', 1)],
             self.q[('force', 2)],
-            self.KILL_PRESSURE_TERM,
+            int(self.KILL_PRESSURE_TERM),
             self.timeIntegration.dt,
             self.quantDOFs,
-            self.hasMaterialParametersAsFunctions,
+            int(self.hasMaterialParametersAsFunctions),
             self.q['density'],
             self.q['dynamic_viscosity'],
             self.ebqe['density'],
             self.ebqe['dynamic_viscosity'],
-            self.u[0].femSpace.order,
+            float(self.u[0].femSpace.order),
             self.isActiveDOF,
             self.coefficients.use_sbm,
             self.ncDrag,
@@ -2539,7 +2535,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # For edge based stabilization #
             self.entropyResidualPerNode,
             self.laggedEntropyResidualPerNode,
-            [self.uStar_dMatrix, self.vStar_dMatrix, self.wStar_dMatrix],
+            self.uStar_dMatrix,
+            self.vStar_dMatrix,
+            self.wStar_dMatrix,
             self.numDOFs_1D,
             self.nnz_1D,
             self.csrRowIndeces[(0, 0)] // self.nSpace_global // self.nSpace_global,
@@ -2616,6 +2614,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 1)] = self.csrColumnOffsets[(0, 1)]
             self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
 
+        (rowptr, colind, globalJacobian) = jacobian.getCSRrepresentation()
         self.rans3pf.calculateJacobian(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2634,16 +2633,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.q_grad_p_sharp,
             self.pressureModel.ebqe_p_sharp,
             self.pressureModel.ebqe_grad_p_sharp,
-            # self.pressureModel.q[('u',0)],
-            # self.pressureModel.q[('grad(u)',0)],
-            # self.pressureModel.ebqe[('u',0)],
-            # self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.Hessian_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
-            # element boundary
             self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
             self.pressureModel.elementBoundaryQuadratureWeights[('u', 0)],
@@ -2662,10 +2656,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeDiametersArray,
             self.stabilization.hFactor,
             self.mesh.nElements_global,
-            self.mesh.nElements_owned,
+            int(self.mesh.nElements_owned),
             self.mesh.nElementBoundaries_global,
-            self.mesh.nElementBoundaries_owned,
-            self.mesh.nNodes_owned,
+            int(self.mesh.nElementBoundaries_owned),
+            int(self.mesh.nNodes_owned),
             self.coefficients.useRBLES,
             self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
@@ -2768,7 +2762,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrRowIndeces[(2, 0)], self.csrColumnOffsets[(2, 0)],
             self.csrRowIndeces[(2, 1)], self.csrColumnOffsets[(2, 1)],
             self.csrRowIndeces[(2, 2)], self.csrColumnOffsets[(2, 2)],
-            jacobian,
+            globalJacobian,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundariesArray,
@@ -2840,10 +2834,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ball_radius,
             self.coefficients.ball_velocity,
             self.coefficients.ball_angular_velocity,
-            self.coefficients.USE_SUPG,
-            self.KILL_PRESSURE_TERM,
+            int(self.coefficients.USE_SUPG),
+            int(self.KILL_PRESSURE_TERM),
             self.timeIntegration.dt,
-            self.hasMaterialParametersAsFunctions,
+            int(self.hasMaterialParametersAsFunctions),
             self.q['density'],
             self.q['dynamic_viscosity'],
             self.ebqe['density'],
@@ -2851,7 +2845,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.use_sbm,
             # for edge based dissipation
             self.coefficients.ARTIFICIAL_VISCOSITY,
-            [self.uStar_dMatrix, self.vStar_dMatrix, self.wStar_dMatrix],
+            self.uStar_dMatrix,
+            self.vStar_dMatrix,
+            self.wStar_dMatrix,
             self.numDOFs_1D,
             self.offset[0],
             self.offset[1],
@@ -2861,6 +2857,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stride[2],
             self.rowptr_1D,
             self.colind_1D,
+            rowptr,
+            colind,
             self.coefficients.INT_BY_PARTS_PRESSURE,
             self.coefficients.useExact)
 
