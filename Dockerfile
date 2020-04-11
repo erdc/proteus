@@ -12,7 +12,7 @@ ENV F77 mpif77
 ENV F90 mpif90
 
 RUN rm -rf proteus && \
-    git clone https://github.com/cekees/proteus && \
+    git clone https://github.com/erdc/proteus && \
     cd proteus && \
     git checkout docker_no_opt && \
     git submodule update --init --recursive && \
