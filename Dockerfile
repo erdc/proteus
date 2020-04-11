@@ -16,7 +16,7 @@ RUN rm -rf proteus && \
     cd proteus && \
     git checkout docker_no_opt && \
     git submodule update --init --recursive && \
-    make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
+    make PROTEUS_OPT="-DNDEBUG -g0 -O0 --param ggc-min-expand=0 --param ggc-min-heapsize=8192" N=1 develop && \
     rm -rf air-water-vv && \
     rm -rf .git && \
     rm -rf stack/.git && \
