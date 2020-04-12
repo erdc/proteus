@@ -170,7 +170,7 @@ EXTENSIONS_TO_BUILD = [
                          PROTEUS_BLAS_LIB],
               ),
     Extension(
-        'mprans.RANS3PSed',
+        'mprans.cRANS3PSed',
         ['proteus/mprans/RANS3PSed.cpp'],
         depends=['proteus/mprans/RANS3PSed.h','proteus/mprans/RANS3PSed2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
@@ -202,11 +202,13 @@ EXTENSIONS_TO_BUILD = [
         libraries=['m',PROTEUS_LAPACK_LIB,
                    PROTEUS_BLAS_LIB]
     ),
-    Extension("mprans.cRANS3PF",['proteus/mprans/cRANS3PF.pyx'],
-              depends=['proteus/mprans/RANS3PF.h','proteus/mprans/RANS3PF2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
-              language='c++',
-              extra_compile_args=PROTEUS_OPT+["-std=c++14","-mavx"],
-              include_dirs=get_xtensor_include()),
+    Extension(
+        'mprans.cRANS3PF',
+        ['proteus/mprans/RANS3PF.cpp'],
+        depends=['proteus/mprans/RANS3PF.h','proteus/mprans/RANS3PF2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++'),
     Extension("Isosurface",['proteus/Isosurface.pyx'],
               language='c',
               extra_compile_args=PROTEUS_OPT,
