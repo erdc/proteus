@@ -170,7 +170,7 @@ EXTENSIONS_TO_BUILD = [
                          PROTEUS_BLAS_LIB],
               ),
     Extension(
-        'mprans.cRANS3PSed',r
+        'mprans.cRANS3PSed',
         ['proteus/mprans/cRANS3PSed.cpp'],
         depends=['proteus/mprans/RANS3PSed.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
