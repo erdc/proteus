@@ -10,6 +10,9 @@
 #include "ModelFactory.h"
 #include "SedClosure.h"
 #include "equivalent_polynomials.h"
+const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
+const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
+const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
 #define DRAG_FAC 1.0
 #define TURB_FORCE_FAC 0.0
 #define CUT_CELL_INTEGRATION 0

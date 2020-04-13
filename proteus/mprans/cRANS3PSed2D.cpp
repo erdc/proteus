@@ -2,7 +2,6 @@
 #include "pybind11/stl_bind.h"
 
 #define FORCE_IMPORT_ARRAY
-#include "RANS3PSed.h"
 #include "RANS3PSed2D.h"
 
 #if defined(__GNUC__) && !defined(__clang__)
