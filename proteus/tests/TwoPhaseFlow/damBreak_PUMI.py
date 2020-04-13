@@ -1,5 +1,5 @@
 """
-danbreak 2-D
+dambreak 2-D
 """
 from __future__ import division
 from past.utils import old_div
