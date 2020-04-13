@@ -16,7 +16,7 @@ RUN rm -rf proteus && \
     cd proteus && \
     git checkout docker_no_opt && \
     git submodule update --init --recursive && \
-    ulimit -s 2048 && \
+    ulimit -s 4096 && \
     make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
     rm -rf air-water-vv && \
     rm -rf .git && \
