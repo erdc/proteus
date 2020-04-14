@@ -37,6 +37,8 @@ matlab_setup.done
 dist/
 tmp/
 
+timeHistory.txt
+
 # Generated files
 
 proteus/BoundaryConditions.cpp

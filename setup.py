@@ -105,6 +105,13 @@ EXTENSIONS_TO_BUILD = [
                extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
                extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
     Extension(
+        'mprans.cArgumentsDict',
+        ['proteus/mprans/ArgumentsDict.cpp'],
+        depends=['proteus/mprans/ArgumentsDict.h'],
+        include_dirs=get_xtensor_include(),
+        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        language='c++'),
+    Extension(
         'mprans.cPres',
         ['proteus/mprans/Pres.cpp'],
         depends=['proteus/mprans/Pres.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
@@ -126,7 +133,7 @@ EXTENSIONS_TO_BUILD = [
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension('mprans.cAddedMass', ['proteus/mprans/AddedMass.cpp'],
-              depends=['proteus/mprans/AddedMass.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              depends=['proteus/mprans/AddedMass.h', 'proteus/mprans/ArgumentDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
               include_dirs=get_xtensor_include(),
               extra_compile_args=PROTEUS_OPT+['-std=c++14']),
