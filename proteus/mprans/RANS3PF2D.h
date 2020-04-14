@@ -37,6 +37,10 @@ double sgn(double val) {
 #define USE_GAMMA_INDICATOR 0
 #define ANISOTROPIC_DIFFUSION 0
 
+static const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
+static const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
+static const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
+
 inline void baryCoords(const double r0[2],
                        const double r1[2],
                        const double r2[2],
