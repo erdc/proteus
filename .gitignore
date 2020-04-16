@@ -62,6 +62,7 @@ proteus/equivalent_polynomials.cpp
 proteus/fenton/Fenton.cpp
 proteus/flcbdfWrappers.cpp
 proteus/mbd/CouplingFSI.cpp
+proteus/MeshAdaptPUMI/Adapter.cpp
 proteus/mprans/BoundaryConditions.cpp
 proteus/mprans/MeshSmoothing.cpp
 proteus/mprans/cAddedMass.cpp
