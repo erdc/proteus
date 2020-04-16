@@ -9,6 +9,9 @@ addons:
     - doxygen
     - graphviz
 
+services:
+  - docker
+
 cache:
   - timeout: 1000
 
@@ -109,3 +112,13 @@ jobs:
       - cd proteus/tests/ci
       - parun poisson_3d_tetgen_p.py poisson_3d_tetgen_c0p1_n.py -l 5 -v
 #      - py.test -n 1 --dist=no --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+  - stage: docker
+    name: "docker"
+    os: linux
+    dist: xenial
+    language: python
+    python: 3.7
+    install:
+      - docker build -t erdc/proteus .
+
+
