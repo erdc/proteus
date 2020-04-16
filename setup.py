@@ -947,7 +947,7 @@ def setup_extensions_in_parallel():
     logger = multiprocessing.log_to_stderr()
     logger.setLevel(logging.INFO)
     multiprocessing.log_to_stderr()
-    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    pool = multiprocessing.Pool(processes=int(os.getenv('N')))
     EXTENSIONS=[[e] for e in EXTENSIONS_TO_BUILD]
     pool.imap(setup_given_extensions, EXTENSIONS)
     pool.close()
