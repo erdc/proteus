@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from __future__ import division
+import math
 from builtins import str
 from builtins import range
 from past.utils import old_div
@@ -12,7 +13,9 @@ from proteus import cfemIntegrals, Quadrature, Norms, Comm
 from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
-                              C0_AffineLinearOnSimplexWithNodalBasis)
+                              C0_AffineLinearOnSimplexWithNodalBasis,
+                              C0_AffineQuadraticOnSimplexWithNodalBasis)
+
 from proteus.Comm import (globalMax,
                           globalSum)
 from proteus.Profiling import memory
@@ -198,7 +201,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
-                 angFriction=old_div(pi,6.0),
+                 angFriction=old_div(math.pi,6.0),
                  vos_function=None,
                  staticSediment=False,
                  vos_limiter = 0.05,

@@ -4,6 +4,9 @@
 #define FORCE_IMPORT_ARRAY
 #include "RANS3PF.h"
 
+namespace py = pybind11;
+using proteus::cppRANS3PF_base;
+
 #if defined(__GNUC__) && !defined(__clang__)
     namespace workaround
     {
@@ -15,9 +18,6 @@
     }
 #endif
 
-namespace py = pybind11;
-using proteus::cppRANS3PF_base;
-
 PYBIND11_MODULE(cRANS3PF, m)
 {
     xt::import_numpy();
@@ -28,6 +28,5 @@ PYBIND11_MODULE(cRANS3PF, m)
         .def("calculateJacobian", &cppRANS3PF_base::calculateJacobian)
         .def("calculateVelocityAverage", &cppRANS3PF_base::calculateVelocityAverage)
         .def("getBoundaryDOFs", &cppRANS3PF_base::getBoundaryDOFs);
-
 }
 

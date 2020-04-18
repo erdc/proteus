@@ -4,6 +4,9 @@
 #define FORCE_IMPORT_ARRAY
 #include "RANS3PF2D.h"
 
+namespace py = pybind11;
+using proteus::cppRANS3PF2D_base;
+
 #if defined(__GNUC__) && !defined(__clang__)
     namespace workaround
     {
@@ -15,10 +18,7 @@
     }
 #endif
 
-namespace py = pybind11;
-using proteus::cppRANS3PF2D_base;
-
-PYBIND11_MODULE(cRANS3PF, m)
+PYBIND11_MODULE(cRANS3PF2D, m)
 {
     xt::import_numpy();
 
