@@ -20,8 +20,37 @@ namespace xt
 
 namespace py = pybind11;
 
+namespace
+{
+    const std::string DARRAY_DICT_NAME = "DArrayDict";
+    const std::string IARRAY_DICT_NAME = "IArrayDict";
+    const std::string DSCALAR_DICT_NAME = "DScalarDict";
+    const std::string ISCALAR_DICT_NAME = "IScalarDict";
+}
+
 namespace proteus
 {
+    namespace detail
+    {
+        template <class OS, class M>
+        OS& print_map(OS& os, const std::string& name, const M& m)
+        {
+            os << name << '{';
+            bool f = false;
+            for(const auto& kv: m)
+            {
+                if(f)
+                {
+                    os << ", ";
+                }
+                os << kv.first <<": " << kv.second;
+                f = true;
+            }
+            os << '}';
+            return os;
+        }
+    }
+
     template <class K, class T>
     void bind_pyarray_dict(py::class_<pyarray_dict<K, T>>& cl, const std::string& name)
     {
@@ -32,17 +61,9 @@ namespace proteus
         cl.def(py::init<>());
 
         cl.def("__setitem__",
-                [](map_type& m, const key_type& k, mapped_type& v)
+                [](map_type& m, key_type& k, mapped_type& v)
                 {
-                    auto it = m.find(k);
-                    if(it != m.end())
-                    {
-                        it->second = std::move(v);
-                    }
-                    else
-                    {
-                        m.emplace(k, std::move(v));
-                    }
+                    m.insert_or_assign(std::move(k), std::move(v));
                 }
         );
 
@@ -50,19 +71,7 @@ namespace proteus
                 [name](map_type& m)
                 {
                     std::ostringstream oss;
-                    oss << name << '{';
-                    bool f = false;
-                    for(const auto& kv: m)
-                    {
-                        if(f)
-                        {
-                            oss << ", ";
-                        }
-                        oss << kv.first <<": " << kv.second;
-                        f = true;
-                    }
-                    oss << '}';
-                    return oss.str();
+                    return detail::print_map(oss, name, m).str();
                 },
                "Return the canonical representation of this map."
         );
@@ -87,6 +96,54 @@ namespace proteus
                 }
         );
     }
+
+    void bind_arguments_dict(py::class_<arguments_dict>& cl, const std::string& name)
+    {
+        cl.def(py::init<>());
+
+        cl.def_readwrite("darray", &arguments_dict::m_darray);
+        cl.def_readwrite("iarray", &arguments_dict::m_iarray);
+        cl.def_readwrite("dscalar", &arguments_dict::m_dscalar);
+        cl.def_readwrite("iscalar", &arguments_dict::m_iscalar);
+
+        cl.def("__setitem__",
+                [](arguments_dict& ad, const std::string& k, int i)
+                {
+                    ad.m_iscalar[k] = i;
+                });
+        cl.def("__setitem__",
+                [](arguments_dict& ad, const std::string& k, double d)
+                {
+                    ad.m_dscalar[k] = d;
+                });
+        cl.def("__setitem__",
+                [](arguments_dict& ad, std::string& k, xt::pyarray<int>& a)
+                {
+                    ad.m_iarray.insert_or_assign(std::move(k), std::move(a));
+                });
+        cl.def("__setitem__",
+                [](arguments_dict& ad, std::string& k, xt::pyarray<double>& a)
+                {
+                    ad.m_darray.insert_or_assign(std::move(k), std::move(a));
+                });
+
+        cl.def("__repr__",
+                [name](arguments_dict& ad)
+                {
+                    std::ostringstream oss;
+                    oss << name << "{\n";
+                    oss << "  " << "m_darray: ";
+                    detail::print_map(oss, DARRAY_DICT_NAME, ad.m_darray);
+                    oss << "\n  " << "m_iarray: ";
+                    detail::print_map(oss, IARRAY_DICT_NAME, ad.m_iarray);
+                    oss << "\n  " << "m_dscalar: ";
+                    detail::print_map(oss, DSCALAR_DICT_NAME, ad.m_dscalar);
+                    oss << "\n  " << "m_iscalar: ";
+                    detail::print_map(oss, ISCALAR_DICT_NAME, ad.m_iscalar);
+                    oss << "\n}";
+                    return oss.str();
+                });
+    }
 }
 
 PYBIND11_MAKE_OPAQUE(proteus::scalar_dict<double>);
@@ -103,20 +160,16 @@ PYBIND11_MODULE(cArgumentsDict, m)
     using dpyarray_dict = pyarray_dict<std::string, double>;
     using ipyarray_dict = pyarray_dict<std::string, int>;
 
-    py::class_<dpyarray_dict> dad(m, "DArrayDict");
-    proteus::bind_pyarray_dict(dad, "DArrayDict");
+    py::class_<dpyarray_dict> dad(m, DARRAY_DICT_NAME.c_str());
+    proteus::bind_pyarray_dict(dad, DARRAY_DICT_NAME.c_str());
 
-    py::class_<ipyarray_dict> iad(m, "IArrayDict");
-    proteus::bind_pyarray_dict(iad, "IArrayDict");
+    py::class_<ipyarray_dict> iad(m, IARRAY_DICT_NAME.c_str());
+    proteus::bind_pyarray_dict(iad, IARRAY_DICT_NAME.c_str());
 
-    py::bind_map<scalar_dict<double>>(m, "DScalarDict");
-    py::bind_map<scalar_dict<int>>(m, "IScalarDict");
+    py::bind_map<scalar_dict<double>>(m, DSCALAR_DICT_NAME.c_str());
+    py::bind_map<scalar_dict<int>>(m, ISCALAR_DICT_NAME.c_str());
 
-    py::class_<arguments_dict>(m, "ArgumentsDict")
-        .def(py::init<>())
-        .def_readwrite("darray", &arguments_dict::m_darray)
-        .def_readwrite("iarray", &arguments_dict::m_iarray)
-        .def_readwrite("dscalar", &arguments_dict::m_dscalar)
-        .def_readwrite("iscalar", &arguments_dict::m_iscalar);
+    py::class_<arguments_dict> ad(m, "ArgumentsDict");
+    proteus::bind_arguments_dict(ad, "ArgumentsDict");
 }
 
