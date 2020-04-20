@@ -58,6 +58,7 @@ namespace proteus
         mapped_type& operator[](const key_type& k);
     
         std::pair<iterator, bool> insert(value_type&&);
+        std::pair<iterator, bool> insert_or_assign(key_type&& k, mapped_type&& v);
     };
     
     template <class K, class T>
@@ -75,6 +76,21 @@ namespace proteus
     inline auto pyarray_dict<K, T>::insert(value_type&& v) -> std::pair<iterator, bool>
     {
         return base_type::insert(std::move(v));
+    }
+
+    template <class K, class T>
+    inline auto pyarray_dict<K, T>::insert_or_assign(key_type&& k, mapped_type&& v) -> std::pair<iterator, bool>
+    {
+        auto it = base_type::find(k);
+        if(it == base_type::end())
+        {
+            return base_type::emplace(k, std::move(v));
+        }
+        else
+        {
+            it->second = std::move(v);
+            return std::make_pair(it, false);
+        }
     }
 
     template <class T>
