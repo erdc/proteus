@@ -5,7 +5,7 @@
 #include "RANS3PSed.h"
 
 namespace py = pybind11;
-using proteus::cppRANS3PSed2D_base;
+using proteus::cppRANS3PSed_base;
 
 #if defined(__GNUC__) && !defined(__clang__)
     namespace workaround

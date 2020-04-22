@@ -171,14 +171,14 @@ EXTENSIONS_TO_BUILD = [
               ),
     Extension(
         'mprans.cRANS3PSed',
-        ['proteus/mprans/cRANS3PSed.cpp'],
+        ['proteus/mprans/RANS3PSed.cpp'],
         depends=['proteus/mprans/RANS3PSed.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension(
         'mprans.cRANS3PSed2D',
-        ['proteus/mprans/cRANS3PSed2D.cpp'],
+        ['proteus/mprans/RANS3PSed2D.cpp'],
         depends=['proteus/mprans/RANS3PSed2D.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
