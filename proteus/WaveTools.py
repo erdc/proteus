@@ -954,7 +954,7 @@ class  MonochromaticWaves(object):
                  meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.,
                  fast = True):
-        if (autoFenton) and (Nf > 999):
+        if waveType=="Fenton" and (autoFenton) and (Nf > 999):
             logEvent("ERROR!!: Number of Fourier modes is not set, please define a reasonable number of Fourier modes e.g. Nf = 12")
             sys.exit(1)
         
