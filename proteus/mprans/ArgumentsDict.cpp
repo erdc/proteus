@@ -106,16 +106,7 @@ namespace proteus
         cl.def_readwrite("dscalar", &arguments_dict::m_dscalar);
         cl.def_readwrite("iscalar", &arguments_dict::m_iscalar);
 
-        cl.def("__setitem__",
-                [](arguments_dict& ad, const std::string& k, int i)
-                {
-                    ad.m_iscalar[k] = i;
-                });
-        cl.def("__setitem__",
-                [](arguments_dict& ad, const std::string& k, double d)
-                {
-                    ad.m_dscalar[k] = d;
-                });
+
         cl.def("__setitem__",
                 [](arguments_dict& ad, std::string& k, xt::pyarray<int>& a)
                 {
@@ -126,7 +117,21 @@ namespace proteus
                 {
                     ad.m_darray.insert_or_assign(std::move(k), std::move(a));
                 });
-
+        // IMPORTANT: keep the scalar overloads AFTER the pyarray overloads,
+        // because numpy array containing a single elements can be implicitly
+        // converted to scalars. If the scalar overload is define before the
+        // pyarray overload, it is chosen by pybind11 and the array ends up
+        // in the wrong dictionary.
+        cl.def("__setitem__",
+                [](arguments_dict& ad, const std::string& k, int i)
+                {
+                    ad.m_iscalar[k] = i;
+                });
+        cl.def("__setitem__",
+                [](arguments_dict& ad, const std::string& k, double d)
+                {
+                    ad.m_dscalar[k] = d;
+                });
         cl.def("__repr__",
                 [name](arguments_dict& ad)
                 {
