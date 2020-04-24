@@ -1042,7 +1042,7 @@ class  MonochromaticWaves(object):
         if(len(meanVelocity) != 3):
             logEvent("ERROR! Wavetools.py: meanVelocity should be a vector with 3 components. ",level=0)
             sys.exit(1)
-        if(self.Nf > 1000):
+        if(self.Nf > 1000) and waveType == "Fenton":
             logEvent("ERROR! Wavetools.py: You are not really using more than 1000 Fourier modes for a regular wave, right? ",level=0)
             sys.exit(1)
 
