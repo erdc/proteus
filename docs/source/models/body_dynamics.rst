@@ -44,9 +44,10 @@ instance.
    from proteus.mbd import CouplingFSI as fsi
 
    my_system = fsi.ProtChSystem()
-   g = pychrono.ChVectorD(0., 0., -9.81)
-   my_system.ChSystem.Set_G_acc(g)
+   g = np.array([0., 0., -9.81])
+   my_system.setGravitationalAcceleration(g)
    my_system.setTimeStep(0.001)  # the time step for Chrono calculations
+   my_chsystem = my_system.getChronoObject()  # access chrono object
 
 .. important::
 
@@ -72,6 +73,7 @@ simulation. This can be done with the passing of the `system` argument as the
    my_body = fsi.ProtChBody(system=my_system)
    my_body.attachShape(my_shape)  # sets everything automatically
    my_body.setRecordValues(all_values=True) # record everything
+   my_chbody = my_body.getChronoObject()  # access chrono object
 
 
 When set up properly and running with a Proteus Navier-Stokes simulation, the
@@ -81,7 +83,8 @@ mesh or immersed boundaries are used).
 
 .. attention::
 
-   The `ProtChBody.ChBody`  variable is actually using a derived class from the
+   The `ProtChBody.ChBody`  variable accessible with
+   `ProtChBody.getChronoObject()` is actually using a derived class from the
    base Chrono `ChBody` in order to add the possibility of using an added-mass
    matrix (see `ChBodyAddedMass` in proteus.mbd.ChRigidBody.h).
 
@@ -93,12 +96,7 @@ This class creates a `ChMesh` that is needed to create moorings.
 .. code-block:: python
 
    my_mesh = fsi.ProtChMesh(system=my_system)
-
-
-.. todo::
-
-   Rename current class `Mesh` in `ProtChMesh` for consistency (code breaking
-   change for some all cases using moorings)
+   my_chmesh = my_mesh.getChronoObject()
 
 
 ProtChMoorings
