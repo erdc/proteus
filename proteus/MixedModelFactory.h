@@ -343,16 +343,16 @@ namespace proteus
 			/*             abort(); */
 			/*           } */
 			/*       } */
-			    if (nQuadraturePoints_elementIn == 4)
+			if (nQuadraturePoints_elementIn == 4)
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 3)
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,CompKernelTemplate_v<2,3,3,3>,2,4,3,3,3,3,3,3>());
+			    else
 			      {
-			        if (nQuadraturePoints_elementBoundaryIn == 3)
-			          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,CompKernelTemplate_v<2,3,3,3>,2,4,3,3,3,3,3,3>());
-			        else
-			          {
-			            NO_INSTANCE;
-			            abort();
-			          }
+				NO_INSTANCE;
+				abort();
 			      }
+			  }
 			/*     else if (nQuadraturePoints_elementIn == 6) */
 			/*       { */
 			/*         if (nQuadraturePoints_elementBoundaryIn == 4) */
@@ -363,16 +363,16 @@ namespace proteus
 			/*             abort(); */
 			/*           } */
 			/*       } */
-			    else if (nQuadraturePoints_elementIn == 7)
+			else if (nQuadraturePoints_elementIn == 7)
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 5)
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,CompKernelTemplate_v<2,3,3,3>,2,7,3,3,3,3,3,5>());
+			    else
 			      {
-			        if (nQuadraturePoints_elementBoundaryIn == 5)
-			          return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,CompKernelTemplate_v<2,3,3,3>,2,7,3,3,3,3,3,5>());
-			        else
-			          {
-			            NO_INSTANCE;
-			            abort();
-			          }
+				NO_INSTANCE;
+				abort();
 			      }
+			  }
 			/*     else if (nQuadraturePoints_elementIn == 112)//hk=0.25 */
 			/*       { */
 			/*         if (nQuadraturePoints_elementBoundaryIn == 5) */
@@ -421,37 +421,31 @@ namespace proteus
 			/*             abort(); */
 			/*           } */
 			/*       } */
-			/*     else */
-			/*       { */
-			/*         NO_INSTANCE; */
-			/*         abort(); */
-			/*       } */
-			/*   } */
-			/* else  if(nDOF_mesh_trial_elementIn == 4) */
-			/*   { */
-			/*     if (nQuadraturePoints_elementIn == 4) // Q1 FE-space */
-			/*       { */
-			/*         if (nQuadraturePoints_elementBoundaryIn == 2) */
-			/*           return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,CompKernelTemplate_v<2,4,4,4>,2,4,4,4,4,4,4,2>()); */
-			/*         else */
-			/*           { */
-			/*             NO_INSTANCE; */
-			/*             abort(); */
-			/*           } */
-			/*       } */
-			/*     else */
-			/*       { */
-			/*         NO_INSTANCE; */
-			/*         abort(); */
-			/*       } */
-			/*   } */
 			else
 			  {
 			    NO_INSTANCE;
 			    abort();
 			  }
 		      }
-		    if (nDOF_v_trial_elementIn == 6)//P1-P2
+		    else  if(nDOF_mesh_trial_elementIn == 4)
+		      {
+			if (nQuadraturePoints_elementIn == 4) // Q1 FE-space
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 2)
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,CompKernelTemplate_v<2,4,4,4>,2,4,4,4,4,4,4,2>());
+			    else
+			      {
+				NO_INSTANCE;
+				abort();
+			      }
+			  }
+			else
+			  {
+			    NO_INSTANCE;
+			    abort();
+			      }
+		      }
+		    else if (nDOF_v_trial_elementIn == 6)//P1-P2
 		      {
 			if (nDOF_mesh_trial_elementIn == 3) // P1 FE-space. Default nquad=4
 			  {
@@ -565,6 +559,11 @@ namespace proteus
 			    abort();
 			  }
 		      }
+		    else
+		      {
+			NO_INSTANCE;
+			abort();
+		      }
 		  }
 		else if (nDOF_mesh_trial_elementIn == 3)
 		  {
@@ -652,6 +651,11 @@ namespace proteus
 		    NO_INSTANCE;
 		    abort();
 		  }
+	      }
+	    else
+	      {
+		NO_INSTANCE;
+		abort();
 	      }
 	  }
 	else
