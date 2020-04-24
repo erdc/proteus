@@ -16,35 +16,11 @@ RUN rm -rf proteus && \
     cd proteus && \
     git checkout master && \
     git submodule update --init --recursive && \
-    make N=1 develop && \
-    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:${PATH} CC=gcc CXX=g++ ./linux/bin/pip3 install pandas && \
-    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=${PATH}:/home/${NB_USER}/proteus/linux/bin CC=gcc CXX=g++ ./linux/bin/pip3 install matplotlib && \
-    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:$PATH make jupyter && \
-    LD_LIBRARY_PATH=/home/${NB_USER}/proteus/linux/lib:${LD_LIBRARY_PATH} PATH=/home/${NB_USER}/proteus/linux/bin:$PATH CC=gcc CXX=g++ ./linux/bin/pip3 install jupyterhub && \
-    rm -rf build && \
+    make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
     rm -rf air-water-vv && \
     rm -rf .git && \
     rm -rf stack/.git && \
     rm -rf /home/$NB_USER/.cache 
 
 ENV PATH /home/$NB_USER/proteus/linux/bin:$PATH
-ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:$LD_LIBRARY_PATH
-
-USER root
-
-CMD ["start-notebook.sh"]
-
-# Add local files as late as possible to avoid cache busting
-ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start.sh /usr/local/bin/start.sh
-ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-notebook.sh /usr/local/bin/start-notebook.sh
-ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-singleuser.sh /usr/local/bin/start-singleuser.sh
-
-RUN chmod a+rx /usr/local/bin/*
-
-RUN ipython kernel install
-
-USER $NB_USER
-
-# Import matplotlib the first time to build the font cache.
-#ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
-#RUN MPLBACKEND=Agg python -c "import matplotlib.pyplot"
+ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux/lib:/home/$NB_USER/proteus/linux/lib64:$LD_LIBRARY_PATH

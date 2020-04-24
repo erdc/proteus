@@ -4,6 +4,9 @@
 #define FORCE_IMPORT_ARRAY
 #include "RANS2P_IB.h"
 
+namespace py = pybind11;
+using proteus::RANS2P_IB_base;
+
 #if defined(__GNUC__) && !defined(__clang__)
     namespace workaround
     {
@@ -14,9 +17,6 @@
         }
     }
 #endif
-
-namespace py = pybind11;
-using proteus::RANS2P_IB_base;
 
 PYBIND11_MODULE(cRANS2P_IB, m)
 {
