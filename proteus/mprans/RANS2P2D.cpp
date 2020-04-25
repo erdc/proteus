@@ -26,8 +26,8 @@ PYBIND11_MODULE(cRANS2P2D, m)
         .def(py::init(&proteus::newRANS2P2D))
         .def("calculateResidual"                    , &RANS2P2D_base::calculateResidual                     )
         .def("calculateJacobian"                    , &RANS2P2D_base::calculateJacobian                     )
-        .def("calculateVelocityAverage"             , &RANS2P2D_base::calculateVelocityAverage              )
-        .def("getTwoPhaseAdvectionOperator"         , &RANS2P2D_base::getTwoPhaseAdvectionOperator          )
-        .def("getTwoPhaseInvScaledLaplaceOperator"  , &RANS2P2D_base::getTwoPhaseInvScaledLaplaceOperator   )
-        .def("getTwoPhaseScaledMassOperator"        , &RANS2P2D_base::getTwoPhaseScaledMassOperator         );
+      .def("calculateVelocityAverage"             , &RANS2P2D_base::calculateVelocityAverage              );
+      //        .def("getTwoPhaseAdvectionOperator"         , &RANS2P2D_base::getTwoPhaseAdvectionOperator          )
+      //        .def("getTwoPhaseInvScaledLaplaceOperator"  , &RANS2P2D_base::getTwoPhaseInvScaledLaplaceOperator   )
+      //        .def("getTwoPhaseScaledMassOperator"        , &RANS2P2D_base::getTwoPhaseScaledMassOperator         );
 }
