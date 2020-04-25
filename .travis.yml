@@ -57,9 +57,8 @@ jobs:
     script:
       - export MPLBACKEND="AGG"
       - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD -k 'not test_damBreak_solver_options' --cov=proteus
-      - git submodule update --init --recursive air-water-vv
-      - PATH=./linux/bin:$PATH py.test MPLBACKEND=Agg -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
-      - PATH=./linux/bin:$PATH py.test MPLBACKEND=Agg -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
   - stage: test
     name: "conda linux"
     os: linux
@@ -83,9 +82,8 @@ jobs:
     script:
       - export MPLBACKEND="AGG"
       - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --cov=proteus
-      - git submodule update --init --recursive air-water-vv
-      - py.test MPLBACKEND=Agg -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
-      - py.test MPLBACKEND=Agg -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
+      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
+      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
