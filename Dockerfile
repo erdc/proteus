@@ -17,7 +17,7 @@ RUN rm -rf proteus && \
     g++ --version && \
     gfortran --version && \
     ulimit -m 2000000 && \
-    ulimit -v 4000000 && \
+    ulimit -v 6000000 && \
     ulimit -a && \
     free -m && \
     make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
