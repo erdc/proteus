@@ -5,8 +5,10 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cKappa import *
 from proteus.mprans.cKappa2D import *
+from proteus import Profiling as prof
 import numpy as np
 from proteus.Transport import OneLevelTransport
+from proteus import cfemIntegrals
 
 """
 NOTES:
@@ -42,7 +44,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         self.nStepsToDelay = nStepsToDelay
         self.nSteps = 0
         if self.lag:
-            logEvent("Kappa.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
+            prof.logEvent("Kappa.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
             self.nStepsToDelay = 1
             self.lag = False
 
@@ -60,12 +62,12 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-            logEvent("Kappa.ShockCapturing: switched to lagged shock capturing")
+            prof.logEvent("Kappa.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             self.numDiff_last = []
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        logEvent("Kappa: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        prof.logEvent("Kappa: max numDiff %e" % (proteus.Comm.globalMax(self.numDiff_last[0].max()),))
 
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
@@ -170,7 +172,7 @@ independently and lagged in time
 
         self.useMetrics = useMetrics
         self.variableNames = ['kappa']
-        nc = 1
+        self.nc = 1
         self.nd = nd
         # assert self.nd == 3, "Kappa only implements 3d for now" #assume 3d for now
         self.rho_0 = rho_0
@@ -219,7 +221,7 @@ independently and lagged in time
             self.vos_limiter = closure.vos_limiter
             self.mu_fr_limiter = closure.mu_fr_limiter
             self.sedFlag = 1
-            logEvent("INFO: Loading parameters for sediment closure",2)
+            prof.logEvent("INFO: Loading parameters for sediment closure",2)
         except:
             self.aDarcy=-1.
             self.betaForch=-1.
@@ -239,9 +241,9 @@ independently and lagged in time
             self.vos_limiter = -1.
             self.mu_fr_limiter = -1.
             self.sedFlag=0
-            assert VOS_model == None
-            assert SED_model == None
-            logEvent("Sediment module is off. Loading dummy parameters",2)
+            assert self.VOS_modelIndex == None
+            assert self.SED_modelIndex == None
+            prof.logEvent("Sediment module is off. Loading dummy parameters",2)
         #
         mass = {0: {0: 'linear'}}
         advection = {0: {0: 'linear'}}
@@ -255,8 +257,8 @@ independently and lagged in time
         else:
             sdInfo = {(0, 0): (np.array([0, 1, 2, 3], dtype='i'),
                                np.array([0, 1, 2], dtype='i'))}
-        TC_base.__init__(self,
-                         nc,
+        proteus.TransportCoefficients.TC_base.__init__(self,
+                         self.nc,
                          mass,
                          advection,
                          diffusion,
@@ -658,7 +660,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nVDOF_element = sum(self.nDOF_trial_element)
         self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
-        NonlinearEquation.__init__(self, self.nFreeVDOF_global)
+        proteus.NonlinearSolvers.NonlinearEquation.__init__(self, self.nFreeVDOF_global)
         #
         # build the quadrature point dictionaries from the input (this
         # is just for convenience so that the input doesn't have to be
@@ -719,7 +721,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # weight at each point in the union
         # mwf include tag telling me which indices are which quadrature rule?
         (self.elementQuadraturePoints, self.elementQuadratureWeights,
-         self.elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+         self.elementQuadratureRuleIndeces) = proteus.Quadrature.buildUnion(elementQuadratureDict)
         self.nQuadraturePoints_element = self.elementQuadraturePoints.shape[0]
         self.nQuadraturePoints_global = self.nQuadraturePoints_element * self.mesh.nElements_global
         #
@@ -727,7 +729,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         (self.elementBoundaryQuadraturePoints,
          self.elementBoundaryQuadratureWeights,
-         self.elementBoundaryQuadratureRuleIndeces) = Quadrature.buildUnion(elementBoundaryQuadratureDict)
+         self.elementBoundaryQuadratureRuleIndeces) = proteus.Quadrature.buildUnion(elementBoundaryQuadratureDict)
         self.nElementBoundaryQuadraturePoints_elementBoundary = self.elementBoundaryQuadraturePoints.shape[0]
         self.nElementBoundaryQuadraturePoints_global = (self.mesh.nElements_global *
                                                         self.mesh.nElementBoundaries_element *
@@ -819,10 +821,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         del self.internalNodes
         self.internalNodes = None
-        logEvent("Updating local to global mappings", 2)
+        prof.logEvent("Updating local to global mappings", 2)
         self.updateLocal2Global()
-        logEvent("Building time integration object", 2)
-        logEvent(memory("inflowBC, internalNodes,updateLocal2Global", "OneLevelTransport"), level=4)
+        prof.logEvent("Building time integration object", 2)
+        prof.logEvent(prof.memory("inflowBC, internalNodes,updateLocal2Global", "OneLevelTransport"), level=4)
         # mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self, integrateInterpolationPoints=True)
@@ -831,18 +833,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if options is not None:
             self.timeIntegration.setFromOptions(options)
-        logEvent(memory("TimeIntegration", "OneLevelTransport"), level=4)
-        logEvent("Calculating numerical quadrature formulas", 2)
+        prof.logEvent(prof.memory("TimeIntegration", "OneLevelTransport"), level=4)
+        prof.logEvent("Calculating numerical quadrature formulas", 2)
         self.calculateQuadrature()
 
         self.setupFieldStrides()
 
-        comm = Comm.get()
+        comm = proteus.Comm.get()
         self.comm = comm
         if comm.size() > 1:
             assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions, "You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        logEvent(memory("stride+offset", "OneLevelTransport"), level=4)
+        prof.logEvent(prof.memory("stride+offset", "OneLevelTransport"), level=4)
         if numericalFluxType is not None:
             if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
@@ -872,12 +874,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
                         self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
-        logEvent(memory("numericalFlux", "OneLevelTransport"), level=4)
+        prof.logEvent(prof.memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
-        logEvent(memory("velocity postprocessor", "OneLevelTransport"), level=4)
+        prof.logEvent(prof.memory("velocity postprocessor", "OneLevelTransport"), level=4)
         # helper for writing out data storage
         from proteus import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
@@ -1113,7 +1115,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
-        logEvent("Global residual", level=9, data=r)
+        prof.logEvent("Global residual", level=9, data=r)
         # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
@@ -1218,7 +1220,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.nzval[i] = 0.0
                         # print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
 
-        logEvent("Jacobian ", level=10, data=jacobian)
+        prof.logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
@@ -1263,7 +1265,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
-        self.fluxBoundaryConditionsObjectsDict = dict([(cj, FluxBoundaryConditions(self.mesh,
+        self.fluxBoundaryConditionsObjectsDict = dict([(cj, proteus.FemTools.FluxBoundaryConditions(self.mesh,
                                                                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
                                                                                    self.ebqe[('x')],
                                                                                    getAdvectiveFluxBoundaryConditions=self.advectiveFluxBoundaryConditionsSetterDict[cj],
