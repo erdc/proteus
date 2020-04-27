@@ -105,7 +105,7 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - pip install -v -e .
+      - make develop-conda N=1
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD
+      - py.test --forked -v proteus/tests --ignore proteus/tests/POD
