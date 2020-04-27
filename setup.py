@@ -673,7 +673,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cVOF',
         ['proteus/mprans/VOF.cpp'],
-        depends=["proteus/mprans/VOF.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/VOF.h", "proteus/mprans/ArgumentsDict.h", "proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
