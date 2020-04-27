@@ -16,10 +16,10 @@ RUN rm -rf proteus && \
     gcc --version && \
     g++ --version && \
     gfortran --version && \
-    ulimit -m 2000000 && \
-    ulimit -v 8000000 && \
+    ulimit -m 3408896 && \
+    ulimit -v 3408896 && \
     ulimit -a && \
-    free -m && \
+    free -k && \
     make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
     rm -rf air-water-vv && \
     rm -rf .git && \
