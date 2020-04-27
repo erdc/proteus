@@ -427,24 +427,24 @@ namespace proteus
 			    abort();
 			  }
 		      }
-		    /* else  if(nDOF_mesh_trial_elementIn == 4) */
-		    /*   { */
-		    /* 	if (nQuadraturePoints_elementIn == 4) // Q1 FE-space */
-		    /* 	  { */
-		    /* 	    if (nQuadraturePoints_elementBoundaryIn == 2) */
-		    /* 	      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,CompKernelTemplate_v<2,4,4,4>,2,4,4,4,4,4,4,2>()); */
-		    /* 	    else */
-		    /* 	      { */
-		    /* 		NO_INSTANCE; */
-		    /* 		abort(); */
-		    /* 	      } */
-		    /* 	  } */
-		    /* 	else */
-		    /* 	  { */
-		    /* 	    NO_INSTANCE; */
-		    /* 	    abort(); */
-		    /* 	      } */
-		    /*   } */
+		    else  if(nDOF_mesh_trial_elementIn == 4)
+		      {
+		    	if (nQuadraturePoints_elementIn == 4) // Q1 FE-space
+		    	  {
+		    	    if (nQuadraturePoints_elementBoundaryIn == 2)
+		    	      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,CompKernelTemplate_v<2,4,4,4>,2,4,4,4,4,4,4,2>());
+		    	    else
+		    	      {
+		    		NO_INSTANCE;
+		    		abort();
+		    	      }
+		    	  }
+		    	else
+		    	  {
+		    	    NO_INSTANCE;
+		    	    abort();
+		    	      }
+		      }
 		    else if (nDOF_v_trial_elementIn == 6)//P1-P2
 		      {
 			if (nDOF_mesh_trial_elementIn == 3) // P1 FE-space. Default nquad=4
