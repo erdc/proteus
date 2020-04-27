@@ -150,7 +150,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cVOS3P',
         ['proteus/mprans/VOS3P.cpp'],
-        depends=['proteus/mprans/VOS3P.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        depends=['proteus/mprans/VOS3P.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
