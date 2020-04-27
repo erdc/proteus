@@ -108,4 +108,4 @@ jobs:
       - make develop-conda N=1
     script:
       - export MPLBACKEND="AGG"
-      - py.test --forked -v proteus/tests --ignore proteus/tests/POD
+      - py.test -v proteus/tests -k "1st_poly_exact"
