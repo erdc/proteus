@@ -133,7 +133,7 @@ EXTENSIONS_TO_BUILD = [
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension('mprans.cAddedMass', ['proteus/mprans/AddedMass.cpp'],
-              depends=['proteus/mprans/AddedMass.h', 'proteus/mprans/ArgumentDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              depends=['proteus/mprans/AddedMass.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
               include_dirs=get_xtensor_include(),
               extra_compile_args=PROTEUS_OPT+['-std=c++14']),
