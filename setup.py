@@ -694,7 +694,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cSW2D',
         ['proteus/mprans/SW2D.cpp'],
-        depends=["proteus/mprans/SW2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/SW2D.h", "proteus/mprans/SW2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
