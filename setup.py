@@ -643,7 +643,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cRANS2P_IB',
         ['proteus/mprans/RANS2P_IB.cpp'],
-        depends=["proteus/mprans/RANS2P_IB.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"] + [
+        depends=["proteus/mprans/RANS2P_IB.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"] + [
             "proteus/equivalent_polynomials.h",
             "proteus/equivalent_polynomials_utils.h",
             "proteus/equivalent_polynomials_coefficients.h"],
