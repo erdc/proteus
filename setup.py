@@ -663,7 +663,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cRDLS',
         ['proteus/mprans/RDLS.cpp'],
-        depends=["proteus/mprans/RDLS.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"] + [
+        depends=["proteus/mprans/RDLS.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"] + [
             "proteus/equivalent_polynomials.h",
             "proteus/equivalent_polynomials_utils.h",
             "proteus/equivalent_polynomials_coefficients.h"],
