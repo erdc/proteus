@@ -9,30 +9,22 @@
 
 namespace proteus
 {
-    namespace detail
-    {
-        template <class T>
-        inline std::string key_error_messagei(const T& key)
-        {
-            return key_error_message(std::to_string(key));
-        }
 
-        inline std::string key_error_message(const std::string& key)
-        {
-            return std::string("key ") + key + std::string(" not found");
-        }
-    }
 
-    // Special map for pyarrays: the arrays are moved
-    // into the map instead of being copied. This allows
-    // to keep them synchronized with the numpy arrays
-    // they refer to.
+    // Special map that behaves like a standard map except for
+    // - operator[] which throws instead of inserting a default
+    //   value when a key is not found
+    // - insert and insert_or_assign which always move the key
+    //   and the value. This allows to keep pyarrays synchronized
+    //   with the numpy arrays they refer to, while avoiding code
+    //   duplication for array of scalars (because insert_or_assign
+    //   is not available in C++14)
     template <class K, class T>
-    class pyarray_dict : private std::map<K, xt::pyarray<T>>
+    class throwing_map : private std::map<K, T>
     {
     public:
 
-        using base_type = std::map<K, xt::pyarray<T>>;
+        using base_type = std::map<K, T>;
         using key_type = typename base_type::key_type;
         using mapped_type = typename base_type::mapped_type;
         using value_type = typename base_type::value_type;
@@ -62,7 +54,39 @@ namespace proteus
     };
     
     template <class K, class T>
-    inline auto pyarray_dict<K, T>::operator[](const key_type& k) -> mapped_type&
+    using pyarray_dict = throwing_map<K, xt::pyarray<T>>;
+
+    template <class K, class T>
+    using scalar_dict = throwing_map<K, T>;
+
+    struct arguments_dict
+    {
+        pyarray_dict<std::string, double> m_darray;
+        pyarray_dict<std::string, int> m_iarray;
+        scalar_dict<std::string, double> m_dscalar;
+        scalar_dict<std::string, int> m_iscalar;
+    };
+
+    /*******************************
+     * throwing_map implementation *
+     *******************************/
+
+    namespace detail
+    {
+        template <class T>
+        inline std::string key_error_messagei(const T& key)
+        {
+            return key_error_message(std::to_string(key));
+        }
+
+        inline std::string key_error_message(const std::string& key)
+        {
+            return std::string("key ") + key + std::string(" not found");
+        }
+    }
+
+    template <class K, class T>
+    inline auto throwing_map<K, T>::operator[](const key_type& k) -> mapped_type&
     {
         auto it = this->find(k);
         if(it == end())
@@ -73,13 +97,13 @@ namespace proteus
     }
 
     template <class K, class T>
-    inline auto pyarray_dict<K, T>::insert(value_type&& v) -> std::pair<iterator, bool>
+    inline auto throwing_map<K, T>::insert(value_type&& v) -> std::pair<iterator, bool>
     {
         return base_type::insert(std::move(v));
     }
 
     template <class K, class T>
-    inline auto pyarray_dict<K, T>::insert_or_assign(key_type&& k, mapped_type&& v) -> std::pair<iterator, bool>
+    inline auto throwing_map<K, T>::insert_or_assign(key_type&& k, mapped_type&& v) -> std::pair<iterator, bool>
     {
         auto it = base_type::find(k);
         if(it == base_type::end())
@@ -92,17 +116,6 @@ namespace proteus
             return std::make_pair(it, false);
         }
     }
-
-    template <class T>
-    using scalar_dict = std::map<std::string, T>;
-
-    struct arguments_dict
-    {
-        pyarray_dict<std::string, double> m_darray;
-        pyarray_dict<std::string, int> m_iarray;
-        scalar_dict<double> m_dscalar;
-        scalar_dict<int> m_iscalar;
-    };
 }
 
 #endif

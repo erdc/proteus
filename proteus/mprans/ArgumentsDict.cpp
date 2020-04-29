@@ -51,10 +51,10 @@ namespace proteus
         }
     }
 
-    template <class K, class T>
-    void bind_pyarray_dict(py::class_<pyarray_dict<K, T>>& cl, const std::string& name)
+    template <class M>
+    void bind_throwing_map(py::class_<M>& cl, const std::string& name)
     {
-        using map_type = pyarray_dict<K, T>;
+        using map_type = M;
         using key_type = typename map_type::key_type;
         using mapped_type = typename map_type::mapped_type;
 
@@ -123,14 +123,14 @@ namespace proteus
         // pyarray overload, it is chosen by pybind11 and the array ends up
         // in the wrong dictionary.
         cl.def("__setitem__",
-                [](arguments_dict& ad, const std::string& k, int i)
+                [](arguments_dict& ad, std::string& k, int i)
                 {
-                    ad.m_iscalar[k] = i;
+                    ad.m_iscalar.insert_or_assign(std::move(k), std::move(i));
                 });
         cl.def("__setitem__",
-                [](arguments_dict& ad, const std::string& k, double d)
+                [](arguments_dict& ad, std::string& k, double d)
                 {
-                    ad.m_dscalar[k] = d;
+                    ad.m_dscalar.insert_or_assign(std::move(k), std::move(d));
                 });
         cl.def("__repr__",
                 [name](arguments_dict& ad)
@@ -151,9 +151,6 @@ namespace proteus
     }
 }
 
-PYBIND11_MAKE_OPAQUE(proteus::scalar_dict<double>);
-PYBIND11_MAKE_OPAQUE(proteus::scalar_dict<int>);
-
 PYBIND11_MODULE(cArgumentsDict, m)
 {
     using proteus::pyarray_dict;
@@ -164,15 +161,20 @@ PYBIND11_MODULE(cArgumentsDict, m)
 
     using dpyarray_dict = pyarray_dict<std::string, double>;
     using ipyarray_dict = pyarray_dict<std::string, int>;
+    using dscalar_dict = scalar_dict<std::string, double>;
+    using iscalar_dict = scalar_dict<std::string, int>;
 
     py::class_<dpyarray_dict> dad(m, DARRAY_DICT_NAME.c_str());
-    proteus::bind_pyarray_dict(dad, DARRAY_DICT_NAME.c_str());
+    proteus::bind_throwing_map(dad, DARRAY_DICT_NAME.c_str());
 
     py::class_<ipyarray_dict> iad(m, IARRAY_DICT_NAME.c_str());
-    proteus::bind_pyarray_dict(iad, IARRAY_DICT_NAME.c_str());
+    proteus::bind_throwing_map(iad, IARRAY_DICT_NAME.c_str());
 
-    py::bind_map<scalar_dict<double>>(m, DSCALAR_DICT_NAME.c_str());
-    py::bind_map<scalar_dict<int>>(m, ISCALAR_DICT_NAME.c_str());
+    py::class_<dscalar_dict> dsd(m, DSCALAR_DICT_NAME.c_str());
+    proteus::bind_throwing_map(dsd, DSCALAR_DICT_NAME.c_str());
+
+    py::class_<iscalar_dict> isd(m, ISCALAR_DICT_NAME.c_str());
+    proteus::bind_throwing_map(isd, ISCALAR_DICT_NAME.c_str());
 
     py::class_<arguments_dict> ad(m, "ArgumentsDict");
     proteus::bind_arguments_dict(ad, "ArgumentsDict");
