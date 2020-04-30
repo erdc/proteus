@@ -2517,7 +2517,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["USE_SUPG"] = int(self.coefficients.USE_SUPG)
         argsDict["ARTIFICIAL_VISCOSITY"] = self.coefficients.ARTIFICIAL_VISCOSITY
         argsDict["cMax"] = self.coefficients.cMax
-        argsDict["cE"] = self.coefficients.cE
+        argsDict["cE"] = float(self.coefficients.cE)
         argsDict["MULTIPLY_EXTERNAL_FORCE_BY_DENSITY"] = self.coefficients.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY
         argsDict["forcex"] = self.q[('force', 0)]
         argsDict["forcey"] = self.q[('force', 1)]
