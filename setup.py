@@ -128,7 +128,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cPresInc',
         ['proteus/mprans/PresInc.cpp'],
-        depends=['proteus/mprans/PresInc.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        depends=['proteus/mprans/PresInc.h', 'proteus/mprans/PresInc.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
