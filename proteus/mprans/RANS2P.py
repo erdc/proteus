@@ -1463,10 +1463,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             self.u[cj].dof[dofN] += self.mesh.nodeVelocityArray[dofN, cj - 1]
 
         argsDict = cArgumentsDict.ArgumentsDict()
-        argsDict["NONCONSERVATIVE_FORM"] = self.coefficients.NONCONSERVATIVE_FORM
-        argsDict["MOMENTUM_SGE"] = self.coefficients.MOMENTUM_SGE
-        argsDict["PRESSURE_SGE"] = self.coefficients.PRESSURE_SGE
-        argsDict["VELOCITY_SGE"] = self.coefficients.VELOCITY_SGE
+        argsDict["NONCONSERVATIVE_FORM"] = float(self.coefficients.NONCONSERVATIVE_FORM)
+        argsDict["MOMENTUM_SGE"] = float(self.coefficients.MOMENTUM_SGE)
+        argsDict["PRESSURE_SGE"] = float(self.coefficients.PRESSURE_SGE)
+        argsDict["VELOCITY_SGE"] = float(self.coefficients.VELOCITY_SGE)
         argsDict["PRESSURE_PROJECTION_STABILIZATION"] = self.coefficients.PRESSURE_PROJECTION_STABILIZATION
         argsDict["numerical_viscosity"] = self.coefficients.numerical_viscosity
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
@@ -1518,7 +1518,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["turbulenceClosureModel"] = self.coefficients.turbulenceClosureModel
         argsDict["Ct_sge"] = self.Ct_sge
         argsDict["Cd_sge"] = self.Cd_sge
-        argsDict["C_dc"] = self.shockCapturing.shockCapturingFactor
+        argsDict["C_dc"] = float(self.shockCapturing.shockCapturingFactor)
         argsDict["C_b"] = self.numericalFlux.penalty_constant
         argsDict["eps_solid"] = self.coefficients.epsFact_solid
         argsDict["phi_solid"] = self.coefficients.q_phi_solid
@@ -1747,10 +1747,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3, 3)] = self.csrColumnOffsets[(0, 2)]
 
         argsDict = cArgumentsDict.ArgumentsDict()
-        argsDict["NONCONSERVATIVE_FORM"] = self.coefficients.NONCONSERVATIVE_FORM
-        argsDict["MOMENTUM_SGE"] = self.coefficients.MOMENTUM_SGE
-        argsDict["PRESSURE_SGE"] = self.coefficients.PRESSURE_SGE
-        argsDict["VELOCITY_SGE"] = self.coefficients.VELOCITY_SGE
+        argsDict["NONCONSERVATIVE_FORM"] = float(self.coefficients.NONCONSERVATIVE_FORM)
+        argsDict["MOMENTUM_SGE"] = float(self.coefficients.MOMENTUM_SGE)
+        argsDict["PRESSURE_SGE"] = float(self.coefficients.PRESSURE_SGE)
+        argsDict["VELOCITY_SGE"] = float(self.coefficients.VELOCITY_SGE)
         argsDict["PRESSURE_PROJECTION_STABILIZATION"] = self.coefficients.PRESSURE_PROJECTION_STABILIZATION
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
         argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
@@ -1800,7 +1800,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["turbulenceClosureModel"] = self.coefficients.turbulenceClosureModel
         argsDict["Ct_sge"] = self.Ct_sge
         argsDict["Cd_sge"] = self.Cd_sge
-        argsDict["C_dg"] = self.shockCapturing.shockCapturingFactor
+        argsDict["C_dg"] = float(self.shockCapturing.shockCapturingFactor)
         argsDict["C_b"] = self.numericalFlux.penalty_constant
         argsDict["eps_solid"] = self.coefficients.epsFact_solid
         argsDict["phi_solid"] = self.coefficients.q_phi_solid

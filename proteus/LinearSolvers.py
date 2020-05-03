@@ -3489,7 +3489,7 @@ class OperatorConstructor_rans2p(OperatorConstructor):
         argsDict["dV_ref"] = self.model.elementQuadratureWeights[('u',0)]
         argsDict["p_trial_ref"] = self.model.u[0].femSpace.psi
         argsDict["p_grad_trial_ref"] = self.model.u[0].femSpace.grad_psi
-        argsDict["vel_trail_ref"] = self.model.u[1].femSpace.psi
+        argsDict["vel_trial_ref"] = self.model.u[1].femSpace.psi
         argsDict["vel_grad_trial_ref"] = self.model.u[1].femSpace.grad_psi
         argsDict["elementDiameter"] = self.model.elementDiameter
         argsDict["nodeDiametersArray"] = self.model.mesh.nodeDiametersArray
