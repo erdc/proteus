@@ -1152,7 +1152,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["useMetrics"] = self.coefficients.useMetrics
         argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
         argsDict["lag_shockCapturing"] = int(self.shockCapturing.lag)
-        argsDict["shockCapturingDiffusion"] = self.shockCapturing.shockCapturingFactor
+        argsDict["shockCapturingDiffusion"] = float(self.shockCapturing.shockCapturingFactor)
         argsDict["sc_uref"] = self.coefficients.sc_uref
         argsDict["sc_alpha"] = self.coefficients.sc_beta
         argsDict["q_vos"] = self.coefficients.q_vos
@@ -1266,7 +1266,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["useMetrics"] = self.coefficients.useMetrics
         argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
         argsDict["lag_shockCapturing"] = self.shockCapturing.lag
-        argsDict["shockCapturingDiffusion"] = self.shockCapturing.shockCapturingFactor
+        argsDict["shockCapturingDiffusion"] = float(self.shockCapturing.shockCapturingFactor)
         argsDict["q_vos"] = self.coefficients.q_vos
         argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
         argsDict["r_l2g"] = self.l2g[0]['freeGlobal']

@@ -2347,7 +2347,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["turbulenceClosureModel"] = self.coefficients.turbulenceClosureModel
         argsDict["Ct_sge"] = self.Ct_sge
         argsDict["Cd_sge"] = self.Cd_sge
-        argsDict["C_dc"] = self.shockCapturing.shockCapturingFactor
+        argsDict["C_dc"] = float(self.shockCapturing.shockCapturingFactor)
         argsDict["C_b"] = self.numericalFlux.penalty_constant
         argsDict["eps_solid"] = self.coefficients.epsFact_solid
         argsDict["ebq_global_phi_solid"] = self.coefficients.ebq_global_phi_s
@@ -2679,7 +2679,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["turbulenceClosureModel"] = self.coefficients.turbulenceClosureModel
         argsDict["Ct_sge"] = self.Ct_sge
         argsDict["Cd_sge"] = self.Cd_sge
-        argsDict["C_dg"] = self.shockCapturing.shockCapturingFactor
+        argsDict["C_dg"] = float(self.shockCapturing.shockCapturingFactor)
         argsDict["C_b"] = self.numericalFlux.penalty_constant
         argsDict["eps_solid"] = self.coefficients.epsFact_solid
         argsDict["ebq_global_phi_solid"] = self.coefficients.ebq_global_phi_s
