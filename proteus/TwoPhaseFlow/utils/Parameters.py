@@ -912,7 +912,7 @@ class ParametersModelKappa(ParametersModelBase):
         super(ParametersModelKappa, self).__init__(name='kappa', index=None,
                                                     Problem=Problem)
 
-        self.timeOrder = 2
+        self.timeOrder = 1
         self.timeDiscretization = 'be'
         self.p.coefficients = Kappa.Coefficients(
             initialize=False,
@@ -977,12 +977,12 @@ class ParametersModelKappa(ParametersModelBase):
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.VOS_model = VOS_model
-        coeffs.V_model = V_model
-        coeffs.LS_model = LS_model
-        coeffs.RD_model = RD_model
-        coeffs.dissipation_model = K_model
-        coeffs.ME_model = ME_model
-        coeffs.SED_model = SED_model
+        coeffs.flowModelIndex = V_model
+        coeffs.LS_modelIndex = LS_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.dissipation_modelIndex = DISS_model
+        coeffs.modelIndex = K_model
+        coeffs.SED_modelIndex = SED_model
         coeffs.dissipation_model_flag = pparams.useRANS
         coeffs.c_mu = pparams.c_mu
         coeffs.sigma_k = pparams.sigma_k
@@ -1015,14 +1015,9 @@ class ParametersModelKappa(ParametersModelBase):
     def _initializeNumerics(self):
         nd = self._Problem.domain.nd
         # TIME
-        if self.timeDiscretization=='vbdf':
-            self.n.timeIntegration = TimeIntegration.VBDF
-            self.n.timeOrder = 2
-        elif self.timeDiscretization: #backward euler
-            self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
-        else:
-            raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(scheme=self.timeDiscretization))
-        self.n.stepController = StepControl.Min_dt_cfl_controller
+        self.n.timeOrder = 1
+        self.n.timeIntegration = TimeIntegration.VBDF#BackwardEuler
+        self.n.stepController = StepControl.Min_dt_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
@@ -1116,13 +1111,13 @@ class ParametersModelDissipation(ParametersModelBase):
         DISS_model = mparams.dissipation.index
         # COEFFICIENTS
         coeffs = self.p.coefficients
-        coeffs.VOS_model = VOS_model
-        coeffs.V_model = V_model
-        coeffs.LS_model = LS_model
-        coeffs.RD_model = RD_model
-        coeffs.K_model = K_model
-        coeffs.DISS_model = DISS_model
-        coeffs.SED_model = SED_model
+        coeffs.VOS_modelIndex = VOS_model
+        coeffs.flowModelIndex = V_model
+        coeffs.LS_modelIndex = LS_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.kappa_modelIndex = K_model
+        coeffs.modelIndex = DISS_model
+        coeffs.SED_modelIndex = SED_model
         coeffs.c_mu = pparams.c_mu
         coeffs.c_1 = pparams.c_1
         coeffs.c_2 = pparams.c_2
@@ -1158,15 +1153,9 @@ class ParametersModelDissipation(ParametersModelBase):
     def _initializeNumerics(self):
         nd = self._Problem.domain.nd
         # TIME
-        if self.timeDiscretization == 'vbdf':
-            self.n.timeIntegration = TimeIntegration.VBDF
-            self.n.timeOrder = 2
-        elif self.timeDiscretization:  # backward euler
-            self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
-        else:
-            raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(
-                scheme=self.timeDiscretization))
-        self.n.stepController = StepControl.Min_dt_cfl_controller
+        self.n.timeOrder = 1
+        self.n.timeIntegration = TimeIntegration.BackwardEuler
+        self.n.stepController = StepControl.Min_dt_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
@@ -1442,8 +1431,8 @@ class ParametersModelNCLS(ParametersModelBase):
         BC = self._Problem.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
-                if 'phi_DBC' in BC:
-                    self.p.dirichletConditions = {0: BC['phi_DBC']}
+                if 'ncls_DBC' in BC:
+                    self.p.dirichletConditions = {0: BC['ncls_DBC']}
                 else:
                     self.p.dirichletCondtions = {0: lambda x,t: None}
             else:
@@ -2000,7 +1989,7 @@ class ParametersPhysical(FreezableClass):
         self.gravity = [0., -9.81, 0.]
         # Turbulence
         self.useRANS = 0
-        self.cm_u = 0.09
+        self.c_mu = 0.09
         self.c_1 = 0.126
         self.c_2 = 1.92
         self.c_e = 0.07

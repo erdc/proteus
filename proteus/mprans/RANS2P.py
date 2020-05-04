@@ -18,6 +18,7 @@ import numpy
 from proteus import *
 from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
+from . import cArgumentsDict
 
 class SubgridError(proteus.SubgridError.SGE_base):
     """
@@ -1460,216 +1461,226 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.timeIntegration.t)
                         if self.MOVING_DOMAIN == 1.0:
                             self.u[cj].dof[dofN] += self.mesh.nodeVelocityArray[dofN, cj - 1]
-        self.rans2p.calculateResidual(self.coefficients.NONCONSERVATIVE_FORM,
-                                      self.coefficients.MOMENTUM_SGE,
-                                      self.coefficients.PRESSURE_SGE,
-                                      self.coefficients.VELOCITY_SGE,
-                                      self.coefficients.PRESSURE_PROJECTION_STABILIZATION,
-                                      self.coefficients.numerical_viscosity,
-                                      # element
-                                      self.u[0].femSpace.elementMaps.psi,
-                                      self.u[0].femSpace.elementMaps.grad_psi,
-                                      self.mesh.nodeArray,
-                                      self.mesh.nodeVelocityArray,
-                                      self.MOVING_DOMAIN,
-                                      self.mesh.elementNodesArray,
-                                      self.elementQuadraturePoints,
-                                      self.elementQuadratureWeights[('u', 0)],
-                                      self.u[0].femSpace.psi,
-                                      self.u[0].femSpace.grad_psi,
-                                      self.u[0].femSpace.psi,
-                                      self.u[0].femSpace.grad_psi,
-                                      self.u[1].femSpace.psi,
-                                      self.u[1].femSpace.grad_psi,
-                                      self.u[1].femSpace.psi,
-                                      self.u[1].femSpace.grad_psi,
-                                      # element boundary
-                                      self.u[0].femSpace.elementMaps.psi_trace,
-                                      self.u[0].femSpace.elementMaps.grad_psi_trace,
-                                      self.elementBoundaryQuadratureWeights[('u', 0)],
-                                      self.u[0].femSpace.psi_trace,
-                                      self.u[0].femSpace.grad_psi_trace,
-                                      self.u[0].femSpace.psi_trace,
-                                      self.u[0].femSpace.grad_psi_trace,
-                                      self.u[1].femSpace.psi_trace,
-                                      self.u[1].femSpace.grad_psi_trace,
-                                      self.u[1].femSpace.psi_trace,
-                                      self.u[1].femSpace.grad_psi_trace,
-                                      self.u[0].femSpace.elementMaps.boundaryNormals,
-                                      self.u[0].femSpace.elementMaps.boundaryJacobians,
-                                      # physics
-                                      self.eb_adjoint_sigma,
-                                      self.elementDiameter,  # mesh.elementDiametersArray,
-                                      self.mesh.nodeDiametersArray,
-                                      self.stabilization.hFactor,
-                                      self.mesh.nElements_global,
-                                      int(self.mesh.nElementBoundaries_owned),
-                                      float(self.coefficients.useRBLES),
-                                      self.coefficients.useMetrics,
-                                      self.timeIntegration.alpha_bdf,
-                                      self.coefficients.epsFact_density,
-                                      self.coefficients.epsFact,
-                                      self.coefficients.sigma,
-                                      self.coefficients.rho_0,
-                                      self.coefficients.nu_0,
-                                      self.coefficients.rho_1,
-                                      self.coefficients.nu_1,
-                                      self.coefficients.smagorinskyConstant,
-                                      self.coefficients.turbulenceClosureModel,
-                                      self.Ct_sge,
-                                      self.Cd_sge,
-                                      self.shockCapturing.shockCapturingFactor,
-                                      self.numericalFlux.penalty_constant,
-                                      # VRANS start
-                                      self.coefficients.epsFact_solid,
-                                      self.coefficients.q_phi_solid,
-                                      self.coefficients.q_velocity_solid,
-                                      self.coefficients.q_porosity,
-                                      self.coefficients.q_dragAlpha,
-                                      self.coefficients.q_dragBeta,
-                                      self.q[('r', 0)],
-                                      self.coefficients.q_turb_var[0],
-                                      self.coefficients.q_turb_var[1],
-                                      self.coefficients.q_turb_var_grad[0],
-                                      self.coefficients.LAG_LES,
-                                      self.q['eddy_viscosity'],
-                                      self.q['eddy_viscosity_last'],
-                                      self.ebqe['eddy_viscosity'],
-                                      self.ebqe['eddy_viscosity_last'],
-                                      # VRANS end
-                                      self.u[0].femSpace.dofMap.l2g,
-                                      self.u[1].femSpace.dofMap.l2g,
-                                      self.l2g[0]['freeGlobal'],
-                                      self.l2g[1]['freeGlobal'],
-                                      self.u[0].dof,
-                                      self.u[1].dof,
-                                      self.u[2].dof,
-                                      self.u[3].dof,
-                                      self.coefficients.p_old_dof,
-                                      self.coefficients.u_old_dof,
-                                      self.coefficients.v_old_dof,
-                                      self.coefficients.w_old_dof,
-                                      self.coefficients.g,
-                                      self.coefficients.useVF,
-                                      self.q['rho'],
-                                      self.coefficients.q_vf,
-                                      self.coefficients.q_phi,
-                                      self.coefficients.phi_dof,
-                                      self.coefficients.q_n,
-                                      self.coefficients.q_kappa,
-                                      self.timeIntegration.m_tmp[1],
-                                      self.timeIntegration.m_tmp[2],
-                                      self.timeIntegration.m_tmp[3],
-                                      self.q[('f', 0)],
-                                      self.timeIntegration.beta_bdf[1],
-                                      self.timeIntegration.beta_bdf[2],
-                                      self.timeIntegration.beta_bdf[3],
-                                      self.q['dV'],
-                                      self.q['dV_last'],
-                                      self.stabilization.v_last,
-                                      self.q[('cfl', 0)],
-                                      self.q[('numDiff', 1, 1)],
-                                      self.q[('numDiff', 2, 2)],
-                                      self.q[('numDiff', 3, 3)],
-                                      self.shockCapturing.numDiff_last[1],
-                                      self.shockCapturing.numDiff_last[2],
-                                      self.shockCapturing.numDiff_last[3],
-                                      self.coefficients.sdInfo[(1, 1)][0], self.coefficients.sdInfo[(1, 1)][1],
-                                      self.coefficients.sdInfo[(1, 2)][0], self.coefficients.sdInfo[(1, 2)][1],
-                                      self.coefficients.sdInfo[(1, 3)][0], self.coefficients.sdInfo[(1, 3)][1],
-                                      self.coefficients.sdInfo[(2, 2)][0], self.coefficients.sdInfo[(2, 2)][1],
-                                      self.coefficients.sdInfo[(2, 1)][0], self.coefficients.sdInfo[(2, 1)][1],
-                                      self.coefficients.sdInfo[(2, 3)][0], self.coefficients.sdInfo[(2, 3)][1],
-                                      self.coefficients.sdInfo[(3, 3)][0], self.coefficients.sdInfo[(3, 3)][1],
-                                      self.coefficients.sdInfo[(3, 1)][0], self.coefficients.sdInfo[(3, 1)][1],
-                                      self.coefficients.sdInfo[(3, 2)][0], self.coefficients.sdInfo[(3, 2)][1],
-                                      self.offset[0], self.offset[1], self.offset[2], self.offset[3],
-                                      self.stride[0], self.stride[1], self.stride[2], self.stride[3],
-                                      r,
-                                      self.mesh.nExteriorElementBoundaries_global,
-                                      self.mesh.exteriorElementBoundariesArray,
-                                      self.mesh.elementBoundaryElementsArray,
-                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                      self.coefficients.ebqe_vf,
-                                      self.coefficients.bc_ebqe_vf,
-                                      self.coefficients.ebqe_phi,
-                                      self.coefficients.bc_ebqe_phi,
-                                      self.coefficients.ebqe_n,
-                                      self.coefficients.ebqe_kappa,
-                                      # VRANS start
-                                      self.coefficients.ebqe_porosity,
-                                      self.coefficients.ebqe_turb_var[0],
-                                      self.coefficients.ebqe_turb_var[1],
-                                      # VRANS end
-                                      self.numericalFlux.isDOFBoundary[0],
-                                      self.numericalFlux.isDOFBoundary[1],
-                                      self.numericalFlux.isDOFBoundary[2],
-                                      self.numericalFlux.isDOFBoundary[3],
-                                      self.ebqe[('advectiveFlux_bc_flag', 0)],
-                                      self.ebqe[('advectiveFlux_bc_flag', 1)],
-                                      self.ebqe[('advectiveFlux_bc_flag', 2)],
-                                      self.ebqe[('advectiveFlux_bc_flag', 3)],
-                                      self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
-                                      self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
-                                      self.ebqe[('diffusiveFlux_bc_flag', 3, 3)],
-                                      self.numericalFlux.ebqe[('u', 0)],
-                                      self.ebqe[('advectiveFlux_bc', 0)],
-                                      self.ebqe[('advectiveFlux_bc', 1)],
-                                      self.ebqe[('advectiveFlux_bc', 2)],
-                                      self.ebqe[('advectiveFlux_bc', 3)],
-                                      self.numericalFlux.ebqe[('u', 1)],
-                                      self.ebqe[('diffusiveFlux_bc', 1, 1)],
-                                      self.ebqe['penalty'],
-                                      self.numericalFlux.ebqe[('u', 2)],
-                                      self.ebqe[('diffusiveFlux_bc', 2, 2)],
-                                      self.numericalFlux.ebqe[('u', 3)],
-                                      self.ebqe[('diffusiveFlux_bc', 3, 3)],
-                                      self.q['x'],
-                                      self.q[('velocity', 0)],
-                                      self.ebqe[('velocity', 0)],
-                                      self.ebq_global[('totalFlux', 0)],
-                                      self.elementResidual[0],
-                                      self.mesh.elementMaterialTypes,
-                                      self.mesh.elementBoundaryMaterialTypes,
-                                      self.coefficients.barycenters,
-                                      self.coefficients.wettedAreas,
-                                      self.coefficients.netForces_p,
-                                      self.coefficients.netForces_v,
-                                      self.coefficients.netMoments,
-                                      self.q['velocityError'],
-                                      self.velocityErrorNodal,
-                                      self.q[('force', 0)],
-                                      self.q[('force', 1)],
-                                      self.q[('force', 2)],
-                                      int(self.coefficients.use_ball_as_particle),
-                                      self.coefficients.ball_center,
-                                      self.coefficients.ball_radius,
-                                      self.coefficients.ball_velocity,
-                                      self.coefficients.ball_angular_velocity,
-                                      self.coefficients.ball_center_acceleration,
-                                      self.coefficients.ball_angular_acceleration,
-                                      self.coefficients.ball_density,
-                                      self.coefficients.particle_signed_distances,
-                                      self.coefficients.particle_signed_distance_normals,
-                                      self.coefficients.particle_velocities,
-                                      self.coefficients.particle_centroids,
-                                      self.coefficients.ebq_global_phi_s,
-                                      self.coefficients.ebq_global_grad_phi_s,
-                                      self.coefficients.ebq_particle_velocity_s,
-                                      self.coefficients.nParticles,
-                                      self.coefficients.particle_netForces,
-                                      self.coefficients.particle_netMoments,
-                                      self.coefficients.particle_surfaceArea,
-                                      int(self.mesh.nElements_owned),
-                                      self.coefficients.particle_nitsche,
-                                      self.coefficients.particle_epsFact,
-                                      self.coefficients.particle_alpha,
-                                      self.coefficients.particle_beta,
-                                      self.coefficients.particle_penalty_constant,
-                                      self.coefficients.phi_s,
-                                      self.coefficients.phisField,
-                                      self.coefficients.use_pseudo_penalty,
-                                      self.coefficients.useExact)
+
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["NONCONSERVATIVE_FORM"] = float(self.coefficients.NONCONSERVATIVE_FORM)
+        argsDict["MOMENTUM_SGE"] = float(self.coefficients.MOMENTUM_SGE)
+        argsDict["PRESSURE_SGE"] = float(self.coefficients.PRESSURE_SGE)
+        argsDict["VELOCITY_SGE"] = float(self.coefficients.VELOCITY_SGE)
+        argsDict["PRESSURE_PROJECTION_STABILIZATION"] = self.coefficients.PRESSURE_PROJECTION_STABILIZATION
+        argsDict["numerical_viscosity"] = self.coefficients.numerical_viscosity
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+        argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["p_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["p_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["p_test_ref"] = self.u[0].femSpace.psi
+        argsDict["p_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["vel_trial_ref"] = self.u[1].femSpace.psi
+        argsDict["vel_grad_trial_ref"] = self.u[1].femSpace.grad_psi
+        argsDict["vel_test_ref"] = self.u[1].femSpace.psi
+        argsDict["vel_grad_test_ref"] = self.u[1].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["p_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["p_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["p_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["p_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["vel_trial_trace_ref"] = self.u[1].femSpace.psi_trace
+        argsDict["vel_grad_trial_trace_ref"] = self.u[1].femSpace.grad_psi_trace
+        argsDict["vel_test_trace_ref"] = self.u[1].femSpace.psi_trace
+        argsDict["vel_grad_test_trace_ref"] = self.u[1].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["eb_adjoint_sigma"] = self.eb_adjoint_sigma
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["hFactor"] = self.stabilization.hFactor
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["nElementBoundaries_owned"] = int(self.mesh.nElementBoundaries_owned)
+        argsDict["useRBLES"] = float(self.coefficients.useRBLES)
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
+        argsDict["epsFact_rho"] = self.coefficients.epsFact_density
+        argsDict["epsFact_mu"] = self.coefficients.epsFact
+        argsDict["sigma"] = self.coefficients.sigma
+        argsDict["rho_0"] = self.coefficients.rho_0
+        argsDict["nu_0"] = self.coefficients.nu_0
+        argsDict["rho_1"] = self.coefficients.rho_1
+        argsDict["nu_1"] = self.coefficients.nu_1
+        argsDict["smagorinskyConstant"] = self.coefficients.smagorinskyConstant
+        argsDict["turbulenceClosureModel"] = self.coefficients.turbulenceClosureModel
+        argsDict["Ct_sge"] = self.Ct_sge
+        argsDict["Cd_sge"] = self.Cd_sge
+        argsDict["C_dc"] = float(self.shockCapturing.shockCapturingFactor)
+        argsDict["C_b"] = self.numericalFlux.penalty_constant
+        argsDict["eps_solid"] = self.coefficients.epsFact_solid
+        argsDict["phi_solid"] = self.coefficients.q_phi_solid
+        argsDict["q_velocity_solid"] = self.coefficients.q_velocity_solid
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["q_dragAlpha"] = self.coefficients.q_dragAlpha
+        argsDict["q_dragBeta"] = self.coefficients.q_dragBeta
+        argsDict["q_mass_source"] = self.q[('r', 0)]
+        argsDict["q_turb_var_0"] = self.coefficients.q_turb_var[0]
+        argsDict["q_turb_var_1"] = self.coefficients.q_turb_var[1]
+        argsDict["q_turb_var_grad_0"] = self.coefficients.q_turb_var_grad[0]
+        argsDict["LAG_LES"] = self.coefficients.LAG_LES
+        argsDict["q_eddy_viscosity"] = self.q['eddy_viscosity']
+        argsDict["q_eddy_viscosity_last"] = self.q['eddy_viscosity_last']
+        argsDict["ebqe_eddy_viscosity"] = self.ebqe['eddy_viscosity']
+        argsDict["ebqe_eddy_viscosity_last"] = self.ebqe['eddy_viscosity_last']
+        argsDict["p_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["vel_l2g"] = self.u[1].femSpace.dofMap.l2g
+        argsDict["rp_l2g"] = self.l2g[0]['freeGlobal']
+        argsDict["rvel_l2g"] = self.l2g[1]['freeGlobal']
+        argsDict["p_dof"] = self.u[0].dof
+        argsDict["u_dof"] = self.u[1].dof
+        argsDict["v_dof"] = self.u[2].dof
+        argsDict["w_dof"] = self.u[3].dof
+        argsDict["p_old_dof"] = self.coefficients.p_old_dof
+        argsDict["u_old_dof"] = self.coefficients.u_old_dof
+        argsDict["v_old_dof"] = self.coefficients.v_old_dof
+        argsDict["w_old_dof"] = self.coefficients.w_old_dof
+        argsDict["g"] = self.coefficients.g
+        argsDict["useVF"] = self.coefficients.useVF
+        argsDict["q_rho"] = self.q['rho']
+        argsDict["vf"] = self.coefficients.q_vf
+        argsDict["phi"] = self.coefficients.q_phi
+        argsDict["phi_nodes"] = self.coefficients.phi_dof
+        argsDict["normal_phi"] = self.coefficients.q_n
+        argsDict["kappa_phi"] = self.coefficients.q_kappa
+        argsDict["q_mom_u_acc"] = self.timeIntegration.m_tmp[1]
+        argsDict["q_mom_v_acc"] = self.timeIntegration.m_tmp[2]
+        argsDict["q_mom_w_acc"] = self.timeIntegration.m_tmp[3]
+        argsDict["q_mass_adv"] = self.q[('f', 0)]
+        argsDict["q_mom_u_acc_beta_bdf"] = self.timeIntegration.beta_bdf[1]
+        argsDict["q_mom_v_acc_beta_bdf"] = self.timeIntegration.beta_bdf[2]
+        argsDict["q_mom_w_acc_beta_bdf"] = self.timeIntegration.beta_bdf[3]
+        argsDict["q_dV"] = self.q['dV']
+        argsDict["q_dV_last"] = self.q['dV_last']
+        argsDict["q_velocity_sge"] = self.stabilization.v_last
+        argsDict["q_cfl"] = self.q[('cfl', 0)]
+        argsDict["q_numDiff_u"] = self.q[('numDiff', 1, 1)]
+        argsDict["q_numDiff_v"] = self.q[('numDiff', 2, 2)]
+        argsDict["q_numDiff_w"] = self.q[('numDiff', 3, 3)]
+        argsDict["q_numDiff_u_last"] = self.shockCapturing.numDiff_last[1]
+        argsDict["q_numDiff_v_last"] = self.shockCapturing.numDiff_last[2]
+        argsDict["q_numDiff_w_last"] = self.shockCapturing.numDiff_last[3]
+        argsDict["sdInfo_u_u_rowptr"] = self.coefficients.sdInfo[(1, 1)][0]
+        argsDict["sdInfo_u_u_colind"] = self.coefficients.sdInfo[(1, 1)][1]
+        argsDict["sdInfo_u_v_rowptr"] = self.coefficients.sdInfo[(1, 2)][0]
+        argsDict["sdInfo_u_v_colind"] = self.coefficients.sdInfo[(1, 2)][1]
+        argsDict["sdInfo_u_w_rowptr"] = self.coefficients.sdInfo[(1, 3)][0]
+        argsDict["sdInfo_u_w_colind"] = self.coefficients.sdInfo[(1, 3)][1]
+        argsDict["sdInfo_v_v_rowptr"] = self.coefficients.sdInfo[(2, 2)][0]
+        argsDict["sdInfo_v_v_colind"] = self.coefficients.sdInfo[(2, 2)][1]
+        argsDict["sdInfo_v_u_rowptr"] = self.coefficients.sdInfo[(2, 1)][0]
+        argsDict["sdInfo_v_u_colind"] = self.coefficients.sdInfo[(2, 1)][1]
+        argsDict["sdInfo_v_w_rowptr"] = self.coefficients.sdInfo[(2, 3)][0]
+        argsDict["sdInfo_v_w_colind"] = self.coefficients.sdInfo[(2, 3)][1]
+        argsDict["sdInfo_w_w_rowptr"] = self.coefficients.sdInfo[(3, 3)][0]
+        argsDict["sdInfo_w_w_colind"] = self.coefficients.sdInfo[(3, 3)][1]
+        argsDict["sdInfo_w_u_rowptr"] = self.coefficients.sdInfo[(3, 1)][0]
+        argsDict["sdInfo_w_u_colind"] = self.coefficients.sdInfo[(3, 1)][1]
+        argsDict["sdInfo_w_v_rowptr"] = self.coefficients.sdInfo[(3, 2)][0]
+        argsDict["sdInfo_w_v_colind"] = self.coefficients.sdInfo[(3, 2)][1]
+        argsDict["offset_p"] = self.offset[0]
+        argsDict["offset_u"] = self.offset[1]
+        argsDict["offset_v"] = self.offset[2]
+        argsDict["offset_w"] = self.offset[3]
+        argsDict["stride_p"] = self.stride[0]
+        argsDict["stride_u"] = self.stride[1]
+        argsDict["stride_v"] = self.stride[2]
+        argsDict["stride_w"] = self.stride[3]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["ebqe_vf_ext"] = self.coefficients.ebqe_vf
+        argsDict["bc_ebqe_vf_ext"] = self.coefficients.bc_ebqe_vf
+        argsDict["ebqe_phi_ext"] = self.coefficients.ebqe_phi
+        argsDict["bc_ebqe_phi_ext"] = self.coefficients.bc_ebqe_phi
+        argsDict["ebqe_normal_phi_ext"] = self.coefficients.ebqe_n
+        argsDict["ebqe_kappa_phi_ext"] = self.coefficients.ebqe_kappa
+        argsDict["ebqe_porosity_ext"] = self.coefficients.ebqe_porosity
+        argsDict["ebqe_turb_var_0"] = self.coefficients.ebqe_turb_var[0]
+        argsDict["ebqe_turb_var_1"] = self.coefficients.ebqe_turb_var[1]
+        argsDict["isDOFBoundary_p"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[1]
+        argsDict["isDOFBoundary_v"] = self.numericalFlux.isDOFBoundary[2]
+        argsDict["isDOFBoundary_w"] = self.numericalFlux.isDOFBoundary[3]
+        argsDict["isAdvectiveFluxBoundary_p"] = self.ebqe[('advectiveFlux_bc_flag', 0)]
+        argsDict["isAdvectiveFluxBoundary_u"] = self.ebqe[('advectiveFlux_bc_flag', 1)]
+        argsDict["isAdvectiveFluxBoundary_v"] = self.ebqe[('advectiveFlux_bc_flag', 2)]
+        argsDict["isAdvectiveFluxBoundary_w"] = self.ebqe[('advectiveFlux_bc_flag', 3)]
+        argsDict["isDiffusiveFluxBoundary_u"] = self.ebqe[('diffusiveFlux_bc_flag', 1, 1)]
+        argsDict["isDiffusiveFluxBoundary_v"] = self.ebqe[('diffusiveFlux_bc_flag', 2, 2)]
+        argsDict["isDiffusiveFluxBoundary_w"] = self.ebqe[('diffusiveFlux_bc_flag', 3, 3)]
+        argsDict["ebqe_bc_p_ext"] = self.numericalFlux.ebqe[('u', 0)]
+        argsDict["ebqe_bc_flux_mass_ext"] = self.ebqe[('advectiveFlux_bc', 0)]
+        argsDict["ebqe_bc_flux_mom_u_adv_ext"] = self.ebqe[('advectiveFlux_bc', 1)]
+        argsDict["ebqe_bc_flux_mom_v_adv_ext"] = self.ebqe[('advectiveFlux_bc', 2)]
+        argsDict["ebqe_bc_flux_mom_w_adv_ext"] = self.ebqe[('advectiveFlux_bc', 3)]
+        argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u', 1)]
+        argsDict["ebqe_bc_flux_u_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 1, 1)]
+        argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
+        argsDict["ebqe_bc_v_ext"] = self.numericalFlux.ebqe[('u', 2)]
+        argsDict["ebqe_bc_flux_v_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 2, 2)]
+        argsDict["ebqe_bc_w_ext"] = self.numericalFlux.ebqe[('u', 3)]
+        argsDict["ebqe_bc_flux_w_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 3, 3)]
+        argsDict["q_x"] = self.q['x']
+        argsDict["q_velocity"] = self.q[('velocity', 0)]
+        argsDict["ebqe_velocity"] = self.ebqe[('velocity', 0)]
+        argsDict["flux"] = self.ebq_global[('totalFlux', 0)]
+        argsDict["elementResidual_p_save"] = self.elementResidual[0]
+        argsDict["elementFlags"] = self.mesh.elementMaterialTypes
+        argsDict["boundaryFlags"] = self.mesh.elementBoundaryMaterialTypes
+        argsDict["barycenters"] = self.coefficients.barycenters
+        argsDict["wettedAreas"] = self.coefficients.wettedAreas
+        argsDict["netForces_p"] = self.coefficients.netForces_p
+        argsDict["netForces_v"] = self.coefficients.netForces_v
+        argsDict["netMoments"] = self.coefficients.netMoments
+        argsDict["velocityError"] = self.q['velocityError']
+        argsDict["velocityErrorNodal"] = self.velocityErrorNodal
+        argsDict["forcex"] = self.q[('force', 0)]
+        argsDict["forcey"] = self.q[('force', 1)]
+        argsDict["forcez"] = self.q[('force', 2)]
+        argsDict["use_ball_as_particle"] = int(self.coefficients.use_ball_as_particle)
+        argsDict["ball_center"] = self.coefficients.ball_center
+        argsDict["ball_radius"] = self.coefficients.ball_radius
+        argsDict["ball_velocity"] = self.coefficients.ball_velocity
+        argsDict["ball_angular_velocity"] = self.coefficients.ball_angular_velocity
+        argsDict["ball_center_acceleration"] = self.coefficients.ball_center_acceleration
+        argsDict["ball_angular_acceleration"] = self.coefficients.ball_angular_acceleration
+        argsDict["ball_density"] = self.coefficients.ball_density
+        argsDict["particle_signed_distances"] = self.coefficients.particle_signed_distances
+        argsDict["particle_signed_distance_normals"] = self.coefficients.particle_signed_distance_normals
+        argsDict["particle_velocities"] = self.coefficients.particle_velocities
+        argsDict["particle_centroids"] = self.coefficients.particle_centroids
+        argsDict["ebq_global_phi_s"] = self.coefficients.ebq_global_phi_s
+        argsDict["ebq_global_grad_phi_s"] = self.coefficients.ebq_global_grad_phi_s
+        argsDict["ebq_particle_velocity_s"] = self.coefficients.ebq_particle_velocity_s
+        argsDict["nParticles"] = self.coefficients.nParticles
+        argsDict["&particle_netForces"] = self.coefficients.particle_netForces
+        argsDict["&particle_netMoments"] = self.coefficients.particle_netMoments
+        argsDict["&particle_surfaceArea"] = self.coefficients.particle_surfaceArea
+        argsDict["nElements_owned"] = int(self.mesh.nElements_owned)
+        argsDict["particle_nitsche"] = self.coefficients.particle_nitsche
+        argsDict["particle_epsFact"] = self.coefficients.particle_epsFact
+        argsDict["particle_alpha"] = self.coefficients.particle_alpha
+        argsDict["particle_beta"] = self.coefficients.particle_beta
+        argsDict["particle_penalty_constant"] = self.coefficients.particle_penalty_constant
+        argsDict["phi_solid_nodes"] = self.coefficients.phi_s
+        argsDict["distance_to_solids"] = self.coefficients.phisField
+        argsDict["use_pseudo_penalty"] = self.coefficients.use_pseudo_penalty
+        self.rans2p.calculateResidual(argsDict, self.coefficients.useExact)
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         
@@ -1735,213 +1746,233 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3, 2)] = self.csrColumnOffsets[(0, 2)]
             self.csrColumnOffsets_eb[(3, 3)] = self.csrColumnOffsets[(0, 2)]
 
-        self.rans2p.calculateJacobian(self.coefficients.NONCONSERVATIVE_FORM,
-                                      self.coefficients.MOMENTUM_SGE,
-                                      self.coefficients.PRESSURE_SGE,
-                                      self.coefficients.VELOCITY_SGE,
-                                      self.coefficients.PRESSURE_PROJECTION_STABILIZATION,
-                                      #element
-                                      self.u[0].femSpace.elementMaps.psi,
-                                      self.u[0].femSpace.elementMaps.grad_psi,
-                                      self.mesh.nodeArray,
-                                      self.mesh.nodeVelocityArray,
-                                      self.MOVING_DOMAIN,
-                                      self.mesh.elementNodesArray,
-                                      self.elementQuadraturePoints,
-                                      self.elementQuadratureWeights[('u', 0)],
-                                      self.u[0].femSpace.psi,
-                                      self.u[0].femSpace.grad_psi,
-                                      self.u[0].femSpace.psi,
-                                      self.u[0].femSpace.grad_psi,
-                                      self.u[1].femSpace.psi,
-                                      self.u[1].femSpace.grad_psi,
-                                      self.u[1].femSpace.psi,
-                                      self.u[1].femSpace.grad_psi,
-                                      # element boundary
-                                      self.u[0].femSpace.elementMaps.psi_trace,
-                                      self.u[0].femSpace.elementMaps.grad_psi_trace,
-                                      self.elementBoundaryQuadratureWeights[('u', 0)],
-                                      self.u[0].femSpace.psi_trace,
-                                      self.u[0].femSpace.grad_psi_trace,
-                                      self.u[0].femSpace.psi_trace,
-                                      self.u[0].femSpace.grad_psi_trace,
-                                      self.u[1].femSpace.psi_trace,
-                                      self.u[1].femSpace.grad_psi_trace,
-                                      self.u[1].femSpace.psi_trace,
-                                      self.u[1].femSpace.grad_psi_trace,
-                                      self.u[0].femSpace.elementMaps.boundaryNormals,
-                                      self.u[0].femSpace.elementMaps.boundaryJacobians,
-                                      self.eb_adjoint_sigma,
-                                      self.elementDiameter,  # mesh.elementDiametersArray,
-                                      self.mesh.nodeDiametersArray,
-                                      self.stabilization.hFactor,
-                                      self.mesh.nElements_global,
-                                      float(self.coefficients.useRBLES),
-                                      self.coefficients.useMetrics,
-                                      self.timeIntegration.alpha_bdf,
-                                      self.coefficients.epsFact_density,
-                                      self.coefficients.epsFact,
-                                      self.coefficients.sigma,
-                                      self.coefficients.rho_0,
-                                      self.coefficients.nu_0,
-                                      self.coefficients.rho_1,
-                                      self.coefficients.nu_1,
-                                      self.coefficients.smagorinskyConstant,
-                                      self.coefficients.turbulenceClosureModel,
-                                      self.Ct_sge,
-                                      self.Cd_sge,
-                                      self.shockCapturing.shockCapturingFactor,
-                                      self.numericalFlux.penalty_constant,
-                                      # VRANS start
-                                      self.coefficients.epsFact_solid,
-                                      self.coefficients.q_phi_solid,
-                                      self.coefficients.q_velocity_solid,
-                                      self.coefficients.q_porosity,
-                                      self.coefficients.q_dragAlpha,
-                                      self.coefficients.q_dragBeta,
-                                      self.q[('r', 0)],
-                                      self.coefficients.q_turb_var[0],
-                                      self.coefficients.q_turb_var[1],
-                                      self.coefficients.q_turb_var_grad[0],
-                                      self.coefficients.LAG_LES,
-                                      self.q['eddy_viscosity_last'],
-                                      self.ebqe['eddy_viscosity_last'],
-                                      # VRANS end
-                                      self.u[0].femSpace.dofMap.l2g,
-                                      self.u[1].femSpace.dofMap.l2g,
-                                      self.u[0].dof,
-                                      self.u[1].dof,
-                                      self.u[2].dof,
-                                      self.u[3].dof,
-                                      self.coefficients.p_old_dof,
-                                      self.coefficients.u_old_dof,
-                                      self.coefficients.v_old_dof,
-                                      self.coefficients.w_old_dof,
-                                      self.coefficients.g,
-                                      self.coefficients.useVF,
-                                      self.coefficients.q_vf,
-                                      self.coefficients.q_phi,
-                                      self.coefficients.phi_dof,
-                                      self.coefficients.q_n,
-                                      self.coefficients.q_kappa,
-                                      self.timeIntegration.beta_bdf[1],
-                                      self.timeIntegration.beta_bdf[2],
-                                      self.timeIntegration.beta_bdf[3],
-                                      self.q['dV'],
-                                      self.q['dV_last'],
-                                      self.stabilization.v_last,
-                                      self.q[('cfl', 0)],
-                                      self.shockCapturing.numDiff_last[1],
-                                      self.shockCapturing.numDiff_last[2],
-                                      self.shockCapturing.numDiff_last[3],
-                                      self.coefficients.sdInfo[(1, 1)][0], self.coefficients.sdInfo[(1, 1)][1],
-                                      self.coefficients.sdInfo[(1, 2)][0], self.coefficients.sdInfo[(1, 2)][1],
-                                      self.coefficients.sdInfo[(1, 3)][0], self.coefficients.sdInfo[(1, 3)][1],
-                                      self.coefficients.sdInfo[(2, 2)][0], self.coefficients.sdInfo[(2, 2)][1],
-                                      self.coefficients.sdInfo[(2, 1)][0], self.coefficients.sdInfo[(2, 1)][1],
-                                      self.coefficients.sdInfo[(2, 3)][0], self.coefficients.sdInfo[(2, 3)][1],
-                                      self.coefficients.sdInfo[(3, 3)][0], self.coefficients.sdInfo[(3, 3)][1],
-                                      self.coefficients.sdInfo[(3, 1)][0], self.coefficients.sdInfo[(3, 1)][1],
-                                      self.coefficients.sdInfo[(3, 2)][0], self.coefficients.sdInfo[(3, 2)][1],
-                                      self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-                                      self.csrRowIndeces[(0, 1)], self.csrColumnOffsets[(0, 1)],
-                                      self.csrRowIndeces[(0, 2)], self.csrColumnOffsets[(0, 2)],
-                                      self.csrRowIndeces[(0, 3)], self.csrColumnOffsets[(0, 3)],
-                                      self.csrRowIndeces[(1, 0)], self.csrColumnOffsets[(1, 0)],
-                                      self.csrRowIndeces[(1, 1)], self.csrColumnOffsets[(1, 1)],
-                                      self.csrRowIndeces[(1, 2)], self.csrColumnOffsets[(1, 2)],
-                                      self.csrRowIndeces[(1, 3)], self.csrColumnOffsets[(1, 3)],
-                                      self.csrRowIndeces[(2, 0)], self.csrColumnOffsets[(2, 0)],
-                                      self.csrRowIndeces[(2, 1)], self.csrColumnOffsets[(2, 1)],
-                                      self.csrRowIndeces[(2, 2)], self.csrColumnOffsets[(2, 2)],
-                                      self.csrRowIndeces[(2, 3)], self.csrColumnOffsets[(2, 3)],
-                                      self.csrRowIndeces[(3, 0)], self.csrColumnOffsets[(3, 0)],
-                                      self.csrRowIndeces[(3, 1)], self.csrColumnOffsets[(3, 1)],
-                                      self.csrRowIndeces[(3, 2)], self.csrColumnOffsets[(3, 2)],
-                                      self.csrRowIndeces[(3, 3)], self.csrColumnOffsets[(3, 3)],
-                                      jacobian.getCSRrepresentation()[2],
-                                      self.mesh.nExteriorElementBoundaries_global,
-                                      self.mesh.exteriorElementBoundariesArray,
-                                      self.mesh.elementBoundaryElementsArray,
-                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                      self.coefficients.ebqe_vf,
-                                      self.coefficients.bc_ebqe_vf,
-                                      self.coefficients.ebqe_phi,
-                                      self.coefficients.bc_ebqe_phi,
-                                      self.coefficients.ebqe_n,
-                                      self.coefficients.ebqe_kappa,
-                                      # VRANS start
-                                      self.coefficients.ebqe_porosity,
-                                      self.coefficients.ebqe_turb_var[0],
-                                      self.coefficients.ebqe_turb_var[1],
-                                      # VRANS end
-                                      self.numericalFlux.isDOFBoundary[0],
-                                      self.numericalFlux.isDOFBoundary[1],
-                                      self.numericalFlux.isDOFBoundary[2],
-                                      self.numericalFlux.isDOFBoundary[3],
-                                      self.ebqe[('advectiveFlux_bc_flag', 0)],
-                                      self.ebqe[('advectiveFlux_bc_flag', 1)],
-                                      self.ebqe[('advectiveFlux_bc_flag', 2)],
-                                      self.ebqe[('advectiveFlux_bc_flag', 3)],
-                                      self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
-                                      self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
-                                      self.ebqe[('diffusiveFlux_bc_flag', 3, 3)],
-                                      self.numericalFlux.ebqe[('u', 0)],
-                                      self.ebqe[('advectiveFlux_bc', 0)],
-                                      self.ebqe[('advectiveFlux_bc', 1)],
-                                      self.ebqe[('advectiveFlux_bc', 2)],
-                                      self.ebqe[('advectiveFlux_bc', 3)],
-                                      self.numericalFlux.ebqe[('u', 1)],
-                                      self.ebqe[('diffusiveFlux_bc', 1, 1)],
-                                      self.ebqe['penalty'],
-                                      self.numericalFlux.ebqe[('u', 2)],
-                                      self.ebqe[('diffusiveFlux_bc', 2, 2)],
-                                      self.numericalFlux.ebqe[('u', 3)],
-                                      self.ebqe[('diffusiveFlux_bc', 3, 3)],
-                                      self.csrColumnOffsets_eb[(0, 0)],
-                                      self.csrColumnOffsets_eb[(0, 1)],
-                                      self.csrColumnOffsets_eb[(0, 2)],
-                                      self.csrColumnOffsets_eb[(0, 3)],
-                                      self.csrColumnOffsets_eb[(1, 0)],
-                                      self.csrColumnOffsets_eb[(1, 1)],
-                                      self.csrColumnOffsets_eb[(1, 2)],
-                                      self.csrColumnOffsets_eb[(1, 3)],
-                                      self.csrColumnOffsets_eb[(2, 0)],
-                                      self.csrColumnOffsets_eb[(2, 1)],
-                                      self.csrColumnOffsets_eb[(2, 2)],
-                                      self.csrColumnOffsets_eb[(2, 3)],
-                                      self.csrColumnOffsets_eb[(3, 0)],
-                                      self.csrColumnOffsets_eb[(3, 1)],
-                                      self.csrColumnOffsets_eb[(3, 2)],
-                                      self.csrColumnOffsets_eb[(3, 3)],
-                                      self.mesh.elementMaterialTypes,
-                                      self.mesh.elementBoundaryMaterialTypes,
-                                      int(self.coefficients.use_ball_as_particle),
-                                      self.coefficients.ball_center,
-                                      self.coefficients.ball_radius,
-                                      self.coefficients.ball_velocity,
-                                      self.coefficients.ball_angular_velocity,
-                                      self.coefficients.ball_center_acceleration,
-                                      self.coefficients.ball_angular_acceleration,
-                                      self.coefficients.ball_density,
-                                      self.coefficients.particle_signed_distances,
-                                      self.coefficients.particle_signed_distance_normals,
-                                      self.coefficients.particle_velocities,
-                                      self.coefficients.particle_centroids,
-                                      self.coefficients.ebq_global_phi_s,
-                                      self.coefficients.ebq_global_grad_phi_s,
-                                      self.coefficients.ebq_particle_velocity_s,
-                                      self.coefficients.phi_s,
-                                      self.coefficients.phisField,
-                                      self.coefficients.nParticles,
-                                      int(self.mesh.nElements_owned),
-                                      self.coefficients.particle_nitsche,
-                                      self.coefficients.particle_epsFact,
-                                      self.coefficients.particle_alpha,
-                                      self.coefficients.particle_beta,
-                                      self.coefficients.particle_penalty_constant,
-                                      self.coefficients.use_pseudo_penalty,
-                                      self.coefficients.useExact)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["NONCONSERVATIVE_FORM"] = float(self.coefficients.NONCONSERVATIVE_FORM)
+        argsDict["MOMENTUM_SGE"] = float(self.coefficients.MOMENTUM_SGE)
+        argsDict["PRESSURE_SGE"] = float(self.coefficients.PRESSURE_SGE)
+        argsDict["VELOCITY_SGE"] = float(self.coefficients.VELOCITY_SGE)
+        argsDict["PRESSURE_PROJECTION_STABILIZATION"] = self.coefficients.PRESSURE_PROJECTION_STABILIZATION
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+        argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["p_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["p_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["p_test_ref"] = self.u[0].femSpace.psi
+        argsDict["p_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["vel_trial_ref"] = self.u[1].femSpace.psi
+        argsDict["vel_grad_trial_ref"] = self.u[1].femSpace.grad_psi
+        argsDict["vel_test_ref"] = self.u[1].femSpace.psi
+        argsDict["vel_grad_test_ref"] = self.u[1].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["p_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["p_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["p_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["p_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["vel_trial_trace_ref"] = self.u[1].femSpace.psi_trace
+        argsDict["vel_grad_trial_trace_ref"] = self.u[1].femSpace.grad_psi_trace
+        argsDict["vel_test_trace_ref"] = self.u[1].femSpace.psi_trace
+        argsDict["vel_grad_test_trace_ref"] = self.u[1].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["eb_adjoint_sigma"] = self.eb_adjoint_sigma
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["hFactor"] = self.stabilization.hFactor
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useRBLES"] = float(self.coefficients.useRBLES)
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
+        argsDict["epsFact_rho"] = self.coefficients.epsFact_density
+        argsDict["epsFact_mu"] = self.coefficients.epsFact
+        argsDict["sigma"] = self.coefficients.sigma
+        argsDict["rho_0"] = self.coefficients.rho_0
+        argsDict["nu_0"] = self.coefficients.nu_0
+        argsDict["rho_1"] = self.coefficients.rho_1
+        argsDict["nu_1"] = self.coefficients.nu_1
+        argsDict["smagorinskyConstant"] = self.coefficients.smagorinskyConstant
+        argsDict["turbulenceClosureModel"] = self.coefficients.turbulenceClosureModel
+        argsDict["Ct_sge"] = self.Ct_sge
+        argsDict["Cd_sge"] = self.Cd_sge
+        argsDict["C_dg"] = float(self.shockCapturing.shockCapturingFactor)
+        argsDict["C_b"] = self.numericalFlux.penalty_constant
+        argsDict["eps_solid"] = self.coefficients.epsFact_solid
+        argsDict["phi_solid"] = self.coefficients.q_phi_solid
+        argsDict["q_velocity_solid"] = self.coefficients.q_velocity_solid
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["q_dragAlpha"] = self.coefficients.q_dragAlpha
+        argsDict["q_dragBeta"] = self.coefficients.q_dragBeta
+        argsDict["q_mass_source"] = self.q[('r', 0)]
+        argsDict["q_turb_var_0"] = self.coefficients.q_turb_var[0]
+        argsDict["q_turb_var_1"] = self.coefficients.q_turb_var[1]
+        argsDict["q_turb_var_grad_0"] = self.coefficients.q_turb_var_grad[0]
+        argsDict["LAG_LES"] = self.coefficients.LAG_LES
+        argsDict["q_eddy_viscosity_last"] = self.q['eddy_viscosity_last']
+        argsDict["ebqe_eddy_viscosity_last"] = self.ebqe['eddy_viscosity_last']
+        argsDict["p_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["vel_l2g"] = self.u[1].femSpace.dofMap.l2g
+        argsDict["p_dof"] = self.u[0].dof
+        argsDict["u_dof"] = self.u[1].dof
+        argsDict["v_dof"] = self.u[2].dof
+        argsDict["w_dof"] = self.u[3].dof
+        argsDict["p_old_dof"] = self.coefficients.p_old_dof
+        argsDict["u_old_dof"] = self.coefficients.u_old_dof
+        argsDict["v_old_dof"] = self.coefficients.v_old_dof
+        argsDict["w_old_dof"] = self.coefficients.w_old_dof
+        argsDict["g"] = self.coefficients.g
+        argsDict["useVF"] = self.coefficients.useVF
+        argsDict["vf"] = self.coefficients.q_vf
+        argsDict["phi"] = self.coefficients.q_phi
+        argsDict["phi_nodes"] = self.coefficients.phi_dof
+        argsDict["normal_phi"] = self.coefficients.q_n
+        argsDict["kappa_phi"] = self.coefficients.q_kappa
+        argsDict["q_mom_u_acc_beta_bdf"] = self.timeIntegration.beta_bdf[1]
+        argsDict["q_mom_v_acc_beta_bdf"] = self.timeIntegration.beta_bdf[2]
+        argsDict["q_mom_w_acc_beta_bdf"] = self.timeIntegration.beta_bdf[3]
+        argsDict["q_dV"] = self.q['dV']
+        argsDict["q_dV_last"] = self.q['dV_last']
+        argsDict["q_velocity_sge"] = self.stabilization.v_last
+        argsDict["q_cfl"] = self.q[('cfl', 0)]
+        argsDict["q_numDiff_u_last"] = self.shockCapturing.numDiff_last[1]
+        argsDict["q_numDiff_v_last"] = self.shockCapturing.numDiff_last[2]
+        argsDict["q_numDiff_w_last"] = self.shockCapturing.numDiff_last[3]
+        argsDict["sdInfo_u_u_rowptr"] = self.coefficients.sdInfo[(1, 1)][0]
+        argsDict["sdInfo_u_u_colind"] = self.coefficients.sdInfo[(1, 1)][1]
+        argsDict["sdInfo_u_v_rowptr"] = self.coefficients.sdInfo[(1, 2)][0]
+        argsDict["sdInfo_u_v_colind"] = self.coefficients.sdInfo[(1, 2)][1]
+        argsDict["sdInfo_u_w_rowptr"] = self.coefficients.sdInfo[(1, 3)][0]
+        argsDict["sdInfo_u_w_colind"] = self.coefficients.sdInfo[(1, 3)][1]
+        argsDict["sdInfo_v_v_rowptr"] = self.coefficients.sdInfo[(2, 2)][0]
+        argsDict["sdInfo_v_v_colind"] = self.coefficients.sdInfo[(2, 2)][1]
+        argsDict["sdInfo_v_u_rowptr"] = self.coefficients.sdInfo[(2, 1)][0]
+        argsDict["sdInfo_v_u_colind"] = self.coefficients.sdInfo[(2, 1)][1]
+        argsDict["sdInfo_v_w_rowptr"] = self.coefficients.sdInfo[(2, 3)][0]
+        argsDict["sdInfo_v_w_colind"] = self.coefficients.sdInfo[(2, 3)][1]
+        argsDict["sdInfo_w_w_rowptr"] = self.coefficients.sdInfo[(3, 3)][0]
+        argsDict["sdInfo_w_w_colind"] = self.coefficients.sdInfo[(3, 3)][1]
+        argsDict["sdInfo_w_u_rowptr"] = self.coefficients.sdInfo[(3, 1)][0]
+        argsDict["sdInfo_w_u_colind"] = self.coefficients.sdInfo[(3, 1)][1]
+        argsDict["sdInfo_w_v_rowptr"] = self.coefficients.sdInfo[(3, 2)][0]
+        argsDict["sdInfo_w_v_colind"] = self.coefficients.sdInfo[(3, 2)][1]
+        argsDict["csrRowIndeces_p_p"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_p_p"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["csrRowIndeces_p_u"] = self.csrRowIndeces[(0, 1)]
+        argsDict["csrColumnOffsets_p_u"] = self.csrColumnOffsets[(0, 1)]
+        argsDict["csrRowIndeces_p_v"] = self.csrRowIndeces[(0, 2)]
+        argsDict["csrColumnOffsets_p_v"] = self.csrColumnOffsets[(0, 2)]
+        argsDict["csrRowIndeces_p_w"] = self.csrRowIndeces[(0, 3)]
+        argsDict["csrColumnOffsets_p_w"] = self.csrColumnOffsets[(0, 3)]
+        argsDict["csrRowIndeces_u_p"] = self.csrRowIndeces[(1, 0)]
+        argsDict["csrColumnOffsets_u_p"] = self.csrColumnOffsets[(1, 0)]
+        argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(1, 1)]
+        argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(1, 1)]
+        argsDict["csrRowIndeces_u_v"] = self.csrRowIndeces[(1, 2)]
+        argsDict["csrColumnOffsets_u_v"] = self.csrColumnOffsets[(1, 2)]
+        argsDict["csrRowIndeces_u_w"] = self.csrRowIndeces[(1, 3)]
+        argsDict["csrColumnOffsets_u_w"] = self.csrColumnOffsets[(1, 3)]
+        argsDict["csrRowIndeces_v_p"] = self.csrRowIndeces[(2, 0)]
+        argsDict["csrColumnOffsets_v_p"] = self.csrColumnOffsets[(2, 0)]
+        argsDict["csrRowIndeces_v_u"] = self.csrRowIndeces[(2, 1)]
+        argsDict["csrColumnOffsets_v_u"] = self.csrColumnOffsets[(2, 1)]
+        argsDict["csrRowIndeces_v_v"] = self.csrRowIndeces[(2, 2)]
+        argsDict["csrColumnOffsets_v_v"] = self.csrColumnOffsets[(2, 2)]
+        argsDict["csrRowIndeces_v_w"] = self.csrRowIndeces[(2, 3)]
+        argsDict["csrColumnOffsets_v_w"] = self.csrColumnOffsets[(2, 3)]
+        argsDict["csrRowIndeces_w_p"] = self.csrRowIndeces[(3, 0)]
+        argsDict["csrColumnOffsets_w_p"] = self.csrColumnOffsets[(3, 0)]
+        argsDict["csrRowIndeces_w_u"] = self.csrRowIndeces[(3, 1)]
+        argsDict["csrColumnOffsets_w_u"] = self.csrColumnOffsets[(3, 1)]
+        argsDict["csrRowIndeces_w_v"] = self.csrRowIndeces[(3, 2)]
+        argsDict["csrColumnOffsets_w_v"] = self.csrColumnOffsets[(3, 2)]
+        argsDict["csrRowIndeces_w_w"] = self.csrRowIndeces[(3, 3)]
+        argsDict["csrColumnOffsets_w_w"] = self.csrColumnOffsets[(3, 3)]
+        argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["ebqe_vf_ext"] = self.coefficients.ebqe_vf
+        argsDict["bc_ebqe_vf_ext"] = self.coefficients.bc_ebqe_vf
+        argsDict["ebqe_phi_ext"] = self.coefficients.ebqe_phi
+        argsDict["bc_ebqe_phi_ext"] = self.coefficients.bc_ebqe_phi
+        argsDict["ebqe_normal_phi_ext"] = self.coefficients.ebqe_n
+        argsDict["ebqe_kappa_phi_ext"] = self.coefficients.ebqe_kappa
+        argsDict["ebqe_porosity_ext"] = self.coefficients.ebqe_porosity
+        argsDict["ebqe_turb_var_0"] = self.coefficients.ebqe_turb_var[0]
+        argsDict["ebqe_turb_var_1"] = self.coefficients.ebqe_turb_var[1]
+        argsDict["isDOFBoundary_p"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[1]
+        argsDict["isDOFBoundary_v"] = self.numericalFlux.isDOFBoundary[2]
+        argsDict["isDOFBoundary_w"] = self.numericalFlux.isDOFBoundary[3]
+        argsDict["isAdvectiveFluxBoundary_p"] = self.ebqe[('advectiveFlux_bc_flag', 0)]
+        argsDict["isAdvectiveFluxBoundary_u"] = self.ebqe[('advectiveFlux_bc_flag', 1)]
+        argsDict["isAdvectiveFluxBoundary_v"] = self.ebqe[('advectiveFlux_bc_flag', 2)]
+        argsDict["isAdvectiveFluxBoundary_w"] = self.ebqe[('advectiveFlux_bc_flag', 3)]
+        argsDict["isDiffusiveFluxBoundary_u"] = self.ebqe[('diffusiveFlux_bc_flag', 1, 1)]
+        argsDict["isDiffusiveFluxBoundary_v"] = self.ebqe[('diffusiveFlux_bc_flag', 2, 2)]
+        argsDict["isDiffusiveFluxBoundary_w"] = self.ebqe[('diffusiveFlux_bc_flag', 3, 3)]
+        argsDict["ebqe_bc_p_ext"] = self.numericalFlux.ebqe[('u', 0)]
+        argsDict["ebqe_bc_flux_mass_ext"] = self.ebqe[('advectiveFlux_bc', 0)]
+        argsDict["ebqe_bc_flux_mom_u_adv_ext"] = self.ebqe[('advectiveFlux_bc', 1)]
+        argsDict["ebqe_bc_flux_mom_v_adv_ext"] = self.ebqe[('advectiveFlux_bc', 2)]
+        argsDict["ebqe_bc_flux_mom_w_adv_ext"] = self.ebqe[('advectiveFlux_bc', 3)]
+        argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u', 1)]
+        argsDict["ebqe_bc_flux_u_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 1, 1)]
+        argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
+        argsDict["ebqe_bc_v_ext"] = self.numericalFlux.ebqe[('u', 2)]
+        argsDict["ebqe_bc_flux_v_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 2, 2)]
+        argsDict["ebqe_bc_w_ext"] = self.numericalFlux.ebqe[('u', 3)]
+        argsDict["ebqe_bc_flux_w_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 3, 3)]
+        argsDict["csrColumnOffsets_eb_p_p"] = self.csrColumnOffsets_eb[(0, 0)]
+        argsDict["csrColumnOffsets_eb_p_u"] = self.csrColumnOffsets_eb[(0, 1)]
+        argsDict["csrColumnOffsets_eb_p_v"] = self.csrColumnOffsets_eb[(0, 2)]
+        argsDict["csrColumnOffsets_eb_p_w"] = self.csrColumnOffsets_eb[(0, 3)]
+        argsDict["csrColumnOffsets_eb_u_p"] = self.csrColumnOffsets_eb[(1, 0)]
+        argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(1, 1)]
+        argsDict["csrColumnOffsets_eb_u_v"] = self.csrColumnOffsets_eb[(1, 2)]
+        argsDict["csrColumnOffsets_eb_u_w"] = self.csrColumnOffsets_eb[(1, 3)]
+        argsDict["csrColumnOffsets_eb_v_p"] = self.csrColumnOffsets_eb[(2, 0)]
+        argsDict["csrColumnOffsets_eb_v_u"] = self.csrColumnOffsets_eb[(2, 1)]
+        argsDict["csrColumnOffsets_eb_v_v"] = self.csrColumnOffsets_eb[(2, 2)]
+        argsDict["csrColumnOffsets_eb_v_w"] = self.csrColumnOffsets_eb[(2, 3)]
+        argsDict["csrColumnOffsets_eb_w_p"] = self.csrColumnOffsets_eb[(3, 0)]
+        argsDict["csrColumnOffsets_eb_w_u"] = self.csrColumnOffsets_eb[(3, 1)]
+        argsDict["csrColumnOffsets_eb_w_v"] = self.csrColumnOffsets_eb[(3, 2)]
+        argsDict["csrColumnOffsets_eb_w_w"] = self.csrColumnOffsets_eb[(3, 3)]
+        argsDict["elementFlags"] = self.mesh.elementMaterialTypes
+        argsDict["boundaryFlags"] = self.mesh.elementBoundaryMaterialTypes
+        argsDict["use_ball_as_particle"] = int(self.coefficients.use_ball_as_particle)
+        argsDict["ball_center"] = self.coefficients.ball_center
+        argsDict["ball_radius"] = self.coefficients.ball_radius
+        argsDict["ball_velocity"] = self.coefficients.ball_velocity
+        argsDict["ball_angular_velocity"] = self.coefficients.ball_angular_velocity
+        argsDict["ball_center_acceleration"] = self.coefficients.ball_center_acceleration
+        argsDict["ball_angular_acceleration"] = self.coefficients.ball_angular_acceleration
+        argsDict["ball_density"] = self.coefficients.ball_density
+        argsDict["particle_signed_distances"] = self.coefficients.particle_signed_distances
+        argsDict["particle_signed_distance_normals"] = self.coefficients.particle_signed_distance_normals
+        argsDict["particle_velocities"] = self.coefficients.particle_velocities
+        argsDict["particle_centroids"] = self.coefficients.particle_centroids
+        argsDict["ebq_global_phi_s"] = self.coefficients.ebq_global_phi_s
+        argsDict["ebq_global_grad_phi_s"] = self.coefficients.ebq_global_grad_phi_s
+        argsDict["ebq_particle_velocity_s"] = self.coefficients.ebq_particle_velocity_s
+        argsDict["phi_solid_nodes"] = self.coefficients.phi_s
+        argsDict["distance_to_solids"] = self.coefficients.phisField
+        argsDict["nParticles"] = self.coefficients.nParticles
+        argsDict["nElements_owned"] = int(self.mesh.nElements_owned)
+        argsDict["particle_nitsche"] = self.coefficients.particle_nitsche
+        argsDict["particle_epsFact"] = self.coefficients.particle_epsFact
+        argsDict["particle_alpha"] = self.coefficients.particle_alpha
+        argsDict["particle_beta"] = self.coefficients.particle_beta
+        argsDict["particle_penalty_constant"] = self.coefficients.particle_penalty_constant
+        argsDict["use_pseudo_penalty"] = self.coefficients.use_pseudo_penalty
+        self.rans2p.calculateJacobian(argsDict, self.coefficients.useExact)
         
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
@@ -2080,29 +2111,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.postProcessing and self.conservativeFlux:
             if self.coefficients.porosityTypes is None:
                 self.coefficients.porosityTypes = np.ones((self.mesh.elementMaterialTypes.max()+1,),'d')
-            self.rans2p.calculateVelocityAverage(self.mesh.nExteriorElementBoundaries_global,
-                                                 self.mesh.exteriorElementBoundariesArray,
-                                                 self.mesh.nInteriorElementBoundaries_global,
-                                                 self.mesh.interiorElementBoundariesArray,
-                                                 self.mesh.elementBoundaryElementsArray,
-                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                 self.mesh.nodeArray,
-                                                 self.mesh.nodeVelocityArray,
-                                                 self.MOVING_DOMAIN,
-                                                 self.mesh.elementNodesArray,
-                                                 self.u[0].femSpace.elementMaps.psi_trace,
-                                                 self.u[0].femSpace.elementMaps.grad_psi_trace,
-                                                 self.u[0].femSpace.elementMaps.boundaryNormals,
-                                                 self.u[0].femSpace.elementMaps.boundaryJacobians,
-                                                 self.u[1].femSpace.dofMap.l2g,
-                                                 self.u[1].dof,
-                                                 self.u[2].dof,
-                                                 self.u[3].dof,
-                                                 self.u[1].femSpace.psi_trace,
-                                                 self.ebqe[('velocity', 0)],
-                                                 self.ebq_global[('velocityAverage', 0)],
-                                                 self.mesh.elementMaterialTypes,
-                                                 self.coefficients.porosityTypes)
+            
+            argsDict = cArgumentsDict.ArgumentsDict()
+            argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+            argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+            argsDict["nInteriorElementBoundaries_global"] = self.mesh.nInteriorElementBoundaries_global
+            argsDict["interiorElementBoundariesArray"] = self.mesh.interiorElementBoundariesArray
+            argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+            argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+            argsDict["mesh_dof"] = self.mesh.nodeArray
+            argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+            argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+            argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+            argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+            argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+            argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+            argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+            argsDict["vel_l2g"] = self.u[1].femSpace.dofMap.l2g
+            argsDict["u_dof"] = self.u[1].dof
+            argsDict["v_dof"] = self.u[2].dof
+            argsDict["w_dof"] = self.u[3].dof
+            argsDict["vel_trial_trace_ref"] = self.u[1].femSpace.psi_trace
+            argsDict["ebqe_velocity"] = self.ebqe[('velocity', 0)]
+            argsDict["velocityAverage"] = self.ebq_global[('velocityAverage', 0)]
+            argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes
+            argsDict["porosityTypes"] = self.coefficients.porosityTypes
+            self.rans2p.calculateVelocityAverage(argsDict)
+            
             if self.movingDomain:
                 logEvent("Element Quadrature", level=3)
                 self.calculateElementQuadrature(domainMoved=True)

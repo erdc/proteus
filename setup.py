@@ -114,21 +114,21 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cPres',
         ['proteus/mprans/Pres.cpp'],
-        depends=['proteus/mprans/Pres.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        depends=['proteus/mprans/Pres.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension(
         'mprans.cPresInit',
         ['proteus/mprans/PresInit.cpp'],
-        depends=['proteus/mprans/PresInit.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        depends=['proteus/mprans/PresInit.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension(
         'mprans.cPresInc',
         ['proteus/mprans/PresInc.cpp'],
-        depends=['proteus/mprans/PresInc.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        depends=['proteus/mprans/PresInc.h', 'proteus/mprans/PresInc.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
@@ -143,14 +143,14 @@ EXTENSIONS_TO_BUILD = [
               include_dirs=get_xtensor_include(),
               extra_compile_args=PROTEUS_OPT+['-std=c++14']),
     Extension('mprans.cVOF3P', ['proteus/mprans/VOF3P.cpp'],
-              depends=['proteus/mprans/VOF3P.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              depends=['proteus/mprans/VOF3P.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
               include_dirs=get_xtensor_include(),
               extra_compile_args=PROTEUS_OPT+['-std=c++14']),
     Extension(
         'mprans.cVOS3P',
         ['proteus/mprans/VOS3P.cpp'],
-        depends=['proteus/mprans/VOS3P.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        depends=['proteus/mprans/VOS3P.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
@@ -633,7 +633,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cRANS2P',
         ['proteus/mprans/RANS2P.cpp'],
-        depends=["proteus/mprans/RANS2P.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"] + [
+        depends=["proteus/mprans/RANS2P.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"] + [
             "proteus/equivalent_polynomials.h",
             "proteus/equivalent_polynomials_utils.h",
             "proteus/equivalent_polynomials_coefficients.h"],
@@ -643,7 +643,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cRANS2P_IB',
         ['proteus/mprans/RANS2P_IB.cpp'],
-        depends=["proteus/mprans/RANS2P_IB.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"] + [
+        depends=["proteus/mprans/RANS2P_IB.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/MixedModelFactory.h","proteus/CompKernel.h"] + [
             "proteus/equivalent_polynomials.h",
             "proteus/equivalent_polynomials_utils.h",
             "proteus/equivalent_polynomials_coefficients.h"],
@@ -663,7 +663,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cRDLS',
         ['proteus/mprans/RDLS.cpp'],
-        depends=["proteus/mprans/RDLS.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"] + [
+        depends=["proteus/mprans/RDLS.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"] + [
             "proteus/equivalent_polynomials.h",
             "proteus/equivalent_polynomials_utils.h",
             "proteus/equivalent_polynomials_coefficients.h"],
@@ -673,7 +673,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cVOF',
         ['proteus/mprans/VOF.cpp'],
-        depends=["proteus/mprans/VOF.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/VOF.h", "proteus/mprans/ArgumentsDict.h", "proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
@@ -694,14 +694,14 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cSW2D',
         ['proteus/mprans/SW2D.cpp'],
-        depends=["proteus/mprans/SW2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/SW2D.h", "proteus/mprans/SW2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension(
         'mprans.cSW2DCV',
         ['proteus/mprans/SW2DCV.cpp'],
-        depends=["proteus/mprans/SW2DCV.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/SW2DCV.h", "proteus/mprans/ArgumentsDict.h", "proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),

@@ -19,6 +19,7 @@ from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 from . import cPresInit
+from . import cArgumentsDict
 
 
 class Coefficients(TC_base):
@@ -580,53 +581,53 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setUnknowns(u)
 
         # no flux boundary conditions
-        self.presinit.calculateResidual(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_vos,
-            self.offset[0], self.stride[0],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["ebqe_phi"] = self.coefficients.ebqe_u_ls
+        argsDict["ebqe_normal_phi"] = self.coefficients.ebqe_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["ebqe_n"] = self.ebqe[('grad(u)', 0)]
+        argsDict["q_r"] = self.q[('r', 0)]
+        argsDict["q_vos"] = self.coefficients.q_vos
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        self.presinit.calculateResidual(argsDict)
         log("Global residual", level=9, data=r)
         self.coefficients.massConservationError = fabs(
             globalSum(sum(r.flat[:self.mesh.nNodes_owned])))
@@ -640,41 +641,42 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian, jacobian)
-        self.presinit.calculateJacobian(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.q_H_vof,
-            self.coefficients.q_vos,
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian.getCSRrepresentation()[2])
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_vos"] = self.coefficients.q_vos
+        argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
+        self.presinit.calculateJacobian(argsDict)
         log("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
