@@ -680,14 +680,14 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cMoveMesh',
         ['proteus/mprans/MoveMesh.cpp'],
-        depends=["proteus/mprans/MoveMesh.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/MoveMesh.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension(
         'mprans.cMoveMesh2D',
         ['proteus/mprans/MoveMesh2D.cpp'],
-        depends=["proteus/mprans/MoveMesh2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/MoveMesh2D.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
