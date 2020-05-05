@@ -1,3 +1,19 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:9823b67b0c3af42715930f6410a5d8c457e7f3337c77ed7ae63e1e0f8bc1b6d9
-size 511
+ply
+format ascii 1.0
+comment author: Proteus
+comment object: DefaultPSLGDomain
+element vertex 4
+property float x
+property float y
+property float z
+element face 4 
+property list uchar int vertex_index
+end_header
+0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+1.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+1.0000000000000000e+00 2.0000000000000000e+00 0.0000000000000000e+00
+0.0000000000000000e+00 2.0000000000000000e+00 0.0000000000000000e+00
+2 0 1
+2 1 2
+2 2 3
+2 3 0

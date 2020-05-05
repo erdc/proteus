@@ -292,11 +292,11 @@ test: air-water-vv check
 	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
-	# @echo "Running air-water-vv test set 1"
-	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
-	# @echo "************************************"
-	# @echo "Running air-water-vv test set 2"
-	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+	@echo "Running air-water-vv test set 1"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
+	@echo "************************************"
+	@echo "Running air-water-vv test set 2"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 
 test-conda: air-water-vv check
 	@echo "**************************************************"
@@ -310,16 +310,19 @@ test-conda: air-water-vv check
 	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
-	# @echo "Running air-water-vv test set 1"
-	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
-	# @echo "************************************"
-	# @echo "Running air-water-vv test set 2"
-	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+	@echo "Running air-water-vv test set 1"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
+	@echo "************************************"
+	@echo "Running air-water-vv test set 2"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 
 jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/widgets"
+ifdef CONDA_PREFIX
+else
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
+endif
 	pip install configparser ipyparallel ipython terminado jupyter ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
 	jupyter nbextension enable --py --sys-prefix ipysheet
@@ -344,7 +347,11 @@ jupyter:
 	printf "c.LocalControllerLauncher.controller_cmd = ['python', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+ifdef CONDA_PREFIX
+	cd ${CONDA_PREFIX}/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+else
 	cd linux/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+endif
 
 jupyterlab:
 	@echo "************************************"

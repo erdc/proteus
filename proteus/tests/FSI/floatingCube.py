@@ -242,6 +242,7 @@ ind += 1
 m.rans2p.auxiliaryVariables += [system]
 m.rans2p.p.coefficients.eb_bc_penalty_constant = 10.#/nu_0#Re
 m.addedMass.auxiliaryVariables += [system.ProtChAddedMass]
+m.rans2p.p.coefficients.NONCONSERVATIVE_FORM=0.0
 max_flag = 0
 max_flag = max(domain.vertexFlags)
 max_flag = max(domain.segmentFlags+[max_flag])

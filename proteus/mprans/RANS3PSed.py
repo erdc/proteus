@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from __future__ import division
+import math
 from builtins import str
 from builtins import range
 from past.utils import old_div
@@ -12,7 +13,9 @@ from proteus import cfemIntegrals, Quadrature, Norms, Comm
 from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
                               FluxBoundaryConditions,
-                              C0_AffineLinearOnSimplexWithNodalBasis)
+                              C0_AffineLinearOnSimplexWithNodalBasis,
+                              C0_AffineQuadraticOnSimplexWithNodalBasis)
+
 from proteus.Comm import (globalMax,
                           globalSum)
 from proteus.Profiling import memory
@@ -22,6 +25,7 @@ from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 from . import cRANS3PSed
+from . import cRANS3PSed2D
 
 
 class SubgridError(proteus.SubgridError.SGE_base):
@@ -197,7 +201,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
-                 angFriction=old_div(pi,6.0),
+                 angFriction=old_div(math.pi,6.0),
                  vos_function=None,
                  staticSediment=False,
                  vos_limiter = 0.05,
@@ -1559,7 +1563,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ('u', 2)] = self.numericalFlux.ebqe[
                 ('u', 1)].copy()
             log("calling RANS3PSed2D ctor")
-            self.rans3psed = cRANS3PSed.RANS3PSed2D(
+            self.rans3psed = cRANS3PSed2D.cppRANS3PSed2D_base(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1587,7 +1591,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 )
         else:
             log("calling  RANS3PSed ctor")
-            self.rans3psed = cRANS3PSed.RANS3PSed(
+            self.rans3psed = cRANS3PSed.cppRANS3PSed_base(
                 self.nSpace_global,
                 self.nQuadraturePoints_element,
                 self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1677,185 +1681,186 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                             dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
         self.ncDrag[:]=0.0
-        self.rans3psed.calculateResidual(  # element
-            self.pressureModel.u[0].femSpace.elementMaps.psi,
-            self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.nodeVelocityArray,
-            self.MOVING_DOMAIN,
-            self.coefficients.PSTAB,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.pressureModel.u[0].femSpace.psi,
-            self.pressureModel.u[0].femSpace.grad_psi,
-            self.pressureModel.u[0].femSpace.psi,
-            self.pressureModel.u[0].femSpace.grad_psi,
-            self.pressureModel.q_p_sharp,
-            self.pressureModel.q_grad_p_sharp,
-            self.pressureModel.ebqe_p_sharp,
-            self.pressureModel.ebqe_grad_p_sharp,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
-            self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.pressureModel.u[0].femSpace.psi_trace,
-            self.pressureModel.u[0].femSpace.grad_psi_trace,
-            self.pressureModel.u[0].femSpace.psi_trace,
-            self.pressureModel.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            self.eb_adjoint_sigma,
-            self.elementDiameter,  # mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.stabilization.hFactor,
-            self.mesh.nElements_global,
-            self.mesh.nElementBoundaries_owned,
-            self.coefficients.useRBLES,
-            self.coefficients.useMetrics,
-            self.timeIntegration.alpha_bdf,
-            self.coefficients.epsFact_density,
-            self.coefficients.epsFact,
-            self.coefficients.sigma,
-            self.coefficients.rho_0,
-            self.coefficients.nu_0,
-            self.coefficients.rho_1,
-            self.coefficients.nu_1,
-            self.coefficients.rho_s,
-            self.coefficients.smagorinskyConstant,
-            self.coefficients.turbulenceClosureModel,
-            self.Ct_sge,
-            self.Cd_sge,
-            self.shockCapturing.shockCapturingFactor,
-            self.numericalFlux.penalty_constant,
-            self.coefficients.epsFact_solid,
-            self.q_velocity_fluid,
-            self.q_velocityStar_fluid,
-            self.q_vos,
-            self.q_dvos_dt,
-            self.coefficients.q_grad_vos,
-            self.coefficients.q_dragAlpha,
-            self.coefficients.q_dragBeta,
-            self.q[('r', 0)],
-            self.coefficients.q_turb_var[0],
-            self.coefficients.q_turb_var[1],
-            self.coefficients.q_turb_var_grad[0],
-            self.q['eddy_viscosity'],
-            self.pressureModel.u[0].femSpace.dofMap.l2g,
-            self.u[0].femSpace.dofMap.l2g,
-            self.pressureModel.u[0].dof,
-            self.u[0].dof,
-            self.u[1].dof,
-            self.u[2].dof,
-            self.coefficients.g,
-            self.coefficients.useVF,
-            self.coefficients.q_vf,
-            self.coefficients.q_phi,
-            self.coefficients.q_n,
-            self.coefficients.q_kappa,
-            self.timeIntegration.m_tmp[0],
-            self.timeIntegration.m_tmp[1],
-            self.timeIntegration.m_tmp[2],
-            self.q[('f', 0)],
-            self.timeIntegration.beta_bdf[0],
-            self.timeIntegration.beta_bdf[1],
-            self.timeIntegration.beta_bdf[2],
-            self.q['dV'],
-            self.q['dV_last'],
-            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy             
-            self.coefficients.ebqe_velocity_last,
-            self.q[('cfl', 0)],
-            self.q[('numDiff', 0, 0)],
-            self.q[('numDiff', 1, 1)],
-            self.q[('numDiff', 2, 2)],
-            self.shockCapturing.numDiff_last[0],
-            self.shockCapturing.numDiff_last[1],
-            self.shockCapturing.numDiff_last[2],
-            self.coefficients.sdInfo[(0, 0)][0],
-            self.coefficients.sdInfo[(0, 0)][1],
-            self.coefficients.sdInfo[(0, 1)][0],
-            self.coefficients.sdInfo[(0, 1)][1],
-            self.coefficients.sdInfo[(0, 2)][0],
-            self.coefficients.sdInfo[(0, 2)][1],
-            self.coefficients.sdInfo[(1, 1)][0],
-            self.coefficients.sdInfo[(1, 1)][1],
-            self.coefficients.sdInfo[(1, 0)][0],
-            self.coefficients.sdInfo[(1, 0)][1],
-            self.coefficients.sdInfo[(1, 2)][0],
-            self.coefficients.sdInfo[(1, 2)][1],
-            self.coefficients.sdInfo[(2, 2)][0],
-            self.coefficients.sdInfo[(2, 2)][1],
-            self.coefficients.sdInfo[(2, 0)][0],
-            self.coefficients.sdInfo[(2, 0)][1],
-            self.coefficients.sdInfo[(2, 1)][0],
-            self.coefficients.sdInfo[(2, 1)][1],
-            self.pressureModel.offset[0],
-            self.offset[0],
-            self.offset[1],
-            self.offset[2],
-            self.pressureModel.stride[0],
-            self.stride[0],
-            self.stride[1],
-            self.stride[2],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.coefficients.ebqe_vf,
-            self.coefficients.bc_ebqe_vf,
-            self.coefficients.ebqe_phi,
-            self.coefficients.bc_ebqe_phi,
-            self.coefficients.ebqe_n,
-            self.coefficients.ebqe_kappa,
-            self.coefficients.ebqe_vos,
-            self.coefficients.ebqe_turb_var[0],
-            self.coefficients.ebqe_turb_var[1],
-            self.pressureModel.numericalFlux.isDOFBoundary[0],
-            self.numericalFlux.isDOFBoundary[0],
-            self.numericalFlux.isDOFBoundary[1],
-            self.numericalFlux.isDOFBoundary[2],
-            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc_flag', 0)],
-            self.ebqe[('advectiveFlux_bc_flag', 0)],
-            self.ebqe[('advectiveFlux_bc_flag', 1)],
-            self.ebqe[('advectiveFlux_bc_flag', 2)],
-            self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
-            self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
-            self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
-            self.pressureModel.numericalFlux.ebqe[('u', 0)],
-            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)],
-            self.ebqe[('advectiveFlux_bc', 0)],
-            self.ebqe[('advectiveFlux_bc', 1)],
-            self.ebqe[('advectiveFlux_bc', 2)],
-            self.numericalFlux.ebqe[('u', 0)],
-            self.ebqe[('diffusiveFlux_bc', 0, 0)],
-            self.ebqe['penalty'],
-            self.numericalFlux.ebqe[('u', 1)],
-            self.ebqe[('diffusiveFlux_bc', 1, 1)],
-            self.numericalFlux.ebqe[('u', 2)],
-            self.ebqe[('diffusiveFlux_bc', 2, 2)],
-            self.q['x'],
-            self.q[('velocity', 0)],
-            self.ebqe[('velocity', 0)],
-            self.ebq_global[('totalFlux', 0)],
-            self.elementResidual[0],
-            self.mesh.elementMaterialTypes,
-            self.mesh.elementBoundaryMaterialTypes,
-            self.coefficients.barycenters,
-            self.coefficients.wettedAreas,
-            self.coefficients.netForces_p,
-            self.coefficients.netForces_v,
-            self.coefficients.netMoments,
-            self.ncDrag,
-            self.LAG_MU_FR,
-            self.q['mu_fr_last'],
-            self.q['mu_fr'])
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.pressureModel.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.pressureModel.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+        argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+        argsDict["PSTAB"] = self.coefficients.PSTAB
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["p_trial_ref"] = self.pressureModel.u[0].femSpace.psi
+        argsDict["p_grad_trial_ref"] = self.pressureModel.u[0].femSpace.grad_psi
+        argsDict["p_test_ref"] = self.pressureModel.u[0].femSpace.psi
+        argsDict["p_grad_test_ref"] = self.pressureModel.u[0].femSpace.grad_psi
+        argsDict["q_p"] = self.pressureModel.q_p_sharp
+        argsDict["q_grad_p"] = self.pressureModel.q_grad_p_sharp
+        argsDict["ebqe_p"] = self.pressureModel.ebqe_p_sharp
+        argsDict["ebqe_grad_p"] = self.pressureModel.ebqe_grad_p_sharp
+        argsDict["vel_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["vel_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["vel_test_ref"] = self.u[0].femSpace.psi
+        argsDict["vel_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.pressureModel.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["p_trial_trace_ref"] = self.pressureModel.u[0].femSpace.psi_trace
+        argsDict["p_grad_trial_trace_ref"] = self.pressureModel.u[0].femSpace.grad_psi_trace
+        argsDict["p_test_trace_ref"] = self.pressureModel.u[0].femSpace.psi_trace
+        argsDict["p_grad_test_trace_ref"] = self.pressureModel.u[0].femSpace.grad_psi_trace
+        argsDict["vel_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["vel_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["vel_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["vel_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["eb_adjoint_sigma"] = self.eb_adjoint_sigma
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["hFactor"] = self.stabilization.hFactor
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["nElementBoundaries_owned"] = self.mesh.nElementBoundaries_owned
+        argsDict["useRBLES"] = self.coefficients.useRBLES
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
+        argsDict["epsFact_rho"] = self.coefficients.epsFact_density
+        argsDict["epsFact_mu"] = self.coefficients.epsFact
+        argsDict["sigma"] = self.coefficients.sigma
+        argsDict["rho_0"] = self.coefficients.rho_0
+        argsDict["nu_0"] = self.coefficients.nu_0
+        argsDict["rho_1"] = self.coefficients.rho_1
+        argsDict["nu_1"] = self.coefficients.nu_1
+        argsDict["rho_s"] = self.coefficients.rho_s
+        argsDict["smagorinskyConstant"] = self.coefficients.smagorinskyConstant
+        argsDict["turbulenceClosureModel"] = self.coefficients.turbulenceClosureModel
+        argsDict["Ct_sge"] = self.Ct_sge
+        argsDict["Cd_sge"] = self.Cd_sge
+        argsDict["C_dc"] = self.shockCapturing.shockCapturingFactor
+        argsDict["C_b"] = self.numericalFlux.penalty_constant
+        argsDict["eps_solid"] = self.coefficients.epsFact_solid
+        argsDict["q_velocity_fluid"] = self.q_velocity_fluid
+        argsDict["q_velocityStar_fluid"] = self.q_velocityStar_fluid
+        argsDict["q_vos"] = self.q_vos
+        argsDict["q_dvos_dt"] = self.q_dvos_dt
+        argsDict["q_grad_vos"] = self.coefficients.q_grad_vos
+        argsDict["q_dragAlpha"] = self.coefficients.q_dragAlpha
+        argsDict["q_dragBeta"] = self.coefficients.q_dragBeta
+        argsDict["q_mass_source"] = self.q[('r', 0)]
+        argsDict["q_turb_var_0"] = self.coefficients.q_turb_var[0]
+        argsDict["q_turb_var_1"] = self.coefficients.q_turb_var[1]
+        argsDict["q_turb_var_grad_0"] = self.coefficients.q_turb_var_grad[0]
+        argsDict["q_eddy_viscosity"] = self.q['eddy_viscosity']
+        argsDict["p_l2g"] = self.pressureModel.u[0].femSpace.dofMap.l2g
+        argsDict["vel_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["p_dof"] = self.pressureModel.u[0].dof
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["v_dof"] = self.u[1].dof
+        argsDict["w_dof"] = self.u[2].dof
+        argsDict["g"] = self.coefficients.g
+        argsDict["useVF"] = self.coefficients.useVF
+        argsDict["vf"] = self.coefficients.q_vf
+        argsDict["phi"] = self.coefficients.q_phi
+        argsDict["normal_phi"] = self.coefficients.q_n
+        argsDict["kappa_phi"] = self.coefficients.q_kappa
+        argsDict["q_mom_u_acc"] = self.timeIntegration.m_tmp[0]
+        argsDict["q_mom_v_acc"] = self.timeIntegration.m_tmp[1]
+        argsDict["q_mom_w_acc"] = self.timeIntegration.m_tmp[2]
+        argsDict["q_mass_adv"] = self.q[('f', 0)]
+        argsDict["q_mom_u_acc_beta_bdf"] = self.timeIntegration.beta_bdf[0]
+        argsDict["q_mom_v_acc_beta_bdf"] = self.timeIntegration.beta_bdf[1]
+        argsDict["q_mom_w_acc_beta_bdf"] = self.timeIntegration.beta_bdf[2]
+        argsDict["q_dV"] = self.q['dV']
+        argsDict["q_dV_last"] = self.q['dV_last']
+        argsDict["q_velocity_sge"] = self.q[('velocityStar',0)]
+        argsDict["ebqe_velocity_star"] = self.coefficients.ebqe_velocity_last
+        argsDict["q_cfl"] = self.q[('cfl', 0)]
+        argsDict["q_numDiff_u"] = self.q[('numDiff', 0, 0)]
+        argsDict["q_numDiff_v"] = self.q[('numDiff', 1, 1)]
+        argsDict["q_numDiff_w"] = self.q[('numDiff', 2, 2)]
+        argsDict["q_numDiff_u_last"] = self.shockCapturing.numDiff_last[0]
+        argsDict["q_numDiff_v_last"] = self.shockCapturing.numDiff_last[1]
+        argsDict["q_numDiff_w_last"] = self.shockCapturing.numDiff_last[2]
+        argsDict["sdInfo_u_u_rowptr"] = self.coefficients.sdInfo[(0, 0)][0]
+        argsDict["sdInfo_u_u_colind"] = self.coefficients.sdInfo[(0, 0)][1]
+        argsDict["sdInfo_u_v_rowptr"] = self.coefficients.sdInfo[(0, 1)][0]
+        argsDict["sdInfo_u_v_colind"] = self.coefficients.sdInfo[(0, 1)][1]
+        argsDict["sdInfo_u_w_rowptr"] = self.coefficients.sdInfo[(0, 2)][0]
+        argsDict["sdInfo_u_w_colind"] = self.coefficients.sdInfo[(0, 2)][1]
+        argsDict["sdInfo_v_v_rowptr"] = self.coefficients.sdInfo[(1, 1)][0]
+        argsDict["sdInfo_v_v_colind"] = self.coefficients.sdInfo[(1, 1)][1]
+        argsDict["sdInfo_v_u_rowptr"] = self.coefficients.sdInfo[(1, 0)][0]
+        argsDict["sdInfo_v_u_colind"] = self.coefficients.sdInfo[(1, 0)][1]
+        argsDict["sdInfo_v_w_rowptr"] = self.coefficients.sdInfo[(1, 2)][0]
+        argsDict["sdInfo_v_w_colind"] = self.coefficients.sdInfo[(1, 2)][1]
+        argsDict["sdInfo_w_w_rowptr"] = self.coefficients.sdInfo[(2, 2)][0]
+        argsDict["sdInfo_w_w_colind"] = self.coefficients.sdInfo[(2, 2)][1]
+        argsDict["sdInfo_w_u_rowptr"] = self.coefficients.sdInfo[(2, 0)][0]
+        argsDict["sdInfo_w_u_colind"] = self.coefficients.sdInfo[(2, 0)][1]
+        argsDict["sdInfo_w_v_rowptr"] = self.coefficients.sdInfo[(2, 1)][0]
+        argsDict["sdInfo_w_v_colind"] = self.coefficients.sdInfo[(2, 1)][1]
+        argsDict["offset_p"] = self.pressureModel.offset[0]
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["offset_v"] = self.offset[1]
+        argsDict["offset_w"] = self.offset[2]
+        argsDict["stride_p"] = self.pressureModel.stride[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["stride_v"] = self.stride[1]
+        argsDict["stride_w"] = self.stride[2]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["ebqe_vf_ext"] = self.coefficients.ebqe_vf
+        argsDict["bc_ebqe_vf_ext"] = self.coefficients.bc_ebqe_vf
+        argsDict["ebqe_phi_ext"] = self.coefficients.ebqe_phi
+        argsDict["bc_ebqe_phi_ext"] = self.coefficients.bc_ebqe_phi
+        argsDict["ebqe_normal_phi_ext"] = self.coefficients.ebqe_n
+        argsDict["ebqe_kappa_phi_ext"] = self.coefficients.ebqe_kappa
+        argsDict["ebqe_vos_ext"] = self.coefficients.ebqe_vos
+        argsDict["ebqe_turb_var_0"] = self.coefficients.ebqe_turb_var[0]
+        argsDict["ebqe_turb_var_1"] = self.coefficients.ebqe_turb_var[1]
+        argsDict["isDOFBoundary_p"] = self.pressureModel.numericalFlux.isDOFBoundary[0]
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["isDOFBoundary_v"] = self.numericalFlux.isDOFBoundary[1]
+        argsDict["isDOFBoundary_w"] = self.numericalFlux.isDOFBoundary[2]
+        argsDict["isAdvectiveFluxBoundary_p"] = self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc_flag', 0)]
+        argsDict["isAdvectiveFluxBoundary_u"] = self.ebqe[('advectiveFlux_bc_flag', 0)]
+        argsDict["isAdvectiveFluxBoundary_v"] = self.ebqe[('advectiveFlux_bc_flag', 1)]
+        argsDict["isAdvectiveFluxBoundary_w"] = self.ebqe[('advectiveFlux_bc_flag', 2)]
+        argsDict["isDiffusiveFluxBoundary_u"] = self.ebqe[('diffusiveFlux_bc_flag', 0, 0)]
+        argsDict["isDiffusiveFluxBoundary_v"] = self.ebqe[('diffusiveFlux_bc_flag', 1, 1)]
+        argsDict["isDiffusiveFluxBoundary_w"] = self.ebqe[('diffusiveFlux_bc_flag', 2, 2)]
+        argsDict["ebqe_bc_p_ext"] = self.pressureModel.numericalFlux.ebqe[('u', 0)]
+        argsDict["ebqe_bc_flux_mass_ext"] = self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)]
+        argsDict["ebqe_bc_flux_mom_u_adv_ext"] = self.ebqe[('advectiveFlux_bc', 0)]
+        argsDict["ebqe_bc_flux_mom_v_adv_ext"] = self.ebqe[('advectiveFlux_bc', 1)]
+        argsDict["ebqe_bc_flux_mom_w_adv_ext"] = self.ebqe[('advectiveFlux_bc', 2)]
+        argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u', 0)]
+        argsDict["ebqe_bc_flux_u_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 0, 0)]
+        argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
+        argsDict["ebqe_bc_v_ext"] = self.numericalFlux.ebqe[('u', 1)]
+        argsDict["ebqe_bc_flux_v_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 1, 1)]
+        argsDict["ebqe_bc_w_ext"] = self.numericalFlux.ebqe[('u', 2)]
+        argsDict["ebqe_bc_flux_w_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 2, 2)]
+        argsDict["q_x"] = self.q['x']
+        argsDict["q_velocity"] = self.q[('velocity', 0)]
+        argsDict["ebqe_velocity"] = self.ebqe[('velocity', 0)]
+        argsDict["flux"] = self.ebq_global[('totalFlux', 0)]
+        argsDict["elementResidual_p_save"] = self.elementResidual[0]
+        argsDict["elementFlags"] = self.mesh.elementMaterialTypes
+        argsDict["boundaryFlags"] = self.mesh.elementBoundaryMaterialTypes
+        argsDict["barycenters"] = self.coefficients.barycenters
+        argsDict["wettedAreas"] = self.coefficients.wettedAreas
+        argsDict["netForces_p"] = self.coefficients.netForces_p
+        argsDict["netForces_v"] = self.coefficients.netForces_v
+        argsDict["netMoments"] = self.coefficients.netMoments
+        argsDict["ncDrag"] = self.ncDrag
+        argsDict["LAG_MU_FR"] = self.LAG_MU_FR
+        argsDict["q_mu_fr_last"] = self.q['mu_fr_last']
+        argsDict["q_mu_fr"] = self.q['mu_fr']
+        self.rans3psed.calculateResidual(argsDict)
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         
@@ -1903,206 +1908,205 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 1)] = self.csrColumnOffsets[(0, 1)]
             self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
 
-        self.rans3psed.calculateJacobian(  # element
-            self.pressureModel.u[0].femSpace.elementMaps.psi,
-            self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.nodeVelocityArray,
-            self.MOVING_DOMAIN,
-            self.coefficients.PSTAB,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.pressureModel.u[0].femSpace.psi,
-            self.pressureModel.u[0].femSpace.grad_psi,
-            self.pressureModel.u[0].femSpace.psi,
-            self.pressureModel.u[0].femSpace.grad_psi,
-            self.pressureModel.q_p_sharp,
-            self.pressureModel.q_grad_p_sharp,
-            self.pressureModel.ebqe_p_sharp,
-            self.pressureModel.ebqe_grad_p_sharp,
-            # self.pressureModel.q[('u',0)],
-            # self.pressureModel.q[('grad(u)',0)],
-            # self.pressureModel.ebqe[('u',0)],
-            # self.pressureModel.ebqe[('grad(u)',0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
-            self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.pressureModel.elementBoundaryQuadratureWeights[('u', 0)],
-            self.pressureModel.u[0].femSpace.psi_trace,
-            self.pressureModel.u[0].femSpace.grad_psi_trace,
-            self.pressureModel.u[0].femSpace.psi_trace,
-            self.pressureModel.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            self.eb_adjoint_sigma,
-            self.elementDiameter,  # mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.stabilization.hFactor,
-            self.mesh.nElements_global,
-            self.coefficients.useRBLES,
-            self.coefficients.useMetrics,
-            self.timeIntegration.alpha_bdf,
-            self.coefficients.epsFact_density,
-            self.coefficients.epsFact,
-            self.coefficients.sigma,
-            self.coefficients.rho_0,
-            self.coefficients.nu_0,
-            self.coefficients.rho_1,
-            self.coefficients.nu_1,
-            self.coefficients.rho_s,
-            self.coefficients.smagorinskyConstant,
-            self.coefficients.turbulenceClosureModel,
-            self.Ct_sge,
-            self.Cd_sge,
-            self.shockCapturing.shockCapturingFactor,
-            self.numericalFlux.penalty_constant,
-            # VRANS start
-            self.coefficients.epsFact_solid,
-            self.q_velocity_fluid,
-            self.q_velocityStar_fluid,
-            self.q_vos,
-            self.q_dvos_dt,
-            self.coefficients.q_grad_vos,
-            self.coefficients.q_dragAlpha,
-            self.coefficients.q_dragBeta,
-            self.pressureModel.q[('r', 0)],
-            self.coefficients.q_turb_var[0],
-            self.coefficients.q_turb_var[1],
-            self.coefficients.q_turb_var_grad[0],
-            # VRANS end
-            self.pressureModel.u[0].femSpace.dofMap.l2g,
-            self.u[0].femSpace.dofMap.l2g,
-            self.pressureModel.u[0].dof,
-            self.u[0].dof,
-            self.u[1].dof,
-            self.u[2].dof,
-            self.coefficients.g,
-            self.coefficients.useVF,
-            self.coefficients.q_vf,
-            self.coefficients.q_phi,
-            self.coefficients.q_n,
-            self.coefficients.q_kappa,
-            self.timeIntegration.beta_bdf[0],
-            self.timeIntegration.beta_bdf[1],
-            self.timeIntegration.beta_bdf[2],
-            self.q['dV'],
-            self.q['dV_last'],
-            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy 
-            self.coefficients.ebqe_velocity_last,
-            self.q[('cfl', 0)],
-            self.shockCapturing.numDiff_last[0],
-            self.shockCapturing.numDiff_last[1],
-            self.shockCapturing.numDiff_last[2],
-            self.coefficients.sdInfo[
-                (0, 0)][0], self.coefficients.sdInfo[
-                (0, 0)][1],
-            self.coefficients.sdInfo[
-                (0, 1)][0], self.coefficients.sdInfo[
-                (0, 1)][1],
-            self.coefficients.sdInfo[
-                (0, 2)][0], self.coefficients.sdInfo[
-                (0, 2)][1],
-            self.coefficients.sdInfo[
-                (1, 1)][0], self.coefficients.sdInfo[
-                (1, 1)][1],
-            self.coefficients.sdInfo[
-                (1, 0)][0], self.coefficients.sdInfo[
-                (1, 0)][1],
-            self.coefficients.sdInfo[
-                (1, 2)][0], self.coefficients.sdInfo[
-                (1, 2)][1],
-            self.coefficients.sdInfo[
-                (2, 2)][0], self.coefficients.sdInfo[
-                (2, 2)][1],
-            self.coefficients.sdInfo[
-                (2, 0)][0], self.coefficients.sdInfo[
-                (2, 0)][1],
-            self.coefficients.sdInfo[
-                (2, 1)][0], self.coefficients.sdInfo[
-                (2, 1)][1],
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.csrRowIndeces[(0, 1)], self.csrColumnOffsets[(0, 1)],
-            self.csrRowIndeces[(0, 2)], self.csrColumnOffsets[(0, 2)],
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.csrRowIndeces[(0, 1)], self.csrColumnOffsets[(0, 1)],
-            self.csrRowIndeces[(0, 2)], self.csrColumnOffsets[(0, 2)],
-            self.csrRowIndeces[(1, 0)], self.csrColumnOffsets[(1, 0)],
-            self.csrRowIndeces[(1, 0)], self.csrColumnOffsets[(1, 0)],
-            self.csrRowIndeces[(1, 1)], self.csrColumnOffsets[(1, 1)],
-            self.csrRowIndeces[(1, 2)], self.csrColumnOffsets[(1, 2)],
-            self.csrRowIndeces[(2, 0)], self.csrColumnOffsets[(2, 0)],
-            self.csrRowIndeces[(2, 0)], self.csrColumnOffsets[(2, 0)],
-            self.csrRowIndeces[(2, 1)], self.csrColumnOffsets[(2, 1)],
-            self.csrRowIndeces[(2, 2)], self.csrColumnOffsets[(2, 2)],
-            jacobian.getCSRrepresentation()[2],
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.coefficients.ebqe_vf,
-            self.coefficients.bc_ebqe_vf,
-            self.coefficients.ebqe_phi,
-            self.coefficients.bc_ebqe_phi,
-            self.coefficients.ebqe_n,
-            self.coefficients.ebqe_kappa,
-            # VRANS start
-            self.coefficients.ebqe_vos,
-            self.coefficients.ebqe_turb_var[0],
-            self.coefficients.ebqe_turb_var[1],
-            # VRANS end
-            self.pressureModel.numericalFlux.isDOFBoundary[0],
-            self.numericalFlux.isDOFBoundary[0],
-            self.numericalFlux.isDOFBoundary[1],
-            self.numericalFlux.isDOFBoundary[2],
-            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc_flag', 0)],
-            self.ebqe[('advectiveFlux_bc_flag', 0)],
-            self.ebqe[('advectiveFlux_bc_flag', 1)],
-            self.ebqe[('advectiveFlux_bc_flag', 2)],
-            self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
-            self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
-            self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
-            self.pressureModel.numericalFlux.ebqe[('u', 0)],
-            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)],
-            self.ebqe[('advectiveFlux_bc', 0)],
-            self.ebqe[('advectiveFlux_bc', 1)],
-            self.ebqe[('advectiveFlux_bc', 2)],
-            self.numericalFlux.ebqe[('u', 0)],
-            self.ebqe[('diffusiveFlux_bc', 0, 0)],
-            self.ebqe['penalty'],
-            self.numericalFlux.ebqe[('u', 1)],
-            self.ebqe[('diffusiveFlux_bc', 1, 1)],
-            self.numericalFlux.ebqe[('u', 2)],
-            self.ebqe[('diffusiveFlux_bc', 2, 2)],
-            self.csrColumnOffsets_eb[(0, 0)],
-            self.csrColumnOffsets_eb[(0, 0)],
-            self.csrColumnOffsets_eb[(0, 1)],
-            self.csrColumnOffsets_eb[(0, 2)],
-            self.csrColumnOffsets_eb[(0, 0)],
-            self.csrColumnOffsets_eb[(0, 0)],
-            self.csrColumnOffsets_eb[(0, 1)],
-            self.csrColumnOffsets_eb[(0, 2)],
-            self.csrColumnOffsets_eb[(1, 0)],
-            self.csrColumnOffsets_eb[(1, 0)],
-            self.csrColumnOffsets_eb[(1, 1)],
-            self.csrColumnOffsets_eb[(1, 2)],
-            self.csrColumnOffsets_eb[(2, 0)],
-            self.csrColumnOffsets_eb[(2, 0)],
-            self.csrColumnOffsets_eb[(2, 1)],
-            self.csrColumnOffsets_eb[(2, 2)],
-            self.mesh.elementMaterialTypes,
-            self.LAG_MU_FR,
-            self.q['mu_fr_last'],
-            self.q['mu_fr'])
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.pressureModel.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.pressureModel.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+        argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+        argsDict["PSTAB"] = self.coefficients.PSTAB
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["p_trial_ref"] = self.pressureModel.u[0].femSpace.psi
+        argsDict["p_grad_trial_ref"] = self.pressureModel.u[0].femSpace.grad_psi
+        argsDict["p_test_ref"] = self.pressureModel.u[0].femSpace.psi
+        argsDict["p_grad_test_ref"] = self.pressureModel.u[0].femSpace.grad_psi
+        argsDict["q_p"] = self.pressureModel.q_p_sharp
+        argsDict["q_grad_p"] = self.pressureModel.q_grad_p_sharp
+        argsDict["ebqe_p"] = self.pressureModel.ebqe_p_sharp
+        argsDict["ebqe_grad_p"] = self.pressureModel.ebqe_grad_p_sharp
+        argsDict["vel_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["vel_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["vel_test_ref"] = self.u[0].femSpace.psi
+        argsDict["vel_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.pressureModel.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.pressureModel.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["p_trial_trace_ref"] = self.pressureModel.u[0].femSpace.psi_trace
+        argsDict["p_grad_trial_trace_ref"] = self.pressureModel.u[0].femSpace.grad_psi_trace
+        argsDict["p_test_trace_ref"] = self.pressureModel.u[0].femSpace.psi_trace
+        argsDict["p_grad_test_trace_ref"] = self.pressureModel.u[0].femSpace.grad_psi_trace
+        argsDict["vel_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["vel_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["vel_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["vel_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["eb_adjoint_sigma"] = self.eb_adjoint_sigma
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["hFactor"] = self.stabilization.hFactor
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useRBLES"] = self.coefficients.useRBLES
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
+        argsDict["epsFact_rho"] = self.coefficients.epsFact_density
+        argsDict["epsFact_mu"] = self.coefficients.epsFact
+        argsDict["sigma"] = self.coefficients.sigma
+        argsDict["rho_0"] = self.coefficients.rho_0
+        argsDict["nu_0"] = self.coefficients.nu_0
+        argsDict["rho_1"] = self.coefficients.rho_1
+        argsDict["nu_1"] = self.coefficients.nu_1
+        argsDict["rho_s"] = self.coefficients.rho_s
+        argsDict["smagorinskyConstant"] = self.coefficients.smagorinskyConstant
+        argsDict["turbulenceClosureModel"] = self.coefficients.turbulenceClosureModel
+        argsDict["Ct_sge"] = self.Ct_sge
+        argsDict["Cd_sge"] = self.Cd_sge
+        argsDict["C_dg"] = self.shockCapturing.shockCapturingFactor
+        argsDict["C_b"] = self.numericalFlux.penalty_constant
+        argsDict["eps_solid"] = self.coefficients.epsFact_solid
+        argsDict["q_velocity_fluid"] = self.q_velocity_fluid
+        argsDict["q_velocityStar_fluid"] = self.q_velocityStar_fluid
+        argsDict["q_vos"] = self.q_vos
+        argsDict["q_dvos_dt"] = self.q_dvos_dt
+        argsDict["q_grad_vos"] = self.coefficients.q_grad_vos
+        argsDict["q_dragAlpha"] = self.coefficients.q_dragAlpha
+        argsDict["q_dragBeta"] = self.coefficients.q_dragBeta
+        argsDict["q_mass_source"] = self.pressureModel.q[('r', 0)]
+        argsDict["q_turb_var_0"] = self.coefficients.q_turb_var[0]
+        argsDict["q_turb_var_1"] = self.coefficients.q_turb_var[1]
+        argsDict["q_turb_var_grad_0"] = self.coefficients.q_turb_var_grad[0]
+        argsDict["p_l2g"] = self.pressureModel.u[0].femSpace.dofMap.l2g
+        argsDict["vel_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["p_dof"] = self.pressureModel.u[0].dof
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["v_dof"] = self.u[1].dof
+        argsDict["w_dof"] = self.u[2].dof
+        argsDict["g"] = self.coefficients.g
+        argsDict["useVF"] = self.coefficients.useVF
+        argsDict["vf"] = self.coefficients.q_vf
+        argsDict["phi"] = self.coefficients.q_phi
+        argsDict["normal_phi"] = self.coefficients.q_n
+        argsDict["kappa_phi"] = self.coefficients.q_kappa
+        argsDict["q_mom_u_acc_beta_bdf"] = self.timeIntegration.beta_bdf[0]
+        argsDict["q_mom_v_acc_beta_bdf"] = self.timeIntegration.beta_bdf[1]
+        argsDict["q_mom_w_acc_beta_bdf"] = self.timeIntegration.beta_bdf[2]
+        argsDict["q_dV"] = self.q['dV']
+        argsDict["q_dV_last"] = self.q['dV_last']
+        argsDict["q_velocity_sge"] = self.q[('velocityStar',0)]
+        argsDict["ebqe_velocity_star"] = self.coefficients.ebqe_velocity_last
+        argsDict["q_cfl"] = self.q[('cfl', 0)]
+        argsDict["q_numDiff_u_last"] = self.shockCapturing.numDiff_last[0]
+        argsDict["q_numDiff_v_last"] = self.shockCapturing.numDiff_last[1]
+        argsDict["q_numDiff_w_last"] = self.shockCapturing.numDiff_last[2]
+        argsDict["sdInfo_u_u_rowptr"] = self.coefficients.sdInfo[(0, 0)][0]
+        argsDict["sdInfo_u_u_colind"] = self.coefficients.sdInfo[(0, 0)][1]
+        argsDict["sdInfo_u_v_rowptr"] = self.coefficients.sdInfo[(0, 1)][0], 
+        argsDict["sdInfo_u_v_colind"] = self.coefficients.sdInfo[(0, 1)][1]
+        argsDict["sdInfo_u_w_rowptr"] = self.coefficients.sdInfo[(0, 2)][0]
+        argsDict["sdInfo_u_w_colind"] = self.coefficients.sdInfo[(0, 2)][1]
+        argsDict["sdInfo_v_v_rowptr"] = self.coefficients.sdInfo[(1, 1)][0]
+        argsDict["sdInfo_v_v_colind"] = self.coefficients.sdInfo[(1, 1)][1]
+        argsDict["sdInfo_v_u_rowptr"] = self.coefficients.sdInfo[(1, 0)][0]
+        argsDict["sdInfo_v_u_colind"] = self.coefficients.sdInfo[(1, 0)][1]
+        argsDict["sdInfo_v_w_rowptr"] = self.coefficients.sdInfo[(1, 2)][0]
+        argsDict["sdInfo_v_w_colind"] = self.coefficients.sdInfo[(1, 2)][1]
+        argsDict["sdInfo_w_w_rowptr"] = self.coefficients.sdInfo[(2, 2)][0]
+        argsDict["sdInfo_w_w_colind"] = self.coefficients.sdInfo[(2, 2)][1]
+        argsDict["sdInfo_w_u_rowptr"] = self.coefficients.sdInfo[(2, 0)][0]
+        argsDict["sdInfo_w_u_colind"] = self.coefficients.sdInfo[(2, 0)][1]
+        argsDict["sdInfo_w_v_rowptr"] = self.coefficients.sdInfo[(2, 1)][0]
+        argsDict["sdInfo_w_v_colind"] = self.coefficients.sdInfo[(2, 1)][1]
+        argsDict["csrRowIndeces_p_p"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_p_p"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["csrRowIndeces_p_u"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_p_u"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["csrRowIndeces_p_v"] = self.csrRowIndeces[(0, 1)]
+        argsDict["csrColumnOffsets_p_v"] = self.csrColumnOffsets[(0, 1)]
+        argsDict["csrRowIndeces_p_w"] = self.csrRowIndeces[(0, 2)]
+        argsDict["csrColumnOffsets_p_w"] = self.csrColumnOffsets[(0, 2)]
+        argsDict["csrRowIndeces_u_p"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_u_p"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["csrRowIndeces_u_v"] = self.csrRowIndeces[(0, 1)]
+        argsDict["csrColumnOffsets_u_v"] = self.csrColumnOffsets[(0, 1)]
+        argsDict["csrRowIndeces_u_w"] = self.csrRowIndeces[(0, 2)]
+        argsDict["csrColumnOffsets_u_w"] = self.csrColumnOffsets[(0, 2)]
+        argsDict["csrRowIndeces_v_p"] = self.csrRowIndeces[(1, 0)]
+        argsDict["csrColumnOffsets_v_p"] = self.csrColumnOffsets[(1, 0)]
+        argsDict["csrRowIndeces_v_u"] = self.csrRowIndeces[(1, 0)]
+        argsDict["csrColumnOffsets_v_u"] = self.csrColumnOffsets[(1, 0)]
+        argsDict["csrRowIndeces_v_v"] = self.csrRowIndeces[(1, 1)]
+        argsDict["csrColumnOffsets_v_v"] = self.csrColumnOffsets[(1, 1)]
+        argsDict["csrRowIndeces_v_w"] = self.csrRowIndeces[(1, 2)]
+        argsDict["csrColumnOffsets_v_w"] = self.csrColumnOffsets[(1, 2)]
+        argsDict["csrRowIndeces_w_p"] = self.csrRowIndeces[(2, 0)]
+        argsDict["csrColumnOffsets_w_p"] = self.csrColumnOffsets[(2, 0)]
+        argsDict["csrRowIndeces_w_u"] = self.csrRowIndeces[(2, 0)]
+        argsDict["csrColumnOffsets_w_u"] = self.csrColumnOffsets[(2, 0)]
+        argsDict["csrRowIndeces_w_v"] = self.csrRowIndeces[(2, 1)]
+        argsDict["csrColumnOffsets_w_v"] = self.csrColumnOffsets[(2, 1)]
+        argsDict["csrRowIndeces_w_w"] = self.csrRowIndeces[(2, 2)]
+        argsDict["csrColumnOffsets_w_w"] = self.csrColumnOffsets[(2, 2)]
+        argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["ebqe_vf_ext"] = self.coefficients.ebqe_vf
+        argsDict["bc_ebqe_vf_ext"] = self.coefficients.bc_ebqe_vf
+        argsDict["ebqe_phi_ext"] = self.coefficients.ebqe_phi
+        argsDict["bc_ebqe_phi_ext"] = self.coefficients.bc_ebqe_phi
+        argsDict["ebqe_normal_phi_ext"] = self.coefficients.ebqe_n
+        argsDict["ebqe_kappa_phi_ext"] = self.coefficients.ebqe_kappa
+        argsDict["ebqe_vos_ext"] = self.coefficients.ebqe_vos
+        argsDict["ebqe_turb_var_0"] = self.coefficients.ebqe_turb_var[0]
+        argsDict["ebqe_turb_var_1"] = self.coefficients.ebqe_turb_var[1]
+        argsDict["isDOFBoundary_p"] = self.pressureModel.numericalFlux.isDOFBoundary[0]
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["isDOFBoundary_v"] = self.numericalFlux.isDOFBoundary[1]
+        argsDict["isDOFBoundary_w"] = self.numericalFlux.isDOFBoundary[2]
+        argsDict["isAdvectiveFluxBoundary_p"] = self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc_flag', 0)]
+        argsDict["isAdvectiveFluxBoundary_u"] = self.ebqe[('advectiveFlux_bc_flag', 0)]
+        argsDict["isAdvectiveFluxBoundary_v"] = self.ebqe[('advectiveFlux_bc_flag', 1)]
+        argsDict["isAdvectiveFluxBoundary_w"] = self.ebqe[('advectiveFlux_bc_flag', 2)]
+        argsDict["isDiffusiveFluxBoundary_u"] = self.ebqe[('diffusiveFlux_bc_flag', 0, 0)]
+        argsDict["isDiffusiveFluxBoundary_v"] = self.ebqe[('diffusiveFlux_bc_flag', 1, 1)]
+        argsDict["isDiffusiveFluxBoundary_w"] = self.ebqe[('diffusiveFlux_bc_flag', 2, 2)]
+        argsDict["ebqe_bc_p_ext"] = self.pressureModel.numericalFlux.ebqe[('u', 0)]
+        argsDict["ebqe_bc_flux_mass_ext"] = self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)]
+        argsDict["ebqe_bc_flux_mom_u_adv_ext"] = self.ebqe[('advectiveFlux_bc', 0)]
+        argsDict["ebqe_bc_flux_mom_v_adv_ext"] = self.ebqe[('advectiveFlux_bc', 1)]
+        argsDict["ebqe_bc_flux_mom_w_adv_ext"] = self.ebqe[('advectiveFlux_bc', 2)]
+        argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u', 0)]
+        argsDict["ebqe_bc_flux_u_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 0, 0)]
+        argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
+        argsDict["ebqe_bc_v_ext"] = self.numericalFlux.ebqe[('u', 1)]
+        argsDict["ebqe_bc_flux_v_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 1, 1)]
+        argsDict["ebqe_bc_w_ext"] = self.numericalFlux.ebqe[('u', 2)]
+        argsDict["ebqe_bc_flux_w_diff_ext"] = self.ebqe[('diffusiveFlux_bc', 2, 2)]
+        argsDict["csrColumnOffsets_eb_p_p"] = self.csrColumnOffsets_eb[(0, 0)]
+        argsDict["csrColumnOffsets_eb_p_u"] = self.csrColumnOffsets_eb[(0, 0)]
+        argsDict["csrColumnOffsets_eb_p_v"] = self.csrColumnOffsets_eb[(0, 1)]
+        argsDict["csrColumnOffsets_eb_p_w"] = self.csrColumnOffsets_eb[(0, 2)]
+        argsDict["csrColumnOffsets_eb_u_p"] = self.csrColumnOffsets_eb[(0, 0)]
+        argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0, 0)]
+        argsDict["csrColumnOffsets_eb_u_v"] = self.csrColumnOffsets_eb[(0, 1)]
+        argsDict["csrColumnOffsets_eb_u_w"] = self.csrColumnOffsets_eb[(0, 2)]
+        argsDict["csrColumnOffsets_eb_v_p"] = self.csrColumnOffsets_eb[(1, 0)]
+        argsDict["csrColumnOffsets_eb_v_u"] = self.csrColumnOffsets_eb[(1, 0)]
+        argsDict["csrColumnOffsets_eb_v_v"] = self.csrColumnOffsets_eb[(1, 1)]
+        argsDict["csrColumnOffsets_eb_v_w"] = self.csrColumnOffsets_eb[(1, 2)]
+        argsDict["csrColumnOffsets_eb_w_p"] = self.csrColumnOffsets_eb[(2, 0)]
+        argsDict["csrColumnOffsets_eb_w_u"] = self.csrColumnOffsets_eb[(2, 0)]
+        argsDict["csrColumnOffsets_eb_w_v"] = self.csrColumnOffsets_eb[(2, 1)]
+        argsDict["csrColumnOffsets_eb_w_w"] = self.csrColumnOffsets_eb[(2, 2)]
+        argsDict["elementFlags"] = self.mesh.elementMaterialTypes
+        argsDict["LAG_MU_FR"] = self.LAG_MU_FR
+        argsDict["q_mu_fr_last"] = self.q['mu_fr_last']
+        argsDict["q_mu_fr"] = self.q['mu_fr']
+        self.rans3psed.calculateJacobian(argsDict)
         self.q[('cfl', 0)][:]=0.0
 
         if not self.forceStrongConditions and max(
@@ -2271,33 +2275,30 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def calculateAuxiliaryQuantitiesAfterStep(self):
         if self.postProcessing and self.conservativeFlux:
-            self.rans3psed.calculateVelocityAverage(
-                self.mesh.nExteriorElementBoundaries_global,
-                self.mesh.exteriorElementBoundariesArray,
-                self.mesh.nInteriorElementBoundaries_global,
-                self.mesh.interiorElementBoundariesArray,
-                self.mesh.elementBoundaryElementsArray,
-                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                self.mesh.nodeArray,
-                self.mesh.nodeVelocityArray,
-                self.MOVING_DOMAIN,
-                self.mesh.elementNodesArray,
-                self.u[0].femSpace.elementMaps.psi_trace,
-                self.u[0].femSpace.elementMaps.grad_psi_trace,
-                self.u[0].femSpace.elementMaps.boundaryNormals,
-                self.u[0].femSpace.elementMaps.boundaryJacobians,
-                self.u[0].femSpace.dofMap.l2g,
-                self.u[0].dof,
-                self.u[1].dof,
-                self.u[2].dof,
-                self.coefficients.vos_dof,
-                self.u[0].femSpace.psi_trace,
-                self.ebqe[
-                    ('velocity',
-                     0)],
-                self.ebq_global[
-                    ('velocityAverage',
-                     0)])
+            argsDict = cArgumentsDict.ArgumentsDict()
+            argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+            argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+            argsDict["nInteriorElementBoundaries_global"] = self.mesh.nInteriorElementBoundaries_global
+            argsDict["interiorElementBoundariesArray"] = self.mesh.interiorElementBoundariesArray
+            argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+            argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+            argsDict["mesh_dof"] = self.mesh.nodeArray
+            argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+            argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+            argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+            argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+            argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+            argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+            argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+            argsDict["vel_l2g"] = self.u[0].femSpace.dofMap.l2g
+            argsDict["u_dof"] = self.u[0].dof
+            argsDict["v_dof"] = self.u[1].dof
+            argsDict["w_dof"] = self.u[2].dof
+            argsDict["vos_dof"] = self.coefficients.vos_dof
+            argsDict["vel_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+            argsDict["ebqe_velocity"] = self.ebqe[('velocity', 0)]
+            argsDict["velocityAverage"] = self.ebq_global[('velocityAverage', 0)]
+            self.rans3psed.calculateVelocityAverage(argsDict)
             if self.movingDomain:
                 log("Element Quadrature", level=3)
                 self.calculateElementQuadrature(domainMoved=True)

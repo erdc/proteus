@@ -12,7 +12,7 @@ The recommended way is the following:
 make develop
 make test
 ```
-https://github.com/erdc/proteus/wiki/How-to-Build-Proteus-Using-HashDist
+https://github.com/erdc/proteus/wiki/How-to-Build-Proteus
 
 However, we are transitioning to a conda-based environment. Proteus can be installed with:
 

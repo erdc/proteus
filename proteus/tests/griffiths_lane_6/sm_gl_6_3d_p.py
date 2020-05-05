@@ -11,7 +11,10 @@ import os
 Soil mechanics model for problem 6.3 in Smith and Griffiths
 """
 nd=3
-from .griffiths_lane_6 import *
+try:
+    from .griffiths_lane_6 import *
+except:
+    from griffiths_lane_6 import *
 genMesh=False#True
 he = 4.0
 #he*=0.5
