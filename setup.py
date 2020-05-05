@@ -160,7 +160,7 @@ EXTENSIONS_TO_BUILD = [
               include_dirs=get_xtensor_include(),
               extra_compile_args=PROTEUS_OPT+['-std=c++14']),
     Extension('mprans.cMCorr3P', ['proteus/mprans/MCorr3P.cpp'],
-              depends=['proteus/mprans/MCorr3P.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              depends=['proteus/mprans/MCorr3P.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
               include_dirs=get_xtensor_include(),
               extra_compile_args=PROTEUS_OPT+['-std=c++14'],
