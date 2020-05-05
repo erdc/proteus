@@ -609,7 +609,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cNCLS',
         ['proteus/mprans/NCLS.cpp'],
-        depends=["proteus/mprans/NCLS.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/NCLS.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
