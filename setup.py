@@ -155,7 +155,7 @@ EXTENSIONS_TO_BUILD = [
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
     Extension('mprans.cNCLS3P', ['proteus/mprans/NCLS3P.cpp'],
-              depends=['proteus/mprans/NCLS3P.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+              depends=['proteus/mprans/NCLS3P.h', 'proteus/mprans/ArgumentsDict.h' , 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
               language='c++',
               include_dirs=get_xtensor_include(),
               extra_compile_args=PROTEUS_OPT+['-std=c++14']),
