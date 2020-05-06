@@ -715,7 +715,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cKappa',
         ['proteus/mprans/Kappa.cpp'],
-        depends=["proteus/mprans/Kappa.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/Kappa.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
