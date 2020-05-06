@@ -432,6 +432,18 @@ namespace proteus
 		            abort();
 		          }
 		      }
+		    else if (nQuadraturePoints_elementIn == 12)
+		      {
+		        if (nQuadraturePoints_elementBoundaryIn == 6)
+		          {
+			    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,12,3,6,6,6>());
+		          }
+		        else
+		          {
+		            NO_INSTANCE;
+		            abort();
+		          }
+		      }
 		    /* else if (nQuadraturePoints_elementIn == 112) */
 		    /*   { */
 		    /*     if (nQuadraturePoints_elementBoundaryIn == 5) */

@@ -179,7 +179,7 @@ namespace proteus
     CompKernelType ck;
     GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
     GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf_s;
-    cppADR(): nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element), ck()
+    cADR(): nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element), ck()
     {}
     /* inline
        void evaluateCoefficients()
@@ -1844,9 +1844,9 @@ namespace proteus
 	    }//kb
 	}//ebNE
     }//computeJacobian
-  };//cppADR
+  };//cADR
 
-  inline cppADR_base* newADR(int nSpaceIn,
+  inline cADR_base* newADR(int nSpaceIn,
 			     int nQuadraturePoints_elementIn,
 			     int nDOF_mesh_trial_elementIn,
 			     int nDOF_trial_elementIn,

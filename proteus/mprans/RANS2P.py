@@ -888,6 +888,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reuse_trial_and_test_quadrature=False,
                  sd=True,
                  movingDomain=False):
+        if coefficients.useExact:
+            self.hasCutCells=True
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         useConstant_he = coefficients.useConstant_he  # this is a hack to test the effect of using a constant smoothing width
         self.postProcessing = True

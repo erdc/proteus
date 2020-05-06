@@ -7,7 +7,7 @@
   <<nSpaceIn<<","                                                       \
   <<nDOF_mesh_trial_elementIn<<","                                      \
   <<nDOF_trial_elementIn<<","                                           \
-  <<nDOF_test_elementIn<<">CompKernelTemplate_v<"                         \
+  <<nDOF_test_elementIn<<">,CompKernelTemplate_v<"                      \
   <<nSpaceIn<<","                                                       \
   <<nDOF_mesh_trial_elementIn<<","                                      \
   <<nDOF_v_trial_elementIn<<","                                         \
@@ -70,8 +70,8 @@ namespace proteus
 			  return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,5,4,4,4,4,4,4>());
 			/* else if (nQuadraturePoints_elementIn == 4) */
 			/*   return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,4,4,4,4,4,4,3>()); */
-			/* else if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7) */
-			/*   return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,15,4,4,4,4,4,7>()); */
+			else if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7)
+			  return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,15,4,4,4,4,4,7>());
 			else if (nQuadraturePoints_elementIn == 24 && nQuadraturePoints_elementBoundaryIn == 12)
 			  return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,4,4>,CompKernelTemplate_v<3,4,4,4>,3,24,4,4,4,4,4,12>());
 			else
@@ -453,11 +453,21 @@ namespace proteus
 				abort();
 			      }
 			  }
+			else if (nQuadraturePoints_elementIn == 25) // Q1 FE-space
+			  {
+			    if (nQuadraturePoints_elementBoundaryIn == 5)			    
+			      return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,CompKernelTemplate_v<2,4,4,4>,2,25,4,4,4,4,4,5>());
+			    else
+			      {
+				NO_INSTANCE;
+				abort();
+			      }
+			  }
 			else
 			  {
 			    NO_INSTANCE;
 			    abort();
-			      }
+			  }
 		      }
 		    else if (nDOF_v_trial_elementIn == 6)//P1-P2
 		      {

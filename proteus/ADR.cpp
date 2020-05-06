@@ -22,8 +22,8 @@ PYBIND11_MODULE(cADR, m)
 {
     xt::import_numpy();
 
-    py::class_<cppADR_base>(m, "cADR_base")
+    py::class_<cADR_base>(m, "cADR_base")
         .def(py::init(&proteus::newADR))
-        .def("calculateResidual", &cppADR_base::calculateResidual)
-        .def("calculateJacobian", &cppADR_base::calculateJacobian);
+        .def("calculateResidual", &cADR_base::calculateResidual)
+        .def("calculateJacobian", &cADR_base::calculateJacobian);
 }

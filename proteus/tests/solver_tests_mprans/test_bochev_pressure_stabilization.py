@@ -93,7 +93,7 @@ def test_bochev_pressure_cavity(load_cavity_problem,
 
     expected_path = 'comparison_files/' + 'comparison_' + 'twp_navier_stokes_cavity_2d' + '_p_t1.csv'
     #write comparison file
-    np.array(actual.root.p_t1).tofile(os.path.join(script_dir, expected_path),sep=",")
+    #np.array(actual.root.p_t1).tofile(os.path.join(script_dir, expected_path),sep=",")
     np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.p_t1).flatten(),decimal=10)
     actual.close()
     #clean_up_directory()
