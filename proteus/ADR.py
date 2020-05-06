@@ -17,7 +17,7 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import  ShockCapturing_base
-from proteus.cppADR import *
+from proteus.cADR import *
 
 class SubgridError(SGE_base):
     """
@@ -569,7 +569,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(self.nc):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
         compKernelFlag = 0
-        self.adr = cppADR_base(self.nSpace_global,
+        self.adr = cADR_base(self.nSpace_global,
                                self.nQuadraturePoints_element,
                                self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
