@@ -602,7 +602,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cCLSVOF',
         ['proteus/mprans/CLSVOF.cpp'],
-        depends=["proteus/mprans/CLSVOF.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/CLSVOF.h", "proteus/mprans/CLSVOF.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
