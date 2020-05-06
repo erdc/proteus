@@ -191,7 +191,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'richards.cRichards',
         ['proteus/richards/cRichards.cpp'],
-        depends=['proteus/richards/Richards.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        depends=['proteus/richards/Richards.h', 'proteus/mprans/ArgumentsDict.h' ,'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         language='c++',
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
