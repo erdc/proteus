@@ -1730,7 +1730,7 @@ namespace proteus
                 velocityErrorElement[i]=0.0;
               }//i
             //Use for plotting result
-            if(use_ball_as_particle==1)
+            if(use_ball_as_particle==1 && nParticles > 0)
               {
                 for (int I=0;I<nDOF_mesh_trial_element;I++)
                   get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),
@@ -2181,7 +2181,7 @@ namespace proteus
                 //
                 const double H_s = gf_s.H(particle_eps,phi_solid.data()[eN_k]);
                 const double D_s = gf_s.D(particle_eps,phi_solid.data()[eN_k]);
-                if ( H_s != 0.0 || D_s != 0.0)
+                if ( nParticles == 0 || H_s != 0.0 || D_s != 0.0)
                   {
                     element_active=true;
                     elementIsActive[eN]=true;
