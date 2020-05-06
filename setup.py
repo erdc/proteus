@@ -301,7 +301,7 @@ EXTENSIONS_TO_BUILD = [
               libraries=['ncurses','stdc++','m'],
               extra_compile_args=["-std=c++11"]),
     Extension(
-        'cppADR',
+        'cADR',
         ['proteus/ADR.cpp'],
         depends=['proteus/ADR.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
