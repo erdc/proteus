@@ -616,7 +616,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cMCorr',
         ['proteus/mprans/MCorr.cpp'],
-        depends=["proteus/mprans/MCorr.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"] + [
+        depends=["proteus/mprans/MCorr.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"] + [
             "proteus/equivalent_polynomials.h",
             "proteus/equivalent_polynomials_utils.h",
             "proteus/equivalent_polynomials_coefficients.h"],
