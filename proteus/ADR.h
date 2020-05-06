@@ -17,10 +17,10 @@ namespace proteus
   template<int nSpace, int nP, int nQ, int nEBQ>
   using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
   
-  class cppADR_base
+  class cADR_base
   {
   public:
-    virtual ~cppADR_base(){}
+    virtual ~cADR_base(){}
     virtual void calculateResidual(//element
 				   xt::pyarray<double>& mesh_trial_ref,
 				   xt::pyarray<double>& mesh_grad_trial_ref,
@@ -169,7 +169,7 @@ namespace proteus
 	   int nDOF_test_element,
 	   int nQuadraturePoints_elementBoundary
 	   >
-  class cppADR: public cppADR_base
+  class cADR: public cADR_base
   {
   public:
     std::set<int> ifem_boundaries, ifem_boundary_elements,
@@ -1855,7 +1855,7 @@ namespace proteus
 			     int CompKernelFlag)
   {
     if (nSpaceIn == 2)
-      return proteus::chooseAndAllocateDiscretization2D<cppADR_base,cppADR,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization2D<cADR_base,cADR,CompKernel>(nSpaceIn,
 										       nQuadraturePoints_elementIn,
 										       nDOF_mesh_trial_elementIn,
 										       nDOF_trial_elementIn,
@@ -1863,7 +1863,7 @@ namespace proteus
 										       nQuadraturePoints_elementBoundaryIn,
 										       CompKernelFlag);
     else
-      return proteus::chooseAndAllocateDiscretization<cppADR_base,cppADR,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization<cADR_base,cADR,CompKernel>(nSpaceIn,
 										     nQuadraturePoints_elementIn,
 										     nDOF_mesh_trial_elementIn,
 										     nDOF_trial_elementIn,
