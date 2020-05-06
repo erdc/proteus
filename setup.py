@@ -708,7 +708,7 @@ EXTENSIONS_TO_BUILD = [
     Extension(
         'mprans.cGN_SW2DCV',
         ['proteus/mprans/GN_SW2DCV.cpp'],
-        depends=["proteus/mprans/GN_SW2DCV.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+        depends=["proteus/mprans/GN_SW2DCV.h", "proteus/mprans/ArgumentsDict.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
         include_dirs=get_xtensor_include(),
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
         language='c++'),
