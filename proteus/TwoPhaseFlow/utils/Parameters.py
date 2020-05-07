@@ -464,7 +464,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.01*self.n.nl_atol_res
-        #self.n.conservativeFlux = {0:'pwl-bdm-opt'}
+        self.n.conservativeFlux = {0:'pwl-bdm-opt'}
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix

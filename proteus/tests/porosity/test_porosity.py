@@ -33,9 +33,10 @@ def test_massConservation_wPorosity_2D(mcorr_nl_atol_res=1e-10):
     file=open(currentPath+'/sloshing.log','r')
     lines=file.readlines()
     mcorr=[]
+    nSteps=0
     for i,j in enumerate(lines):
         if "Phase 0 mass (consistent) after mass correction" in j:
             mcorr.append([float(lines[i+1].split()[7][:-1]),float(j.split()[-1])])
-
-    if (mcorr[0][1]+mcorr_nl_atol_res)<=mcorr[-1][-1] or (mcorr[0][1]-mcorr_nl_atol_res)>=mcorr[-1][-1]:
-        pytest.fail("Mass is not being conserved within nonlinear residual tolerance for MCorr\n")
+            nSteps +=1
+    if (mcorr[0][1]+nSteps*mcorr_nl_atol_res)<=mcorr[-1][-1] or (mcorr[0][1]-nSteps*mcorr_nl_atol_res)>=mcorr[-1][-1]:
+        pytest.fail("Mass is not being conserved within nonlinear residual tolerance for MCorr. Absolute mass error: {0:e}\n".format(abs(mcorr[-1][-1]-mcorr[0][1])))
