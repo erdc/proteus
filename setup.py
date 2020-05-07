@@ -207,7 +207,7 @@ EXTENSIONS_TO_BUILD = [
                         PROTEUS_LAPACK_INTEGER),
                        ('PROTEUS_BLAS_H',
                         PROTEUS_BLAS_H)],
-        depends=['proteus/elastoplastic/ElastoPlastic.h','proteus/ModelFactory.h', 'proteus/CompKernel.h'],
+        depends=['proteus/elastoplastic/ElastoPlastic.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
         language='c++',
         extra_compile_args=PROTEUS_OPT+['-std=c++14'],
