@@ -35,7 +35,8 @@ class TwoPhaseFlowProblem:
                  auxVariables=None,
                  # OTHERS #
                  useSuperlu=True,
-                 fastArchive=False):
+                 fastArchive=False,
+                 useExact=False):
         # ***** SET OF ASSERTS ***** #
         if ns_model is not None:
             assert ns_model in [0,1], "ns_model={0,1} for rans2p or rans3p respectively"
@@ -60,6 +61,7 @@ class TwoPhaseFlowProblem:
             assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
 
         # ***** SAVE PARAMETERS ***** #
+        self.useExact=useExact
         self.domain=domain
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
         self.ns_model=ns_model
@@ -87,7 +89,7 @@ class TwoPhaseFlowProblem:
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace(self.ns_model, self.nd)
-        self.FESpace.setFESpace()
+        self.FESpace.setFESpace(useExact)
 
         # ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
         self.physical_parameters = default_physical_parameters
@@ -325,7 +327,7 @@ class FESpace:
     def __getitem__(self, key):
         return self.__dict__[key]
 
-    def setFESpace(self):
+    def setFESpace(self,useExact=False):
         ##################
         # VELOCITY SPACE #
         ##################
@@ -350,11 +352,19 @@ class FESpace:
         # QUADRATURE RULE #
         ###################
         if max(self.velSpaceOrder,self.pSpaceOrder)==1:
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 6)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 6)
+            if useExact:
+                quadOrder=6
+            else:
+                quadOrder=3
+            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
         else:
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 6)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 6)
+            if useExact:
+                quadOrder=6
+            else:
+                quadOrder=5
+            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #

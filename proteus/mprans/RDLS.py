@@ -355,7 +355,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def setZeroLSweakDirichletBCs(vt):
         if vt.coefficients.weakBC_on:
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Setting new weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Setting new weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             vt.dirichletNodeSetList[0] = []
             vt.dirichletGlobalNodeSet[0] = set()
             vt.dirichletValues[0] = {}
@@ -402,7 +402,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         vt.dirichletNodeSetList[0][eN].add(j)
                         vt.dirichletValues[0][(eN, j)] = float(vt.u[0].dof[J])
         else:
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Unsetting weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Unsetting weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             vt.dirichletNodeSetList[0] = []
             vt.dirichletGlobalNodeSet[0] = set()
             vt.dirichletValues[0] = {}
@@ -452,7 +452,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def setZeroLSweakDirichletBCs3(vt):
         if vt.coefficients.weakBC_on:
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Setting new weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Setting new weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             vt.dirichletNodeSetList[0] = []
             vt.dirichletGlobalNodeSet[0] = set()
             vt.dirichletValues[0] = {}
@@ -468,7 +468,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         vt.dirichletValues[0][(eN, j)] = float(vt.u[0].dof[J])
                         vt.dirichletGlobalNodeSet[0].add(J)
         else:
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Unsetting weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!=========================Unsetting weak BC's=======================!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             vt.dirichletNodeSetList[0] = []
             vt.dirichletGlobalNodeSet[0] = set()
             vt.dirichletValues[0] = {}

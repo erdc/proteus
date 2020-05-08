@@ -315,6 +315,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             epsFact=epsFact,
             eb_penalty_constant=100.,
             particle_epsFact = 3.,
+            useExact=Problem.useExact
         )
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
@@ -464,7 +465,6 @@ class ParametersModelRANS2P(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.01*self.n.nl_atol_res
-        self.n.conservativeFlux = {0:'pwl-bdm-opt'}
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix

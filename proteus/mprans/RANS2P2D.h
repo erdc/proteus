@@ -1672,8 +1672,8 @@ namespace proteus
         xt::pyarray<double>& isActiveDOF = args.m_darray["isActiveDOF"];
         const bool normalize_pressure = args.m_iscalar["normalize_pressure"];
         logEvent("Entered mprans calculateResidual",6);
-        gf.useExact = useExact;
-        gf_p.useExact = useExact;
+        gf.useExact = false;//useExact;
+        gf_p.useExact = false;//useExact;
         gf_s.useExact = useExact;
         ifem_boundaries.clear();
         ifem_boundary_elements.clear();
@@ -4204,10 +4204,10 @@ namespace proteus
         double ghost_penalty_constant = args.m_dscalar["ghost_penalty_constant"];
         const bool useExact = args.m_iscalar["useExact"];
         xt::pyarray<double>& isActiveDOF = args.m_darray["isActiveDOF"];
-          const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-          std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
-        gf.useExact = useExact;
-        gf_p.useExact = useExact;
+	const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
+	std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
+	gf.useExact = false;//useExact;
+	gf_p.useExact = false;//useExact;
         gf_s.useExact = useExact;
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
