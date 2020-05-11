@@ -11,6 +11,7 @@ import numpy.testing as npt
 from importlib import import_module
 from petsc4py import PETSc
 import importlib
+import pytest
 
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
@@ -139,6 +140,7 @@ class TestIBM(unittest.TestCase):
         npt.assert_almost_equal(pos, np.array([1.5, 1.98645, 0.]), decimal=5)
         #self.teardown_method(self)
 
+    @pytest.mark.skipif(os.sys.platform == "darwin", reason="does not run on macOS")    
     def test_floatingCylinderALE(self):
         from proteus import defaults
         from . import floatingCylinder
@@ -184,6 +186,7 @@ class TestIBM(unittest.TestCase):
         npt.assert_almost_equal(pos, np.array([0.5, 0.5074055958, 0.]), decimal=5)
         #self.teardown_method(self)
 
+    @pytest.mark.skipif(os.sys.platform == "darwin", reason="does not run on macOS")
     def test_floatingCubeALE(self):
         from proteus import defaults
         from . import floatingCube
