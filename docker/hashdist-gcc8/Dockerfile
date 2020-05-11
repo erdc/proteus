@@ -11,7 +11,7 @@ WORKDIR /home/$NB_USER
 RUN rm -rf proteus && \
     git clone https://github.com/erdc/proteus && \
     cd proteus && \
-    git checkout check_docker_hub && \
+    git checkout master && \
     git submodule update --init --recursive && \
     gcc --version && \
     g++ --version && \
