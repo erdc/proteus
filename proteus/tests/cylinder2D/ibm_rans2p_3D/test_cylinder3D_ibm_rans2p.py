@@ -42,6 +42,7 @@ class Test_ibm():
 #         self.compare_name = "T8P2"
 #         self.example_setting("T=8.0 vspaceOrder=2 onlySaveFinalSolution=True")
 
+    @pytest.mark.skip(reason="need to redo after history revision")                         
     def test_ex2(self):
         self.compare_name = "T1_ibm_3D_rans2p"
         self.example_setting("T=0.01 onlySaveFinalSolution=True")
