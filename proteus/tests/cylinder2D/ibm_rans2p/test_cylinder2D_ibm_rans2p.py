@@ -4,6 +4,7 @@ from proteus import Comm
 from proteus import Context
 import tables
 import importlib
+import pytest
 
 
 comm = Comm.get()
