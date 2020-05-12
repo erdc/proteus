@@ -71,7 +71,6 @@ def runTest(ns, name):
     actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
     return actual_log
 
-@pytest.mark.skip
 def test_01_FullRun():
     """ Runs two-dimensional step problem with the settings:
         * Strongly enforced Free-slip BC.
@@ -98,7 +97,6 @@ def test_01_FullRun():
     assert L5[0][1]==38
     assert L6[0][1]==38
 
-@pytest.mark.skip
 def test_02_FullRun():
     """ Runs two-dimensional step problem with the settings:
         * Strongly enforced no-slip BC.

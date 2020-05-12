@@ -82,7 +82,6 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         actual.close()
 
     @pytest.mark.slowTest
-    @pytest.mark.skip(reason="need to redo after history revision")
     def test_01_FullRun(self):
         stokesDrivenCavity_2d_n.linearSmoother = proteus.LinearSolvers.Schur_Qp
         self._setPETSc()
@@ -97,7 +96,6 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         assert L1 == L2
 
     @pytest.mark.slowTest
-    @pytest.mark.skip(reason="need to redo after history revision")
     def test_02_FullRun(self):
         self._setPETSc_LU()
         self._runTest()

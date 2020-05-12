@@ -24,7 +24,6 @@ from NavierStokes_ST_LS_SO_VV import NavierStokes_ST_LS_SO_VV
 @pytest.mark.LinearSolvers
 @pytest.mark.modelTest
 @pytest.mark.navierstokesTest
-@pytest.mark.skip #ARB - remove this when test has been fixed.
 
 # ARB TODO (10/24/18) something has become mixed up with this test and
 # needs to be fixed.  Notably, the *.h5 file is not working correctly

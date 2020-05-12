@@ -152,7 +152,6 @@ class Test2DStokesOnQuads(object):
     # not have the time to look into this at the moment and it is not a
     # critical piece of code for current projects.  See comments below.
         
-    @pytest.mark.skip
     def test_01_FullRun(self):
         import filecmp
         self.ns.calculateSolution('test1')
