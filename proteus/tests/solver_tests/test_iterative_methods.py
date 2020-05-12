@@ -233,7 +233,6 @@ def load_rans2p_step_newton_5(request):
     yield A
 
 @pytest.mark.LinearSolvers
-@pytest.mark.skip(reason="need to redo after history revision")
 def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
                                           initialize_petsc_options):
     """Tests a KSP solve using the Sp Schur complement approximation.
@@ -258,7 +257,6 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     assert ksp_obj.reason == 2
 
 @pytest.mark.LinearSolvers
-@pytest.mark.skip(reason="need to redo after history revision")
 def test_Schur_Sp_solve(load_nse_step_matrix,
                         initialize_petsc_options):
     """Tests a KSP solve using the Sp Schur complement approximation.
@@ -296,7 +294,6 @@ def test_amg_basic(load_small_step_matrix,
     assert F_ksp.its == 9
 
 @pytest.mark.amg
-@pytest.mark.skip(reason="need to redo after history revision")
 def test_amg_iteration_performance(load_medium_step_matrix,
                                    initialize_velocity_block_petsc_options):
     mat_A = load_medium_step_matrix
@@ -312,7 +309,7 @@ def test_amg_iteration_performance(load_medium_step_matrix,
     F_ksp.solve(b,x)
     assert F_ksp.its == 41
 
-@pytest.mark.skip(reason="need to redo after history revision")
+@pytest.mark.amg
 def test_amg_step_problem_01(load_rans2p_step_newton_1,
                              initialize_velocity_block_petsc_options):
     mat_A = load_rans2p_step_newton_1
@@ -327,7 +324,7 @@ def test_amg_step_problem_01(load_rans2p_step_newton_1,
     F_ksp.solve(b,x)
     assert F_ksp.its == 59
 
-@pytest.mark.skip(reason="need to redo after history revision")
+@pytest.mark.amg
 def test_amg_step_problem_02(load_rans2p_step_newton_5,
                              initialize_velocity_block_petsc_options):
     mat_A = load_rans2p_step_newton_5
