@@ -19,10 +19,11 @@ RUN rm -rf proteus && \
     gcc --version && \
     g++ --version && \
     gfortran --version && \
+    make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
+    . ./linux/bin/proteus_env.sh \
     mpicc --version && \
     mpicxx --version && \
     mpifort --version && \
-    make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
     rm -rf air-water-vv && \
     rm -rf .git && \
     rm -rf stack/.git && \
