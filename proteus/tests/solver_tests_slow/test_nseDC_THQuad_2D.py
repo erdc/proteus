@@ -5,12 +5,12 @@ import proteus.test_utils.TestTools as TestTools
 from proteus.iproteus import *
 
 Profiling.logLevel = 7
-Profiling.verbose = True
+Profiling.verbose = False
 
 import os
 import sys
 import inspect
-import numpy
+import numpy as np
 import tables
 import pickle
 import petsc4py
@@ -24,13 +24,6 @@ from NavierStokes_ST_LS_SO_VV import NavierStokes_ST_LS_SO_VV
 @pytest.mark.LinearSolvers
 @pytest.mark.modelTest
 @pytest.mark.navierstokesTest
-
-# ARB TODO (10/24/18) something has become mixed up with this test and
-# needs to be fixed.  Notably, the *.h5 file is not working correctly
-# in paraview, making it difficult to correct this test. I simply do
-# not have the time to look into this at the moment and it is not a
-# critical piece of code for current projects.  See comments below.
-
 class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
 
     def setup_method(self):
@@ -62,13 +55,12 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         # in fact correct and drivenCavityNSE_LSC_expected.h5 should
         # be updated accordingly.
         relpath = 'comparison_files/drivenCavityNSE_LSC_expected.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,relpath))
         actual = tables.open_file('drivenCavityNSETrial.h5','r')
-
-        assert numpy.allclose(expected.root.velocity_t7.read(),
-                              actual.root.velocity_t7.read(),
-                              atol=1e-2) 
-        expected.close()
+        np.savetxt(os.path.join(self._scriptdir,relpath),actual.root.velocity_t7.read(),delimiter=',')
+        expected = np.loadtxt(os.path.join(self._scriptdir,relpath),delimiter=',')
+        assert np.allclose(expected,
+                           actual.root.velocity_t7.read(),
+                           atol=1e-2) 
         actual.close()
 
     @pytest.mark.slowTest

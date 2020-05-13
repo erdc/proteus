@@ -73,7 +73,7 @@ def runTest(ns, name):
     actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
     return actual_log
 
-def test_01_FullRun():
+def test_step_slip_FullRun():
     """ Runs two-dimensional step problem with the settings:
         * Strongly enforced Free-slip BC.
         * Pressure Projection Stablization.
@@ -99,7 +99,7 @@ def test_01_FullRun():
     assert L5[0][1]==40
     assert L6[0][1]==35
 
-def test_02_FullRun():
+def test_ste_noslip_FullRun():
     """ Runs two-dimensional step problem with the settings:
         * Strongly enforced no-slip BC.
         * Pressure Projection Stablization.
@@ -216,6 +216,8 @@ def clear_petsc_options():
     for key in PETSc.Options().getAll():
         PETSc.Options().delValue(key)
 
+
+@pytest.fixture()
 def initialize_velocity_block_petsc_options():
     petsc_options = PETSc.Options()
     petsc_options.setValue('ksp_type','gmres')
@@ -226,6 +228,7 @@ def initialize_velocity_block_petsc_options():
     petsc_options.setValue('pc_type','hypre')
     petsc_options.setValue('pc_type_hypre_type','boomeramg')
 
+@pytest.fixture()
 def initialize_velocity_block_petsc_options_2():
     petsc_options = PETSc.Options()
     petsc_options.setValue('ksp_type','gmres')
@@ -234,10 +237,21 @@ def initialize_velocity_block_petsc_options_2():
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
 
 @pytest.fixture()
-def load_saddle_point_matrix_1(request):
+def initialize_velocity_block_petsc_options_3(request):
+    petsc_options = p4pyPETSc.Options()
+    petsc_options.setValue('ksp_type','gmres')
+    petsc_options.setValue('ksp_gmres_restart',100)
+    petsc_options.setValue('ksp_pc_side','right')
+    petsc_options.setValue('ksp_atol',1e-8)
+    petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
+    petsc_options.setValue('pc_type','hypre')
+    petsc_options.setValue('pc_type_hypre_type','boomeramg')
+
+@pytest.fixture()
+def load_matrix_step_slip(request):
     """
-    Loads a small example of a drivine cavity matrix for
-    testing purposes. (Note: this matrix does not have advection)
+    Loads a medium sized backwards facing step matrix for studying
+    different AMG preconditioners.
     """
     A = LAT.petsc_load_matrix(os.path.join
                               (os.path.dirname(__file__),
@@ -245,7 +259,7 @@ def load_saddle_point_matrix_1(request):
     yield A
 
 @pytest.fixture()
-def load_medium_step_matrix(request):
+def load_matrix_step_noslip(request):
     """
     Loads a medium sized backwards facing step matrix for studying
     different AMG preconditioners.
@@ -256,8 +270,8 @@ def load_medium_step_matrix(request):
     yield A
 
 @pytest.mark.amg
-def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
-    mat_A = load_saddle_point_matrix_1
+def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
+    mat_A = load_matrix_step_noslip
     petsc_options = initialize_velocity_block_petsc_options()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
@@ -266,7 +280,7 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                    index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 27
+    assert F_ksp.its == 20
 
     PETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
     F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
@@ -275,7 +289,7 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 28
+    assert F_ksp.its == 22
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -287,7 +301,7 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 53
+    assert F_ksp.its == 42
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -300,10 +314,10 @@ def test_amg_iteration_matrix_1(load_saddle_point_matrix_1):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 62
+    assert F_ksp.its == 48
 
-def test_amg_iteration_matrix_2(load_saddle_point_matrix_1):
-    mat_A = load_saddle_point_matrix_1
+def test_amg_iteration_matrix_slip(load_matrix_step_slip):
+    mat_A = load_matrix_step_slip
     petsc_options = initialize_velocity_block_petsc_options_2()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
@@ -325,6 +339,133 @@ def test_amg_iteration_matrix_2(load_saddle_point_matrix_1):
                                                    index_sets[0]))
     F_ksp.solve(b,x)
     assert F_ksp.its == 7
+
+@pytest.mark.amg
+def test_amg_basic(load_matrix_step_noslip,
+                   initialize_velocity_block_petsc_options):
+    mat_A = load_matrix_step_noslip
+
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    #Initialize ksp object
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                index_sets[0]))   
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 20
+
+@pytest.mark.amg
+def test_amg_iteration_performance(load_matrix_step_noslip,
+                                   initialize_velocity_block_petsc_options):
+    mat_A = load_matrix_step_noslip
+    petsc_options = initialize_velocity_block_petsc_options_2
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                index_sets[0]))
+
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 20
+
+@pytest.mark.amg
+def test_amg_step_problem_noslip(load_matrix_step_noslip,
+                             initialize_velocity_block_petsc_options):
+    mat_A = load_matrix_step_noslip
+    petsc_options = initialize_velocity_block_petsc_options_3
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                index_sets[0]))
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 20
+
+@pytest.mark.amg
+def test_amg_step_problem_slip(load_matrix_step_slip,
+                             initialize_velocity_block_petsc_options):
+    mat_A = load_matrix_step_slip
+    petsc_options = initialize_velocity_block_petsc_options
+    L_sizes = mat_A.getSizes()
+    index_sets = build_amg_index_sets(L_sizes)
+
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                      index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                index_sets[0]))
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 27
+
+@pytest.fixture()
+def initialize_petsc_options(request):
+    """Initializes schur complement petsc options. """
+    petsc_options = PETSc.Options()
+    petsc_options.setValue('ksp_type','gmres')
+    petsc_options.setValue('ksp_gmres_restart',500)
+    petsc_options.setValue('ksp_atol',1e-16)
+    petsc_options.setValue('ksp_rtol',1.0e-16)
+    petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
+    petsc_options.setValue('pc_fieldsplit_type','schur')
+    petsc_options.setValue('pc_fieldsplit_schur_fact_type','upper')
+    petsc_options.setValue('pc_fieldsplit_schur_precondition','user')
+    petsc_options.setValue('fieldsplit_velocity_ksp_type','preonly')
+    petsc_options.setValue('fieldsplit_velocity_pc_type', 'lu')
+    petsc_options.setValue('fieldsplit_pressure_ksp_type','preonly')
+
+def initialize_schur_ksp_obj(matrix_A, schur_approx):
+    """
+    Creates a right-hand-side and solution PETSc4Py vector for
+    testing ksp solves.
+
+    Parameters
+    ----------
+    matrix_A: :class:`PETSc.Mat`
+        Global matrix object.
+    schur_approx: :class:`LS.SchurPrecon`
+
+    Returns
+    -------
+    ksp_obj: :class:`PETSc.KSP`
+    """
+    ksp_obj = PETSc.KSP().create()
+    ksp_obj.setOperators(matrix_A,matrix_A)
+    pc = schur_approx.pc
+    ksp_obj.setPC(pc)
+    ksp_obj.setFromOptions()
+    pc.setFromOptions()
+    pc.setOperators(matrix_A,matrix_A)
+    pc.setUp()
+    schur_approx.setUp(ksp_obj)
+    ksp_obj.setUp()
+    ksp_obj.pc.setUp()
+    return ksp_obj
+
+@pytest.mark.LinearSolvers
+def test_Schur_Sp_solve(load_matrix_step_noslip,
+                        initialize_petsc_options):
+    """Tests a KSP solve using the Sp Schur complement approximation.
+       For this test, the global matrix does not have a null space."""
+    mat_A = load_matrix_step_noslip
+    b, x = create_petsc_vecs(mat_A)
+
+    solver_info = LS.ModelInfo('interlaced', 3)
+    schur_approx = LS.Schur_Sp(mat_A,
+                               '',
+                               solver_info=solver_info)
+    ksp_obj = initialize_schur_ksp_obj(mat_A, schur_approx)
+    ksp_obj.solve(b,x)
+
+    assert ksp_obj.converged == True
+    assert ksp_obj.reason == 2
+    assert ksp_obj.norm < np.linalg.norm(b)*1.0e-10 + 1.0e-16
+    assert ksp_obj.its == 616
 
 if __name__ == '__main__':
     pass
