@@ -9,7 +9,7 @@ from proteus.default_so import *
 from proteus import Context
 
 opts=Context.Options([
-    ("he",0.05,"max element diameter"),
+    ("he",0.1,"max element diameter"),
     ("schur_solver", 'two_phase_PCD', "preconditioner type"),
     ("ns_forceStrongDirichlet",True,"boundary condition type"),
     ("boundary_condition_type",'fs',"Free or no slip boundary"),

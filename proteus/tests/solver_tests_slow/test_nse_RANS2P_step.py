@@ -119,11 +119,11 @@ def test_ste_noslip_FullRun():
     L6 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,5)])
 
     assert L1[0][1]==34
-    assert L2[0][1]==38
-    assert L3[0][1]==50
-    assert L4[0][1]==47
-    assert L5[0][1]==48
-    assert L6[0][1]==48
+    assert L2[0][1]==41
+    assert L3[0][1]==55
+    assert L4[0][1]==51
+    assert L5[0][1]==53
+    assert L6[0][1]==38
 
 def create_petsc_vecs(matrix_A):
     """
@@ -276,29 +276,29 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                    index_sets[0]))
     F_ksp.solve(b,x)
+    assert F_ksp.its == 9
+
+    PETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                         index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                   index_sets[0]))
+
+    F_ksp.solve(b,x)
+    assert F_ksp.its == 10
+
+    clear_petsc_options()
+    initialize_velocity_block_petsc_options()
+
+    PETSc.Options().setValue('pc_hypre_boomeramg_coarsen_type','PMIS')
+    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
+                                                         index_sets[0]))
+    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
+                                                   index_sets[0]))
+
+    F_ksp.solve(b,x)
     assert F_ksp.its == 20
 
-    PETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
-    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
-                                                         index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
-                                                   index_sets[0]))
-
-    F_ksp.solve(b,x)
-    assert F_ksp.its == 22
-
-    clear_petsc_options()
-    initialize_velocity_block_petsc_options()
-
-    PETSc.Options().setValue('pc_hypre_boomeramg_coarsen_type','PMIS')
-    F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
-                                                         index_sets[0]))
-    b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
-                                                   index_sets[0]))
-
-    F_ksp.solve(b,x)
-    assert F_ksp.its == 42
-
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
 
@@ -310,7 +310,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 48
+    assert F_ksp.its == 23
 
 def test_amg_iteration_matrix_slip(load_matrix_step_slip):
     mat_A = load_matrix_step_slip
@@ -351,7 +351,7 @@ def test_amg_basic(load_matrix_step_noslip,
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))   
     F_ksp.solve(b,x)
-    assert F_ksp.its == 20
+    assert F_ksp.its == 9
 
 @pytest.mark.amg
 def test_amg_iteration_performance(load_matrix_step_noslip,
@@ -367,7 +367,7 @@ def test_amg_iteration_performance(load_matrix_step_noslip,
                                                 index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 20
+    assert F_ksp.its == 9
 
 @pytest.mark.amg
 def test_amg_step_problem_noslip(load_matrix_step_noslip,
@@ -382,7 +382,7 @@ def test_amg_step_problem_noslip(load_matrix_step_noslip,
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 20
+    assert F_ksp.its == 9
 
 @pytest.mark.amg
 def test_amg_step_problem_slip(load_matrix_step_slip,
@@ -461,7 +461,7 @@ def test_Schur_Sp_solve(load_matrix_step_noslip,
     assert ksp_obj.converged == True
     assert ksp_obj.reason == 2
     assert ksp_obj.norm < np.linalg.norm(b)*1.0e-10 + 1.0e-16
-    assert ksp_obj.its == 616
+    assert ksp_obj.its == 399
 
 if __name__ == '__main__':
     pass
