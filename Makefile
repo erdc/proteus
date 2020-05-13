@@ -289,6 +289,10 @@ test: air-water-vv check
 	@echo "you should install git-lfs or try 'make lfs', passing all tests is needed"
 	@echo "**************************************************************************"
 	@echo "Running basic test suite"
+ifeq (${PROTEUS_ARCH},darwin)
+	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --cov=proteus
+	@echo "Basic tests complete "
+else
 	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
@@ -297,6 +301,7 @@ test: air-water-vv check
 	@echo "************************************"
 	@echo "Running air-water-vv test set 2"
 	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+endif
 
 test-conda: air-water-vv check
 	@echo "**************************************************"
