@@ -37,27 +37,27 @@ he = opts.he
 # Input checks
 if spaceOrder not in [1,2]:
     print("INVALID: spaceOrder" + spaceOrder)
-    sys.exit() 
+    sys.exit()
 if spaceOrder == 1:
     hFactor=1.0
     if useHex:
          basis=C0_AffineLinearOnCubeWithNodalBasis
          elementQuadrature = CubeGaussQuadrature(nd,2)
-         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)         
+         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)
     else:
          basis=C0_AffineLinearOnSimplexWithNodalBasis
-         elementQuadrature = SimplexGaussQuadrature(nd,4)
-         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)         
+         elementQuadrature = SimplexGaussQuadrature(nd,5)
+         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,5)
 elif spaceOrder == 2:
     hFactor=0.5
-    if useHex:    
+    if useHex:
         basis=C0_AffineLagrangeOnCubeWithNodalBasis
         elementQuadrature = CubeGaussQuadrature(nd,4)
-        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)    
-    else:    
-        basis=C0_AffineQuadraticOnSimplexWithNodalBasis 
-        elementQuadrature = SimplexGaussQuadrature(nd,4)
-        elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
+        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)
+    else:
+        basis=C0_AffineQuadraticOnSimplexWithNodalBasis
+        elementQuadrature = SimplexGaussQuadrature(nd,5)
+        elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,5)
 
 nLevels = 1
 

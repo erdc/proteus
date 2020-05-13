@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 from proteus.default_so import *
 import proteus
-from . import step2d
+try:
+    from . import step2d
+except:
+    import step2d
 reload(step2d)
 from proteus import Context
 import os

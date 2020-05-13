@@ -141,16 +141,10 @@ class Test2DStokesOnQuads(object):
                     "reference_triangle.poly",
                     "reference_simplex.poly",
                     "proteus.log",
-#                    "poiseulleFlow.xmf",
+                    "poiseulleFlow.xmf",
                     "poiseulleFlow.h5",
-                    "poiseulleFlow0.h5"]
+        ]
         TestTools.removeFiles(Filelist)
-
-    # ARB TODO (10/24/18) something has become mixed up with this test and
-    # needs to be fixed.  Notably, the *.h5 file is not working correctly
-    # in paraview, making it difficult to correct this test. I simply do
-    # not have the time to look into this at the moment and it is not a
-    # critical piece of code for current projects.  See comments below.
         
     def test_01_FullRun(self):
         import filecmp
@@ -159,13 +153,9 @@ class Test2DStokesOnQuads(object):
             relpath = "comparison_files/poiseulle_global_xmf.output"
         else:
             relpath = "comparison_files/poiseulle_xmf.output"
-        # The produced output has diverged from the old comparison
-        # output. It needs to be confirmed that the new ouput is
-        # in fact correct and drivenCavityNSE_LSC_expected.h5 should
-        # be updated accordingly.            
         xmf_file = filecmp.cmp('poiseulleFlow.xmf',os.path.join(self._scriptdir,relpath))
-        import pdb ; pdb.set_trace()
-        assert xmf_file == True, '******** xmf_file compare failed **********'
+        for u,ua in zip(self.ns.modelList[0].levelModelList[1].u.values(),self.ns.modelList[0].levelModelList[1].u_analytical.values()):
+            assert np.allclose(u.dof,ua[0],atol=1.0e-14,rtol=1.0e-14)
 
 if __name__ == '__main__':
     pass

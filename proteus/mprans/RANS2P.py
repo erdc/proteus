@@ -1989,7 +1989,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         else:
                             self.nzval[i] = 0.0
                             # print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-        logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
