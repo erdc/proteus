@@ -2078,6 +2078,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def testRandomNLFast(self):
         from proteus.WaveTools import RandomNLWaves,RandomNLWavesFast,TimeSeries
         import random
