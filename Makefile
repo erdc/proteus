@@ -292,6 +292,7 @@ test: air-water-vv check
 ifeq (${PROTEUS_ARCH},darwin)
 	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --cov=proteus
 	@echo "Basic tests complete "
+	@echo "************************************"
 else
 	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
@@ -320,19 +321,6 @@ test-conda: air-water-vv check
 	@echo "************************************"
 	@echo "Running air-water-vv test set 2"
 	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
-
-test-macos: air-water-vv check
-	@echo "**************************************************"
-	@echo "Running git-lfs to get regression test data files."
-	-git lfs fetch
-	-git lfs checkout
-	@echo "If git-lfs failed to download data, then some tests will fail, and"
-	@echo "you should install git-lfs or try 'make lfs', passing all tests is needed"
-	@echo "**************************************************************************"
-	@echo "Running basic test suite"
-	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --cov=proteus
-	@echo "Basic tests complete "
-	@echo "************************************"
 
 jupyter:
 	@echo "************************************"
