@@ -156,9 +156,7 @@ def initialize_schur_ksp_obj(matrix_A, schur_approx):
 @pytest.fixture()
 def load_nse_cavity_matrix(request):
     """Loads a Navier-Stokes matrix drawn from the MPRANS module. """
-    A = LAT.petsc_load_matrix(os.path.join
-                              (os.path.dirname(__file__),
-                               'dump_stokes_drivenCavityStokesTrial_1.0par_j_1'))
+    A = LAT.petsc_load_matrix('dump_stokes_drivenCavityStokesTrial_1.0par_j_1')
     yield A
 
 @pytest.fixture()

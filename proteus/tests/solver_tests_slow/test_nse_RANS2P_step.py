@@ -253,9 +253,7 @@ def load_matrix_step_slip(request):
     Loads a medium sized backwards facing step matrix for studying
     different AMG preconditioners.
     """
-    A = LAT.petsc_load_matrix(os.path.join
-                              (os.path.dirname(__file__),
-                               'dump_test_1_step2d_1e+18par_j_0'))
+    A = LAT.petsc_load_matrix('dump_test_1_step2d_1e+18par_j_0')
     yield A
 
 @pytest.fixture()
@@ -264,9 +262,7 @@ def load_matrix_step_noslip(request):
     Loads a medium sized backwards facing step matrix for studying
     different AMG preconditioners.
     """
-    A = LAT.petsc_load_matrix(os.path.join
-                              (os.path.dirname(__file__),
-                               'dump_test_2_step2d_1e+18par_j_0'))
+    A = LAT.petsc_load_matrix('dump_test_2_step2d_1e+18par_j_0')
     yield A
 
 @pytest.mark.amg
