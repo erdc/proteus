@@ -9,7 +9,6 @@ from proteus import LinearSolvers as LS
 from proteus import Profiling
 from proteus import NumericalSolution
 from proteus import iproteus
-from proteus.iproteus import opts
 #from proteus.iproteus import *
 
 import os
@@ -24,7 +23,10 @@ import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 from proteus import default_p, default_n, default_so, default_s
+from proteus import iproteus
 from importlib import reload
+reload(iproteus)
+opts=iproteus.opts
 reload(default_p)
 reload(default_n)
 reload(default_so)
@@ -83,7 +85,88 @@ def runTest(ns, name):
     actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
     return actual_log
 
-def test_step_slip_FullRun():
+
+@pytest.fixture()
+def initialize_petsc_options(request):
+    """Initializes schur complement petsc options. """
+    OptDB = PETSc.Options()
+    OptDB.clear()
+    OptDB.setValue('ksp_type', 'fgmres')
+    OptDB.setValue('ksp_rtol', 1.0e-8)
+    OptDB.setValue('ksp_atol', 1.0e-8)
+    OptDB.setValue('ksp_gmres_restart', 300)
+    OptDB.setValue('ksp_gmres_modifiedgramschmidt', 1)
+    OptDB.setValue('ksp_pc_side','right')
+    OptDB.setValue('pc_fieldsplit_type', 'schur')
+    OptDB.setValue('pc_fieldsplit_schur_fact_type', 'upper')
+    OptDB.setValue('pc_fieldsplit_schur_precondition', 'user')
+    # Velocity block options
+    OptDB.setValue('fieldsplit_velocity_ksp_type', 'gmres')
+    OptDB.setValue('fieldsplit_velocity_ksp_gmres_modifiedgramschmidt', 1)
+    OptDB.setValue('fieldsplit_velocity_ksp_atol', 1e-5)
+    OptDB.setValue('fieldsplit_velocity_ksp_rtol', 1e-5)
+    OptDB.setValue('fieldsplit_velocity_ksp_pc_side', 'right')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_ksp_type', 'preonly')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_type', 'hypre')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomeramg')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_ksp_type', 'preonly')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_type', 'hypre')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomeramg')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_ksp_type', 'preonly')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_type', 'hypre')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomeramg')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    #PCD Schur Complement options
+    OptDB.setValue('fieldsplit_pressure_ksp_type', 'preonly')
+    OptDB.setValue('innerTPPCDsolver_Qp_visc_ksp_type', 'preonly')
+    OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_type', 'lu')
+    OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type', 'superlu_dist')
+    OptDB.setValue('innerTPPCDsolver_Qp_dens_ksp_type', 'preonly')
+    OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_type', 'lu')
+    OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type', 'superlu_dist')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_type', 'richardson')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_max_it', 1)
+    #OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space',1)
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_type', 'hypre')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type', 'boomeramg')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold', 0.5)
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type', 'ext+i-cc')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl', 2)
+
+def initialize_schur_ksp_obj(matrix_A, schur_approx):
+    """
+    Creates a right-hand-side and solution PETSc4Py vector for
+    testing ksp solves.
+
+    Parameters
+    ----------
+    matrix_A: :class:`PETSc.Mat`
+        Global matrix object.
+    schur_approx: :class:`LS.SchurPrecon`
+
+    Returns
+    -------
+    ksp_obj: :class:`PETSc.KSP`
+    """
+    ksp_obj = PETSc.KSP().create()
+    ksp_obj.setOperators(matrix_A,matrix_A)
+    pc = schur_approx.pc
+    ksp_obj.setPC(pc)
+    ksp_obj.setFromOptions()
+    pc.setFromOptions()
+    pc.setOperators(matrix_A,matrix_A)
+    pc.setUp()
+    schur_approx.setUp(ksp_obj)
+    ksp_obj.setUp()
+    ksp_obj.pc.setUp()
+    return ksp_obj
+
+
+@pytest.mark.LinearSolvers
+def test_step_slip_FullRun(initialize_petsc_options):
     """ Runs two-dimensional step problem with the settings:
         * Strongly enforced Free-slip BC.
         * Pressure Projection Stablization.
@@ -91,6 +174,7 @@ def test_step_slip_FullRun():
     """
     #TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
     #                                                             'import_modules/petsc.options.schur'))
+    pestc_options=initialize_petsc_options
     context_options_str='he=0.05'
     ns = load_simulation(context_options_str)
     actual_log = runTest(ns,'test_1')
@@ -98,12 +182,13 @@ def test_step_slip_FullRun():
     L1 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,0)])
     L2 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,1)])
     L3 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,2)])
+    print(L1,L2,L3)
+    assert L1[0][1]==5
+    assert L2[0][1]==6
+    assert L3[0][1]==9
 
-    assert L1[0][1]==2
-    assert L2[0][1]==11
-    assert L3[0][1]==14
-
-def test_ste_noslip_FullRun():
+@pytest.mark.LinearSolvers
+def test_step_noslip_FullRun(initialize_petsc_options):
     """ Runs two-dimensional step problem with the settings:
         * Strongly enforced no-slip BC.
         * Pressure Projection Stablization.
@@ -111,6 +196,7 @@ def test_ste_noslip_FullRun():
     """
     #TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
     #                                                             'import_modules/petsc.options.schur'))
+    pestc_options=initialize_petsc_options
     context_options_str="boundary_condition_type='ns'"
     ns = load_simulation(context_options_str)
     actual_log = runTest(ns,'test_2')
@@ -118,11 +204,32 @@ def test_ste_noslip_FullRun():
     L1 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,0)])
     L2 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,1)])
     L3 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,2)])
+    print(L1,L2,L3)
+    assert L1[0][1]==5
+    assert L2[0][1]==6
+    assert L3[0][1]==9
 
-    assert L1[0][1]==2
-    assert L2[0][1]==11
-    assert L3[0][1]==14
+@pytest.mark.LinearSolvers
+def test_Schur_Sp_solve(load_matrix_step_noslip,
+                        initialize_petsc_options):
+    """Tests a KSP solve using the Sp Schur complement approximation.
+       For this test, the global matrix does not have a null space."""
+    mat_A = load_matrix_step_noslip
+    b, x = create_petsc_vecs(mat_A)
+    petsc_options = initialize_petsc_options
 
+    solver_info = LS.ModelInfo('interlaced', 3)
+    schur_approx = LS.Schur_Sp(mat_A,
+                               '',
+                               solver_info=solver_info)
+    ksp_obj = initialize_schur_ksp_obj(mat_A, schur_approx)
+    ksp_obj.solve(b,x)
+
+    assert ksp_obj.converged == True
+    assert ksp_obj.reason == 2
+    assert float(ksp_obj.norm) < 1.0e-5
+    assert ksp_obj.its == 9
+    
 def create_petsc_vecs(matrix_A):
     """
     Creates a right-hand-side and solution PETSc vector for
@@ -276,7 +383,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                    index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 68
+    assert F_ksp.its == 5
 
     PETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
     F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
@@ -285,7 +392,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 73
+    assert F_ksp.its == 6
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -297,7 +404,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 126
+    assert F_ksp.its == 8
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -310,7 +417,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 126
+    assert F_ksp.its == 8
 
 def test_amg_iteration_matrix_slip(load_matrix_step_slip):
     mat_A = load_matrix_step_slip
@@ -334,7 +441,7 @@ def test_amg_iteration_matrix_slip(load_matrix_step_slip):
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                    index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 7
+    assert F_ksp.its == 6
 
 @pytest.mark.amg
 def test_amg_basic(load_matrix_step_noslip,
@@ -351,7 +458,7 @@ def test_amg_basic(load_matrix_step_noslip,
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))   
     F_ksp.solve(b,x)
-    assert F_ksp.its == 68
+    assert F_ksp.its == 5
 
 @pytest.mark.amg
 def test_amg_iteration_performance(load_matrix_step_noslip,
@@ -367,7 +474,7 @@ def test_amg_iteration_performance(load_matrix_step_noslip,
                                                 index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 68
+    assert F_ksp.its == 5
 
 @pytest.mark.amg
 def test_amg_step_problem_noslip(load_matrix_step_noslip,
@@ -382,7 +489,7 @@ def test_amg_step_problem_noslip(load_matrix_step_noslip,
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 68
+    assert F_ksp.its == 5
 
 @pytest.mark.amg
 def test_amg_step_problem_slip(load_matrix_step_slip,
@@ -397,106 +504,8 @@ def test_amg_step_problem_slip(load_matrix_step_slip,
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 68
+    assert F_ksp.its == 5
 
-@pytest.fixture()
-def initialize_petsc_options(request):
-    """Initializes schur complement petsc options. """
-    OptDB = PETSc.Options()
-    OptDB.clear()
-    OptDB.setValue('ksp_type', 'fgmres')
-    OptDB.setValue('ksp_rtol', 1.0e-8)
-    OptDB.setValue('ksp_atol', 1.0e-8)
-    OptDB.setValue('ksp_gmres_restart', 300)
-    OptDB.setValue('ksp_gmres_modifiedgramschmidt', 1)
-    OptDB.setValue('ksp_pc_side','right')
-    OptDB.setValue('pc_fieldsplit_type', 'schur')
-    OptDB.setValue('pc_fieldsplit_schur_fact_type', 'upper')
-    OptDB.setValue('pc_fieldsplit_schur_precondition', 'user')
-    # Velocity block options
-    OptDB.setValue('fieldsplit_velocity_ksp_type', 'gmres')
-    OptDB.setValue('fieldsplit_velocity_ksp_gmres_modifiedgramschmidt', 1)
-    OptDB.setValue('fieldsplit_velocity_ksp_atol', 1e-5)
-    OptDB.setValue('fieldsplit_velocity_ksp_rtol', 1e-5)
-    OptDB.setValue('fieldsplit_velocity_ksp_pc_side', 'right')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_ksp_type', 'preonly')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_type', 'hypre')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomeramg')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type', 'HMIS')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_ksp_type', 'preonly')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_type', 'hypre')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomeramg')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type', 'HMIS')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_ksp_type', 'preonly')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_type', 'hypre')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomeramg')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type', 'HMIS')
-    #PCD Schur Complement options
-    OptDB.setValue('fieldsplit_pressure_ksp_type', 'preonly')
-    OptDB.setValue('innerTPPCDsolver_Qp_visc_ksp_type', 'preonly')
-    OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_type', 'lu')
-    OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type', 'superlu_dist')
-    OptDB.setValue('innerTPPCDsolver_Qp_dens_ksp_type', 'preonly')
-    OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_type', 'lu')
-    OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type', 'superlu_dist')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_type', 'richardson')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_max_it', 1)
-    #OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space',1)
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_type', 'hypre')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type', 'boomeramg')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold', 0.5)
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type', 'ext+i-cc')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', 'HMIS')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl', 2)
-
-def initialize_schur_ksp_obj(matrix_A, schur_approx):
-    """
-    Creates a right-hand-side and solution PETSc4Py vector for
-    testing ksp solves.
-
-    Parameters
-    ----------
-    matrix_A: :class:`PETSc.Mat`
-        Global matrix object.
-    schur_approx: :class:`LS.SchurPrecon`
-
-    Returns
-    -------
-    ksp_obj: :class:`PETSc.KSP`
-    """
-    ksp_obj = PETSc.KSP().create()
-    ksp_obj.setOperators(matrix_A,matrix_A)
-    pc = schur_approx.pc
-    ksp_obj.setPC(pc)
-    ksp_obj.setFromOptions()
-    pc.setFromOptions()
-    pc.setOperators(matrix_A,matrix_A)
-    pc.setUp()
-    schur_approx.setUp(ksp_obj)
-    ksp_obj.setUp()
-    ksp_obj.pc.setUp()
-    return ksp_obj
-
-@pytest.mark.LinearSolvers
-def test_Schur_Sp_solve(load_matrix_step_noslip,
-                        initialize_petsc_options):
-    """Tests a KSP solve using the Sp Schur complement approximation.
-       For this test, the global matrix does not have a null space."""
-    mat_A = load_matrix_step_noslip
-    b, x = create_petsc_vecs(mat_A)
-    petsc_options = initialize_petsc_options
-
-    solver_info = LS.ModelInfo('interlaced', 3)
-    schur_approx = LS.Schur_Sp(mat_A,
-                               '',
-                               solver_info=solver_info)
-    ksp_obj = initialize_schur_ksp_obj(mat_A, schur_approx)
-    ksp_obj.solve(b,x)
-
-    assert ksp_obj.converged == True
-    assert ksp_obj.reason == 2
-    assert float(ksp_obj.norm) < 1.0e-5
-    assert ksp_obj.its == 64
 
 if __name__ == '__main__':
     pass
