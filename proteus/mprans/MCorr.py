@@ -141,7 +141,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 #                                                         self.massCorrModel.mesh.nElements_owned)
                 #self.vofGlobalMass = 0.0
                 #self.lsGlobalMass = self.massCorrModel.calculateMass(self.lsModel.q[('u',0)])
-                # logEvent("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                # logEvent("Attach Models MCorr: mass correction %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                 #                                                                                self.massCorrModel.q[('r',0)],
                 #                                                                                self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = 0.0
@@ -152,10 +152,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.lsGlobalMassErrorArray = []  # self.lsGlobalMass - self.lsGlobalMassArray[0]]# + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral]
                 self.fluxArray = []  # 0.0]#self.vofModel.coefficients.fluxIntegral]
                 self.timeArray = []  # self.vofModel.timeIntegration.t]
-                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                #logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
-                #logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %21.16e" % (self.vofGlobalMass,),level=2)
+                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (LS) %21.16e" % (self.lsGlobalMass,),level=2)
+                #logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %21.16e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                #logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %21.16e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
 
     def initializeElementQuadrature(self, t, cq):
         if self.sd and ('a', 0, 0) in cq:
@@ -171,15 +171,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         if self.checkMass:
-            logEvent("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (VOF) %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                       self.vofModel.q[('m', 0)],
                                                                                                       self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass (primitive) before mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
+            logEvent("Phase 0 mass (primitive) before mass correction (LS) %21.16e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
                                                                                                                                   self.massCorrModel.elementDiameter,
                                                                                                                                   self.q_porosity*self.vofModel.q['dV'],
                                                                                                                                   self.lsModel.q[('m', 0)],
                                                                                                                                   self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass (consistent) before mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
+            logEvent("Phase 0 mass (consistent) before mass correction (LS) %21.16e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
         copyInstructions = {'clear_uList': True}
         return copyInstructions
 
@@ -204,15 +204,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
             # print "********************max VOF************************",max(self.vofModel.q[('u',0)].flat[:])
         if self.checkMass:
-            logEvent("Phase 0 mass after mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass after mass correction (VOF) %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                      self.vofModel.q[('m', 0)],
                                                                                                      self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass (primitive) after mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
+            logEvent("Phase 0 mass (primitive) after mass correction (LS) %21.16e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
                                                                                                                                  self.massCorrModel.elementDiameter,
                                                                                                                                  self.q_porosity*self.vofModel.q['dV'],
                                                                                                                                  self.lsModel.q[('m', 0)],
                                                                                                                                  self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
+            logEvent("Phase 0 mass (consistent) after mass correction (LS) %21.16e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
         copyInstructions = {}
 
         # get the waterline on the obstacle if option set in NCLS (boundary==7)
@@ -262,10 +262,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if (self.checkMass and c[('u', 0)].shape == self.q_u_ls.shape):
             self.m_tmp[:] = H_vof
             self.m_tmp += self.massCorrModel.q[('r', 0)]
-            logEvent("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("mass correction during Newton %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                           self.massCorrModel.q[('r', 0)],
                                                                                           self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass during Newton %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                        self.m_tmp,
                                                                                        self.massCorrModel.mesh.nElements_owned),), level=2)
 

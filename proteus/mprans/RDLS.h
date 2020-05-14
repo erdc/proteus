@@ -20,8 +20,8 @@ namespace proteus
     return (z>0 ? 1. : (z<0 ? 0. : 0.5));
   }
 
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
   
   class RDLS_base
@@ -49,7 +49,7 @@ namespace proteus
     public:
       const int nDOF_test_X_trial_element;
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf,gfu;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf,gfu;
     RDLS():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
@@ -72,6 +72,12 @@ namespace proteus
         dm=1.0;
         H = 0.0;
         Si= gf.H(eps,u_levelSet) - gf.ImH(eps,u_levelSet);
+        /* if (u_levelSet > 0.0) */
+        /*   Si=1.0; */
+        /* else if (u_levelSet < 0.0) */
+        /*   Si = -1.0; */
+        /* else */
+        /*   Si=0.0; */
         r = -Si;
         for (I=0; I < nSpace; I++)
           {
@@ -237,7 +243,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
             /* for (int i=0;i<nDOF_test_element;i++) */
             /*   { */
 	    /*     register int eN_i=eN*nDOF_trial_element+i; */
@@ -303,8 +309,9 @@ namespace proteus
                 ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
                 ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref.data()[k*nDOF_trial_element],u0);
                 if (freezeLevelSet)
-                  u0 = phi_ls.data()[eN_k];
-                //u0 = phi_ls.data()[eN_k];//cek debug
+                  {
+                    u0 = phi_ls.data()[eN_k];
+                  }
                 /* double DX=(x-0.5),DY=(y-0.75); */
                 /* double radius = std::sqrt(DX*DX+DY*DY); */
                 /* double theta = std::atan2(DY,DX); */
@@ -468,6 +475,7 @@ namespace proteus
                   {
                     register int i_nSpace = i*nSpace;
                     double FREEZE=double(freezeLevelSet);
+                    //assert(FREEZE==0.0);
                     //register int eN_k_i=eN_k*nDOF_test_element+i;
                     //register int eN_k_i_nSpace = eN_k_i*nSpace;
 
@@ -691,7 +699,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());            
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);            
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
@@ -1188,7 +1196,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());                        
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);                        
             //loop over quadrature points and compute integrands
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
@@ -1489,7 +1497,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);

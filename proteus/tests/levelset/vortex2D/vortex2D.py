@@ -6,7 +6,7 @@ parallel = False
 linearSmoother = None
 #compute mass balance statistics or not
 checkMass=True
-useExact=True#False
+useExact=False
 #number of space dimensions
 nd=2
 #time integration, not relevant if using BDF with cfl timestepping
@@ -62,6 +62,7 @@ if unstructured:
 else:
     from proteus.Domain import RectangularDomain
     domain = RectangularDomain(L)
+
 #end time of simulation, full problem is T=8.0
 T = 8.0#8.0#
 #number of output time steps

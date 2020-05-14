@@ -3,7 +3,10 @@ from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
-from .rotation2D import *
+try:
+    from .rotation2D import *
+except:
+    from rotation2D import *
 from proteus.mprans import NCLS
 #import Profiling
 

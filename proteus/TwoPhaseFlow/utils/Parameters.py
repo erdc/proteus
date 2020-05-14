@@ -315,6 +315,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             epsFact=epsFact,
             eb_penalty_constant=100.,
             particle_epsFact = 3.,
+            useExact=Problem.useExact
         )
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
@@ -340,7 +341,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
-        self.n.maxNonlinearIts = 50
+        self.n.maxNonlinearIts = 100
         self.n.maxLineSearches = 0
         self._freeze()
 
@@ -1507,8 +1508,11 @@ class ParametersModelRDLS(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'rdls_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.tolFac = 0.
+        #self.n.maxNonlinearIts = 1
         self.n.maxNonlinearIts = 50
         self.n.maxLineSearches = 0
         # freeze attributes
@@ -1553,7 +1557,7 @@ class ParametersModelRDLS(ParametersModelBase):
         # TOLERANCES
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.1*mesh.he)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
@@ -1603,6 +1607,8 @@ class ParametersModelMCorr(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'mcorr_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.
@@ -1660,7 +1666,7 @@ class ParametersModelMCorr(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
-
+        
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
         if self._Problem.useSuperlu:
@@ -1699,6 +1705,8 @@ class ParametersModelAddedMass(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'am_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.

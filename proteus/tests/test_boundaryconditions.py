@@ -871,26 +871,26 @@ class TestBC(unittest.TestCase):
         Cmu = 0.09
         B = 5.57
         # Normal and tangential vectors
-        nV = old_div(-b_or_wall,np.sqrt(np.sum(b_or_wall**2)))
+        nV = -b_or_wall/np.sqrt(np.sum(b_or_wall**2))
         uTan = U0 - U0*(nV**2)
-        tV = old_div(uTan,np.sqrt(np.sum(uTan**2)))
+        tV = uTan/np.sqrt(np.sum(uTan**2))
         uTanAbs = np.sqrt(np.sum(uTan**2))
         # Calculation of turbulent variables
         Re0 = U0abs * Y / 1.004e-6
-        cf = old_div(0.045, (Re0**0.25))
-        ut = U0abs * np.sqrt(old_div(cf,2.))
+        cf = 0.045/(Re0**0.25)
+        ut = U0abs * np.sqrt(cf/2.)
         Yplus = Y*ut/1.004e-6
         turbModel = 'ke' # 'kw'
-        kappaP = old_div((ut**2), (Cmu**0.5))
+        kappaP = (ut**2)/(Cmu**0.5)
         if turbModel is 'ke':
-            dissipationP = old_div((ut**3), (0.41*Y)) # ke model
+            dissipationP = (ut**3)/(0.41*Y) # ke model
         elif turbModel is 'kw':
-            dissipationP = old_div(np.sqrt(kappaP), (0.41*Y*(Cmu**0.25))) # kw model
+            dissipationP = np.sqrt(kappaP)/(0.41*Y*(Cmu**0.25)) # kw model
         # Log law
         E = np.exp(0.41*B)
         utStar = (kappaP**0.5)*(0.09**0.25)
         uStar = utStar * np.log(E*Yplus) / 0.41
-        ut = utStar * np.sqrt(old_div(uTanAbs,uStar))
+        ut = utStar * np.sqrt(uTanAbs/uStar)
         gradU = (ut/0.41/Y) * tV
         uDir = uTan - gradU*Y
         # Wall objects
@@ -902,11 +902,11 @@ class TestBC(unittest.TestCase):
         x = np.array(get_random_x())  
         t = random.uniform(0., 10.)
         BC.setWallFunction(wall)
-#        npt.assert_allclose(BC.u_dirichlet.uOfXT(x, t), uDir[0], atol=1e-10)
-#        npt.assert_allclose(BC.v_dirichlet.uOfXT(x, t), uDir[1], atol=1e-10)
-#        npt.assert_allclose(BC.w_dirichlet.uOfXT(x, t), uDir[2], atol=1e-10)
-        npt.assert_allclose(BC.k_dirichlet.uOfXT(x, t), kappaP, atol=1e-10)
-        npt.assert_allclose(BC.dissipation_dirichlet.uOfXT(x, t), dissipationP, atol=1e-10)
+        npt.assert_allclose(BC.u_dirichlet.uOfXT(x, t, b_or_wall), uDir[0], atol=1e-10)
+        npt.assert_allclose(BC.v_dirichlet.uOfXT(x, t, b_or_wall), uDir[1], atol=1e-10)
+        npt.assert_allclose(BC.w_dirichlet.uOfXT(x, t, b_or_wall), uDir[2], atol=1e-10)
+        npt.assert_allclose(BC.k_dirichlet.uOfXT(x, t, b_or_wall), kappaP, atol=1e-10)
+        npt.assert_allclose(BC.dissipation_dirichlet.uOfXT(x, t, b_or_wall), dissipationP, atol=1e-10)
         
 
 

@@ -7,13 +7,11 @@ for key, value in cfg_vars.items():
         cfg_vars[key] = cfg_vars[key].replace("-Wstrict-prototypes", "")
         cfg_vars[key] = cfg_vars[key].replace("-Wall", "-w")
 
-from distutils.core import setup, Extension
-from Cython.Build import cythonize
-
-import numpy
+from distutils.core import setup
 from Cython.Build import cythonize
 from Cython.Distutils.extension import Extension
 from Cython.Distutils import build_ext
+import numpy
 ## \file setup.py setup.py
 #  \brief The python script for building proteus
 #
@@ -298,7 +296,7 @@ EXTENSIONS_TO_BUILD = [
               libraries=['ncurses','stdc++','m'],
               extra_compile_args=["-std=c++11"]),
     Extension(
-        'ADR',
+        'cADR',
         ['proteus/ADR.cpp'],
         depends=['proteus/ADR.h', 'proteus/mprans/ArgumentsDict.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
         include_dirs=get_xtensor_include(),
