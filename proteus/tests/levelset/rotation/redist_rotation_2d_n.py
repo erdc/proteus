@@ -3,8 +3,12 @@ from __future__ import division
 from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
-from .redist_rotation_2d_p import *
-from .rotation2D import *
+try:
+    from .redist_rotation_2d_p import *
+    from .rotation2D import *
+except:
+    from redist_rotation_2d_p import *
+    from rotation2D import *
 
 if redist_Newton:
     timeIntegration = NoIntegration

@@ -56,7 +56,10 @@ box=Domain.RectangularDomain(L=(2.0,2.0),
 genMesh=False
 #box.writePoly("box")
 if unstructured:
-    from .rotationDomain import *
+    try:
+        from .rotationDomain import *
+    except:
+        from rotationDomain import *
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
     domain.boundaryTags = box.boundaryTags
     bt = domain.boundaryTags
