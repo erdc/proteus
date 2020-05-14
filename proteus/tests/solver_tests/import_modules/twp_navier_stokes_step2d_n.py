@@ -101,6 +101,7 @@ if usePETSc:
         # Global KSP options
         from petsc4py import PETSc
         OptDB = PETSc.Options()
+        OptDB.clear()
         prefix='rans2p_'
         OptDB.setValue(prefix+'ksp_type', 'fgmres')
         OptDB.setValue(prefix+'ksp_gmres_restart', 300)

@@ -16,12 +16,12 @@ from proteus import LinearSolvers as LS
 import os
 import sys
 import inspect
-import petsc4py as p4pyPETSc
+import petsc4py
 import numpy as np
 import pytest
 import pickle
 
-from petsc4py import PETSc as p4pyPETSc
+from petsc4py import PETSc
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 
@@ -32,7 +32,7 @@ def create_petsc_vecs(matrix_A):
 
     Parameters
     ----------
-    matrix_A: :class:`p4pyPETSc.Mat`
+    matrix_A: :class:`PETSc.Mat`
         Global matrix object
 
     Returns
@@ -43,8 +43,8 @@ def create_petsc_vecs(matrix_A):
         second vector is a vector of zeros (usually to act as a
         storage vector for the solution).
     """
-    b = p4pyPETSc.Vec().create()
-    x = p4pyPETSc.Vec().create()
+    b = PETSc.Vec().create()
+    x = PETSc.Vec().create()
     b.createWithArray(np.ones(matrix_A.getSizes()[0][0]))
     x.createWithArray(np.zeros(matrix_A.getSizes()[0][0]))
     return (b, x)
@@ -57,14 +57,14 @@ def initialize_asm_ksp_obj(matrix_A):
 
     Parameters
     ----------
-    matrix_A: :class:`p4pyPETSc.Mat`
+    matrix_A: :class:`PETSc.Mat`
         Global matrix object.
 
     Returns
     -------
-    ksp_obj: :class:`p4pyPETSc.KSP`
+    ksp_obj: :class:`PETSc.KSP`
     """
-    ksp_obj = p4pyPETSc.KSP().create()
+    ksp_obj = PETSc.KSP().create()
     ksp_obj.setOperators(matrix_A,matrix_A)
     ksp_obj.setFromOptions()
     ksp_obj.setUp()
@@ -106,11 +106,11 @@ def build_amg_index_sets(L_sizes):
                                     step=3,
                                     dtype='i'))
     velocity_v_DOF_full = np.vstack(velocity_v_DOF).transpose().flatten()
-    isvelocity = p4pyPETSc.IS()
+    isvelocity = PETSc.IS()
     isvelocity.createGeneral(velocityDOF_full)
-    isu = p4pyPETSc.IS()
+    isu = PETSc.IS()
     isu.createGeneral(velocity_u_DOF_full)
-    isv = p4pyPETSc.IS()
+    isv = PETSc.IS()
     isv.createGeneral(velocity_v_DOF_full)
     return [isvelocity, isu, isv]
 
@@ -147,7 +147,8 @@ class TestSmoothingAlgorithms(proteus.test_utils.TestTools.BasicTest):
 class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
 
     def setup_method(self,method):
-        self.petsc_options = p4pyPETSc.Options()
+        self.petsc_options = PETSc.Options()
+        self.petsc_options.clear()
         self._scriptdir = os.path.dirname(__file__)
         self.quad_mass_matrix = np.load(os.path.join(self._scriptdir,
                                         'import_modules/quad_mass_matrix.npy'))
@@ -173,8 +174,8 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         for i in range(0,n,2):
             b1[i] = 0.
         A_petsc = LAT.dense_numpy_2_petsc4py(A)
-        x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
-        b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
+        x0_petsc = PETSc.Vec().createWithArray(x0)
+        b1_petsc = PETSc.Vec().createWithArray(b1)
         solver = LS.ChebyshevSemiIteration(A_petsc,
                                            alpha,
                                            beta,
@@ -196,8 +197,8 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         for i in range(0,n):
             b1[i] = i
         A_petsc = LAT.dense_numpy_2_petsc4py(A)
-        x0_petsc = p4pyPETSc.Vec().createWithArray(x0)
-        b1_petsc = p4pyPETSc.Vec().createWithArray(b1)
+        x0_petsc = PETSc.Vec().createWithArray(x0)
+        b1_petsc = PETSc.Vec().createWithArray(b1)
         solver = LS.ChebyshevSemiIteration(A_petsc,
                                            alpha,
                                            beta,

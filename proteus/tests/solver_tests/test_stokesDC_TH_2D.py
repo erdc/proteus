@@ -75,6 +75,7 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         self.remove_files(FileList)
 
     def _setPETSc(self):
+        petsc4py.PETSc.Options().clear()
         petsc4py.PETSc.Options().setValue("ksp_type","fgmres")
         petsc4py.PETSc.Options().setValue("ksp_atol",1e-20)
         petsc4py.PETSc.Options().setValue("ksp_atol",1e-12)
@@ -85,6 +86,7 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         petsc4py.PETSc.Options().setValue("fieldsplit_pressure_ksp_type","preonly")
 
     def _setPETSc_LU(self):
+        petsc4py.PETSc.Options().clear()
         petsc4py.PETSc.Options().setValue("ksp_type","preonly")
         petsc4py.PETSc.Options().setValue("pc_type","lu")
         petsc4py.PETSc.Options().setValue("pc_factor_mat_solver_package","mumps")
@@ -163,6 +165,7 @@ def load_nse_cavity_matrix(request):
 def initialize_petsc_options(request):
     """Initializes schur complement petsc options. """
     petsc_options = PETSc.Options()
+    petsc_options.clear()
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',500)
     petsc_options.setValue('ksp_atol',1e-16)

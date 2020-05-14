@@ -17,7 +17,7 @@ import petsc4py
 import numpy as np
 import pytest
 
-from petsc4py import PETSc as p4pyPETSc
+from petsc4py import PETSc
 from scipy.sparse import csr_matrix
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
@@ -96,8 +96,8 @@ def create_simple_saddle_point_problem(request):
 
     x_vec = np.ones(num_p_unkwn)
     y_vec = np.zeros(num_p_unkwn)
-    x_PETSc_vec = p4pyPETSc.Vec().createWithArray(x_vec)
-    y_PETSc_vec = p4pyPETSc.Vec().createWithArray(y_vec)
+    x_PETSc_vec = PETSc.Vec().createWithArray(x_vec)
+    y_PETSc_vec = PETSc.Vec().createWithArray(y_vec)
 
     output_data = Output_Storage(petsc_matF,
                                  petsc_matD,
@@ -136,7 +136,8 @@ def create_simple_petsc_matrix(request):
 class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
     def setup_method(self,method):
-        self.petsc_options = p4pyPETSc.Options()
+        self.petsc_options = PETSc.Options()
+        self.petsc_options.clear()
         self._scriptdir = os.path.dirname(__file__)
 
     def teardown_method(self,method):
@@ -148,8 +149,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
                      'innerLSCsolver_T_']
         for name in aux_names:
             rm_lst.extend([name+g for g in ['ksp_type','pc_type']])
-        for element in rm_lst:
-            self.petsc_options.delValue(element)
+        self.petsc_options.clear()
 
     def test_lsc_shell(self, create_simple_saddle_point_problem):
         ''' Test for the lsc operator shell '''
@@ -159,9 +159,10 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         LSC_shell.apply(None,
                         fixture_data.x_vec,
                         fixture_data.y_vec)
-        true_solu = np.mat('[-0.01096996,0.00983216]')
-        assert np.allclose(fixture_data.y_vec.getArray(),
-                           true_solu)
+        true_solu = np.array([-0.01096996,0.00983216],'d')
+        np.testing.assert_allclose(fixture_data.y_vec.getArray(),
+                                   true_solu,
+                                   rtol=1e-8, atol=1e-8)
 
     def test_tppcd_shell(self):
         ''' Test for the two-phase pcd operator shell '''
@@ -172,7 +173,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         alpha = True
         delta_t = 0.001
         x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
-
+        self.petsc_options.clear()
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
@@ -189,8 +190,11 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         y_vec.zeroEntries()
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
-        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output.bin'))
-        assert np.allclose(y_vec.getArray(),true_solu.getArray(),rtol=1e-01)
+        true_solu = np.loadtxt(os.path.join(self._scriptdir,'comparison_files/tp_pcd_y_output.csv'),delimiter=',')
+        np.savetxt('comparison_files/tp_pcd_y_output.csv',y_vec.getArray(),delimiter=',')
+        np.testing.assert_allclose(y_vec.getArray(),
+                                   true_solu,
+                                   rtol=1e-8, atol=1e-8)
 
     def test_tppcd_shell_with_chebyshev_iteration(self):
         ''' Test for the lsc operator shell '''
@@ -201,7 +205,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         alpha = True
         delta_t = 0.001
         x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
-
+        self.petsc_options.clear()
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
@@ -219,12 +223,14 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
         true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output.bin'))
-        assert np.allclose(y_vec.getArray(),true_solu.getArray())
+        np.testing.assert_allclose(y_vec.getArray(),
+                                       true_solu.getArray(),
+                                       rtol=1e-8, atol=1e-8)
 
     def test_SpInv_shell(self, create_simple_saddle_point_problem):
         """Test :math:`S_{p}` shell has correct behavior. """
         fixture_data = create_simple_saddle_point_problem
-
+        self.petsc_options.clear()
         self.petsc_options.setValue('innerSpsolver_ksp_type', 'preonly')
         self.petsc_options.setValue('innerSpsolver_pc_type', 'hypre')
         self.petsc_options.setValue('innerSpsolver_pc_hypre_type', 'boomeramg')
@@ -237,9 +243,10 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         SpInv_shell.apply(None,
                           fixture_data.x_vec,
                           fixture_data.y_vec)
-        true_solu = np.mat('[1.0655362, -0.30354183]')
-        assert np.allclose(fixture_data.y_vec.getArray(),
-                           true_solu)
+        true_solu = np.array([1.0655362, -0.30354183],'d')
+        np.testing.assert_allclose(fixture_data.y_vec.getArray(),
+                                       true_solu,
+                                       rtol=1e-8, atol=1e-8)
 
     def test_tppcd_shell_with_dirichlet_pressure(self):
         ''' Test for the lsc operator shell '''
@@ -250,7 +257,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         alpha = True
         delta_t = 0.001
         x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
-
+        self.petsc_options.clear()
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
@@ -270,7 +277,8 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         known_indices_mask = np.ones(TPPCD_shell.getSize(),dtype=bool)
         known_indices_mask[dirichlet_nodes] = False
         unknown_is = unknown_indices[known_indices_mask]
-        assert np.array_equal(unknown_is, TPPCD_shell.unknown_dof_is.getIndices())
+        np.testing.assert_equal(unknown_is,
+                                TPPCD_shell.unknown_dof_is.getIndices())
 
         y_vec = x_vec.copy()
         y_vec.zeroEntries()
@@ -279,7 +287,9 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         assert np.array_equal(y_vec[dirichlet_nodes], [0.,0.,0.,0.,0.])
         true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir,
                                                        'import_modules/tppcd_y_dirichlet_dof.bin'))
-        assert np.allclose(y_vec.getArray(),true_solu.getArray())
+        np.testing.assert_allclose(y_vec.getArray(),
+                                       true_solu.getArray(),
+                                       rtol=1e-8, atol=1e-8)
 
 def test_tmp_vec_creation():
     A = LAT.InvOperatorShell._create_tmp_vec(4)
@@ -291,7 +301,8 @@ def test_create_petsc_ksp_obj(create_simple_petsc_matrix):
     def getSize():
         return 3
 
-    petsc_options = p4pyPETSc.Options()
+    petsc_options = PETSc.Options()
+    petsc_options.clear()
     petsc_options.setValue('test_F_ksp_type','preonly')
     petsc_options.setValue('test_F_pc_type','lu')
     petsc_matF = create_simple_petsc_matrix
@@ -307,8 +318,8 @@ def test_create_petsc_ksp_obj(create_simple_petsc_matrix):
     assert A.getOperators()[0].equal(petsc_matF)
 
     InvOpShell._set_dirichlet_idx_set()
-    assert np.array_equal(InvOpShell.unknown_dof_is.getIndices(),
-                          np.array([0,2]))
+    np.testing.assert_array_equal(InvOpShell.unknown_dof_is.getIndices(),
+                                  np.array([0,2]))
 
 if __name__ == '__main__':
     pass

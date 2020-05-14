@@ -3,10 +3,14 @@
 from __future__ import absolute_import
 
 import proteus.test_utils.TestTools as TestTools
+import proteus
 from proteus import LinearAlgebraTools as LAT
 from proteus import LinearSolvers as LS
-
-from proteus.iproteus import *
+from proteus import Profiling
+from proteus import NumericalSolution
+from proteus import iproteus
+from proteus.iproteus import opts
+#from proteus.iproteus import *
 
 import os
 import sys
@@ -19,6 +23,12 @@ from petsc4py import PETSc
 import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
+from proteus import default_p, default_n, default_so, default_s
+from importlib import reload
+reload(default_p)
+reload(default_n)
+reload(default_so)
+reload(default_s)
 try:
     from .import_modules import step2d_so
     from .import_modules import step2d
@@ -201,13 +211,13 @@ def build_amg_index_sets(L_sizes):
     return [isvelocity, isu, isv]
 
 def clear_petsc_options():
-    for key in PETSc.Options().getAll():
-        PETSc.Options().delValue(key)
+    PETSc.Options().clear()
 
 
 @pytest.fixture()
 def initialize_velocity_block_petsc_options():
     petsc_options = PETSc.Options()
+    petsc_options.clear()
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',100)
 #    petsc_options.setValue('ksp_pc_side','right')
@@ -219,6 +229,7 @@ def initialize_velocity_block_petsc_options():
 @pytest.fixture()
 def initialize_velocity_block_petsc_options_2():
     petsc_options = PETSc.Options()
+    petsc_options.clear()
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',100)
     petsc_options.setValue('ksp_atol',1e-8)
@@ -227,6 +238,7 @@ def initialize_velocity_block_petsc_options_2():
 @pytest.fixture()
 def initialize_velocity_block_petsc_options_3(request):
     petsc_options = PETSc.Options()
+    petsc_options.clear()
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',100)
     petsc_options.setValue('ksp_pc_side','right')
@@ -285,7 +297,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 104
+    assert F_ksp.its == 126
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -391,6 +403,7 @@ def test_amg_step_problem_slip(load_matrix_step_slip,
 def initialize_petsc_options(request):
     """Initializes schur complement petsc options. """
     OptDB = PETSc.Options()
+    OptDB.clear()
     OptDB.setValue('ksp_type', 'fgmres')
     OptDB.setValue('ksp_rtol', 1.0e-8)
     OptDB.setValue('ksp_atol', 1.0e-8)

@@ -2,8 +2,9 @@
 """ Test modules for Driven Cavity Stokes preconditioners. """
 
 import proteus.test_utils.TestTools as TestTools
-from proteus.iproteus import *
-
+from proteus.iproteus import opts
+from proteus import Profiling, NumericalSolution
+from importlib import reload
 Profiling.logLevel = 7
 Profiling.verbose = True
 
@@ -15,9 +16,14 @@ import tables
 import pickle
 import pytest
 
-from petsc4py import PETSc as p4pyPETSc
+from petsc4py import PETSc
 
 TestTools.addSubFolders( inspect.currentframe() )
+from proteus import default_p, default_n, default_so, default_s
+reload(default_p)
+reload(default_n)
+reload(default_so)
+reload(default_s)
 import cavity2d
 import twp_navier_stokes_cavity_2d_so
 import twp_navier_stokes_cavity_2d_p
@@ -38,10 +44,12 @@ def clean_up_directory():
 
 @pytest.fixture()
 def initialize_tp_pcd_options(request):
-    petsc_options = p4pyPETSc.Options()
+    petsc_options = PETSc.Options()
+    petsc_options.clear()
     petsc_options.setValue('rans2p_ksp_type','gmres')
     petsc_options.setValue('rans2p_ksp_gmres_restart',500)
-    petsc_options.setValue('rans2p_ksp_atol',1e-20)
+    petsc_options.setValue('rans2p_ksp_atol',1e-12)
+    petsc_options.setValue('rans2p_ksp_rtol',1e-12)
     petsc_options.setValue('rans2p_ksp_gmres_modifiedgramschmidt','')
     petsc_options.setValue('rans2p_pc_fieldsplit_type','schur')
     petsc_options.setValue('rans2p_pc_fieldsplit_schur_fact_type','upper')
@@ -60,10 +68,6 @@ def initialize_tp_pcd_options(request):
 
 @pytest.fixture()
 def load_cavity_problem(request):
-    reload(cavity2d)
-    reload(twp_navier_stokes_cavity_2d_so)
-    reload(twp_navier_stokes_cavity_2d_p)
-    reload(twp_navier_stokes_cavity_2d_n)
     pList = [twp_navier_stokes_cavity_2d_p]
     nList = [twp_navier_stokes_cavity_2d_n]
     so = twp_navier_stokes_cavity_2d_so
@@ -94,6 +98,6 @@ def test_bochev_pressure_cavity(load_cavity_problem,
     expected_path = 'comparison_files/' + 'comparison_' + 'twp_navier_stokes_cavity_2d' + '_p_t1.csv'
     #write comparison file
     #np.array(actual.root.p_t1).tofile(os.path.join(script_dir, expected_path),sep=",")
-    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.p_t1).flatten(),decimal=10)
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.p_t1).flatten(),decimal=8)
     actual.close()
-    #clean_up_directory()
+    clean_up_directory()
