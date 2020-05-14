@@ -51,14 +51,12 @@ jobs:
       - export PATHSAVE=$PATH
       - export PATH=$PWD/linux/bin:$PATH
       - export LD_LIBRARY_PATH=$PWD/linux/lib:$LD_LIBRARY_PATH
-      - PROTEUS_OPT="-w -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=1
+      - PROTEUS_OPT="-w -g0 -O0 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=1
       - export SSL_CERT_DIR=/etc/ssl/certs
-      - #./linux/bin/pip3 install matplotlib
     script:
-      - export MPLBACKEND="AGG"
-      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD -k 'not test_damBreak_solver_options' --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --cov=proteus
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus
   - stage: test
     name: "conda linux"
     os: linux
