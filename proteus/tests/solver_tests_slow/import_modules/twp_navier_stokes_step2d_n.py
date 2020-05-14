@@ -6,7 +6,6 @@ try:
 except:
     import step2d
     
-reload(step2d)
 try:
     from .step2d import *
 except:
@@ -16,7 +15,6 @@ try:
     from . import twp_navier_stokes_step2d_p
 except:
     import twp_navier_stokes_step2d_p
-reload(twp_navier_stokes_step2d_p)
 try:
     from .twp_navier_stokes_step2d_p import *
 except:
@@ -62,34 +60,13 @@ class Fixed_dt_controller(proteus.StepControl.Min_dt_controller):
         Min_dt_controller.updateTimeHistory(self,resetFromDOF=resetFromDOF)
         self.dt_model_last = self.dt_model
 
-if useBackwardEuler:
-    timeIntegration = BackwardEuler#_cfl
-    stepController = Min_dt_controller
-    #stepController = HeuristicNL_dt_controller
-    #nonlinearIterationsFloor = 2
-    #nonlinearIterationsCeil=4
-    #nonlinearIterationsFloor = 3
-    #nonlinearIterationsCeil=4
-    #dtNLgrowFactor  = 1.5
-    #dtNLreduceFactor= 0.75
-    
-    #timeIntegration = NoIntegration
-    #stepController = Newton_controller
-
-else:
-    timeIntegration = BackwardEuler
-    stepController = SC_base #FixedStep #SC_base
-#    stepControllerType = proteus.SplitOperator.Sequential_tnList
-#    systemStepExact = True
-    
-#    timeOrder=2
-#    timeIntegration = VBDF 
-#    stepController = Fixed_dt_controller #Min_dt_controller
-#    DT = dt_fixed
+timeIntegration = NoIntegration
+stepController = Newton_controller
 
 femSpaces = {0:basis,
              1:basis,
              2:basis}
+
 numericalFluxType = RANS2P.NumericalFlux
 subgridError = RANS2P.SubgridError(coefficients,nd,lag=ns_lag_subgridError,hFactor=hFactor)
 shockCapturing = RANS2P.ShockCapturing(coefficients,nd,ns_shockCapturingFactor,lag=ns_lag_shockCapturing)
@@ -97,11 +74,11 @@ shockCapturing = RANS2P.ShockCapturing(coefficients,nd,ns_shockCapturingFactor,l
 massLumping = False
 
 fullNewtonFlag = True
-multilevelNonlinearSolver = Newton#NS
-levelNonlinearSolver = Newton#NS
+multilevelNonlinearSolver = Newton
+levelNonlinearSolver = Newton
 
 nonlinearSmoother = None
-linearSmoother = None #SimpleNavierStokes2D
+linearSmoother = None
 
 matrix = SparseMatrix
 
@@ -109,8 +86,7 @@ if usePETSc:
     multilevelLinearSolver = KSP_petsc4py
     levelLinearSolver = KSP_petsc4py
     linear_solver_options_prefix = 'rans2p_'
-    schur_solver = 'two_phase_PCD' #'two_phase_PCD' #'selfp_petsc'
-#    schur_solver = ct.opts.schur_solver
+    schur_solver = ct.opts.schur_solver
     if schur_solver == 'Qp':
         linearSmoother=NavierStokes3D_Qp
     elif schur_solver == 'petsc_ASM':
@@ -121,7 +97,54 @@ if usePETSc:
         linearSmoother=NavierStokes_TwoPhaseLSC
     elif schur_solver == 'two_phase_PCD':
         linearSmoother=NavierStokes_TwoPhasePCD
-        linearSmootherOptions = (False, False, True, 0) #(density_scaling, numerical_viscosity, lumped, chebyshev_its)
+        # Options for PCD
+        # Global KSP options
+        from petsc4py import PETSc
+        OptDB = PETSc.Options()
+        prefix='rans2p_'
+        OptDB.setValue(prefix+'ksp_type', 'fgmres')
+        OptDB.setValue(prefix+'ksp_gmres_restart', 300)
+        OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
+        OptDB.setValue(prefix+'ksp_pc_side','right')
+        OptDB.setValue(prefix+'pc_fieldsplit_type', 'schur')
+        OptDB.setValue(prefix+'pc_fieldsplit_schur_fact_type', 'upper')
+        OptDB.setValue(prefix+'pc_fieldsplit_schur_precondition', 'user')
+        # Velocity block options
+        OptDB.setValue(prefix+'fieldsplit_velocity_ksp_type', 'gmres')
+        OptDB.setValue(prefix+'fieldsplit_velocity_ksp_gmres_modifiedgramschmidt', 1)
+        OptDB.setValue(prefix+'fieldsplit_velocity_ksp_atol', 1e-5)
+        OptDB.setValue(prefix+'fieldsplit_velocity_ksp_rtol', 1e-5)
+        OptDB.setValue(prefix+'fieldsplit_velocity_ksp_pc_side', 'right')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_ksp_type', 'preonly')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_type', 'hypre')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomeramg')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_ksp_type', 'preonly')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_type', 'hypre')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomeramg')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_ksp_type', 'preonly')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_type', 'hypre')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomeramg')
+        OptDB.setValue(prefix+'fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+        #PCD Schur Complement options
+        OptDB.setValue(prefix+'fieldsplit_pressure_ksp_type', 'preonly')
+        OptDB.setValue('innerTPPCDsolver_Qp_visc_ksp_type', 'preonly')
+        OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_type', 'lu')
+        OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type', 'superlu_dist')
+        OptDB.setValue('innerTPPCDsolver_Qp_dens_ksp_type', 'preonly')
+        OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_type', 'lu')
+        OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type', 'superlu_dist')
+        OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_type', 'richardson')
+        OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_max_it', 1)
+        #OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space',1)
+        OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_type', 'hypre')
+        OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type', 'boomeramg')
+        OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold', 0.5)
+        OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type', 'ext+i-cc')
+        OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+        OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl', 2)
+#        linearSmootherOptions = (False, True, True, 3) #(density_scaling, numerical_viscosity, lumped, chebyshev_its)
     elif schur_solver == 'LSC':
         linearSmoother=NavierStokes3D_LSC
     elif schur_solver == 'pcd':
@@ -142,8 +165,9 @@ else:
     levelLinearSolver = LU
 
 tolFac = 0.0
-linTolFac = 0.0001
-nl_atol_res = 1.0e-10
+linTolFac = 1.0e-2
+l_atol_res = 0.01*ns_nl_atol_res
+nl_atol_res = ns_nl_atol_res
 
 maxNonlinearIts = 100
 maxLineSearches =0

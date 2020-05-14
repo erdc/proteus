@@ -60,7 +60,7 @@ def load_simulation(context_options_str=None):
     so.sList = pList[0].name
     so.sList = [default_s]
     _scriptdir = os.path.dirname(__file__)
-    Profiling.logAllProcesses = True
+    Profiling.logAllProcesses = False
     ns = NumericalSolution.NS_base(so,
                                    pList,
                                    nList,
@@ -79,25 +79,19 @@ def test_step_slip_FullRun():
         * Pressure Projection Stablization.
         * he = 0.05
     """
-    TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
-                                                                 'import_modules/petsc.options.schur'))
+    #TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
+    #                                                             'import_modules/petsc.options.schur'))
     context_options_str='he=0.05'
     ns = load_simulation(context_options_str)
     actual_log = runTest(ns,'test_1')
 
-    L1 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,0)])
-    L2 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,1)])
-    L3 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,2)])
-    L4 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,3)])
-    L5 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,4)])
-    L6 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,5)])
-    
-    assert L1[0][1]==25
-    assert L2[0][1]==31
-    assert L3[0][1]==43
-    assert L4[0][1]==39
-    assert L5[0][1]==40
-    assert L6[0][1]==35
+    L1 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,0)])
+    L2 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,1)])
+    L3 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,2)])
+
+    assert L1[0][1]==2
+    assert L2[0][1]==11
+    assert L3[0][1]==14
 
 def test_ste_noslip_FullRun():
     """ Runs two-dimensional step problem with the settings:
@@ -105,25 +99,19 @@ def test_ste_noslip_FullRun():
         * Pressure Projection Stablization.
         * he = 0.05
     """
-    TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
-                                                                 'import_modules/petsc.options.schur'))
+    #TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
+    #                                                             'import_modules/petsc.options.schur'))
     context_options_str="boundary_condition_type='ns'"
     ns = load_simulation(context_options_str)
     actual_log = runTest(ns,'test_2')
 
-    L1 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,0)])
-    L2 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,1)])
-    L3 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,2)])
-    L4 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,3)])
-    L5 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,4)])
-    L6 = actual_log.get_ksp_resid_it_info([(' step2d ',1e+18,0,5)])
+    L1 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,0)])
+    L2 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,1)])
+    L3 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,2)])
 
-    assert L1[0][1]==34
-    assert L2[0][1]==41
-    assert L3[0][1]==55
-    assert L4[0][1]==51
-    assert L5[0][1]==53
-    assert L6[0][1]==38
+    assert L1[0][1]==2
+    assert L2[0][1]==11
+    assert L3[0][1]==14
 
 def create_petsc_vecs(matrix_A):
     """
@@ -238,7 +226,7 @@ def initialize_velocity_block_petsc_options_2():
 
 @pytest.fixture()
 def initialize_velocity_block_petsc_options_3(request):
-    petsc_options = p4pyPETSc.Options()
+    petsc_options = PETSc.Options()
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',100)
     petsc_options.setValue('ksp_pc_side','right')
@@ -253,7 +241,7 @@ def load_matrix_step_slip(request):
     Loads a medium sized backwards facing step matrix for studying
     different AMG preconditioners.
     """
-    A = LAT.petsc_load_matrix('dump_test_1_step2d_1e+18par_j_0')
+    A = LAT.petsc_load_matrix('dump_test_1_step2d_1.0par_j_0')
     yield A
 
 @pytest.fixture()
@@ -262,7 +250,7 @@ def load_matrix_step_noslip(request):
     Loads a medium sized backwards facing step matrix for studying
     different AMG preconditioners.
     """
-    A = LAT.petsc_load_matrix('dump_test_2_step2d_1e+18par_j_0')
+    A = LAT.petsc_load_matrix('dump_test_2_step2d_1.0par_j_0')
     yield A
 
 @pytest.mark.amg
@@ -276,7 +264,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                    index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 9
+    assert F_ksp.its == 68
 
     PETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
     F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
@@ -285,7 +273,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 10
+    assert F_ksp.its == 73
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -297,7 +285,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 20
+    assert F_ksp.its == 104
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -310,7 +298,7 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 23
+    assert F_ksp.its == 126
 
 def test_amg_iteration_matrix_slip(load_matrix_step_slip):
     mat_A = load_matrix_step_slip
@@ -351,7 +339,7 @@ def test_amg_basic(load_matrix_step_noslip,
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))   
     F_ksp.solve(b,x)
-    assert F_ksp.its == 9
+    assert F_ksp.its == 68
 
 @pytest.mark.amg
 def test_amg_iteration_performance(load_matrix_step_noslip,
@@ -367,7 +355,7 @@ def test_amg_iteration_performance(load_matrix_step_noslip,
                                                 index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 9
+    assert F_ksp.its == 68
 
 @pytest.mark.amg
 def test_amg_step_problem_noslip(load_matrix_step_noslip,
@@ -382,7 +370,7 @@ def test_amg_step_problem_noslip(load_matrix_step_noslip,
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 9
+    assert F_ksp.its == 68
 
 @pytest.mark.amg
 def test_amg_step_problem_slip(load_matrix_step_slip,
@@ -397,23 +385,56 @@ def test_amg_step_problem_slip(load_matrix_step_slip,
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 27
+    assert F_ksp.its == 68
 
 @pytest.fixture()
 def initialize_petsc_options(request):
     """Initializes schur complement petsc options. """
-    petsc_options = PETSc.Options()
-    petsc_options.setValue('ksp_type','gmres')
-    petsc_options.setValue('ksp_gmres_restart',500)
-    petsc_options.setValue('ksp_atol',1e-16)
-    petsc_options.setValue('ksp_rtol',1.0e-16)
-    petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
-    petsc_options.setValue('pc_fieldsplit_type','schur')
-    petsc_options.setValue('pc_fieldsplit_schur_fact_type','upper')
-    petsc_options.setValue('pc_fieldsplit_schur_precondition','user')
-    petsc_options.setValue('fieldsplit_velocity_ksp_type','preonly')
-    petsc_options.setValue('fieldsplit_velocity_pc_type', 'lu')
-    petsc_options.setValue('fieldsplit_pressure_ksp_type','preonly')
+    OptDB = PETSc.Options()
+    OptDB.setValue('ksp_type', 'fgmres')
+    OptDB.setValue('ksp_rtol', 1.0e-8)
+    OptDB.setValue('ksp_atol', 1.0e-8)
+    OptDB.setValue('ksp_gmres_restart', 300)
+    OptDB.setValue('ksp_gmres_modifiedgramschmidt', 1)
+    OptDB.setValue('ksp_pc_side','right')
+    OptDB.setValue('pc_fieldsplit_type', 'schur')
+    OptDB.setValue('pc_fieldsplit_schur_fact_type', 'upper')
+    OptDB.setValue('pc_fieldsplit_schur_precondition', 'user')
+    # Velocity block options
+    OptDB.setValue('fieldsplit_velocity_ksp_type', 'gmres')
+    OptDB.setValue('fieldsplit_velocity_ksp_gmres_modifiedgramschmidt', 1)
+    OptDB.setValue('fieldsplit_velocity_ksp_atol', 1e-5)
+    OptDB.setValue('fieldsplit_velocity_ksp_rtol', 1e-5)
+    OptDB.setValue('fieldsplit_velocity_ksp_pc_side', 'right')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_ksp_type', 'preonly')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_type', 'hypre')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomeramg')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_ksp_type', 'preonly')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_type', 'hypre')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomeramg')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_ksp_type', 'preonly')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_type', 'hypre')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomeramg')
+    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    #PCD Schur Complement options
+    OptDB.setValue('fieldsplit_pressure_ksp_type', 'preonly')
+    OptDB.setValue('innerTPPCDsolver_Qp_visc_ksp_type', 'preonly')
+    OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_type', 'lu')
+    OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type', 'superlu_dist')
+    OptDB.setValue('innerTPPCDsolver_Qp_dens_ksp_type', 'preonly')
+    OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_type', 'lu')
+    OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type', 'superlu_dist')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_type', 'richardson')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_max_it', 1)
+    #OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space',1)
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_type', 'hypre')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type', 'boomeramg')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold', 0.5)
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type', 'ext+i-cc')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl', 2)
 
 def initialize_schur_ksp_obj(matrix_A, schur_approx):
     """
@@ -450,6 +471,7 @@ def test_Schur_Sp_solve(load_matrix_step_noslip,
        For this test, the global matrix does not have a null space."""
     mat_A = load_matrix_step_noslip
     b, x = create_petsc_vecs(mat_A)
+    petsc_options = initialize_petsc_options
 
     solver_info = LS.ModelInfo('interlaced', 3)
     schur_approx = LS.Schur_Sp(mat_A,
@@ -460,8 +482,8 @@ def test_Schur_Sp_solve(load_matrix_step_noslip,
 
     assert ksp_obj.converged == True
     assert ksp_obj.reason == 2
-    assert ksp_obj.norm < np.linalg.norm(b)*1.0e-10 + 1.0e-16
-    assert ksp_obj.its == 399
+    assert float(ksp_obj.norm) < 1.0e-5
+    assert ksp_obj.its == 64
 
 if __name__ == '__main__':
     pass
