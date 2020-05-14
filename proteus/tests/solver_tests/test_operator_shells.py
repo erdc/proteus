@@ -190,8 +190,8 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         y_vec.zeroEntries()
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
+        #np.savetxt(os.path.join(self._scriptdir,'comparison_files/tp_pcd_y_output.csv'),y_vec.getArray(),delimiter=',')
         true_solu = np.loadtxt(os.path.join(self._scriptdir,'comparison_files/tp_pcd_y_output.csv'),delimiter=',')
-        np.savetxt('comparison_files/tp_pcd_y_output.csv',y_vec.getArray(),delimiter=',')
         np.testing.assert_allclose(y_vec.getArray(),
                                    true_solu,
                                    rtol=1e-8, atol=1e-8)
@@ -222,9 +222,10 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         y_vec.zeroEntries()
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
-        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir, 'import_modules/tp_pcd_y_output.bin'))
+        #np.savetxt(os.path.join(self._scriptdir,'comparison_files/tp_pcd_y_output_cheb.csv'),y_vec.getArray(),delimiter=',')
+        true_solu = np.loadtxt(os.path.join(self._scriptdir,'comparison_files/tp_pcd_y_output_cheb.csv'),delimiter=',')
         np.testing.assert_allclose(y_vec.getArray(),
-                                       true_solu.getArray(),
+                                       true_solu,
                                        rtol=1e-8, atol=1e-8)
 
     def test_SpInv_shell(self, create_simple_saddle_point_problem):
@@ -285,10 +286,10 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         A = None
         TPPCD_shell.apply(A,x_vec,y_vec)
         assert np.array_equal(y_vec[dirichlet_nodes], [0.,0.,0.,0.,0.])
-        true_solu = LAT.petsc_load_vector(os.path.join(self._scriptdir,
-                                                       'import_modules/tppcd_y_dirichlet_dof.bin'))
+        #np.savetxt(os.path.join(self._scriptdir,'comparison_files/tppcd_y_dirichlet_dof.csv'),y_vec.getArray(),delimiter=',')
+        true_solu = np.loadtxt(os.path.join(self._scriptdir,'comparison_files/tppcd_y_dirichlet_dof.csv'),delimiter=',')
         np.testing.assert_allclose(y_vec.getArray(),
-                                       true_solu.getArray(),
+                                       true_solu,
                                        rtol=1e-8, atol=1e-8)
 
 def test_tmp_vec_creation():

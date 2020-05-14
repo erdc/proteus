@@ -1694,10 +1694,10 @@ namespace proteus
           p_L2=0.0, u_L2=0.0, v_L2=0.0,
           p_Linfty=0.0, u_Linfty=0.0, v_Linfty=0.0;
         double globalConservationError=0.0;
-        std::cout<<"Ball Info: center "<<ball_center[0]<<'\t'<<ball_center[1]<<std::endl
-                 <<"Ball Info: radius "<<ball_radius[0]<<std::endl
-                 <<"Ball Info: velocity "<<ball_velocity[0]<<'\t'<<ball_velocity[1]<<'\t'<<ball_velocity[2]<<std::endl
-                 <<"Ball Info: angular "<<ball_angular_velocity[0]<<ball_angular_velocity[1]<<ball_angular_velocity[2]<<std::endl;
+        /* std::cout<<"Ball Info: center "<<ball_center[0]<<'\t'<<ball_center[1]<<std::endl */
+        /*          <<"Ball Info: radius "<<ball_radius[0]<<std::endl */
+        /*          <<"Ball Info: velocity "<<ball_velocity[0]<<'\t'<<ball_velocity[1]<<'\t'<<ball_velocity[2]<<std::endl */
+        /*          <<"Ball Info: angular "<<ball_angular_velocity[0]<<ball_angular_velocity[1]<<ball_angular_velocity[2]<<std::endl; */
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -3889,9 +3889,9 @@ namespace proteus
             /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
             /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
             /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
-            std::cout<<"Pressure Integral "<<p_dv<<std::endl
-                     <<"Analytical Pressure Integral "<<pa_dv<<std::endl
-                     <<"Total Boundary Flux "<<total_flux<<std::endl;
+            /* std::cout<<"Pressure Integral "<<p_dv<<std::endl */
+            /*          <<"Analytical Pressure Integral "<<pa_dv<<std::endl */
+            /*          <<"Total Boundary Flux "<<total_flux<<std::endl; */
             int nDOF_pressure=0;
             for(int eN=0;eN<nElements_global;eN++)
               for (int i=0;i<nDOF_test_element;i++)
@@ -3962,15 +3962,15 @@ namespace proteus
             //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
             //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_Linfty<<std::endl;
           }
-        std::cout<<"p_1.append("<<p_L1<<")"<<std::endl
-                 <<"u_1.append("<<u_L1<<")"<<std::endl
-                 <<"v_1.append("<<v_L1<<")"<<std::endl
-                 <<"p_2.append("<<p_L2<<")"<<std::endl
-                 <<"u_2.append("<<u_L2<<")"<<std::endl
-                 <<"v_2.append("<<v_L2<<")"<<std::endl
-                 <<"p_I.append("<<p_Linfty<<")"<<std::endl
-                 <<"u_I.append("<<u_Linfty<<")"<<std::endl
-                 <<"v_I.append("<<v_Linfty<<")"<<std::endl;
+        /* std::cout<<"p_1.append("<<p_L1<<")"<<std::endl */
+        /*          <<"u_1.append("<<u_L1<<")"<<std::endl */
+        /*          <<"v_1.append("<<v_L1<<")"<<std::endl */
+        /*          <<"p_2.append("<<p_L2<<")"<<std::endl */
+        /*          <<"u_2.append("<<u_L2<<")"<<std::endl */
+        /*          <<"v_2.append("<<v_L2<<")"<<std::endl */
+        /*          <<"p_I.append("<<p_Linfty<<")"<<std::endl */
+        /*          <<"u_I.append("<<u_Linfty<<")"<<std::endl */
+        /*          <<"v_I.append("<<v_Linfty<<")"<<std::endl; */
       }
 
       void calculateJacobian(arguments_dict& args)
