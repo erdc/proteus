@@ -472,7 +472,7 @@ def test_amg_step_problem_noslip():
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 11
+    assert F_ksp.its == 6
 
 @pytest.mark.amg
 def test_amg_step_problem_slip():
