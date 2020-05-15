@@ -103,7 +103,7 @@ class TestPoisson(object):
         del ns
         assert(True)
 
-    def check_c0q1(self,test_hexMesh_3x3=False,use_petsc=False,name="_hexMesh_"):
+    def check_c0q1(self,test_hexMesh_3x3=False,use_petsc=True,name="_hexMesh_"):
         poisson_3d_p = load_physics('poisson_3d_p',
                                     modulepath)
         poisson_3d_c0q1_n = load_numerics('poisson_3d_c0q1_n',
@@ -136,6 +136,7 @@ class TestPoisson(object):
         """
         self.check_c0q1(test_hexMesh_3x3=False,use_petsc=True, name="_proteusMesh_")
 
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")    
     def test_c0q1_hex_mesh(self):
         from proteus import MeshTools
         xmf_archive_base=os.path.join(os.path.dirname(os.path.abspath(__file__)),

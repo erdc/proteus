@@ -46,7 +46,7 @@ class TestAuxFunctions(unittest.TestCase):
         RMS = np.sqrt(RMS)
         self.assertTrue(RMS<1e-04)
         self.assertTrue(MaxErr<1e-3)
-         
+
     def testFastCosh(self):
         from proteus.WaveTools import fastcosh_test
         RMS = 0.
@@ -127,11 +127,11 @@ class TestAuxFunctions(unittest.TestCase):
     def testVDir(self):
         from proteus.WaveTools import setVertDir
         self.assertTrue(np.array_equal(setVertDir(np.array([0,-9.81,0])), np.array([0,1,0])))
-          
+
     def testDirVector(self):
         from proteus.WaveTools import setDirVector
         self.assertTrue(all(setDirVector(np.array([2.,2.,1.]))== old_div(np.array([2.,2.,1]),3.)))
-                  
+
     def testDirCheck(self):
         from proteus.WaveTools import dirCheck
         dirCheck(np.array([1.,2.,3.]),np.array([7.,4.,-5.]) )# Just loading the function with two vertical vectors
@@ -158,7 +158,7 @@ class TestAuxFunctions(unittest.TestCase):
         y = 2*xim
         A = sum(returnRectangles(y,xim))
         self.assertTrue(round(A,10) == 1.0)
-                  
+
     def testIntegrateRectangles3D(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
         from proteus.WaveTools import reduceToIntervals,returnRectangles3D
         x = np.linspace(0,1,101)
@@ -176,7 +176,7 @@ class TestAuxFunctions(unittest.TestCase):
         A = sum(sum(returnRectangles3D(y1,xim,zim)))
         # Integrate function z*(2*x) over x[0,1], z[0,1] result == 0.5
         self.assertTrue(round(A,10)== 0.5)
-                  
+
     def testNormInt(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
         from proteus.WaveTools import normIntegral, reduceToIntervals, returnRectangles
         #pickin
@@ -204,7 +204,7 @@ class TestAuxFunctions(unittest.TestCase):
         amplitude =0.2
         eta = amplitude*cos(kDir[0]*x+kDir[1]*y+kDir[2]*z - omega*t +phi)
         self.assertTrue((eta - eta_mode([x,y,z],t,kDir,omega,phi,amplitude)==0.))# check eta
-    
+
     def testUdrift(self):
         from proteus.WaveTools import Udrift
         amp = 0.1
@@ -251,8 +251,8 @@ class TestAuxFunctions(unittest.TestCase):
         #Checking that the code does not allow z to be outside (-d,0)
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
-        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir,gAbs)[2]==0.)                  
-        
+        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir,gAbs)[2]==0.)
+
     def testTophat(self):
         from proteus.WaveTools import tophat
         a  = np.random.rand(100)
@@ -270,7 +270,7 @@ class TestAuxFunctions(unittest.TestCase):
         a[:10] = 0.5*(1.-np.cos(pi*np.linspace(0,9,10)/10.))
         a[-10:] =0.5*(1.-np.cos(pi*np.linspace(9,0,10)/10.))
         self.assertTrue( a.all() == af.all())
-                  
+
     def testDecomposeFFT(self):
         from proteus.WaveTools import decompose_tseries
         dt = 0.01
@@ -288,7 +288,7 @@ class TestAuxFunctions(unittest.TestCase):
         rec[:]+=dec[3]
         self.assertTrue( rec.all() == eta.all())
 
-         
+
 class TestWaveParameters(unittest.TestCase):
 #Checking dispersion calculation for a predicted wavelenght of 5.00m
     def test_dispersion(self):
@@ -300,7 +300,7 @@ class TestWaveParameters(unittest.TestCase):
         length-=5.
         length/=5
         self.assertTrue( (all(length) <0.001) or  (all(length) > -0.001))
-                  
+
 #Check  sigma
     def test_sigma(self):
         from proteus.WaveTools import sigma,JONSWAP
@@ -315,7 +315,7 @@ class TestWaveParameters(unittest.TestCase):
         self.assertTrue((sigma[0] == sigma0).all())
         self.assertTrue((sigma[1] == sigma0).all())
         self.assertTrue((sigma[2] == sigma1).all())
-                  
+
     def test_Jonswap(self): #JONSWAP tests
 # Test Jonswap spectrum without TMA modification
         from proteus.WaveTools import sigma, JONSWAP, dispersion
@@ -343,7 +343,7 @@ class TestWaveParameters(unittest.TestCase):
         JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True, depth=h)
         JCOMP = old_div(JON2,(TMA*JON))
         self.assertTrue((np.around(JCOMP,10)==1).all())
-        
+
     def test_PM(self): #PM tests
         from proteus.WaveTools import PM_mod
         f0 = random.random() + 1.
@@ -414,8 +414,8 @@ class VerifySteadyCurrent(unittest.TestCase):
             SteadyCurrent(U,mwl,0.2)
         self.assertEqual(cm1.exception.code, 1)
 
-        
-        
+
+
 class VerifySolitaryWave(unittest.TestCase):
     def testSolitary(self):
         from proteus.WaveTools import SolitaryWave
@@ -426,17 +426,17 @@ class VerifySolitaryWave(unittest.TestCase):
         waveDir = np.array([5.,0.,0.])
         trans = np.array([1. ,0., 0.])
 
-        #No translation        
+        #No translation
         aa = SolitaryWave(HH,mwl,dd,g,waveDir)
-        
+
         x = 2.5
         t = 5.
 
         cc = np.sqrt(9.81*(dd+HH))
         eta_Ref = old_div(HH, np.cosh( np.sqrt(3.*HH/4./dd**3)*(x - cc*t))**2)
-        xx = x*waveDir/5. 
+        xx = x*waveDir/5.
         self.assertAlmostEqual(eta_Ref, aa.eta(xx,t))
-        
+
         def pow(a,b):
             return a**b
         h_ = dd
@@ -454,14 +454,14 @@ class VerifySolitaryWave(unittest.TestCase):
         sqrt = np.sqrt
         cosh = np.cosh
         tanh = np.tanh
-        phase = sum( xx[:]*waveDir[:]/5.)  - c * t 
-        a1 =  cosh(K*phase*2.)  
+        phase = sum( xx[:]*waveDir[:]/5.)  - c * t
+        a1 =  cosh(K*phase*2.)
         a2 =  cosh(K*phase)
 
         Uhorz =  1.0 /(4.0 * dd**4 ) * np.sqrt(G_ * dd) *  HH *(
             2.0 * d3 + d2 * HH  + 12.0 * dd * HH * Z + 6.0 *  HH * Z**2.0 +
             (2.0 * d3 - d2 * HH - 6.0 * dd * HH * Z - 3.0 * HH * Z**2 ) * a1)/(a2)**4
-        
+
         Uvert =   1.0 / ( 4.0 * np.sqrt(G_* dd) ) * np.sqrt(3.0) * G_ * (old_div(HH, dd**3.0))** 1.5  * (dd + Z)*(
                 2.0 * dd**3 - 7.0 * dd**2.0 * HH + 10.0 * dd * HH * Z + 5.0 * HH * Z**2.0 +
                 (2.0 * dd**3.0 + dd**2.0 * HH - 2.0 * dd * HH * Z - HH * Z**2.0)*
@@ -515,7 +515,7 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         from proteus.WaveTools import coshkzd_test as fcosh
         from proteus.WaveTools import sinhkzd_test as fsinh
         from proteus.WaveTools import Udrift as Ud
-        
+
 # Wave direction, random in x,y plane
         period = 2.
         waveHeight = 1.
@@ -530,7 +530,7 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = np.array([0.]), Bcoeff  = np.array([0.]), meanVelocity = np.array([0.,0,0.]),phi0 = phi0, fast = False)
         x = 150.
         y = 130.
-        z = mwl 
+        z = mwl
         t =  125.
         eta = a.eta([x, y, z], t)
         ux, uy, uz = a.u([x, y, z], t)
@@ -545,11 +545,11 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
 # Flow equation from Wikipedia, Airy wave theory https://en.wikipedia.org/wiki/Airy_wave_theoryhttps://en.wikipedia.org/wiki/Airy_wave_theory
         etaRef = amp*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
         z0 = z - mwl
-        
+
         uxRef = normDir[0]*(amp*omega*fcosh(kw,z0,depth,fast=False)*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,old_div(omega,kw),depth))
         uyRef = normDir[1]*(amp*omega*fcosh(kw,z0,depth,fast=False)*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,old_div(omega,kw),depth))
         uzRef = amp*omega*fsinh(kw,z0,depth,fast=False)*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
-        
+
        # print ux,uxRef
         err = abs(old_div(eta,etaRef) - 1.)
         err_x = abs(old_div(ux,uxRef) - 1.)
@@ -607,7 +607,7 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         uxRef= mv[0]
         uyRef= mv[1]
         uzRef= mv[2]
-        
+
         for ii in range(len(YC)):
             jj+=1
             etaRef+=YC[ii]*fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t + jj*phi0)/kw
@@ -670,9 +670,9 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         self.assertTrue((err <= 1e-3))
         self.assertEqual(np.round(Bc_test,7).all(), np.round(Bc,7).all())
         self.assertEqual(np.round(Yc_test,7).all(), np.round(Yc,7).all())
-        
-        
-        
+
+
+
 #========================================= RANDOM WAVES ======================================
 
 
@@ -766,7 +766,7 @@ class VerifyNewWaves(unittest.TestCase):
         imax=np.where(tt>=tfocus)[0][0]
         self.assertAlmostEqual(eta[imax],max(eta))
         self.assertAlmostEqual(max(eta),0.107290525)
-         
+
 class VerifyRandomWaves(unittest.TestCase):
     def testRandom(self):
         from proteus.WaveTools import RandomWaves,dispersion
@@ -1701,6 +1701,7 @@ class CheckRandomWavesFastFailureModes(unittest.TestCase):
 
 class VerifyRandomWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def testRandomFast(self):
         from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
         import random
@@ -1785,7 +1786,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
 
         x = x0 + Lgen * 0.5
 
-        
+
         eta0 = np.zeros(len(series),)
         eta1 =  np.zeros(len(series),)
         eta2 =  np.zeros(len(series),)
@@ -1805,7 +1806,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
         filenames = ['RandomSeries_Hs_0.15_Tp_1.0_depth_0.9',
                      'randomFastSeries.txt',]
         remove_files(filenames)
-        
+
         self.assertTrue(round(abs(old_div(aRF.eta(x,t),aT.eta(x,t))),8) == 1.)
         self.assertTrue(round(abs(old_div(aRF.u(x,t)[0],aT.u(x,t)[0])),8) == 1.)
         self.assertTrue(round(abs(old_div(aRF.u(x,t)[1],aT.u(x,t)[1])),8) == 1.)
@@ -1823,7 +1824,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
         plt.plot(series[:,0],eta0,"k-")
 #        plt.plot(series[:,0],eta1,"b--")
         plt.plot(series[:,0],eta2,"r-.")
-        
+
         plt.xlim(t-5.,t+5)
         plt.grid()
         plt.savefig("t.pdf")
@@ -1918,7 +1919,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
         x = 150.
         y = 135.
-        z =  mwl 
+        z =  mwl
         t =  120.
         xi = np.array([x, y, z])
 #        print aR.eta(xi,t),aNL.eta(xi,t)
@@ -1962,7 +1963,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
         self.assertTrue(round(old_div(etaT,aNL.eta_short(xi,t)),2)==1 )
 # Testing lower harmonics
         etaT = 0.
-        N = aR.N    
+        N = aR.N
         for ii in range(0,N-1):
             for jj in range(ii+1,N):
                 w1p2 = ww[ii] - ww[jj]
@@ -2077,6 +2078,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def testRandomNLFast(self):
         from proteus.WaveTools import RandomNLWaves,RandomNLWavesFast,TimeSeries
         import random
@@ -2310,11 +2312,11 @@ class VerifyCombinedWaves(unittest.TestCase):
 
         with self.assertRaises(SystemExit) as cm:
             waveList = [period,a]
-            CombineWaves(waveList)          
+            CombineWaves(waveList)
         self.assertEqual(cm.exception.code, 1)
         with self.assertRaises(SystemExit) as cm1:
             waveList = [a,period]
-            CombineWaves(waveList)          
+            CombineWaves(waveList)
         self.assertEqual(cm1.exception.code, 1)
     def testClassCombinedWaves(self):
         from proteus.WaveTools import MonochromaticWaves
@@ -2345,17 +2347,16 @@ class VerifyCombinedWaves(unittest.TestCase):
                          50,
                          2,
                          "JONSWAP")
-        
+
         waveList = [MW,RW]
         CW = CombineWaves(waveList)
         x = np.zeros(3,)
         t = 2.1
         CW_test = RW.eta(x,t)+MW.eta(x,t)
-        npt.assert_equal(CW.eta(x,t),CW_test)        
+        npt.assert_equal(CW.eta(x,t),CW_test)
         CW_test = RW.u(x,t)+MW.u(x,t)
-        npt.assert_equal(CW.u(x,t),CW_test)        
-        
+        npt.assert_equal(CW.u(x,t),CW_test)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
-

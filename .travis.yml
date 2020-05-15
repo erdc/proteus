@@ -108,6 +108,4 @@ jobs:
       - export MPLBACKEND="AGG"
       - git lfs install
       - git lfs pull
-      - cd proteus/tests/ci
-      - parun poisson_3d_tetgen_p.py poisson_3d_tetgen_c0p1_n.py -l 5 -v
-#      - py.test -n 1 --dist=no --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --cov=proteus
