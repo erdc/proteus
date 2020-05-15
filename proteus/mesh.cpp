@@ -104,31 +104,29 @@ extern "C"
 	    n1 =(j+1) + (i+0)*nx,
 	    n2 =(j+0) + (i+1)*nx,
 	    n3 =(j+1) + (i+1)*nx;
-	  //uncomment for "right leaning" diagonal
-	  if (triangleFlag == 2)
+	  if (triangleFlag == 2)//left leaning
 	    {
-	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n1);
-	      eN=newTriangle(eN,mesh.elementNodesArray,n2,n3,n1);
+	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n1,n2);
+	      eN=newTriangle(eN,mesh.elementNodesArray,n2,n1,n3);
 
 	    }
-	  else if (triangleFlag == 1) //
+	  else if (triangleFlag == 1)//union jack
 	    {
-	      //uncomment for union jack
 	      if (i%2 + j%2 == 0 || i%2 + j%2 == 2)
 		{
-		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
-		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
+		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n1,n3);
+		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n2);
 		}
 	      else
 		{
-		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n1);
-		  eN=newTriangle(eN,mesh.elementNodesArray,n2,n3,n1);
+		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n1,n2);
+		  eN=newTriangle(eN,mesh.elementNodesArray,n2,n1,n3);
 		}
 	    }
 	  else //right leaning
 	    {
-	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
-	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
+	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n1,n3);
+	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n2);
 	    }
 	  //NW element is (n0,n3,n1), SE element is (n0,n2,n3)
 	  //eN was incremented twice just now

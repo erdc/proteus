@@ -2,7 +2,10 @@ from __future__ import absolute_import
 from builtins import object
 from proteus import *
 from proteus.default_p import *
-from .rotation2D import *
+try:
+    from .rotation2D import *
+except:
+    from rotation2D import *
 name=soname+"_phicor"
 from proteus.mprans import MCorr
 
