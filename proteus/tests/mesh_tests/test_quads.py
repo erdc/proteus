@@ -59,6 +59,7 @@ def simple_mesh_with_c():
     yield mlMesh, nnx, nny
 
 @pytest.mark.MeshTools
+@pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
 def test_mesh_build(simple_mesh):
     """  Test mesh generation and refinment """
     mlMesh,nnx,nny = simple_mesh
@@ -66,6 +67,7 @@ def test_mesh_build(simple_mesh):
     assert mlMesh.meshList[1].nElements_global == 4*(nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
 
 @pytest.mark.MeshTools
+@pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
 def test_mesh_build_1(simple_mesh_with_c):
     """ Test mesh generation with c """
     mlMesh,nnx,nny = simple_mesh_with_c
@@ -73,17 +75,19 @@ def test_mesh_build_1(simple_mesh_with_c):
     # TODO (ARB) - add an additional test for refinement when its ready
 
 @pytest.mark.MeshTools
+@pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
 def test_calc_quad_area(simple_mesh):
     mlMesh, nnx, nny = simple_mesh
     for i in range(9):
         assert mlMesh.meshList[0]._calc_quad_area(i) == 4. / 9.
 
 @pytest.mark.MeshTools
+@pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
 def test_calc_quad_area(simple_mesh_with_c):
     mlMesh, nnx, nny = simple_mesh_with_c
     for i in range(9):
         assert mlMesh.meshList[0]._calc_quad_area(i) == 4. / 9.
-        
+
 @pytest.mark.MeshTools
 def test_calc_hmax(simple_mesh):
     mlMesh, nnx, nny = simple_mesh
@@ -108,7 +112,7 @@ def test_buildNodeDiameterArray_1(simple_mesh):
 class Test2DStokesOnQuads(object):
     """ Runs a 2D Poiseulle Stokes problem on Quads with TH elements """
 
-    @classmethod    
+    @classmethod
     def setup_class(cls):
         pass
 
@@ -121,7 +125,7 @@ class Test2DStokesOnQuads(object):
         reload(stokes_2d_p)
         reload(stokes_2d_n)
         pList = [stokes_2d_p]
-        nList = [stokes_2d_n]    
+        nList = [stokes_2d_n]
         so = default_so
         so.tnList = [0.,1.]
         so.name = pList[0].name
@@ -145,7 +149,7 @@ class Test2DStokesOnQuads(object):
                     "poiseulleFlow.h5",
         ]
         TestTools.removeFiles(Filelist)
-        
+
     def test_01_FullRun(self):
         import filecmp
         self.ns.calculateSolution('test1')

@@ -9,6 +9,7 @@ import numpy as np
 import numpy.testing as npt
 from importlib import import_module
 from petsc4py import PETSc
+import pytest
 
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,6 +39,7 @@ class TestAddedMass3D(unittest.TestCase):
         #    else:
         #        pass
 
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def test_AddedMass_3D(self):
         from proteus import defaults
         from . import addedmass3D as am3D

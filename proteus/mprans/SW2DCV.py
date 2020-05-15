@@ -104,7 +104,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         if old_div(self.dt, self.dtLast) > self.dtRatioMax:
             self.dt = self.dtLast * self.dtRatioMax
         self.t = self.tLast + self.dt
-        self.substeps = [self.t for i in range(self.nStages)]  # Ignoring dif. time step levels 
+        self.substeps = [self.t for i in range(self.nStages)]  # Ignoring dif. time step levels
 
     def initialize_dt(self, t0, tOut, q):
         """
