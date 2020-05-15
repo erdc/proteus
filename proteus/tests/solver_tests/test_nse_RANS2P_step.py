@@ -321,7 +321,6 @@ def clear_petsc_options():
     PETSc.Options().clear()
 
 
-@pytest.fixture()
 def initialize_velocity_block_petsc_options():
     petsc_options = PETSc.Options()
     petsc_options.clear()
@@ -333,7 +332,6 @@ def initialize_velocity_block_petsc_options():
     petsc_options.setValue('pc_type','hypre')
     petsc_options.setValue('pc_type_hypre_type','boomeramg')
 
-@pytest.fixture()
 def initialize_velocity_block_petsc_options_2():
     petsc_options = PETSc.Options()
     petsc_options.clear()
@@ -342,7 +340,6 @@ def initialize_velocity_block_petsc_options_2():
     petsc_options.setValue('ksp_atol',1e-8)
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
 
-@pytest.fixture()
 def initialize_velocity_block_petsc_options_3(request):
     petsc_options = PETSc.Options()
     petsc_options.clear()
