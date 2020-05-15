@@ -157,6 +157,7 @@ class Test2DStokesOnQuads(object):
             relpath = "comparison_files/poiseulle_global_xmf.output"
         else:
             relpath = "comparison_files/poiseulle_xmf.output"
+
         xmf_file = filecmp.cmp('poiseulleFlow.xmf',os.path.join(self._scriptdir,relpath))
         for u,ua in zip(self.ns.modelList[0].levelModelList[1].u.values(),self.ns.modelList[0].levelModelList[1].u_analytical.values()):
             assert np.allclose(u.dof,ua[0],atol=1.0e-14,rtol=1.0e-14)
