@@ -170,7 +170,7 @@ def test_step_slip_FullRun():
         * Pressure Projection Stablization.
         * he = 0.05
     """
-    petsc_options = initialize_petsc_options
+    petsc_options = initialize_petsc_options()
     context_options_str='he=0.05'
     ns = load_simulation(context_options_str)
     actual_log = runTest(ns,'test_1')
@@ -208,7 +208,7 @@ def test_Schur_Sp_solve():
     """Tests a KSP solve using the Sp Schur complement approximation.
        For this test, the global matrix does not have a null space."""
     mat_A = load_matrix_step_noslip()
-    petsc_options = initialize_petsc_options
+    petsc_options = initialize_petsc_options()
     b, x = create_petsc_vecs(mat_A)
 
     solver_info = LS.ModelInfo('interlaced', 3)
@@ -433,7 +433,7 @@ def test_amg_iteration_matrix_slip():
 def test_amg_basic():
     mat_A = load_matrix_step_noslip()
 
-    petsc_options = initialize_velocity_block_petsc_options
+    petsc_options = initialize_velocity_block_petsc_options()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
@@ -447,8 +447,8 @@ def test_amg_basic():
 
 @pytest.mark.amg
 def test_amg_iteration_performance():
-    mat_A = load_matrix_step_noslip
-    petsc_options = initialize_velocity_block_petsc_options_2
+    mat_A = load_matrix_step_noslip()
+    petsc_options = initialize_velocity_block_petsc_options_2()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
@@ -463,7 +463,7 @@ def test_amg_iteration_performance():
 @pytest.mark.amg
 def test_amg_step_problem_noslip():
     mat_A = load_matrix_step_noslip()
-    petsc_options = initialize_velocity_block_petsc_options_3
+    petsc_options = initialize_velocity_block_petsc_options_3()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
@@ -477,7 +477,7 @@ def test_amg_step_problem_noslip():
 @pytest.mark.amg
 def test_amg_step_problem_slip():
     mat_A = load_matrix_step_slip()
-    petsc_options = initialize_velocity_block_petsc_options
+    petsc_options = initialize_velocity_block_petsc_options()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
 
