@@ -10,6 +10,7 @@ from math import sqrt
 from proteus.Transport import OneLevelTransport, TC_base, NonlinearEquation
 from proteus import Quadrature, FemTools, Comm, Archiver, cfemIntegrals
 from proteus.Profiling import logEvent, memory
+from proteus import cmeshTools
 from . import cArgumentsDict
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
@@ -34,6 +35,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.gravityStep = True
         self.meIndex = meIndex
         self.dt_last = None
+        self.dt_last_last = None
         self.solidsList = []
         self.nullSpace = nullSpace
         if initialize:
@@ -137,7 +139,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             dt = self.dt_last
         self.mesh.nodeVelocityArray /= dt
+        #this is needed for proper restarting
+        if(self.dt_last is not None):
+            self.dt_last_last = self.dt_last
+
         self.dt_last = self.model.timeIntegration.dt
+
+        #update nodal/element diameters:
+        #TODO: unclear if this needs to apply to all mesh types
+        if self.nd == 2:  
+           cmeshTools.computeGeometricInfo_triangle(self.mesh.subdomainMesh.cmesh)
+           self.mesh.buildFromC(self.mesh.cmesh)
+        if self.nd == 3:  
+           cmeshTools.computeGeometricInfo_tetrahedron(self.mesh.subdomainMesh.cmesh)
+           self.mesh.buildFromC(self.mesh.cmesh)
+
         copyInstructions = {'clear_uList': True}
         return copyInstructions
 

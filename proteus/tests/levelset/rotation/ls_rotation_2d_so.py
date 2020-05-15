@@ -3,8 +3,12 @@ from __future__ import division
 from builtins import range
 from past.utils import old_div
 from proteus.default_so import *
-from . import rotation2D
-from .rotation2D import *
+try:
+    from . import rotation2D
+    from .rotation2D import *
+except:
+    import rotation2D
+    from rotation2D import *
 
 if applyRedistancing:
     if applyCorrection:

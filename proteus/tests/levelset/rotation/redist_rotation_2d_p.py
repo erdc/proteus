@@ -2,9 +2,13 @@ from __future__ import absolute_import
 from proteus import *
 from proteus.default_p import *
 from math import *
-from .rotation2D import *
 from proteus.mprans import RDLS
-from . import ls_rotation_2d_p
+try:
+    from .rotation2D import *
+    from . import ls_rotation_2d_p
+except:
+    from rotation2D import *
+    import ls_rotation_2d_p
 name = soname+"_rdls"
 LevelModelType = RDLS.LevelModel
 

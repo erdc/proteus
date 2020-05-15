@@ -15,8 +15,8 @@ namespace py = pybind11;
 namespace proteus
 {
 
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
   //using GeneralizedFunctions = equivalent_polynomials::Regularized<nSpace, nP, nQ>;
   //using GeneralizedFunctions = equivalent_polynomials::EquivalentPolynomials<nSpace, nP, nQ>;
 
@@ -50,8 +50,8 @@ namespace proteus
     {
     public:
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf;
-      GeneralizedFunctions<nSpace,1,nDOF_trial_element> gf_nodes;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
+      GeneralizedFunctions<nSpace,2,nDOF_trial_element,nQuadraturePoints_elementBoundary> gf_nodes;
     MCorr():ck()
         {}
 
@@ -314,60 +314,60 @@ namespace proteus
                 register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
-              }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
-            calculateElementResidual(mesh_trial_ref.data(),
-                                     mesh_grad_trial_ref.data(),
-                                     mesh_dof.data(),
-                                     mesh_l2g.data(),
-                                     dV_ref.data(),
-                                     u_trial_ref.data(),
-                                     u_grad_trial_ref.data(),
-                                     u_test_ref.data(),
-                                     u_grad_test_ref.data(),
-                                     mesh_trial_trace_ref.data(),
-                                     mesh_grad_trial_trace_ref.data(),
-                                     dS_ref.data(),
-                                     u_trial_trace_ref.data(),
-                                     u_grad_trial_trace_ref.data(),
-                                     u_test_trace_ref.data(),
-                                     u_grad_test_trace_ref.data(),
-                                     normal_ref.data(),
-                                     boundaryJac_ref.data(),
-                                     nElements_global,
-                                     useMetrics,
-                                     epsFactHeaviside,
-                                     epsFactDirac,
-                                     epsFactDiffusion,
-                                     u_l2g.data(),
-                                     elementDiameter.data(),
-                                     nodeDiametersArray.data(),
-                                     u_dof.data(),
-                                     q_phi.data(),
-                                     q_normal_phi.data(),
-                                     ebqe_phi.data(),
-                                     ebqe_normal_phi.data(),
-                                     q_H.data(),
-                                     q_u.data(),
-                                     q_n.data(),
-                                     ebqe_u.data(),
-                                     ebqe_n.data(),
-                                     q_r.data(),
-                                     q_porosity.data(),
-                                     offset_u,stride_u,
-                                     elementResidual_u,
-                                     nExteriorElementBoundaries_global,
-                                     exteriorElementBoundariesArray.data(),
-                                     elementBoundaryElementsArray.data(),
-                                     elementBoundaryLocalElementBoundariesArray.data(),
-                                     element_u,
-                                     eN);
-            //
-            //load element into global residual and save element residual
-            //
-            for(int i=0;i<nDOF_test_element;i++)
-              {
-                register int eN_i=eN*nDOF_test_element+i;
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+	    calculateElementResidual(mesh_trial_ref.data(),
+				     mesh_grad_trial_ref.data(),
+				     mesh_dof.data(),
+				     mesh_l2g.data(),
+				     dV_ref.data(),
+				     u_trial_ref.data(),
+				     u_grad_trial_ref.data(),
+				     u_test_ref.data(),
+				     u_grad_test_ref.data(),
+				     mesh_trial_trace_ref.data(),
+				     mesh_grad_trial_trace_ref.data(),
+				     dS_ref.data(),
+				     u_trial_trace_ref.data(),
+				     u_grad_trial_trace_ref.data(),
+				     u_test_trace_ref.data(),
+				     u_grad_test_trace_ref.data(),
+				     normal_ref.data(),
+				     boundaryJac_ref.data(),
+				     nElements_global,
+				     useMetrics,
+				     epsFactHeaviside,
+				     epsFactDirac,
+				     epsFactDiffusion,
+				     u_l2g.data(),
+				     elementDiameter.data(),
+				     nodeDiametersArray.data(),
+				     u_dof.data(),
+				     q_phi.data(),
+				     q_normal_phi.data(),
+				     ebqe_phi.data(),
+				     ebqe_normal_phi.data(),
+				     q_H.data(),
+				     q_u.data(),
+				     q_n.data(),
+				     ebqe_u.data(),
+				     ebqe_n.data(),
+				     q_r.data(),
+				     q_porosity.data(),
+				     offset_u,stride_u,
+				     elementResidual_u,
+				     nExteriorElementBoundaries_global,
+				     exteriorElementBoundariesArray.data(),
+				     elementBoundaryElementsArray.data(),
+				     elementBoundaryLocalElementBoundariesArray.data(),
+				     element_u,
+				     eN);
+	    //
+	    //load element into global residual and save element residual
+	    //
+	    for(int i=0;i<nDOF_test_element;i++)
+	      {
+		register int eN_i=eN*nDOF_test_element+i;
 
                 globalResidual.data()[offset_u+stride_u*r_l2g.data()[eN_i]]+=elementResidual_u[i];
               }//i
@@ -670,51 +670,51 @@ namespace proteus
                 register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
-              }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
-            calculateElementJacobian(mesh_trial_ref.data(),
-                                     mesh_grad_trial_ref.data(),
-                                     mesh_dof.data(),
-                                     mesh_l2g.data(),
-                                     dV_ref.data(),
-                                     u_trial_ref.data(),
-                                     u_grad_trial_ref.data(),
-                                     u_test_ref.data(),
-                                     u_grad_test_ref.data(),
-                                     mesh_trial_trace_ref.data(),
-                                     mesh_grad_trial_trace_ref.data(),
-                                     dS_ref.data(),
-                                     u_trial_trace_ref.data(),
-                                     u_grad_trial_trace_ref.data(),
-                                     u_test_trace_ref.data(),
-                                     u_grad_test_trace_ref.data(),
-                                     normal_ref.data(),
-                                     boundaryJac_ref.data(),
-                                     nElements_global,
-                                     useMetrics,
-                                     epsFactHeaviside,
-                                     epsFactDirac,
-                                     epsFactDiffusion,
-                                     u_l2g.data(),
-                                     elementDiameter.data(),
-                                     nodeDiametersArray.data(),
-                                     u_dof.data(),
-                                     q_phi.data(),
-                                     q_normal_phi.data(),
-                                     q_H.data(),
-                                     q_porosity.data(),
-                                     elementJacobian_u_u,
-                                     element_u,
-                                     eN);
-            //
-            //load into element Jacobian into global Jacobian
-            //
-            for (int i=0;i<nDOF_test_element;i++)
-              {
-                int eN_i = eN*nDOF_test_element+i;
-                for (int j=0;j<nDOF_trial_element;j++)
-                  {
-                    int eN_i_j = eN_i*nDOF_trial_element+j;
+	      }//i
+          gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+	    calculateElementJacobian(mesh_trial_ref.data(),
+				     mesh_grad_trial_ref.data(),
+				     mesh_dof.data(),
+				     mesh_l2g.data(),
+				     dV_ref.data(),
+				     u_trial_ref.data(),
+				     u_grad_trial_ref.data(),
+				     u_test_ref.data(),
+				     u_grad_test_ref.data(),
+				     mesh_trial_trace_ref.data(),
+				     mesh_grad_trial_trace_ref.data(),
+				     dS_ref.data(),
+				     u_trial_trace_ref.data(),
+				     u_grad_trial_trace_ref.data(),
+				     u_test_trace_ref.data(),
+				     u_grad_test_trace_ref.data(),
+				     normal_ref.data(),
+				     boundaryJac_ref.data(),
+				     nElements_global,
+				     useMetrics,
+				     epsFactHeaviside,
+				     epsFactDirac,
+				     epsFactDiffusion,
+				     u_l2g.data(),
+				     elementDiameter.data(),
+				     nodeDiametersArray.data(),
+				     u_dof.data(),
+				     q_phi.data(),
+				     q_normal_phi.data(),
+				     q_H.data(),
+				     q_porosity.data(),
+				     elementJacobian_u_u,
+				     element_u,
+				     eN);
+	    //
+	    //load into element Jacobian into global Jacobian
+	    //
+	    for (int i=0;i<nDOF_test_element;i++)
+	      {
+		int eN_i = eN*nDOF_test_element+i;
+		for (int j=0;j<nDOF_trial_element;j++)
+		  {
+		    int eN_i_j = eN_i*nDOF_trial_element+j;
 
                     globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i*nDOF_trial_element+j];
                   }//j
@@ -1446,23 +1446,23 @@ namespace proteus
                 register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
-              }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
-            for  (int k=0;k<nQuadraturePoints_element;k++)
-              {
-                //compute indeces and declare local storage
-                register int eN_k = eN*nQuadraturePoints_element+k,
-                  eN_k_nSpace = eN_k*nSpace;
-                //eN_nDOF_trial_element = eN*nDOF_trial_element;
-                //double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
-                double jac[nSpace*nSpace],
-                  jacDet,
-                  jacInv[nSpace*nSpace],
-                  //u_grad_trial[nDOF_trial_element*nSpace],
-                  //u_test_dV[nDOF_trial_element],
-                  //u_grad_test_dV[nDOF_test_element*nSpace],
-                  dV,x,y,z,
-                  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace;
+		//eN_nDOF_trial_element = eN*nDOF_trial_element;
+		//double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
+		double jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  //u_grad_trial[nDOF_trial_element*nSpace],
+		  //u_test_dV[nDOF_trial_element],
+		  //u_grad_test_dV[nDOF_test_element*nSpace],
+		  dV,x,y,z,
+		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
                 gf.set_quad(k);
                 //
                 //compute solution and gradients at quadrature points
@@ -1570,27 +1570,27 @@ namespace proteus
                 register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
-              }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
-            gf_nodes.calculate(element_phi, element_nodes, element_nodes);
-            for  (int k=0;k<nQuadraturePoints_element;k++)
-              {
-                //compute indeces and declare local storage
-                register int eN_k = eN*nQuadraturePoints_element+k,
-                  eN_k_nSpace = eN_k*nSpace;
-                //eN_nDOF_trial_element = eN*nDOF_trial_element;
-                //register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
-                register double jac[nSpace*nSpace],
-                  jacDet,
-                  jacInv[nSpace*nSpace],
-                  //u_grad_trial[nDOF_trial_element*nSpace],
-                  //u_test_dV[nDOF_trial_element],
-                  //u_grad_test_dV[nDOF_test_element*nSpace],
-                  dV,x,y,z,
-                  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
-                //
-                //compute solution and gradients at quadrature points
-                //
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+            gf_nodes.calculate(element_phi, element_nodes, element_nodes,false);
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace;
+		//eN_nDOF_trial_element = eN*nDOF_trial_element;
+		//register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
+		register double jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  //u_grad_trial[nDOF_trial_element*nSpace],
+		  //u_test_dV[nDOF_trial_element],
+		  //u_grad_test_dV[nDOF_test_element*nSpace],
+		  dV,x,y,z,
+		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+		//
+		//compute solution and gradients at quadrature points
+		//
                 gf.set_quad(k);
                 ck.calculateMapping_element(eN,
                                             k,
@@ -2036,27 +2036,25 @@ namespace proteus
                 register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
-              }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
-            for  (int k=0;k<nQuadraturePoints_element;k++)
-              {
-                //compute indeces and declare local storage
-                register int eN_k = eN*nQuadraturePoints_element+k,
-                  eN_k_nSpace = eN_k*nSpace;
-                //eN_nDOF_trial_element = eN*nDOF_trial_element;
-                //register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
-                register double jac[nSpace*nSpace],
-                  jacDet,
-                  jacInv[nSpace*nSpace],
-                  //u_grad_trial[nDOF_trial_element*nSpace],
-                  //u_test_dV[nDOF_trial_element],
-                  //u_grad_test_dV[nDOF_test_element*nSpace],
-                  dV,x,y,z,
-                  u_test_dV[nDOF_test_element],
-                  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
-                gf.set_quad(k);
-                //
-                //compute solution and gradients at quadrature points
+	      }//i
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+	    for  (int k=0;k<nQuadraturePoints_element;k++)
+	      {
+		//compute indeces and declare local storage
+		register int eN_k = eN*nQuadraturePoints_element+k,
+		  eN_k_nSpace = eN_k*nSpace;
+		//eN_nDOF_trial_element = eN*nDOF_trial_element;
+		//register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
+		register double jac[nSpace*nSpace],
+		  jacDet,
+		  jacInv[nSpace*nSpace],
+		  //u_grad_trial[nDOF_trial_element*nSpace],
+		  //u_test_dV[nDOF_trial_element],
+		  //u_grad_test_dV[nDOF_test_element*nSpace],
+		  dV,x,y,z,
+		  u_test_dV[nDOF_test_element],
+		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+		gf.set_quad(k);
                 //
                 ck.calculateMapping_element(eN,
                                             k,

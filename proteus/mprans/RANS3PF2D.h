@@ -55,8 +55,8 @@ inline void baryCoords(const double r0[2],
 
 namespace proteus
 {
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
   class cppRANS3PF2D_base
   {
@@ -112,8 +112,8 @@ namespace proteus
       const int nDOF_test_X_trial_element,
         nSpace2;
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf_s;
+      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
+      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf_s;
     cppRANS3PF2D():
       nSpace2(4),
         closure(150.0,
@@ -715,8 +715,10 @@ namespace proteus
                                        (vStar - v_s) * (vStar - v_s) +
                                        (wStar - w_s) * (wStar - w_s));
 
-            double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
-            double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
+            //            double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
+            //double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
+            double C_surf = mu * penalty;
+            double C_vol = (alpha + beta * rel_vel_norm);
 
             C = (D_s * C_surf + gf_s.ImH(eps_s, phi_s) * C_vol);
             force_x = dV * D_s * (p * fluid_outward_normal[0]
@@ -763,23 +765,23 @@ namespace proteus
             dmom_v_source[1] += C;
 
             //Nitsche terms
-            mom_u_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
-            dmom_u_ham_grad_u[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_u_ham_grad_u[1] -= D_s * porosity * nu * fluid_outward_normal[1];
+            mom_u_ham -= D_s * porosity * mu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1]);
+            dmom_u_ham_grad_u[0] -= D_s * porosity * mu * fluid_outward_normal[0];
+            dmom_u_ham_grad_u[1] -= D_s * porosity * mu * fluid_outward_normal[1];
 
-            mom_v_ham -= D_s * porosity * nu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
-            dmom_v_ham_grad_v[0] -= D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_v_ham_grad_v[1] -= D_s * porosity * nu * fluid_outward_normal[1];
+            mom_v_ham -= D_s * porosity * mu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1]);
+            dmom_v_ham_grad_v[0] -= D_s * porosity * mu * fluid_outward_normal[0];
+            dmom_v_ham_grad_v[1] -= D_s * porosity * mu * fluid_outward_normal[1];
 
-            mom_u_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (u - u_s);
-            mom_u_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (u - u_s);
-            dmom_u_adv_u[0] += D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_u_adv_u[1] += D_s * porosity * nu * fluid_outward_normal[1];
+            mom_u_adv[0] += D_s * porosity * mu * fluid_outward_normal[0] * (u - u_s);
+            mom_u_adv[1] += D_s * porosity * mu * fluid_outward_normal[1] * (u - u_s);
+            dmom_u_adv_u[0] += D_s * porosity * mu * fluid_outward_normal[0];
+            dmom_u_adv_u[1] += D_s * porosity * mu * fluid_outward_normal[1];
 
-            mom_v_adv[0] += D_s * porosity * nu * fluid_outward_normal[0] * (v - v_s);
-            mom_v_adv[1] += D_s * porosity * nu * fluid_outward_normal[1] * (v - v_s);
-            dmom_v_adv_v[0] += D_s * porosity * nu * fluid_outward_normal[0];
-            dmom_v_adv_v[1] += D_s * porosity * nu * fluid_outward_normal[1];
+            mom_v_adv[0] += D_s * porosity * mu * fluid_outward_normal[0] * (v - v_s);
+            mom_v_adv[1] += D_s * porosity * mu * fluid_outward_normal[1] * (v - v_s);
+            dmom_v_adv_v[0] += D_s * porosity * mu * fluid_outward_normal[0];
+            dmom_v_adv_v[1] += D_s * porosity * mu * fluid_outward_normal[1];
           }
       }
       inline void compute_force_around_solid(bool element_owned,
@@ -2279,8 +2281,8 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            gf_s.calculate(element_phi_s, element_nodes, x_ref.data());
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+	    gf_s.calculate(element_phi_s, element_nodes, x_ref.data(), false);
+            gf.calculate(element_phi, element_nodes, x_ref.data(), false);
             //
             //loop over quadrature points and compute integrands
             //
@@ -5027,8 +5029,8 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
-            gf_s.calculate(element_phi_s, element_nodes, x_ref.data());
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+	    gf_s.calculate(element_phi_s, element_nodes, x_ref.data(), false);
+            gf.calculate(element_phi, element_nodes, x_ref.data(), false);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
