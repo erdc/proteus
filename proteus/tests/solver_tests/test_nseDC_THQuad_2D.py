@@ -54,13 +54,13 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         # output. It needs to be confirmed that the new ouput is
         # in fact correct and drivenCavityNSE_LSC_expected.h5 should
         # be updated accordingly.
-        relpath = 'comparison_files/drivenCavityNSE_LSC_expected.h5'
         actual = tables.open_file('drivenCavityNSETrial.h5','r')
-        np.savetxt(os.path.join(self._scriptdir,relpath),actual.root.velocity_t7.read(),delimiter=',')
+        relpath = 'comparison_files/drivenCavityNSE_LSC_expected.csv'
+        #np.savetxt(os.path.join(self._scriptdir,relpath),actual.root.velocity_t7.read(),delimiter=',')
         expected = np.loadtxt(os.path.join(self._scriptdir,relpath),delimiter=',')
         assert np.allclose(expected,
                            actual.root.velocity_t7.read(),
-                           atol=1e-2) 
+                           rtol=1e-8, atol=1e-8) 
         actual.close()
 
     @pytest.mark.slowTest
