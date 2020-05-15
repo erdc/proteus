@@ -80,61 +80,55 @@ def load_simulation(context_options_str=None):
                                    opts)
     return ns
 
-def runTest(ns, name):
-    ns.calculateSolution(name)
-    actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
-    return actual_log
-
-
-@pytest.fixture()
-def initialize_petsc_options(request):
+def initialize_petsc_options():
     """Initializes schur complement petsc options. """
-    OptDB = PETSc.Options()
-    OptDB.clear()
-    OptDB.setValue('ksp_type', 'fgmres')
-    OptDB.setValue('ksp_rtol', 1.0e-8)
-    OptDB.setValue('ksp_atol', 1.0e-8)
-    OptDB.setValue('ksp_gmres_restart', 300)
-    OptDB.setValue('ksp_gmres_modifiedgramschmidt', 1)
-    OptDB.setValue('ksp_pc_side','right')
-    OptDB.setValue('pc_fieldsplit_type', 'schur')
-    OptDB.setValue('pc_fieldsplit_schur_fact_type', 'upper')
-    OptDB.setValue('pc_fieldsplit_schur_precondition', 'user')
+    petsc_options = PETSc.Options()
+    petsc_options.clear()
+    petsc_options.setValue('ksp_type', 'fgmres')
+    petsc_options.setValue('ksp_rtol', 1.0e-8)
+    petsc_options.setValue('ksp_atol', 1.0e-8)
+    petsc_options.setValue('ksp_gmres_restart', 300)
+    petsc_options.setValue('ksp_gmres_modifiedgramschmidt', 1)
+    petsc_options.setValue('ksp_pc_side','right')
+    petsc_options.setValue('pc_fieldsplit_type', 'schur')
+    petsc_options.setValue('pc_fieldsplit_schur_fact_type', 'upper')
+    petsc_options.setValue('pc_fieldsplit_schur_precondition', 'user')
     # Velocity block options
-    OptDB.setValue('fieldsplit_velocity_ksp_type', 'gmres')
-    OptDB.setValue('fieldsplit_velocity_ksp_gmres_modifiedgramschmidt', 1)
-    OptDB.setValue('fieldsplit_velocity_ksp_atol', 1e-5)
-    OptDB.setValue('fieldsplit_velocity_ksp_rtol', 1e-5)
-    OptDB.setValue('fieldsplit_velocity_ksp_pc_side', 'right')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_ksp_type', 'preonly')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_type', 'hypre')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomeramg')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type', 'HMIS')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_ksp_type', 'preonly')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_type', 'hypre')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomeramg')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type', 'HMIS')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_ksp_type', 'preonly')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_type', 'hypre')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomeramg')
-    OptDB.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    petsc_options.setValue('fieldsplit_velocity_ksp_type', 'gmres')
+    petsc_options.setValue('fieldsplit_velocity_ksp_gmres_modifiedgramschmidt', 1)
+    petsc_options.setValue('fieldsplit_velocity_ksp_atol', 1e-5)
+    petsc_options.setValue('fieldsplit_velocity_ksp_rtol', 1e-5)
+    petsc_options.setValue('fieldsplit_velocity_ksp_pc_side', 'right')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_u_ksp_type', 'preonly')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_u_pc_type', 'hypre')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_type', 'boomeramg')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_u_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_v_ksp_type', 'preonly')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_v_pc_type', 'hypre')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_type', 'boomeramg')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_v_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_w_ksp_type', 'preonly')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_w_pc_type', 'hypre')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_type', 'boomeramg')
+    petsc_options.setValue('fieldsplit_velocity_fieldsplit_w_pc_hypre_boomeramg_coarsen_type', 'HMIS')
     #PCD Schur Complement options
-    OptDB.setValue('fieldsplit_pressure_ksp_type', 'preonly')
-    OptDB.setValue('innerTPPCDsolver_Qp_visc_ksp_type', 'preonly')
-    OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_type', 'lu')
-    OptDB.setValue('innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type', 'superlu_dist')
-    OptDB.setValue('innerTPPCDsolver_Qp_dens_ksp_type', 'preonly')
-    OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_type', 'lu')
-    OptDB.setValue('innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type', 'superlu_dist')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_type', 'richardson')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_max_it', 1)
-    #OptDB.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space',1)
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_type', 'hypre')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type', 'boomeramg')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold', 0.5)
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type', 'ext+i-cc')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', 'HMIS')
-    OptDB.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl', 2)
+    petsc_options.setValue('fieldsplit_pressure_ksp_type', 'preonly')
+    petsc_options.setValue('innerTPPCDsolver_Qp_visc_ksp_type', 'preonly')
+    petsc_options.setValue('innerTPPCDsolver_Qp_visc_pc_type', 'lu')
+    petsc_options.setValue('innerTPPCDsolver_Qp_visc_pc_factor_mat_solver_type', 'superlu_dist')
+    petsc_options.setValue('innerTPPCDsolver_Qp_dens_ksp_type', 'preonly')
+    petsc_options.setValue('innerTPPCDsolver_Qp_dens_pc_type', 'lu')
+    petsc_options.setValue('innerTPPCDsolver_Qp_dens_pc_factor_mat_solver_type', 'superlu_dist')
+    petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type', 'richardson')
+    petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_max_it', 1)
+    #petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space',1)
+    petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type', 'hypre')
+    petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_type', 'boomeramg')
+    petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_strong_threshold', 0.5)
+    petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_interp_type', 'ext+i-cc')
+    petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_coarsen_type', 'HMIS')
+    petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_hypre_boomeramg_agg_nl', 2)
+    return petsc_options
 
 def initialize_schur_ksp_obj(matrix_A, schur_approx):
     """
@@ -164,17 +158,19 @@ def initialize_schur_ksp_obj(matrix_A, schur_approx):
     ksp_obj.pc.setUp()
     return ksp_obj
 
+def runTest(ns, name):
+    ns.calculateSolution(name)
+    actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
+    return actual_log
 
 @pytest.mark.LinearSolvers
-def test_step_slip_FullRun(initialize_petsc_options):
+def test_step_slip_FullRun():
     """ Runs two-dimensional step problem with the settings:
         * Strongly enforced Free-slip BC.
         * Pressure Projection Stablization.
         * he = 0.05
     """
-    #TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
-    #                                                             'import_modules/petsc.options.schur'))
-    pestc_options=initialize_petsc_options
+    petsc_options = initialize_petsc_options
     context_options_str='he=0.05'
     ns = load_simulation(context_options_str)
     actual_log = runTest(ns,'test_1')
@@ -188,15 +184,13 @@ def test_step_slip_FullRun(initialize_petsc_options):
     assert L3[0][1]==9
 
 @pytest.mark.LinearSolvers
-def test_step_noslip_FullRun(initialize_petsc_options):
+def test_step_noslip_FullRun():
     """ Runs two-dimensional step problem with the settings:
         * Strongly enforced no-slip BC.
         * Pressure Projection Stablization.
         * he = 0.05
     """
-    #TestTools.SimulationTest._setPETSc(petsc_file = os.path.join(os.path.dirname(__file__),
-    #                                                             'import_modules/petsc.options.schur'))
-    pestc_options=initialize_petsc_options
+    petsc_options = initialize_petsc_options
     context_options_str="boundary_condition_type='ns'"
     ns = load_simulation(context_options_str)
     actual_log = runTest(ns,'test_2')
@@ -210,13 +204,12 @@ def test_step_noslip_FullRun(initialize_petsc_options):
     assert L3[0][1]==9
 
 @pytest.mark.LinearSolvers
-def test_Schur_Sp_solve(load_matrix_step_noslip,
-                        initialize_petsc_options):
+def test_Schur_Sp_solve():
     """Tests a KSP solve using the Sp Schur complement approximation.
        For this test, the global matrix does not have a null space."""
-    mat_A = load_matrix_step_noslip
-    b, x = create_petsc_vecs(mat_A)
+    mat_A = load_matrix_step_noslip()
     petsc_options = initialize_petsc_options
+    b, x = create_petsc_vecs(mat_A)
 
     solver_info = LS.ModelInfo('interlaced', 3)
     schur_approx = LS.Schur_Sp(mat_A,
@@ -320,7 +313,6 @@ def build_amg_index_sets(L_sizes):
 def clear_petsc_options():
     PETSc.Options().clear()
 
-
 def initialize_velocity_block_petsc_options():
     petsc_options = PETSc.Options()
     petsc_options.clear()
@@ -340,7 +332,7 @@ def initialize_velocity_block_petsc_options_2():
     petsc_options.setValue('ksp_atol',1e-8)
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
 
-def initialize_velocity_block_petsc_options_3(request):
+def initialize_velocity_block_petsc_options_3():
     petsc_options = PETSc.Options()
     petsc_options.clear()
     petsc_options.setValue('ksp_type','gmres')
@@ -351,27 +343,24 @@ def initialize_velocity_block_petsc_options_3(request):
     petsc_options.setValue('pc_type','hypre')
     petsc_options.setValue('pc_type_hypre_type','boomeramg')
 
-@pytest.fixture()
-def load_matrix_step_slip(request):
+def load_matrix_step_slip():
     """
     Loads a medium sized backwards facing step matrix for studying
     different AMG preconditioners.
     """
     A = LAT.petsc_load_matrix('dump_test_1_step2d_1.0par_j_0')
-    yield A
+    return A
 
-@pytest.fixture()
-def load_matrix_step_noslip(request):
+def load_matrix_step_noslip():
     """
     Loads a medium sized backwards facing step matrix for studying
     different AMG preconditioners.
     """
     A = LAT.petsc_load_matrix('dump_test_2_step2d_1.0par_j_0')
-    yield A
+    return A
 
-@pytest.mark.amg
-def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
-    mat_A = load_matrix_step_noslip
+def test_amg_iteration_matrix_noslip():
+    mat_A = load_matrix_step_noslip()
     petsc_options = initialize_velocity_block_petsc_options()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
@@ -416,8 +405,8 @@ def test_amg_iteration_matrix_noslip(load_matrix_step_noslip):
     F_ksp.solve(b,x)
     assert F_ksp.its == 8
 
-def test_amg_iteration_matrix_slip(load_matrix_step_slip):
-    mat_A = load_matrix_step_slip
+def test_amg_iteration_matrix_slip():
+    mat_A = load_matrix_step_slip()
     petsc_options = initialize_velocity_block_petsc_options_2()
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
@@ -441,9 +430,8 @@ def test_amg_iteration_matrix_slip(load_matrix_step_slip):
     assert F_ksp.its == 6
 
 @pytest.mark.amg
-def test_amg_basic(load_matrix_step_noslip,
-                   initialize_velocity_block_petsc_options):
-    mat_A = load_matrix_step_noslip
+def test_amg_basic():
+    mat_A = load_matrix_step_noslip()
 
     petsc_options = initialize_velocity_block_petsc_options
     L_sizes = mat_A.getSizes()
@@ -458,8 +446,7 @@ def test_amg_basic(load_matrix_step_noslip,
     assert F_ksp.its == 5
 
 @pytest.mark.amg
-def test_amg_iteration_performance(load_matrix_step_noslip,
-                                   initialize_velocity_block_petsc_options):
+def test_amg_iteration_performance():
     mat_A = load_matrix_step_noslip
     petsc_options = initialize_velocity_block_petsc_options_2
     L_sizes = mat_A.getSizes()
@@ -474,9 +461,8 @@ def test_amg_iteration_performance(load_matrix_step_noslip,
     assert F_ksp.its == 5
 
 @pytest.mark.amg
-def test_amg_step_problem_noslip(load_matrix_step_noslip,
-                             initialize_velocity_block_petsc_options):
-    mat_A = load_matrix_step_noslip
+def test_amg_step_problem_noslip():
+    mat_A = load_matrix_step_noslip()
     petsc_options = initialize_velocity_block_petsc_options_3
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
@@ -489,9 +475,8 @@ def test_amg_step_problem_noslip(load_matrix_step_noslip,
     assert F_ksp.its == 5
 
 @pytest.mark.amg
-def test_amg_step_problem_slip(load_matrix_step_slip,
-                             initialize_velocity_block_petsc_options):
-    mat_A = load_matrix_step_slip
+def test_amg_step_problem_slip():
+    mat_A = load_matrix_step_slip()
     petsc_options = initialize_velocity_block_petsc_options
     L_sizes = mat_A.getSizes()
     index_sets = build_amg_index_sets(L_sizes)
