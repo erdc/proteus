@@ -1660,8 +1660,10 @@ class OneLevelTransport(NonlinearEquation):
         for cj,sol in analyticalSolutionsDict.items():
             if not hasattr(self,'u_save'):
                 self.u_save = {}
+                self.u_analytical = {}
             if cj not in self.u_save:
                 self.u_save[cj] = (self.u[cj].dof.copy(), self.u[cj].name)
+                self.u_analytical[cj] = (self.u[cj].dof.copy(), self.u[cj].name+'_analytical')
             else:
                 self.u_save[cj][0][:] = self.u[cj].dof
             interpolationValues = numpy.zeros((self.mesh.nElements_global,
@@ -1679,6 +1681,7 @@ class OneLevelTransport(NonlinearEquation):
             self.u[cj].projectFromInterpolationConditions(interpolationValues)
             self.u[cj].name += '_analytical'
             self.u[cj].femSpace.writeFunctionXdmf(archive,self.u[cj],tCount)
+            self.u_analytical[cj][0][:] = self.u[cj].dof
             self.u[cj].dof[:] = self.u_save[cj][0]
             self.u[cj].name = self.u_save[cj][1]
     #what about setting initial conditions directly from dofs calculated elsewhere?
@@ -1832,7 +1835,6 @@ class OneLevelTransport(NonlinearEquation):
             self.getJacobian_dense(jacobian)
         else:
             raise TypeError("Matrix type must be SparseMatrix or array")
-        logEvent("Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys()):

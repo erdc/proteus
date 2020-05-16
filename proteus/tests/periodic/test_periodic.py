@@ -90,7 +90,7 @@ def test_periodic_2D(load_periodic_opts_2D,
     expected_path = 'comparison_files/' + 'comparison_' + 'ductq1t12dpghe0.0975609756097561' + '_velocity_t25.csv'
     #write comparison file
     #np.array(actual.root.velocity_t25).tofile(os.path.join(script_dir, expected_path),sep=",")
-    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.velocity_t25).flatten(),decimal=8)
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.velocity_t25).flatten(),decimal=7)
     actual.close()
 
 
