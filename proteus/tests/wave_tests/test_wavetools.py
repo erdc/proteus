@@ -321,7 +321,7 @@ class TestWaveParameters(unittest.TestCase):
         from proteus.WaveTools import sigma, JONSWAP, dispersion
         import random
         f0 = random.random() + 1.
-        f = np.linspace(old_div(f0,2.),2.*f0,100)
+        f = np.linspace(f0/2.,2.*f0,100)
         sig = sigma(f,f0)
         gamma = 6.*random.random() + 1.
         Hs = random.random()
@@ -347,7 +347,7 @@ class TestWaveParameters(unittest.TestCase):
     def test_PM(self): #PM tests
         from proteus.WaveTools import PM_mod
         f0 = random.random() + 1.
-        f = np.linspace(old_div(f0,2.),2.*f0,10)
+        f = np.linspace(f0/2.,2.*f0,10)
         Hs = random.random()
         g = 9.81
         S_PM = (old_div(5.,16.)) * Hs**2 * f0**4 / f**5 * np.exp(-5./4. * (old_div(f0,f))**4)
@@ -358,8 +358,8 @@ class TestWaveParameters(unittest.TestCase):
     def testCos2s(self):
         from proteus.WaveTools import cos2s
         f0 = random.random() + 1.
-        f = np.linspace(old_div(f0,2.),2.*f0,10.)
-        thetas = np.linspace(old_div(-pi,2.),old_div(pi,2.),11)
+        f = np.linspace(f0/2.,2.*f0,10)
+        thetas = np.linspace(-pi/2.,pi/2.,11)
         s = 10. + 10. * np.random.random()
         S_PM = np.zeros((len(thetas),len(f)),)
         for ii in range(len(thetas)):
@@ -372,8 +372,8 @@ class TestWaveParameters(unittest.TestCase):
     def testMitsuyasu(self):
         from proteus.WaveTools import mitsuyasu
         f0 = random.random() + 1.
-        f = np.linspace(old_div(f0,2.),2.*f0,10.)
-        thetas = np.linspace(old_div(-pi,2.),old_div(pi,2.),11)
+        f = np.linspace(f0/2.,2.*f0,10)
+        thetas = np.linspace(-pi/2.,pi/2.,11)
         s = 10 + 10. * np.random.random()
         ss = np.zeros(len(f),)
         ss = (old_div(f,f0))**5
@@ -876,7 +876,7 @@ class VerifyRandomWaves(unittest.TestCase):
         Tlag = old_div(sum(Lgen[:]*normDir[:]),min(old_div(omega[:],ki[:])))
         Tstart2 = Tstart -  Tlag
         dt = old_div(Tp,50.)
-        Nf = int(old_div((Tend-Tstart2),dt))
+        Nf = int((Tend-Tstart2)/dt)
         tlist = np.linspace(Tstart2,Tend,Nf)
         etaWrite = np.zeros(len(tlist),)
         for ii in range(len(tlist)):
@@ -1197,7 +1197,7 @@ class VerifyDirectionals(unittest.TestCase):
         fmin = old_div(1.,(Tp * bandFactor))
         fmax = old_div(bandFactor,(Tp))
         fi = np.linspace(fmin,fmax,N)
-        thetas = np.linspace(theta0 - old_div(pi,2),theta0+old_div(pi,2),2*M+1)
+        thetas = np.linspace(theta0 - pi/2,theta0+pi/2,2*M+1)
         dth = old_div(pi,(2*M))
         df = old_div((fmax-fmin),(N - 1 ))
         ki = dispersion(2*pi*fi,depth)
