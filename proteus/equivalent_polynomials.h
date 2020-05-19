@@ -692,6 +692,13 @@ namespace equivalent_polynomials
       else
         return regularized.VA_y(i);
     }
+    inline double VA_z(int i)
+    {
+      if(useExact)
+        return exact.VA_z(i);
+      else
+        return regularized.VA_z(i);
+    }
     inline double VB(int i)
     {
       if(useExact)
@@ -712,6 +719,13 @@ namespace equivalent_polynomials
         return exact.VB_y(i);
       else
         return regularized.VB_y(i);
+    }
+    inline double VB_z(int i)
+    {
+      if(useExact)
+        return exact.VB_z(i);
+      else
+        return regularized.VB_z(i);
     }
   };
 }//equivalent_polynomials

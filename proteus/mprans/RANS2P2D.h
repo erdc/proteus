@@ -415,18 +415,6 @@ namespace proteus
           vx = ball_velocity[3*I + 0] - ball_angular_velocity[3*I + 2]*(y-ball_center[3*I + 1]);
           vy = ball_velocity[3*I + 1] + ball_angular_velocity[3*I + 2]*(x-ball_center[3*I + 0]);
       }
-      void get_acceleration_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
-                                    const double* ball_velocity, const double* ball_angular_velocity,
-                                    const double* ball_center_acceleration, const double* ball_angular_acceleration,
-                                    int I,
-                                    const double x, const double y, const double z,
-                                    double& ax, double& ay)
-      {
-          ax = ball_center_acceleration[3*I + 0] - ball_angular_acceleration[3*I + 2]*(y-ball_center[3*I + 1])
-                - ball_angular_acceleration[3*I + 2]*ball_angular_acceleration[3*I + 2]*(x-ball_center[3*I + 0]);
-          ay = ball_center_acceleration[3*I + 1] + ball_angular_acceleration[3*I + 2]*(x-ball_center[3*I + 0])
-                - ball_angular_acceleration[3*I + 2]*ball_angular_acceleration[3*I + 2]*(y-ball_center[3*I + 1]);
-      }
       inline void updateSolidParticleTerms(const double NONCONSERVATIVE_FORM,
                                            bool element_owned,
                                            const double particle_nitsche,
@@ -442,8 +430,6 @@ namespace proteus
                                            const double* ball_radius,
                                            const double* ball_velocity,
                                            const double* ball_angular_velocity,
-                                           const double* ball_center_acceleration,
-                                           const double* ball_angular_acceleration,
                                            const double* ball_density,
                                            const double porosity, //VRANS specific
                                            const double penalty,
@@ -515,7 +501,6 @@ namespace proteus
         double phi_s_normal[2]={0.0,0.0};
         double fluid_outward_normal[2]={0.0,0.0};
         double vel[2]={0.0,0.0};
-        double acceleration[2]={0.0,0.0};
         double center[2]={0.0,0.0};
         H_mu = (1.0 - useVF) * gf.H(eps_mu, phi) + useVF * fmin(1.0, fmax(0.0, vf));
         ImH_mu = (1.0 - useVF) * gf.ImH(eps_mu, phi) + useVF * (1.0-fmin(1.0, fmax(0.0, vf)));
@@ -528,24 +513,16 @@ namespace proteus
             if(use_ball_as_particle==1)
               {
                 get_distance_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s);
-                get_normal_to_ith_ball(nParticles,ball_center,ball_radius,i,x,y,z,phi_s_normal[0],phi_s_normal[1]);
                 get_velocity_to_ith_ball(nParticles,ball_center,ball_radius,
                                          ball_velocity,ball_angular_velocity,
                                          i,x,y,z,
                                          vel[0],vel[1]);
                 center[0] = ball_center[3*i+0];
                 center[1] = ball_center[3*i+1];
-                get_acceleration_to_ith_ball(nParticles,ball_center,ball_radius,
-                                             ball_velocity,ball_angular_velocity,
-                                             ball_center_acceleration,ball_angular_acceleration,
-                                             i,x,y,z,
-                                             acceleration[0],acceleration[1]);
               }
             else
               {
                 phi_s = particle_signed_distances[i * sd_offset];
-                //phi_s_normal[0] = particle_signed_distance_normals[i * sd_offset * 3 + 0];
-                //phi_s_normal[1] = particle_signed_distance_normals[i * sd_offset * 3 + 1];
                 vel[0] = particle_velocities[i * sd_offset * 3 + 0];
                 vel[1] = particle_velocities[i * sd_offset * 3 + 1];
                 center[0] = particle_centroids[3*i+0];
@@ -580,22 +557,14 @@ namespace proteus
             double rel_vel_norm = sqrt((uStar - u_s) * (uStar - u_s) +
                                        (vStar - v_s) * (vStar - v_s) +
                                        (wStar - w_s) * (wStar - w_s));
-            force_x = porosity * dV * D_s * (p * fluid_outward_normal[0]
-                                             -mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
-                                             +mu*penalty*(u-u_s)
-                                             );
-            force_y = porosity * dV * D_s * (p * fluid_outward_normal[1]
-                                             -mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
-                                             +mu*penalty*(v-v_s)
-                                             );
             force_p_x = porosity * dV * D_s * p * fluid_outward_normal[0];
             force_p_y = porosity * dV * D_s * p * fluid_outward_normal[1];
-            force_stress_x = porosity * dV * D_s * (-mu * (fluid_outward_normal[0] * grad_u[0] + fluid_outward_normal[1] * grad_u[1])
-                                                    +mu*penalty*(u-u_s)
-                                                    );
-            force_stress_y = porosity * dV * D_s * (-mu * (fluid_outward_normal[0] * grad_v[0] + fluid_outward_normal[1] * grad_v[1])
-                                                    +mu*penalty*(v-v_s)
-                                                    );
+            force_stress_x = porosity * dV * D_s * (-mu * (fluid_outward_normal[0] * 2* grad_u[0] + fluid_outward_normal[1] * (grad_u[1]+grad_v[0]))
+						    +mu*penalty*(u-u_s));
+            force_stress_y = porosity * dV * D_s * (-mu * (fluid_outward_normal[0] * (grad_u[1]+grad_v[0]) + fluid_outward_normal[1] * 2* grad_v[1])
+						    +mu*penalty*(v-v_s));
+            force_x = force_p_x + force_stress_x;
+            force_y = force_p_y + force_stress_y;
             //always 3D for particle centroids
             r_x = x - center[0];
             r_y = y - center[1];
@@ -983,174 +952,174 @@ namespace proteus
       }
 
       inline
-        void exteriorNumericalAdvectiveFlux(const double NONCONSERVATIVE_FORM,
-                                            const int& isDOFBoundary_p,
-                                            const int& isDOFBoundary_u,
-                                            const int& isDOFBoundary_v,
-                                            const int& isDOFBoundary_w,
-                                            const int& isFluxBoundary_p,
-                                            const int& isFluxBoundary_u,
-                                            const int& isFluxBoundary_v,
-                                            const int& isFluxBoundary_w,
-                                            const double& oneByRho,
-                                            const double& bc_oneByRho,
-                                            const double n[nSpace],
-                                            const double& bc_p,
-                                            const double& bc_u,
-                                            const double& bc_v,
-                                            const double bc_f_mass[nSpace],
-                                            const double bc_f_umom[nSpace],
-                                            const double bc_f_vmom[nSpace],
-                                            const double bc_f_wmom[nSpace],
-                                            const double& bc_flux_mass,
-                                            const double& bc_flux_umom,
-                                            const double& bc_flux_vmom,
-                                            const double& bc_flux_wmom,
-                                            const double& p,
-                                            const double& u,
-                                            const double& v,
-                                            const double f_mass[nSpace],
-                                            const double f_umom[nSpace],
-                                            const double f_vmom[nSpace],
-                                            const double f_wmom[nSpace],
-                                            const double df_mass_du[nSpace],
-                                            const double df_mass_dv[nSpace],
-                                            const double df_mass_dw[nSpace],
-                                            const double df_umom_dp[nSpace],
-                                            const double dham_grad[nSpace],
-                                            const double df_umom_du[nSpace],
-                                            const double df_umom_dv[nSpace],
-                                            const double df_umom_dw[nSpace],
-                                            const double df_vmom_dp[nSpace],
-                                            const double df_vmom_du[nSpace],
-                                            const double df_vmom_dv[nSpace],
-                                            const double df_vmom_dw[nSpace],
-                                            const double df_wmom_dp[nSpace],
-                                            const double df_wmom_du[nSpace],
-                                            const double df_wmom_dv[nSpace],
-                                            const double df_wmom_dw[nSpace],
-                                            double& flux_mass,
-                                            double& flux_umom,
-                                            double& flux_vmom,
-                                            double& flux_wmom,
-                                            double* velocity)
+      void exteriorNumericalAdvectiveFlux(const double NONCONSERVATIVE_FORM,
+					  const int& isDOFBoundary_p,
+					  const int& isDOFBoundary_u,
+					  const int& isDOFBoundary_v,
+					  const int& isDOFBoundary_w,
+					  const int& isFluxBoundary_p,
+					  const int& isFluxBoundary_u,
+					  const int& isFluxBoundary_v,
+					  const int& isFluxBoundary_w,
+					  const double& oneByRho,
+					  const double& bc_oneByRho,
+					  const double n[nSpace],
+					  const double& bc_p,
+					  const double& bc_u,
+					  const double& bc_v,
+					  const double bc_f_mass[nSpace],
+					  const double bc_f_umom[nSpace],
+					  const double bc_f_vmom[nSpace],
+					  const double bc_f_wmom[nSpace],
+					  const double& bc_flux_mass,
+					  const double& bc_flux_umom,
+					  const double& bc_flux_vmom,
+					  const double& bc_flux_wmom,
+					  const double& p,
+					  const double& u,
+					  const double& v,
+					  const double f_mass[nSpace],
+					  const double f_umom[nSpace],
+					  const double f_vmom[nSpace],
+					  const double f_wmom[nSpace],
+					  const double df_mass_du[nSpace],
+					  const double df_mass_dv[nSpace],
+					  const double df_mass_dw[nSpace],
+					  const double df_umom_dp[nSpace],
+					  const double dham_grad[nSpace],
+					  const double df_umom_du[nSpace],
+					  const double df_umom_dv[nSpace],
+					  const double df_umom_dw[nSpace],
+					  const double df_vmom_dp[nSpace],
+					  const double df_vmom_du[nSpace],
+					  const double df_vmom_dv[nSpace],
+					  const double df_vmom_dw[nSpace],
+					  const double df_wmom_dp[nSpace],
+					  const double df_wmom_du[nSpace],
+					  const double df_wmom_dv[nSpace],
+					  const double df_wmom_dw[nSpace],
+					  double& flux_mass,
+					  double& flux_umom,
+					  double& flux_vmom,
+					  double& flux_wmom,
+					  double* velocity)
       {
         double flowSpeedNormal;
         flux_mass = 0.0;
         flux_umom = 0.0;
         flux_vmom = 0.0;
         if (NONCONSERVATIVE_FORM > 0.0)
-        {
-          flowSpeedNormal = n[0] * df_vmom_dv[0] + n[1] * df_umom_du[1]; //tricky, works for  moving and fixed domains
-          flowSpeedNormal += n[0] * dham_grad[0] + n[1] * dham_grad[1];
-        }
+	  {
+	    flowSpeedNormal = n[0] * df_vmom_dv[0] + n[1] * df_umom_du[1]; //tricky, works for  moving and fixed domains
+	    flowSpeedNormal += n[0] * dham_grad[0] + n[1] * dham_grad[1];
+	  }
         else
           flowSpeedNormal = n[0] * df_vmom_dv[0] + n[1] * df_umom_du[1]; //tricky, works for  moving and fixed domains
         if (isDOFBoundary_u != 1)
-        {
-          flux_mass += n[0] * f_mass[0];
-          velocity[0] = f_mass[0];
-          if (flowSpeedNormal >= 0.0)
-          {
-            flux_umom += n[0] * f_umom[0];
-            flux_vmom += n[0] * f_vmom[0];
-          }
-          else
-          {
-            if (NONCONSERVATIVE_FORM > 0.0)
-            {
-              flux_umom += (0.0 - u) * flowSpeedNormal;
-            }
-          }
-        }
+	  {
+	    flux_mass += n[0] * f_mass[0];
+	    velocity[0] = f_mass[0];
+	    if (flowSpeedNormal >= 0.0)
+	      {
+		flux_umom += n[0] * f_umom[0];
+		flux_vmom += n[0] * f_vmom[0];
+	      }
+	    else
+	      {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_umom += (0.0 - u) * flowSpeedNormal;
+		  }
+	      }
+	  }
         else
-        {
-          flux_mass += n[0] * f_mass[0];
-          velocity[0] = f_mass[0];
-          if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
-          {
-            flux_umom += n[0] * f_umom[0];
-            flux_vmom += n[0] * f_vmom[0];
-          }
-          else
-          {
-            if (NONCONSERVATIVE_FORM > 0.0)
-            {
-              flux_umom += (bc_u - u) * flowSpeedNormal;
-            }
-            else
-            {
-              flux_umom += n[0] * bc_f_umom[0];
-              flux_vmom += n[0] * bc_f_vmom[0];
-            }
-          }
-        }
+	  {
+	    flux_mass += n[0] * f_mass[0];
+	    velocity[0] = f_mass[0];
+	    if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
+	      {
+		flux_umom += n[0] * f_umom[0];
+		flux_vmom += n[0] * f_vmom[0];
+	      }
+	    else
+	      {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_umom += (bc_u - u) * flowSpeedNormal;
+		  }
+		else
+		  {
+		    flux_umom += n[0] * bc_f_umom[0];
+		    flux_vmom += n[0] * bc_f_vmom[0];
+		  }
+	      }
+	  }
         if (isDOFBoundary_v != 1)
-        {
-          flux_mass += n[1] * f_mass[1];
-          velocity[1] = f_mass[1];
-          if (flowSpeedNormal >= 0.0)
-          {
-            flux_umom += n[1] * f_umom[1];
-            flux_vmom += n[1] * f_vmom[1];
-          }
-          else
-          {
-            if (NONCONSERVATIVE_FORM > 0.0)
-            {
-              flux_vmom += (0.0 - v) * flowSpeedNormal;
-            }
-          }
-        }
+	  {
+	    flux_mass += n[1] * f_mass[1];
+	    velocity[1] = f_mass[1];
+	    if (flowSpeedNormal >= 0.0)
+	      {
+		flux_umom += n[1] * f_umom[1];
+		flux_vmom += n[1] * f_vmom[1];
+	      }
+	    else
+	      {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_vmom += (0.0 - v) * flowSpeedNormal;
+		  }
+	      }
+	  }
         else
-        {
-          flux_mass += n[1] * f_mass[1];
-          velocity[1] = f_mass[1];
-          if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
-          {
-            flux_umom += n[1] * f_umom[1];
-            flux_vmom += n[1] * f_vmom[1];
-          }
-          else
-          {
-            if (NONCONSERVATIVE_FORM > 0.0)
-            {
-              flux_vmom += (bc_v - v) * flowSpeedNormal;
-            }
-            else
-            {
-              flux_umom += n[1] * bc_f_umom[1];
-              flux_vmom += n[1] * bc_f_vmom[1];
-            }
-          }
-        }
+	  {
+	    flux_mass += n[1] * f_mass[1];
+	    velocity[1] = f_mass[1];
+	    if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
+	      {
+		flux_umom += n[1] * f_umom[1];
+		flux_vmom += n[1] * f_vmom[1];
+	      }
+	    else
+	      {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    flux_vmom += (bc_v - v) * flowSpeedNormal;
+		  }
+		else
+		  {
+		    flux_umom += n[1] * bc_f_umom[1];
+		    flux_vmom += n[1] * bc_f_vmom[1];
+		  }
+	      }
+	  }
         if (isDOFBoundary_p == 1)
-        {
-          if (NONCONSERVATIVE_FORM > 0.0)
-          {
-            flux_umom += n[0] * (bc_p - p);
-            flux_vmom += n[1] * (bc_p - p);
-          }
-          else
-          {
-            flux_umom += n[0] * (bc_p * bc_oneByRho - p * oneByRho);
-            flux_vmom += n[1] * (bc_p * bc_oneByRho - p * oneByRho);
-          }
-        }
+	  {
+	    if (NONCONSERVATIVE_FORM > 0.0)
+	      {
+		flux_umom += n[0] * (bc_p - p);
+		flux_vmom += n[1] * (bc_p - p);
+	      }
+	    else
+	      {
+		flux_umom += n[0] * (bc_p * bc_oneByRho - p * oneByRho);
+		flux_vmom += n[1] * (bc_p * bc_oneByRho - p * oneByRho);
+	      }
+	  }
         if (isFluxBoundary_p == 1)
-        {
-          velocity[0] += (bc_flux_mass - flux_mass) * n[0];
-          velocity[1] += (bc_flux_mass - flux_mass) * n[1];
-          flux_mass = bc_flux_mass;
-        }
+	  {
+	    velocity[0] += (bc_flux_mass - flux_mass) * n[0];
+	    velocity[1] += (bc_flux_mass - flux_mass) * n[1];
+	    flux_mass = bc_flux_mass;
+	  }
         if (isFluxBoundary_u == 1)
-        {
-          flux_umom = bc_flux_umom;
-        }
+	  {
+	    flux_umom = bc_flux_umom;
+	  }
         if (isFluxBoundary_v == 1)
-        {
-          flux_vmom = bc_flux_vmom;
-        }
+	  {
+	    flux_vmom = bc_flux_vmom;
+	  }
       }
 
       inline
@@ -1235,127 +1204,127 @@ namespace proteus
         flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for moving and fixed  domains
         flowSpeedNormal+=NONCONSERVATIVE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]);
         if (isDOFBoundary_u != 1)
-        {
-          dflux_mass_du += n[0] * df_mass_du[0];
-          if (flowSpeedNormal >= 0.0)
-          {
-            dflux_umom_du += n[0] * df_umom_du[0];
-            dflux_umom_dv += n[0] * df_umom_dv[0];
+	  {
+	    dflux_mass_du += n[0] * df_mass_du[0];
+	    if (flowSpeedNormal >= 0.0)
+	      {
+		dflux_umom_du += n[0] * df_umom_du[0];
+		dflux_umom_dv += n[0] * df_umom_dv[0];
 
-            dflux_vmom_du += n[0] * df_vmom_du[0];
-            dflux_vmom_dv += n[0] * df_vmom_dv[0];
-          }
-          else
-          {
-            if (NONCONSERVATIVE_FORM > 0.0)
-            {
-              dflux_umom_du += dmom_u_acc_u * n[0] * (0.0 - u) - flowSpeedNormal;
-              dflux_umom_dv += dmom_u_acc_u * n[1] * (0.0 - u) ;
-            }
-          }
-        }
+		dflux_vmom_du += n[0] * df_vmom_du[0];
+		dflux_vmom_dv += n[0] * df_vmom_dv[0];
+	      }
+	    else
+	      {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_umom_du += dmom_u_acc_u * n[0] * (0.0 - u) - flowSpeedNormal;
+		    dflux_umom_dv += dmom_u_acc_u * n[1] * (0.0 - u) ;
+		  }
+	      }
+	  }
         else
-        {
-          //cek still upwind the advection for Dirichlet?
-          dflux_mass_du += n[0] * df_mass_du[0];
-          if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
-          {
-            dflux_umom_du += n[0] * df_umom_du[0];
-            dflux_umom_dv += n[0] * df_umom_dv[0];
+	  {
+	    //cek still upwind the advection for Dirichlet?
+	    dflux_mass_du += n[0] * df_mass_du[0];
+	    if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
+	      {
+		dflux_umom_du += n[0] * df_umom_du[0];
+		dflux_umom_dv += n[0] * df_umom_dv[0];
 
-            dflux_vmom_du += n[0] * df_vmom_du[0];
-            dflux_vmom_dv += n[0] * df_vmom_dv[0];
-          }
-          else
-          {
-            if (NONCONSERVATIVE_FORM > 0.0)
-            {
-              dflux_umom_du += dmom_u_acc_u * n[0] * (bc_u - u) - flowSpeedNormal;
-              dflux_umom_dv += dmom_u_acc_u * n[1] * (bc_u - u) ;
-            }
-            else
-            {
-              if (isDOFBoundary_v != 1)
-                dflux_vmom_dv += n[0] * df_vmom_dv[0];
-            }
-          }
-        }
+		dflux_vmom_du += n[0] * df_vmom_du[0];
+		dflux_vmom_dv += n[0] * df_vmom_dv[0];
+	      }
+	    else
+	      {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_umom_du += dmom_u_acc_u * n[0] * (bc_u - u) - flowSpeedNormal;
+		    dflux_umom_dv += dmom_u_acc_u * n[1] * (bc_u - u) ;
+		  }
+		else
+		  {
+		    if (isDOFBoundary_v != 1)
+		      dflux_vmom_dv += n[0] * df_vmom_dv[0];
+		  }
+	      }
+	  }
         if (isDOFBoundary_v != 1)
-        {
-          dflux_mass_dv += n[1] * df_mass_dv[1];
-          if (flowSpeedNormal >= 0.0)
-          {
-            dflux_umom_du += n[1] * df_umom_du[1];
-            dflux_umom_dv += n[1] * df_umom_dv[1];
+	  {
+	    dflux_mass_dv += n[1] * df_mass_dv[1];
+	    if (flowSpeedNormal >= 0.0)
+	      {
+		dflux_umom_du += n[1] * df_umom_du[1];
+		dflux_umom_dv += n[1] * df_umom_dv[1];
 
-            dflux_vmom_du += n[1] * df_vmom_du[1];
-            dflux_vmom_dv += n[1] * df_vmom_dv[1];
-          }
-          else
-          {
-            if (NONCONSERVATIVE_FORM > 0.0)
-            {
-              dflux_vmom_du += dmom_u_acc_u * n[0] * (0.0 - v);
-              dflux_vmom_dv += dmom_u_acc_u * n[1] * (0.0 - v) - flowSpeedNormal;
-            }
-          }
-        }
+		dflux_vmom_du += n[1] * df_vmom_du[1];
+		dflux_vmom_dv += n[1] * df_vmom_dv[1];
+	      }
+	    else
+	      {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_vmom_du += dmom_u_acc_u * n[0] * (0.0 - v);
+		    dflux_vmom_dv += dmom_u_acc_u * n[1] * (0.0 - v) - flowSpeedNormal;
+		  }
+	      }
+	  }
         else
-        {
-          //cek still upwind the advection for Dirichlet?
-          dflux_mass_dv += n[1] * df_mass_dv[1];
-          if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
-          {
-            dflux_umom_du += n[1] * df_umom_du[1];
-            dflux_umom_dv += n[1] * df_umom_dv[1];
+	  {
+	    //cek still upwind the advection for Dirichlet?
+	    dflux_mass_dv += n[1] * df_mass_dv[1];
+	    if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
+	      {
+		dflux_umom_du += n[1] * df_umom_du[1];
+		dflux_umom_dv += n[1] * df_umom_dv[1];
 
-            dflux_vmom_du += n[1] * df_vmom_du[1];
-            dflux_vmom_dv += n[1] * df_vmom_dv[1];
-          }
-          else
-          {
-            if (NONCONSERVATIVE_FORM > 0.0)
-            {
-              dflux_vmom_du += dmom_u_acc_u * n[0] * (bc_v - v);
-              dflux_vmom_dv += dmom_u_acc_u * n[1] * (bc_v - v) - flowSpeedNormal;
-            }
-            else
-            {
-              if (isDOFBoundary_u != 1)
-                dflux_umom_du += n[1] * df_umom_du[1];
-            }
-          }
-        }
+		dflux_vmom_du += n[1] * df_vmom_du[1];
+		dflux_vmom_dv += n[1] * df_vmom_dv[1];
+	      }
+	    else
+	      {
+		if (NONCONSERVATIVE_FORM > 0.0)
+		  {
+		    dflux_vmom_du += dmom_u_acc_u * n[0] * (bc_v - v);
+		    dflux_vmom_dv += dmom_u_acc_u * n[1] * (bc_v - v) - flowSpeedNormal;
+		  }
+		else
+		  {
+		    if (isDOFBoundary_u != 1)
+		      dflux_umom_du += n[1] * df_umom_du[1];
+		  }
+	      }
+	  }
         if (isDOFBoundary_p == 1)
-        {
-          if (NONCONSERVATIVE_FORM > 0.0)
-          {
-            dflux_umom_dp = -n[0];
-            dflux_vmom_dp = -n[1];
-          }
-          else
-          {
-            dflux_umom_dp = -n[0] * oneByRho;
-            dflux_vmom_dp = -n[1] * oneByRho;
-          }
-        }
+	  {
+	    if (NONCONSERVATIVE_FORM > 0.0)
+	      {
+		dflux_umom_dp = -n[0];
+		dflux_vmom_dp = -n[1];
+	      }
+	    else
+	      {
+		dflux_umom_dp = -n[0] * oneByRho;
+		dflux_vmom_dp = -n[1] * oneByRho;
+	      }
+	  }
         if (isFluxBoundary_p == 1)
-        {
-          dflux_mass_du = 0.0;
-          dflux_mass_dv = 0.0;
-        }
+	  {
+	    dflux_mass_du = 0.0;
+	    dflux_mass_dv = 0.0;
+	  }
         if (isFluxBoundary_u == 1)
-        {
-          dflux_umom_dp = 0.0;
-          dflux_umom_du = 0.0;
-          dflux_umom_dv = 0.0;
-        }
+	  {
+	    dflux_umom_dp = 0.0;
+	    dflux_umom_du = 0.0;
+	    dflux_umom_dv = 0.0;
+	  }
         if (isFluxBoundary_v == 1)
-        {
-          dflux_vmom_dp = 0.0;
-          dflux_vmom_du = 0.0;
-          dflux_vmom_dv = 0.0;
-        }
+	  {
+	    dflux_vmom_dp = 0.0;
+	    dflux_vmom_du = 0.0;
+	    dflux_vmom_dv = 0.0;
+	  }
       }
 
       inline
@@ -1645,8 +1614,6 @@ namespace proteus
         xt::pyarray<double>& ball_radius = args.m_darray["ball_radius"];
         xt::pyarray<double>& ball_velocity = args.m_darray["ball_velocity"];
         xt::pyarray<double>& ball_angular_velocity = args.m_darray["ball_angular_velocity"];
-        xt::pyarray<double>& ball_center_acceleration = args.m_darray["ball_center_acceleration"];
-        xt::pyarray<double>& ball_angular_acceleration = args.m_darray["ball_angular_acceleration"];
         xt::pyarray<double>& ball_density = args.m_darray["ball_density"];
         xt::pyarray<double>& particle_signed_distances = args.m_darray["particle_signed_distances"];
         xt::pyarray<double>& particle_signed_distance_normals = args.m_darray["particle_signed_distance_normals"];
@@ -2157,7 +2124,6 @@ namespace proteus
                 div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last.data()[eN_k])/dV;
                 //VRANS
                 porosity      = q_porosity.data()[eN_k];
-                //meanGrainSize = q_meanGrain.data()[eN_k];
                 //
                 q_velocity.data()[eN_k_nSpace+0]=u;
                 q_velocity.data()[eN_k_nSpace+1]=v;
@@ -2622,8 +2588,6 @@ namespace proteus
                                              ball_radius.data(),
                                              ball_velocity.data(),
                                              ball_angular_velocity.data(),
-                                             ball_center_acceleration.data(),
-                                             ball_angular_acceleration.data(),
                                              ball_density.data(),
                                              porosity,
                                              particle_penalty_constant/h_phi,//penalty,
@@ -2819,7 +2783,7 @@ namespace proteus
                   }//i
                 //estimate the numerical viscosity combining shock capturing and VMS/SUPG
                 numerical_viscosity.data()[eN_k] = q_numDiff_u_last.data()[eN_k] + MOMENTUM_SGE*VELOCITY_SGE*tau_v*(dmom_adv_star[0]*dmom_adv_star[0]+
-                                                                                                      dmom_adv_star[1]*dmom_adv_star[1]);
+														    dmom_adv_star[1]*dmom_adv_star[1]);
                 if (!elementIsActive[eN])
                   {
                     assert(std::fabs(gf_s.H(particle_eps,phi_solid.data()[eN_k])) == 0.0);
@@ -2883,7 +2847,7 @@ namespace proteus
           {
             if(elementIsActive[elementBoundaryElementsArray[(*it)*2+0]] && elementIsActive[elementBoundaryElementsArray[(*it)*2+1]])
               {
-                std::map<int,double> Dwp_Dn_jump, Dw_Dn_jump;
+                std::map<int,double> DWp_Dn_jump, DW_Dn_jump;
                 register double gamma_cutfem=ghost_penalty_constant,gamma_cutfem_p=ghost_penalty_constant,h_cutfem=elementBoundaryDiameter.data()[*it];
                 int eN_nDOF_v_trial_element  = elementBoundaryElementsArray.data()[(*it)*2+0]*nDOF_v_trial_element;
                 //See Massing Schott Wall 2018
@@ -2910,11 +2874,11 @@ namespace proteus
                           eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
                         for (int i=0;i<nDOF_test_element;i++)
                           {
-                            Dwp_Dn_jump[rp_l2g.data()[eN*nDOF_test_element+i]] = 0.0;
+                            DWp_Dn_jump[rp_l2g.data()[eN*nDOF_test_element+i]] = 0.0;
                           }
                         for (int i=0;i<nDOF_v_test_element;i++)
                           {
-                            Dw_Dn_jump[rvel_l2g.data()[eN*nDOF_v_test_element+i]] = 0.0;
+                            DW_Dn_jump[rvel_l2g.data()[eN*nDOF_v_test_element+i]] = 0.0;
                           }
                       }
                     for (int eN_side=0;eN_side < 2; eN_side++)
@@ -2997,26 +2961,26 @@ namespace proteus
                         for (int i=0;i<nDOF_test_element;i++)
                           {
                             for (int I=0;I<nSpace;I++)
-                              Dwp_Dn_jump[rp_l2g[eN_nDOF_trial_element+i]] += p_grad_trial_trace[i*nSpace+I]*normal[I];
+                              DWp_Dn_jump[rp_l2g[eN_nDOF_trial_element+i]] += p_grad_trial_trace[i*nSpace+I]*normal[I];
                           }
                         for (int i=0;i<nDOF_v_test_element;i++)
                           {
                             for (int I=0;I<nSpace;I++)
-                              Dw_Dn_jump[rvel_l2g[eN_nDOF_v_trial_element+i]] += vel_grad_trial_trace[i*nSpace+I]*normal[I];
+                              DW_Dn_jump[rvel_l2g[eN_nDOF_v_trial_element+i]] += vel_grad_trial_trace[i*nSpace+I]*normal[I];
                           }
                       }//eN_side
-                    for (std::map<int,double>::iterator w_it=Dwp_Dn_jump.begin(); w_it!=Dwp_Dn_jump.end(); ++w_it)
+                    for (std::map<int,double>::iterator W_it=DWp_Dn_jump.begin(); W_it!=DWp_Dn_jump.end(); ++W_it)
                       {
-                        int i_global = w_it->first;
-                        double Dwp_Dn_jump_i = w_it->second;
-                        globalResidual.data()[offset_p+stride_p*i_global]+=gamma_cutfem_p*h_cutfem*Dp_Dn_jump*Dwp_Dn_jump_i*dS;
+                        int i_global = W_it->first;
+                        double DWp_Dn_jump_i = W_it->second;
+                        globalResidual.data()[offset_p+stride_p*i_global]+=gamma_cutfem_p*h_cutfem*Dp_Dn_jump*DWp_Dn_jump_i*dS;
                       }
-                    for (std::map<int,double>::iterator w_it=Dw_Dn_jump.begin(); w_it!=Dw_Dn_jump.end(); ++w_it)
+                    for (std::map<int,double>::iterator W_it=DW_Dn_jump.begin(); W_it!=DW_Dn_jump.end(); ++W_it)
                       {
-                        int i_global = w_it->first;
-                        double Dw_Dn_jump_i = w_it->second;
-                        globalResidual.data()[offset_u+stride_u*i_global]+=gamma_cutfem*h_cutfem*Du_Dn_jump*Dw_Dn_jump_i*dS;
-                        globalResidual.data()[offset_v+stride_v*i_global]+=gamma_cutfem*h_cutfem*Dv_Dn_jump*Dw_Dn_jump_i*dS;
+                        int i_global = W_it->first;
+                        double DW_Dn_jump_i = W_it->second;
+                        globalResidual.data()[offset_u+stride_u*i_global]+=gamma_cutfem*h_cutfem*Du_Dn_jump*DW_Dn_jump_i*dS;
+                        globalResidual.data()[offset_v+stride_v*i_global]+=gamma_cutfem*h_cutfem*Dv_Dn_jump*DW_Dn_jump_i*dS;
                       }//i
                   }//kb
                 ++it;
@@ -3243,7 +3207,7 @@ namespace proteus
                   dS,p_test_dS[nDOF_test_element],vel_test_dS[nDOF_v_test_element],
                   p_grad_trial_trace[nDOF_trial_element*nSpace],vel_grad_trial_trace[nDOF_v_trial_element*nSpace],
                   vel_grad_test_dS[nDOF_v_trial_element*nSpace],
-                  normal[2],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
+                  normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
                   //VRANS
                   porosity_ext,
                   //
@@ -3542,7 +3506,7 @@ namespace proteus
                 //Turbulence closure model
                 if (turbulenceClosureModel >= 3)
                   {
-                    const double turb_var_grad_0_dummy[2] = {0.,0.};
+                    const double turb_var_grad_0_dummy[nSpace] = {0.,0.};
                     const double c_mu = 0.09;//mwf hack
                     updateTurbulenceClosure(NONCONSERVATIVE_FORM,
                                             turbulenceClosureModel,
@@ -4182,8 +4146,6 @@ namespace proteus
         xt::pyarray<double>& ball_radius = args.m_darray["ball_radius"];
         xt::pyarray<double>& ball_velocity = args.m_darray["ball_velocity"];
         xt::pyarray<double>& ball_angular_velocity = args.m_darray["ball_angular_velocity"];
-        xt::pyarray<double>& ball_center_acceleration = args.m_darray["ball_center_acceleration"];
-        xt::pyarray<double>& ball_angular_acceleration = args.m_darray["ball_angular_acceleration"];
         xt::pyarray<double>& ball_density = args.m_darray["ball_density"];
         xt::pyarray<double>& particle_signed_distances = args.m_darray["particle_signed_distances"];
         xt::pyarray<double>& particle_signed_distance_normals = args.m_darray["particle_signed_distance_normals"];
@@ -4651,10 +4613,10 @@ namespace proteus
                       mesh_velocity_dof[mesh_l2g.data()[eN_j]*3+0]*p_grad_trial[j*2+0] +
                       mesh_velocity_dof[mesh_l2g.data()[eN_j]*3+1]*p_grad_trial[j*2+1];
                   }
-                div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
+                div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last.data()[eN_k])/dV;
                 //
                 //VRANS
-                porosity = q_porosity[eN_k];
+                porosity = q_porosity.data()[eN_k];
                 //
                 double ball_n[nSpace];
                 if (use_ball_as_particle == 1)
@@ -4801,7 +4763,6 @@ namespace proteus
                                      0.0,
                                      0.0);
                 mass_source = q_mass_source.data()[eN_k];
-                //todo: decide if these should be lagged or not
                 updateDarcyForchheimerTerms_Ergun(NONCONSERVATIVE_FORM,
                                                   /* linearDragFactor, */
                                                   /* nonlinearDragFactor, */
@@ -5133,8 +5094,6 @@ namespace proteus
                                              ball_radius.data(),
                                              ball_velocity.data(),
                                              ball_angular_velocity.data(),
-                                             ball_center_acceleration.data(),
-                                             ball_angular_acceleration.data(),
                                              ball_density.data(),
                                              porosity,
                                              particle_penalty_constant/h_phi,//penalty,
@@ -5374,7 +5333,7 @@ namespace proteus
           }//elements
         for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); ++it)
           {
-            std::map<int,double> Dwp_Dn_jump,Dw_Dn_jump;
+            std::map<int,double> DWp_Dn_jump,DW_Dn_jump;
             std::map<std::pair<int, int>, int> p_p_nz, u_u_nz, v_v_nz;
             register double gamma_cutfem=ghost_penalty_constant,gamma_cutfem_p=ghost_penalty_constant,h_cutfem=elementBoundaryDiameter.data()[*it];
             int eN_nDOF_v_trial_element  = elementBoundaryElementsArray.data()[(*it)*2+0]*nDOF_v_trial_element;
@@ -5401,9 +5360,9 @@ namespace proteus
                     register int ebN = *it,
                       eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
                     for (int i=0;i<nDOF_test_element;i++)
-                      Dwp_Dn_jump[p_l2g.data()[eN*nDOF_test_element+i]] = 0.0;
+                      DWp_Dn_jump[p_l2g.data()[eN*nDOF_test_element+i]] = 0.0;
                     for (int i=0;i<nDOF_v_test_element;i++)
-                      Dw_Dn_jump[vel_l2g.data()[eN*nDOF_v_test_element+i]] = 0.0;
+                      DW_Dn_jump[vel_l2g.data()[eN*nDOF_v_test_element+i]] = 0.0;
                   }
                 for (int eN_side=0;eN_side < 2; eN_side++)
                   {
@@ -5473,13 +5432,13 @@ namespace proteus
                       {
                         int eN_i = eN*nDOF_test_element + i;
                         for (int I=0;I<nSpace;I++)
-                          Dwp_Dn_jump[p_l2g.data()[eN_i]] += p_grad_trial_trace[i*nSpace+I]*normal[I];
+                          DWp_Dn_jump[p_l2g.data()[eN_i]] += p_grad_trial_trace[i*nSpace+I]*normal[I];
                       }
                     for (int i=0;i<nDOF_v_test_element;i++)
                       {
                         int eN_i = eN*nDOF_v_test_element + i;
                         for (int I=0;I<nSpace;I++)
-                          Dw_Dn_jump[vel_l2g.data()[eN_i]] += vel_grad_trial_trace[i*nSpace+I]*normal[I];
+                          DW_Dn_jump[vel_l2g.data()[eN_i]] += vel_grad_trial_trace[i*nSpace+I]*normal[I];
                       }
                   }//eN_side
                 for (int eN_side=0;eN_side < 2; eN_side++)
@@ -5543,26 +5502,26 @@ namespace proteus
                           }
                       }
                   }
-                for (std::map<int,double>::iterator wi_it=Dwp_Dn_jump.begin(); wi_it!=Dwp_Dn_jump.end(); ++wi_it)
-                  for (std::map<int,double>::iterator wj_it=Dwp_Dn_jump.begin(); wj_it!=Dwp_Dn_jump.end(); ++wj_it)
+                for (std::map<int,double>::iterator Wi_it=DWp_Dn_jump.begin(); Wi_it!=DWp_Dn_jump.end(); ++Wi_it)
+                  for (std::map<int,double>::iterator Wj_it=DWp_Dn_jump.begin(); Wj_it!=DWp_Dn_jump.end(); ++Wj_it)
                     {
-                      int i_global = wi_it->first,
-                        j_global = wj_it->first;
-                      double Dwp_Dn_jump_i = wi_it->second,
-                        Dwp_Dn_jump_j = wj_it->second;
+                      int i_global = Wi_it->first,
+                        j_global = Wj_it->first;
+                      double DWp_Dn_jump_i = Wi_it->second,
+                        DWp_Dn_jump_j = Wj_it->second;
                       std::pair<int,int> ij = std::make_pair(i_global, j_global);
-                      globalJacobian.data()[p_p_nz.at(ij)] += gamma_cutfem_p*h_cutfem*Dwp_Dn_jump_j*Dwp_Dn_jump_i*dS;
+                      globalJacobian.data()[p_p_nz.at(ij)] += gamma_cutfem_p*h_cutfem*DWp_Dn_jump_j*DWp_Dn_jump_i*dS;
                     }//i,j
-                for (std::map<int,double>::iterator wi_it=Dw_Dn_jump.begin(); wi_it!=Dw_Dn_jump.end(); ++wi_it)
-                  for (std::map<int,double>::iterator wj_it=Dw_Dn_jump.begin(); wj_it!=Dw_Dn_jump.end(); ++wj_it)
+                for (std::map<int,double>::iterator Wi_it=DW_Dn_jump.begin(); Wi_it!=DW_Dn_jump.end(); ++Wi_it)
+                  for (std::map<int,double>::iterator Wj_it=DW_Dn_jump.begin(); Wj_it!=DW_Dn_jump.end(); ++Wj_it)
                     {
-                      int i_global = wi_it->first,
-                        j_global = wj_it->first;
-                      double Dw_Dn_jump_i = wi_it->second,
-                        Dw_Dn_jump_j = wj_it->second;
+                      int i_global = Wi_it->first,
+                        j_global = Wj_it->first;
+                      double DW_Dn_jump_i = Wi_it->second,
+                        DW_Dn_jump_j = Wj_it->second;
                       std::pair<int,int> ij = std::make_pair(i_global, j_global);
-                      globalJacobian.data()[u_u_nz.at(ij)] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
-                      globalJacobian.data()[v_v_nz.at(ij)] += gamma_cutfem*h_cutfem*Dw_Dn_jump_j*Dw_Dn_jump_i*dS;
+                      globalJacobian.data()[u_u_nz.at(ij)] += gamma_cutfem*h_cutfem*DW_Dn_jump_j*DW_Dn_jump_i*dS;
+                      globalJacobian.data()[v_v_nz.at(ij)] += gamma_cutfem*h_cutfem*DW_Dn_jump_j*DW_Dn_jump_i*dS;
                     }//i,j
               }//kb
           }//cutfem element boundaries
@@ -6316,7 +6275,7 @@ namespace proteus
                                                                  &vel_grad_trial_trace[j_nSpace],
                                                                  penalty);//ebqe_penalty_ext.data()[ebNE_kb]);
                       }//j
-                  }//if boundaryFlags[ebN] positive
+                  }//if boundaryFlags.data()[ebN] positive
                 //
                 //update the global Jacobian from the flux Jacobian
                 //
@@ -6911,6 +6870,7 @@ namespace proteus
         xt::pyarray<int>& csrRowIndeces_w_w = args.m_iarray["csrRowIndeces_w_w"];
         xt::pyarray<int>& csrColumnOffsets_w_w = args.m_iarray["csrColumnOffsets_w_w"];
         xt::pyarray<double>& laplace_matrix = args.m_darray["laplace_matrix"];
+        gf.useExact = false;
         for (int eN=0 ; eN < nElements_global ; ++eN)
           {
             // local matrix allocations
