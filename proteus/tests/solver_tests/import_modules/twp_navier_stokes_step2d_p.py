@@ -6,11 +6,7 @@ from builtins import object
 from proteus import *
 from proteus.default_p import *
 import sys
-try:
-    from . import step2d
-except:
-    import step2d
-reload(step2d)
+
 try:
     from .step2d import *
 except:
@@ -21,7 +17,7 @@ from proteus.mprans import RANS2P
 from proteus import Context
 ct = Context.get()
 
-bcsTimeDependent = True
+bcsTimeDependent = False
 LevelModelType = RANS2P.LevelModel
 LS_model = None
 
@@ -40,16 +36,16 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    nd=nd,
                                    LS_model=None,
                                    epsFact_density=epsFact_density,
-                                   stokes=False,#useStokes,
+                                   stokes=False,
                                    useVF=useVF,
                                    useRBLES=0.0,
                                    useMetrics=1.0,
                                    forceStrongDirichlet=ns_forceStrongDirichlet,
                                    NONCONSERVATIVE_FORM=1.0,
-                                   MOMENTUM_SGE=0.0,
-                                   PRESSURE_SGE=0.0,
-                                   VELOCITY_SGE=0.0,
-                                   PRESSURE_PROJECTION_STABILIZATION=1.0,
+                                   MOMENTUM_SGE=1.0,
+                                   PRESSURE_SGE=1.0,
+                                   VELOCITY_SGE=1.0,
+                                   PRESSURE_PROJECTION_STABILIZATION=0.0,
                                    phaseFunction=phase_func)
 
 class uTrue(object):
@@ -155,12 +151,10 @@ def getAFBC_p(x,flag):
         pass
 
 def getAFBC_u(x,flag):
-#    pass
     if flag in [boundaryTags['top'], boundaryTags['bottom']]:
         return lambda x,t: 0.
 
 def getAFBC_v(x,flag):
-#    pass
     if flag in [boundaryTags['top'], boundaryTags['bottom']]:
         return lambda x,t: 0.
 

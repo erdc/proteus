@@ -58,8 +58,10 @@ class TestElementwiseFlux2D(object):
     def test_BDM2_reference_triangle_full_in_space(self):
         rel_path_1 = "comparison_files/bdm_bdy_func_values_mesh_8.npy"
         rel_path_2 = "comparison_files/bdm_func_values_mesh_8.npy"
+        rel_path_3 = "comparison_files/bdm_flux_values_mesh_8.npy"
         bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
         bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
+        bdm_flux_values = np.load(os.path.join(self.scriptdir,rel_path_3))
         
         self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values.copy()
         self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
@@ -67,7 +69,7 @@ class TestElementwiseFlux2D(object):
         self.bdm2_obj.getElementwiseFlux(0)
 
         flux_compare = np.zeros((8,1))
-        assert np.allclose(self.bdm2_obj.element_flux,flux_compare)
+        assert np.allclose(self.bdm2_obj.element_flux,bdm_flux_values)
 
 if __name__ == '__main__':
     pass

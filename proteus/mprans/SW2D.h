@@ -4,6 +4,7 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include "ArgumentsDict.h"
 #include "xtensor-python/pyarray.hpp"
 
 namespace py = pybind11;
@@ -19,436 +20,10 @@ namespace proteus
   {
   public:
     virtual ~SW2D_base(){}
-    virtual void calculateResidual(//element
-                                   xt::pyarray<double>& mesh_trial_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_ref,
-                                   xt::pyarray<double>& mesh_dof,
-                                   xt::pyarray<double>& mesh_velocity_dof,
-                                   double MOVING_DOMAIN,//0 or 1
-                                   xt::pyarray<int>& mesh_l2g,
-                                   xt::pyarray<double>& dV_ref,
-                                   xt::pyarray<double>& h_trial_ref,
-                                   xt::pyarray<double>& h_grad_trial_ref,
-                                   xt::pyarray<double>& h_test_ref,
-                                   xt::pyarray<double>& h_grad_test_ref,
-                                   xt::pyarray<double>& vel_trial_ref,
-                                   xt::pyarray<double>& vel_grad_trial_ref,
-                                   xt::pyarray<double>& vel_test_ref,
-                                   xt::pyarray<double>& vel_grad_test_ref,
-                                   //element boundary
-                                   xt::pyarray<double>& mesh_trial_trace_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                   xt::pyarray<double>& dS_ref,
-                                   xt::pyarray<double>& h_trial_trace_ref,
-                                   xt::pyarray<double>& h_grad_trial_trace_ref,
-                                   xt::pyarray<double>& h_test_trace_ref,
-                                   xt::pyarray<double>& h_grad_test_trace_ref,
-                                   xt::pyarray<double>& vel_trial_trace_ref,
-                                   xt::pyarray<double>& vel_grad_trial_trace_ref,
-                                   xt::pyarray<double>& vel_test_trace_ref,
-                                   xt::pyarray<double>& vel_grad_test_trace_ref,
-                                   xt::pyarray<double>& normal_ref,
-                                   xt::pyarray<double>& boundaryJac_ref,
-                                   //physics
-                                   xt::pyarray<double>& elementDiameter,
-                                   int nElements_global,
-                                   double useRBLES,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   double nu,
-                                   double g,
-                                   double shockCapturingCoefficient,
-                                   xt::pyarray<int>& h_l2g,
-                                   xt::pyarray<int>& vel_l2g,
-                                   xt::pyarray<double>& b_dof,
-                                   xt::pyarray<double>& h_dof,
-                                   xt::pyarray<double>& u_dof,
-                                   xt::pyarray<double>& v_dof,
-                                   xt::pyarray<double>& h_dof_sge,
-                                   xt::pyarray<double>& u_dof_sge,
-                                   xt::pyarray<double>& v_dof_sge,
-                                   xt::pyarray<double>& q_mass_acc,
-                                   xt::pyarray<double>& q_mom_u_acc,
-                                   xt::pyarray<double>& q_mom_v_acc,
-                                   xt::pyarray<double>& q_mass_adv,
-                                   xt::pyarray<double>& q_mass_acc_beta_bdf,
-                                   xt::pyarray<double>& q_mom_u_acc_beta_bdf,
-                                   xt::pyarray<double>& q_mom_v_acc_beta_bdf,
-                                   xt::pyarray<double>& q_velocity_sge,
-                                   xt::pyarray<double>& q_cfl,
-                                   xt::pyarray<double>& q_numDiff_h,
-                                   xt::pyarray<double>& q_numDiff_u,
-                                   xt::pyarray<double>& q_numDiff_v,
-                                   xt::pyarray<double>& q_numDiff_h_last,
-                                   xt::pyarray<double>& q_numDiff_u_last,
-                                   xt::pyarray<double>& q_numDiff_v_last,
-                                   xt::pyarray<int>& sdInfo_u_u_rowptr,
-                                   xt::pyarray<int>& sdInfo_u_u_colind,
-                                   xt::pyarray<int>& sdInfo_u_v_rowptr,
-                                   xt::pyarray<int>& sdInfo_u_v_colind,
-                                   xt::pyarray<int>& sdInfo_v_v_rowptr,
-                                   xt::pyarray<int>& sdInfo_v_v_colind,
-                                   xt::pyarray<int>& sdInfo_v_u_rowptr,
-                                   xt::pyarray<int>& sdInfo_v_u_colind,
-                                   int offset_h,
-                                   int offset_u,
-                                   int offset_v,
-                                   int stride_h,
-                                   int stride_u,
-                                   int stride_v,
-                                   xt::pyarray<double>& globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   xt::pyarray<int>& exteriorElementBoundariesArray,
-                                   xt::pyarray<int>& elementBoundaryElementsArray,
-                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                   xt::pyarray<int>& isDOFBoundary_h,
-                                   xt::pyarray<int>& isDOFBoundary_u,
-                                   xt::pyarray<int>& isDOFBoundary_v,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_h,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_u,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_v,
-                                   xt::pyarray<int>& isDiffusiveFluxBoundary_u,
-                                   xt::pyarray<int>& isDiffusiveFluxBoundary_v,
-                                   xt::pyarray<double>& ebqe_bc_h_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mass_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext,
-                                   xt::pyarray<double>& ebqe_bc_u_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_u_diff_ext,
-                                   xt::pyarray<double>& ebqe_penalty_ext,
-                                   xt::pyarray<double>& ebqe_bc_v_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_v_diff_ext,
-                                   xt::pyarray<double>& q_velocity,
-                                   xt::pyarray<double>& ebqe_velocity,
-                                   xt::pyarray<double>& flux,
-                                   xt::pyarray<double>& elementResidual_h)=0;
-    virtual void calculateJacobian(//element
-                                   xt::pyarray<double>& mesh_trial_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_ref,
-                                   xt::pyarray<double>& mesh_dof,
-                                   xt::pyarray<double>& mesh_velocity_dof,
-                                   double MOVING_DOMAIN,
-                                   xt::pyarray<int>& mesh_l2g,
-                                   xt::pyarray<double>& dV_ref,
-                                   xt::pyarray<double>& h_trial_ref,
-                                   xt::pyarray<double>& h_grad_trial_ref,
-                                   xt::pyarray<double>& h_test_ref,
-                                   xt::pyarray<double>& h_grad_test_ref,
-                                   xt::pyarray<double>& vel_trial_ref,
-                                   xt::pyarray<double>& vel_grad_trial_ref,
-                                   xt::pyarray<double>& vel_test_ref,
-                                   xt::pyarray<double>& vel_grad_test_ref,
-                                   //element boundary
-                                   xt::pyarray<double>& mesh_trial_trace_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                   xt::pyarray<double>& dS_ref,
-                                   xt::pyarray<double>& h_trial_trace_ref,
-                                   xt::pyarray<double>& h_grad_trial_trace_ref,
-                                   xt::pyarray<double>& h_test_trace_ref,
-                                   xt::pyarray<double>& h_grad_test_trace_ref,
-                                   xt::pyarray<double>& vel_trial_trace_ref,
-                                   xt::pyarray<double>& vel_grad_trial_trace_ref,
-                                   xt::pyarray<double>& vel_test_trace_ref,
-                                   xt::pyarray<double>& vel_grad_test_trace_ref,
-                                   xt::pyarray<double>& normal_ref,
-                                   xt::pyarray<double>& boundaryJac_ref,
-                                   //physics
-                                   xt::pyarray<double>& elementDiameter,
-                                   int nElements_global,
-                                   double useRBLES,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   double nu,
-                                   double g,
-                                   xt::pyarray<int>& h_l2g,
-                                   xt::pyarray<int>& vel_l2g,
-                                   xt::pyarray<double>& b_dof,
-                                   xt::pyarray<double>& h_dof,
-                                   xt::pyarray<double>& u_dof,
-                                   xt::pyarray<double>& v_dof,
-                                   xt::pyarray<double>& h_dof_sge,
-                                   xt::pyarray<double>& u_dof_sge,
-                                   xt::pyarray<double>& v_dof_sge,
-                                   xt::pyarray<double>& q_mass_acc_beta_bdf,
-                                   xt::pyarray<double>& q_mom_u_acc_beta_bdf,
-                                   xt::pyarray<double>& q_mom_v_acc_beta_bdf,
-                                   xt::pyarray<double>& q_velocity_sge,
-                                   xt::pyarray<double>& q_cfl,
-                                   xt::pyarray<double>& q_numDiff_h_last,
-                                   xt::pyarray<double>& q_numDiff_u_last,
-                                   xt::pyarray<double>& q_numDiff_v_last,
-                                   xt::pyarray<int>& sdInfo_u_u_rowptr,
-                                   xt::pyarray<int>& sdInfo_u_u_colind,
-                                   xt::pyarray<int>& sdInfo_u_v_rowptr,
-                                   xt::pyarray<int>& sdInfo_u_v_colind,
-                                   xt::pyarray<int>& sdInfo_v_v_rowptr,
-                                   xt::pyarray<int>& sdInfo_v_v_colind,
-                                   xt::pyarray<int>& sdInfo_v_u_rowptr,
-                                   xt::pyarray<int>& sdInfo_v_u_colind,
-                                   xt::pyarray<int>& csrRowIndeces_h_h,
-                                   xt::pyarray<int>& csrColumnOffsets_h_h,
-                                   xt::pyarray<int>& csrRowIndeces_h_u,
-                                   xt::pyarray<int>& csrColumnOffsets_h_u,
-                                   xt::pyarray<int>& csrRowIndeces_h_v,
-                                   xt::pyarray<int>& csrColumnOffsets_h_v,
-                                   xt::pyarray<int>& csrRowIndeces_u_h,
-                                   xt::pyarray<int>& csrColumnOffsets_u_h,
-                                   xt::pyarray<int>& csrRowIndeces_u_u,
-                                   xt::pyarray<int>& csrColumnOffsets_u_u,
-                                   xt::pyarray<int>& csrRowIndeces_u_v,
-                                   xt::pyarray<int>& csrColumnOffsets_u_v,
-                                   xt::pyarray<int>& csrRowIndeces_v_h,
-                                   xt::pyarray<int>& csrColumnOffsets_v_h,
-                                   xt::pyarray<int>& csrRowIndeces_v_u,
-                                   xt::pyarray<int>& csrColumnOffsets_v_u,
-                                   xt::pyarray<int>& csrRowIndeces_v_v,
-                                   xt::pyarray<int>& csrColumnOffsets_v_v,
-                                   xt::pyarray<double>& globalJacobian,
-                                   int nExteriorElementBoundaries_global,
-                                   xt::pyarray<int>& exteriorElementBoundariesArray,
-                                   xt::pyarray<int>& elementBoundaryElementsArray,
-                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                   xt::pyarray<int>& isDOFBoundary_h,
-                                   xt::pyarray<int>& isDOFBoundary_u,
-                                   xt::pyarray<int>& isDOFBoundary_v,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_h,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_u,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_v,
-                                   xt::pyarray<int>& isDiffusiveFluxBoundary_u,
-                                   xt::pyarray<int>& isDiffusiveFluxBoundary_v,
-                                   xt::pyarray<double>& ebqe_bc_h_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mass_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext,
-                                   xt::pyarray<double>& ebqe_bc_u_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_u_diff_ext,
-                                   xt::pyarray<double>& ebqe_penalty_ext,
-                                   xt::pyarray<double>& ebqe_bc_v_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_v_diff_ext,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_h_h,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_h_u,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_h_v,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_u_h,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_u_u,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_u_v,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_v_h,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_v_u,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_v_v)=0;
-    virtual void calculateResidual_supg(//element
-                                   xt::pyarray<double>& mesh_trial_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_ref,
-                                   xt::pyarray<double>& mesh_dof,
-                                   xt::pyarray<double>& mesh_velocity_dof,
-                                   double MOVING_DOMAIN,//0 or 1
-                                   xt::pyarray<int>& mesh_l2g,
-                                   xt::pyarray<double>& dV_ref,
-                                   xt::pyarray<double>& h_trial_ref,
-                                   xt::pyarray<double>& h_grad_trial_ref,
-                                   xt::pyarray<double>& h_test_ref,
-                                   xt::pyarray<double>& h_grad_test_ref,
-                                   xt::pyarray<double>& vel_trial_ref,
-                                   xt::pyarray<double>& vel_grad_trial_ref,
-                                   xt::pyarray<double>& vel_test_ref,
-                                   xt::pyarray<double>& vel_grad_test_ref,
-                                   //element boundary
-                                   xt::pyarray<double>& mesh_trial_trace_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                   xt::pyarray<double>& dS_ref,
-                                   xt::pyarray<double>& h_trial_trace_ref,
-                                   xt::pyarray<double>& h_grad_trial_trace_ref,
-                                   xt::pyarray<double>& h_test_trace_ref,
-                                   xt::pyarray<double>& h_grad_test_trace_ref,
-                                   xt::pyarray<double>& vel_trial_trace_ref,
-                                   xt::pyarray<double>& vel_grad_trial_trace_ref,
-                                   xt::pyarray<double>& vel_test_trace_ref,
-                                   xt::pyarray<double>& vel_grad_test_trace_ref,
-                                   xt::pyarray<double>& normal_ref,
-                                   xt::pyarray<double>& boundaryJac_ref,
-                                   //physics
-                                   xt::pyarray<double>& elementDiameter,
-                                   int nElements_global,
-                                   double useRBLES,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   double nu,
-                                   double g,
-                                   double shockCapturingCoefficient,
-                                   xt::pyarray<int>& h_l2g,
-                                   xt::pyarray<int>& vel_l2g,
-                                   xt::pyarray<double>& b_dof,
-                                   xt::pyarray<double>& h_dof,
-                                   xt::pyarray<double>& u_dof,
-                                   xt::pyarray<double>& v_dof,
-                                   xt::pyarray<double>& h_dof_sge,
-                                   xt::pyarray<double>& u_dof_sge,
-                                   xt::pyarray<double>& v_dof_sge,
-                                   xt::pyarray<double>& q_mass_acc,
-                                   xt::pyarray<double>& q_mom_u_acc,
-                                   xt::pyarray<double>& q_mom_v_acc,
-                                   xt::pyarray<double>& q_mass_adv,
-                                   xt::pyarray<double>& q_mass_acc_beta_bdf,
-                                   xt::pyarray<double>& q_mom_u_acc_beta_bdf,
-                                   xt::pyarray<double>& q_mom_v_acc_beta_bdf,
-                                   xt::pyarray<double>& q_velocity_sge,
-                                   xt::pyarray<double>& q_cfl,
-                                   xt::pyarray<double>& q_numDiff_h,
-                                   xt::pyarray<double>& q_numDiff_u,
-                                   xt::pyarray<double>& q_numDiff_v,
-                                   xt::pyarray<double>& q_numDiff_h_last,
-                                   xt::pyarray<double>& q_numDiff_u_last,
-                                   xt::pyarray<double>& q_numDiff_v_last,
-                                   xt::pyarray<int>& sdInfo_u_u_rowptr,
-                                   xt::pyarray<int>& sdInfo_u_u_colind,
-                                   xt::pyarray<int>& sdInfo_u_v_rowptr,
-                                   xt::pyarray<int>& sdInfo_u_v_colind,
-                                   xt::pyarray<int>& sdInfo_v_v_rowptr,
-                                   xt::pyarray<int>& sdInfo_v_v_colind,
-                                   xt::pyarray<int>& sdInfo_v_u_rowptr,
-                                   xt::pyarray<int>& sdInfo_v_u_colind,
-                                   int offset_h,
-                                   int offset_u,
-                                   int offset_v,
-                                   int stride_h,
-                                   int stride_u,
-                                   int stride_v,
-                                   xt::pyarray<double>& globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   xt::pyarray<int>& exteriorElementBoundariesArray,
-                                   xt::pyarray<int>& elementBoundaryElementsArray,
-                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                   xt::pyarray<int>& isDOFBoundary_h,
-                                   xt::pyarray<int>& isDOFBoundary_u,
-                                   xt::pyarray<int>& isDOFBoundary_v,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_h,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_u,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_v,
-                                   xt::pyarray<int>& isDiffusiveFluxBoundary_u,
-                                   xt::pyarray<int>& isDiffusiveFluxBoundary_v,
-                                   xt::pyarray<double>& ebqe_bc_h_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mass_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext,
-                                   xt::pyarray<double>& ebqe_bc_u_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_u_diff_ext,
-                                   xt::pyarray<double>& ebqe_penalty_ext,
-                                   xt::pyarray<double>& ebqe_bc_v_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_v_diff_ext,
-                                   xt::pyarray<double>& q_velocity,
-                                   xt::pyarray<double>& ebqe_velocity,
-                                   xt::pyarray<double>& flux,
-                                   xt::pyarray<double>& elementResidual_h)=0;
-    virtual void calculateJacobian_supg(//element
-                                   xt::pyarray<double>& mesh_trial_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_ref,
-                                   xt::pyarray<double>& mesh_dof,
-                                   xt::pyarray<double>& mesh_velocity_dof,
-                                   double MOVING_DOMAIN,
-                                   xt::pyarray<int>& mesh_l2g,
-                                   xt::pyarray<double>& dV_ref,
-                                   xt::pyarray<double>& h_trial_ref,
-                                   xt::pyarray<double>& h_grad_trial_ref,
-                                   xt::pyarray<double>& h_test_ref,
-                                   xt::pyarray<double>& h_grad_test_ref,
-                                   xt::pyarray<double>& vel_trial_ref,
-                                   xt::pyarray<double>& vel_grad_trial_ref,
-                                   xt::pyarray<double>& vel_test_ref,
-                                   xt::pyarray<double>& vel_grad_test_ref,
-                                   //element boundary
-                                   xt::pyarray<double>& mesh_trial_trace_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                   xt::pyarray<double>& dS_ref,
-                                   xt::pyarray<double>& h_trial_trace_ref,
-                                   xt::pyarray<double>& h_grad_trial_trace_ref,
-                                   xt::pyarray<double>& h_test_trace_ref,
-                                   xt::pyarray<double>& h_grad_test_trace_ref,
-                                   xt::pyarray<double>& vel_trial_trace_ref,
-                                   xt::pyarray<double>& vel_grad_trial_trace_ref,
-                                   xt::pyarray<double>& vel_test_trace_ref,
-                                   xt::pyarray<double>& vel_grad_test_trace_ref,
-                                   xt::pyarray<double>& normal_ref,
-                                   xt::pyarray<double>& boundaryJac_ref,
-                                   //physics
-                                   xt::pyarray<double>& elementDiameter,
-                                   int nElements_global,
-                                   double useRBLES,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   double nu,
-                                   double g,
-                                   xt::pyarray<int>& h_l2g,
-                                   xt::pyarray<int>& vel_l2g,
-                                   xt::pyarray<double>& b_dof,
-                                   xt::pyarray<double>& h_dof,
-                                   xt::pyarray<double>& u_dof,
-                                   xt::pyarray<double>& v_dof,
-                                   xt::pyarray<double>& h_dof_sge,
-                                   xt::pyarray<double>& u_dof_sge,
-                                   xt::pyarray<double>& v_dof_sge,
-                                   xt::pyarray<double>& q_mass_acc_beta_bdf,
-                                   xt::pyarray<double>& q_mom_u_acc_beta_bdf,
-                                   xt::pyarray<double>& q_mom_v_acc_beta_bdf,
-                                   xt::pyarray<double>& q_velocity_sge,
-                                   xt::pyarray<double>& q_cfl,
-                                   xt::pyarray<double>& q_numDiff_h_last,
-                                   xt::pyarray<double>& q_numDiff_u_last,
-                                   xt::pyarray<double>& q_numDiff_v_last,
-                                   xt::pyarray<int>& sdInfo_u_u_rowptr,
-                                   xt::pyarray<int>& sdInfo_u_u_colind,
-                                   xt::pyarray<int>& sdInfo_u_v_rowptr,
-                                   xt::pyarray<int>& sdInfo_u_v_colind,
-                                   xt::pyarray<int>& sdInfo_v_v_rowptr,
-                                   xt::pyarray<int>& sdInfo_v_v_colind,
-                                   xt::pyarray<int>& sdInfo_v_u_rowptr,
-                                   xt::pyarray<int>& sdInfo_v_u_colind,
-                                   xt::pyarray<int>& csrRowIndeces_h_h,
-                                   xt::pyarray<int>& csrColumnOffsets_h_h,
-                                   xt::pyarray<int>& csrRowIndeces_h_u,
-                                   xt::pyarray<int>& csrColumnOffsets_h_u,
-                                   xt::pyarray<int>& csrRowIndeces_h_v,
-                                   xt::pyarray<int>& csrColumnOffsets_h_v,
-                                   xt::pyarray<int>& csrRowIndeces_u_h,
-                                   xt::pyarray<int>& csrColumnOffsets_u_h,
-                                   xt::pyarray<int>& csrRowIndeces_u_u,
-                                   xt::pyarray<int>& csrColumnOffsets_u_u,
-                                   xt::pyarray<int>& csrRowIndeces_u_v,
-                                   xt::pyarray<int>& csrColumnOffsets_u_v,
-                                   xt::pyarray<int>& csrRowIndeces_v_h,
-                                   xt::pyarray<int>& csrColumnOffsets_v_h,
-                                   xt::pyarray<int>& csrRowIndeces_v_u,
-                                   xt::pyarray<int>& csrColumnOffsets_v_u,
-                                   xt::pyarray<int>& csrRowIndeces_v_v,
-                                   xt::pyarray<int>& csrColumnOffsets_v_v,
-                                   xt::pyarray<double>& globalJacobian,
-                                   int nExteriorElementBoundaries_global,
-                                   xt::pyarray<int>& exteriorElementBoundariesArray,
-                                   xt::pyarray<int>& elementBoundaryElementsArray,
-                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                   xt::pyarray<int>& isDOFBoundary_h,
-                                   xt::pyarray<int>& isDOFBoundary_u,
-                                   xt::pyarray<int>& isDOFBoundary_v,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_h,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_u,
-                                   xt::pyarray<int>& isAdvectiveFluxBoundary_v,
-                                   xt::pyarray<int>& isDiffusiveFluxBoundary_u,
-                                   xt::pyarray<int>& isDiffusiveFluxBoundary_v,
-                                   xt::pyarray<double>& ebqe_bc_h_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mass_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext,
-                                   xt::pyarray<double>& ebqe_bc_u_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_u_diff_ext,
-                                   xt::pyarray<double>& ebqe_penalty_ext,
-                                   xt::pyarray<double>& ebqe_bc_v_ext,
-                                   xt::pyarray<double>& ebqe_bc_flux_v_diff_ext,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_h_h,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_h_u,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_h_v,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_u_h,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_u_u,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_u_v,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_v_h,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_v_u,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_v_v)=0;
+    virtual void calculateResidual(arguments_dict& args)=0;
+    virtual void calculateJacobian(arguments_dict& args)=0;
+    virtual void calculateResidual_supg(arguments_dict& args)=0;
+    virtual void calculateJacobian_supg(arguments_dict& args)=0;
   };
 
   template<class CompKernelType,
@@ -1153,110 +728,108 @@ namespace proteus
     /*   return tmp; */
     /* } */
 
-    void calculateResidual(//element
-                           xt::pyarray<double>& mesh_trial_ref,
-                           xt::pyarray<double>& mesh_grad_trial_ref,
-                           xt::pyarray<double>& mesh_dof,
-                           xt::pyarray<double>& mesh_velocity_dof,
-                           double MOVING_DOMAIN,
-                           xt::pyarray<int>& mesh_l2g,
-                           xt::pyarray<double>& dV_ref,
-                           xt::pyarray<double>& h_trial_ref,
-                           xt::pyarray<double>& h_grad_trial_ref,
-                           xt::pyarray<double>& h_test_ref,
-                           xt::pyarray<double>& h_grad_test_ref,
-                           xt::pyarray<double>& vel_trial_ref,
-                           xt::pyarray<double>& vel_grad_trial_ref,
-                           xt::pyarray<double>& vel_test_ref,
-                           xt::pyarray<double>& vel_grad_test_ref,
-                           //element boundary
-                           xt::pyarray<double>& mesh_trial_trace_ref,
-                           xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                           xt::pyarray<double>& dS_ref,
-                           xt::pyarray<double>& h_trial_trace_ref,
-                           xt::pyarray<double>& h_grad_trial_trace_ref,
-                           xt::pyarray<double>& h_test_trace_ref,
-                           xt::pyarray<double>& h_grad_test_trace_ref,
-                           xt::pyarray<double>& vel_trial_trace_ref,
-                           xt::pyarray<double>& vel_grad_trial_trace_ref,
-                           xt::pyarray<double>& vel_test_trace_ref,
-                           xt::pyarray<double>& vel_grad_test_trace_ref,
-                           xt::pyarray<double>& normal_ref,
-                           xt::pyarray<double>& boundaryJac_ref,
-                           //physics
-                           xt::pyarray<double>& elementDiameter,
-                           int nElements_global,
-                           double useRBLES,
-                           double useMetrics,
-                           double alphaBDF,
-                           double nu,
-                           double g,
-                           double shockCapturingCoefficient,
-                           xt::pyarray<int>& h_l2g,
-                           xt::pyarray<int>& vel_l2g,
-                           xt::pyarray<double>& b_dof,
-                           xt::pyarray<double>& h_dof,
-                           xt::pyarray<double>& u_dof,
-                           xt::pyarray<double>& v_dof,
-                           xt::pyarray<double>& h_dof_sge,
-                           xt::pyarray<double>& u_dof_sge,
-                           xt::pyarray<double>& v_dof_sge,
-                           xt::pyarray<double>& q_mass_acc,
-                           xt::pyarray<double>& q_mom_u_acc,
-                           xt::pyarray<double>& q_mom_v_acc,
-                           xt::pyarray<double>& q_mass_adv,
-                           xt::pyarray<double>& q_mass_acc_beta_bdf,
-                           xt::pyarray<double>& q_mom_u_acc_beta_bdf,
-                           xt::pyarray<double>& q_mom_v_acc_beta_bdf,
-                           xt::pyarray<double>& q_velocity_sge,
-                           xt::pyarray<double>& q_cfl,
-                           xt::pyarray<double>& q_numDiff_h,
-                           xt::pyarray<double>& q_numDiff_u,
-                           xt::pyarray<double>& q_numDiff_v,
-                           xt::pyarray<double>& q_numDiff_h_last,
-                           xt::pyarray<double>& q_numDiff_u_last,
-                           xt::pyarray<double>& q_numDiff_v_last,
-                           xt::pyarray<int>& sdInfo_u_u_rowptr,
-                           xt::pyarray<int>& sdInfo_u_u_colind,
-                           xt::pyarray<int>& sdInfo_u_v_rowptr,
-                           xt::pyarray<int>& sdInfo_u_v_colind,
-                           xt::pyarray<int>& sdInfo_v_v_rowptr,
-                           xt::pyarray<int>& sdInfo_v_v_colind,
-                           xt::pyarray<int>& sdInfo_v_u_rowptr,
-                           xt::pyarray<int>& sdInfo_v_u_colind,
-                           int offset_h,
-                           int offset_u,
-                           int offset_v,
-                           int stride_h,
-                           int stride_u,
-                           int stride_v,
-                           xt::pyarray<double>& globalResidual,
-                           int nExteriorElementBoundaries_global,
-                           xt::pyarray<int>& exteriorElementBoundariesArray,
-                           xt::pyarray<int>& elementBoundaryElementsArray,
-                           xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                           xt::pyarray<int>& isDOFBoundary_h,
-                           xt::pyarray<int>& isDOFBoundary_u,
-                           xt::pyarray<int>& isDOFBoundary_v,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_h,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_u,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_v,
-                           xt::pyarray<int>& isDiffusiveFluxBoundary_u,
-                           xt::pyarray<int>& isDiffusiveFluxBoundary_v,
-                           xt::pyarray<double>& ebqe_bc_h_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mass_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext,
-                           xt::pyarray<double>& ebqe_bc_u_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_u_diff_ext,
-                           xt::pyarray<double>& ebqe_penalty_ext,
-                           xt::pyarray<double>& ebqe_bc_v_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_v_diff_ext,
-                           xt::pyarray<double>& q_velocity,
-                           xt::pyarray<double>& ebqe_velocity,
-                           xt::pyarray<double>& flux,
-                           xt::pyarray<double>& elementResidual_h_save)
+    void calculateResidual(arguments_dict& args)
     {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<double>& mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
+        double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& h_trial_ref = args.m_darray["h_trial_ref"];
+        xt::pyarray<double>& h_grad_trial_ref = args.m_darray["h_grad_trial_ref"];
+        xt::pyarray<double>& h_test_ref = args.m_darray["h_test_ref"];
+        xt::pyarray<double>& h_grad_test_ref = args.m_darray["h_grad_test_ref"];
+        xt::pyarray<double>& vel_trial_ref = args.m_darray["vel_trial_ref"];
+        xt::pyarray<double>& vel_grad_trial_ref = args.m_darray["vel_grad_trial_ref"];
+        xt::pyarray<double>& vel_test_ref = args.m_darray["vel_test_ref"];
+        xt::pyarray<double>& vel_grad_test_ref = args.m_darray["vel_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& h_trial_trace_ref = args.m_darray["h_trial_trace_ref"];
+        xt::pyarray<double>& h_grad_trial_trace_ref = args.m_darray["h_grad_trial_trace_ref"];
+        xt::pyarray<double>& h_test_trace_ref = args.m_darray["h_test_trace_ref"];
+        xt::pyarray<double>& h_grad_test_trace_ref = args.m_darray["h_grad_test_trace_ref"];
+        xt::pyarray<double>& vel_trial_trace_ref = args.m_darray["vel_trial_trace_ref"];
+        xt::pyarray<double>& vel_grad_trial_trace_ref = args.m_darray["vel_grad_trial_trace_ref"];
+        xt::pyarray<double>& vel_test_trace_ref = args.m_darray["vel_test_trace_ref"];
+        xt::pyarray<double>& vel_grad_test_trace_ref = args.m_darray["vel_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useRBLES = args.m_dscalar["useRBLES"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double nu = args.m_dscalar["nu"];
+        double g = args.m_dscalar["g"];
+        double shockCapturingCoefficient = args.m_dscalar["shockCapturingCoefficient"];
+        xt::pyarray<int>& h_l2g = args.m_iarray["h_l2g"];
+        xt::pyarray<int>& vel_l2g = args.m_iarray["vel_l2g"];
+        xt::pyarray<double>& b_dof = args.m_darray["b_dof"];
+        xt::pyarray<double>& h_dof = args.m_darray["h_dof"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& v_dof = args.m_darray["v_dof"];
+        xt::pyarray<double>& h_dof_sge = args.m_darray["h_dof_sge"];
+        xt::pyarray<double>& u_dof_sge = args.m_darray["u_dof_sge"];
+        xt::pyarray<double>& v_dof_sge = args.m_darray["v_dof_sge"];
+        xt::pyarray<double>& q_mass_acc = args.m_darray["q_mass_acc"];
+        xt::pyarray<double>& q_mom_u_acc = args.m_darray["q_mom_u_acc"];
+        xt::pyarray<double>& q_mom_v_acc = args.m_darray["q_mom_v_acc"];
+        xt::pyarray<double>& q_mass_adv = args.m_darray["q_mass_adv"];
+        xt::pyarray<double>& q_mass_acc_beta_bdf = args.m_darray["q_mass_acc_beta_bdf"];
+        xt::pyarray<double>& q_mom_u_acc_beta_bdf = args.m_darray["q_mom_u_acc_beta_bdf"];
+        xt::pyarray<double>& q_mom_v_acc_beta_bdf = args.m_darray["q_mom_v_acc_beta_bdf"];
+        xt::pyarray<double>& q_velocity_sge = args.m_darray["q_velocity_sge"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_h = args.m_darray["q_numDiff_h"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_v = args.m_darray["q_numDiff_v"];
+        xt::pyarray<double>& q_numDiff_h_last = args.m_darray["q_numDiff_h_last"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<double>& q_numDiff_v_last = args.m_darray["q_numDiff_v_last"];
+        xt::pyarray<int>& sdInfo_u_u_rowptr = args.m_iarray["sdInfo_u_u_rowptr"];
+        xt::pyarray<int>& sdInfo_u_u_colind = args.m_iarray["sdInfo_u_u_colind"];
+        xt::pyarray<int>& sdInfo_u_v_rowptr = args.m_iarray["sdInfo_u_v_rowptr"];
+        xt::pyarray<int>& sdInfo_u_v_colind = args.m_iarray["sdInfo_u_v_colind"];
+        xt::pyarray<int>& sdInfo_v_v_rowptr = args.m_iarray["sdInfo_v_v_rowptr"];
+        xt::pyarray<int>& sdInfo_v_v_colind = args.m_iarray["sdInfo_v_v_colind"];
+        xt::pyarray<int>& sdInfo_v_u_rowptr = args.m_iarray["sdInfo_v_u_rowptr"];
+        xt::pyarray<int>& sdInfo_v_u_colind = args.m_iarray["sdInfo_v_u_colind"];
+        int offset_h = args.m_iscalar["offset_h"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int offset_v = args.m_iscalar["offset_v"];
+        int stride_h = args.m_iscalar["stride_h"];
+        int stride_u = args.m_iscalar["stride_u"];
+        int stride_v = args.m_iscalar["stride_v"];
+        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<int>& isDOFBoundary_h = args.m_iarray["isDOFBoundary_h"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<int>& isDOFBoundary_v = args.m_iarray["isDOFBoundary_v"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_h = args.m_iarray["isAdvectiveFluxBoundary_h"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_u = args.m_iarray["isAdvectiveFluxBoundary_u"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_v = args.m_iarray["isAdvectiveFluxBoundary_v"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_u = args.m_iarray["isDiffusiveFluxBoundary_u"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_v = args.m_iarray["isDiffusiveFluxBoundary_v"];
+        xt::pyarray<double>& ebqe_bc_h_ext = args.m_darray["ebqe_bc_h_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mass_ext = args.m_darray["ebqe_bc_flux_mass_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext = args.m_darray["ebqe_bc_flux_mom_u_adv_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext = args.m_darray["ebqe_bc_flux_mom_v_adv_ext"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_u_diff_ext = args.m_darray["ebqe_bc_flux_u_diff_ext"];
+        xt::pyarray<double>& ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
+        xt::pyarray<double>& ebqe_bc_v_ext = args.m_darray["ebqe_bc_v_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_v_diff_ext = args.m_darray["ebqe_bc_flux_v_diff_ext"];
+        xt::pyarray<double>& q_velocity = args.m_darray["q_velocity"];
+        xt::pyarray<double>& ebqe_velocity = args.m_darray["ebqe_velocity"];
+        xt::pyarray<double>& flux = args.m_darray["flux"];
+        xt::pyarray<double>& elementResidual_h_save = args.m_darray["elementResidual_h"];
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -2092,110 +1665,108 @@ namespace proteus
       /*        }ebNE */
     }
 
-    void calculateResidual_supg(//element
-                               xt::pyarray<double>& mesh_trial_ref,
-                               xt::pyarray<double>& mesh_grad_trial_ref,
-                               xt::pyarray<double>& mesh_dof,
-                               xt::pyarray<double>& mesh_velocity_dof,
-                               double MOVING_DOMAIN,
-                               xt::pyarray<int>& mesh_l2g,
-                               xt::pyarray<double>& dV_ref,
-                               xt::pyarray<double>& h_trial_ref,
-                               xt::pyarray<double>& h_grad_trial_ref,
-                               xt::pyarray<double>& h_test_ref,
-                               xt::pyarray<double>& h_grad_test_ref,
-                               xt::pyarray<double>& vel_trial_ref,
-                               xt::pyarray<double>& vel_grad_trial_ref,
-                               xt::pyarray<double>& vel_test_ref,
-                               xt::pyarray<double>& vel_grad_test_ref,
-                               //element boundary
-                               xt::pyarray<double>& mesh_trial_trace_ref,
-                               xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                               xt::pyarray<double>& dS_ref,
-                               xt::pyarray<double>& h_trial_trace_ref,
-                               xt::pyarray<double>& h_grad_trial_trace_ref,
-                               xt::pyarray<double>& h_test_trace_ref,
-                               xt::pyarray<double>& h_grad_test_trace_ref,
-                               xt::pyarray<double>& vel_trial_trace_ref,
-                               xt::pyarray<double>& vel_grad_trial_trace_ref,
-                               xt::pyarray<double>& vel_test_trace_ref,
-                               xt::pyarray<double>& vel_grad_test_trace_ref,
-                               xt::pyarray<double>& normal_ref,
-                               xt::pyarray<double>& boundaryJac_ref,
-                               //physics
-                               xt::pyarray<double>& elementDiameter,
-                               int nElements_global,
-                               double useRBLES,
-                               double useMetrics,
-                               double alphaBDF,
-                               double nu,
-                               double g,
-                               double shockCapturingCoefficient,
-                               xt::pyarray<int>& h_l2g,
-                               xt::pyarray<int>& vel_l2g,
-                               xt::pyarray<double>& b_dof,
-                               xt::pyarray<double>& h_dof,
-                               xt::pyarray<double>& u_dof,
-                               xt::pyarray<double>& v_dof,
-                               xt::pyarray<double>& h_dof_sge,
-                               xt::pyarray<double>& u_dof_sge,
-                               xt::pyarray<double>& v_dof_sge,
-                               xt::pyarray<double>& q_mass_acc,
-                               xt::pyarray<double>& q_mom_u_acc,
-                               xt::pyarray<double>& q_mom_v_acc,
-                               xt::pyarray<double>& q_mass_adv,
-                               xt::pyarray<double>& q_mass_acc_beta_bdf,
-                               xt::pyarray<double>& q_mom_u_acc_beta_bdf,
-                               xt::pyarray<double>& q_mom_v_acc_beta_bdf,
-                               xt::pyarray<double>& q_velocity_sge,
-                               xt::pyarray<double>& q_cfl,
-                               xt::pyarray<double>& q_numDiff_h,
-                               xt::pyarray<double>& q_numDiff_u,
-                               xt::pyarray<double>& q_numDiff_v,
-                               xt::pyarray<double>& q_numDiff_h_last,
-                               xt::pyarray<double>& q_numDiff_u_last,
-                               xt::pyarray<double>& q_numDiff_v_last,
-                               xt::pyarray<int>& sdInfo_u_u_rowptr,
-                               xt::pyarray<int>& sdInfo_u_u_colind,
-                               xt::pyarray<int>& sdInfo_u_v_rowptr,
-                               xt::pyarray<int>& sdInfo_u_v_colind,
-                               xt::pyarray<int>& sdInfo_v_v_rowptr,
-                               xt::pyarray<int>& sdInfo_v_v_colind,
-                               xt::pyarray<int>& sdInfo_v_u_rowptr,
-                               xt::pyarray<int>& sdInfo_v_u_colind,
-                               int offset_h,
-                               int offset_u,
-                               int offset_v,
-                               int stride_h,
-                               int stride_u,
-                               int stride_v,
-                               xt::pyarray<double>& globalResidual,
-                               int nExteriorElementBoundaries_global,
-                               xt::pyarray<int>& exteriorElementBoundariesArray,
-                               xt::pyarray<int>& elementBoundaryElementsArray,
-                               xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                               xt::pyarray<int>& isDOFBoundary_h,
-                               xt::pyarray<int>& isDOFBoundary_u,
-                               xt::pyarray<int>& isDOFBoundary_v,
-                               xt::pyarray<int>& isAdvectiveFluxBoundary_h,
-                               xt::pyarray<int>& isAdvectiveFluxBoundary_u,
-                               xt::pyarray<int>& isAdvectiveFluxBoundary_v,
-                               xt::pyarray<int>& isDiffusiveFluxBoundary_u,
-                               xt::pyarray<int>& isDiffusiveFluxBoundary_v,
-                               xt::pyarray<double>& ebqe_bc_h_ext,
-                               xt::pyarray<double>& ebqe_bc_flux_mass_ext,
-                               xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext,
-                               xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext,
-                               xt::pyarray<double>& ebqe_bc_u_ext,
-                               xt::pyarray<double>& ebqe_bc_flux_u_diff_ext,
-                               xt::pyarray<double>& ebqe_penalty_ext,
-                               xt::pyarray<double>& ebqe_bc_v_ext,
-                               xt::pyarray<double>& ebqe_bc_flux_v_diff_ext,
-                               xt::pyarray<double>& q_velocity,
-                               xt::pyarray<double>& ebqe_velocity,
-                               xt::pyarray<double>& flux,
-                               xt::pyarray<double>& elementResidual_h_save)
+    void calculateResidual_supg(arguments_dict& args)
     {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<double>& mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
+        double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& h_trial_ref = args.m_darray["h_trial_ref"];
+        xt::pyarray<double>& h_grad_trial_ref = args.m_darray["h_grad_trial_ref"];
+        xt::pyarray<double>& h_test_ref = args.m_darray["h_test_ref"];
+        xt::pyarray<double>& h_grad_test_ref = args.m_darray["h_grad_test_ref"];
+        xt::pyarray<double>& vel_trial_ref = args.m_darray["vel_trial_ref"];
+        xt::pyarray<double>& vel_grad_trial_ref = args.m_darray["vel_grad_trial_ref"];
+        xt::pyarray<double>& vel_test_ref = args.m_darray["vel_test_ref"];
+        xt::pyarray<double>& vel_grad_test_ref = args.m_darray["vel_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& h_trial_trace_ref = args.m_darray["h_trial_trace_ref"];
+        xt::pyarray<double>& h_grad_trial_trace_ref = args.m_darray["h_grad_trial_trace_ref"];
+        xt::pyarray<double>& h_test_trace_ref = args.m_darray["h_test_trace_ref"];
+        xt::pyarray<double>& h_grad_test_trace_ref = args.m_darray["h_grad_test_trace_ref"];
+        xt::pyarray<double>& vel_trial_trace_ref = args.m_darray["vel_trial_trace_ref"];
+        xt::pyarray<double>& vel_grad_trial_trace_ref = args.m_darray["vel_grad_trial_trace_ref"];
+        xt::pyarray<double>& vel_test_trace_ref = args.m_darray["vel_test_trace_ref"];
+        xt::pyarray<double>& vel_grad_test_trace_ref = args.m_darray["vel_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useRBLES = args.m_dscalar["useRBLES"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double nu = args.m_dscalar["nu"];
+        double g = args.m_dscalar["g"];
+        double shockCapturingCoefficient = args.m_dscalar["shockCapturingCoefficient"];
+        xt::pyarray<int>& h_l2g = args.m_iarray["h_l2g"];
+        xt::pyarray<int>& vel_l2g = args.m_iarray["vel_l2g"];
+        xt::pyarray<double>& b_dof = args.m_darray["b_dof"];
+        xt::pyarray<double>& h_dof = args.m_darray["h_dof"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& v_dof = args.m_darray["v_dof"];
+        xt::pyarray<double>& h_dof_sge = args.m_darray["h_dof_sge"];
+        xt::pyarray<double>& u_dof_sge = args.m_darray["u_dof_sge"];
+        xt::pyarray<double>& v_dof_sge = args.m_darray["v_dof_sge"];
+        xt::pyarray<double>& q_mass_acc = args.m_darray["q_mass_acc"];
+        xt::pyarray<double>& q_mom_u_acc = args.m_darray["q_mom_u_acc"];
+        xt::pyarray<double>& q_mom_v_acc = args.m_darray["q_mom_v_acc"];
+        xt::pyarray<double>& q_mass_adv = args.m_darray["q_mass_adv"];
+        xt::pyarray<double>& q_mass_acc_beta_bdf = args.m_darray["q_mass_acc_beta_bdf"];
+        xt::pyarray<double>& q_mom_u_acc_beta_bdf = args.m_darray["q_mom_u_acc_beta_bdf"];
+        xt::pyarray<double>& q_mom_v_acc_beta_bdf = args.m_darray["q_mom_v_acc_beta_bdf"];
+        xt::pyarray<double>& q_velocity_sge = args.m_darray["q_velocity_sge"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_h = args.m_darray["q_numDiff_h"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_v = args.m_darray["q_numDiff_v"];
+        xt::pyarray<double>& q_numDiff_h_last = args.m_darray["q_numDiff_h_last"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<double>& q_numDiff_v_last = args.m_darray["q_numDiff_v_last"];
+        xt::pyarray<int>& sdInfo_u_u_rowptr = args.m_iarray["sdInfo_u_u_rowptr"];
+        xt::pyarray<int>& sdInfo_u_u_colind = args.m_iarray["sdInfo_u_u_colind"];
+        xt::pyarray<int>& sdInfo_u_v_rowptr = args.m_iarray["sdInfo_u_v_rowptr"];
+        xt::pyarray<int>& sdInfo_u_v_colind = args.m_iarray["sdInfo_u_v_colind"];
+        xt::pyarray<int>& sdInfo_v_v_rowptr = args.m_iarray["sdInfo_v_v_rowptr"];
+        xt::pyarray<int>& sdInfo_v_v_colind = args.m_iarray["sdInfo_v_v_colind"];
+        xt::pyarray<int>& sdInfo_v_u_rowptr = args.m_iarray["sdInfo_v_u_rowptr"];
+        xt::pyarray<int>& sdInfo_v_u_colind = args.m_iarray["sdInfo_v_u_colind"];
+        int offset_h = args.m_iscalar["offset_h"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int offset_v = args.m_iscalar["offset_v"];
+        int stride_h = args.m_iscalar["stride_h"];
+        int stride_u = args.m_iscalar["stride_u"];
+        int stride_v = args.m_iscalar["stride_v"];
+        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<int>& isDOFBoundary_h = args.m_iarray["isDOFBoundary_h"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<int>& isDOFBoundary_v = args.m_iarray["isDOFBoundary_v"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_h = args.m_iarray["isAdvectiveFluxBoundary_h"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_u = args.m_iarray["isAdvectiveFluxBoundary_u"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_v = args.m_iarray["isAdvectiveFluxBoundary_v"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_u = args.m_iarray["isDiffusiveFluxBoundary_u"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_v = args.m_iarray["isDiffusiveFluxBoundary_v"];
+        xt::pyarray<double>& ebqe_bc_h_ext = args.m_darray["ebqe_bc_h_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mass_ext = args.m_darray["ebqe_bc_flux_mass_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext = args.m_darray["ebqe_bc_flux_mom_u_adv_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext = args.m_darray["ebqe_bc_flux_mom_v_adv_ext"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_u_diff_ext = args.m_darray["ebqe_bc_flux_u_diff_ext"];
+        xt::pyarray<double>& ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
+        xt::pyarray<double>& ebqe_bc_v_ext = args.m_darray["ebqe_bc_v_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_v_diff_ext = args.m_darray["ebqe_bc_flux_v_diff_ext"];
+        xt::pyarray<double>& q_velocity = args.m_darray["q_velocity"];
+        xt::pyarray<double>& ebqe_velocity = args.m_darray["ebqe_velocity"];
+        xt::pyarray<double>& flux = args.m_darray["flux"];
+        xt::pyarray<double>& elementResidual_h_save = args.m_darray["elementResidual_h"];
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -2586,119 +2157,117 @@ namespace proteus
             }
         }
     }
-    void calculateJacobian(//element
-                           xt::pyarray<double>& mesh_trial_ref,
-                           xt::pyarray<double>& mesh_grad_trial_ref,
-                           xt::pyarray<double>& mesh_dof,
-                           xt::pyarray<double>& mesh_velocity_dof,
-                           double MOVING_DOMAIN,
-                           xt::pyarray<int>& mesh_l2g,
-                           xt::pyarray<double>& dV_ref,
-                           xt::pyarray<double>& h_trial_ref,
-                           xt::pyarray<double>& h_grad_trial_ref,
-                           xt::pyarray<double>& h_test_ref,
-                           xt::pyarray<double>& h_grad_test_ref,
-                           xt::pyarray<double>& vel_trial_ref,
-                           xt::pyarray<double>& vel_grad_trial_ref,
-                           xt::pyarray<double>& vel_test_ref,
-                           xt::pyarray<double>& vel_grad_test_ref,
-                           //element boundary
-                           xt::pyarray<double>& mesh_trial_trace_ref,
-                           xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                           xt::pyarray<double>& dS_ref,
-                           xt::pyarray<double>& h_trial_trace_ref,
-                           xt::pyarray<double>& h_grad_trial_trace_ref,
-                           xt::pyarray<double>& h_test_trace_ref,
-                           xt::pyarray<double>& h_grad_test_trace_ref,
-                           xt::pyarray<double>& vel_trial_trace_ref,
-                           xt::pyarray<double>& vel_grad_trial_trace_ref,
-                           xt::pyarray<double>& vel_test_trace_ref,
-                           xt::pyarray<double>& vel_grad_test_trace_ref,
-                           xt::pyarray<double>& normal_ref,
-                           xt::pyarray<double>& boundaryJac_ref,
-                           //physics
-                           xt::pyarray<double>& elementDiameter,
-                           int nElements_global,
-                           double useRBLES,
-                           double useMetrics,
-                           double alphaBDF,
-                           double nu,
-                           double g,
-                           xt::pyarray<int>& h_l2g,
-                           xt::pyarray<int>& vel_l2g,
-                           xt::pyarray<double>& b_dof,
-                           xt::pyarray<double>& h_dof,
-                           xt::pyarray<double>& u_dof,
-                           xt::pyarray<double>& v_dof,
-                           xt::pyarray<double>& h_dof_sge,
-                           xt::pyarray<double>& u_dof_sge,
-                           xt::pyarray<double>& v_dof_sge,
-                           xt::pyarray<double>& q_mass_acc_beta_bdf,
-                           xt::pyarray<double>& q_mom_u_acc_beta_bdf,
-                           xt::pyarray<double>& q_mom_v_acc_beta_bdf,
-                           xt::pyarray<double>& q_velocity_sge,
-                           xt::pyarray<double>& q_cfl,
-                           xt::pyarray<double>& q_numDiff_h_last,
-                           xt::pyarray<double>& q_numDiff_u_last,
-                           xt::pyarray<double>& q_numDiff_v_last,
-                           xt::pyarray<int>& sdInfo_u_u_rowptr,
-                           xt::pyarray<int>& sdInfo_u_u_colind,
-                           xt::pyarray<int>& sdInfo_u_v_rowptr,
-                           xt::pyarray<int>& sdInfo_u_v_colind,
-                           xt::pyarray<int>& sdInfo_v_v_rowptr,
-                           xt::pyarray<int>& sdInfo_v_v_colind,
-                           xt::pyarray<int>& sdInfo_v_u_rowptr,
-                           xt::pyarray<int>& sdInfo_v_u_colind,
-                           xt::pyarray<int>& csrRowIndeces_h_h,
-                           xt::pyarray<int>& csrColumnOffsets_h_h,
-                           xt::pyarray<int>& csrRowIndeces_h_u,
-                           xt::pyarray<int>& csrColumnOffsets_h_u,
-                           xt::pyarray<int>& csrRowIndeces_h_v,
-                           xt::pyarray<int>& csrColumnOffsets_h_v,
-                           xt::pyarray<int>& csrRowIndeces_u_h,
-                           xt::pyarray<int>& csrColumnOffsets_u_h,
-                           xt::pyarray<int>& csrRowIndeces_u_u,
-                           xt::pyarray<int>& csrColumnOffsets_u_u,
-                           xt::pyarray<int>& csrRowIndeces_u_v,
-                           xt::pyarray<int>& csrColumnOffsets_u_v,
-                           xt::pyarray<int>& csrRowIndeces_v_h,
-                           xt::pyarray<int>& csrColumnOffsets_v_h,
-                           xt::pyarray<int>& csrRowIndeces_v_u,
-                           xt::pyarray<int>& csrColumnOffsets_v_u,
-                           xt::pyarray<int>& csrRowIndeces_v_v,
-                           xt::pyarray<int>& csrColumnOffsets_v_v,
-                           xt::pyarray<double>& globalJacobian,
-                           int nExteriorElementBoundaries_global,
-                           xt::pyarray<int>& exteriorElementBoundariesArray,
-                           xt::pyarray<int>& elementBoundaryElementsArray,
-                           xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                           xt::pyarray<int>& isDOFBoundary_h,
-                           xt::pyarray<int>& isDOFBoundary_u,
-                           xt::pyarray<int>& isDOFBoundary_v,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_h,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_u,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_v,
-                           xt::pyarray<int>& isDiffusiveFluxBoundary_u,
-                           xt::pyarray<int>& isDiffusiveFluxBoundary_v,
-                           xt::pyarray<double>& ebqe_bc_h_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mass_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext,
-                           xt::pyarray<double>& ebqe_bc_u_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_u_diff_ext,
-                           xt::pyarray<double>& ebqe_penalty_ext,
-                           xt::pyarray<double>& ebqe_bc_v_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_v_diff_ext,
-                           xt::pyarray<int>& csrColumnOffsets_eb_h_h,
-                           xt::pyarray<int>& csrColumnOffsets_eb_h_u,
-                           xt::pyarray<int>& csrColumnOffsets_eb_h_v,
-                           xt::pyarray<int>& csrColumnOffsets_eb_u_h,
-                           xt::pyarray<int>& csrColumnOffsets_eb_u_u,
-                           xt::pyarray<int>& csrColumnOffsets_eb_u_v,
-                           xt::pyarray<int>& csrColumnOffsets_eb_v_h,
-                           xt::pyarray<int>& csrColumnOffsets_eb_v_u,
-                           xt::pyarray<int>& csrColumnOffsets_eb_v_v)
+    void calculateJacobian(arguments_dict& args)
     {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<double>& mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
+        double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& h_trial_ref = args.m_darray["h_trial_ref"];
+        xt::pyarray<double>& h_grad_trial_ref = args.m_darray["h_grad_trial_ref"];
+        xt::pyarray<double>& h_test_ref = args.m_darray["h_test_ref"];
+        xt::pyarray<double>& h_grad_test_ref = args.m_darray["h_grad_test_ref"];
+        xt::pyarray<double>& vel_trial_ref = args.m_darray["vel_trial_ref"];
+        xt::pyarray<double>& vel_grad_trial_ref = args.m_darray["vel_grad_trial_ref"];
+        xt::pyarray<double>& vel_test_ref = args.m_darray["vel_test_ref"];
+        xt::pyarray<double>& vel_grad_test_ref = args.m_darray["vel_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& h_trial_trace_ref = args.m_darray["h_trial_trace_ref"];
+        xt::pyarray<double>& h_grad_trial_trace_ref = args.m_darray["h_grad_trial_trace_ref"];
+        xt::pyarray<double>& h_test_trace_ref = args.m_darray["h_test_trace_ref"];
+        xt::pyarray<double>& h_grad_test_trace_ref = args.m_darray["h_grad_test_trace_ref"];
+        xt::pyarray<double>& vel_trial_trace_ref = args.m_darray["vel_trial_trace_ref"];
+        xt::pyarray<double>& vel_grad_trial_trace_ref = args.m_darray["vel_grad_trial_trace_ref"];
+        xt::pyarray<double>& vel_test_trace_ref = args.m_darray["vel_test_trace_ref"];
+        xt::pyarray<double>& vel_grad_test_trace_ref = args.m_darray["vel_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useRBLES = args.m_dscalar["useRBLES"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double nu = args.m_dscalar["nu"];
+        double g = args.m_dscalar["g"];
+        xt::pyarray<int>& h_l2g = args.m_iarray["h_l2g"];
+        xt::pyarray<int>& vel_l2g = args.m_iarray["vel_l2g"];
+        xt::pyarray<double>& b_dof = args.m_darray["b_dof"];
+        xt::pyarray<double>& h_dof = args.m_darray["h_dof"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& v_dof = args.m_darray["v_dof"];
+        xt::pyarray<double>& h_dof_sge = args.m_darray["h_dof_sge"];
+        xt::pyarray<double>& u_dof_sge = args.m_darray["u_dof_sge"];
+        xt::pyarray<double>& v_dof_sge = args.m_darray["v_dof_sge"];
+        xt::pyarray<double>& q_mass_acc_beta_bdf = args.m_darray["q_mass_acc_beta_bdf"];
+        xt::pyarray<double>& q_mom_u_acc_beta_bdf = args.m_darray["q_mom_u_acc_beta_bdf"];
+        xt::pyarray<double>& q_mom_v_acc_beta_bdf = args.m_darray["q_mom_v_acc_beta_bdf"];
+        xt::pyarray<double>& q_velocity_sge = args.m_darray["q_velocity_sge"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_h_last = args.m_darray["q_numDiff_h_last"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<double>& q_numDiff_v_last = args.m_darray["q_numDiff_v_last"];
+        xt::pyarray<int>& sdInfo_u_u_rowptr = args.m_iarray["sdInfo_u_u_rowptr"];
+        xt::pyarray<int>& sdInfo_u_u_colind = args.m_iarray["sdInfo_u_u_colind"];
+        xt::pyarray<int>& sdInfo_u_v_rowptr = args.m_iarray["sdInfo_u_v_rowptr"];
+        xt::pyarray<int>& sdInfo_u_v_colind = args.m_iarray["sdInfo_u_v_colind"];
+        xt::pyarray<int>& sdInfo_v_v_rowptr = args.m_iarray["sdInfo_v_v_rowptr"];
+        xt::pyarray<int>& sdInfo_v_v_colind = args.m_iarray["sdInfo_v_v_colind"];
+        xt::pyarray<int>& sdInfo_v_u_rowptr = args.m_iarray["sdInfo_v_u_rowptr"];
+        xt::pyarray<int>& sdInfo_v_u_colind = args.m_iarray["sdInfo_v_u_colind"];
+        xt::pyarray<int>& csrRowIndeces_h_h = args.m_iarray["csrRowIndeces_h_h"];
+        xt::pyarray<int>& csrColumnOffsets_h_h = args.m_iarray["csrColumnOffsets_h_h"];
+        xt::pyarray<int>& csrRowIndeces_h_u = args.m_iarray["csrRowIndeces_h_u"];
+        xt::pyarray<int>& csrColumnOffsets_h_u = args.m_iarray["csrColumnOffsets_h_u"];
+        xt::pyarray<int>& csrRowIndeces_h_v = args.m_iarray["csrRowIndeces_h_v"];
+        xt::pyarray<int>& csrColumnOffsets_h_v = args.m_iarray["csrColumnOffsets_h_v"];
+        xt::pyarray<int>& csrRowIndeces_u_h = args.m_iarray["csrRowIndeces_u_h"];
+        xt::pyarray<int>& csrColumnOffsets_u_h = args.m_iarray["csrColumnOffsets_u_h"];
+        xt::pyarray<int>& csrRowIndeces_u_u = args.m_iarray["csrRowIndeces_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_u_u = args.m_iarray["csrColumnOffsets_u_u"];
+        xt::pyarray<int>& csrRowIndeces_u_v = args.m_iarray["csrRowIndeces_u_v"];
+        xt::pyarray<int>& csrColumnOffsets_u_v = args.m_iarray["csrColumnOffsets_u_v"];
+        xt::pyarray<int>& csrRowIndeces_v_h = args.m_iarray["csrRowIndeces_v_h"];
+        xt::pyarray<int>& csrColumnOffsets_v_h = args.m_iarray["csrColumnOffsets_v_h"];
+        xt::pyarray<int>& csrRowIndeces_v_u = args.m_iarray["csrRowIndeces_v_u"];
+        xt::pyarray<int>& csrColumnOffsets_v_u = args.m_iarray["csrColumnOffsets_v_u"];
+        xt::pyarray<int>& csrRowIndeces_v_v = args.m_iarray["csrRowIndeces_v_v"];
+        xt::pyarray<int>& csrColumnOffsets_v_v = args.m_iarray["csrColumnOffsets_v_v"];
+        xt::pyarray<double>& globalJacobian = args.m_darray["globalJacobian"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<int>& isDOFBoundary_h = args.m_iarray["isDOFBoundary_h"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<int>& isDOFBoundary_v = args.m_iarray["isDOFBoundary_v"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_h = args.m_iarray["isAdvectiveFluxBoundary_h"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_u = args.m_iarray["isAdvectiveFluxBoundary_u"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_v = args.m_iarray["isAdvectiveFluxBoundary_v"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_u = args.m_iarray["isDiffusiveFluxBoundary_u"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_v = args.m_iarray["isDiffusiveFluxBoundary_v"];
+        xt::pyarray<double>& ebqe_bc_h_ext = args.m_darray["ebqe_bc_h_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mass_ext = args.m_darray["ebqe_bc_flux_mass_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext = args.m_darray["ebqe_bc_flux_mom_u_adv_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext = args.m_darray["ebqe_bc_flux_mom_v_adv_ext"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_u_diff_ext = args.m_darray["ebqe_bc_flux_u_diff_ext"];
+        xt::pyarray<double>& ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
+        xt::pyarray<double>& ebqe_bc_v_ext = args.m_darray["ebqe_bc_v_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_v_diff_ext = args.m_darray["ebqe_bc_flux_v_diff_ext"];
+        xt::pyarray<int>& csrColumnOffsets_eb_h_h = args.m_iarray["csrColumnOffsets_eb_h_h"];
+        xt::pyarray<int>& csrColumnOffsets_eb_h_u = args.m_iarray["csrColumnOffsets_eb_h_u"];
+        xt::pyarray<int>& csrColumnOffsets_eb_h_v = args.m_iarray["csrColumnOffsets_eb_h_v"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_h = args.m_iarray["csrColumnOffsets_eb_u_h"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.m_iarray["csrColumnOffsets_eb_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_v = args.m_iarray["csrColumnOffsets_eb_u_v"];
+        xt::pyarray<int>& csrColumnOffsets_eb_v_h = args.m_iarray["csrColumnOffsets_eb_v_h"];
+        xt::pyarray<int>& csrColumnOffsets_eb_v_u = args.m_iarray["csrColumnOffsets_eb_v_u"];
+        xt::pyarray<int>& csrColumnOffsets_eb_v_v = args.m_iarray["csrColumnOffsets_eb_v_v"];
       double tauSum=0.0;
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -3702,119 +3271,117 @@ namespace proteus
       /*            }//kb */
       /*        }//ebNE */
     }//computeJacobian
-    void calculateJacobian_supg(//element
-                           xt::pyarray<double>& mesh_trial_ref,
-                           xt::pyarray<double>& mesh_grad_trial_ref,
-                           xt::pyarray<double>& mesh_dof,
-                           xt::pyarray<double>& mesh_velocity_dof,
-                           double MOVING_DOMAIN,
-                           xt::pyarray<int>& mesh_l2g,
-                           xt::pyarray<double>& dV_ref,
-                           xt::pyarray<double>& h_trial_ref,
-                           xt::pyarray<double>& h_grad_trial_ref,
-                           xt::pyarray<double>& h_test_ref,
-                           xt::pyarray<double>& h_grad_test_ref,
-                           xt::pyarray<double>& vel_trial_ref,
-                           xt::pyarray<double>& vel_grad_trial_ref,
-                           xt::pyarray<double>& vel_test_ref,
-                           xt::pyarray<double>& vel_grad_test_ref,
-                           //element boundary
-                           xt::pyarray<double>& mesh_trial_trace_ref,
-                           xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                           xt::pyarray<double>& dS_ref,
-                           xt::pyarray<double>& h_trial_trace_ref,
-                           xt::pyarray<double>& h_grad_trial_trace_ref,
-                           xt::pyarray<double>& h_test_trace_ref,
-                           xt::pyarray<double>& h_grad_test_trace_ref,
-                           xt::pyarray<double>& vel_trial_trace_ref,
-                           xt::pyarray<double>& vel_grad_trial_trace_ref,
-                           xt::pyarray<double>& vel_test_trace_ref,
-                           xt::pyarray<double>& vel_grad_test_trace_ref,
-                           xt::pyarray<double>& normal_ref,
-                           xt::pyarray<double>& boundaryJac_ref,
-                           //physics
-                           xt::pyarray<double>& elementDiameter,
-                           int nElements_global,
-                           double useRBLES,
-                           double useMetrics,
-                           double alphaBDF,
-                           double nu,
-                           double g,
-                           xt::pyarray<int>& h_l2g,
-                           xt::pyarray<int>& vel_l2g,
-                           xt::pyarray<double>& b_dof,
-                           xt::pyarray<double>& h_dof,
-                           xt::pyarray<double>& u_dof,
-                           xt::pyarray<double>& v_dof,
-                           xt::pyarray<double>& h_dof_sge,
-                           xt::pyarray<double>& u_dof_sge,
-                           xt::pyarray<double>& v_dof_sge,
-                           xt::pyarray<double>& q_mass_acc_beta_bdf,
-                           xt::pyarray<double>& q_mom_u_acc_beta_bdf,
-                           xt::pyarray<double>& q_mom_v_acc_beta_bdf,
-                           xt::pyarray<double>& q_velocity_sge,
-                           xt::pyarray<double>& q_cfl,
-                           xt::pyarray<double>& q_numDiff_h_last,
-                           xt::pyarray<double>& q_numDiff_u_last,
-                           xt::pyarray<double>& q_numDiff_v_last,
-                           xt::pyarray<int>& sdInfo_u_u_rowptr,
-                           xt::pyarray<int>& sdInfo_u_u_colind,
-                           xt::pyarray<int>& sdInfo_u_v_rowptr,
-                           xt::pyarray<int>& sdInfo_u_v_colind,
-                           xt::pyarray<int>& sdInfo_v_v_rowptr,
-                           xt::pyarray<int>& sdInfo_v_v_colind,
-                           xt::pyarray<int>& sdInfo_v_u_rowptr,
-                           xt::pyarray<int>& sdInfo_v_u_colind,
-                           xt::pyarray<int>& csrRowIndeces_h_h,
-                           xt::pyarray<int>& csrColumnOffsets_h_h,
-                           xt::pyarray<int>& csrRowIndeces_h_u,
-                           xt::pyarray<int>& csrColumnOffsets_h_u,
-                           xt::pyarray<int>& csrRowIndeces_h_v,
-                           xt::pyarray<int>& csrColumnOffsets_h_v,
-                           xt::pyarray<int>& csrRowIndeces_u_h,
-                           xt::pyarray<int>& csrColumnOffsets_u_h,
-                           xt::pyarray<int>& csrRowIndeces_u_u,
-                           xt::pyarray<int>& csrColumnOffsets_u_u,
-                           xt::pyarray<int>& csrRowIndeces_u_v,
-                           xt::pyarray<int>& csrColumnOffsets_u_v,
-                           xt::pyarray<int>& csrRowIndeces_v_h,
-                           xt::pyarray<int>& csrColumnOffsets_v_h,
-                           xt::pyarray<int>& csrRowIndeces_v_u,
-                           xt::pyarray<int>& csrColumnOffsets_v_u,
-                           xt::pyarray<int>& csrRowIndeces_v_v,
-                           xt::pyarray<int>& csrColumnOffsets_v_v,
-                           xt::pyarray<double>& globalJacobian,
-                           int nExteriorElementBoundaries_global,
-                           xt::pyarray<int>& exteriorElementBoundariesArray,
-                           xt::pyarray<int>& elementBoundaryElementsArray,
-                           xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                           xt::pyarray<int>& isDOFBoundary_h,
-                           xt::pyarray<int>& isDOFBoundary_u,
-                           xt::pyarray<int>& isDOFBoundary_v,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_h,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_u,
-                           xt::pyarray<int>& isAdvectiveFluxBoundary_v,
-                           xt::pyarray<int>& isDiffusiveFluxBoundary_u,
-                           xt::pyarray<int>& isDiffusiveFluxBoundary_v,
-                           xt::pyarray<double>& ebqe_bc_h_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mass_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext,
-                           xt::pyarray<double>& ebqe_bc_u_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_u_diff_ext,
-                           xt::pyarray<double>& ebqe_penalty_ext,
-                           xt::pyarray<double>& ebqe_bc_v_ext,
-                           xt::pyarray<double>& ebqe_bc_flux_v_diff_ext,
-                           xt::pyarray<int>& csrColumnOffsets_eb_h_h,
-                           xt::pyarray<int>& csrColumnOffsets_eb_h_u,
-                           xt::pyarray<int>& csrColumnOffsets_eb_h_v,
-                           xt::pyarray<int>& csrColumnOffsets_eb_u_h,
-                           xt::pyarray<int>& csrColumnOffsets_eb_u_u,
-                           xt::pyarray<int>& csrColumnOffsets_eb_u_v,
-                           xt::pyarray<int>& csrColumnOffsets_eb_v_h,
-                           xt::pyarray<int>& csrColumnOffsets_eb_v_u,
-                           xt::pyarray<int>& csrColumnOffsets_eb_v_v)
+    void calculateJacobian_supg(arguments_dict& args)
     {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<double>& mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
+        double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& h_trial_ref = args.m_darray["h_trial_ref"];
+        xt::pyarray<double>& h_grad_trial_ref = args.m_darray["h_grad_trial_ref"];
+        xt::pyarray<double>& h_test_ref = args.m_darray["h_test_ref"];
+        xt::pyarray<double>& h_grad_test_ref = args.m_darray["h_grad_test_ref"];
+        xt::pyarray<double>& vel_trial_ref = args.m_darray["vel_trial_ref"];
+        xt::pyarray<double>& vel_grad_trial_ref = args.m_darray["vel_grad_trial_ref"];
+        xt::pyarray<double>& vel_test_ref = args.m_darray["vel_test_ref"];
+        xt::pyarray<double>& vel_grad_test_ref = args.m_darray["vel_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& h_trial_trace_ref = args.m_darray["h_trial_trace_ref"];
+        xt::pyarray<double>& h_grad_trial_trace_ref = args.m_darray["h_grad_trial_trace_ref"];
+        xt::pyarray<double>& h_test_trace_ref = args.m_darray["h_test_trace_ref"];
+        xt::pyarray<double>& h_grad_test_trace_ref = args.m_darray["h_grad_test_trace_ref"];
+        xt::pyarray<double>& vel_trial_trace_ref = args.m_darray["vel_trial_trace_ref"];
+        xt::pyarray<double>& vel_grad_trial_trace_ref = args.m_darray["vel_grad_trial_trace_ref"];
+        xt::pyarray<double>& vel_test_trace_ref = args.m_darray["vel_test_trace_ref"];
+        xt::pyarray<double>& vel_grad_test_trace_ref = args.m_darray["vel_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useRBLES = args.m_dscalar["useRBLES"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double nu = args.m_dscalar["nu"];
+        double g = args.m_dscalar["g"];
+        xt::pyarray<int>& h_l2g = args.m_iarray["h_l2g"];
+        xt::pyarray<int>& vel_l2g = args.m_iarray["vel_l2g"];
+        xt::pyarray<double>& b_dof = args.m_darray["b_dof"];
+        xt::pyarray<double>& h_dof = args.m_darray["h_dof"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& v_dof = args.m_darray["v_dof"];
+        xt::pyarray<double>& h_dof_sge = args.m_darray["h_dof_sge"];
+        xt::pyarray<double>& u_dof_sge = args.m_darray["u_dof_sge"];
+        xt::pyarray<double>& v_dof_sge = args.m_darray["v_dof_sge"];
+        xt::pyarray<double>& q_mass_acc_beta_bdf = args.m_darray["q_mass_acc_beta_bdf"];
+        xt::pyarray<double>& q_mom_u_acc_beta_bdf = args.m_darray["q_mom_u_acc_beta_bdf"];
+        xt::pyarray<double>& q_mom_v_acc_beta_bdf = args.m_darray["q_mom_v_acc_beta_bdf"];
+        xt::pyarray<double>& q_velocity_sge = args.m_darray["q_velocity_sge"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_h_last = args.m_darray["q_numDiff_h_last"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<double>& q_numDiff_v_last = args.m_darray["q_numDiff_v_last"];
+        xt::pyarray<int>& sdInfo_u_u_rowptr = args.m_iarray["sdInfo_u_u_rowptr"];
+        xt::pyarray<int>& sdInfo_u_u_colind = args.m_iarray["sdInfo_u_u_colind"];
+        xt::pyarray<int>& sdInfo_u_v_rowptr = args.m_iarray["sdInfo_u_v_rowptr"];
+        xt::pyarray<int>& sdInfo_u_v_colind = args.m_iarray["sdInfo_u_v_colind"];
+        xt::pyarray<int>& sdInfo_v_v_rowptr = args.m_iarray["sdInfo_v_v_rowptr"];
+        xt::pyarray<int>& sdInfo_v_v_colind = args.m_iarray["sdInfo_v_v_colind"];
+        xt::pyarray<int>& sdInfo_v_u_rowptr = args.m_iarray["sdInfo_v_u_rowptr"];
+        xt::pyarray<int>& sdInfo_v_u_colind = args.m_iarray["sdInfo_v_u_colind"];
+        xt::pyarray<int>& csrRowIndeces_h_h = args.m_iarray["csrRowIndeces_h_h"];
+        xt::pyarray<int>& csrColumnOffsets_h_h = args.m_iarray["csrColumnOffsets_h_h"];
+        xt::pyarray<int>& csrRowIndeces_h_u = args.m_iarray["csrRowIndeces_h_u"];
+        xt::pyarray<int>& csrColumnOffsets_h_u = args.m_iarray["csrColumnOffsets_h_u"];
+        xt::pyarray<int>& csrRowIndeces_h_v = args.m_iarray["csrRowIndeces_h_v"];
+        xt::pyarray<int>& csrColumnOffsets_h_v = args.m_iarray["csrColumnOffsets_h_v"];
+        xt::pyarray<int>& csrRowIndeces_u_h = args.m_iarray["csrRowIndeces_u_h"];
+        xt::pyarray<int>& csrColumnOffsets_u_h = args.m_iarray["csrColumnOffsets_u_h"];
+        xt::pyarray<int>& csrRowIndeces_u_u = args.m_iarray["csrRowIndeces_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_u_u = args.m_iarray["csrColumnOffsets_u_u"];
+        xt::pyarray<int>& csrRowIndeces_u_v = args.m_iarray["csrRowIndeces_u_v"];
+        xt::pyarray<int>& csrColumnOffsets_u_v = args.m_iarray["csrColumnOffsets_u_v"];
+        xt::pyarray<int>& csrRowIndeces_v_h = args.m_iarray["csrRowIndeces_v_h"];
+        xt::pyarray<int>& csrColumnOffsets_v_h = args.m_iarray["csrColumnOffsets_v_h"];
+        xt::pyarray<int>& csrRowIndeces_v_u = args.m_iarray["csrRowIndeces_v_u"];
+        xt::pyarray<int>& csrColumnOffsets_v_u = args.m_iarray["csrColumnOffsets_v_u"];
+        xt::pyarray<int>& csrRowIndeces_v_v = args.m_iarray["csrRowIndeces_v_v"];
+        xt::pyarray<int>& csrColumnOffsets_v_v = args.m_iarray["csrColumnOffsets_v_v"];
+        xt::pyarray<double>& globalJacobian = args.m_darray["globalJacobian"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<int>& isDOFBoundary_h = args.m_iarray["isDOFBoundary_h"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<int>& isDOFBoundary_v = args.m_iarray["isDOFBoundary_v"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_h = args.m_iarray["isAdvectiveFluxBoundary_h"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_u = args.m_iarray["isAdvectiveFluxBoundary_u"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_v = args.m_iarray["isAdvectiveFluxBoundary_v"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_u = args.m_iarray["isDiffusiveFluxBoundary_u"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_v = args.m_iarray["isDiffusiveFluxBoundary_v"];
+        xt::pyarray<double>& ebqe_bc_h_ext = args.m_darray["ebqe_bc_h_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mass_ext = args.m_darray["ebqe_bc_flux_mass_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mom_u_adv_ext = args.m_darray["ebqe_bc_flux_mom_u_adv_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_mom_v_adv_ext = args.m_darray["ebqe_bc_flux_mom_v_adv_ext"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_u_diff_ext = args.m_darray["ebqe_bc_flux_u_diff_ext"];
+        xt::pyarray<double>& ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
+        xt::pyarray<double>& ebqe_bc_v_ext = args.m_darray["ebqe_bc_v_ext"];
+        xt::pyarray<double>& ebqe_bc_flux_v_diff_ext = args.m_darray["ebqe_bc_flux_v_diff_ext"];
+        xt::pyarray<int>& csrColumnOffsets_eb_h_h = args.m_iarray["csrColumnOffsets_eb_h_h"];
+        xt::pyarray<int>& csrColumnOffsets_eb_h_u = args.m_iarray["csrColumnOffsets_eb_h_u"];
+        xt::pyarray<int>& csrColumnOffsets_eb_h_v = args.m_iarray["csrColumnOffsets_eb_h_v"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_h = args.m_iarray["csrColumnOffsets_eb_u_h"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.m_iarray["csrColumnOffsets_eb_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_v = args.m_iarray["csrColumnOffsets_eb_u_v"];
+        xt::pyarray<int>& csrColumnOffsets_eb_v_h = args.m_iarray["csrColumnOffsets_eb_v_h"];
+        xt::pyarray<int>& csrColumnOffsets_eb_v_u = args.m_iarray["csrColumnOffsets_eb_v_u"];
+        xt::pyarray<int>& csrColumnOffsets_eb_v_v = args.m_iarray["csrColumnOffsets_eb_v_v"];
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //

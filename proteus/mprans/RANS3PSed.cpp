@@ -4,6 +4,9 @@
 #define FORCE_IMPORT_ARRAY
 #include "RANS3PSed.h"
 
+namespace py = pybind11;
+using proteus::cppRANS3PSed_base;
+
 #if defined(__GNUC__) && !defined(__clang__)
     namespace workaround
     {
@@ -15,11 +18,6 @@
     }
 #endif
 
-namespace py = pybind11;
-using proteus::cppRANS3PSed_base;
-
-void init_RANS3PFSed2D(py::module& m);
-
 PYBIND11_MODULE(cRANS3PSed, m)
 {
     xt::import_numpy();
@@ -29,6 +27,4 @@ PYBIND11_MODULE(cRANS3PSed, m)
         .def("calculateResidual", &cppRANS3PSed_base::calculateResidual)
         .def("calculateJacobian", &cppRANS3PSed_base::calculateJacobian)
         .def("calculateVelocityAverage", &cppRANS3PSed_base::calculateVelocityAverage);
-
-    init_RANS3PFSed2D(m);
 }

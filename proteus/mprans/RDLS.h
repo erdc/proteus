@@ -6,6 +6,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "equivalent_polynomials.h"
+#include "ArgumentsDict.h"
 #include "xtensor-python/pyarray.hpp"
 
 namespace py = pybind11;
@@ -19,8 +20,8 @@ namespace proteus
     return (z>0 ? 1. : (z<0 ? 0. : 0.5));
   }
 
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
   
   class RDLS_base
@@ -28,306 +29,12 @@ namespace proteus
   public:
     std::valarray<double> weighted_lumped_mass_matrix;
     virtual ~RDLS_base(){}
-    virtual void calculateResidual(//element
-                                   xt::pyarray<double>& mesh_trial_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_ref,
-                                   xt::pyarray<double>& mesh_dof,
-                                   xt::pyarray<int>& mesh_l2g,
-                                   xt::pyarray<double>& x_ref,
-                                   xt::pyarray<double>& dV_ref,
-                                   xt::pyarray<double>& u_trial_ref,
-                                   xt::pyarray<double>& u_grad_trial_ref,
-                                   xt::pyarray<double>& u_test_ref,
-                                   xt::pyarray<double>& u_grad_test_ref,
-                                   //element boundary
-                                   xt::pyarray<double>& mesh_trial_trace_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                   xt::pyarray<double>& dS_ref,
-                                   xt::pyarray<double>& u_trial_trace_ref,
-                                   xt::pyarray<double>& u_grad_trial_trace_ref,
-                                   xt::pyarray<double>& u_test_trace_ref,
-                                   xt::pyarray<double>& u_grad_test_trace_ref,
-                                   xt::pyarray<double>& normal_ref,
-                                   xt::pyarray<double>& boundaryJac_ref,
-                                   //physics
-                                   int nElements_global,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   double epsFact_redist,
-                                   double backgroundDiffusionFactor,
-                                   double weakDirichletFactor,
-                                   int freezeLevelSet,
-                                   int useTimeIntegration,
-                                   int lag_shockCapturing,
-                                   int lag_subgridError, //0 nothing lagged
-                                   //1 dH lagged in tau
-                                   //2 dH lagged in tau and Residual, adjoint calculations
-                                   double shockCapturingDiffusion,
-                                   xt::pyarray<int>& u_l2g,
-                                   xt::pyarray<double>& elementDiameter,
-                                   xt::pyarray<double>& nodeDiametersArray,
-                                   xt::pyarray<double>& u_dof,
-                                   xt::pyarray<double>& phi_dof,
-                                   xt::pyarray<double>& phi_ls,
-                                   xt::pyarray<double>& q_m,
-                                   xt::pyarray<double>& q_u,
-                                   xt::pyarray<double>& q_n,
-                                   xt::pyarray<double>& q_dH,
-                                   xt::pyarray<double>& u_weak_internal_bc_dofs,//for freezing level set
-                                   xt::pyarray<double>& q_m_betaBDF,
-                                   xt::pyarray<double>& q_dH_last,//for lagging subgrid error
-                                   xt::pyarray<double>& q_cfl,
-                                   xt::pyarray<double>& q_numDiff_u,
-                                   xt::pyarray<double>& q_numDiff_u_last,
-                                   xt::pyarray<int>& weakDirichletConditionFlags,
-                                   int offset_u, int stride_u,
-                                   xt::pyarray<double>& globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   xt::pyarray<int>& exteriorElementBoundariesArray,
-                                   xt::pyarray<int>& elementBoundaryElementsArray,
-                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                   xt::pyarray<double>& ebqe_phi_ls_ext,
-                                   xt::pyarray<int>& isDOFBoundary_u,
-                                   xt::pyarray<double>& ebqe_bc_u_ext,
-                                   xt::pyarray<double>& ebqe_u,
-                                   xt::pyarray<double>& ebqe_n,
-                                   // elliptic redistancing
-                                   int ELLIPTIC_REDISTANCING,
-				   double backgroundDissipationEllipticRedist,
-                                   xt::pyarray<double>& lumped_qx,
-                                   xt::pyarray<double>& lumped_qy,
-                                   xt::pyarray<double>& lumped_qz,
-                                   double alpha,
-                                   bool useExact)=0;
-    virtual void calculateJacobian(//element
-                                   xt::pyarray<double>& mesh_trial_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_ref,
-                                   xt::pyarray<double>& mesh_dof,
-                                   xt::pyarray<int>& mesh_l2g,
-                                   xt::pyarray<double>& x_ref,
-                                   xt::pyarray<double>& dV_ref,
-                                   xt::pyarray<double>& u_trial_ref,
-                                   xt::pyarray<double>& u_grad_trial_ref,
-                                   xt::pyarray<double>& u_test_ref,
-                                   xt::pyarray<double>& u_grad_test_ref,
-                                   //element boundary
-                                   xt::pyarray<double>& mesh_trial_trace_ref,
-                                   xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                   xt::pyarray<double>& dS_ref,
-                                   xt::pyarray<double>& u_trial_trace_ref,
-                                   xt::pyarray<double>& u_grad_trial_trace_ref,
-                                   xt::pyarray<double>& u_test_trace_ref,
-                                   xt::pyarray<double>& u_grad_test_trace_ref,
-                                   xt::pyarray<double>& normal_ref,
-                                   xt::pyarray<double>& boundaryJac_ref,
-                                   //physics
-                                   int nElements_global,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   double epsFact_redist,
-                                   double backgroundDiffusionFactor,
-                                   double weakDirichletFactor,
-                                   int freezeLevelSet,
-                                   int useTimeIntegration,
-                                   int lag_shockCapturing,
-                                   int lag_subgridError,
-                                   double shockCapturingDiffusion,
-                                   xt::pyarray<int>& u_l2g,
-                                   xt::pyarray<double>& elementDiameter,
-                                   xt::pyarray<double>& nodeDiametersArray,
-                                   xt::pyarray<double>& u_dof,
-                                   xt::pyarray<double>& phi_dof,
-                                   xt::pyarray<double>& u_weak_internal_bc_dofs,//for freezing level set
-                                   xt::pyarray<double>& phi_ls,
-                                   xt::pyarray<double>& q_m_betaBDF,
-                                   xt::pyarray<double>& q_dH_last,
-                                   xt::pyarray<double>& q_cfl,
-                                   xt::pyarray<double>& q_numDiff_u,
-                                   xt::pyarray<double>& q_numDiff_u_last,
-                                   xt::pyarray<int>& weakDirichletConditionFlags,
-                                   xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
-                                   xt::pyarray<double>& globalJacobian,
-                                   int nExteriorElementBoundaries_global,
-                                   xt::pyarray<int>& exteriorElementBoundariesArray,
-                                   xt::pyarray<int>& elementBoundaryElementsArray,
-                                   xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                   xt::pyarray<double>& ebqe_phi_ls_ext,
-                                   xt::pyarray<int>& isDOFBoundary_u,
-                                   xt::pyarray<double>& ebqe_bc_u_ext,
-                                   xt::pyarray<int>& csrColumnOffsets_eb_u_u,
-                                   // elliptic redistancing
-                                   int ELLIPTIC_REDISTANCING,
-				   double backgroundDissipationEllipticRedist,
-                                   double alpha,
-                                   bool useExact)=0;
-    virtual void calculateResidual_ellipticRedist(//element
-                                                  xt::pyarray<double>& mesh_trial_ref,
-                                                  xt::pyarray<double>& mesh_grad_trial_ref,
-                                                  xt::pyarray<double>& mesh_dof,
-                                                  xt::pyarray<int>& mesh_l2g,
-                                                  xt::pyarray<double>& x_ref,
-                                                  xt::pyarray<double>& dV_ref,
-                                                  xt::pyarray<double>& u_trial_ref,
-                                                  xt::pyarray<double>& u_grad_trial_ref,
-                                                  xt::pyarray<double>& u_test_ref,
-                                                  xt::pyarray<double>& u_grad_test_ref,
-                                                  //element boundary
-                                                  xt::pyarray<double>& mesh_trial_trace_ref,
-                                                  xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                                  xt::pyarray<double>& dS_ref,
-                                                  xt::pyarray<double>& u_trial_trace_ref,
-                                                  xt::pyarray<double>& u_grad_trial_trace_ref,
-                                                  xt::pyarray<double>& u_test_trace_ref,
-                                                  xt::pyarray<double>& u_grad_test_trace_ref,
-                                                  xt::pyarray<double>& normal_ref,
-                                                  xt::pyarray<double>& boundaryJac_ref,
-                                                  //physics
-                                                  int nElements_global,
-                                                  double useMetrics,
-                                                  double alphaBDF,
-                                                  double epsFact_redist,
-                                                  double backgroundDiffusionFactor,
-                                                  double weakDirichletFactor,
-                                                  int freezeLevelSet,
-                                                  int useTimeIntegration,
-                                                  int lag_shockCapturing,
-                                                  int lag_subgridError, //0 nothing lagged
-                                                  //1 dH lagged in tau
-                                                  //2 dH lagged in tau and Residual, adjoint calculations
-                                                  double shockCapturingDiffusion,
-                                                  xt::pyarray<int>& u_l2g,
-                                                  xt::pyarray<double>& elementDiameter,
-                                                  xt::pyarray<double>& nodeDiametersArray,
-                                                  xt::pyarray<double>& u_dof,
-                                                  xt::pyarray<double>& phi_dof,
-                                                  xt::pyarray<double>& phi_ls,
-                                                  xt::pyarray<double>& q_m,
-                                                  xt::pyarray<double>& q_u,
-                                                  xt::pyarray<double>& q_n,
-                                                  xt::pyarray<double>& q_dH,
-                                                  xt::pyarray<double>& u_weak_internal_bc_dofs,//for freezing level set
-                                                  xt::pyarray<double>& q_m_betaBDF,
-                                                  xt::pyarray<double>& q_dH_last,//for lagging subgrid error
-                                                  xt::pyarray<double>& q_cfl,
-                                                  xt::pyarray<double>& q_numDiff_u,
-                                                  xt::pyarray<double>& q_numDiff_u_last,
-                                                  xt::pyarray<int>& weakDirichletConditionFlags,
-                                                  int offset_u, int stride_u,
-                                                  xt::pyarray<double>& globalResidual,
-                                                  int nExteriorElementBoundaries_global,
-                                                  xt::pyarray<int>& exteriorElementBoundariesArray,
-                                                  xt::pyarray<int>& elementBoundaryElementsArray,
-                                                  xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                                  xt::pyarray<double>& ebqe_phi_ls_ext,
-                                                  xt::pyarray<int>& isDOFBoundary_u,
-                                                  xt::pyarray<double>& ebqe_bc_u_ext,
-                                                  xt::pyarray<double>& ebqe_u,
-                                                  xt::pyarray<double>& ebqe_n,
-                                                  // elliptic redistancing
-                                                  int ELLIPTIC_REDISTANCING,
-						  double backgroundDissipationEllipticRedist,
-                                                  xt::pyarray<double>& lumped_qx,
-                                                  xt::pyarray<double>& lumped_qy,
-                                                  xt::pyarray<double>& lumped_qz,
-                                                  double alpha,
-                                                  bool useExact)=0;
-    virtual void calculateJacobian_ellipticRedist(//element
-                                                  xt::pyarray<double>& mesh_trial_ref,
-                                                  xt::pyarray<double>& mesh_grad_trial_ref,
-                                                  xt::pyarray<double>& mesh_dof,
-                                                  xt::pyarray<int>& mesh_l2g,
-                                                  xt::pyarray<double>& x_ref,
-                                                  xt::pyarray<double>& dV_ref,
-                                                  xt::pyarray<double>& u_trial_ref,
-                                                  xt::pyarray<double>& u_grad_trial_ref,
-                                                  xt::pyarray<double>& u_test_ref,
-                                                  xt::pyarray<double>& u_grad_test_ref,
-                                                  //element boundary
-                                                  xt::pyarray<double>& mesh_trial_trace_ref,
-                                                  xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                                  xt::pyarray<double>& dS_ref,
-                                                  xt::pyarray<double>& u_trial_trace_ref,
-                                                  xt::pyarray<double>& u_grad_trial_trace_ref,
-                                                  xt::pyarray<double>& u_test_trace_ref,
-                                                  xt::pyarray<double>& u_grad_test_trace_ref,
-                                                  xt::pyarray<double>& normal_ref,
-                                                  xt::pyarray<double>& boundaryJac_ref,
-                                                  //physics
-                                                  int nElements_global,
-                                                  double useMetrics,
-                                                  double alphaBDF,
-                                                  double epsFact_redist,
-                                                  double backgroundDiffusionFactor,
-                                                  double weakDirichletFactor,
-                                                  int freezeLevelSet,
-                                                  int useTimeIntegration,
-                                                  int lag_shockCapturing,
-                                                  int lag_subgridError,
-                                                  double shockCapturingDiffusion,
-                                                  xt::pyarray<int>& u_l2g,
-                                                  xt::pyarray<double>& elementDiameter,
-                                                  xt::pyarray<double>& nodeDiametersArray,
-                                                  xt::pyarray<double>& u_dof,
-                                                  xt::pyarray<double>& phi_dof,
-                                                  xt::pyarray<double>& u_weak_internal_bc_dofs,//for freezing level set
-                                                  xt::pyarray<double>& phi_ls,
-                                                  xt::pyarray<double>& q_m_betaBDF,
-                                                  xt::pyarray<double>& q_dH_last,
-                                                  xt::pyarray<double>& q_cfl,
-                                                  xt::pyarray<double>& q_numDiff_u,
-                                                  xt::pyarray<double>& q_numDiff_u_last,
-                                                  xt::pyarray<int>& weakDirichletConditionFlags,
-                                                  xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
-                                                  xt::pyarray<double>& globalJacobian,
-                                                  int nExteriorElementBoundaries_global,
-                                                  xt::pyarray<int>& exteriorElementBoundariesArray,
-                                                  xt::pyarray<int>& elementBoundaryElementsArray,
-                                                  xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                                  xt::pyarray<double>& ebqe_phi_ls_ext,
-                                                  xt::pyarray<int>& isDOFBoundary_u,
-                                                  xt::pyarray<double>& ebqe_bc_u_ext,
-                                                  xt::pyarray<int>& csrColumnOffsets_eb_u_u,
-                                                  // elliptic redistancing
-                                                  int ELLIPTIC_REDISTANCING,
-						  double backgroundDissipationEllipticRedist,
-                                                  double alpha,
-                                                  bool useExact)=0;
-    virtual void normalReconstruction(xt::pyarray<double>& mesh_trial_ref,
-                                      xt::pyarray<double>& mesh_grad_trial_ref,
-                                      xt::pyarray<double>& mesh_dof,
-                                      xt::pyarray<int>& mesh_l2g,
-                                      xt::pyarray<double>& dV_ref,
-                                      xt::pyarray<double>& u_trial_ref,
-                                      xt::pyarray<double>& u_grad_trial_ref,
-                                      xt::pyarray<double>& u_test_ref,
-                                      int nElements_global,
-                                      xt::pyarray<int>& u_l2g,
-                                      xt::pyarray<double>& elementDiameter,
-                                      xt::pyarray<double>& phi_dof,
-                                      int offset_u, int stride_u,
-                                      int numDOFs,
-                                      xt::pyarray<double>& lumped_qx,
-                                      xt::pyarray<double>& lumped_qy,
-                                      xt::pyarray<double>& lumped_qz)=0;
-    virtual std::tuple<double, double, double> calculateMetricsAtEOS( //EOS=End Of Simulation
-                                       xt::pyarray<double>& mesh_trial_ref,
-                                       xt::pyarray<double>& mesh_grad_trial_ref,
-                                       xt::pyarray<double>& mesh_dof,
-                                       xt::pyarray<int>& mesh_l2g,
-                                       xt::pyarray<double>& dV_ref,
-                                       xt::pyarray<double>& u_trial_ref,
-                                       xt::pyarray<double>& u_grad_trial_ref,
-                                       xt::pyarray<double>& u_test_ref,
-                                       //physics
-                                       int nElements_global,
-                                       xt::pyarray<int>& u_l2g,
-                                       xt::pyarray<double>& elementDiameter,
-                                       //xt::pyarray<double>& nodeDiametersArray,
-                                       double degree_polynomial,
-                                       double epsFact_redist,
-                                       xt::pyarray<double>& u_dof,
-                                       xt::pyarray<double>& u_exact,
-                                       int offset_u, int stride_u)=0;
+    virtual void calculateResidual(arguments_dict& args, bool useExact)=0;
+    virtual void calculateJacobian(arguments_dict& args, bool useExact)=0;
+    virtual void calculateResidual_ellipticRedist(arguments_dict& args, bool useExact)=0;
+    virtual void calculateJacobian_ellipticRedist(arguments_dict& args, bool useExact)=0;
+    virtual void normalReconstruction(arguments_dict& args)=0;
+    virtual std::tuple<double, double, double> calculateMetricsAtEOS(arguments_dict& args)=0;
   };
 
   template<class CompKernelType,
@@ -342,7 +49,7 @@ namespace proteus
     public:
       const int nDOF_test_X_trial_element;
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf,gfu;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf,gfu;
     RDLS():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
@@ -365,6 +72,12 @@ namespace proteus
         dm=1.0;
         H = 0.0;
         Si= gf.H(eps,u_levelSet) - gf.ImH(eps,u_levelSet);
+        /* if (u_levelSet > 0.0) */
+        /*   Si=1.0; */
+        /* else if (u_levelSet < 0.0) */
+        /*   Si = -1.0; */
+        /* else */
+        /*   Si=0.0; */
         r = -Si;
         for (I=0; I < nSpace; I++)
           {
@@ -414,78 +127,74 @@ namespace proteus
       }
 
 #undef CKDEBUG
-      void calculateResidual(//element
-                             xt::pyarray<double>& mesh_trial_ref,
-                             xt::pyarray<double>& mesh_grad_trial_ref,
-                             xt::pyarray<double>& mesh_dof,
-                             xt::pyarray<int>& mesh_l2g,
-                             xt::pyarray<double>& x_ref,
-                             xt::pyarray<double>& dV_ref,
-                             xt::pyarray<double>& u_trial_ref,
-                             xt::pyarray<double>& u_grad_trial_ref,
-                             xt::pyarray<double>& u_test_ref,
-                             xt::pyarray<double>& u_grad_test_ref,
-                             //element boundary
-                             xt::pyarray<double>& mesh_trial_trace_ref,
-                             xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                             xt::pyarray<double>& dS_ref,
-                             xt::pyarray<double>& u_trial_trace_ref,
-                             xt::pyarray<double>& u_grad_trial_trace_ref,
-                             xt::pyarray<double>& u_test_trace_ref,
-                             xt::pyarray<double>& u_grad_test_trace_ref,
-                             xt::pyarray<double>& normal_ref,
-                             xt::pyarray<double>& boundaryJac_ref,
-                             //physics
-                             int nElements_global,
-                             double useMetrics,
-                             double alphaBDF,
-                             double epsFact_redist,
-                             double backgroundDiffusionFactor,
-                             double weakDirichletFactor,
-                             int freezeLevelSet,
-                             int useTimeIntegration,
-                             int lag_shockCapturing,
-                             int lag_subgridError, //0 nothing lagged
-                             //1 dH lagged in tau
-                             //2 dH lagged in tau and Residual, adjoint calculations
-                             double shockCapturingDiffusion,
-                             xt::pyarray<int>& u_l2g,
-                             xt::pyarray<double>& elementDiameter,
-                             xt::pyarray<double>& nodeDiametersArray,
-                             xt::pyarray<double>& u_dof,
-                             xt::pyarray<double>& phi_dof,
-                             xt::pyarray<double>& phi_ls,
-                             xt::pyarray<double>& q_m,
-                             xt::pyarray<double>& q_u,
-                             xt::pyarray<double>& q_n,
-                             xt::pyarray<double>& q_dH,
-                             xt::pyarray<double>& u_weak_internal_bc_dofs,//for freezing level set
-                             xt::pyarray<double>& q_m_betaBDF,
-                             xt::pyarray<double>& q_dH_last,//for lagging subgrid error
-                             xt::pyarray<double>& q_cfl,
-                             xt::pyarray<double>& q_numDiff_u,
-                             xt::pyarray<double>& q_numDiff_u_last,
-                             xt::pyarray<int>& weakDirichletConditionFlags,
-                             int offset_u, int stride_u,
-                             xt::pyarray<double>& globalResidual,
-                             int nExteriorElementBoundaries_global,
-                             xt::pyarray<int>& exteriorElementBoundariesArray,
-                             xt::pyarray<int>& elementBoundaryElementsArray,
-                             xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                             xt::pyarray<double>& ebqe_phi_ls_ext,
-                             xt::pyarray<int>& isDOFBoundary_u,
-                             xt::pyarray<double>& ebqe_bc_u_ext,
-                             xt::pyarray<double>& ebqe_u,
-                             xt::pyarray<double>& ebqe_n,
-                             // elliptic redistancing
-                             int ELLIPTIC_REDISTANCING,
-			     double backgroundDissipationEllipticRedist,
-                             xt::pyarray<double>& lumped_qx,
-                             xt::pyarray<double>& lumped_qy,
-                             xt::pyarray<double>& lumped_qz,
-                             double alpha,
+      void calculateResidual(arguments_dict& args,
                              bool useExact)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& x_ref = args.m_darray["x_ref"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        double backgroundDiffusionFactor = args.m_dscalar["backgroundDiffusionFactor"];
+        double weakDirichletFactor = args.m_dscalar["weakDirichletFactor"];
+        int freezeLevelSet = args.m_iscalar["freezeLevelSet"];
+        int useTimeIntegration = args.m_iscalar["useTimeIntegration"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        int lag_subgridError = args.m_iscalar["lag_subgridError"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& nodeDiametersArray = args.m_darray["nodeDiametersArray"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& phi_dof = args.m_darray["phi_dof"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_m = args.m_darray["q_m"];
+        xt::pyarray<double>& q_u = args.m_darray["q_u"];
+        xt::pyarray<double>& q_n = args.m_darray["q_n"];
+        xt::pyarray<double>& q_dH = args.m_darray["q_dH"];
+        xt::pyarray<double>& u_weak_internal_bc_dofs = args.m_darray["u_weak_internal_bc_dofs"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& q_dH_last = args.m_darray["q_dH_last"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<int>& weakDirichletConditionFlags = args.m_iarray["weakDirichletConditionFlags"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u"];
+        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_phi_ls_ext = args.m_darray["ebqe_phi_ls_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<double>& ebqe_u = args.m_darray["ebqe_u"];
+        xt::pyarray<double>& ebqe_n = args.m_darray["ebqe_n"];
+        int ELLIPTIC_REDISTANCING = args.m_iscalar["ELLIPTIC_REDISTANCING"];
+        double backgroundDissipationEllipticRedist = args.m_dscalar["backgroundDissipationEllipticRedist"];
+        xt::pyarray<double>& lumped_qx = args.m_darray["lumped_qx"];
+        xt::pyarray<double>& lumped_qy = args.m_darray["lumped_qy"];
+        xt::pyarray<double>& lumped_qz = args.m_darray["lumped_qz"];
+        double alpha = args.m_dscalar["alpha"];
         double circbc=0.0,circ=0.0;
         gf.useExact=useExact;
         gfu.useExact=useExact;
@@ -534,7 +243,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
             /* for (int i=0;i<nDOF_test_element;i++) */
             /*   { */
 	    /*     register int eN_i=eN*nDOF_trial_element+i; */
@@ -600,8 +309,9 @@ namespace proteus
                 ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
                 ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref.data()[k*nDOF_trial_element],u0);
                 if (freezeLevelSet)
-                  u0 = phi_ls.data()[eN_k];
-                //u0 = phi_ls.data()[eN_k];//cek debug
+                  {
+                    u0 = phi_ls.data()[eN_k];
+                  }
                 /* double DX=(x-0.5),DY=(y-0.75); */
                 /* double radius = std::sqrt(DX*DX+DY*DY); */
                 /* double theta = std::atan2(DY,DX); */
@@ -765,6 +475,7 @@ namespace proteus
                   {
                     register int i_nSpace = i*nSpace;
                     double FREEZE=double(freezeLevelSet);
+                    //assert(FREEZE==0.0);
                     //register int eN_k_i=eN_k*nDOF_test_element+i;
                     //register int eN_k_i_nSpace = eN_k_i*nSpace;
 
@@ -895,68 +606,66 @@ namespace proteus
       //for now assumes that using time integration
       //and so lags stabilization and subgrid error
       //extern "C" void calculateJacobian_RDLSV2(int nElements_global,
-      void calculateJacobian(//element
-                             xt::pyarray<double>& mesh_trial_ref,
-                             xt::pyarray<double>& mesh_grad_trial_ref,
-                             xt::pyarray<double>& mesh_dof,
-                             xt::pyarray<int>& mesh_l2g,
-                             xt::pyarray<double>& x_ref,
-                             xt::pyarray<double>& dV_ref,
-                             xt::pyarray<double>& u_trial_ref,
-                             xt::pyarray<double>& u_grad_trial_ref,
-                             xt::pyarray<double>& u_test_ref,
-                             xt::pyarray<double>& u_grad_test_ref,
-                             //element boundary
-                             xt::pyarray<double>& mesh_trial_trace_ref,
-                             xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                             xt::pyarray<double>& dS_ref,
-                             xt::pyarray<double>& u_trial_trace_ref,
-                             xt::pyarray<double>& u_grad_trial_trace_ref,
-                             xt::pyarray<double>& u_test_trace_ref,
-                             xt::pyarray<double>& u_grad_test_trace_ref,
-                             xt::pyarray<double>& normal_ref,
-                             xt::pyarray<double>& boundaryJac_ref,
-                             //physics
-                             int nElements_global,
-                             double useMetrics,
-                             double alphaBDF,
-                             double epsFact_redist,
-                             double backgroundDiffusionFactor,
-                             double weakDirichletFactor,
-                             int freezeLevelSet,
-                             int useTimeIntegration,
-                             int lag_shockCapturing,
-                             int lag_subgridError,
-                             double shockCapturingDiffusion,
-                             xt::pyarray<int>& u_l2g,
-                             xt::pyarray<double>& elementDiameter,
-                             xt::pyarray<double>& nodeDiametersArray,
-                             xt::pyarray<double>& u_dof,
-                             xt::pyarray<double>& phi_dof,
-                             xt::pyarray<double>& u_weak_internal_bc_dofs,//for freezing level set
-                             xt::pyarray<double>& phi_ls,
-                             xt::pyarray<double>& q_m_betaBDF,
-                             xt::pyarray<double>& q_dH_last,
-                             xt::pyarray<double>& q_cfl,
-                             xt::pyarray<double>& q_numDiff_u,
-                             xt::pyarray<double>& q_numDiff_u_last,
-                             xt::pyarray<int>& weakDirichletConditionFlags,
-                             xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
-                             xt::pyarray<double>& globalJacobian,
-                             int nExteriorElementBoundaries_global,
-                             xt::pyarray<int>& exteriorElementBoundariesArray,
-                             xt::pyarray<int>& elementBoundaryElementsArray,
-                             xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                             xt::pyarray<double>& ebqe_phi_ls_ext,
-                             xt::pyarray<int>& isDOFBoundary_u,
-                             xt::pyarray<double>& ebqe_bc_u_ext,
-                             xt::pyarray<int>& csrColumnOffsets_eb_u_u,
-                             // elliptic redistancing
-                             int ELLIPTIC_REDISTANCING,
-			     double backgroundDissipationEllipticRedist,
-                             double alpha,
+      void calculateJacobian(arguments_dict& args,
                              bool useExact)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& x_ref = args.m_darray["x_ref"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        double backgroundDiffusionFactor = args.m_dscalar["backgroundDiffusionFactor"];
+        double weakDirichletFactor = args.m_dscalar["weakDirichletFactor"];
+        int freezeLevelSet = args.m_iscalar["freezeLevelSet"];
+        int useTimeIntegration = args.m_iscalar["useTimeIntegration"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        int lag_subgridError = args.m_iscalar["lag_subgridError"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& nodeDiametersArray = args.m_darray["nodeDiametersArray"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& phi_dof = args.m_darray["phi_dof"];
+        xt::pyarray<double>& u_weak_internal_bc_dofs = args.m_darray["u_weak_internal_bc_dofs"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& q_dH_last = args.m_darray["q_dH_last"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<int>& weakDirichletConditionFlags = args.m_iarray["weakDirichletConditionFlags"];
+        xt::pyarray<int>& csrRowIndeces_u_u = args.m_iarray["csrRowIndeces_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_u_u = args.m_iarray["csrColumnOffsets_u_u"];
+        xt::pyarray<double>& globalJacobian = args.m_darray["globalJacobian"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_phi_ls_ext = args.m_darray["ebqe_phi_ls_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.m_iarray["csrColumnOffsets_eb_u_u"];
+        int ELLIPTIC_REDISTANCING = args.m_iscalar["ELLIPTIC_REDISTANCING"];
+        double backgroundDissipationEllipticRedist = args.m_dscalar["backgroundDissipationEllipticRedist"];
+        double alpha = args.m_dscalar["alpha"];
         double circ=0.0;
         gf.useExact=useExact;
         //
@@ -990,7 +699,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());            
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);            
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
@@ -1390,78 +1099,74 @@ namespace proteus
         /* gf.useExact = useExact;//just to be safe */
       }//computeJacobian
 
-      void calculateResidual_ellipticRedist(//element
-                                            xt::pyarray<double>& mesh_trial_ref,
-                                            xt::pyarray<double>& mesh_grad_trial_ref,
-                                            xt::pyarray<double>& mesh_dof,
-                                            xt::pyarray<int>& mesh_l2g,
-                                            xt::pyarray<double>& x_ref,
-                                            xt::pyarray<double>& dV_ref,
-                                            xt::pyarray<double>& u_trial_ref,
-                                            xt::pyarray<double>& u_grad_trial_ref,
-                                            xt::pyarray<double>& u_test_ref,
-                                            xt::pyarray<double>& u_grad_test_ref,
-                                            //element boundary
-                                            xt::pyarray<double>& mesh_trial_trace_ref,
-                                            xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                            xt::pyarray<double>& dS_ref,
-                                            xt::pyarray<double>& u_trial_trace_ref,
-                                            xt::pyarray<double>& u_grad_trial_trace_ref,
-                                            xt::pyarray<double>& u_test_trace_ref,
-                                            xt::pyarray<double>& u_grad_test_trace_ref,
-                                            xt::pyarray<double>& normal_ref,
-                                            xt::pyarray<double>& boundaryJac_ref,
-                                            //physics
-                                            int nElements_global,
-                                            double useMetrics,
-                                            double alphaBDF,
-                                            double epsFact_redist,
-                                            double backgroundDiffusionFactor,
-                                            double weakDirichletFactor,
-                                            int freezeLevelSet,
-                                            int useTimeIntegration,
-                                            int lag_shockCapturing,
-                                            int lag_subgridError, //0 nothing lagged
-                                            //1 dH lagged in tau
-                                            //2 dH lagged in tau and Residual, adjoint calculations
-                                            double shockCapturingDiffusion,
-                                            xt::pyarray<int>& u_l2g,
-                                            xt::pyarray<double>& elementDiameter,
-                                            xt::pyarray<double>& nodeDiametersArray,
-                                            xt::pyarray<double>& u_dof,
-                                            xt::pyarray<double>& phi_dof,
-                                            xt::pyarray<double>& phi_ls,
-                                            xt::pyarray<double>& q_m,
-                                            xt::pyarray<double>& q_u,
-                                            xt::pyarray<double>& q_n,
-                                            xt::pyarray<double>& q_dH,
-                                            xt::pyarray<double>& u_weak_internal_bc_dofs,//for freezing level set
-                                            xt::pyarray<double>& q_m_betaBDF,
-                                            xt::pyarray<double>& q_dH_last,//for lagging subgrid error
-                                            xt::pyarray<double>& q_cfl,
-                                            xt::pyarray<double>& q_numDiff_u,
-                                            xt::pyarray<double>& q_numDiff_u_last,
-                                            xt::pyarray<int>& weakDirichletConditionFlags,
-                                            int offset_u, int stride_u,
-                                            xt::pyarray<double>& globalResidual,
-                                            int nExteriorElementBoundaries_global,
-                                            xt::pyarray<int>& exteriorElementBoundariesArray,
-                                            xt::pyarray<int>& elementBoundaryElementsArray,
-                                            xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                            xt::pyarray<double>& ebqe_phi_ls_ext,
-                                            xt::pyarray<int>& isDOFBoundary_u,
-                                            xt::pyarray<double>& ebqe_bc_u_ext,
-                                            xt::pyarray<double>& ebqe_u,
-                                            xt::pyarray<double>& ebqe_n,
-                                            // elliptic redistancing
-                                            int ELLIPTIC_REDISTANCING,
-					    double backgroundDissipationEllipticRedist,
-                                            xt::pyarray<double>& lumped_qx,
-                                            xt::pyarray<double>& lumped_qy,
-                                            xt::pyarray<double>& lumped_qz,
-                                            double alpha,
+      void calculateResidual_ellipticRedist(arguments_dict& args,
                                             bool useExact)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& x_ref = args.m_darray["x_ref"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        double backgroundDiffusionFactor = args.m_dscalar["backgroundDiffusionFactor"];
+        double weakDirichletFactor = args.m_dscalar["weakDirichletFactor"];
+        int freezeLevelSet = args.m_iscalar["freezeLevelSet"];
+        int useTimeIntegration = args.m_iscalar["useTimeIntegration"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        int lag_subgridError = args.m_iscalar["lag_subgridError"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& nodeDiametersArray = args.m_darray["nodeDiametersArray"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& phi_dof = args.m_darray["phi_dof"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_m = args.m_darray["q_m"];
+        xt::pyarray<double>& q_u = args.m_darray["q_u"];
+        xt::pyarray<double>& q_n = args.m_darray["q_n"];
+        xt::pyarray<double>& q_dH = args.m_darray["q_dH"];
+        xt::pyarray<double>& u_weak_internal_bc_dofs = args.m_darray["u_weak_internal_bc_dofs"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& q_dH_last = args.m_darray["q_dH_last"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<int>& weakDirichletConditionFlags = args.m_iarray["weakDirichletConditionFlags"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u"];
+        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_phi_ls_ext = args.m_darray["ebqe_phi_ls_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<double>& ebqe_u = args.m_darray["ebqe_u"];
+        xt::pyarray<double>& ebqe_n = args.m_darray["ebqe_n"];
+        int ELLIPTIC_REDISTANCING = args.m_iscalar["ELLIPTIC_REDISTANCING"];
+        double backgroundDissipationEllipticRedist = args.m_dscalar["backgroundDissipationEllipticRedist"];
+        xt::pyarray<double>& lumped_qx = args.m_darray["lumped_qx"];
+        xt::pyarray<double>& lumped_qy = args.m_darray["lumped_qy"];
+        xt::pyarray<double>& lumped_qz = args.m_darray["lumped_qz"];
+        double alpha = args.m_dscalar["alpha"];
         gf.useExact=useExact;
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -1491,7 +1196,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());                        
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);                        
             //loop over quadrature points and compute integrands
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
@@ -1708,68 +1413,66 @@ namespace proteus
           }//ebNE
       }
 
-      void calculateJacobian_ellipticRedist(//element
-                                            xt::pyarray<double>& mesh_trial_ref,
-                                            xt::pyarray<double>& mesh_grad_trial_ref,
-                                            xt::pyarray<double>& mesh_dof,
-                                            xt::pyarray<int>& mesh_l2g,
-                                            xt::pyarray<double>& x_ref,
-                                            xt::pyarray<double>& dV_ref,
-                                            xt::pyarray<double>& u_trial_ref,
-                                            xt::pyarray<double>& u_grad_trial_ref,
-                                            xt::pyarray<double>& u_test_ref,
-                                            xt::pyarray<double>& u_grad_test_ref,
-                                            //element boundary
-                                            xt::pyarray<double>& mesh_trial_trace_ref,
-                                            xt::pyarray<double>& mesh_grad_trial_trace_ref,
-                                            xt::pyarray<double>& dS_ref,
-                                            xt::pyarray<double>& u_trial_trace_ref,
-                                            xt::pyarray<double>& u_grad_trial_trace_ref,
-                                            xt::pyarray<double>& u_test_trace_ref,
-                                            xt::pyarray<double>& u_grad_test_trace_ref,
-                                            xt::pyarray<double>& normal_ref,
-                                            xt::pyarray<double>& boundaryJac_ref,
-                                            //physics
-                                            int nElements_global,
-                                            double useMetrics,
-                                            double alphaBDF,
-                                            double epsFact_redist,
-                                            double backgroundDiffusionFactor,
-                                            double weakDirichletFactor,
-                                            int freezeLevelSet,
-                                            int useTimeIntegration,
-                                            int lag_shockCapturing,
-                                            int lag_subgridError,
-                                            double shockCapturingDiffusion,
-                                            xt::pyarray<int>& u_l2g,
-                                            xt::pyarray<double>& elementDiameter,
-                                            xt::pyarray<double>& nodeDiametersArray,
-                                            xt::pyarray<double>& u_dof,
-                                            xt::pyarray<double>& phi_dof,
-                                            xt::pyarray<double>& u_weak_internal_bc_dofs,//for freezing level set
-                                            xt::pyarray<double>& phi_ls,
-                                            xt::pyarray<double>& q_m_betaBDF,
-                                            xt::pyarray<double>& q_dH_last,
-                                            xt::pyarray<double>& q_cfl,
-                                            xt::pyarray<double>& q_numDiff_u,
-                                            xt::pyarray<double>& q_numDiff_u_last,
-                                            xt::pyarray<int>& weakDirichletConditionFlags,
-                                            xt::pyarray<int>& csrRowIndeces_u_u,xt::pyarray<int>& csrColumnOffsets_u_u,
-                                            xt::pyarray<double>& globalJacobian,
-                                            int nExteriorElementBoundaries_global,
-                                            xt::pyarray<int>& exteriorElementBoundariesArray,
-                                            xt::pyarray<int>& elementBoundaryElementsArray,
-                                            xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray,
-                                            xt::pyarray<double>& ebqe_phi_ls_ext,
-                                            xt::pyarray<int>& isDOFBoundary_u,
-                                            xt::pyarray<double>& ebqe_bc_u_ext,
-                                            xt::pyarray<int>& csrColumnOffsets_eb_u_u,
-                                            // elliptic redistancing
-                                            int ELLIPTIC_REDISTANCING,
-					    double backgroundDissipationEllipticRedist,
-                                            double alpha,
+      void calculateJacobian_ellipticRedist(arguments_dict& args,
                                             bool useExact)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& x_ref = args.m_darray["x_ref"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        double backgroundDiffusionFactor = args.m_dscalar["backgroundDiffusionFactor"];
+        double weakDirichletFactor = args.m_dscalar["weakDirichletFactor"];
+        int freezeLevelSet = args.m_iscalar["freezeLevelSet"];
+        int useTimeIntegration = args.m_iscalar["useTimeIntegration"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        int lag_subgridError = args.m_iscalar["lag_subgridError"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& nodeDiametersArray = args.m_darray["nodeDiametersArray"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& phi_dof = args.m_darray["phi_dof"];
+        xt::pyarray<double>& u_weak_internal_bc_dofs = args.m_darray["u_weak_internal_bc_dofs"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& q_dH_last = args.m_darray["q_dH_last"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<int>& weakDirichletConditionFlags = args.m_iarray["weakDirichletConditionFlags"];
+        xt::pyarray<int>& csrRowIndeces_u_u = args.m_iarray["csrRowIndeces_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_u_u = args.m_iarray["csrColumnOffsets_u_u"];
+        xt::pyarray<double>& globalJacobian = args.m_darray["globalJacobian"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_phi_ls_ext = args.m_darray["ebqe_phi_ls_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.m_iarray["csrColumnOffsets_eb_u_u"];
+        int ELLIPTIC_REDISTANCING = args.m_iscalar["ELLIPTIC_REDISTANCING"];
+        double backgroundDissipationEllipticRedist = args.m_dscalar["backgroundDissipationEllipticRedist"];
+        double alpha = args.m_dscalar["alpha"];
         gf.useExact=useExact;
         //
         //loop over elements
@@ -1794,7 +1497,7 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref.data());
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
@@ -1918,27 +1621,26 @@ namespace proteus
           }//elements
       }//computeJacobian
 
-      void normalReconstruction(//element
-                                xt::pyarray<double>& mesh_trial_ref,//
-                                xt::pyarray<double>& mesh_grad_trial_ref,
-                                xt::pyarray<double>& mesh_dof, //
-                                xt::pyarray<int>& mesh_l2g,//
-                                xt::pyarray<double>& dV_ref,//
-                                xt::pyarray<double>& u_trial_ref,
-                                xt::pyarray<double>& u_grad_trial_ref,
-                                xt::pyarray<double>& u_test_ref,
-                                //physics
-                                int nElements_global,//
-                                xt::pyarray<int>& u_l2g, //
-                                xt::pyarray<double>& elementDiameter,//
-                                xt::pyarray<double>& u_dof,//
-                                int offset_u, int stride_u,
-                                // PARAMETERS FOR EDGE VISCOSITY
-                                int numDOFs,
-                                xt::pyarray<double>& lumped_qx,
-                                xt::pyarray<double>& lumped_qy,
-                                xt::pyarray<double>& lumped_qz)
+      void normalReconstruction(arguments_dict& args)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u"];
+        int numDOFs = args.m_iscalar["numDOFs"];
+        xt::pyarray<double>& lumped_qx = args.m_darray["lumped_qx"];
+        xt::pyarray<double>& lumped_qy = args.m_darray["lumped_qy"];
+        xt::pyarray<double>& lumped_qz = args.m_darray["lumped_qz"];
         weighted_lumped_mass_matrix.resize(numDOFs,0.0);
         for (int i=0; i<numDOFs; i++)
           {
@@ -2043,26 +1745,25 @@ namespace proteus
           }
       }
 
-      std::tuple<double, double, double> calculateMetricsAtEOS( //EOS=End Of Simulation
-                                 xt::pyarray<double>& mesh_trial_ref, //
-                                 xt::pyarray<double>& mesh_grad_trial_ref, //
-                                 xt::pyarray<double>& mesh_dof, //
-                                 xt::pyarray<int>& mesh_l2g, //
-                                 xt::pyarray<double>& dV_ref, //
-                                 xt::pyarray<double>& u_trial_ref,
-                                 xt::pyarray<double>& u_grad_trial_ref,
-                                 xt::pyarray<double>& u_test_ref, //
-                                 //physics
-                                 int nElements_global, //
-                                 xt::pyarray<int>& u_l2g, //
-                                 xt::pyarray<double>& elementDiameter,
-                                 //xt::pyarray<double>& nodeDiametersArray,
-                                 double degree_polynomial,
-                                 double epsFact_redist,
-                                 xt::pyarray<double>& u_dof,
-                                 xt::pyarray<double>& u_exact,
-                                 int offset_u, int stride_u)
+      std::tuple<double, double, double> calculateMetricsAtEOS(arguments_dict& args)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        double degree_polynomial = args.m_dscalar["degree_polynomial"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& u_exact = args.m_darray["u_exact"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u)"];
         double global_V = 0.;
         double global_V0 = 0.;
         double global_I_err = 0.0;

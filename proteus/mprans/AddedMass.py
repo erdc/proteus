@@ -19,7 +19,7 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
-from . import cAddedMass
+from . import cAddedMass, cArgumentsDict
 from mpi4py import MPI
 
 class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior):
@@ -668,43 +668,46 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.setUnknowns(u)
         self.Aij[:,:,self.added_mass_i]=0.0
-        self.addedMass.calculateResidual(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
+
+        argDict = cArgumentsDict.ArgumentsDict()
+        argDict['mesh_trial_ref'] = self.u[0].femSpace.elementMaps.psi
+        argDict['mesh_grad_trial_ref'] = self.u[0].femSpace.elementMaps.grad_psi
+        argDict['mesh_dof'] = self.mesh.nodeArray
+        argDict['mesh_l2g'] = self.mesh.elementNodesArray
+        argDict['dV_ref'] = self.elementQuadratureWeights[('u', 0)]
+        argDict['u_trial_ref'] = self.u[0].femSpace.psi
+        argDict['u_grad_trial_ref'] = self.u[0].femSpace.grad_psi
+        argDict['u_test_ref'] = self.u[0].femSpace.psi
+        argDict['u_grad_test_ref'] = self.u[0].femSpace.grad_psi
             # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
+        argDict['mesh_trial_trace_ref'] = self.u[0].femSpace.elementMaps.psi_trace
+        argDict['mesh_grad_trial_trace_ref'] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argDict['dS_ref'] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argDict['u_trial_trace_ref'] = self.u[0].femSpace.psi_trace
+        argDict['u_grad_trial_trace_ref'] = self.u[0].femSpace.grad_psi_trace
+        argDict['u_test_trace_ref'] = self.u[0].femSpace.psi_trace
+        argDict['u_grad_test_trace_ref'] = self.u[0].femSpace.grad_psi_trace
+        argDict['normal_ref'] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argDict['boundaryJac_ref'] = self.u[0].femSpace.elementMaps.boundaryJacobians
             # physics
-            self.mesh.nElements_global,
-            self.mesh.nElementBoundaries_owned,
-            self.u[0].femSpace.dofMap.l2g,
-            self.u[0].dof,
-            self.coefficients.q_rho,
-            self.offset[0], self.stride[0],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.mesh.elementBoundaryMaterialTypes,
-            self.Aij,
-            self.added_mass_i,
-            self.barycenters,
-            self.flags_rigidbody)
+        argDict['nElements_global'] = self.mesh.nElements_global
+        argDict['nElementBoundaries_owned'] = self.mesh.nElementBoundaries_owned
+        argDict['u_l2g'] = self.u[0].femSpace.dofMap.l2g
+        argDict['u_dof'] = self.u[0].dof
+        argDict['q_rho'] = self.coefficients.q_rho
+        argDict['offset_u'] = self.offset[0]
+        argDict['stride_u'] = self.stride[0]
+        argDict['globalResidual'] = r
+        argDict['nExteriorElementBoundaries_global'] = self.mesh.nExteriorElementBoundaries_global
+        argDict['exteriorElementBoundariesArray'] = self.mesh.exteriorElementBoundariesArray
+        argDict['elementBoundaryElementsArray'] = self.mesh.elementBoundaryElementsArray
+        argDict['elementBoundaryLocalElementBoundariesArray'] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argDict['elementBoundaryMaterialTypesArray'] = self.mesh.elementBoundaryMaterialTypes
+        argDict['Aij'] = self.Aij
+        argDict['added_mass_i'] = self.added_mass_i
+        argDict['barycenters'] = self.barycenters
+        argDict['flags_rigidbody'] = self.flags_rigidbody
+        self.addedMass.calculateResidual(argDict)
         # sum of residual should be zero
         # but it is sometimes not exactly zero with certain meshes in parallel
         # hack

@@ -1,8 +1,12 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .vof_rotation_2d_p import *
-from .rotation2D import *
+try:
+    from .vof_rotation_2d_p import *
+    from .rotation2D import *
+except:
+    from vof_rotation_2d_p import *
+    from rotation2D import *
 
 multilevelNonlinearSolver  = NLNI
 levelNonlinearSolver = Newton
