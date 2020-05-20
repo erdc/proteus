@@ -14,9 +14,6 @@
 
 namespace py = pybind11;
 
-#define IFEM
-#define IFEMGALERKIN
-#define DEBUG
 #define ZEROVEC {0.,0.}
 const bool UPWIND_DIRICHLET=false;
 
@@ -4242,7 +4239,7 @@ namespace proteus
           int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref.data(), -rho_1*g.data()[1], -rho_0*g.data()[1],false,true);
           int icase = gf.calculate(element_phi, element_nodes, x_ref.data(), rho_1*nu_1, rho_0*nu_0,false,false);
 #else
-          int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref.data().data(), 1.,1.,false,false);
+          int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref.data(), 1.,1.,false,false);
           int icase = gf.calculate(element_phi, element_nodes, x_ref.data(), 1.,1.,false,false);
 #endif
           for (int fluid_phase=0;fluid_phase < 2 - abs(icase); fluid_phase++)
