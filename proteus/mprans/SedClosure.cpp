@@ -23,7 +23,24 @@ PYBIND11_MODULE(SedClosure, m)
     py::class_<cppHsuSedStress2D>(m, "HsuSedStress")
         .def(py::init<double, double, double, double, double, double, double, double,
                       double, double, double, double, double, double, double, double,
-                      double>())
+	     double>(),
+	     py::arg("aDarcy"),
+	     py::arg("betaForch"),
+	     py::arg("grain"),
+	     py::arg("packFraction"),
+	     py::arg("packMargin"),
+	     py::arg("maxFraction"),
+	     py::arg("frFraction"),
+	     py::arg("sigmaC"),
+	     py::arg("C3e"),
+	     py::arg("C4e"),
+	     py::arg("eR"),
+	     py::arg("fContact"),
+	     py::arg("mContact"),
+	     py::arg("nContact"),
+	     py::arg("angFriction"),
+	     py::arg("vos_limiter"),
+	     py::arg("mu_fr_limiter"))
         .def_readonly("aDarcy", &cppHsuSedStress2D::aDarcy_)
         .def_readonly("betaForch", &cppHsuSedStress2D::betaForch_)
         .def_readonly("grain", &cppHsuSedStress2D::grain_)

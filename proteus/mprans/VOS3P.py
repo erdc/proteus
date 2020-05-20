@@ -1233,7 +1233,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["global_max_u"] = self.coefficients.global_max_u
         argsDict["csrRowIndeces_DofLoops"] = rowptr
         argsDict["csrColumnOffsets_DofLoops"] = colind
-        self.vos.kth_FCT_step(args)
+        self.vos.kth_FCT_step(argsDict)
         self.timeIntegration.u[:] = limited_solution
         fromFreeToGlobal=1 #direction copying
         cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
