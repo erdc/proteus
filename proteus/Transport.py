@@ -110,7 +110,8 @@ class OneLevelTransport(NonlinearEquation):
                  reuse_trial_and_test_quadrature=False,
                  sd = True,
                  movingDomain=False,
-                 bdyNullSpace=False):#,
+                 bdyNullSpace=False,
+                 hasCutCells=False):#,
         r""" Allocate storage and initialize some variables.
 
         Parameters
@@ -190,6 +191,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #set the objects describing the method and boundary conditions
         #
+        self.hasCutCells=False
         self.movingDomain=movingDomain
         self.tLast_mesh=None
         self.par_info = ParInfo_petsc4py()
@@ -1658,8 +1660,10 @@ class OneLevelTransport(NonlinearEquation):
         for cj,sol in analyticalSolutionsDict.items():
             if not hasattr(self,'u_save'):
                 self.u_save = {}
+                self.u_analytical = {}
             if cj not in self.u_save:
                 self.u_save[cj] = (self.u[cj].dof.copy(), self.u[cj].name)
+                self.u_analytical[cj] = (self.u[cj].dof.copy(), self.u[cj].name+'_analytical')
             else:
                 self.u_save[cj][0][:] = self.u[cj].dof
             interpolationValues = numpy.zeros((self.mesh.nElements_global,
@@ -1677,6 +1681,7 @@ class OneLevelTransport(NonlinearEquation):
             self.u[cj].projectFromInterpolationConditions(interpolationValues)
             self.u[cj].name += '_analytical'
             self.u[cj].femSpace.writeFunctionXdmf(archive,self.u[cj],tCount)
+            self.u_analytical[cj][0][:] = self.u[cj].dof
             self.u[cj].dof[:] = self.u_save[cj][0]
             self.u[cj].name = self.u_save[cj][1]
     #what about setting initial conditions directly from dofs calculated elsewhere?
@@ -1830,7 +1835,6 @@ class OneLevelTransport(NonlinearEquation):
             self.getJacobian_dense(jacobian)
         else:
             raise TypeError("Matrix type must be SparseMatrix or array")
-        logEvent("Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys()):
@@ -4279,13 +4283,26 @@ class OneLevelTransport(NonlinearEquation):
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]: #if we make stencil an array this can pass to C++
                 if useC:
-                    hasNumericalFlux=0
-                    if self.numericalFlux is not None and self.numericalFlux.hasInterior:
-                        hasNumericalFlux = 1
-                    hasDiffusionInMixedForm = int(self.numericalFlux is not None and  self.numericalFlux.mixedDiffusion[ci] == True)
-                    needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
-                    hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
-                    needsOutflowJacobian_int = int(needOutflowJacobian == True)
+                    #immersed/embedded
+                    try:
+                        if self.hasCutCells:
+                            hasNumericalFlux=1#cek hack 0
+                            if self.numericalFlux is not None and self.numericalFlux.hasInterior:
+                                hasNumericalFlux = 1
+                            hasDiffusionInMixedForm = 1#cek hack int(self.numericalFlux is not None and  self.numericalFlux.mixedDiffusion[ci] == True)
+                            needNumericalFluxJacobian_int = 1#cek hack int(needNumericalFluxJacobian)
+                            hasOutflowBoundary = 1#cek hack int(self.fluxBoundaryConditions[ci] == 'outFlow')
+                            needsOutflowJacobian_int = 1#cek hack int(needOutflowJacobian == True)
+                    except:
+                        self.hasCutCells=False
+                    if not self.hasCutCells:
+                        hasNumericalFlux=0
+                        if self.numericalFlux is not None and self.numericalFlux.hasInterior:
+                            hasNumericalFlux = 1
+                        hasDiffusionInMixedForm = int(self.numericalFlux is not None and  self.numericalFlux.mixedDiffusion[ci] == True)
+                        needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
+                        hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
+                        needsOutflowJacobian_int = int(needOutflowJacobian == True)
                     self.sparsityInfo.findNonzeros(self.mesh.nElements_global,
                                                    self.nDOF_test_element[ci],
                                                    self.nDOF_trial_element[cj],

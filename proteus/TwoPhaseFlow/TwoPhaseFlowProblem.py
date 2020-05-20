@@ -34,7 +34,8 @@ class TwoPhaseFlowProblem:
                  auxVariables=None,
                  # OTHERS #
                  useSuperlu=True,
-                 fastArchive=False):
+                 fastArchive=False,
+                 useExact=False):
         # ***** SET OF ASSERTS ***** #
         assert nd in [2,3], "nd={2,3}"
         assert cfl <= 1, "Choose cfl <= 1"
@@ -55,6 +56,7 @@ class TwoPhaseFlowProblem:
             assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
 
         # ***** SAVE PARAMETERS ***** #
+        self.useExact=useExact
         self.domain=domain
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
         self.modelList=[] #list used for internal tracking of models
@@ -82,6 +84,16 @@ class TwoPhaseFlowProblem:
 
         # ***** CREATE FINITE ELEMENT  ***** #
         self.FESpace = FESpace(self.nd)
+
+        # ***** CREATE FINITE ELEMENT SPACES ***** #
+        self.FESpace = FESpace(self.ns_model, self.nd)
+        self.FESpace.setFESpace(useExact)
+
+        # ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
+        self.physical_parameters = default_physical_parameters
+        self.rans2p_parameters = default_rans2p_parameters
+        self.rans3p_parameters = default_rans3p_parameters
+        self.clsvof_parameters = default_clsvof_parameters
 
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.general = default_general
@@ -284,24 +296,7 @@ class FESpace:
     def __getitem__(self, key):
         return self.__dict__[key]
 
-    def setFESpace(self,modelIdxDict):
-        """
-        User is allowed to define velSpaceOrder and pSpaceOrder. If not specified, defaults will be chosen based on 
-        """
-        
-        # For now we just support rans2p with: p1-p1 and rans3p with: p2-p1
-        if(self.velSpaceOrder is None and self.pSpaceOrder is None):
-            if 'rans2p' in modelIdxDict: # rans2p or None
-                self.velSpaceOrder=1
-                self.pSpaceOrder=1
-            elif 'rans3p' in modelIdxDict: #rans3p
-                self.velSpaceOrder=2
-                self.pSpaceOrder=1
-            else:
-                assert False, "the rans2p or rans3p model needs to be added to the problem"
-        assert self.velSpaceOrder is not None, "need to set problem.FESpace.velSpaceOrder"
-        assert self.pSpaceOrder is not None, "need to set problem.FESpace.pSpaceOrder"
-
+    def setFESpace(self,useExact=False):
 
         ##################
         # VELOCITY SPACE #
@@ -327,11 +322,19 @@ class FESpace:
         # QUADRATURE RULE #
         ###################
         if max(self.velSpaceOrder,self.pSpaceOrder)==1:
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 3)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 3)
+            if useExact:
+                quadOrder=6
+            else:
+                quadOrder=3
+            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
         else:
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, 5)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, 5)
+            if useExact:
+                quadOrder=6
+            else:
+                quadOrder=5
+            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
@@ -353,7 +356,7 @@ default_rans2p_parameters = {'useMetrics': 1.0,
                              'weak_bc_penalty_constant': 1.0E6,
                              'useRBLES': 0.0,
                              'ns_closure': 0,
-                             'useVF': 1.0,
+                             'useVF': 0.0,
                              'ns_shockCapturingFactor': 0.25,
                              'ns_lag_shockCapturing': True,
                              'ns_lag_subgridError': True,
@@ -368,7 +371,7 @@ default_rans3p_parameters = {'useMetrics': 1.0,
                              'useRBLES': 0.0,
                              'useRANS': 0.0,
                              'ns_closure': 0,
-                             'useVF': 1.0,
+                             'useVF': 0.0,
                              'ns_shockCapturingFactor': 0.5,
                              'ns_lag_shockCapturing': True,
                              'ns_lag_subgridError': True,

@@ -5,6 +5,10 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "SedClosure.h"
+#include "ArgumentsDict.h"
+#include "xtensor-python/pyarray.hpp"
+
+namespace py = pybind11;
 
 namespace proteus
 {
@@ -30,184 +34,8 @@ namespace proteus
                                double angFriction,
                                double vos_limiter,
                                double mu_fr_limiter){}
-   virtual void calculateResidual(//element
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   double* meshVelocity_dof,
-                                   double MOVING_DOMAIN,
-                                   int* mesh_l2g,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
-                                   //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
-                                   //physics
-                                   int nElements_global,
-                                   //diffusion terms
-                                   double nu_0,
-                                   double nu_1,
-                                   double sigma_e,
-                                   double c_mu,
-                                   double c_1,
-                                   double c_2,
-                                   double c_e,
-                                   double rho_0,
-                                   double rho_1,
-  //                             Argumentlist for sediment
-                                   double sedFlag,
-                                   double* q_vos,
-                                   double *q_vos_gradc,
-                                   double* ebqe_q_vos,
-                                   double *ebqe_q_vos_gradc,
-                                   double rho_f,
-                                   double rho_s,
-                                   double* vs,
-                                   double* ebqe_vs,
-                                   double* g,
-                              //end sediment
-                                   int dissipation_model_flag,
-                                   //end diffusion
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   int lag_shockCapturing,
-                                   double shockCapturingDiffusion,
-                                   double sc_uref, double sc_alpha,
-                                   int* u_l2g,
-                                   double* elementDiameter,
-                                   double* u_dof,double* u_dof_old,
-                                   double* velocity,
-                                   double* phi_ls, //level set variable
-                                   double* q_kappa, //kinetic energy variable
-                                   double* q_grad_kappa,
-                                   double* q_porosity, //VRANS
-                                   //velocity dof
-                                   double * velocity_dof_u,
-                                   double * velocity_dof_v,
-                                   double * velocity_dof_w,
-                                   //end velocity dof
-                                   double* q_m,
-                                   double* q_u,
-                                   double* q_grad_u,
-                                   double* q_m_betaBDF,
-                                   double* cfl,
-                                   double* q_numDiff_u,
-                                   double* q_numDiff_u_last,
-                                   double* ebqe_penalty_ext, //penalty
-                                   int offset_u, int stride_u,
-                                   double* globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_velocity_ext,
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_bc_u_ext,
-                                   int* isAdvectiveFluxBoundary_u,
-                                   double* ebqe_bc_advectiveFlux_u_ext,
-                                   int* isDiffusiveFluxBoundary_u,
-                                   double* ebqe_bc_diffusiveFlux_u_ext,
-                                   double* ebqe_phi,double epsFact,
-                                   double* ebqe_kappa, //kinetic energy variable on boundary
-                                   double* ebqe_porosity, //VRANS
-                                   double* ebqe_u,
-                                   double* ebqe_flux)=0;
-    virtual void calculateJacobian(//element
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   double* mesh_velocity_dof,
-                                   double MOVING_DOMAIN,
-                                   int* mesh_l2g,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
-                                   //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
-                                   //physics
-                                   int nElements_global,
-                                   //diffusion
-                                   double nu_0,
-                                   double nu_1,
-                                   double sigma_e,
-                                   double c_mu,
-                                   double c_1,
-                                   double c_2,
-                                   double c_e,
-                                   double rho_0,
-                                   double rho_1,
-                                   int dissipation_model_flag,
-                                   //end diffusion
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   int lag_shockCapturing,/*mwf not used yet*/
-                                   double shockCapturingDiffusion,
-                                   int* u_l2g,
-                                   double* elementDiameter,
-                                   double* u_dof, double* u_dof_old,
-                                   double* velocity,
-                                   double* phi_ls, //level set variable
-                                   double* q_kappa, //kinetic energy
-                                   double* q_grad_kappa,
-                                   double* q_porosity,//VRANS
-  //                             Argumentlist for sediment
-                                   double sedFlag,
-                                   double* q_vos,
-                                   double *q_vos_gradc,
-                                   double* ebqe_q_vos,
-                                   double *ebqe_q_vos_gradc,
-                                   double rho_f,
-                                   double rho_s,
-                                   double* vs,
-                                   double* ebqe_vs,
-                                   double* g,
-                              //end sediment
-                                   //velocity dof
-                                   double * velocity_dof_u,
-                                   double * velocity_dof_v,
-                                   double * velocity_dof_w,
-                                   //end velocity dof
-                                   double* q_m_betaBDF,
-                                   double* cfl,
-                                   double* q_numDiff_u_last,
-                                   double* ebqe_penalty_ext, //penalty
-                                   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                   double* globalJacobian,
-                                   int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_velocity_ext,
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_bc_u_ext,
-                                   int* isAdvectiveFluxBoundary_u,
-                                   double* ebqe_bc_advectiveFlux_u_ext,
-                                   int* isDiffusiveFluxBoundary_u,
-                                   double* ebqe_bc_diffusiveFlux_u_ext,
-                                   int* csrColumnOffsets_eb_u_u,
-                                   double* ebqe_phi,double epsFact,
-                                   double* ebqe_kappa,//kinetic energy on boundary
-                                   double* ebqe_porosity)=0; //VRANS
+   virtual void calculateResidual(arguments_dict& args)=0;
+    virtual void calculateJacobian(arguments_dict& args)=0; //VRANS
   };
 
   template<class CompKernelType,
@@ -742,99 +570,95 @@ namespace proteus
         fluxJacobian = 0.0;
     }
 
-    void calculateResidual(//element
-                           double* mesh_trial_ref,
-                           double* mesh_grad_trial_ref,
-                           double* mesh_dof,
-                           double* mesh_velocity_dof,
-                           double MOVING_DOMAIN,
-                           int* mesh_l2g,
-                           double* dV_ref,
-                           double* u_trial_ref,
-                           double* u_grad_trial_ref,
-                           double* u_test_ref,
-                           double* u_grad_test_ref,
-                           //element boundary
-                           double* mesh_trial_trace_ref,
-                           double* mesh_grad_trial_trace_ref,
-                           double* dS_ref,
-                           double* u_trial_trace_ref,
-                           double* u_grad_trial_trace_ref,
-                           double* u_test_trace_ref,
-                           double* u_grad_test_trace_ref,
-                           double* normal_ref,
-                           double* boundaryJac_ref,
-                           //physics
-                           int nElements_global,
-                           //diffusion terms
-                           double nu_0,
-                           double nu_1,
-                           double sigma_e,
-                           double c_mu,
-                           double c_1,
-                           double c_2,
-                           double c_e,
-                           double rho_0,
-                           double rho_1,
-  //                             Argumentlist for sediment
-                                   double sedFlag,
-                                   double* q_vos,
-                                   double *q_vos_gradc,
-                                   double* ebqe_q_vos,
-                                   double *ebqe_q_vos_gradc,
-                                   double rho_f,
-                                   double rho_s,
-                                   double* vs,
-                                   double* ebqe_vs,
-                                   double* g,
-                              //end sediment
-                          int dissipation_model_flag,
-                           //end diffusion
-                           double useMetrics,
-                           double alphaBDF,
-                           int lag_shockCapturing, /*mwf not used yet*/
-                           double shockCapturingDiffusion,
-                           double sc_uref, double sc_alpha,
-                           int* u_l2g,
-                           double* elementDiameter,
-                           double* u_dof,double* u_dof_old,
-                           double* velocity,
-                           double* phi_ls, //level set variable
-                           double* q_kappa, //kinetic energy
-                           double* q_grad_kappa,
-                           double* q_porosity, //VRANS
-                           //velocity dof
-                           double * velocity_dof_u,
-                           double * velocity_dof_v,
-                           double * velocity_dof_w,
-                           //end velocity dof
-                           double* q_m,
-                           double* q_u,
-                           double* q_grad_u,
-                           double* q_m_betaBDF,
-                           double* cfl,
-                           double* q_numDiff_u,
-                           double* q_numDiff_u_last,
-                           double* ebqe_penalty_ext, //penalty
-                           int offset_u, int stride_u,
-                           double* globalResidual,
-                           int nExteriorElementBoundaries_global,
-                           int* exteriorElementBoundariesArray,
-                           int* elementBoundaryElementsArray,
-                           int* elementBoundaryLocalElementBoundariesArray,
-                           double* ebqe_velocity_ext,
-                           int* isDOFBoundary_u,
-                           double* ebqe_bc_u_ext,
-                           int* isAdvectiveFluxBoundary_u,
-                           double* ebqe_bc_advectiveFlux_u_ext,
-                           int* isDiffusiveFluxBoundary_u,
-                           double* ebqe_bc_diffusiveFlux_u_ext,
-                           double* ebqe_phi,double epsFact,
-                           double* ebqe_kappa, //kinetic energy on boundary
-                           double* ebqe_porosity, //VRANS
-                           double* ebqe_u,
-                           double* ebqe_flux)
+    void calculateResidual(arguments_dict& args)
     {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<double>& mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
+        double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double nu_0 = args.m_dscalar["nu_0"];
+        double nu_1 = args.m_dscalar["nu_1"];
+        double sigma_e = args.m_dscalar["sigma_e"];
+        double c_mu = args.m_dscalar["c_mu"];
+        double c_1 = args.m_dscalar["c_1"];
+        double c_2 = args.m_dscalar["c_2"];
+        double c_e = args.m_dscalar["c_e"];
+        double rho_0 = args.m_dscalar["rho_0"];
+        double rho_1 = args.m_dscalar["rho_1"];
+        double sedFlag = args.m_dscalar["sedFlag"];
+        xt::pyarray<double>& q_vos = args.m_darray["q_vos"];
+        xt::pyarray<double>& q_vos_gradc = args.m_darray["q_vos_gradc"];
+        xt::pyarray<double>& ebqe_q_vos = args.m_darray["ebqe_q_vos"];
+        xt::pyarray<double>& ebqe_q_vos_gradc = args.m_darray["ebqe_q_vos_gradc"];
+        double rho_f = args.m_dscalar["rho_f"];
+        double rho_s = args.m_dscalar["rho_s"];
+        xt::pyarray<double>& vs = args.m_darray["vs"];
+        xt::pyarray<double>& ebqe_vs = args.m_darray["ebqe_vs"];
+        xt::pyarray<double>& g = args.m_darray["g"];
+        int dissipation_model_flag = args.m_iscalar["dissipation_model_flag"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        double sc_uref = args.m_dscalar["sc_uref"];
+        double sc_alpha = args.m_dscalar["sc_alpha"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& u_dof_old = args.m_darray["u_dof_old"];
+        xt::pyarray<double>& velocity = args.m_darray["velocity"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_kappa = args.m_darray["q_kappa"];
+        xt::pyarray<double>& q_grad_kappa = args.m_darray["q_grad_kappa"];
+        xt::pyarray<double>& q_porosity = args.m_darray["q_porosity"];
+        xt::pyarray<double>&  velocity_dof_u = args.m_darray["velocity_dof_u"];
+        xt::pyarray<double>&  velocity_dof_v = args.m_darray["velocity_dof_v"];
+        xt::pyarray<double>&  velocity_dof_w = args.m_darray["velocity_dof_w"];
+        xt::pyarray<double>& q_m = args.m_darray["q_m"];
+        xt::pyarray<double>& q_u = args.m_darray["q_u"];
+        xt::pyarray<double>& q_grad_u = args.m_darray["q_grad_u"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& cfl = args.m_darray["cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<double>& ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u"];
+        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_velocity_ext = args.m_darray["ebqe_velocity_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_u = args.m_iarray["isAdvectiveFluxBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_advectiveFlux_u_ext = args.m_darray["ebqe_bc_advectiveFlux_u_ext"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_u = args.m_iarray["isDiffusiveFluxBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_diffusiveFlux_u_ext = args.m_darray["ebqe_bc_diffusiveFlux_u_ext"];
+        xt::pyarray<double>& ebqe_phi = args.m_darray["ebqe_phi"];
+        double epsFact = args.m_dscalar["epsFact"];
+        xt::pyarray<double>& ebqe_kappa = args.m_darray["ebqe_kappa"];
+        xt::pyarray<double>& ebqe_porosity = args.m_darray["ebqe_porosity"];
+        xt::pyarray<double>& ebqe_u = args.m_darray["ebqe_u"];
+        xt::pyarray<double>& ebqe_flux = args.m_darray["ebqe_flux"];
       //cek should this be read in?
       double Ct_sge = 4.0;
 
@@ -896,51 +720,51 @@ namespace proteus
               //     int eN_j=eN*nDOF_trial_element+j;
               //     int eN_k_j=eN_k*nDOF_trial_element+j;
               //     int eN_k_j_nSpace = eN_k_j*nSpace;
-              //     u += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial[eN_k_j]);
+              //     u += valFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_trial[eN_k_j]);
               //     for (int I=0;I<nSpace;I++)
               //       {
-              //         grad_u[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial[eN_k_j_nSpace+I]);
+              //         grad_u[I] += gradFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_grad_trial[eN_k_j_nSpace+I]);
               //       }
               //   }
               ck.calculateMapping_element(eN,
                                           k,
-                                          mesh_dof,
-                                          mesh_l2g,
-                                          mesh_trial_ref,
-                                          mesh_grad_trial_ref,
+                                          mesh_dof.data(),
+                                          mesh_l2g.data(),
+                                          mesh_trial_ref.data(),
+                                          mesh_grad_trial_ref.data(),
                                           jac,
                                           jacDet,
                                           jacInv,
                                           x,y,z);
               ck.calculateMappingVelocity_element(eN,
                                                   k,
-                                                  mesh_velocity_dof,
-                                                  mesh_l2g,
-                                                  mesh_trial_ref,
+                                                  mesh_velocity_dof.data(),
+                                                  mesh_l2g.data(),
+                                                  mesh_trial_ref.data(),
                                                   xt,yt,zt);
               //get the physical integration weight
-              dV = fabs(jacDet)*dV_ref[k];
+              dV = fabs(jacDet)*dV_ref.data()[k];
               ck.calculateG(jacInv,G,G_dd_G,tr_G);
               //get the trial function gradients
-              ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+              ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
               //get the solution
-              ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-              ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u_old);
+              ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
+              ck.valFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u_old);
               //get the solution gradients
-              ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
-              ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u_old);
+              ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
+              ck.gradFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u_old);
               //
               //compute velocity production terms, ***assumes same spaces for velocity dofs and Dissipation2D!***
-              ck.gradFromDOF(velocity_dof_u,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_vx);
-              ck.gradFromDOF(velocity_dof_v,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_vy);
-              //ck.gradFromDOF(velocity_dof_w,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_vz);
+              ck.gradFromDOF(velocity_dof_u.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_vx);
+              ck.gradFromDOF(velocity_dof_v.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_vy);
+              //ck.gradFromDOF(velocity_dof_w.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_vz);
               //
 
               //
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+                  u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
                   for (int I=0;I<nSpace;I++)
                     {
                       u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -949,9 +773,9 @@ namespace proteus
               //
               //calculate pde coefficients at quadrature points
               //
-              evaluateCoefficients(&velocity[eN_k_nSpace],
+              evaluateCoefficients(&velocity.data()[eN_k_nSpace],
                                    epsFact,
-                                   phi_ls[eN_k],
+                                   phi_ls.data()[eN_k],
                                    nu_0,
                                    nu_1,
                                    sigma_e,
@@ -964,19 +788,19 @@ namespace proteus
                                    //grad_vz,
                                    u,
                                    u_old,
-                                   q_kappa[eN_k],
-                                   q_porosity[eN_k],
+                                   q_kappa.data()[eN_k],
+                                   q_porosity.data()[eN_k],
 //                             Argumentlist for sediment
                                    sedFlag,
-                                   q_vos[eN_k],
-                                   &q_vos_gradc[eN_k_nSpace],
+                                   q_vos.data()[eN_k],
+                                   &q_vos_gradc.data()[eN_k_nSpace],
                                    rho_f,
                                    rho_s,
-                                   &vs[eN_k_nSpace],
-                                   &g[0],
+                                   &vs.data()[eN_k_nSpace],
+                                   &g.data()[0],
                               //end sediment
                                    dissipation_model_flag,
-                                   &q_grad_kappa[eN_k_nSpace],
+                                   &q_grad_kappa.data()[eN_k_nSpace],
                                    grad_u_old,
                                    m,
                                    dm,
@@ -1004,7 +828,7 @@ namespace proteus
               //calculate time derivative at quadrature points
               //
               ck.bdf(alphaBDF,
-                     q_m_betaBDF[eN_k],
+                     q_m_betaBDF.data()[eN_k],
                      m,
                      dm,
                      m_t,
@@ -1025,13 +849,13 @@ namespace proteus
                     ck.Reaction_adjoint(dr,u_test_dV[i]);
                 }
               //calculate tau and tau*Res
-              calculateSubgridError_tau(elementDiameter[eN],dm_t + dr,df_minus_da_grad_u,cfl[eN_k],tau0);
+              calculateSubgridError_tau(elementDiameter.data()[eN],dm_t + dr,df_minus_da_grad_u,cfl.data()[eN_k],tau0);
               calculateSubgridError_tau(Ct_sge,
                                         G,
                                         dm_t + dr,
                                         df_minus_da_grad_u,
                                         tau1,
-                                        cfl[eN_k]);
+                                        cfl.data()[eN_k]);
 
               tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
 
@@ -1041,10 +865,10 @@ namespace proteus
               //
 
 
-              ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);
+              ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter.data()[eN],pdeResidual_u,grad_u,numDiff0);
               ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
-              q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
-              //std::cout<<tau<<"   "<<q_numDiff_u[eN_k]<<std::endl;
+              q_numDiff_u.data()[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
+              //std::cout<<tau<<"   "<<q_numDiff_u.data()[eN_k]<<std::endl;
               //
               //update element residual
               //
@@ -1058,7 +882,7 @@ namespace proteus
                     ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) +
                     ck.SubgridError(subgridError_u,Lstar_u[i]) +
                     ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]) + //scalar diffusion so steal numericalDiffusion approximation
-                    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&u_grad_test_dV[i_nSpace]) +
+                    ck.NumericalDiffusion(q_numDiff_u_last.data()[eN_k],grad_u,&u_grad_test_dV[i_nSpace]) +
                     ck.Reaction_weak(r,u_test_dV[i]);
 
                 }//i
@@ -1067,10 +891,10 @@ namespace proteus
               //save momentum for time history and velocity for subgrid error
               //save solution for other models
               //
-              q_u[eN_k] = u;
-              q_m[eN_k] = m;
+              q_u.data()[eN_k] = u;
+              q_m.data()[eN_k] = m;
               for (int I=0; I < nSpace; I++)
-                q_grad_u[eN_k_nSpace+I] = grad_u[I];
+                q_grad_u.data()[eN_k_nSpace+I] = grad_u[I];
             }
           //
           //load element into global residual and save element residual
@@ -1079,7 +903,7 @@ namespace proteus
             {
               register int eN_i=eN*nDOF_test_element+i;
 
-              globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+              globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]] += elementResidual_u[i];
             }//i
         }//elements
       //
@@ -1090,9 +914,9 @@ namespace proteus
       //eN is the element index
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
         {
-          register int ebN = exteriorElementBoundariesArray[ebNE],
-            eN  = elementBoundaryElementsArray[ebN*2+0],
-            ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+          register int ebN = exteriorElementBoundariesArray.data()[ebNE],
+            eN  = elementBoundaryElementsArray.data()[ebN*2+0],
+            ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
             eN_nDOF_trial_element = eN*nDOF_trial_element;
           register double elementResidual_u[nDOF_test_element];
           for (int i=0;i<nDOF_test_element;i++)
@@ -1141,70 +965,70 @@ namespace proteus
                                                   ebN_local,
                                                   kb,
                                                   ebN_local_kb,
-                                                  mesh_dof,
-                                                  mesh_l2g,
-                                                  mesh_trial_trace_ref,
-                                                  mesh_grad_trial_trace_ref,
-                                                  boundaryJac_ref,
+                                                  mesh_dof.data(),
+                                                  mesh_l2g.data(),
+                                                  mesh_trial_trace_ref.data(),
+                                                  mesh_grad_trial_trace_ref.data(),
+                                                  boundaryJac_ref.data(),
                                                   jac_ext,
                                                   jacDet_ext,
                                                   jacInv_ext,
                                                   boundaryJac,
                                                   metricTensor,
                                                   metricTensorDetSqrt,
-                                                  normal_ref,
+                                                  normal_ref.data(),
                                                   normal,
                                                   x_ext,y_ext,z_ext);
               ck.calculateMappingVelocity_elementBoundary(eN,
                                                           ebN_local,
                                                           kb,
                                                           ebN_local_kb,
-                                                          mesh_velocity_dof,
-                                                          mesh_l2g,
-                                                          mesh_trial_trace_ref,
+                                                          mesh_velocity_dof.data(),
+                                                          mesh_l2g.data(),
+                                                          mesh_trial_trace_ref.data(),
                                                           xt_ext,yt_ext,zt_ext,
                                                           normal,
                                                           boundaryJac,
                                                           metricTensor,
                                                           integralScaling);
-              dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+              dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref.data()[kb];
               //get the metric tensor
               //cek todo use symmetry
               ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
               //compute shape and solution information
               //shape
-              ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+              ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
               //solution and gradients
-              ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-              ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_old_ext);
-              ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
-              ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_old_ext);
+              ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_ext);
+              ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_old_ext);
+              ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+              ck.gradFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_old_ext);
 
               //mwf hack, skip on boundary for now
               grad_kappa_ext_dummy[0] = 0.0; grad_kappa_ext_dummy[1] = 0.0; //grad_kappa_ext_dummy[2] = 0.0;
 
               //
               //compute velocity production terms, ***assumes same spaces for velocity dofs and Dissipation2D!***
-              ck.gradFromDOF(velocity_dof_u,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_vx_ext);
-              ck.gradFromDOF(velocity_dof_v,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_vy_ext);
-              //ck.gradFromDOF(velocity_dof_w,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_vz_ext);
+              ck.gradFromDOF(velocity_dof_u.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_vx_ext);
+              ck.gradFromDOF(velocity_dof_v.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_vy_ext);
+              //ck.gradFromDOF(velocity_dof_w.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_vz_ext);
               //
 
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                  u_test_dS[j] = u_test_trace_ref.data()[ebN_local_kb*nDOF_test_element+j]*dS;
                 }
               //
               //load the boundary values
               //
-              bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
+              bc_u_ext = isDOFBoundary_u.data()[ebNE_kb]*ebqe_bc_u_ext.data()[ebNE_kb]+(1-isDOFBoundary_u.data()[ebNE_kb])*u_ext;
               //
               //calculate the pde coefficients using the solution and the boundary values for the solution
               //
-              evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+              evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
                                    epsFact,
-                                   ebqe_phi[ebNE_kb],
+                                   ebqe_phi.data()[ebNE_kb],
                                    nu_0,
                                    nu_1,
                                    sigma_e,
@@ -1217,16 +1041,16 @@ namespace proteus
                                    //grad_vz_ext,
                                    u_ext,
                                    u_old_ext,
-                                   ebqe_kappa[ebNE_kb],
-                                   ebqe_porosity[ebNE_kb],
+                                   ebqe_kappa.data()[ebNE_kb],
+                                   ebqe_porosity.data()[ebNE_kb],
 //                             Argumentlist for sediment
                                    sedFlag,
-                                   ebqe_q_vos[ebNE_kb],
-                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   ebqe_q_vos.data()[ebNE_kb],
+                                   &ebqe_q_vos_gradc.data()[ebNE_kb_nSpace],
                                    rho_f,
                                    rho_s,
-                                   &ebqe_vs[ebNE_kb_nSpace],
-                                   &g[0],
+                                   &ebqe_vs.data()[ebNE_kb_nSpace],
+                                   &g.data()[0],
                               //end sediment
                                    dissipation_model_flag,
                                    grad_kappa_ext_dummy,
@@ -1239,9 +1063,9 @@ namespace proteus
                                    da_ext,
                                    r_ext,
                                    dr_ext);
-              evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+              evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
                                    epsFact,
-                                   ebqe_phi[ebNE_kb],
+                                   ebqe_phi.data()[ebNE_kb],
                                    nu_0,
                                    nu_1,
                                    sigma_e,
@@ -1254,16 +1078,16 @@ namespace proteus
                                    //grad_vz_ext,
                                    bc_u_ext,
                                    bc_u_ext,
-                                   ebqe_kappa[ebNE_kb],
-                                   ebqe_porosity[ebNE_kb],
+                                   ebqe_kappa.data()[ebNE_kb],
+                                   ebqe_porosity.data()[ebNE_kb],
 //                             Argumentlist for sediment
                                    sedFlag,
-                                   ebqe_q_vos[ebNE_kb],
-                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   ebqe_q_vos.data()[ebNE_kb],
+                                   &ebqe_q_vos_gradc.data()[ebNE_kb_nSpace],
                                    rho_f,
                                    rho_s,
-                                   &ebqe_vs[ebNE_kb_nSpace],
-                                   &g[0],
+                                   &ebqe_vs.data()[ebNE_kb_nSpace],
+                                   &g.data()[0],
                               //end sediment
                                   dissipation_model_flag,
                                    grad_kappa_ext_dummy,
@@ -1280,42 +1104,42 @@ namespace proteus
               //moving mesh
               //
               double velocity_ext[nSpace];
-              velocity_ext[0] = ebqe_velocity_ext[ebNE_kb_nSpace+0] - MOVING_DOMAIN*xt_ext;
-              velocity_ext[1] = ebqe_velocity_ext[ebNE_kb_nSpace+1] - MOVING_DOMAIN*yt_ext;
-              //velocity_ext[2] = ebqe_velocity_ext[ebNE_kb_nSpace+2] - MOVING_DOMAIN*zt_ext;
+              velocity_ext[0] = ebqe_velocity_ext.data()[ebNE_kb_nSpace+0] - MOVING_DOMAIN*xt_ext;
+              velocity_ext[1] = ebqe_velocity_ext.data()[ebNE_kb_nSpace+1] - MOVING_DOMAIN*yt_ext;
+              //velocity_ext[2] = ebqe_velocity_ext.data()[ebNE_kb_nSpace+2] - MOVING_DOMAIN*zt_ext;
               //
               //calculate the numerical fluxes
               //
-              exteriorNumericalAdvectiveFlux(isDOFBoundary_u[ebNE_kb],
-                                             isAdvectiveFluxBoundary_u[ebNE_kb],
+              exteriorNumericalAdvectiveFlux(isDOFBoundary_u.data()[ebNE_kb],
+                                             isAdvectiveFluxBoundary_u.data()[ebNE_kb],
                                              normal,
                                              bc_u_ext,
-                                             ebqe_bc_advectiveFlux_u_ext[ebNE_kb],
-                                             u_ext,//smoothedHeaviside(eps,ebqe_phi[ebNE_kb]),
+                                             ebqe_bc_advectiveFlux_u_ext.data()[ebNE_kb],
+                                             u_ext,//smoothedHeaviside(eps,ebqe_phi.data()[ebNE_kb]),
                                              velocity_ext,
                                              flux_ext);
               //diffusive flux now as well
               //for now just apply flux boundary through advection term
-              const double bc_diffusive_flux = ebqe_bc_diffusiveFlux_u_ext[ebNE_kb];
+              const double bc_diffusive_flux = ebqe_bc_diffusiveFlux_u_ext.data()[ebNE_kb];
               exteriorNumericalDiffusiveFlux(bc_diffusive_flux,
-                                             isDOFBoundary_u[ebNE_kb],
-                                             isDiffusiveFluxBoundary_u[ebNE_kb],
+                                             isDOFBoundary_u.data()[ebNE_kb],
+                                             isDiffusiveFluxBoundary_u.data()[ebNE_kb],
                                              normal,
                                              bc_u_ext,
                                              a_ext,
                                              grad_u_ext,
                                              u_ext,
-                                             ebqe_penalty_ext[ebNE_kb],//penalty,
+                                             ebqe_penalty_ext.data()[ebNE_kb],//penalty,
                                              diffusive_flux_ext);
               //mwf debug
-              //std::cout<<"Residual ebNE= "<<ebNE<<" kb= "<<kb <<" penalty= "<<ebqe_penalty_ext[ebNE_kb] <<std::endl;
+              //std::cout<<"Residual ebNE= "<<ebNE<<" kb= "<<kb <<" penalty= "<<ebqe_penalty_ext.data()[ebNE_kb] <<std::endl;
               flux_ext += diffusive_flux_ext;
-              ebqe_flux[ebNE_kb] = flux_ext;
+              ebqe_flux.data()[ebNE_kb] = flux_ext;
               //save for other models? cek need to be consistent with numerical flux
               if(flux_ext >=0.0)
-                ebqe_u[ebNE_kb] = u_ext;
+                ebqe_u.data()[ebNE_kb] = u_ext;
               else
-                ebqe_u[ebNE_kb] = bc_u_ext;
+                ebqe_u.data()[ebNE_kb] = bc_u_ext;
               //
               //update residuals
               //
@@ -1333,97 +1157,93 @@ namespace proteus
             {
               int eN_i = eN*nDOF_test_element+i;
 
-              globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+              globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]] += elementResidual_u[i];
             }//i
         }//ebNE
     }
 
-    void calculateJacobian(//element
-                           double* mesh_trial_ref,
-                           double* mesh_grad_trial_ref,
-                           double* mesh_dof,
-                           double* mesh_velocity_dof,
-                           double MOVING_DOMAIN,
-                           int* mesh_l2g,
-                           double* dV_ref,
-                           double* u_trial_ref,
-                           double* u_grad_trial_ref,
-                           double* u_test_ref,
-                           double* u_grad_test_ref,
-                           //element boundary
-                           double* mesh_trial_trace_ref,
-                           double* mesh_grad_trial_trace_ref,
-                           double* dS_ref,
-                           double* u_trial_trace_ref,
-                           double* u_grad_trial_trace_ref,
-                           double* u_test_trace_ref,
-                           double* u_grad_test_trace_ref,
-                           double* normal_ref,
-                           double* boundaryJac_ref,
-                           //physics
-                           int nElements_global,
-                           //diffusion terms
-                           double nu_0,
-                           double nu_1,
-                           double sigma_e,
-                           double c_mu,
-                           double c_1,
-                           double c_2,
-                           double c_e,
-                           double rho_0,
-                           double rho_1,
-                           int dissipation_model_flag,
-                           //end diffusion
-                           double useMetrics,
-                           double alphaBDF,
-                           int lag_shockCapturing,/*mwf not used yet*/
-                           double shockCapturingDiffusion,
-                           int* u_l2g,
-                           double* elementDiameter,
-                           double* u_dof, double* u_dof_old,
-                           double* velocity,
-                           double* phi_ls, //level set variable
-                           double* q_kappa, //kinetic energy
-                           double* q_grad_kappa,
-                           double* q_porosity,//VRANS
-  //                             Argumentlist for sediment
-                                   double sedFlag,
-                                   double* q_vos,
-                                   double *q_vos_gradc,
-                                   double* ebqe_q_vos,
-                                   double *ebqe_q_vos_gradc,
-                                   double rho_f,
-                                   double rho_s,
-                                   double* vs,
-                                   double* ebqe_vs,
-                                   double* g,
-                              //end sediment
-                           double * velocity_dof_u,
-                           double * velocity_dof_v,
-                           double * velocity_dof_w,
-                           //end velocity dof
-                           double* q_m_betaBDF,
-                           double* cfl,
-                           double* q_numDiff_u_last,
-                           double* ebqe_penalty_ext, //penalty
-                           int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                           double* globalJacobian,
-                           int nExteriorElementBoundaries_global,
-                           int* exteriorElementBoundariesArray,
-                           int* elementBoundaryElementsArray,
-                           int* elementBoundaryLocalElementBoundariesArray,
-                           double* ebqe_velocity_ext,
-                           int* isDOFBoundary_u,
-                           double* ebqe_bc_u_ext,
-                           int* isAdvectiveFluxBoundary_u,
-                           double* ebqe_bc_advectiveFlux_u_ext,
-                           int* isDiffusiveFluxBoundary_u,
-                           double* ebqe_bc_diffusiveFlux_u_ext,
-                           int* csrColumnOffsets_eb_u_u,
-                           double* ebqe_phi,double epsFact,
-                           double* ebqe_kappa, //kinetic energy on boundary
-                           double* ebqe_porosity)//VRANS
+    void calculateJacobian(arguments_dict& args)//VRANS
     {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<double>& mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
+        double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double nu_0 = args.m_dscalar["nu_0"];
+        double nu_1 = args.m_dscalar["nu_1"];
+        double sigma_e = args.m_dscalar["sigma_e"];
+        double c_mu = args.m_dscalar["c_mu"];
+        double c_1 = args.m_dscalar["c_1"];
+        double c_2 = args.m_dscalar["c_2"];
+        double c_e = args.m_dscalar["c_e"];
+        double rho_0 = args.m_dscalar["rho_0"];
+        double rho_1 = args.m_dscalar["rho_1"];
+        int dissipation_model_flag = args.m_iscalar["dissipation_model_flag"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& u_dof_old = args.m_darray["u_dof_old"];
+        xt::pyarray<double>& velocity = args.m_darray["velocity"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_kappa = args.m_darray["q_kappa"];
+        xt::pyarray<double>& q_grad_kappa = args.m_darray["q_grad_kappa"];
+        xt::pyarray<double>& q_porosity = args.m_darray["q_porosity"];
+        double sedFlag = args.m_dscalar["sedFlag"];
+        xt::pyarray<double>& q_vos = args.m_darray["q_vos"];
+        xt::pyarray<double>& q_vos_gradc = args.m_darray["q_vos_gradc"];
+        xt::pyarray<double>& ebqe_q_vos = args.m_darray["ebqe_q_vos"];
+        xt::pyarray<double>& ebqe_q_vos_gradc = args.m_darray["ebqe_q_vos_gradc"];
+        double rho_f = args.m_dscalar["rho_f"];
+        double rho_s = args.m_dscalar["rho_s"];
+        xt::pyarray<double>& vs = args.m_darray["vs"];
+        xt::pyarray<double>& ebqe_vs = args.m_darray["ebqe_vs"];
+        xt::pyarray<double>& g = args.m_darray["g"];
+        xt::pyarray<double>&  velocity_dof_u = args.m_darray["velocity_dof_u"];
+        xt::pyarray<double>&  velocity_dof_v = args.m_darray["velocity_dof_v"];
+        xt::pyarray<double>&  velocity_dof_w = args.m_darray["velocity_dof_w"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& cfl = args.m_darray["cfl"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<double>& ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
+        xt::pyarray<int>& csrRowIndeces_u_u = args.m_iarray["csrRowIndeces_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_u_u = args.m_iarray["csrColumnOffsets_u_u"];
+        xt::pyarray<double>& globalJacobian = args.m_darray["globalJacobian"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_velocity_ext = args.m_darray["ebqe_velocity_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<int>& isAdvectiveFluxBoundary_u = args.m_iarray["isAdvectiveFluxBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_advectiveFlux_u_ext = args.m_darray["ebqe_bc_advectiveFlux_u_ext"];
+        xt::pyarray<int>& isDiffusiveFluxBoundary_u = args.m_iarray["isDiffusiveFluxBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_diffusiveFlux_u_ext = args.m_darray["ebqe_bc_diffusiveFlux_u_ext"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.m_iarray["csrColumnOffsets_eb_u_u"];
+        xt::pyarray<double>& ebqe_phi = args.m_darray["ebqe_phi"];
+        double epsFact = args.m_dscalar["epsFact"];
+        xt::pyarray<double>& ebqe_kappa = args.m_darray["ebqe_kappa"];
+        xt::pyarray<double>& ebqe_porosity = args.m_darray["ebqe_porosity"];
       double Ct_sge = 4.0;
 
       //
@@ -1477,51 +1297,51 @@ namespace proteus
               //     int eN_k_j=eN_k*nDOF_trial_element+j;
               //     int eN_k_j_nSpace = eN_k_j*nSpace;
 
-              //     u += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial[eN_k_j]);
+              //     u += valFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_trial[eN_k_j]);
               //     for (int I=0;I<nSpace;I++)
               //       {
-              //         grad_u[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial[eN_k_j_nSpace+I]);
+              //         grad_u[I] += gradFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_grad_trial[eN_k_j_nSpace+I]);
               //       }
               //   }
               //get jacobian, etc for mapping reference element
               ck.calculateMapping_element(eN,
                                           k,
-                                          mesh_dof,
-                                          mesh_l2g,
-                                          mesh_trial_ref,
-                                          mesh_grad_trial_ref,
+                                          mesh_dof.data(),
+                                          mesh_l2g.data(),
+                                          mesh_trial_ref.data(),
+                                          mesh_grad_trial_ref.data(),
                                           jac,
                                           jacDet,
                                           jacInv,
                                           x,y,z);
               ck.calculateMappingVelocity_element(eN,
                                                   k,
-                                                  mesh_velocity_dof,
-                                                  mesh_l2g,
-                                                  mesh_trial_ref,
+                                                  mesh_velocity_dof.data(),
+                                                  mesh_l2g.data(),
+                                                  mesh_trial_ref.data(),
                                                   xt,yt,zt);
               //get the physical integration weight
-              dV = fabs(jacDet)*dV_ref[k];
+              dV = fabs(jacDet)*dV_ref.data()[k];
               ck.calculateG(jacInv,G,G_dd_G,tr_G);
               //get the trial function gradients
-              ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+              ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
               //get the solution
-              ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-              ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u_old);
+              ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
+              ck.valFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u_old);
               //get the solution gradients
-              ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
-              ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u_old);
+              ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
+              ck.gradFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u_old);
               //
               //compute velocity production terms, ***assumes same spaces for velocity dofs and Dissipation2D!***
-              ck.gradFromDOF(velocity_dof_u,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_vx);
-              ck.gradFromDOF(velocity_dof_v,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_vy);
-              //ck.gradFromDOF(velocity_dof_w,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_vz);
+              ck.gradFromDOF(velocity_dof_u.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_vx);
+              ck.gradFromDOF(velocity_dof_v.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_vy);
+              //ck.gradFromDOF(velocity_dof_w.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_vz);
               //
 
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+                  u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
                   for (int I=0;I<nSpace;I++)
                     {
                       u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -1530,9 +1350,9 @@ namespace proteus
               //
               //calculate pde coefficients and derivatives at quadrature points
               //
-              evaluateCoefficients(&velocity[eN_k_nSpace],
+              evaluateCoefficients(&velocity.data()[eN_k_nSpace],
                                    epsFact,
-                                   phi_ls[eN_k],
+                                   phi_ls.data()[eN_k],
                                    nu_0,
                                    nu_1,
                                    sigma_e,
@@ -1545,19 +1365,19 @@ namespace proteus
                                    //grad_vz,
                                    u,
                                    u_old,
-                                   q_kappa[eN_k],
-                                   q_porosity[eN_k],
+                                   q_kappa.data()[eN_k],
+                                   q_porosity.data()[eN_k],
 //                             Argumentlist for sediment
                                    sedFlag,
-                                   q_vos[eN_k],
-                                   &q_vos_gradc[eN_k_nSpace],
+                                   q_vos.data()[eN_k],
+                                   &q_vos_gradc.data()[eN_k_nSpace],
                                    rho_f,
                                    rho_s,
-                                   &vs[eN_k_nSpace],
-                                   g,
+                                   &vs.data()[eN_k_nSpace],
+                                   g.data(),
                               //end sediment
                                    dissipation_model_flag,
-                                   &q_grad_kappa[eN_k_nSpace],
+                                   &q_grad_kappa.data()[eN_k_nSpace],
                                    grad_u_old,
                                    m,
                                    dm,
@@ -1588,7 +1408,7 @@ namespace proteus
               //calculate time derivatives
               //
               ck.bdf(alphaBDF,
-                     q_m_betaBDF[eN_k],
+                     q_m_betaBDF.data()[eN_k],
                      m,
                      dm,
                      m_t,
@@ -1611,15 +1431,15 @@ namespace proteus
                   //int eN_k_j=eN_k*nDOF_trial_element+j;
                   //int eN_k_j_nSpace = eN_k_j*nSpace;
                   int j_nSpace = j*nSpace;
-                  dpdeResidual_u_u[j]= ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+                  dpdeResidual_u_u[j]= ck.MassJacobian_strong(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j]) +
                     ck.AdvectionJacobian_strong(df_minus_da_grad_u,&u_grad_trial[j_nSpace]) +
-                    ck.ReactionJacobian_strong(dr,u_trial_ref[k*nDOF_trial_element+j]);
+                    ck.ReactionJacobian_strong(dr,u_trial_ref.data()[k*nDOF_trial_element+j]);
                 }
               //tau and tau*Res
-              calculateSubgridError_tau(elementDiameter[eN],
+              calculateSubgridError_tau(elementDiameter.data()[eN],
                                         dm_t + dr,
                                         df_minus_da_grad_u,
-                                        cfl[eN_k],
+                                        cfl.data()[eN_k],
                                         tau0);
 
               calculateSubgridError_tau(Ct_sge,
@@ -1627,7 +1447,7 @@ namespace proteus
                                         dm_t + dr,
                                         df_minus_da_grad_u,
                                         tau1,
-                                        cfl[eN_k]);
+                                        cfl.data()[eN_k]);
               tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
 
               for(int j=0;j<nDOF_trial_element;j++)
@@ -1642,12 +1462,12 @@ namespace proteus
                       //int eN_k_j_nSpace = eN_k_j*nSpace;
                       int j_nSpace = j*nSpace;
                       int i_nSpace = i*nSpace;
-                      elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
-                        ck.AdvectionJacobian_weak(df_minus_da_grad_u,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
+                      elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j],u_test_dV[i]) +
+                        ck.AdvectionJacobian_weak(df_minus_da_grad_u,u_trial_ref.data()[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
                         ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
                         ck.NumericalDiffusionJacobian(a,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]) + //steal numericalDiffusion for scalar term
-                        ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]) +
-                        ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]);
+                        ck.NumericalDiffusionJacobian(q_numDiff_u_last.data()[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]) +
+                        ck.ReactionJacobian_weak(dr,u_trial_ref.data()[k*nDOF_trial_element+j],u_test_dV[i]);
                     }//j
                 }//i
             }//k
@@ -1669,9 +1489,9 @@ namespace proteus
       //
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
         {
-          register int ebN = exteriorElementBoundariesArray[ebNE];
-          register int eN  = elementBoundaryElementsArray[ebN*2+0],
-            ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+          register int ebN = exteriorElementBoundariesArray.data()[ebNE];
+          register int eN  = elementBoundaryElementsArray.data()[ebN*2+0],
+            ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
             eN_nDOF_trial_element = eN*nDOF_trial_element;
           for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
             {
@@ -1723,80 +1543,80 @@ namespace proteus
               //     register int eN_j = eN*nDOF_trial_element+j,
               //       ebNE_kb_j = ebNE_kb*nDOF_trial_element+j,
               //       ebNE_kb_j_nSpace= ebNE_kb_j*nSpace;
-              //     u_ext += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial_ext[ebNE_kb_j]);
+              //     u_ext += valFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_trial_ext[ebNE_kb_j]);
 
               //     for (int I=0;I<nSpace;I++)
               //       {
-              //         grad_u_ext[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial_ext[ebNE_kb_j_nSpace+I]);
+              //         grad_u_ext[I] += gradFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_grad_trial_ext[ebNE_kb_j_nSpace+I]);
               //       }
               //   }
               ck.calculateMapping_elementBoundary(eN,
                                                   ebN_local,
                                                   kb,
                                                   ebN_local_kb,
-                                                  mesh_dof,
-                                                  mesh_l2g,
-                                                  mesh_trial_trace_ref,
-                                                  mesh_grad_trial_trace_ref,
-                                                  boundaryJac_ref,
+                                                  mesh_dof.data(),
+                                                  mesh_l2g.data(),
+                                                  mesh_trial_trace_ref.data(),
+                                                  mesh_grad_trial_trace_ref.data(),
+                                                  boundaryJac_ref.data(),
                                                   jac_ext,
                                                   jacDet_ext,
                                                   jacInv_ext,
                                                   boundaryJac,
                                                   metricTensor,
                                                   metricTensorDetSqrt,
-                                                  normal_ref,
+                                                  normal_ref.data(),
                                                   normal,
                                                   x_ext,y_ext,z_ext);
               ck.calculateMappingVelocity_elementBoundary(eN,
                                                           ebN_local,
                                                           kb,
                                                           ebN_local_kb,
-                                                          mesh_velocity_dof,
-                                                          mesh_l2g,
-                                                          mesh_trial_trace_ref,
+                                                          mesh_velocity_dof.data(),
+                                                          mesh_l2g.data(),
+                                                          mesh_trial_trace_ref.data(),
                                                           xt_ext,yt_ext,zt_ext,
                                                           normal,
                                                           boundaryJac,
                                                           metricTensor,
                                                           integralScaling);
-              dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
-              //dS = metricTensorDetSqrt*dS_ref[kb];
+              dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref.data()[kb];
+              //dS = metricTensorDetSqrt*dS_ref.data()[kb];
               ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
               //compute shape and solution information
               //shape
-              ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+              ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
               //solution and gradients
-              ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-              ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_old_ext);
-              ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
-              ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_old_ext);
+              ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_ext);
+              ck.valFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_old_ext);
+              ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+              ck.gradFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_old_ext);
 
               //mwf hack, skip on boundary for now
               grad_kappa_ext_dummy[0] = 0.0; grad_kappa_ext_dummy[1] = 0.0; //grad_kappa_ext_dummy[2] = 0.0;
 
               //
               //compute velocity production terms, ***assumes same spaces for velocity dofs and Dissipation2D!***
-              ck.gradFromDOF(velocity_dof_u,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_vx_ext);
-              ck.gradFromDOF(velocity_dof_v,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_vy_ext);
-              //ck.gradFromDOF(velocity_dof_w,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_vz_ext);
+              ck.gradFromDOF(velocity_dof_u.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_vx_ext);
+              ck.gradFromDOF(velocity_dof_v.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_vy_ext);
+              //ck.gradFromDOF(velocity_dof_w.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_vz_ext);
               //
 
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+                  u_test_dS[j] = u_test_trace_ref.data()[ebN_local_kb*nDOF_test_element+j]*dS;
                 }
               //
               //load the boundary values
               //
-              bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
+              bc_u_ext = isDOFBoundary_u.data()[ebNE_kb]*ebqe_bc_u_ext.data()[ebNE_kb]+(1-isDOFBoundary_u.data()[ebNE_kb])*u_ext;
               //
               //calculate the internal and external trace of the pde coefficients
               //
-              evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+              evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
                                    epsFact,
-                                   ebqe_phi[ebNE_kb],
+                                   ebqe_phi.data()[ebNE_kb],
                                    nu_0,
                                    nu_1,
                                    sigma_e,
@@ -1809,16 +1629,16 @@ namespace proteus
                                    //grad_vz_ext,
                                    u_ext,
                                    u_old_ext,
-                                   ebqe_kappa[ebNE_kb],
-                                   ebqe_porosity[ebNE_kb],
+                                   ebqe_kappa.data()[ebNE_kb],
+                                   ebqe_porosity.data()[ebNE_kb],
 //                             Argumentlist for sediment
                                    sedFlag,
-                                   ebqe_q_vos[ebNE_kb],
-                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   ebqe_q_vos.data()[ebNE_kb],
+                                   &ebqe_q_vos_gradc.data()[ebNE_kb_nSpace],
                                    rho_f,
                                    rho_s,
-                                   &ebqe_vs[ebNE_kb_nSpace],
-                                   &g[0],
+                                   &ebqe_vs.data()[ebNE_kb_nSpace],
+                                   &g.data()[0],
                               //end sediment
                                   dissipation_model_flag,
                                    grad_kappa_ext_dummy,
@@ -1831,9 +1651,9 @@ namespace proteus
                                    da_ext,
                                    r_ext,
                                    dr_ext);
-              evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace],
+              evaluateCoefficients(&ebqe_velocity_ext.data()[ebNE_kb_nSpace],
                                    epsFact,
-                                   ebqe_phi[ebNE_kb],
+                                   ebqe_phi.data()[ebNE_kb],
                                    nu_0,
                                    nu_1,
                                    sigma_e,
@@ -1846,16 +1666,16 @@ namespace proteus
                                    //grad_vz_ext,
                                    bc_u_ext,
                                    bc_u_ext,
-                                   ebqe_kappa[ebNE_kb],
-                                   ebqe_porosity[ebNE_kb],
+                                   ebqe_kappa.data()[ebNE_kb],
+                                   ebqe_porosity.data()[ebNE_kb],
 //                             Argumentlist for sediment
                                    sedFlag,
-                                   ebqe_q_vos[ebNE_kb],
-                                   &ebqe_q_vos_gradc[ebNE_kb_nSpace],
+                                   ebqe_q_vos.data()[ebNE_kb],
+                                   &ebqe_q_vos_gradc.data()[ebNE_kb_nSpace],
                                    rho_f,
                                    rho_s,
-                                   &ebqe_vs[ebNE_kb_nSpace],
-                                   &g[0],
+                                   &ebqe_vs.data()[ebNE_kb_nSpace],
+                                   &g.data()[0],
                               //end sediment
                                    dissipation_model_flag,
                                    grad_kappa_ext_dummy,
@@ -1872,16 +1692,16 @@ namespace proteus
               //moving domain
               //
               double velocity_ext[nSpace];
-              velocity_ext[0] = ebqe_velocity_ext[ebNE_kb_nSpace+0] - MOVING_DOMAIN*xt_ext;
-              velocity_ext[1] = ebqe_velocity_ext[ebNE_kb_nSpace+1] - MOVING_DOMAIN*yt_ext;
-              //velocity_ext[2] = ebqe_velocity_ext[ebNE_kb_nSpace+2] - MOVING_DOMAIN*zt_ext;
+              velocity_ext[0] = ebqe_velocity_ext.data()[ebNE_kb_nSpace+0] - MOVING_DOMAIN*xt_ext;
+              velocity_ext[1] = ebqe_velocity_ext.data()[ebNE_kb_nSpace+1] - MOVING_DOMAIN*yt_ext;
+              //velocity_ext[2] = ebqe_velocity_ext.data()[ebNE_kb_nSpace+2] - MOVING_DOMAIN*zt_ext;
               //
               //calculate the numerical fluxes
               //
-              exteriorNumericalAdvectiveFluxDerivative(isDOFBoundary_u[ebNE_kb],
-                                                       isAdvectiveFluxBoundary_u[ebNE_kb],
+              exteriorNumericalAdvectiveFluxDerivative(isDOFBoundary_u.data()[ebNE_kb],
+                                                       isAdvectiveFluxBoundary_u.data()[ebNE_kb],
                                                        normal,
-                                                       velocity_ext,//ebqe_velocity_ext[ebNE_kb_nSpace],
+                                                       velocity_ext,//ebqe_velocity_ext.data()[ebNE_kb_nSpace],
                                                        dflux_u_u_ext);
               //
               //calculate the flux jacobian
@@ -1891,19 +1711,19 @@ namespace proteus
                   //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
                   register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
                   //diffusive flux
-                  exteriorNumericalDiffusiveFluxDerivative(isDOFBoundary_u[ebNE_kb],
-                                                           isDiffusiveFluxBoundary_u[ebNE_kb],
+                  exteriorNumericalDiffusiveFluxDerivative(isDOFBoundary_u.data()[ebNE_kb],
+                                                           isDiffusiveFluxBoundary_u.data()[ebNE_kb],
                                                            normal,
                                                            a_ext,
                                                            da_ext,
                                                            grad_u_ext,
                                                            &u_grad_trial_trace[j*nSpace],
-                                                           u_trial_trace_ref[ebN_local_kb_j],
-                                                           ebqe_penalty_ext[ebNE_kb],//penalty,
+                                                           u_trial_trace_ref.data()[ebN_local_kb_j],
+                                                           ebqe_penalty_ext.data()[ebNE_kb],//penalty,
                                                            diffusiveFluxJacobian_u_u[j]);
                   //mwf debug
-                  //std::cout<<"Jacobian ebNE= "<<ebNE<<" kb= "<<kb <<" penalty= "<<ebqe_penalty_ext[ebNE_kb] <<std::endl;
-                  fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+                  //std::cout<<"Jacobian ebNE= "<<ebNE<<" kb= "<<kb <<" penalty= "<<ebqe_penalty_ext.data()[ebNE_kb] <<std::endl;
+                  fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref.data()[ebN_local_kb_j]);
                 }//j
               //
               //update the global Jacobian from the flux Jacobian

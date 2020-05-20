@@ -44,9 +44,10 @@ instance.
    from proteus.mbd import CouplingFSI as fsi
 
    my_system = fsi.ProtChSystem()
-   g = pychrono.ChVectorD(0., 0., -9.81)
-   my_system.ChSystem.Set_G_acc(g)
+   g = np.array([0., 0., -9.81])
+   my_system.setGravitationalAcceleration(g)
    my_system.setTimeStep(0.001)  # the time step for Chrono calculations
+   my_chsystem = my_system.getChronoObject()  # access chrono object
 
 .. important::
 
@@ -72,6 +73,7 @@ simulation. This can be done with the passing of the `system` argument as the
    my_body = fsi.ProtChBody(system=my_system)
    my_body.attachShape(my_shape)  # sets everything automatically
    my_body.setRecordValues(all_values=True) # record everything
+   my_chbody = my_body.getChronoObject()  # access chrono object
 
 
 When set up properly and running with a Proteus Navier-Stokes simulation, the
@@ -81,7 +83,8 @@ mesh or immersed boundaries are used).
 
 .. attention::
 
-   The `ProtChBody.ChBody`  variable is actually using a derived class from the
+   The `ProtChBody.ChBody`  variable accessible with
+   `ProtChBody.getChronoObject()` is actually using a derived class from the
    base Chrono `ChBody` in order to add the possibility of using an added-mass
    matrix (see `ChBodyAddedMass` in proteus.mbd.ChRigidBody.h).
 
@@ -93,12 +96,7 @@ This class creates a `ChMesh` that is needed to create moorings.
 .. code-block:: python
 
    my_mesh = fsi.ProtChMesh(system=my_system)
-
-
-.. todo::
-
-   Rename current class `Mesh` in `ProtChMesh` for consistency (code breaking
-   change for some all cases using moorings)
+   my_chmesh = my_mesh.getChronoObject()
 
 
 ProtChMoorings
@@ -116,17 +114,19 @@ modulus of the cable/segment.
    my_mooring = fsi.ProtChMoorings(system=my_system,
                                    mesh=my_mesh,
                                    length=np.array([10.]),
-                                   nb_elems=np.array([10], dtype=np.int_32),
+                                   nb_elems=np.array([10], dtype=np.int32),
                                    d=np.array([0.01]),
                                    rho=np.array([300.2]),
                                    E=np.array([1e9]))
    # set function to place the nodes along cable ('s' is the position along the 1D cable)
    fpos = lambda s: np.array([s, 1., 0.])  # position along cable
    ftan = lambda s: np.array([1., 0., 0.])  # tangent of cable along cable
-   my_mooring.setNodesPositionFunction(function_position=fpos,
-                                       function_tangent=ftan)
+   my_mooring.setNodesPositionFunction(fpos, ftan)
    # set the nodes position from the function
    my_mooring.setNodesPosition()
+   # build nodes (automatic with fpos/ftan)
+   # nodes are equally spaced according to the number of elements (nb_elems)
+   my_mooring.buildNodes()
    # add a body as fairlead
    my_mooring.attachBackNodeToBody(my_body)
    # fix front node as anchor

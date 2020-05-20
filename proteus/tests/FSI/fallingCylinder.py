@@ -4,6 +4,7 @@ from proteus import Context
 from proteus.mprans import SpatialTools as st
 from proteus.mbd import CouplingFSI as fsi
 import pychrono
+import os
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
 
 addedMass = False
@@ -35,10 +36,10 @@ context_options += [
 context_options += [
     ("T", 1., "Simulation time in s"),
     ("dt_init", 0.001 ,"Value of initial time step"),
-    ("dt_fixed", 0.5, "Value of maximum time step"),
+    ("dt_fixed", 0.005, "Value of maximum time step"),
     ("archiveAllSteps", False, "archive every steps"),
-    ("dt_output", 1., "number of saves per second"),
-    ("cfl", 0.9 , "Target CFL value"),
+    ("dt_output", 0.005, "number of saves per second"),
+    ("cfl", 0.1 , "Target CFL value"),
     ]
 # mesh options
 context_options += [
@@ -123,13 +124,13 @@ chbod.SetInertiaXX(inertia)
 body.setConstraints(free_x=np.array([0., 1., 0.]), free_r=np.array([0., 0., 0.]))
 body.setRecordValues(all_values=True)
 
-
 def sdf(t, x):
     dist = np.sqrt((x[0]**2+x[1]**2+x[2]**2))
     if dist < radius:
-        return -dist, (0., -1., 0.)
+        return -(radius-dist), (0., -1., 0.)
     else:
-        return dist, (0., 1., 0.)
+        return dist-radius, (0., 1., 0.)
+
 
 body.setIBM(True,
             radiusIBM=radius,  # used only when particle are balls
@@ -179,7 +180,8 @@ initialConditions = {'pressure': P_IC(),
 domain.MeshOptions.use_gmsh = False
 domain.MeshOptions.genMesh = False
 domain.MeshOptions.he = he
-mesh_fileprefix='mesh'+str(int(1000*he))
+modulepath = os.path.dirname(os.path.abspath(__file__))
+mesh_fileprefix=modulepath+'/meshFallingCylinder'
 domain.MeshOptions.setOutputFiles(mesh_fileprefix)
 st.assembleDomain(domain)
 domain.use_gmsh = False
@@ -218,6 +220,7 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(
     initialConditions=initialConditions,
     boundaryConditions=None, # set with SpatialTools,
     useSuperlu=True,
+    useExact=True
 )
 
 # line below needed for relaxation zones
@@ -231,7 +234,7 @@ myTpFlowProblem.movingDomain = False
 params = myTpFlowProblem.Parameters
 
 # MESH PARAMETERS
-params.mesh.genMesh = True
+params.mesh.genMesh = False
 params.mesh.he = he
 
 # PHYSICAL PARAMETERS
@@ -251,21 +254,22 @@ if addedMass is True:
     m.addedMass.index = ind+1
     ind += 1
 m.rans2p.auxiliaryVariables += [system]
-# m.rans2p.p.CoefficientsOptions.particle_epsFact = 1.5
-m.rans2p.p.CoefficientsOptions.use_ball_as_particle = opts.use_ball_as_particle
-m.rans2p.p.CoefficientsOptions.nParticles = 1
-#m.rans2p.p.CoefficientsOptions.particle_alpha = 1000.
-#m.rans2p.p.CoefficientsOptions.particle_beta = 1000.
-#m.rans2p.p.CoefficientsOptions.particle_penalty_constant = 100.
-#m.rans2p.p.CoefficientsOptions.particle_sdfList = [lambda t, x: body.getDynamicSDF(t, x)]
-#m.rans2p.p.CoefficientsOptions.particle_velocityList = [lambda t, x: body.getVelocity()]
-# m.rans2p.p.CoefficientsOptions.useExact = False
-# m.rans2p.p.CoefficientsOptions.ghost_penalty_constant = 0.1
-#m.rans2p.p.CoefficientsOptions.ball_radius = np.array([radius], 'd')
-#m.rans2p.p.CoefficientsOptions.ball_velocity = np.zeros((1, 3), 'd')
-#m.rans2p.p.CoefficientsOptions.ball_angular_velocity = np.zeros((1, 3), 'd')
-#m.rans2p.p.CoefficientsOptions.ball_center = np.array([[pos.x, pos.y, pos.z]], 'd')
+# m.rans2p.p.coefficients.particle_epsFact = 1.5
+m.rans2p.p.coefficients.use_ball_as_particle = opts.use_ball_as_particle
+m.rans2p.p.coefficients.nParticles = 1
+m.rans2p.n.conservativeFlux=None
+#m.rans2p.p.coefficients.particle_alpha = 1000.
+#m.rans2p.p.coefficients.particle_beta = 1000.
+#m.rans2p.p.coefficients.particle_penalty_constant = 100.
+#m.rans2p.p.coefficients.particle_sdfList = [lambda t, x: body.getDynamicSDF(t, x)]
+#m.rans2p.p.coefficients.particle_velocityList = [lambda t, x: body.getVelocity()]
+# m.rans2p.p.coefficients.useExact = False
+# m.rans2p.p.coefficients.ghost_penalty_constant = 0.1
+#m.rans2p.p.coefficients.ball_radius = np.array([radius], 'd')
+#m.rans2p.p.coefficients.ball_velocity = np.zeros((1, 3), 'd')
+#m.rans2p.p.coefficients.ball_angular_velocity = np.zeros((1, 3), 'd')
+#m.rans2p.p.coefficients.ball_center = np.array([[pos.x, pos.y, pos.z]], 'd')
 
-# m.rans2p.p.CoefficientsOptions.MOMENTUM_SGE = 1.
-# m.rans2p.p.CoefficientsOptions.PRESSURE_SGE = 1.
-# m.rans2p.p.CoefficientsOptions.VELOCITY_SGE = 1.
+# m.rans2p.p.coefficients.MOMENTUM_SGE = 1.
+# m.rans2p.p.coefficients.PRESSURE_SGE = 1.
+# m.rans2p.p.coefficients.VELOCITY_SGE = 1.

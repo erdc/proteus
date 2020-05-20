@@ -954,6 +954,9 @@ class  MonochromaticWaves(object):
                  meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.,
                  fast = True):
+        if waveType=="Fenton" and (autoFenton) and (Nf > 999):
+            logEvent("ERROR!!: Number of Fourier modes is not set, please define a reasonable number of Fourier modes e.g. Nf = 12")
+            sys.exit(1)
         
         self.fast = fast
         knownWaveTypes = ["Linear","Fenton"]
@@ -1042,7 +1045,7 @@ class  MonochromaticWaves(object):
         if(len(meanVelocity) != 3):
             logEvent("ERROR! Wavetools.py: meanVelocity should be a vector with 3 components. ",level=0)
             sys.exit(1)
-        if(self.Nf > 1000):
+        if(self.Nf > 1000) and waveType == "Fenton":
             logEvent("ERROR! Wavetools.py: You are not really using more than 1000 Fourier modes for a regular wave, right? ",level=0)
             sys.exit(1)
 

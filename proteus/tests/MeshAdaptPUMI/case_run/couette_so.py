@@ -1,7 +1,27 @@
 from builtins import range
 from proteus.default_so import *
 import couette
-from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+from proteus.MeshAdaptPUMI import MeshAdapt
+
+from proteus import Context
+import os
+
+# Create context from main module
+name_so = os.path.basename(__file__)
+if '_so.py' in name_so[-6:]:
+    name = name_so[:-6]
+elif '_so.pyc' in name_so[-7:]:
+    name = name_so[:-7]
+else:
+    raise NameError('Split operator module must end with "_so.py"')
+
+try:
+    case = __import__(name)
+    Context.setFromModule(case)
+    ct = Context.get()
+except ImportError:
+    raise ImportError(str(name) + '.py not found')
+
 
 if couette.useOnlyVF:
     pnList = [("twp_navier_stokes_p", "twp_navier_stokes_n"),

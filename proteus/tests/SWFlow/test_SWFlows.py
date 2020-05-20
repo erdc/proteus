@@ -21,11 +21,18 @@ class TestSWFlow(object):
         self.path = proteus.__path__[0]+"/tests/SWFlow/"
 
     def compare_vs_saved_files(self,name):
-        expected_path = 'comparison_files/' + name + '.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        #expected_path = 'comparison_files/' + name + '.h5'
+        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
+        #actual = tables.open_file(name+'.h5','r')
+        #assert np.allclose(expected.root.h_t2,actual.root.h_t2,atol=1e-8)
+        #expected.close()
+        #actual.close()
+
         actual = tables.open_file(name+'.h5','r')
-        assert np.allclose(expected.root.h_t2,actual.root.h_t2,atol=1e-8)
-        expected.close()
+        expected_path = 'comparison_files/' + 'comparison_' + name + '_h_t2.csv'
+        #write comparison file
+        # np.array(actual.root.h_t2).tofile(os.path.join(self._scriptdir, '.'),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t2).flatten(),decimal=10)
         actual.close()
 
     def test_solitary_wave(self):
@@ -60,3 +67,8 @@ class TestSWFlow(object):
         os.system("parun --SWEs --path " + self.path + " "
                   "-l1 -v seawall.py -C 'refinement=4 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("seawall")
+
+    def test_island(self):
+        os.system("parun --SWEs --path " + self.path + " "
+                  "-l1 -v solitary_island.py -C 'refinement=4 final_time=0.1 dt_output=0.1'")
+        self.compare_vs_saved_files("solitary_island")

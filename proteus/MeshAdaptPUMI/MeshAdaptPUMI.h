@@ -18,7 +18,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, double, int, int, int, const char*, const char*,const char*,double,double,int,double,double); 
+  MeshAdaptPUMIDrvr(); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
@@ -49,13 +49,17 @@ class MeshAdaptPUMIDrvr{
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double interfaceBandSize);
+  int transferElementFieldToProteus(const char* name, double* outArray, int nVar, int nN);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT, double deltaT_next,double T_simulation,double interfaceBandSize);
+  //int setAdaptProperties(std::vector<std::string> sizeInputs,double hmax);
+  int setAdaptProperties(std::vector<std::string> sizeInputs,bool in_adapt, double in_hmax,double in_hmin,double in_hphi, int in_numAdaptSteps, double in_targetError, double in_gradingFactor, bool in_logging, int in_numIterations);
   //int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   //int transferBCsToProteus();
 
   //MeshAdapt functions
   int willAdapt();
   int willErrorAdapt();
+  int willErrorAdapt_reference();
   int willInterfaceAdapt();
   int adaptPUMIMesh(const char* input);
   int setSphereSizeField();
@@ -65,7 +69,7 @@ class MeshAdaptPUMIDrvr{
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
-  int gradeMesh();
+  int gradeMesh(double gradationFactor);
 
   //analytic geometry
   gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
@@ -86,6 +90,7 @@ class MeshAdaptPUMIDrvr{
   double hmax, hmin, hPhi; //bounds on mesh size
   int numIter; //number of iterations for MeshAdapt
   int nAdapt; //counter for number of adapt steps
+  int nTriggers; //counter for number of triggers
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
   int maxAspect; //maximum aspect ratio
@@ -93,6 +98,16 @@ class MeshAdaptPUMIDrvr{
   int numAdaptSteps; //Number adaptivity
   double N_interface_band; //number of elements in half-band around interface
   double gradingFactor;
+  bool hasIBM;
+  bool hasInterface;
+  bool hasVMS;
+  bool hasERM;
+  bool hasAniso;
+  bool hasAnalyticSphere;
+  bool useProteus; 
+  bool useProteusAniso;
+
+  
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic
@@ -139,9 +154,17 @@ class MeshAdaptPUMIDrvr{
   apf::Mesh2* m;
   int comm_size, comm_rank;
 
-  double rho[2], nu[2];
+  //double rho[2];
+  //nu[2];
+  double* rho;
+  double* nu;
+
   double g[3];
   double delta_T;
+  double delta_T_next;
+  double T_current; //for error trigger
+  double T_reference; //for error trigger
+
   apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
@@ -149,6 +172,8 @@ class MeshAdaptPUMIDrvr{
   apf::Field* vmsErrH1; //error field for VMS
   apf::Field* errRho_reg; //error-density field from ERM
   apf::Field* errRel_reg; //relative error field from ERM
+  apf::Field* error_reference;
+
   /* this field stores isotropic size */
   apf::Field* size_iso;
   /* these fields store anisotropic size and metric tensor */
@@ -174,6 +199,8 @@ class MeshAdaptPUMIDrvr{
   static void averageToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
   void volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
+      apf::MeshEntity* ent);
+  static void minToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
 
   bool has_gBC; //boolean for having global boundary conditions

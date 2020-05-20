@@ -100,7 +100,6 @@ cdef extern from "ProtChBody.h":
         void setTimestepperType(string tstype, bool verbose)
         void setCollisionEnvelopeMargin(double envelope, double margin)
         void addMesh(shared_ptr[ch.ChMesh] mesh)
-        void setSolverDiagonalPreconditioning(bool boolval)
     cppSystem * newSystem()
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
@@ -248,7 +247,7 @@ cdef class ProtChBody:
       object sdfIBM
       string hdfFileName
       double Aij_factor
-      int[:] boundaryFlags
+      np.ndarray boundaryFlags
     cdef np.ndarray callPrescribedMotion(self, double t)
 
 
@@ -297,6 +296,10 @@ cdef class ProtChSystem:
         bool initialized
         bool update_substeps
         int nBodiesIBM
+        object log_chrono_bodies
+        object log_chrono_springs
+        object log_chrono_residuals
+        string log_chrono_format
 
 
 cdef class ProtChMesh:
@@ -363,4 +366,4 @@ cdef class ChBodyAddedMass:
     cdef public:
         object ChBodySWIG
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in)
-    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in)
+    # cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in)

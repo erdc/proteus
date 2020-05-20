@@ -382,8 +382,8 @@ def test_NonlinearDAE_f():
                      f[:, :, slice, 0])
         plt.title("NonlinearDAE_f.png")
         plt.savefig("NonlinearDAE_f.png")
-        
-        
+
+
 def test_poissonsEquationExp1D():
     iwork = np.zeros((1,), 'i')
     rwork = np.zeros((1,), 'd')
@@ -403,7 +403,7 @@ def test_poissonsEquationExp1D():
                  label='poissonsEquationExp1D')
         plt.title("poissonsEquationsExp1D.png")
         plt.savefig("poissonsEquationsExp1D.png")
-        
+
 
 def test_poissonsEquationsExp2D():
     iwork = np.zeros((1,), 'i')
@@ -427,7 +427,7 @@ def test_poissonsEquationsExp2D():
                      u)
         plt.title('poissonsEquationExp2D')
         plt.savefig("poissonsEquationExp2D.png")
-        
+
 
 def test_poissonsEquationExp3D():
     iwork = np.zeros((1,), 'i')
@@ -472,7 +472,9 @@ def test_diffusionSin1D():
         x[i, 0] = i*(1.0/(nPoints-1.0))
     u = np.zeros(x.shape[0], 'd')
     canalyticalSolutions.diffusionSin1D(iwork, rwork, t, x, u)
-    assert u[(nPoints+1)//2] == 2.4788703515727932
+    # assert u[(nPoints+1)//2] == 2.4788703515727932
+    np.testing.assert_approx_equal(u[(nPoints+1)//2], 2.4788703515727932,
+    significant=7)
     if save_plots:
         fig = plt.figure()
         plt.plot(x[:, 0],
@@ -496,7 +498,8 @@ def test_diffusionSin2D():
             x[i, j, 1] = j*(1.0/(nPoints_y-1.0))
     u = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.diffusionSin2D(iwork, rwork, t, x, u)
-    assert u[(nPoints_x+1)//2, (nPoints_y+1)//2] == 9.895915468712143
+    # assert u[(nPoints_x+1)//2, (nPoints_y+1)//2] == 9.895915468712143
+    np.testing.assert_approx_equal(u[(nPoints_x+1)//2, (nPoints_y+1)//2], 9.895915468712143,significant=7)
     if save_plots:
         fig = plt.figure()
         plt.contourf(x[:, :, 0],
@@ -568,13 +571,16 @@ def test_STflowSphere_P():
         plt.savefig("STflowSphere_P_xy.png")
     ux = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.STflowSphere_Vx(iwork, rwork, t, x, ux)
-    assert ux[midpoint_x_index, midpoint_y_index, midpoint_z_index] == 0.0422649730810374
+    # assert ux[midpoint_x_index, midpoint_y_index, midpoint_z_index] == 0.0422649730810374
+    np.testing.assert_approx_equal(ux[midpoint_x_index, midpoint_y_index, midpoint_z_index],0.0422649730810374,significant=7)
     uy = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.STflowSphere_Vy(iwork, rwork, t, x, uy)
-    assert uy[midpoint_x_index, midpoint_y_index, midpoint_z_index] == -0.009622504486493759
+    # assert uy[midpoint_x_index, midpoint_y_index, midpoint_z_index] == -0.009622504486493759
+    np.testing.assert_approx_equal(uy[midpoint_x_index, midpoint_y_index, midpoint_z_index],-0.009622504486493759,significant=7)
     uz = np.zeros(x.shape[:-1], 'd')
     canalyticalSolutions.STflowSphere_Vz(iwork, rwork, t, x, uz)
-    assert uz[midpoint_x_index, midpoint_y_index, midpoint_z_index] == -0.009622504486493759
+    # assert uz[midpoint_x_index, midpoint_y_index, midpoint_z_index] == -0.009622504486493759
+    np.testing.assert_approx_equal(uz[midpoint_x_index, midpoint_y_index, midpoint_z_index],-0.009622504486493759,significant=7)
     if save_plots:
         fig = plt.figure()
         slice = (nPoints_z+1)//2
@@ -632,7 +638,7 @@ def test_PlanePoiseuilleFlow_u():
                    uy[:, :, slice])
         plt.title("Plane Poiseuille Flow Velocity")
         plt.savefig("PlanePoiseuilleFlowQuiver.png")
-    
+
 
 def test_PoiseuillePipeFlow():
     iwork = np.zeros((1,), 'i')

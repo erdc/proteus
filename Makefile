@@ -81,10 +81,10 @@ F90 ?= gfortran
 
 # The choice for default Fortran compiler needs to be overridden on the Garnet system
 ifeq ($(PROTEUS_ARCH), garnet.gnu)
-FC=ftn 
-F77=ftn 
+FC=ftn
+F77=ftn
 F90=ftn
-endif 
+endif
 
 ifdef VERBOSE
 HIT_FLAGS += -v
@@ -138,7 +138,7 @@ stack/default.yaml: stack/hit/bin/hit
 	@echo "Linking stack/default.yaml for this arch"
 	-ln -s ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
-# A hashstack profile will be rebuilt if Make detects any files in the stack 
+# A hashstack profile will be rebuilt if Make detects any files in the stack
 # directory newer than the profile artifact file.
 ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) ${BOOTSTRAP}
 	@echo "************************"
@@ -289,14 +289,20 @@ test: air-water-vv check
 	@echo "you should install git-lfs or try 'make lfs', passing all tests is needed"
 	@echo "**************************************************************************"
 	@echo "Running basic test suite"
+ifeq (${PROTEUS_ARCH},darwin)
+	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --cov=proteus
+	@echo "Basic tests complete "
+	@echo "************************************"
+else
 	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
-	# @echo "Running air-water-vv test set 1"
-	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
-	# @echo "************************************"
-	# @echo "Running air-water-vv test set 2"
-	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+	@echo "Running air-water-vv test set 1"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
+	@echo "************************************"
+	@echo "Running air-water-vv test set 2"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+endif
 
 test-conda: air-water-vv check
 	@echo "**************************************************"
@@ -310,16 +316,19 @@ test-conda: air-water-vv check
 	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
-	# @echo "Running air-water-vv test set 1"
-	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
-	# @echo "************************************"
-	# @echo "Running air-water-vv test set 2"
-	# -source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
+	@echo "Running air-water-vv test set 1"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
+	@echo "************************************"
+	@echo "Running air-water-vv test set 2"
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 
 jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/widgets"
+ifdef CONDA_PREFIX
+else
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
+endif
 	pip install configparser ipyparallel ipython terminado jupyter ipywidgets ipyleaflet jupyter_dashboards pythreejs rise cesiumpy ipympl sympy transforms3d ipymesh voila ipyvolume ipysheet xonsh[ptk,linux,proctitle] ipytree
 	ipcluster nbextension enable --user
 	jupyter nbextension enable --py --sys-prefix ipysheet
@@ -344,7 +353,11 @@ jupyter:
 	printf "c.LocalControllerLauncher.controller_cmd = ['python', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+ifdef CONDA_PREFIX
+	cd ${CONDA_PREFIX}/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+else
 	cd linux/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+endif
 
 jupyterlab:
 	@echo "************************************"

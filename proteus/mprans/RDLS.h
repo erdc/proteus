@@ -6,6 +6,11 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "equivalent_polynomials.h"
+#include "ArgumentsDict.h"
+#include "xtensor-python/pyarray.hpp"
+
+namespace py = pybind11;
+
 #define SINGLE_POTENTIAL 1
 
 namespace proteus
@@ -15,8 +20,8 @@ namespace proteus
     return (z>0 ? 1. : (z<0 ? 0. : 0.5));
   }
 
-  template<int nSpace, int nP, int nQ>
-  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ>;
+  template<int nSpace, int nP, int nQ, int nEBQ>
+  using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
   
   class RDLS_base
@@ -24,309 +29,12 @@ namespace proteus
   public:
     std::valarray<double> weighted_lumped_mass_matrix;
     virtual ~RDLS_base(){}
-    virtual void calculateResidual(//element
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   int* mesh_l2g,
-                                   double* x_ref,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
-                                   //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
-                                   //physics
-                                   int nElements_global,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   double epsFact_redist,
-                                   double backgroundDiffusionFactor,
-                                   double weakDirichletFactor,
-                                   int freezeLevelSet,
-                                   int useTimeIntegration,
-                                   int lag_shockCapturing,
-                                   int lag_subgridError, //0 nothing lagged
-                                   //1 dH lagged in tau
-                                   //2 dH lagged in tau and Residual, adjoint calculations
-                                   double shockCapturingDiffusion,
-                                   int* u_l2g,
-                                   double* elementDiameter,
-                                   double* nodeDiametersArray,
-                                   double* u_dof,
-                                   double* phi_dof,
-                                   double* phi_ls,
-                                   double* q_m,
-                                   double* q_u,
-                                   double* q_n,
-                                   double* q_dH,
-                                   double* u_weak_internal_bc_dofs,//for freezing level set
-                                   double* q_m_betaBDF,
-                                   double* q_dH_last,//for lagging subgrid error
-                                   double* q_cfl,
-                                   double* q_numDiff_u,
-                                   double* q_numDiff_u_last,
-                                   int* weakDirichletConditionFlags,
-                                   int offset_u, int stride_u,
-                                   double* globalResidual,
-                                   int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_phi_ls_ext,
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_bc_u_ext,
-                                   double* ebqe_u,
-                                   double* ebqe_n,
-                                   // elliptic redistancing
-                                   int ELLIPTIC_REDISTANCING,
-				   double backgroundDissipationEllipticRedist,
-                                   double* lumped_qx,
-                                   double* lumped_qy,
-                                   double* lumped_qz,
-                                   double alpha,
-                                   bool useExact)=0;
-    virtual void calculateJacobian(//element
-                                   double* mesh_trial_ref,
-                                   double* mesh_grad_trial_ref,
-                                   double* mesh_dof,
-                                   int* mesh_l2g,
-                                   double* x_ref,
-                                   double* dV_ref,
-                                   double* u_trial_ref,
-                                   double* u_grad_trial_ref,
-                                   double* u_test_ref,
-                                   double* u_grad_test_ref,
-                                   //element boundary
-                                   double* mesh_trial_trace_ref,
-                                   double* mesh_grad_trial_trace_ref,
-                                   double* dS_ref,
-                                   double* u_trial_trace_ref,
-                                   double* u_grad_trial_trace_ref,
-                                   double* u_test_trace_ref,
-                                   double* u_grad_test_trace_ref,
-                                   double* normal_ref,
-                                   double* boundaryJac_ref,
-                                   //physics
-                                   int nElements_global,
-                                   double useMetrics,
-                                   double alphaBDF,
-                                   double epsFact_redist,
-                                   double backgroundDiffusionFactor,
-                                   double weakDirichletFactor,
-                                   int freezeLevelSet,
-                                   int useTimeIntegration,
-                                   int lag_shockCapturing,
-                                   int lag_subgridError,
-                                   double shockCapturingDiffusion,
-                                   int* u_l2g,
-                                   double* elementDiameter,
-                                   double* nodeDiametersArray,
-                                   double* u_dof,
-                                   double* phi_dof,
-                                   double* u_weak_internal_bc_dofs,//for freezing level set
-                                   double* phi_ls,
-                                   double* q_m_betaBDF,
-                                   double* q_dH_last,
-                                   double* q_cfl,
-                                   double* q_numDiff_u,
-                                   double* q_numDiff_u_last,
-                                   int * weakDirichletConditionFlags,
-                                   int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                   double* globalJacobian,
-                                   int nExteriorElementBoundaries_global,
-                                   int* exteriorElementBoundariesArray,
-                                   int* elementBoundaryElementsArray,
-                                   int* elementBoundaryLocalElementBoundariesArray,
-                                   double* ebqe_phi_ls_ext,
-                                   int* isDOFBoundary_u,
-                                   double* ebqe_bc_u_ext,
-                                   int* csrColumnOffsets_eb_u_u,
-                                   // elliptic redistancing
-                                   int ELLIPTIC_REDISTANCING,
-				   double backgroundDissipationEllipticRedist,
-                                   double alpha,
-                                   bool useExact)=0;
-    virtual void calculateResidual_ellipticRedist(//element
-                                                  double* mesh_trial_ref,
-                                                  double* mesh_grad_trial_ref,
-                                                  double* mesh_dof,
-                                                  int* mesh_l2g,
-                                                  double* x_ref,
-                                                  double* dV_ref,
-                                                  double* u_trial_ref,
-                                                  double* u_grad_trial_ref,
-                                                  double* u_test_ref,
-                                                  double* u_grad_test_ref,
-                                                  //element boundary
-                                                  double* mesh_trial_trace_ref,
-                                                  double* mesh_grad_trial_trace_ref,
-                                                  double* dS_ref,
-                                                  double* u_trial_trace_ref,
-                                                  double* u_grad_trial_trace_ref,
-                                                  double* u_test_trace_ref,
-                                                  double* u_grad_test_trace_ref,
-                                                  double* normal_ref,
-                                                  double* boundaryJac_ref,
-                                                  //physics
-                                                  int nElements_global,
-                                                  double useMetrics,
-                                                  double alphaBDF,
-                                                  double epsFact_redist,
-                                                  double backgroundDiffusionFactor,
-                                                  double weakDirichletFactor,
-                                                  int freezeLevelSet,
-                                                  int useTimeIntegration,
-                                                  int lag_shockCapturing,
-                                                  int lag_subgridError, //0 nothing lagged
-                                                  //1 dH lagged in tau
-                                                  //2 dH lagged in tau and Residual, adjoint calculations
-                                                  double shockCapturingDiffusion,
-                                                  int* u_l2g,
-                                                  double* elementDiameter,
-                                                  double* nodeDiametersArray,
-                                                  double* u_dof,
-                                                  double* phi_dof,
-                                                  double* phi_ls,
-                                                  double* q_m,
-                                                  double* q_u,
-                                                  double* q_n,
-                                                  double* q_dH,
-                                                  double* u_weak_internal_bc_dofs,//for freezing level set
-                                                  double* q_m_betaBDF,
-                                                  double* q_dH_last,//for lagging subgrid error
-                                                  double* q_cfl,
-                                                  double* q_numDiff_u,
-                                                  double* q_numDiff_u_last,
-                                                  int* weakDirichletConditionFlags,
-                                                  int offset_u, int stride_u,
-                                                  double* globalResidual,
-                                                  int nExteriorElementBoundaries_global,
-                                                  int* exteriorElementBoundariesArray,
-                                                  int* elementBoundaryElementsArray,
-                                                  int* elementBoundaryLocalElementBoundariesArray,
-                                                  double* ebqe_phi_ls_ext,
-                                                  int* isDOFBoundary_u,
-                                                  double* ebqe_bc_u_ext,
-                                                  double* ebqe_u,
-                                                  double* ebqe_n,
-                                                  // elliptic redistancing
-                                                  int ELLIPTIC_REDISTANCING,
-						  double backgroundDissipationEllipticRedist,
-                                                  double* lumped_qx,
-                                                  double* lumped_qy,
-                                                  double* lumped_qz,
-                                                  double alpha,
-                                                  bool useExact)=0;
-    virtual void calculateJacobian_ellipticRedist(//element
-                                                  double* mesh_trial_ref,
-                                                  double* mesh_grad_trial_ref,
-                                                  double* mesh_dof,
-                                                  int* mesh_l2g,
-                                                  double* x_ref,
-                                                  double* dV_ref,
-                                                  double* u_trial_ref,
-                                                  double* u_grad_trial_ref,
-                                                  double* u_test_ref,
-                                                  double* u_grad_test_ref,
-                                                  //element boundary
-                                                  double* mesh_trial_trace_ref,
-                                                  double* mesh_grad_trial_trace_ref,
-                                                  double* dS_ref,
-                                                  double* u_trial_trace_ref,
-                                                  double* u_grad_trial_trace_ref,
-                                                  double* u_test_trace_ref,
-                                                  double* u_grad_test_trace_ref,
-                                                  double* normal_ref,
-                                                  double* boundaryJac_ref,
-                                                  //physics
-                                                  int nElements_global,
-                                                  double useMetrics,
-                                                  double alphaBDF,
-                                                  double epsFact_redist,
-                                                  double backgroundDiffusionFactor,
-                                                  double weakDirichletFactor,
-                                                  int freezeLevelSet,
-                                                  int useTimeIntegration,
-                                                  int lag_shockCapturing,
-                                                  int lag_subgridError,
-                                                  double shockCapturingDiffusion,
-                                                  int* u_l2g,
-                                                  double* elementDiameter,
-                                                  double* nodeDiametersArray,
-                                                  double* u_dof,
-                                                  double* phi_dof,
-                                                  double* u_weak_internal_bc_dofs,//for freezing level set
-                                                  double* phi_ls,
-                                                  double* q_m_betaBDF,
-                                                  double* q_dH_last,
-                                                  double* q_cfl,
-                                                  double* q_numDiff_u,
-                                                  double* q_numDiff_u_last,
-                                                  int * weakDirichletConditionFlags,
-                                                  int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                                  double* globalJacobian,
-                                                  int nExteriorElementBoundaries_global,
-                                                  int* exteriorElementBoundariesArray,
-                                                  int* elementBoundaryElementsArray,
-                                                  int* elementBoundaryLocalElementBoundariesArray,
-                                                  double* ebqe_phi_ls_ext,
-                                                  int* isDOFBoundary_u,
-                                                  double* ebqe_bc_u_ext,
-                                                  int* csrColumnOffsets_eb_u_u,
-                                                  // elliptic redistancing
-                                                  int ELLIPTIC_REDISTANCING,
-						  double backgroundDissipationEllipticRedist,
-                                                  double alpha,
-                                                  bool useExact)=0;
-    virtual void normalReconstruction(double* mesh_trial_ref,
-                                      double* mesh_grad_trial_ref,
-                                      double* mesh_dof,
-                                      int* mesh_l2g,
-                                      double* dV_ref,
-                                      double* u_trial_ref,
-                                      double* u_grad_trial_ref,
-                                      double* u_test_ref,
-                                      int nElements_global,
-                                      int* u_l2g,
-                                      double* elementDiameter,
-                                      double* phi_dof,
-                                      int offset_u, int stride_u,
-                                      int numDOFs,
-                                      double* lumped_qx,
-                                      double* lumped_qy,
-                                      double* lumped_qz)=0;
-    virtual void calculateMetricsAtEOS( //EOS=End Of Simulation
-                                       double* mesh_trial_ref,
-                                       double* mesh_grad_trial_ref,
-                                       double* mesh_dof,
-                                       int* mesh_l2g,
-                                       double* dV_ref,
-                                       double* u_trial_ref,
-                                       double* u_grad_trial_ref,
-                                       double* u_test_ref,
-                                       //physics
-                                       int nElements_global,
-                                       int* u_l2g,
-                                       double* elementDiameter,
-                                       //double* nodeDiametersArray,
-                                       double degree_polynomial,
-                                       double epsFact_redist,
-                                       double* u_dof,
-                                       double* u_exact,
-                                       int offset_u, int stride_u,
-                                       double* global_I_err,
-                                       double* global_V_err,
-                                       double* global_D_err)=0;
+    virtual void calculateResidual(arguments_dict& args, bool useExact)=0;
+    virtual void calculateJacobian(arguments_dict& args, bool useExact)=0;
+    virtual void calculateResidual_ellipticRedist(arguments_dict& args, bool useExact)=0;
+    virtual void calculateJacobian_ellipticRedist(arguments_dict& args, bool useExact)=0;
+    virtual void normalReconstruction(arguments_dict& args)=0;
+    virtual std::tuple<double, double, double> calculateMetricsAtEOS(arguments_dict& args)=0;
   };
 
   template<class CompKernelType,
@@ -341,7 +49,7 @@ namespace proteus
     public:
       const int nDOF_test_X_trial_element;
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,1,nQuadraturePoints_element> gf,gfu;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf,gfu;
     RDLS():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
@@ -364,6 +72,12 @@ namespace proteus
         dm=1.0;
         H = 0.0;
         Si= gf.H(eps,u_levelSet) - gf.ImH(eps,u_levelSet);
+        /* if (u_levelSet > 0.0) */
+        /*   Si=1.0; */
+        /* else if (u_levelSet < 0.0) */
+        /*   Si = -1.0; */
+        /* else */
+        /*   Si=0.0; */
         r = -Si;
         for (I=0; I < nSpace; I++)
           {
@@ -413,78 +127,74 @@ namespace proteus
       }
 
 #undef CKDEBUG
-      void calculateResidual(//element
-                             double* mesh_trial_ref,
-                             double* mesh_grad_trial_ref,
-                             double* mesh_dof,
-                             int* mesh_l2g,
-                             double* x_ref,
-                             double* dV_ref,
-                             double* u_trial_ref,
-                             double* u_grad_trial_ref,
-                             double* u_test_ref,
-                             double* u_grad_test_ref,
-                             //element boundary
-                             double* mesh_trial_trace_ref,
-                             double* mesh_grad_trial_trace_ref,
-                             double* dS_ref,
-                             double* u_trial_trace_ref,
-                             double* u_grad_trial_trace_ref,
-                             double* u_test_trace_ref,
-                             double* u_grad_test_trace_ref,
-                             double* normal_ref,
-                             double* boundaryJac_ref,
-                             //physics
-                             int nElements_global,
-                             double useMetrics,
-                             double alphaBDF,
-                             double epsFact_redist,
-                             double backgroundDiffusionFactor,
-                             double weakDirichletFactor,
-                             int freezeLevelSet,
-                             int useTimeIntegration,
-                             int lag_shockCapturing,
-                             int lag_subgridError, //0 nothing lagged
-                             //1 dH lagged in tau
-                             //2 dH lagged in tau and Residual, adjoint calculations
-                             double shockCapturingDiffusion,
-                             int* u_l2g,
-                             double* elementDiameter,
-                             double* nodeDiametersArray,
-                             double* u_dof,
-                             double* phi_dof,
-                             double* phi_ls,
-                             double* q_m,
-                             double* q_u,
-                             double* q_n,
-                             double* q_dH,
-                             double* u_weak_internal_bc_dofs,//for freezing level set
-                             double* q_m_betaBDF,
-                             double* q_dH_last,//for lagging subgrid error
-                             double* q_cfl,
-                             double* q_numDiff_u,
-                             double* q_numDiff_u_last,
-                             int* weakDirichletConditionFlags,
-                             int offset_u, int stride_u,
-                             double* globalResidual,
-                             int nExteriorElementBoundaries_global,
-                             int* exteriorElementBoundariesArray,
-                             int* elementBoundaryElementsArray,
-                             int* elementBoundaryLocalElementBoundariesArray,
-                             double* ebqe_phi_ls_ext,
-                             int* isDOFBoundary_u,
-                             double* ebqe_bc_u_ext,
-                             double* ebqe_u,
-                             double* ebqe_n,
-                             // elliptic redistancing
-                             int ELLIPTIC_REDISTANCING,
-			     double backgroundDissipationEllipticRedist,
-                             double* lumped_qx,
-                             double* lumped_qy,
-                             double* lumped_qz,
-                             double alpha,
+      void calculateResidual(arguments_dict& args,
                              bool useExact)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& x_ref = args.m_darray["x_ref"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        double backgroundDiffusionFactor = args.m_dscalar["backgroundDiffusionFactor"];
+        double weakDirichletFactor = args.m_dscalar["weakDirichletFactor"];
+        int freezeLevelSet = args.m_iscalar["freezeLevelSet"];
+        int useTimeIntegration = args.m_iscalar["useTimeIntegration"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        int lag_subgridError = args.m_iscalar["lag_subgridError"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& nodeDiametersArray = args.m_darray["nodeDiametersArray"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& phi_dof = args.m_darray["phi_dof"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_m = args.m_darray["q_m"];
+        xt::pyarray<double>& q_u = args.m_darray["q_u"];
+        xt::pyarray<double>& q_n = args.m_darray["q_n"];
+        xt::pyarray<double>& q_dH = args.m_darray["q_dH"];
+        xt::pyarray<double>& u_weak_internal_bc_dofs = args.m_darray["u_weak_internal_bc_dofs"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& q_dH_last = args.m_darray["q_dH_last"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<int>& weakDirichletConditionFlags = args.m_iarray["weakDirichletConditionFlags"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u"];
+        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_phi_ls_ext = args.m_darray["ebqe_phi_ls_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<double>& ebqe_u = args.m_darray["ebqe_u"];
+        xt::pyarray<double>& ebqe_n = args.m_darray["ebqe_n"];
+        int ELLIPTIC_REDISTANCING = args.m_iscalar["ELLIPTIC_REDISTANCING"];
+        double backgroundDissipationEllipticRedist = args.m_dscalar["backgroundDissipationEllipticRedist"];
+        xt::pyarray<double>& lumped_qx = args.m_darray["lumped_qx"];
+        xt::pyarray<double>& lumped_qy = args.m_darray["lumped_qy"];
+        xt::pyarray<double>& lumped_qz = args.m_darray["lumped_qz"];
+        double alpha = args.m_dscalar["alpha"];
         double circbc=0.0,circ=0.0;
         gf.useExact=useExact;
         gfu.useExact=useExact;
@@ -523,7 +233,7 @@ namespace proteus
               {
 		register int eN_i=eN*nDOF_trial_element+i;
                 elementResidual_u[i]=0.0;
-		element_phi[i] = phi_dof[u_l2g[eN_i]];
+		element_phi[i] = phi_dof.data()[u_l2g.data()[eN_i]];
                 dummy_l2g[i] = i;
               }//i
             double element_nodes[nDOF_mesh_trial_element*3];
@@ -531,18 +241,18 @@ namespace proteus
 	      {
 		register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
-                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+                  element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref);
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
             /* for (int i=0;i<nDOF_test_element;i++) */
             /*   { */
 	    /*     register int eN_i=eN*nDOF_trial_element+i; */
             /*     double eps=1.0e-4; */
             /*     if((fabs(gf.exact.phi_dof_corrected[i]) < eps) || */
-            /*        (fabs(phi_dof[u_l2g[eN_i]]) < eps)) */
+            /*        (fabs(phi_dof.data()[u_l2g.data()[eN_i]]) < eps)) */
             /*       std::cout<<"Warning "<<gf.exact.phi_dof_corrected[i]<<'\t' */
-            /*                <<phi_dof[u_l2g[eN_i]]<<'\t' */
-            /*                <<u_l2g[eN_i]<<std::endl; */
+            /*                <<phi_dof.data()[u_l2g.data()[eN_i]]<<'\t' */
+            /*                <<u_l2g.data()[eN_i]<<std::endl; */
             /*   } */
             //loop over quadrature points and compute integrands
             for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -575,32 +285,33 @@ namespace proteus
                   G[nSpace*nSpace],G_dd_G,tr_G;
                 ck.calculateMapping_element(eN,
                                             k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
+                                            mesh_dof.data(),
+                                            mesh_l2g.data(),
+                                            mesh_trial_ref.data(),
+                                            mesh_grad_trial_ref.data(),
                                             jac,
                                             jacDet,
                                             jacInv,
                                             x,y,z);
                 ck.calculateH_element(eN,
                                       k,
-                                      nodeDiametersArray,
-                                      mesh_l2g,
-                                      mesh_trial_ref,
+                                      nodeDiametersArray.data(),
+                                      mesh_l2g.data(),
+                                      mesh_trial_ref.data(),
                                       h_phi);
                 //get the physical integration weight
-                dV = fabs(jacDet)*dV_ref[k];
+                dV = fabs(jacDet)*dV_ref.data()[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
 
                 //get the trial function gradients
-                ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+                ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
                 //get the solution
-                ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-                ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref[k*nDOF_trial_element],u0);
+                ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
+                ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref.data()[k*nDOF_trial_element],u0);
                 if (freezeLevelSet)
-                  u0 = phi_ls[eN_k];
-                //u0 = phi_ls[eN_k];//cek debug
+                  {
+                    u0 = phi_ls.data()[eN_k];
+                  }
                 /* double DX=(x-0.5),DY=(y-0.75); */
                 /* double radius = std::sqrt(DX*DX+DY*DY); */
                 /* double theta = std::atan2(DY,DX); */
@@ -608,18 +319,18 @@ namespace proteus
                 /* u0 = scaling*std::pow((0.15+(0.015/2.)*std::cos(kp*theta) - radius),rp);     */
 
                 //u0 = 0.15 - std::sqrt(DX*DX + DY*DY);
-                //u0 = phi_ls[eN_k];//cek debug--set to exact input
+                //u0 = phi_ls.data()[eN_k];//cek debug--set to exact input
                 /* //cek debug */
                 /* double u0_test; */
-                /* ck.valFromDOF(phi_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u0_test); */
+                /* ck.valFromDOF(phi_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u0_test); */
                 /* if (u0 != u0_test) */
                 /*   std::cout<<"eN "<<eN<<" k "<<k<<" u0 "<<u0<<" u0_test "<<u0_test<<std::endl; */
                 //get the solution gradients
-                ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+                ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
-                    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+                    u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
                       {
                         u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -638,7 +349,7 @@ namespace proteus
 
                 /* ck.calculateGScale(G,dir,h_phi); */
 
-                epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
 
                 evaluateCoefficients(epsilon_redist,
                                      u0,
@@ -661,28 +372,28 @@ namespace proteus
                   {
                     for (int I=0; I < nSpace; I++)
                       {
-                        dH_tau[I] = q_dH_last[eN_k_nSpace+I];
+                        dH_tau[I] = q_dH_last.data()[eN_k_nSpace+I];
                       }
                   }
                 if (lag_subgridError > 1)
                   {
                     for (int I=0; I < nSpace; I++)
                       {
-                        dH_strong[I] = q_dH_last[eN_k_nSpace+I];
+                        dH_strong[I] = q_dH_last.data()[eN_k_nSpace+I];
                       }
                   }
                 //save mass for time history and dH for subgrid error
                 //save solution for other models
                 //
-                q_m[eN_k] = m;
-                q_u[eN_k] = u;
+                q_m.data()[eN_k] = m;
+                q_u.data()[eN_k] = u;
                 for (int I=0;I<nSpace;I++)
-                  q_n[eN_k_nSpace+I] = dir[I];
+                  q_n.data()[eN_k_nSpace+I] = dir[I];
 
                 for (int I=0;I<nSpace;I++)
                   {
                     int eN_k_nSpace_I = eN_k_nSpace+I;
-                    q_dH[eN_k_nSpace_I] = dH[I];
+                    q_dH.data()[eN_k_nSpace_I] = dH[I];
                   }
 
                 //
@@ -693,7 +404,7 @@ namespace proteus
                 //calculate time derivative at quadrature points
                 //
                 ck.bdf(alphaBDF,
-                       q_m_betaBDF[eN_k],
+                       q_m_betaBDF.data()[eN_k],
                        m,
                        dm,
                        m_t,
@@ -703,7 +414,7 @@ namespace proteus
                 m *= timeIntegrationScale; dm *= timeIntegrationScale; m_t *= timeIntegrationScale;
                 dm_t *= timeIntegrationScale;
 #ifdef CKDEBUG
-                std::cout<<"alpha "<<alphaBDF<<"\t"<<q_m_betaBDF[eN_k]<<"\t"<<m_t<<'\t'<<m<<'\t'<<alphaBDF*m<<std::endl;
+                std::cout<<"alpha "<<alphaBDF<<"\t"<<q_m_betaBDF.data()[eN_k]<<"\t"<<m_t<<'\t'<<m<<'\t'<<alphaBDF*m<<std::endl;
 #endif
                 //
                 //calculate subgrid error (strong residual and adjoint)
@@ -724,14 +435,14 @@ namespace proteus
                     //reaction is constant
                   }
                 //calculate tau and tau*Res
-                calculateSubgridError_tau(elementDiameter[eN],
+                calculateSubgridError_tau(elementDiameter.data()[eN],
                                           dm_t,dH_tau,
-                                          q_cfl[eN_k],
+                                          q_cfl.data()[eN_k],
                                           tau0);
                 calculateSubgridError_tau(G,
                                           dH_tau,
                                           tau1,
-                                          q_cfl[eN_k]);
+                                          q_cfl.data()[eN_k]);
 
                 tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
 
@@ -742,28 +453,29 @@ namespace proteus
                 //
                 //calculate shock capturing diffusion
                 //
-                ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);
+                ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter.data()[eN],pdeResidual_u,grad_u,numDiff0);
                 ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u,numDiff1);
 
-                q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
+                q_numDiff_u.data()[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
 
 #ifdef CKDEBUG
-                std::cout<<"q_numDiff_u[eN_k] "<<q_numDiff_u[eN_k]<<" q_numDiff_u_last[eN_k] "<<q_numDiff_u_last[eN_k]<<" lag "<<lag_shockCapturingScale<<std::endl;
+                std::cout<<"q_numDiff_u[eN_k] "<<q_numDiff_u.data()[eN_k]<<" q_numDiff_u_last[eN_k] "<<q_numDiff_u_last.data()[eN_k]<<" lag "<<lag_shockCapturingScale<<std::endl;
 #endif
-                nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
-                /* double epsilon_background_diffusion = 3.0*h_phi;//2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]); */
+                nu_sc = q_numDiff_u.data()[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last.data()[eN_k]*lag_shockCapturingScale;
+                /* double epsilon_background_diffusion = 3.0*h_phi;//2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]); */
                 /* if (fabs(u0) >  epsilon_background_diffusion) */
                 /*   nu_sc += backgroundDiffusionFactor*h_phi; */
                 
-                double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-                if (fabs(phi_ls[eN_k]) >  epsilon_background_diffusion)
-                  nu_sc += backgroundDiffusionFactor*elementDiameter[eN];                //
+                double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
+                if (fabs(phi_ls.data()[eN_k]) >  epsilon_background_diffusion)
+                  nu_sc += backgroundDiffusionFactor*elementDiameter.data()[eN];                //
                 //update element residual
                 //
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     register int i_nSpace = i*nSpace;
                     double FREEZE=double(freezeLevelSet);
+                    //assert(FREEZE==0.0);
                     //register int eN_k_i=eN_k*nDOF_test_element+i;
                     //register int eN_k_i_nSpace = eN_k_i*nSpace;
 
@@ -771,7 +483,7 @@ namespace proteus
                     std::cout<<"shock capturing input  nu_sc "<<nu_sc<<'\t'<<grad_u[0]<<'\t'<<grad_u[1]<<'\t'<<grad_u[1]<<'\t'<<u_grad_test_dV[i_nSpace]<<std::endl;
 #endif
                     //std::cout<<element_phi[i]<<'\t'<<element_nodes[i*3+0]<<'\t'<<element_nodes[i*3+1]<<std::endl;
-                    //std::cout<<"eN_k "<<eN_k<<" D "<<gf.D(epsilon_redist,phi_ls[eN_k])<<std::endl;
+                    //std::cout<<"eN_k "<<eN_k<<" D "<<gf.D(epsilon_redist,phi_ls.data()[eN_k])<<std::endl;
                     circbc += ck.Reaction_weak(gf.D(epsilon_redist,u0)*(u-u0), u_test_dV[i]);
                     elementResidual_u[i] += ck.Mass_weak(m_t,u_test_dV[i]) +
 		      ck.Hamiltonian_weak(H,u_test_dV[i]) +
@@ -799,11 +511,11 @@ namespace proteus
                 for (int j = 0; j < nDOF_trial_element; j++)
                   {
                     const int eN_j = eN*nDOF_trial_element+j;
-                    const int J = u_l2g[eN_j];
-                    //if (weakDirichletConditionFlags[J] == 1)
-                    if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
+                    const int J = u_l2g.data()[eN_j];
+                    //if (weakDirichletConditionFlags.data()[J] == 1)
+                    if (fabs(u_weak_internal_bc_dofs.data()[J]) < epsilon_redist)
                       {
-                        elementResidual_u[j] = (u_dof[J]-u_weak_internal_bc_dofs[J])*weakDirichletFactor*elementDiameter[eN];
+                        elementResidual_u[j] = (u_dof.data()[J]-u_weak_internal_bc_dofs.data()[J])*weakDirichletFactor*elementDiameter.data()[eN];
                       }
                   }//j
               }//freeze
@@ -818,7 +530,7 @@ namespace proteus
 #ifdef CKDEBUG
                 std::cout<<"element residual i = "<<i<<"\t"<<elementResidual_u[i]<<std::endl;
 #endif
-                globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
+                globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]]+=elementResidual_u[i];
               }//i
           }//elements
         //
@@ -829,9 +541,9 @@ namespace proteus
         //eN is the element index
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
-            register int ebN = exteriorElementBoundariesArray[ebNE],
-              eN  = elementBoundaryElementsArray[ebN*2+0],
-              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+            register int ebN = exteriorElementBoundariesArray.data()[ebNE],
+              eN  = elementBoundaryElementsArray.data()[ebN*2+0],
+              ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
               eN_nDOF_trial_element = eN*nDOF_trial_element;
             double epsilon_redist, h_phi;
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
@@ -856,26 +568,26 @@ namespace proteus
                                                     ebN_local,
                                                     kb,
                                                     ebN_local_kb,
-                                                    mesh_dof,
-                                                    mesh_l2g,
-                                                    mesh_trial_trace_ref,
-                                                    mesh_grad_trial_trace_ref,
-                                                    boundaryJac_ref,
+                                                    mesh_dof.data(),
+                                                    mesh_l2g.data(),
+                                                    mesh_trial_trace_ref.data(),
+                                                    mesh_grad_trial_trace_ref.data(),
+                                                    boundaryJac_ref.data(),
                                                     jac_ext,
                                                     jacDet_ext,
                                                     jacInv_ext,
                                                     boundaryJac,
                                                     metricTensor,
                                                     metricTensorDetSqrt,
-                                                    normal_ref,
+                                                    normal_ref.data(),
                                                     normal,
                                                     x_ext,y_ext,z_ext);
                 //compute shape and solution information
                 //shape
-		ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+		ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
                 //solution and gradients
-                ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
-                ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+                ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_ext);
+                ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
                 norm = 1.0e-8;
                 for (int I=0;I<nSpace;I++)
                   norm += grad_u_ext[I]*grad_u_ext[I];
@@ -883,9 +595,9 @@ namespace proteus
                 for (int I=0;I<nSpace;I++)
                   dir[I] = grad_u_ext[I]/norm;
                 //save for other models
-                ebqe_u[ebNE_kb] = u_ext;
+                ebqe_u.data()[ebNE_kb] = u_ext;
                 for (int I=0;I<nSpace;I++)
-                  ebqe_n[ebNE_kb_nSpace+I] = dir[I];
+                  ebqe_n.data()[ebNE_kb_nSpace+I] = dir[I];
               }//kb
           }//ebNE
         //std::cout<<"Circ Res"<<circbc<<'\t'<<circ<<std::endl;
@@ -894,68 +606,66 @@ namespace proteus
       //for now assumes that using time integration
       //and so lags stabilization and subgrid error
       //extern "C" void calculateJacobian_RDLSV2(int nElements_global,
-      void calculateJacobian(//element
-                             double* mesh_trial_ref,
-                             double* mesh_grad_trial_ref,
-                             double* mesh_dof,
-                             int* mesh_l2g,
-                             double* x_ref,
-                             double* dV_ref,
-                             double* u_trial_ref,
-                             double* u_grad_trial_ref,
-                             double* u_test_ref,
-                             double* u_grad_test_ref,
-                             //element boundary
-                             double* mesh_trial_trace_ref,
-                             double* mesh_grad_trial_trace_ref,
-                             double* dS_ref,
-                             double* u_trial_trace_ref,
-                             double* u_grad_trial_trace_ref,
-                             double* u_test_trace_ref,
-                             double* u_grad_test_trace_ref,
-                             double* normal_ref,
-                             double* boundaryJac_ref,
-                             //physics
-                             int nElements_global,
-                             double useMetrics,
-                             double alphaBDF,
-                             double epsFact_redist,
-                             double backgroundDiffusionFactor,
-                             double weakDirichletFactor,
-                             int freezeLevelSet,
-                             int useTimeIntegration,
-                             int lag_shockCapturing,
-                             int lag_subgridError,
-                             double shockCapturingDiffusion,
-                             int* u_l2g,
-                             double* elementDiameter,
-                             double* nodeDiametersArray,
-                             double* u_dof,
-                             double* phi_dof,
-                             double* u_weak_internal_bc_dofs,//for freezing level set
-                             double* phi_ls,
-                             double* q_m_betaBDF,
-                             double* q_dH_last,
-                             double* q_cfl,
-                             double* q_numDiff_u,
-                             double* q_numDiff_u_last,
-                             int * weakDirichletConditionFlags,
-                             int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                             double* globalJacobian,
-                             int nExteriorElementBoundaries_global,
-                             int* exteriorElementBoundariesArray,
-                             int* elementBoundaryElementsArray,
-                             int* elementBoundaryLocalElementBoundariesArray,
-                             double* ebqe_phi_ls_ext,
-                             int* isDOFBoundary_u,
-                             double* ebqe_bc_u_ext,
-                             int* csrColumnOffsets_eb_u_u,
-                             // elliptic redistancing
-                             int ELLIPTIC_REDISTANCING,
-			     double backgroundDissipationEllipticRedist,
-                             double alpha,
+      void calculateJacobian(arguments_dict& args,
                              bool useExact)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& x_ref = args.m_darray["x_ref"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        double backgroundDiffusionFactor = args.m_dscalar["backgroundDiffusionFactor"];
+        double weakDirichletFactor = args.m_dscalar["weakDirichletFactor"];
+        int freezeLevelSet = args.m_iscalar["freezeLevelSet"];
+        int useTimeIntegration = args.m_iscalar["useTimeIntegration"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        int lag_subgridError = args.m_iscalar["lag_subgridError"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& nodeDiametersArray = args.m_darray["nodeDiametersArray"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& phi_dof = args.m_darray["phi_dof"];
+        xt::pyarray<double>& u_weak_internal_bc_dofs = args.m_darray["u_weak_internal_bc_dofs"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& q_dH_last = args.m_darray["q_dH_last"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<int>& weakDirichletConditionFlags = args.m_iarray["weakDirichletConditionFlags"];
+        xt::pyarray<int>& csrRowIndeces_u_u = args.m_iarray["csrRowIndeces_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_u_u = args.m_iarray["csrColumnOffsets_u_u"];
+        xt::pyarray<double>& globalJacobian = args.m_darray["globalJacobian"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_phi_ls_ext = args.m_darray["ebqe_phi_ls_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.m_iarray["csrColumnOffsets_eb_u_u"];
+        int ELLIPTIC_REDISTANCING = args.m_iscalar["ELLIPTIC_REDISTANCING"];
+        double backgroundDissipationEllipticRedist = args.m_dscalar["backgroundDissipationEllipticRedist"];
+        double alpha = args.m_dscalar["alpha"];
         double circ=0.0;
         gf.useExact=useExact;
         //
@@ -975,7 +685,7 @@ namespace proteus
             for (int i=0;i<nDOF_test_element;i++)
               {
 		register int eN_i=eN*nDOF_trial_element+i;
-                element_phi[i] = phi_dof[u_l2g[eN_i]];
+                element_phi[i] = phi_dof.data()[u_l2g.data()[eN_i]];
                 dummy_l2g[i] = i;
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
@@ -987,9 +697,9 @@ namespace proteus
 	      {
 		register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
-                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+                  element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref);            
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);            
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
@@ -1024,49 +734,49 @@ namespace proteus
                 //
                 ck.calculateMapping_element(eN,
                                             k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
+                                            mesh_dof.data(),
+                                            mesh_l2g.data(),
+                                            mesh_trial_ref.data(),
+                                            mesh_grad_trial_ref.data(),
                                             jac,
                                             jacDet,
                                             jacInv,
                                             x,y,z);
                 ck.calculateH_element(eN,
                                       k,
-                                      nodeDiametersArray,
-                                      mesh_l2g,
-                                      mesh_trial_ref,
+                                      nodeDiametersArray.data(),
+                                      mesh_l2g.data(),
+                                      mesh_trial_ref.data(),
                                       h_phi);
                 //get the physical integration weight
-                dV = fabs(jacDet)*dV_ref[k];
+                dV = fabs(jacDet)*dV_ref.data()[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
                 //get the trial function gradients
-                ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+                ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
                 //get the solution
-                ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-                ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref[k*nDOF_trial_element],u0);
+                ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
+                ck.valFromDOF(gf.exact.phi_dof_corrected,dummy_l2g,&u_trial_ref.data()[k*nDOF_trial_element],u0);
                 if (freezeLevelSet)
-                  u0 = phi_ls[eN_k];
-                //u0 = phi_ls[eN_k];//cek debug
+                  u0 = phi_ls.data()[eN_k];
+                //u0 = phi_ls.data()[eN_k];//cek debug
                 /* double DX=(x-0.5),DY=(y-0.75); */
                 /* double radius = std::sqrt(DX*DX+DY*DY); */
                 /* double theta = std::atan2(DY,DX); */
                 /* double kp=10.0, scaling=1.0, rp=1; */
                 /* u0 = scaling*std::pow((0.15+(0.015/2.)*std::cos(kp*theta) - radius),rp);     */
                 //u0 = 0.15 - std::sqrt(DX*DX + DY*DY);
-                //u0 = phi_ls[eN_k];//cek debug--set to exact input
+                //u0 = phi_ls.data()[eN_k];//cek debug--set to exact input
                 /* double u0_test=0; */
-                /* ck.valFromDOF(phi_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u0_test); */
+                /* ck.valFromDOF(phi_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u0_test); */
                 /* if (u0 != u0_test) */
                 /*   std::cout<<"JAC eN "<<eN<<" k "<<k<<" u0 "<<u0<<" u0_test "<<u0_test<<std::endl; */
 
                 //get the solution gradients
-                ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
+                ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
-                    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+                    u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
                       {
                         u_grad_test_dV[j*nSpace+I]   = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -1084,7 +794,7 @@ namespace proteus
 
                 /* ck.calculateGScale(G,dir,h_phi); */
 
-                epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+                epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
 
                 evaluateCoefficients(epsilon_redist,
                                      u0,
@@ -1107,14 +817,14 @@ namespace proteus
                   {
                     for (int I=0; I < nSpace; I++)
                       {
-                        dH_tau[I] = q_dH_last[eN_k_nSpace+I];
+                        dH_tau[I] = q_dH_last.data()[eN_k_nSpace+I];
                       }
                   }
                 if (lag_subgridError > 1)
                   {
                     for (int I=0; I < nSpace; I++)
                       {
-                        dH_strong[I] = q_dH_last[eN_k_nSpace+I];
+                        dH_strong[I] = q_dH_last.data()[eN_k_nSpace+I];
                       }
                   }
                 //
@@ -1125,7 +835,7 @@ namespace proteus
                 //calculate time derivatives
                 //
                 ck.bdf(alphaBDF,
-                       q_m_betaBDF[eN_k],
+                       q_m_betaBDF.data()[eN_k],
                        m,
                        dm,
                        m_t,
@@ -1152,37 +862,37 @@ namespace proteus
                     //int eN_k_j=eN_k*nDOF_trial_element+j;
                     //int eN_k_j_nSpace = eN_k_j*nSpace;
                     int j_nSpace = j*nSpace;
-                    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+                    dpdeResidual_u_u[j]=ck.MassJacobian_strong(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j]) +
                       ck.HamiltonianJacobian_strong(dH_strong,&u_grad_trial[j_nSpace]);
                   }
                 //tau and tau*Res
-                calculateSubgridError_tau(elementDiameter[eN],
+                calculateSubgridError_tau(elementDiameter.data()[eN],
                                           dm_t,
                                           dH_tau,
-                                          q_cfl[eN_k],
+                                          q_cfl.data()[eN_k],
                                           tau0);
                 calculateSubgridError_tau(G,
                                           dH_tau,
                                           tau1,
-                                          q_cfl[eN_k]);
+                                          q_cfl.data()[eN_k]);
 
                 tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
 
                 for (int j=0;j<nDOF_trial_element;j++)
                   dsubgridError_u_u[j] =  -tau*dpdeResidual_u_u[j];
 
-                nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
+                nu_sc = q_numDiff_u.data()[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last.data()[eN_k]*lag_shockCapturingScale;
                 /* double epsilon_background_diffusion = 3.0*epsFact_redist*h_phi; */
                 /* if (fabs(u0) >  epsilon_background_diffusion) */
                 /*   nu_sc += backgroundDiffusionFactor*h_phi; */
-                double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-                if (fabs(phi_ls[eN_k]) >  epsilon_background_diffusion)
-                  nu_sc += backgroundDiffusionFactor*elementDiameter[eN];                //
+                double epsilon_background_diffusion = 2.0*epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
+                if (fabs(phi_ls.data()[eN_k]) >  epsilon_background_diffusion)
+                  nu_sc += backgroundDiffusionFactor*elementDiameter.data()[eN];                //
                 for(int i=0;i<nDOF_test_element;i++)
                   {
                     //int eN_k_i=eN_k*nDOF_test_element+i;
                     //int eN_k_i_nSpace=eN_k_i*nSpace;
-                    circ += ck.Reaction_weak(gf.D(epsilon_redist, phi_ls[eN_k]), u_test_dV[i]);
+                    circ += ck.Reaction_weak(gf.D(epsilon_redist, phi_ls.data()[eN_k]), u_test_dV[i]);
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
                         //int eN_k_j=eN_k*nDOF_trial_element+j;
@@ -1191,11 +901,11 @@ namespace proteus
                         int i_nSpace = i*nSpace;
                         double FREEZE=double(freezeLevelSet);
                         //std::cout<<element_phi[i]<<'\t'<<element_nodes[i*3+0]<<'\t'<<element_nodes[i*3+1]<<std::endl;
-                        //std::cout<<"eN_k "<<eN_k<<" D-J "<<gf.D(epsilon_redist,phi_ls[eN_k])<<std::endl;
-                        elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
+                        //std::cout<<"eN_k "<<eN_k<<" D-J "<<gf.D(epsilon_redist,phi_ls.data()[eN_k])<<std::endl;
+                        elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dm_t,u_trial_ref.data()[k*nDOF_trial_element+j],u_test_dV[i]) +
                           ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]) +
                           (1.0-FREEZE)*(weakDirichletFactor/h_phi)*ck.ReactionJacobian_weak(-gf.D(epsilon_redist,u0),
-                                                                                             u_trial_ref[k*nDOF_trial_element+j],
+                                                                                             u_trial_ref.data()[k*nDOF_trial_element+j],
                                                                                              u_test_dV[i]) +
                           ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
                           ck.NumericalDiffusionJacobian(nu_sc,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
@@ -1212,14 +922,14 @@ namespace proteus
                 //assume correspondence between dof and equations
                 for (int j = 0; j < nDOF_trial_element; j++)
                   {
-                    const int J = u_l2g[eN*nDOF_trial_element+j];
-                    if (fabs(u_weak_internal_bc_dofs[J]) < epsilon_redist)
+                    const int J = u_l2g.data()[eN*nDOF_trial_element+j];
+                    if (fabs(u_weak_internal_bc_dofs.data()[J]) < epsilon_redist)
                     //if (weakDirichletConditionFlags[J] == 1)
                     //if (fabs(gf.exact.phi_dof_corrected[j]) < epsilon_redist)
                       {
                         for (int jj=0; jj < nDOF_trial_element; jj++)
                           elementJacobian_u_u[j][jj] = 0.0;
-                        elementJacobian_u_u[j][j] = weakDirichletFactor*elementDiameter[eN];
+                        elementJacobian_u_u[j][j] = weakDirichletFactor*elementDiameter.data()[eN];
                       }
                   }
               }
@@ -1232,7 +942,7 @@ namespace proteus
 #ifdef CKDEBUG
                     std::cout<<"element jacobian i = "<<i<<"\t"<<"j = "<<j<<"\t"<<elementJacobian_u_u[i][j]<<std::endl;
 #endif
-                    globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+                    globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i][j];
                   }//j
               }//i
           }//elements
@@ -1243,9 +953,9 @@ namespace proteus
         /* gf.useExact=false;//exact Heaviside integration not implemented for boundaries yet */
         /* for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) */
         /*   { */
-        /*     register int ebN = exteriorElementBoundariesArray[ebNE]; */
-        /*     register int eN  = elementBoundaryElementsArray[ebN*2+0], */
-        /*       ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0], */
+        /*     register int ebN = exteriorElementBoundariesArray.data()[ebNE]; */
+        /*     register int eN  = elementBoundaryElementsArray.data()[ebN*2+0], */
+        /*       ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0], */
         /*       eN_nDOF_trial_element = eN*nDOF_trial_element; */
         /*     double epsilon_redist,h_phi; */
         /*     for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) */
@@ -1290,32 +1000,32 @@ namespace proteus
         /*                                             ebN_local, */
         /*                                             kb, */
         /*                                             ebN_local_kb, */
-        /*                                             mesh_dof, */
-        /*                                             mesh_l2g, */
-        /*                                             mesh_trial_trace_ref, */
-        /*                                             mesh_grad_trial_trace_ref, */
-        /*                                             boundaryJac_ref, */
+        /*                                             mesh_dof.data(), */
+        /*                                             mesh_l2g.data(), */
+        /*                                             mesh_trial_trace_ref.data(), */
+        /*                                             mesh_grad_trial_trace_ref.data(), */
+        /*                                             boundaryJac_ref.data(), */
         /*                                             jac_ext, */
         /*                                             jacDet_ext, */
         /*                                             jacInv_ext, */
         /*                                             boundaryJac, */
         /*                                             metricTensor, */
         /*                                             metricTensorDetSqrt, */
-        /*                                             normal_ref, */
+        /*                                             normal_ref.data(), */
         /*                                             normal, */
         /*                                             x_ext,y_ext,z_ext); */
-        /*         dS = metricTensorDetSqrt*dS_ref[kb]; */
+        /*         dS = metricTensorDetSqrt*dS_ref.data()[kb]; */
         /*         ck.calculateG(jacInv_ext,G,G_dd_G,tr_G); */
         /*         //compute shape and solution information */
         /*         //shape */
-        /*         ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace); */
+        /*         ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace); */
         /*         //solution and gradients */
-        /*         ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext); */
-        /*         ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext); */
+        /*         ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_ext); */
+        /*         ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext); */
         /*         //precalculate test function products with integration weights */
         /*         for (int j=0;j<nDOF_trial_element;j++) */
         /*           { */
-        /*             u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS; */
+        /*             u_test_dS[j] = u_test_trace_ref.data()[ebN_local_kb*nDOF_test_element+j]*dS; */
         /*           } */
 
         /*         norm = 1.0e-8; */
@@ -1326,17 +1036,17 @@ namespace proteus
         /*           dir[I] = grad_u_ext[I]/norm; */
 
         /*         ck.calculateGScale(G,dir,h_phi); */
-        /*         epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]); */
+        /*         epsilon_redist = epsFact_redist*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]); */
 
         /*         // */
         /*         //load the boundary values */
         /*         // */
-        /*         bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext; */
+        /*         bc_u_ext = isDOFBoundary_u.data()[ebNE_kb]*ebqe_bc_u_ext.data()[ebNE_kb]+(1-isDOFBoundary_u.data()[ebNE_kb])*u_ext; */
         /*         // */
         /*         //calculate the internal and external trace of the pde coefficients */
         /*         // */
         /*         evaluateCoefficients(epsilon_redist, */
-        /*                              ebqe_phi_ls_ext[ebNE_kb], */
+        /*                              ebqe_phi_ls_ext.data()[ebNE_kb], */
         /*                              u_ext, */
         /*                              grad_u_ext, */
         /*                              m_ext, */
@@ -1345,7 +1055,7 @@ namespace proteus
         /*                              dH_ext, */
         /*                              r_ext); */
         /*         evaluateCoefficients(epsilon_redist, */
-        /*                              ebqe_phi_ls_ext[ebNE_kb], */
+        /*                              ebqe_phi_ls_ext.data()[ebNE_kb], */
         /*                              bc_u_ext, */
         /*                              bc_grad_u_ext, */
         /*                              bc_m_ext, */
@@ -1367,7 +1077,7 @@ namespace proteus
         /*             //register int j_nSpace = j*nSpace; */
         /*             register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j; */
 
-        /*             fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]); */
+        /*             fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref.data()[ebN_local_kb_j]); */
         /*           }//j */
         /*         // */
         /*         //update the global Jacobian from the flux Jacobian */
@@ -1381,7 +1091,7 @@ namespace proteus
         /*                 register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j; */
         /*                 //mwf debug */
         /*                 assert(fluxJacobian_u_u[j] == 0.0); */
-        /*                 globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i]; */
+        /*                 globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i]; */
         /*               }//j */
         /*           }//i */
         /*       }//kb */
@@ -1389,78 +1099,74 @@ namespace proteus
         /* gf.useExact = useExact;//just to be safe */
       }//computeJacobian
 
-      void calculateResidual_ellipticRedist(//element
-                                            double* mesh_trial_ref,
-                                            double* mesh_grad_trial_ref,
-                                            double* mesh_dof,
-                                            int* mesh_l2g,
-                                            double* x_ref,
-                                            double* dV_ref,
-                                            double* u_trial_ref,
-                                            double* u_grad_trial_ref,
-                                            double* u_test_ref,
-                                            double* u_grad_test_ref,
-                                            //element boundary
-                                            double* mesh_trial_trace_ref,
-                                            double* mesh_grad_trial_trace_ref,
-                                            double* dS_ref,
-                                            double* u_trial_trace_ref,
-                                            double* u_grad_trial_trace_ref,
-                                            double* u_test_trace_ref,
-                                            double* u_grad_test_trace_ref,
-                                            double* normal_ref,
-                                            double* boundaryJac_ref,
-                                            //physics
-                                            int nElements_global,
-                                            double useMetrics,
-                                            double alphaBDF,
-                                            double epsFact_redist,
-                                            double backgroundDiffusionFactor,
-                                            double weakDirichletFactor,
-                                            int freezeLevelSet,
-                                            int useTimeIntegration,
-                                            int lag_shockCapturing,
-                                            int lag_subgridError, //0 nothing lagged
-                                            //1 dH lagged in tau
-                                            //2 dH lagged in tau and Residual, adjoint calculations
-                                            double shockCapturingDiffusion,
-                                            int* u_l2g,
-                                            double* elementDiameter,
-                                            double* nodeDiametersArray,
-                                            double* u_dof,
-                                            double* phi_dof,
-                                            double* phi_ls,
-                                            double* q_m,
-                                            double* q_u,
-                                            double* q_n,
-                                            double* q_dH,
-                                            double* u_weak_internal_bc_dofs,//for freezing level set
-                                            double* q_m_betaBDF,
-                                            double* q_dH_last,//for lagging subgrid error
-                                            double* q_cfl,
-                                            double* q_numDiff_u,
-                                            double* q_numDiff_u_last,
-                                            int* weakDirichletConditionFlags,
-                                            int offset_u, int stride_u,
-                                            double* globalResidual,
-                                            int nExteriorElementBoundaries_global,
-                                            int* exteriorElementBoundariesArray,
-                                            int* elementBoundaryElementsArray,
-                                            int* elementBoundaryLocalElementBoundariesArray,
-                                            double* ebqe_phi_ls_ext,
-                                            int* isDOFBoundary_u,
-                                            double* ebqe_bc_u_ext,
-                                            double* ebqe_u,
-                                            double* ebqe_n,
-                                            // elliptic redistancing
-                                            int ELLIPTIC_REDISTANCING,
-					    double backgroundDissipationEllipticRedist,
-                                            double* lumped_qx,
-                                            double* lumped_qy,
-                                            double* lumped_qz,
-                                            double alpha,
+      void calculateResidual_ellipticRedist(arguments_dict& args,
                                             bool useExact)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& x_ref = args.m_darray["x_ref"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        double backgroundDiffusionFactor = args.m_dscalar["backgroundDiffusionFactor"];
+        double weakDirichletFactor = args.m_dscalar["weakDirichletFactor"];
+        int freezeLevelSet = args.m_iscalar["freezeLevelSet"];
+        int useTimeIntegration = args.m_iscalar["useTimeIntegration"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        int lag_subgridError = args.m_iscalar["lag_subgridError"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& nodeDiametersArray = args.m_darray["nodeDiametersArray"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& phi_dof = args.m_darray["phi_dof"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_m = args.m_darray["q_m"];
+        xt::pyarray<double>& q_u = args.m_darray["q_u"];
+        xt::pyarray<double>& q_n = args.m_darray["q_n"];
+        xt::pyarray<double>& q_dH = args.m_darray["q_dH"];
+        xt::pyarray<double>& u_weak_internal_bc_dofs = args.m_darray["u_weak_internal_bc_dofs"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& q_dH_last = args.m_darray["q_dH_last"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<int>& weakDirichletConditionFlags = args.m_iarray["weakDirichletConditionFlags"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u"];
+        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_phi_ls_ext = args.m_darray["ebqe_phi_ls_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<double>& ebqe_u = args.m_darray["ebqe_u"];
+        xt::pyarray<double>& ebqe_n = args.m_darray["ebqe_n"];
+        int ELLIPTIC_REDISTANCING = args.m_iscalar["ELLIPTIC_REDISTANCING"];
+        double backgroundDissipationEllipticRedist = args.m_dscalar["backgroundDissipationEllipticRedist"];
+        xt::pyarray<double>& lumped_qx = args.m_darray["lumped_qx"];
+        xt::pyarray<double>& lumped_qy = args.m_darray["lumped_qy"];
+        xt::pyarray<double>& lumped_qz = args.m_darray["lumped_qz"];
+        double alpha = args.m_dscalar["alpha"];
         gf.useExact=useExact;
         //
         //loop over elements to compute volume integrals and load them into element and global residual
@@ -1481,16 +1187,16 @@ namespace proteus
               {
 		register int eN_i=eN*nDOF_trial_element+i;
                 elementResidual_u[i]=0.0;
-                element_phi[i] = phi_dof[u_l2g[eN_i]];
+                element_phi[i] = phi_dof.data()[u_l2g.data()[eN_i]];
               }//i
             double element_nodes[nDOF_mesh_trial_element*3];
 	    for (int i=0;i<nDOF_mesh_trial_element;i++)
 	      {
 		register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
-                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+                  element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref);                        
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);                        
             //loop over quadrature points and compute integrands
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
@@ -1510,50 +1216,50 @@ namespace proteus
                   dV,x,y,z,G[nSpace*nSpace],G_dd_G,tr_G;
                 ck.calculateMapping_element(eN,
                                             k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
+                                            mesh_dof.data(),
+                                            mesh_l2g.data(),
+                                            mesh_trial_ref.data(),
+                                            mesh_grad_trial_ref.data(),
                                             jac,
                                             jacDet,
                                             jacInv,
                                             x,y,z);
                 ck.calculateH_element(eN,
                                       k,
-                                      nodeDiametersArray,
-                                      mesh_l2g,
-                                      mesh_trial_ref,
+                                      nodeDiametersArray.data(),
+                                      mesh_l2g.data(),
+                                      mesh_trial_ref.data(),
                                       h_phi);
                 //get the physical integration weight
-                dV = fabs(jacDet)*dV_ref[k];
+                dV = fabs(jacDet)*dV_ref.data()[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
                 //get the trial function gradients
-                ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+                ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],
                                     jacInv,
                                     u_grad_trial);
                 //get the solution
-                ck.valFromDOF(u_dof,
-                              &u_l2g[eN_nDOF_trial_element],
-                              &u_trial_ref[k*nDOF_trial_element],
+                ck.valFromDOF(u_dof.data(),
+                              &u_l2g.data()[eN_nDOF_trial_element],
+                              &u_trial_ref.data()[k*nDOF_trial_element],
                               u);
                 //get the solution gradients
-                ck.gradFromDOF(u_dof,
-                               &u_l2g[eN_nDOF_trial_element],
+                ck.gradFromDOF(u_dof.data(),
+                               &u_l2g.data()[eN_nDOF_trial_element],
                                u_grad_trial,
                                grad_u);
                 if (ELLIPTIC_REDISTANCING > 1)
                   { // use linear elliptic re-distancing via C0 normal reconstruction
-                    ck.valFromDOF(lumped_qx,
-                                  &u_l2g[eN_nDOF_trial_element],
-                                  &u_trial_ref[k*nDOF_trial_element],
+                    ck.valFromDOF(lumped_qx.data(),
+                                  &u_l2g.data()[eN_nDOF_trial_element],
+                                  &u_trial_ref.data()[k*nDOF_trial_element],
                                   qx);
-                    ck.valFromDOF(lumped_qy,
-                                  &u_l2g[eN_nDOF_trial_element],
-                                  &u_trial_ref[k*nDOF_trial_element],
+                    ck.valFromDOF(lumped_qy.data(),
+                                  &u_l2g.data()[eN_nDOF_trial_element],
+                                  &u_trial_ref.data()[k*nDOF_trial_element],
                                   qy);
-                    ck.valFromDOF(lumped_qz,
-                                  &u_l2g[eN_nDOF_trial_element],
-                                  &u_trial_ref[k*nDOF_trial_element],
+                    ck.valFromDOF(lumped_qz.data(),
+                                  &u_l2g.data()[eN_nDOF_trial_element],
+                                  &u_trial_ref.data()[k*nDOF_trial_element],
                                   qz);
                     normalReconstruction[0] = qx;
                     normalReconstruction[1] = qy;
@@ -1563,7 +1269,7 @@ namespace proteus
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
-                    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+                    u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
                       u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
                   }
@@ -1575,10 +1281,10 @@ namespace proteus
                 norm_grad_u = std::sqrt(norm_grad_u) + 1.0E-10;
 
                 // SAVE MASS AND SOLUTION FOR OTHER MODELS //
-                q_m[eN_k] = u; //m=u
-                q_u[eN_k] = u;
+                q_m.data()[eN_k] = u; //m=u
+                q_u.data()[eN_k] = u;
                 for (int I=0;I<nSpace;I++)
-                  q_n[eN_k_nSpace+I] = grad_u[I]/norm_grad_u;
+                  q_n.data()[eN_k_nSpace+I] = grad_u[I]/norm_grad_u;
 
                 // COMPUTE COEFFICIENTS //
                 if (SINGLE_POTENTIAL == 1)
@@ -1588,20 +1294,20 @@ namespace proteus
 
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
-                                                 +(1.0-useMetrics)*elementDiameter[eN]);
-                delta = gf.D(epsilon_redist,phi_ls[eN_k]);
+                                                 +(1.0-useMetrics)*elementDiameter.data()[eN]);
+                delta = gf.D(epsilon_redist,phi_ls.data()[eN_k]);
 
 		// COMPUTE STRONG RESIDUAL //
-		double Si = -1.0+2.0*gf.H(epsilon_redist,phi_ls[eN_k]);
+		double Si = -1.0+2.0*gf.H(epsilon_redist,phi_ls.data()[eN_k]);
 		double residualEikonal = Si*(norm_grad_u-1.0);
-		double backgroundDissipation = backgroundDissipationEllipticRedist*elementDiameter[eN];
+		double backgroundDissipation = backgroundDissipationEllipticRedist*elementDiameter.data()[eN];
 
                 // UPDATE ELEMENT RESIDUAL //
 		for(int i=0;i<nDOF_test_element;i++)
 		  {
 		    register int i_nSpace = i*nSpace;
 		    // global i-th index
-		    int gi = offset_u+stride_u*u_l2g[eN*nDOF_test_element+i];
+		    int gi = offset_u+stride_u*u_l2g.data()[eN*nDOF_test_element+i];
 
 		    if (ELLIPTIC_REDISTANCING > 1) // (NON)LINEAR VIA C0 NORMAL RECONSTRUCTION
 		      {
@@ -1613,7 +1319,7 @@ namespace proteus
 			  -ck.NumericalDiffusion(1.0,
 						 normalReconstruction,
 						 &u_grad_test_dV[i_nSpace])
-			  +alpha*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; // BCs
+			  +alpha*(u_dof.data()[gi]-phi_dof.data()[gi])*delta*u_test_dV[i]; // BCs
 		      }
 		    else // =1. Nonlinear via single or double pot.
 		      {
@@ -1622,7 +1328,7 @@ namespace proteus
 			  +ck.NumericalDiffusion(coeff+backgroundDissipation,
 						 grad_u,
 						 &u_grad_test_dV[i_nSpace])
-			  + alpha*(u_dof[gi]-phi_dof[gi])*delta*u_test_dV[i]; // BCs
+			  + alpha*(u_dof.data()[gi]-phi_dof.data()[gi])*delta*u_test_dV[i]; // BCs
 		      }
 		  }//i
               }//k
@@ -1632,7 +1338,7 @@ namespace proteus
             for(int i=0;i<nDOF_test_element;i++)
               {
                 register int eN_i=eN*nDOF_test_element+i;
-                globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
+                globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]]+=elementResidual_u[i];
               }//i
           }//elements
         //
@@ -1640,9 +1346,9 @@ namespace proteus
         //
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
-            register int ebN = exteriorElementBoundariesArray[ebNE],
-              eN  = elementBoundaryElementsArray[ebN*2+0],
-              ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+            register int ebN = exteriorElementBoundariesArray.data()[ebNE],
+              eN  = elementBoundaryElementsArray.data()[ebN*2+0],
+              ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
               eN_nDOF_trial_element = eN*nDOF_trial_element;
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
@@ -1663,32 +1369,32 @@ namespace proteus
                                                     ebN_local,
                                                     kb,
                                                     ebN_local_kb,
-                                                    mesh_dof,
-                                                    mesh_l2g,
-                                                    mesh_trial_trace_ref,
-                                                    mesh_grad_trial_trace_ref,
-                                                    boundaryJac_ref,
+                                                    mesh_dof.data(),
+                                                    mesh_l2g.data(),
+                                                    mesh_trial_trace_ref.data(),
+                                                    mesh_grad_trial_trace_ref.data(),
+                                                    boundaryJac_ref.data(),
                                                     jac_ext,
                                                     jacDet_ext,
                                                     jacInv_ext,
                                                     boundaryJac,
                                                     metricTensor,
                                                     metricTensorDetSqrt,
-                                                    normal_ref,
+                                                    normal_ref.data(),
                                                     normal,
                                                     x_ext,y_ext,z_ext);
                 //compute shape and solution information
                 //shape
-                ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],
+                ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],
                                     jacInv_ext,
                                     u_grad_trial_trace);
                 //solution and gradients
-                ck.valFromDOF(u_dof,
-                              &u_l2g[eN_nDOF_trial_element],
-                              &u_trial_trace_ref[ebN_local_kb*nDOF_test_element],
+                ck.valFromDOF(u_dof.data(),
+                              &u_l2g.data()[eN_nDOF_trial_element],
+                              &u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],
                               u_ext);
-                ck.gradFromDOF(u_dof,
-                               &u_l2g[eN_nDOF_trial_element],
+                ck.gradFromDOF(u_dof.data(),
+                               &u_l2g.data()[eN_nDOF_trial_element],
                                u_grad_trial_trace,
                                grad_u_ext);
                 norm = 0;
@@ -1699,76 +1405,74 @@ namespace proteus
                   dir[I] = grad_u_ext[I]/norm;
 
                 //save for other models
-                ebqe_u[ebNE_kb] = u_ext;
+                ebqe_u.data()[ebNE_kb] = u_ext;
 
                 for (int I=0;I<nSpace;I++)
-                  ebqe_n[ebNE_kb_nSpace+I] = dir[I];
+                  ebqe_n.data()[ebNE_kb_nSpace+I] = dir[I];
               }//kb
           }//ebNE
       }
 
-      void calculateJacobian_ellipticRedist(//element
-                                            double* mesh_trial_ref,
-                                            double* mesh_grad_trial_ref,
-                                            double* mesh_dof,
-                                            int* mesh_l2g,
-                                            double* x_ref,
-                                            double* dV_ref,
-                                            double* u_trial_ref,
-                                            double* u_grad_trial_ref,
-                                            double* u_test_ref,
-                                            double* u_grad_test_ref,
-                                            //element boundary
-                                            double* mesh_trial_trace_ref,
-                                            double* mesh_grad_trial_trace_ref,
-                                            double* dS_ref,
-                                            double* u_trial_trace_ref,
-                                            double* u_grad_trial_trace_ref,
-                                            double* u_test_trace_ref,
-                                            double* u_grad_test_trace_ref,
-                                            double* normal_ref,
-                                            double* boundaryJac_ref,
-                                            //physics
-                                            int nElements_global,
-                                            double useMetrics,
-                                            double alphaBDF,
-                                            double epsFact_redist,
-                                            double backgroundDiffusionFactor,
-                                            double weakDirichletFactor,
-                                            int freezeLevelSet,
-                                            int useTimeIntegration,
-                                            int lag_shockCapturing,
-                                            int lag_subgridError,
-                                            double shockCapturingDiffusion,
-                                            int* u_l2g,
-                                            double* elementDiameter,
-                                            double* nodeDiametersArray,
-                                            double* u_dof,
-                                            double* phi_dof,
-                                            double* u_weak_internal_bc_dofs,//for freezing level set
-                                            double* phi_ls,
-                                            double* q_m_betaBDF,
-                                            double* q_dH_last,
-                                            double* q_cfl,
-                                            double* q_numDiff_u,
-                                            double* q_numDiff_u_last,
-                                            int * weakDirichletConditionFlags,
-                                            int* csrRowIndeces_u_u,int* csrColumnOffsets_u_u,
-                                            double* globalJacobian,
-                                            int nExteriorElementBoundaries_global,
-                                            int* exteriorElementBoundariesArray,
-                                            int* elementBoundaryElementsArray,
-                                            int* elementBoundaryLocalElementBoundariesArray,
-                                            double* ebqe_phi_ls_ext,
-                                            int* isDOFBoundary_u,
-                                            double* ebqe_bc_u_ext,
-                                            int* csrColumnOffsets_eb_u_u,
-                                            // elliptic redistancing
-                                            int ELLIPTIC_REDISTANCING,
-					    double backgroundDissipationEllipticRedist,
-                                            double alpha,
+      void calculateJacobian_ellipticRedist(arguments_dict& args,
                                             bool useExact)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& x_ref = args.m_darray["x_ref"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        double useMetrics = args.m_dscalar["useMetrics"];
+        double alphaBDF = args.m_dscalar["alphaBDF"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        double backgroundDiffusionFactor = args.m_dscalar["backgroundDiffusionFactor"];
+        double weakDirichletFactor = args.m_dscalar["weakDirichletFactor"];
+        int freezeLevelSet = args.m_iscalar["freezeLevelSet"];
+        int useTimeIntegration = args.m_iscalar["useTimeIntegration"];
+        int lag_shockCapturing = args.m_iscalar["lag_shockCapturing"];
+        int lag_subgridError = args.m_iscalar["lag_subgridError"];
+        double shockCapturingDiffusion = args.m_dscalar["shockCapturingDiffusion"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& nodeDiametersArray = args.m_darray["nodeDiametersArray"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& phi_dof = args.m_darray["phi_dof"];
+        xt::pyarray<double>& u_weak_internal_bc_dofs = args.m_darray["u_weak_internal_bc_dofs"];
+        xt::pyarray<double>& phi_ls = args.m_darray["phi_ls"];
+        xt::pyarray<double>& q_m_betaBDF = args.m_darray["q_m_betaBDF"];
+        xt::pyarray<double>& q_dH_last = args.m_darray["q_dH_last"];
+        xt::pyarray<double>& q_cfl = args.m_darray["q_cfl"];
+        xt::pyarray<double>& q_numDiff_u = args.m_darray["q_numDiff_u"];
+        xt::pyarray<double>& q_numDiff_u_last = args.m_darray["q_numDiff_u_last"];
+        xt::pyarray<int>& weakDirichletConditionFlags = args.m_iarray["weakDirichletConditionFlags"];
+        xt::pyarray<int>& csrRowIndeces_u_u = args.m_iarray["csrRowIndeces_u_u"];
+        xt::pyarray<int>& csrColumnOffsets_u_u = args.m_iarray["csrColumnOffsets_u_u"];
+        xt::pyarray<double>& globalJacobian = args.m_darray["globalJacobian"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& ebqe_phi_ls_ext = args.m_darray["ebqe_phi_ls_ext"];
+        xt::pyarray<int>& isDOFBoundary_u = args.m_iarray["isDOFBoundary_u"];
+        xt::pyarray<double>& ebqe_bc_u_ext = args.m_darray["ebqe_bc_u_ext"];
+        xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.m_iarray["csrColumnOffsets_eb_u_u"];
+        int ELLIPTIC_REDISTANCING = args.m_iscalar["ELLIPTIC_REDISTANCING"];
+        double backgroundDissipationEllipticRedist = args.m_dscalar["backgroundDissipationEllipticRedist"];
+        double alpha = args.m_dscalar["alpha"];
         gf.useExact=useExact;
         //
         //loop over elements
@@ -1780,7 +1484,7 @@ namespace proteus
             for (int i=0;i<nDOF_test_element;i++)
               {
 		register int eN_i=eN*nDOF_trial_element+i;
-                element_phi[i] = phi_dof[u_l2g[eN_i]];
+                element_phi[i] = phi_dof.data()[u_l2g.data()[eN_i]];
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     elementJacobian_u_u[i][j]=0.0;
@@ -1791,9 +1495,9 @@ namespace proteus
 	      {
 		register int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
-                  element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
+                  element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-            gf.calculate(element_phi, element_nodes, x_ref);
+            gf.calculate(element_phi, element_nodes, x_ref.data(),false);
             for  (int k=0;k<nQuadraturePoints_element;k++)
               {
                 gf.set_quad(k);
@@ -1814,36 +1518,36 @@ namespace proteus
                 //
                 ck.calculateMapping_element(eN,
                                             k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
+                                            mesh_dof.data(),
+                                            mesh_l2g.data(),
+                                            mesh_trial_ref.data(),
+                                            mesh_grad_trial_ref.data(),
                                             jac,
                                             jacDet,
                                             jacInv,
                                             x,y,z);
                 ck.calculateH_element(eN,
                                       k,
-                                      nodeDiametersArray,
-                                      mesh_l2g,
-                                      mesh_trial_ref,
+                                      nodeDiametersArray.data(),
+                                      mesh_l2g.data(),
+                                      mesh_trial_ref.data(),
                                       h_phi);
                 //get the physical integration weight
-                dV = fabs(jacDet)*dV_ref[k];
+                dV = fabs(jacDet)*dV_ref.data()[k];
                 ck.calculateG(jacInv,G,G_dd_G,tr_G);
                 //get the trial function gradients
-                ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+                ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],
                                     jacInv,
                                     u_grad_trial);
                 //get the solution gradients
-                ck.gradFromDOF(u_dof,
-                               &u_l2g[eN_nDOF_trial_element],
+                ck.gradFromDOF(u_dof.data(),
+                               &u_l2g.data()[eN_nDOF_trial_element],
                                u_grad_trial,
                                grad_u);
                 //precalculate test function products with integration weights
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
-                    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+                    u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
                     for (int I=0;I<nSpace;I++)
                       u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;
                   }
@@ -1868,15 +1572,15 @@ namespace proteus
 
                 // COMPUTE DELTA FUNCTION //
                 epsilon_redist = epsFact_redist*(useMetrics*h_phi
-                                                 +(1.0-useMetrics)*elementDiameter[eN]);
-                delta = gf.D(epsilon_redist,phi_ls[eN_k]);
+                                                 +(1.0-useMetrics)*elementDiameter.data()[eN]);
+                delta = gf.D(epsilon_redist,phi_ls.data()[eN_k]);
 
 		// COMPUTE STRONG Jacobian //
-		double Si = -1.0+2.0*gf.H(epsilon_redist,phi_ls[eN_k]);
+		double Si = -1.0+2.0*gf.H(epsilon_redist,phi_ls.data()[eN_k]);
 		double dH[nSpace];
 		for (int I=0; I<nSpace;I++)
 		  dH[I] = Si*grad_u[I]/norm_grad_u;
-		double backgroundDissipation = backgroundDissipationEllipticRedist*elementDiameter[eN];
+		double backgroundDissipation = backgroundDissipationEllipticRedist*elementDiameter.data()[eN];
 
 		// LOOP IN I-DOFs //
                 for(int i=0;i<nDOF_test_element;i++)
@@ -1910,41 +1614,40 @@ namespace proteus
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     int eN_i_j = eN_i*nDOF_trial_element+j;
-                    globalJacobian[csrRowIndeces_u_u[eN_i]
-                                   + csrColumnOffsets_u_u[eN_i_j]] += elementJacobian_u_u[i][j];
+                    globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i]
+                                   + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i][j];
                   }//j
               }//i
           }//elements
       }//computeJacobian
 
-      void normalReconstruction(//element
-                                double* mesh_trial_ref,//
-                                double* mesh_grad_trial_ref,
-                                double* mesh_dof, //
-                                int* mesh_l2g,//
-                                double* dV_ref,//
-                                double* u_trial_ref,
-                                double* u_grad_trial_ref,
-                                double* u_test_ref,
-                                //physics
-                                int nElements_global,//
-                                int* u_l2g, //
-                                double* elementDiameter,//
-                                double* u_dof,//
-                                int offset_u, int stride_u,
-                                // PARAMETERS FOR EDGE VISCOSITY
-                                int numDOFs,
-                                double* lumped_qx,
-                                double* lumped_qy,
-                                double* lumped_qz)
+      void normalReconstruction(arguments_dict& args)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u"];
+        int numDOFs = args.m_iscalar["numDOFs"];
+        xt::pyarray<double>& lumped_qx = args.m_darray["lumped_qx"];
+        xt::pyarray<double>& lumped_qy = args.m_darray["lumped_qy"];
+        xt::pyarray<double>& lumped_qz = args.m_darray["lumped_qz"];
         weighted_lumped_mass_matrix.resize(numDOFs,0.0);
         for (int i=0; i<numDOFs; i++)
           {
             // output vectors
-            lumped_qx[i]=0.;
-            lumped_qy[i]=0.;
-            lumped_qz[i]=0.;
+            lumped_qx.data()[i]=0.;
+            lumped_qy.data()[i]=0.;
+            lumped_qz.data()[i]=0.;
             // auxiliary vectors
             weighted_lumped_mass_matrix[i]=0.;
           }
@@ -1981,24 +1684,24 @@ namespace proteus
                 //get the physical integration weight
                 ck.calculateMapping_element(eN,
                                             k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
+                                            mesh_dof.data(),
+                                            mesh_l2g.data(),
+                                            mesh_trial_ref.data(),
+                                            mesh_grad_trial_ref.data(),
                                             jac,
                                             jacDet,
                                             jacInv,
                                             x,y,z);
-                dV = fabs(jacDet)*dV_ref[k];
-                ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+                dV = fabs(jacDet)*dV_ref.data()[k];
+                ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],
                                     jacInv,
                                     u_grad_trial);
-                ck.gradFromDOF(u_dof,
-                               &u_l2g[eN_nDOF_trial_element],u_grad_trial,
+                ck.gradFromDOF(u_dof.data(),
+                               &u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,
                                grad_u);
                 //precalculate test function products with integration weights for mass matrix terms
                 for (int j=0;j<nDOF_trial_element;j++)
-                  u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+                  u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 
                 double rhsx = grad_u[0];
                 double rhsy = grad_u[1];
@@ -2023,12 +1726,12 @@ namespace proteus
             for(int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i=eN*nDOF_test_element+i;
-                int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+                int gi = offset_u+stride_u*u_l2g.data()[eN_i]; //global i-th index
 
                 weighted_lumped_mass_matrix[gi] += element_weighted_lumped_mass_matrix[i];
-                lumped_qx[gi] += element_rhsx_normal_reconstruction[i];
-                lumped_qy[gi] += element_rhsy_normal_reconstruction[i];
-                lumped_qz[gi] += element_rhsz_normal_reconstruction[i];
+                lumped_qx.data()[gi] += element_rhsx_normal_reconstruction[i];
+                lumped_qy.data()[gi] += element_rhsy_normal_reconstruction[i];
+                lumped_qz.data()[gi] += element_rhsz_normal_reconstruction[i];
               }//i
           }//elements
         // COMPUTE LUMPED L2 PROJECTION
@@ -2036,40 +1739,36 @@ namespace proteus
           {
             // normal reconstruction
             double weighted_mi = weighted_lumped_mass_matrix[i];
-            lumped_qx[i] /= weighted_mi;
-            lumped_qy[i] /= weighted_mi;
-            lumped_qz[i] /= weighted_mi;
+            lumped_qx.data()[i] /= weighted_mi;
+            lumped_qy.data()[i] /= weighted_mi;
+            lumped_qz.data()[i] /= weighted_mi;
           }
       }
 
-      void calculateMetricsAtEOS( //EOS=End Of Simulation
-                                 double* mesh_trial_ref, //
-                                 double* mesh_grad_trial_ref, //
-                                 double* mesh_dof, //
-                                 int* mesh_l2g, //
-                                 double* dV_ref, //
-                                 double* u_trial_ref,
-                                 double* u_grad_trial_ref,
-                                 double* u_test_ref, //
-                                 //physics
-                                 int nElements_global, //
-                                 int* u_l2g, //
-                                 double* elementDiameter,
-                                 //double* nodeDiametersArray,
-                                 double degree_polynomial,
-                                 double epsFact_redist,
-                                 double* u_dof,
-                                 double* u_exact,
-                                 int offset_u, int stride_u,
-                                 double* global_I_err,
-                                 double* global_V_err,
-                                 double* global_D_err)
+      std::tuple<double, double, double> calculateMetricsAtEOS(arguments_dict& args)
       {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        int nElements_global = args.m_iscalar["nElements_global"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& elementDiameter = args.m_darray["elementDiameter"];
+        double degree_polynomial = args.m_dscalar["degree_polynomial"];
+        double epsFact_redist = args.m_dscalar["epsFact_redist"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
+        xt::pyarray<double>& u_exact = args.m_darray["u_exact"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u)"];
         double global_V = 0.;
         double global_V0 = 0.;
-        *global_I_err = 0.0;
-        *global_V_err = 0.0;
-        *global_D_err = 0.0;
+        double global_I_err = 0.0;
+        double global_V_err = 0.0;
+        double global_D_err = 0.0;
         //////////////////////
         // ** LOOP IN CELLS //
         //////////////////////        
@@ -2101,27 +1800,27 @@ namespace proteus
                 //get the physical integration weight
                 ck.calculateMapping_element(eN,
                                             k,
-                                            mesh_dof,
-                                            mesh_l2g,
-                                            mesh_trial_ref,
-                                            mesh_grad_trial_ref,
+                                            mesh_dof.data(),
+                                            mesh_l2g.data(),
+                                            mesh_trial_ref.data(),
+                                            mesh_grad_trial_ref.data(),
                                             jac,
                                             jacDet,
                                             jacInv,
                                             x,y,z);
-                dV = fabs(jacDet)*dV_ref[k];
+                dV = fabs(jacDet)*dV_ref.data()[k];
                 // get functions at quad points
-                ck.valFromDOF(u_dof,
-                              &u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],
+                ck.valFromDOF(u_dof.data(),
+                              &u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],
                               uh);
-                u = u_exact[eN_k];
+                u = u_exact.data()[eN_k];
                 // get gradients
-                ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],
+                ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],
                                     jacInv,
                                     u_grad_trial);
-                ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_uh);
+                ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_uh);
 
-                double epsHeaviside = epsFact_redist*elementDiameter[eN]/degree_polynomial;
+                double epsHeaviside = epsFact_redist*elementDiameter.data()[eN]/degree_polynomial;
                 // compute (smoothed) heaviside functions //
                 double Hu = heaviside(u);
                 double Huh = heaviside(uh);
@@ -2138,11 +1837,12 @@ namespace proteus
             global_V += cell_V;
             global_V0 += cell_V0;
             // metrics //
-            *global_I_err    += cell_I_err;
-            *global_D_err    += cell_D_err;
+            global_I_err    += cell_I_err;
+            global_D_err    += cell_D_err;
           }//elements
-        *global_V_err = fabs(global_V0 - global_V)/global_V0;
-        *global_D_err *= 0.5;
+        global_V_err = fabs(global_V0 - global_V)/global_V0;
+        global_D_err *= 0.5;
+        return std::tuple<double, double, double>(global_I_err, global_V_err, global_D_err);
       }
 
     };//RDLS

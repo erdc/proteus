@@ -110,6 +110,9 @@ cdef class ProtChBody:
         self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
+    def getChronoObject(self):
+        return self.ChBody
+
     def attachShape(self,
                     shape,
                     take_shape_name=True):
@@ -161,50 +164,50 @@ cdef class ProtChBody:
                                               is_convex=is_convex,
                                               sphereswept_thickness=sphereswept_thickness)
 
-    def addTriangleMeshFromVerticesFaces(self,
-                                         double[:,:] vertices,
-                                         int[:,:,:] facets,
-                                         double[:] pos=None,
-                                         double[:,:] rot=None,
-                                         bool is_static=False,
-                                         bool is_convex=False,
-                                         double sphereswept_thickness=0.005):
-        """Adds triangle mesh to collision model and for IBM calculations
-        """
-        self.thisptr.trimesh = make_shared[ch.ChTriangleMeshConnected]()
-        self.trimesh_nodes.clear()
-        self.trimesh_triangles.clear()
-        for v in vertices:
-            self.trimesh_nodes.push_back(ch.ChVector(v[0], v[1], v[2]))
-        for f_i, facet in enumerate(facets):
-            f = facet[0]
-            assert len(f) == 3, 'Facets must be triangles for triangle mesh but facet '+str(f_i)+' is not of length 3'
-            self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
-                                                           self.trimesh_nodes.at(f[1]),
-                                                           self.trimesh_nodes.at(f[2])))
-            deref(self.thisptr.trimesh).addTriangle(self.trimesh_triangles.at(f_i))
-        if pos is None:
-            pos = np.zeros(3)
-        cdef ch.ChMatrix33 rotmat
-        if rot is None:
-            rot = np.eye(3)
-        for i in range(rot.shape[0]):
-            for j in range(rot.shape[1]):
-                rotmat.SetElement(i, j, rot[i, j])
-        # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
-        deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(<shared_ptr[ch.ChTriangleMesh]> self.thisptr.trimesh,
-                                                                            is_static,
-                                                                            is_convex,
-                                                                            ch.ChVector(pos[0],
-                                                                                        pos[1],
-                                                                                        pos[2]),
-                                                                            rotmat,
-                                                                            sphereswept_thickness)
-        self.thisptr.has_trimesh = True
-        cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
-        self.thisptr.pos0_trimesh = pos0
-        cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
-        self.thisptr.rotq0_trimesh = rot0
+    # def addTriangleMeshFromVerticesFaces(self,
+    #                                      double[:,:] vertices,
+    #                                      int[:,:,:] facets,
+    #                                      double[:] pos=None,
+    #                                      double[:,:] rot=None,
+    #                                      bool is_static=False,
+    #                                      bool is_convex=False,
+    #                                      double sphereswept_thickness=0.005):
+    #     """Adds triangle mesh to collision model and for IBM calculations
+    #     """
+    #     self.thisptr.trimesh = make_shared[ch.ChTriangleMeshConnected]()
+    #     self.trimesh_nodes.clear()
+    #     self.trimesh_triangles.clear()
+    #     for v in vertices:
+    #         self.trimesh_nodes.push_back(ch.ChVector(v[0], v[1], v[2]))
+    #     for f_i, facet in enumerate(facets):
+    #         f = facet[0]
+    #         assert len(f) == 3, 'Facets must be triangles for triangle mesh but facet '+str(f_i)+' is not of length 3'
+    #         self.trimesh_triangles.push_back(ch.ChTriangle(self.trimesh_nodes.at(f[0]),
+    #                                                        self.trimesh_nodes.at(f[1]),
+    #                                                        self.trimesh_nodes.at(f[2])))
+    #         deref(self.thisptr.trimesh).addTriangle(self.trimesh_triangles.at(f_i))
+    #     if pos is None:
+    #         pos = np.zeros(3)
+    #     cdef ch.ChMatrix33 rotmat
+    #     if rot is None:
+    #         rot = np.eye(3)
+    #     for i in range(rot.shape[0]):
+    #         for j in range(rot.shape[1]):
+    #             rotmat.SetElement(i, j, rot[i, j])
+    #     # deref(deref(self.thisptr.body).GetCollisionModel()).ClearModel()
+    #     deref(deref(self.thisptr.body).GetCollisionModel()).AddTriangleMesh(<shared_ptr[ch.ChTriangleMesh]> self.thisptr.trimesh,
+    #                                                                         is_static,
+    #                                                                         is_convex,
+    #                                                                         ch.ChVector(pos[0],
+    #                                                                                     pos[1],
+    #                                                                                     pos[2]),
+    #                                                                         rotmat,
+    #                                                                         sphereswept_thickness)
+    #     self.thisptr.has_trimesh = True
+    #     cdef ch.ChVector pos0 = deref(self.thisptr.body).GetPos()
+    #     self.thisptr.pos0_trimesh = pos0
+    #     cdef ch.ChQuaternion rot0 = deref(self.thisptr.body).GetRot()
+    #     self.thisptr.rotq0_trimesh = rot0
 
     # # (!) # cannot use right now because of cython error when C++ function has default
     # # (!) # arguments (known bug in cython community, silent error)
@@ -535,13 +538,8 @@ cdef class ProtChBody:
         cdef np.ndarray iner = pymat332array(self.ChBody.GetInertia())
         cdef np.ndarray MM = np.zeros((6,6))  # mass matrix
         cdef np.ndarray FM = np.zeros((6,6))  # full mass matrix
-        cdef ch.ChMatrixDynamic chFM = ch.ChMatrixDynamic[double](6, 6)
-        cdef ch.ChMatrixDynamic inv_chFM = ch.ChMatrixDynamic[double](6, 6)
 
         # added mass matrix
-        cdef ch.ChQuaternion rot
-        cdef ch.ChMatrix33 rotch
-        cdef ch.ChMatrix33 rotchT
         cdef np.ndarray rotMarr_big
         cdef np.ndarray rotMarrT_big
         # store Aij in global frame
@@ -550,20 +548,18 @@ cdef class ProtChBody:
         # transform Aij in local frame
         if self.Aij_updated_global is True and self.Aij_transform_local is True:
             # converting from global to local: Rot*Aij*RotT*v
-            rot = deref(self.thisptr.body).GetRot()
-            rotch = ch.ChMatrix33[double](rot)
-            rotchT = ch.ChMatrix33[double]()
+            rot = self.ChBodyAddedMass.GetRot()
+            rotch = chrono.ChMatrix33D(rot)
             rotMarr_big = np.zeros((6, 6))
             rotMarrT_big = np.zeros((6, 6))
-            rotchT.CopyFromMatrixT(rotch)
             for i in range(6):
                 for j in range(6):
                     if i < 3 and j < 3 :
-                        rotMarr_big[i, j] = rotch.GetElement(i, j)
-                        rotMarrT_big[i, j] = rotchT.GetElement(i, j)
+                        rotMarr_big[i, j] = rotch.getitem(i, j)
+                        rotMarrT_big[i, j] = rotch.getitem(j, i)
                     elif i >=3 and j >= 3:
-                        rotMarr_big[i, j] = rotch.GetElement(i-3, j-3)
-                        rotMarrT_big[i, j] = rotchT.GetElement(i-3, j-3)
+                        rotMarr_big[i, j] = rotch.getitem(i-3, j-3)
+                        rotMarrT_big[i, j] = rotch.getitem(j-3, i-3)
             # self.Aij[:] = np.matmul(rotMarr_big, np.matmul(Aij, rotMarrT_big))
             self.Aij[:] = rotMarrT_big.dot(Aij).dot(rotMarr_big)
         else:
@@ -595,12 +591,19 @@ cdef class ProtChBody:
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
         #set it to chrono variable
+        chFM = chrono.ChMatrixDynamicD(6, 6)
+        inv_chFM = chrono.ChMatrixDynamicD(6, 6)
         for i in range(6):
             for j in range(6):
-                chFM.SetElement(i, j, FM[i, j])
-                inv_chFM.SetElement(i, j, inv_FM[i, j])
-        self.ChBodyAddedMass.SetMfullmass(chFM)
-        self.ChBodyAddedMass.SetInvMfullmass(inv_chFM)
+                chFM.setitem(i, j, FM[i, j])
+
+        # hack for swig
+        cdef SwigPyObject *swig_obj = <SwigPyObject*> chFM.this
+        cdef ch.ChMatrixDynamic *mycpp_ptr = <ch.ChMatrixDynamic*?>swig_obj.ptr
+        cdef ch.ChMatrixDynamic my_instance = deref(mycpp_ptr)
+
+        # set full mass matrix
+        self.ChBodyAddedMass.SetMfullmass(my_instance)
 
         aa = np.zeros(6)
 
@@ -849,13 +852,39 @@ cdef class ProtChBody:
         relative_x = x-np.array([chpos.x, chpos.y, chpos.z])
         return self.sdfIBM(t, relative_x)
 
+    def setPosition(self, np.ndarray pos):
+        chvec = chrono.ChVectorD(pos[0], pos[1], pos[2])
+        self.ChBody.SetPos(chvec)
+
     def getPosition(self):
         chpos = self.ChBody.GetPos()
-        return np.array([chpos.x, chpos.y, chpos.z])
+        return pyvec2array(chpos)
+
+    def setMass(self, double mass):
+        self.ChBody.SetMass(mass)
+
+    def getMass(self):
+        return self.ChBody.GetMass()
+
+    def setInertiaXX(self, np.ndarray inertia):
+        chvec = chrono.ChVectorD(inertia[0], inertia[1], inertia[2])
+        self.ChBody.SetInertiaXX(chvec)
+
+    def setInertiaXY(self, np.ndarray inertia):
+        chvec = chrono.ChVectorD(inertia[0], inertia[1], inertia[2])
+        self.ChBody.SetInertiaXY(chvec)
+
+    def getInertia(self):
+        iner = pymat332array(self.ChBody.GetInertia())
+        return iner
 
     def getVelocity(self):
         chvel = self.ChBody.GetPos_dt()
-        return np.array([chvel.x, chvel.y, chvel.z])
+        return pyvec2array(chvel)
+
+    def setVelocity(self, np.ndarray vel):
+        chvec = chrono.ChVectorD(vel[0], vel[1], vel[2])
+        self.ChBody.SetPos_dt(chvec)
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
@@ -925,7 +954,7 @@ cdef class ProtChBody:
         self.position[:] = pyvec2array(self.ChBody.GetPos())
         # check if IBM and set index if not set previously by user
         if self.useIBM:
-            if self.boundaryFlags is None:
+            if not self.boundaryFlags:
                 self.setBoundaryFlags([self.ProtChSystem.nBodiesIBM])
             self.ProtChSystem.nBodiesIBM += 1
         # get the initial values for F and M
@@ -940,7 +969,7 @@ cdef class ProtChBody:
         self.getValues()
         self.storeValues()
         # set mass matrix with no added mass
-        self.setAddedMass(np.zeros((6,6)))
+        self.setAddedMass(self.Aij)
         self.thisptr.calculate_init()
 
     def calculate(self):
@@ -1318,7 +1347,7 @@ cdef class ProtChBody:
         elements = ET.SubElement(topology,
                                  "DataItem",
                                  {"Format": dataItemFormat,
-                                  "DataType": "Int",
+                                  "DataType": "UInt",
                                   "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
                                                            Xdmf_NodesPerElement)})
         elements.text = self.hdfFileName+".h5:/elementsSpatial_Domain"+str(tCount)
@@ -1424,6 +1453,15 @@ cdef class ProtChSystem:
         self.initialized = False
         self.update_substeps = False
 
+        # Set the chrono logging values
+        self.log_chrono_format = 'h5'
+        self.log_chrono_bodies = None
+        self.log_chrono_springs = None
+        self.log_chrono_residuals = None
+
+    def getChronoObject(self):
+        return self.ChSystem
+
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
         Calculations in Chrono will use this time step within the
@@ -1436,6 +1474,9 @@ cdef class ProtChSystem:
         self.chrono_dt = dt
         self.thisptr.chrono_dt = dt
 
+    def setSampleRate(self, sampleRate):
+        self.sampleRate = sampleRate
+
     def addProtChBody(self, ProtChBody body):
         # self.ChSystemSMC.Add(body.ChBody)
         self.ChSystem.Add(body.ChBody)
@@ -1446,8 +1487,12 @@ cdef class ProtChSystem:
         self.thisptr.addMesh(mesh.mesh)
         mesh.ProtChSystem = self
 
-    def setSolverDiagonalPreconditioning(self, bool boolval):
-        self.thisptr.setSolverDiagonalPreconditioning(boolval)
+    def setGravitationalAcceleration(self, g):
+        chvec = chrono.ChVectorD(g[0], g[1], g[2])
+        self.ChSystem.Set_G_acc(chvec)
+
+    def getGravitationalAcceleration(self):
+        return pyvec2array(self.ChSystem.Get_G_acc())
 
     def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
         assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
@@ -1557,6 +1602,30 @@ cdef class ProtChSystem:
         Profiling.logEvent("Chrono poststep")
         for s in self.subcomponents:
             s.poststep()
+
+        # Log the chrono phyics of interest
+        if self.log_chrono_bodies:
+            if self.log_chrono_format == 'h5':
+                self.log_bodies_h5(self.log_chrono_bodies)
+            else:
+                self.log_bodies_text(self.t + self.proteus_dt, self.log_chrono_bodies)
+
+        if self.log_chrono_springs:
+            if self.log_chrono_format == 'h5':
+                self.log_springs_h5(self.log_chrono_springs)
+            else:
+                self.log_springs_text(self.t + self.proteus_dt, self.log_chrono_springs)
+
+        if self.log_chrono_residuals:
+            if self.log_chrono_format == 'h5':
+                self.log_residuals_h5(self.log_chrono_residuals)
+            else:
+                self.log_residuals_text(self.t + self.proteus_dt, self.log_chrono_residuals)
+
+        if (self.log_chrono_bodies or self.log_chrono_springs or self.log_chrono_residuals) \
+                and self.log_chrono_format == 'h5':
+            self.log_times_h5(self.t + self.proteus_dt)
+
         self.record_values = False
         self.first_step = False  # first step passed
         self.tCount += 1
@@ -1582,7 +1651,7 @@ cdef class ProtChSystem:
             for s in self.subcomponents:
                 s.calculate_init()
             Profiling.logEvent("Setup initial"+str(self.next_sample))
-            self.ChSystem.SetupInitial()
+            self.ChSystem.Setup()
             Profiling.logEvent("Finished init"+str(self.next_sample))
             self.initialized = True
         else:
@@ -1837,6 +1906,443 @@ cdef class ProtChSystem:
     def setCollisionEnvelopeMargin(self, double envelope, double margin):
         self.thisptr.setCollisionEnvelopeMargin(envelope, margin)
 
+    def log_bodies_text(self, d_time, l_logging_info):
+        """
+        Logs the chrono information into a text file at each timestep
+                Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Simulation time
+        l_logging_info: list
+            Contains the information to be logged. Structure is [body number, type]
+            with multiple entries being included as a 2d list. Valid types are
+            'position', 'rotation', 'force', and 'torque'.
+        Returns
+        -------
+        None. Data is logged to a text file
+        """
+
+        # Open the file
+        s_filename = 'chrono_log_body.txt'
+        o_file = open(s_filename, 'a+')
+
+        # Loop and write the body information
+        for i_entry_body in range(0, len(l_logging_info), 1):
+            # Extract the coordinate positions
+            o_body = self.subcomponents[l_logging_info[i_entry_body][0]].ChBody
+
+            if l_logging_info[i_entry_body][1] == 'position':
+                o_body_position = o_body.GetPos()
+
+                o_file.write(str(d_time) + '\t' + 'position' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_position.x) + '\t' +
+                             str(o_body_position.y) + '\t' + str(o_body_position.z) + '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'rotation':
+                o_body_rotation = o_body.GetRot()
+
+                o_file.write(str(d_time) + '\t' + 'rotation' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_rotation.e0) + '\t' +
+                             str(o_body_rotation.e1) + '\t' + str(o_body_rotation.e2) + '\t' + str(o_body_rotation.e3) +
+                             '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'force':
+                o_body_force = o_body.Get_XForce()
+
+                o_file.write(str(d_time) + '\t' + 'force' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_force.x) + '\t' +
+                             str(o_body_force.y) + '\t' + str(o_body_force.z) + '\n')
+
+            elif l_logging_info[i_entry_body][1] == 'torque':
+                o_body_torque = o_body.Get_Xtorque()
+
+                o_file.write(str(d_time) + '\t' + 'torque' + '\t' +
+                             str(l_logging_info[i_entry_body][0]) + '\t' + str(o_body_torque.x) + '\t' +
+                             str(o_body_torque.y) + '\t' + str(o_body_torque.z) + '\n')
+
+            else:
+                raise NotImplementedError('Chrono body log not understood.')
+
+        # Close the log file
+        o_file.close()
+
+
+    def log_bodies_h5(self, l_logging_info):
+        """
+        Logs the chrono information into a h5 file at each timestep
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        l_logging_info: list
+            Contains the information to be logged. Structure is [body number, type]
+            with multiple entries being included as a 2d list. Valid types are
+            'position', 'rotation', 'force', and 'torque'.
+        Returns
+        -------
+        None. Data is saved to an h5 file.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Create the empty data holders
+        l_position = []
+        l_rotation = []
+        l_force = []
+        l_torque = []
+
+        # Loop and write the body information
+        for i_entry_body in range(0, len(l_logging_info), 1):
+            # Extract the coordinate positions
+            o_body = self.subcomponents[l_logging_info[i_entry_body][0]].ChBody
+
+            if l_logging_info[i_entry_body][1] == 'position':
+                o_body_position = o_body.GetPos()
+                l_position.append([o_body_position.x, o_body_position.y, o_body_position.z])
+
+            elif l_logging_info[i_entry_body][1] == 'rotation':
+                o_body_rotation = o_body.GetRot()
+                l_rotation.append([o_body_rotation.e0, o_body_rotation.e1, o_body_rotation.e2, o_body_rotation.e3])
+
+            elif l_logging_info[i_entry_body][1] == 'force':
+                o_body_force = o_body.Get_XForce()
+                l_force.append([o_body_force.x, o_body_force.y, o_body_force.z])
+
+            elif l_logging_info[i_entry_body][1] == 'torque':
+                o_body_torque = o_body.Get_Xtorque()
+                l_torque.append([o_body_torque.x, o_body_torque.y, o_body_torque.z])
+
+            else:
+                raise NotImplementedError('Chrono body log not understood.')
+
+        # Log the position data
+        if len(l_position) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_position = o_file['position']
+
+                # Resize the dataset
+                i_index = dm_position.shape[0]
+                dm_position.resize(dm_position.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_position[i_index, :, :] = np.array(l_position)
+
+            except:
+                # Create the initial dataset
+                dm_position = o_file.create_dataset('position', (1, len(l_position), 3), compression="gzip",
+                                                    maxshape=(None, len(l_position), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_position[0, :, :] = np.array(l_position)
+
+        # Log the rotation data
+        if len(l_rotation) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_rotation = o_file['rotation']
+
+                # Resize the dataset
+                i_index = dm_rotation.shape[0]
+                dm_rotation.resize(dm_rotation.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_rotation[i_index, :, :] = np.array(l_rotation)
+
+            except:
+                # Create the initial dataset
+                dm_rotation = o_file.create_dataset('rotation', (1, len(l_rotation), 4), compression="gzip",
+                                                    maxshape=(None, len(l_rotation), 4), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_rotation[0, :, :] = np.array(l_rotation)
+
+        # Log the force data
+        if len(l_force) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_force = o_file['force']
+
+                # Resize the dataset
+                i_index = dm_force.shape[0]
+                dm_force.resize(dm_force.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_force[i_index, :, :] = np.array(l_force)
+
+            except:
+                # Create the initial dataset
+                dm_force = o_file.create_dataset('force', (1, len(l_force), 3), compression="gzip",
+                                                 maxshape=(None, len(l_force), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_force[0, :, :] = np.array(l_force)
+
+        # Log the torque data
+        if len(l_torque) > 0:
+            # Check if the dataset exists
+            try:
+                # Open the dataset
+                dm_torque = o_file['torque']
+
+                # Resize the dataset
+                i_index = dm_torque.shape[0]
+                dm_torque.resize(dm_torque.shape[0] + 1, axis=0)
+
+                # Store the values into the dataset
+                dm_torque[i_index, :, :] = np.array(l_torque)
+
+            except:
+                # Create the initial dataset
+                dm_torque = o_file.create_dataset('torque', (1, len(l_torque), 3), compression="gzip",
+                                                  maxshape=(None, len(l_torque), 3), dtype=float)
+
+                # Store the first entry into the dataset
+                dm_torque[0, :, :] = np.array(l_torque)
+
+        # Close the log file
+        o_file.close()
+
+
+    def log_springs_text(self, d_time, l_springs):
+        """
+        Logs the chrono information into a text file at each timestep
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Current simulation time
+        l_springs: list
+            Spring objects for which data is being stored
+        Returns
+        -------
+        None. Data is saved to a text file.
+        """
+
+        # Open the file
+        s_filename = 'chrono_log_spring.txt'
+        o_file = open(s_filename, 'a+')
+
+        # Loop and write the body information
+        for i_entry_spring in range(0, len(l_springs), 1):
+            # Get the current state of the spring
+            d_internal_force = l_springs[i_entry_spring].GetSpringReact()
+            d_spring_velocity = l_springs[i_entry_spring].GetSpringVelocity()
+            d_spring_length = l_springs[i_entry_spring].GetSpringLength()
+
+            # Write to the file
+            o_file.write(str(d_time) + '\t' + str(i_entry_spring) + '\t' + str(d_internal_force) + '\t' +
+                         str(d_spring_velocity) + '\t' + str(d_spring_length) + '\n')
+
+        # Close the output file
+        o_file.close()
+
+
+    def log_springs_h5(self, l_springs):
+        """
+        Logs chrono spring information to an h5 file
+        Parameters
+        ----------
+        self: object
+            ProtChSystem object being referenced.
+        l_springs: list
+            Spring objects for which the data is being logged
+        Returns
+        -------
+        None. Data is logged to an h5 file.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Create the empty data holders
+        l_spring_data = []
+
+        # Loop and write the body information
+        for i_entry_spring in range(0, len(l_springs), 1):
+            # Get the current state of the spring
+            d_internal_force = l_springs[i_entry_spring].GetSpringReact()
+            d_spring_velocity = l_springs[i_entry_spring].GetSpringVelocity()
+            d_spring_length = l_springs[i_entry_spring].GetSpringLength()
+
+            # Write to the file
+            l_spring_data.append([d_internal_force, d_spring_velocity, d_spring_length])
+
+        # Log the spring data
+        try:
+            # Open the dataset
+            dm_springs = o_file['springs']
+
+            # Resize the dataset
+            i_index = dm_springs.shape[0]
+            dm_springs.resize(dm_springs.shape[0] + 1, axis=0)
+
+            # Store the values into the dataset
+            dm_springs[i_index, :, :] = np.array(l_spring_data)
+
+        except:
+            # Create the initial dataset
+            dm_springs = o_file.create_dataset('springs', (1, len(l_spring_data), 3), compression="gzip",
+                                               maxshape=(None, len(l_spring_data), 3), dtype=float)
+
+            # Store the first entry into the dataset
+            dm_springs[0, :, :] = np.array(l_spring_data)
+
+        # Close the output file
+        o_file.close()
+
+    def log_residuals_text(self, d_time, l_linklocks):
+        """
+        Logs the chrono information into a text file at each timestep
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Current simulation time
+        l_linklocks: list
+            Link lock objects for which the residual information is desired.
+        Returns
+        -------
+        None. Data is saved to a text file.
+        """
+
+        # Loop and write the body information
+        for i_entry_linkage in range(0, len(l_linklocks), 1):
+            # Open the file
+            s_filename = 'chrono_' + str(i_entry_linkage) + '.txt'
+            o_file = open(s_filename, 'a+')
+
+            # Get the residual matrix from the linkage
+            o_linkage_residual = l_linklocks[i_entry_linkage].GetC()
+
+            # The number of residual components will vary based on the the number of active dimensions in the domain.
+            # Attempt to get each component and write zeros for the remainder for consistency of the code.
+            s_residuals = str(d_time) + '\t'
+
+            for i_entry_residual in range(0, 6, 1):
+                try:
+                    # Attempt to extract the value from the Chrono matrix
+                    s_residuals += str(o_linkage_residual.GetElement(0, i_entry_residual)) + '\t'
+
+                except:
+                    # Residual doesn't exist. Keep the zero in the array.
+                    s_residuals += str(0.000) + '\t'
+
+            # Add the new line to the code, replacing the last tab
+            s_residuals += '\n'
+
+            # Write to the file
+            o_file.write(s_residuals)
+
+        # Close the output file
+        o_file.close()
+
+    def log_residuals_h5(self, l_linklocks):
+        """
+        Logs chrono spring information to an h5 file
+        Parameters
+        ----------
+        self: object
+            ProtChSystem object being referenced.
+        l_linklocks: list
+            Link lock objects for which the residual information is desired.
+        Returns
+        -------
+        None. Data is logged to an h5 file.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # The number of residual components will vary based on the the number of active dimensions in the domain.
+        # Attempt to get each component and write zeros for the remainder for consistency of the code.
+        dm_residuals = np.zeros((len(l_linklocks), 6))
+
+        for i_entry_linkage in range(0, len(l_linklocks), 1):
+                        # Get the residual matrix from the linkage
+            o_linkage_residual = l_linklocks[i_entry_linkage].GetC()
+
+             # Extract the data from the Chrono matrix
+            for i_entry_residual in range(0, 6, 1):
+                try:
+                    # Attemp to extract the value from the Chrono matrix
+                    dm_residuals[i_entry_linkage, i_entry_residual] = o_linkage_residual.GetElement(0, i_entry_residual)
+                except:
+                    # Residual doesn't exist. Keep the zero in the array.
+                    dm_residuals[i_entry_linkage, i_entry_residual] = 0
+
+        # Log the spring data
+        try:
+            # Open the dataset
+            dm_residuals_h5 = o_file['residuals']
+
+            # Resize the dataset in the h5 file to expand it by an entry
+            i_index = dm_residuals_h5.shape[0]
+            dm_residuals_h5.resize(dm_residuals_h5.shape[0] + 1, axis=0)
+
+            # Store the values into the dataset
+            dm_residuals_h5[i_index, :, :] = dm_residuals
+
+        except:
+            # Create the initial dataset
+            dm_residuals_h5 = o_file.create_dataset('residuals', (1, len(l_linklocks), 6), compression="gzip",
+                                                    maxshape=(None, len(l_linklocks), 6), dtype=float)
+
+            # Store the first entry into the dataset
+            dm_residuals_h5[0, :, :] = dm_residuals
+
+        # Close the output file
+        o_file.close()
+
+
+    def log_times_h5(self, d_time):
+        """
+        Creates a log of the Proteus timestep within the h5 log file
+        Parameters
+        ----------
+        self: object
+            ProtChSystem being referenced
+        d_time: float
+            Time within the simulation
+        Returns
+        -------
+        None. Data is logged to the disk.
+        """
+
+        # Open the log file
+        o_file = h5py.File('chrono_log.h5')
+
+        # Log the time data
+        try:
+            # Open the dataset
+            dm_time = o_file['time']
+
+            # Resize the dataset
+            i_index = dm_time.shape[0]
+            dm_time.resize(dm_time.shape[0] + 1, axis=0)
+
+            # Store the values into the dataset
+            dm_time[i_index] = np.array(d_time)
+
+        except:
+            # Create the initial dataset
+            dm_time = o_file.create_dataset('time', (1,), compression="gzip",
+                                            maxshape=(None,), dtype=float)
+
+            # Store the first entry into the dataset
+            dm_time[0] = d_time
+
+        # Close the file
+        o_file.close()
+
     # def findFluidVelocityAtCoords(self, coords):
     #     """Finds solution from NS for velocity of fluid at given coordinates
 
@@ -1906,6 +2412,9 @@ cdef class ProtChMesh:
         cdef shared_ptr[ch.ChMesh]* pt_to_shp = <shared_ptr[ch.ChMesh]*> swig_obj.ptr;
         self.mesh = pt_to_shp[0]
         system.addProtChMesh(self)
+
+    def getChronoObject(self):
+        return self.ChMeshh
 
 
 
@@ -2160,7 +2669,9 @@ cdef class ProtChMoorings:
         topology = ET.SubElement(arGrid,
                                 "Topology",
                                 {"Type": Xdmf_ElementTopology,
-                                 "NumberOfElements": "{0:d}".format(Xdmf_NumberOfElements)})
+                                 "NumberOfElements": "{0:d}".format(Xdmf_NumberOfElements),
+                                 "NodesPerElement": "{0:d}".format(Xdmf_NodesPerElement),
+                                })
 
         elements = ET.SubElement(topology,
                                  "DataItem",
@@ -2175,8 +2686,7 @@ cdef class ProtChMoorings:
                               {"Format": dataItemFormat,
                                "DataType": "Float",
                                "Precision": "8",
-                               "Dimensions": "{0:d} {0:d}".format(pos.shape[0],
-                                                        pos.shape[1])})
+                               "Dimensions": "{0:d} {1:d}".format(pos.shape[0], pos.shape[1])})
         nodes.text = "{0}.h5:/nodesSpatial_Domain{1:d}".format(str(self.hdfFileName,'utf-8'),tCount)
         all_names = self._record_names+self._record_etas_names
         for name in all_names:
@@ -2191,7 +2701,7 @@ cdef class ProtChMoorings:
                                   "DataType": "Float",
                                   "Precision": "8",
                                   "Dimensions": "{0:d}".format(pos.shape[0])})
-            data.text = "{0}.h5:/{1}{2:d}".format(str(self.hdfFileName,'utf-8'), name, tCount)
+            data.text = "{0}.h5:/{1}_t{2:d}".format(str(self.hdfFileName,'utf-8'), name, tCount)
 
         tree = ET.ElementTree(root)
 
@@ -3122,8 +3632,8 @@ cdef class ChBodyAddedMass:
     cdef void SetMfullmass(self, ch.ChMatrixDynamic Mfullmass_in):
         self.thisptr.SetMfullmass(Mfullmass_in)
 
-    cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
-        self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
+    # cdef void SetInvMfullmass(self, ch.ChMatrixDynamic inv_Mfullmass_in):
+    #     self.thisptr.SetInvMfullmass(inv_Mfullmass_in)
 
 
 

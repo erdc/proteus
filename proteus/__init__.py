@@ -9,7 +9,7 @@ except ImportError:
     import pkgutil
     __path__ = pkgutil.extend_path(__path__, __name__)
 
-__version__ = '1.7.2.dev0'
+__version__ = '1.7.3.dev0'
 
 __all__ = ["Archiver",
            "Domain",
@@ -62,7 +62,7 @@ __all__ = ["Archiver",
            "cmeshTools",
            "cnumericalFlux",
            "cTwophaseDarcyCoefficients",
-           "ADR",
+           "cADR",
            "deim_utils",
            "WaveTools",
            "Context",

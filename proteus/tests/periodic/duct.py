@@ -61,7 +61,7 @@ if p.nd == 3:
 else:
     h = p.L[1]
     umax = opts.Re*nu/p.L[1]
-p.T = 2.0*(p.L[0]/umax)
+p.T = 5.0*(p.L[0]/umax)
 mu = nu*rho
 G = (umax*8.0*mu)/(h**2)
 
@@ -78,31 +78,6 @@ else:
     nullSpace="NoNullSpace"
 
 
-p.coefficients = RANS2P.Coefficients(epsFact=0.0,
-                                     sigma=0.0,
-                                     rho_0=rho,nu_0=nu,
-                                     rho_1=rho,nu_1=nu,
-                                     g=gravity,
-                                     nd=p.nd,
-                                     ME_model=0,
-                                     VF_model=None,
-                                     LS_model=None,
-                                     Closure_0_model=None,
-                                     Closure_1_model=None,
-                                     epsFact_density=0.0,
-                                     stokes=False,
-                                     useVF=0.0,
-                                     useRBLES=0.0,
-                                     useMetrics=1.0,
-                                     eb_adjoint_sigma=1.0,
-                                     eb_penalty_constant=100.0,
-                                     forceStrongDirichlet=not opts.weak,
-                                     turbulenceClosureModel=0,
-                                     NONCONSERVATIVE_FORM=1.0,
-                                     MOMENTUM_SGE=0.0 if opts.useTaylorHood else 1.0,
-                                     PRESSURE_SGE=0.0 if opts.useTaylorHood else 1.0,
-                                     VELOCITY_SGE=0.0 if opts.useTaylorHood else 1.0,
-                                     nullSpace=nullSpace)
 
 eps=1.0e-8
 if opts.periodic:
@@ -175,6 +150,33 @@ elif p.nd == 3:
     p.analyticalSolution = {0:pSol, 1:uSol, 2: vSol, 3: vRot()}
 
 initialConditions = p.analyticalSolution
+
+p.coefficients = RANS2P.Coefficients(epsFact=1.5,
+                                     sigma=0.0,
+                                     rho_0=rho,nu_0=nu,
+                                     rho_1=rho,nu_1=nu,
+                                     g=gravity,
+                                     nd=p.nd,
+                                     ME_model=0,
+                                     VF_model=None,
+                                     LS_model=None,
+                                     Closure_0_model=None,
+                                     Closure_1_model=None,
+                                     epsFact_density=1.5,
+                                     stokes=False,
+                                     useVF=0.0,
+                                     useRBLES=0.0,
+                                     useMetrics=1.0,
+                                     eb_adjoint_sigma=1.0,
+                                     eb_penalty_constant=100.0,
+                                     forceStrongDirichlet=not opts.weak,
+                                     turbulenceClosureModel=0,
+                                     NONCONSERVATIVE_FORM=1.0,
+                                     MOMENTUM_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     PRESSURE_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     VELOCITY_SGE=0.0 if opts.useTaylorHood else 1.0,
+                                     nullSpace=nullSpace)
+                                     #analyticalSolution=p.analyticalSolution)
 
 nsave=25
 dt_init = 1.0e-3
@@ -276,7 +278,7 @@ else:
     if  opts.coord:
         def getDBC_pressure_duct(x,flag):
             if onRight(x):
-                return lambda x,t: 0.0
+                return lambda x,t: pSol.uOfX(x)
             
         def getDBC_u_duct(x,flag):
             if onLeft(x):
@@ -287,11 +289,15 @@ else:
                 return lambda x,t: uSol.uOfX(x)
             
         def getDBC_v_duct(x,flag):
-            if onLeft(x) or onRight(x) or onTop(x) or onBottom(x):
+            if onLeft(x) or onTop(x) or onBottom(x):
+                return lambda x,t: 0.0
+            if opts.weak and onRight(x):
                 return lambda x,t: 0.0
 
         def getDBC_w_duct(x,flag):
-            if onLeft(x) or onRight(x) or onTop(x) or onBottom(x):
+            if onLeft(x) or onTop(x) or onBottom(x):
+                return lambda x,t: 0.0
+            if opts.weak and onRight(x):
                 return lambda x,t: 0.0
 
         p.dirichletConditions = {0:getDBC_pressure_duct,
@@ -349,7 +355,7 @@ else:
     else:
         def getDBC_pressure_duct(x,flag):
             if flag == boundaryTags['right']:
-                return lambda x,t: 0.0
+                return lambda x,t: pSol.uOfX(x)
 
         def getDBC_u_duct(x,flag):
             if flag == boundaryTags['left']:
@@ -360,16 +366,17 @@ else:
                 return lambda x,t: 0.0
         def getDBC_v_duct(x,flag):
             if flag in [boundaryTags['left'],
-                        boundaryTags['right'],
                         boundaryTags['top'],
                         boundaryTags['bottom']]:
                 return lambda x,t: 0.0
-
+            elif opts.weak and flag == boundaryTags['right']:
+                return lambda x,t: 0.0
         def getDBC_w_duct(x,flag):
             if flag in [boundaryTags['left'],
-                        boundaryTags['right'],
                         boundaryTags['top'],
                         boundaryTags['bottom']]:
+                return lambda x,t: 0.0
+            elif opts.weak and flag == boundaryTags['right']:
                 return lambda x,t: 0.0
 
         p.dirichletConditions = {0:getDBC_pressure_duct,
@@ -470,8 +477,8 @@ if opts.spaceOrder == 1:
                            2:FemTools.C0_AffineLinearOnSimplexWithNodalBasis}
             if p.nd == 3:
                 n.femSpaces[3] = FemTools.C0_AffineLinearOnSimplexWithNodalBasis
-            n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,3)
-            n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
+            n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,5)
+            n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,5)
     else:
         if opts.useTaylorHood:
             n.femSpaces = {0:FemTools.C0_AffineLinearOnCubeWithNodalBasis,
@@ -493,8 +500,8 @@ if opts.spaceOrder == 1:
                 n.femSpaces[3] = FemTools.C0_AffineLinearOnCubeWithNodalBasis
             else:
                 n.quad = True
-            n.elementQuadrature = Quadrature.CubeGaussQuadrature(p.nd,2)
-            n.elementBoundaryQuadrature = Quadrature.CubeGaussQuadrature(p.nd-1,2)
+            n.elementQuadrature = Quadrature.CubeGaussQuadrature(p.nd,5)
+            n.elementBoundaryQuadrature = Quadrature.CubeGaussQuadrature(p.nd-1,5)
 
 elif opts.spaceOrder == 2:    
     if opts.triangles:
@@ -523,7 +530,7 @@ he = p.L[0]/float(n.nnx-1)
 if p.nd == 3:
     n.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 else:
-    n.triangleFlag = 1#if regular triangulatio then alternate diagonals
+    n.triangleFlag = 0#if regular triangulatio then alternate diagonals
     n.triangleOptions="pAq30.0Dena%f" % ((he**2)/4.0,)
 
 n.numericalFluxType = RANS2P.NumericalFlux
@@ -534,7 +541,7 @@ if opts.periodic:
 
 n.subgridError = RANS2P.SubgridError(coefficients=p.coefficients,
                                      nd=p.nd,
-                                     lag=False,
+                                     lag=True,
                                      hFactor=1.0)
 
 n.shockCapturing = RANS2P.ShockCapturing(coefficients=p.coefficients,

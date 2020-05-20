@@ -1600,7 +1600,7 @@ class Mesh(object):
             gnuplot.flush()
         input('Please press return to continue... \n')
 
-    def convertFromPUMI(self, domain, PUMIMesh, faceList,regList, parallel=False, dim=3):
+    def convertFromPUMI(self, domain, MeshAdapt, faceList,regList, parallel=False, dim=3):
         from . import cmeshTools
         from . import MeshAdaptPUMI
         from . import cpartitioning
@@ -1611,24 +1611,24 @@ class Mesh(object):
           self.subdomainMesh=self.__class__()
           self.subdomainMesh.globalMesh = self
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
-          PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
+          MeshAdapt.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
-          if(PUMIMesh.isReconstructed()==1):
+          if(domain.AdaptManager.reconstructedFlag==1):
             logEvent("Material arrays updating based on reconstructed model.\n")
-            PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
-          elif(PUMIMesh.isReconstructed()==2):
+            MeshAdapt.updateMaterialArrays(self.subdomainMesh.cmesh);
+          elif(domain.AdaptManager.reconstructedFlag==2):
             logEvent("Material arrays updating based on better reconstructed model.\n")
-            PUMIMesh.updateMaterialArrays2(self.subdomainMesh.cmesh);
+            MeshAdapt.updateMaterialArrays2(self.subdomainMesh.cmesh);
           else:
               logEvent("Material arrays updating based on geometric model.\n")
               for i in range(len(faceList)):
                 for j in range(len(faceList[i])):
-                  #PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), i+1,
+                  #MeshAdapt.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), i+1,
                   #    faceList[i][j])
-                  PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), domain.boundaryLabels[i], faceList[i][j])
+                  MeshAdapt.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), domain.boundaryLabels[i], faceList[i][j])
               for i in range(len(regList)):
                 for j in range(len(regList[i])):
-                  PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,dim, i+1, regList[i][j])
+                  MeshAdapt.updateMaterialArrays(self.subdomainMesh.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
@@ -1673,21 +1673,21 @@ class Mesh(object):
           par_nodeDiametersArray.scatter_forward_insert()
           comm.barrier()
         else:
-          PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          if(PUMIMesh.isReconstructed()==1):
+          MeshAdapt.constructFromSerialPUMIMesh(self.cmesh)
+          if(domain.AdaptManager.reconstructedFlag==1):
             logEvent("Material arrays updating based on reconstructed model.\n")
-            PUMIMesh.updateMaterialArrays(self.cmesh);
-          elif(PUMIMesh.isReconstructed()==2):
+            MeshAdapt.updateMaterialArrays(self.cmesh);
+          elif(domain.AdaptManager.reconstructedFlag==2):
             logEvent("Material arrays updating based on better reconstructed model.\n")
-            PUMIMesh.updateMaterialArrays2(self.cmesh);
+            MeshAdapt.updateMaterialArrays2(self.cmesh);
           else:
               for i in range(len(faceList)):
                 for j in range(len(faceList[i])):
-                  #PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
-                  PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), domain.boundaryLabels[i], faceList[i][j])
+                  #MeshAdapt.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
+                  MeshAdapt.updateMaterialArrays(self.cmesh,(dim-1), domain.boundaryLabels[i], faceList[i][j])
               for i in range(len(regList)):
                 for j in range(len(regList[i])):
-                  PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
+                  MeshAdapt.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
@@ -6212,8 +6212,8 @@ def triangleVerticesToNormals(elementVertices):
                          (1., 0., 0.),
                          (0., 0., 0.)))
 
-    for set, out in zip(sets, outs):
-        vertices = elementVertices[[set]]
+    for seti, out in zip(sets, outs):
+        vertices = elementVertices[np.array(seti,'i')]
         ab = vertices[1] - vertices[0]
         v_out = vertices[0] - elementVertices[out]
         normal = rotate.dot(ab)
@@ -6235,8 +6235,8 @@ def tetrahedronVerticesToNormals(elementVertices):
 
     faces = []
 
-    for set, out in zip(sets, outs):
-        vertices = elementVertices[[set]]
+    for seti, out in zip(sets, outs):
+        vertices = elementVertices[np.array(seti,'i')]
         ab = vertices[1] - vertices[0]
         ac = vertices[2] - vertices[0]
         normal = np.cross(ab, ac)

@@ -3,9 +3,13 @@ from builtins import zip
 from builtins import range
 from past.utils import old_div
 import proteus
+from proteus import cfemIntegrals, Norms, Quadrature
 from proteus.Comm import globalSum
 from proteus.mprans.cMCorr import *
-
+import numpy as np
+from proteus.Transport import OneLevelTransport, logEvent, memory, fabs
+from proteus.Transport import TC_base, l2Norm, NonlinearEquation
+from . import cArgumentsDict
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import levelSetConservationCoefficientsEvaluate
@@ -30,40 +34,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useQuadraticRegularization=False,
                  edgeBasedStabilizationMethods=False,
                  nullSpace='NoNullSpace',
-                 useExact=False):
+                 useExact=False,
+                 initialize=True):
         self.useExact=useExact
         self.useQuadraticRegularization = useQuadraticRegularization
         self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         self.sd = sd
+        self.nd = nd
         self.checkMass = checkMass
         self.variableNames = ['phiCorr']
-        nc = 1
-        mass = {}
-        advection = {}
-        hamiltonian = {}
-        diffusion = {0: {0: {0: 'constant'}}}
-        potential = {0: {0: 'u'}}
-        reaction = {0: {0: 'nonlinear'}}
-        # reaction={}
-        if self.sd:
-            assert nd is not None, "You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
-            sdInfo = {(0, 0): (numpy.arange(start=0, stop=nd + 1, step=1, dtype='i'),
-                               numpy.arange(start=0, stop=nd, step=1, dtype='i'))}
-        else:
-            sdInfo = {}
-        TC_base.__init__(self,
-                         nc,
-                         mass,
-                         advection,
-                         diffusion,
-                         potential,
-                         reaction,
-                         hamiltonian,
-                         self.variableNames,
-                         sparseDiffusionTensors=sdInfo,
-                         useSparseDiffusion=sd)
         self.useQuadraticRegularization = useQuadraticRegularization
         self.edgeBasedStabilizationMethods = edgeBasedStabilizationMethods
         self.levelSetModelIndex = LSModel_index
@@ -77,10 +58,41 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.applyCorrection = applyCorrection
         if self.applyCorrection:
             self.applyCorrectionToDOF = applyCorrectionToDOF
-        else:
-            self.applyCorrectionToDOF = False
         self.massConservationError = 0.0
         self.nullSpace = nullSpace
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        if not self.applyCorrection:
+            self.applyCorrectionToDOF = False
+        #
+        nc = 1
+        mass = {}
+        advection = {}
+        hamiltonian = {}
+        diffusion = {0: {0: {0: 'constant'}}}
+        potential = {0: {0: 'u'}}
+        reaction = {0: {0: 'nonlinear'}}
+        # reaction={}
+        nd = self.nd
+        if self.sd:
+            assert nd is not None, "You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
+            sdInfo = {(0, 0): (np.arange(start=0, stop=nd + 1, step=1, dtype='i'),
+                               np.arange(start=0, stop=nd, step=1, dtype='i'))}
+        else:
+            sdInfo = {}
+        TC_base.__init__(self,
+                         nc,
+                         mass,
+                         advection,
+                         diffusion,
+                         potential,
+                         reaction,
+                         hamiltonian,
+                         self.variableNames,
+                         sparseDiffusionTensors=sdInfo,
+                         useSparseDiffusion=self.sd)
 
     def initializeMesh(self, mesh):
         self.h = mesh.h
@@ -117,7 +129,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # correction
         self.massCorrModel = modelList[self.me_model]
         self.massCorrModel.setMassQuadrature()
-        self.vofModel.q[('m_last', 0)][:] = self.vofModel.q[('m', 0)]
+        self.vofModel.q[('m_last', 0)][:] = self.q_porosity*self.q_H_vof
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r', 0)])
             if self.checkMass:
@@ -129,7 +141,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 #                                                         self.massCorrModel.mesh.nElements_owned)
                 #self.vofGlobalMass = 0.0
                 #self.lsGlobalMass = self.massCorrModel.calculateMass(self.lsModel.q[('u',0)])
-                # logEvent("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                # logEvent("Attach Models MCorr: mass correction %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                 #                                                                                self.massCorrModel.q[('r',0)],
                 #                                                                                self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = 0.0
@@ -140,10 +152,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.lsGlobalMassErrorArray = []  # self.lsGlobalMass - self.lsGlobalMassArray[0]]# + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral]
                 self.fluxArray = []  # 0.0]#self.vofModel.coefficients.fluxIntegral]
                 self.timeArray = []  # self.vofModel.timeIntegration.t]
-                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                #logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
-                #logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %21.16e" % (self.vofGlobalMass,),level=2)
+                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (LS) %21.16e" % (self.lsGlobalMass,),level=2)
+                #logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %21.16e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                #logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %21.16e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
 
     def initializeElementQuadrature(self, t, cq):
         if self.sd and ('a', 0, 0) in cq:
@@ -159,15 +171,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         if self.checkMass:
-            logEvent("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (VOF) %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                       self.vofModel.q[('m', 0)],
                                                                                                       self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass (primitive) before mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
+            logEvent("Phase 0 mass (primitive) before mass correction (LS) %21.16e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
                                                                                                                                   self.massCorrModel.elementDiameter,
-                                                                                                                                  self.vofModel.q['dV'],
+                                                                                                                                  self.q_porosity*self.vofModel.q['dV'],
                                                                                                                                   self.lsModel.q[('m', 0)],
                                                                                                                                   self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass (consistent) before mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
+            logEvent("Phase 0 mass (consistent) before mass correction (LS) %21.16e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
         copyInstructions = {'clear_uList': True}
         return copyInstructions
 
@@ -192,15 +204,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
             # print "********************max VOF************************",max(self.vofModel.q[('u',0)].flat[:])
         if self.checkMass:
-            logEvent("Phase 0 mass after mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass after mass correction (VOF) %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                      self.vofModel.q[('m', 0)],
                                                                                                      self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass (primitive) after mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
+            logEvent("Phase 0 mass (primitive) after mass correction (LS) %21.16e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
                                                                                                                                  self.massCorrModel.elementDiameter,
-                                                                                                                                 self.vofModel.q['dV'],
+                                                                                                                                 self.q_porosity*self.vofModel.q['dV'],
                                                                                                                                  self.lsModel.q[('m', 0)],
                                                                                                                                  self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
+            logEvent("Phase 0 mass (consistent) after mass correction (LS) %21.16e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m', 0)]),), level=2)
         copyInstructions = {}
 
         # get the waterline on the obstacle if option set in NCLS (boundary==7)
@@ -250,10 +262,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if (self.checkMass and c[('u', 0)].shape == self.q_u_ls.shape):
             self.m_tmp[:] = H_vof
             self.m_tmp += self.massCorrModel.q[('r', 0)]
-            logEvent("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("mass correction during Newton %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                           self.massCorrModel.q[('r', 0)],
                                                                                           self.massCorrModel.mesh.nElements_owned),), level=2)
-            logEvent("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass during Newton %21.16e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                        self.m_tmp,
                                                                                        self.massCorrModel.mesh.nElements_owned),), level=2)
 
@@ -463,13 +475,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi_ip = {}
         # mesh
         # uncomment this to store q arrays, see calculateElementQuadrature below
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.q[('u', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('grad(u)', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q[('r', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('grad(u)', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        self.q[('r', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
 
-        self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('grad(u)', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+        self.ebqe[('u', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('grad(u)', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                  self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
 
         self.points_elementBoundaryQuadrature = set()
@@ -481,9 +493,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,), 'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
-            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+            self.inflowBoundaryBC[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,), 'i')
+            self.inflowBoundaryBC_values[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
+            self.inflowFlux[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.internalNodes = set(range(self.mesh.nNodes_global))
         # identify the internal nodes this is ought to be in mesh
         # \todo move this to mesh
@@ -496,7 +508,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global, i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray = numpy.zeros((self.nNodes_internal,), 'i')
+        self.internalNodesArray = np.zeros((self.nNodes_internal,), 'i')
         for nI, n in enumerate(self.internalNodes):
             self.internalNodesArray[nI] = n
         #
@@ -594,18 +606,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MassMatrix.getCSRrepresentation()
         if (self.limited_L2p_vof_mass_correction is None):
-            self.limited_L2p_vof_mass_correction = numpy.zeros(self.LumpedMassMatrix.size, 'd')
-
-        self.mcorr.FCTStep(
-            self.nnz,  # number of non zero entries
-            len(rowptr) - 1,  # number of DOFs
-            self.LumpedMassMatrix,  # Lumped mass matrix
-            self.L2p_vof_mass_correction,  # high order projection
-            self.lumped_L2p_vof_mass_correction,  # low order projection
-            self.limited_L2p_vof_mass_correction,
-            rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
-            colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
-            MassMatrix)
+            self.limited_L2p_vof_mass_correction = np.zeros(self.LumpedMassMatrix.size, 'd')
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["NNZ"] = self.nnz
+        argsDict["numDOFs"] = len(rowptr) - 1
+        argsDict["lumped_mass_matrix"] = self.LumpedMassMatrix
+        argsDict["solH"] = self.L2p_vof_mass_correction
+        argsDict["solL"] = self.lumped_L2p_vof_mass_correction
+        argsDict["limited_solution"] = self.limited_L2p_vof_mass_correction
+        argsDict["csrRowIndeces_DofLoops"] = rowptr
+        argsDict["csrColumnOffsets_DofLoops"] = colind
+        argsDict["matrix"] = MassMatrix
+        self.mcorr.FCTStep(argsDict)
 
     def calculateCoefficients(self):
         pass
@@ -625,56 +637,56 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setUnknowns(u)
 
         # no flux boundary conditions
-        self.mcorr.calculateResidual(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadraturePoints,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.l2g[0]['freeGlobal'],
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.lsModel.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_porosity,
-            self.offset[0], self.stride[0],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["r_l2g"] = self.l2g[0]['freeGlobal']
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["phi_dof"] = self.coefficients.lsModel.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["ebqe_phi"] = self.coefficients.ebqe_u_ls
+        argsDict["ebqe_normal_phi"] = self.coefficients.ebqe_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["ebqe_n"] = self.ebqe[('grad(u)', 0)]
+        argsDict["q_r"] = self.q[('r', 0)]
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        self.mcorr.calculateResidual(argsDict,
             self.coefficients.useExact)
 
         logEvent("Global residual", level=9, data=r)
@@ -682,7 +694,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("   Mass Conservation Error: ", level=3, data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape, 'd')
+            self.globalResidualDummy = np.zeros(r.shape, 'd')
 
     # GET MASS MATRIX # (MQL)
     def getMassMatrix(self):
@@ -698,88 +710,90 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                            colind,
                                                            rowptr)
             # Lumped mass matrix
-            self.LumpedMassMatrix = numpy.zeros(rowptr.size - 1, 'd')
+            self.LumpedMassMatrix = np.zeros(rowptr.size - 1, 'd')
         else:
             self.LumpedMassMatrix.fill(0.0)
 
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        self.MassMatrix)
-        self.mcorr.calculateMassMatrix(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.q_H_vof,
-            self.coefficients.q_porosity,
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.MassMatrix,
-            self.LumpedMassMatrix)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["globalMassMatrix"] = self.MassMatrix.getCSRrepresentation()[2]
+        argsDict["globalLumpedMassMatrix"] = self.LumpedMassMatrix
+        self.mcorr.calculateMassMatrix(argsDict)
 
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian, jacobian)
-        self.mcorr.calculateJacobian(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadraturePoints,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.lsModel.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.q_H_vof,
-            self.coefficients.q_porosity,
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["phi_dof"] = self.coefficients.lsModel.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
+        self.mcorr.calculateJacobian(argsDict,
             self.coefficients.useExact)
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
@@ -797,55 +811,55 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setUnknowns(u)
 
         # no flux boundary conditions
-        self.mcorr.elementSolve(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_porosity,
-            self.offset[0], self.stride[0],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.maxIts,
-            self.atol)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["ebqe_phi"] = self.coefficients.ebqe_u_ls
+        argsDict["ebqe_normal_phi"] = self.coefficients.ebqe_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["ebqe_n"] = self.ebqe[('grad(u)', 0)]
+        argsDict["q_r"] = self.q[('r', 0)]
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["maxIts"] = self.maxIts
+        argsDict["atol"] = self.atol
+        self.mcorr.elementSolve(argsDict)
 
     def elementConstantSolve(self, u, r):
         import pdb
@@ -858,55 +872,55 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setUnknowns(u)
 
         # no flux boundary conditions
-        self.mcorr.elementConstantSolve(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_porosity,
-            self.offset[0], self.stride[0],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.maxIts,
-            self.atol)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["ebqe_phi"] = self.coefficients.ebqe_u_ls
+        argsDict["ebqe_normal_phi"] = self.coefficients.ebqe_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["ebqe_n"] = self.ebqe[('grad(u)', 0)]
+        argsDict["q_r"] = self.q[('r', 0)]
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["maxIts"] = self.maxIts
+        argsDict["atol"] = self.atol
+        self.mcorr.elementConstantSolve(argsDict)
 
     def globalConstantRJ(self, u, r, U):
         import pdb
@@ -919,57 +933,56 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setUnknowns(u)
 
         # no flux boundary conditions
-        (R, J) = self.mcorr.globalConstantRJ(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_owned,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,
-            self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.offset[0], self.stride[0],
-            r,
-            self.coefficients.q_porosity,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.maxIts,
-            self.atol,
-            U)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_owned"] = self.mesh.nElements_owned
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["ebqe_phi"] = self.coefficients.ebqe_u_ls
+        argsDict["ebqe_normal_phi"] = self.coefficients.ebqe_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["ebqe_n"] = self.ebqe[('grad(u)', 0)]
+        argsDict["q_r"] = self.q[('r', 0)]
+        argsDict["q_porosity"] = self.offset[0]
+        argsDict["offset_u"] = self.stride[0]
+        argsDict["stride_u"] = r
+        argsDict["globalResidual"] = self.coefficients.q_porosity
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["maxIts"] = self.maxIts
+        argsDict["atol"] = self.atol
+        argsDict["constant_u"] = U
+        (R, J) = self.mcorr.globalConstantRJ(argsDict)
         R = globalSum(R)
         J = globalSum(J)
         self.coefficients.massConservationError = fabs(R)
@@ -1032,171 +1045,171 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
 
     def calculateMass(self, q_phi):
-        return globalSum(self.mcorr.calculateMass(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadraturePoints,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_owned,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.lsModel.u[0].dof,
-            q_phi,  # self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_porosity,
-            self.offset[0], self.stride[0],
-            self.u[0].dof,  # dummy r,not used
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_owned"] = self.mesh.nElements_owned
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["phi_dof"] = self.coefficients.lsModel.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["ebqe_phi"] = self.coefficients.ebqe_u_ls
+        argsDict["ebqe_normal_phi"] = self.coefficients.ebqe_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["ebqe_n"] = self.ebqe[('grad(u)', 0)]
+        argsDict["q_r"] = self.q[('r', 0)]
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = self.u[0].dof
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        return globalSum(self.mcorr.calculateMass(argsDict,
             self.coefficients.useExact))
 
     def setMassQuadratureEdgeBasedStabilizationMethods(self):
         # Compute mass matrix
         # Set rhs of mass correction to zero
         if self.rhs_mass_correction is None:
-            self.rhs_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
-            self.lumped_L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
-            self.L2p_vof_mass_correction = numpy.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
+            self.rhs_mass_correction = np.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
+            self.lumped_L2p_vof_mass_correction = np.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
+            self.L2p_vof_mass_correction = np.zeros(self.coefficients.vofModel.u[0].dof.shape, 'd')
         else:
             self.rhs_mass_correction.fill(0.0)
 
-        self.mcorr.setMassQuadratureEdgeBasedStabilizationMethods(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.coefficients.lsModel.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.coefficients.lsModel.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_porosity,
-            self.offset[0], self.stride[0],
-            self.u[0].dof,  # dummy r,not used
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.rhs_mass_correction,  # (MQL): compute rhs for L2 projection.
-            self.lumped_L2p_vof_mass_correction,
-            self.LumpedMassMatrix,
-            self.lumped_L2p_vof_mass_correction.size,
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["phi_l2g"] = self.coefficients.lsModel.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["phi_dof"] = self.coefficients.lsModel.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["ebqe_phi"] = self.coefficients.ebqe_u_ls
+        argsDict["ebqe_normal_phi"] = self.coefficients.ebqe_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["ebqe_n"] = self.ebqe[('grad(u)', 0)]
+        argsDict["q_r"] = self.q[('r', 0)]
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = self.u[0].dof
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["rhs_mass_correction"] = self.rhs_mass_correction
+        argsDict["lumped_L2p_vof_mass_correction"] = self.lumped_L2p_vof_mass_correction
+        argsDict["lumped_mass_matrix"] = self.LumpedMassMatrix
+        argsDict["numDOFs"] = self.lumped_L2p_vof_mass_correction.size
+        self.mcorr.setMassQuadratureEdgeBasedStabilizationMethods(argsDict,
             self.coefficients.useExact)
 
     def setMassQuadrature(self):
-
-        self.mcorr.setMassQuadrature(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadraturePoints,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.coefficients.lsModel.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.coefficients.lsModel.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.ebqe[('u', 0)],
-            self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_porosity,
-            self.offset[0], self.stride[0],
-            self.u[0].dof,  # dummy r,not used
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.coefficients.vofModel.u[0].dof,
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["epsFactHeaviside"] = self.coefficients.epsFactHeaviside
+        argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
+        argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
+        argsDict["phi_l2g"] = self.coefficients.lsModel.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["phi_dof"] = self.coefficients.lsModel.u[0].dof
+        argsDict["q_phi"] = self.coefficients.q_u_ls
+        argsDict["q_normal_phi"] = self.coefficients.q_n_ls
+        argsDict["ebqe_phi"] = self.coefficients.ebqe_u_ls
+        argsDict["ebqe_normal_phi"] = self.coefficients.ebqe_n_ls
+        argsDict["q_H"] = self.coefficients.q_H_vof
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["ebqe_n"] = self.ebqe[('grad(u)', 0)]
+        argsDict["q_r"] = self.q[('r', 0)]
+        argsDict["q_porosity"] = self.coefficients.q_porosity
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = self.u[0].dof
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["H_dof"] = self.coefficients.vofModel.u[0].dof
+        self.mcorr.setMassQuadrature(argsDict,
             self.coefficients.useExact)
 
     def calculateSolutionAtQuadrature(self):
@@ -1252,7 +1265,7 @@ class DummyNewton(proteus.NonlinearSolvers.NonlinearSolver):
             self.dJ_t_dJ = copy.deepcopy(self.J)
             self.JLsolver = LU(self.J_t_J, computeEigenvalues=True)
             self.dJLsolver = LU(self.dJ_t_dJ, computeEigenvalues=True)
-            self.u0 = numpy.zeros(self.F.dim, 'd')
+            self.u0 = np.zeros(self.F.dim, 'd')
 
     def info(self):
         return "Not Implemented"
@@ -1310,7 +1323,7 @@ class ElementNewton(proteus.NonlinearSolvers.NonlinearSolver):
             self.dJ_t_dJ = copy.deepcopy(self.J)
             self.JLsolver = LU(self.J_t_J, computeEigenvalues=True)
             self.dJLsolver = LU(self.dJ_t_dJ, computeEigenvalues=True)
-            self.u0 = numpy.zeros(self.F.dim, 'd')
+            self.u0 = np.zeros(self.F.dim, 'd')
 
     def info(self):
         return "Not Implemented"
@@ -1370,7 +1383,7 @@ class ElementConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
             self.dJ_t_dJ = copy.deepcopy(self.J)
             self.JLsolver = LU(self.J_t_J, computeEigenvalues=True)
             self.dJLsolver = LU(self.dJ_t_dJ, computeEigenvalues=True)
-            self.u0 = numpy.zeros(self.F.dim, 'd')
+            self.u0 = np.zeros(self.F.dim, 'd')
 
     def info(self):
         return "Not Implemented"
@@ -1430,7 +1443,7 @@ class GlobalConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
             self.dJ_t_dJ = copy.deepcopy(self.J)
             self.JLsolver = LU(self.J_t_J, computeEigenvalues=True)
             self.dJLsolver = LU(self.dJ_t_dJ, computeEigenvalues=True)
-            self.u0 = numpy.zeros(self.F.dim, 'd')
+            self.u0 = np.zeros(self.F.dim, 'd')
 
     def info(self):
         return "Not Implemented"

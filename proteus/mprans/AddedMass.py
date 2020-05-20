@@ -4,9 +4,7 @@ from builtins import str
 from builtins import range
 from past.utils import old_div
 import proteus
-import numpy
-from proteus import *
-from proteus.Transport import *
+import numpy as np
 from proteus.Transport import OneLevelTransport
 import os
 from proteus import cfemIntegrals, Quadrature, Norms, Comm
@@ -21,7 +19,7 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
-from . import cAddedMass
+from . import cAddedMass, cArgumentsDict
 from mpi4py import MPI
 
 class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior):
@@ -58,7 +56,8 @@ class Coefficients(TC_base):
                  barycenters=None,
                  flags_rigidbody=None,
                  solve_rate=0.,
-                 nullSpace="ConstantNullSpace"):
+                 nullSpace="ConstantNullSpace",
+                 initialize=True):
         """
         TODO
         """
@@ -66,8 +65,15 @@ class Coefficients(TC_base):
         self.updated_global = False
         self.next_solve = 0.
         self.nullSpace = nullSpace
-        assert(nd in [2, 3])
         self.nd = nd
+        self.flowModelIndex=V_model
+        self.barycenters = barycenters
+        self.flags_rigidbody = flags_rigidbody
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
+        assert(self.nd in [2, 3])
         if self.nd == 2:
             sdInfo = {(0, 0): (np.array([0, 1, 2], dtype='i'),
                                np.array([0, 1], dtype='i'))}
@@ -81,11 +87,7 @@ class Coefficients(TC_base):
                          potential={0: {0: 'u'}},
                          sparseDiffusionTensors=sdInfo,
                          useSparseDiffusion=True)
-        self.flowModelIndex=V_model
-        self.barycenters = barycenters
-        if flags_rigidbody is not None:
-            self.flags_rigidbody = flags_rigidbody
-        else:
+        if self.flags_rigidbody is None:
             Profiling.logEvent("Warning: flags_rigidbody was not set for"+
                                "AddedMass model, using a zero array of length"+
                                "1000, this sets all boundaries as fixed walls"+
@@ -378,151 +380,151 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe = {}
         self.phi_ip = {}
         # mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.ebqe['x'] = numpy.zeros(
+        #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.ebqe['x'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.q[('u', 0)] = numpy.zeros(
+        self.q[('u', 0)] = np.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
             ('grad(u)',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global),
             'd')
         self.ebqe[
             ('u',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
         self.ebqe[
             ('grad(u)',
-             0)] = numpy.zeros(
+             0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
 
-        self.q[('v', 0)] = numpy.zeros(
+        self.q[('v', 0)] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nDOF_trial_element[0]),
             'd')
-        self.q['J'] = numpy.zeros(
+        self.q['J'] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.q['det(J)'] = numpy.zeros(
+        self.q['det(J)'] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element),
             'd')
-        self.q['inverse(J)'] = numpy.zeros(
+        self.q['inverse(J)'] = np.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.ebq[('v', 0)] = numpy.zeros(
+        self.ebq[('v', 0)] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nDOF_trial_element[0]),
             'd')
-        self.ebq[('w', 0)] = numpy.zeros(
+        self.ebq[('w', 0)] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nDOF_trial_element[0]),
             'd')
-        self.ebq['x'] = numpy.zeros(
+        self.ebq['x'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.ebq['hat(x)'] = numpy.zeros(
+        self.ebq['hat(x)'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.ebq['inverse(J)'] = numpy.zeros(
+        self.ebq['inverse(J)'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.ebq['g'] = numpy.zeros(
+        self.ebq['g'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global - 1,
              self.nSpace_global - 1),
             'd')
-        self.ebq['sqrt(det(g))'] = numpy.zeros(
+        self.ebq['sqrt(det(g))'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-        self.ebq['n'] = numpy.zeros(
+        self.ebq['n'] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-        self.ebq[('dS_u', 0)] = numpy.zeros(
+        self.ebq[('dS_u', 0)] = np.zeros(
             (self.mesh.nElements_global,
              self.mesh.nElementBoundaries_element,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-        self.ebqe['dS'] = numpy.zeros(
+        self.ebqe['dS'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
         self.ebqe[('dS_u', 0)] = self.ebqe['dS']
-        self.ebqe['n'] = numpy.zeros(
+        self.ebqe['n'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-        self.ebqe['inverse(J)'] = numpy.zeros(
+        self.ebqe['inverse(J)'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global,
              self.nSpace_global),
             'd')
-        self.ebqe['g'] = numpy.zeros(
+        self.ebqe['g'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global - 1,
              self.nSpace_global - 1),
             'd')
-        self.ebqe['sqrt(det(g))'] = numpy.zeros(
+        self.ebqe['sqrt(det(g))'] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
-        self.ebq_global['n'] = numpy.zeros(
+        self.ebq_global['n'] = np.zeros(
             (self.mesh.nElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-        self.ebq_global['x'] = numpy.zeros(
+        self.ebq_global['x'] = np.zeros(
             (self.mesh.nElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              3),
             'd')
-        self.ebqe[('diffusiveFlux_bc_flag', 0, 0)] = numpy.zeros(
+        self.ebqe[('diffusiveFlux_bc_flag', 0, 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
-        self.ebqe[('diffusiveFlux_bc', 0, 0)] = numpy.zeros(
+        self.ebqe[('diffusiveFlux_bc', 0, 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('diffusiveFlux', 0, 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('diffusiveFlux', 0, 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set(
             [('u', ci) for ci in range(self.nc)])
@@ -534,11 +536,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros(
+            self.inflowBoundaryBC[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global,), 'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros(
+            self.inflowBoundaryBC_values[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
-            self.inflowFlux[cj] = numpy.zeros(
+            self.inflowFlux[cj] = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global,
                  self.nElementBoundaryQuadraturePoints_elementBoundary),
                 'd')
@@ -555,7 +557,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global, i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray = numpy.zeros((self.nNodes_internal,), 'i')
+        self.internalNodesArray = np.zeros((self.nNodes_internal,), 'i')
         for nI, n in enumerate(self.internalNodes):
             self.internalNodesArray[nI] = n
         #
@@ -635,7 +637,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.globalResidualDummy = None
         compKernelFlag = 0
-        self.addedMass = cAddedMass.AddedMass(
+        self.addedMass = cAddedMass.newAddedMass(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -666,43 +668,46 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             u[self.offset[0] + self.stride[0] * dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         self.setUnknowns(u)
         self.Aij[:,:,self.added_mass_i]=0.0
-        self.addedMass.calculateResidual(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
+
+        argDict = cArgumentsDict.ArgumentsDict()
+        argDict['mesh_trial_ref'] = self.u[0].femSpace.elementMaps.psi
+        argDict['mesh_grad_trial_ref'] = self.u[0].femSpace.elementMaps.grad_psi
+        argDict['mesh_dof'] = self.mesh.nodeArray
+        argDict['mesh_l2g'] = self.mesh.elementNodesArray
+        argDict['dV_ref'] = self.elementQuadratureWeights[('u', 0)]
+        argDict['u_trial_ref'] = self.u[0].femSpace.psi
+        argDict['u_grad_trial_ref'] = self.u[0].femSpace.grad_psi
+        argDict['u_test_ref'] = self.u[0].femSpace.psi
+        argDict['u_grad_test_ref'] = self.u[0].femSpace.grad_psi
             # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
+        argDict['mesh_trial_trace_ref'] = self.u[0].femSpace.elementMaps.psi_trace
+        argDict['mesh_grad_trial_trace_ref'] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argDict['dS_ref'] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argDict['u_trial_trace_ref'] = self.u[0].femSpace.psi_trace
+        argDict['u_grad_trial_trace_ref'] = self.u[0].femSpace.grad_psi_trace
+        argDict['u_test_trace_ref'] = self.u[0].femSpace.psi_trace
+        argDict['u_grad_test_trace_ref'] = self.u[0].femSpace.grad_psi_trace
+        argDict['normal_ref'] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argDict['boundaryJac_ref'] = self.u[0].femSpace.elementMaps.boundaryJacobians
             # physics
-            self.mesh.nElements_global,
-            self.mesh.nElementBoundaries_owned,
-            self.u[0].femSpace.dofMap.l2g,
-            self.u[0].dof,
-            self.coefficients.q_rho,
-            self.offset[0], self.stride[0],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.mesh.elementBoundaryMaterialTypes,
-            self.Aij,
-            self.added_mass_i,
-            self.barycenters,
-            self.flags_rigidbody)
+        argDict['nElements_global'] = self.mesh.nElements_global
+        argDict['nElementBoundaries_owned'] = self.mesh.nElementBoundaries_owned
+        argDict['u_l2g'] = self.u[0].femSpace.dofMap.l2g
+        argDict['u_dof'] = self.u[0].dof
+        argDict['q_rho'] = self.coefficients.q_rho
+        argDict['offset_u'] = self.offset[0]
+        argDict['stride_u'] = self.stride[0]
+        argDict['globalResidual'] = r
+        argDict['nExteriorElementBoundaries_global'] = self.mesh.nExteriorElementBoundaries_global
+        argDict['exteriorElementBoundariesArray'] = self.mesh.exteriorElementBoundariesArray
+        argDict['elementBoundaryElementsArray'] = self.mesh.elementBoundaryElementsArray
+        argDict['elementBoundaryLocalElementBoundariesArray'] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argDict['elementBoundaryMaterialTypesArray'] = self.mesh.elementBoundaryMaterialTypes
+        argDict['Aij'] = self.Aij
+        argDict['added_mass_i'] = self.added_mass_i
+        argDict['barycenters'] = self.barycenters
+        argDict['flags_rigidbody'] = self.flags_rigidbody
+        self.addedMass.calculateResidual(argDict)
         # sum of residual should be zero
         # but it is sometimes not exactly zero with certain meshes in parallel
         # hack
@@ -721,7 +726,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.Aij[k,j,self.added_mass_i])
         for i,flag in enumerate(self.flags_rigidbody):
             if flag==1:
-                numpy.set_printoptions(precision=2, linewidth=160)
+                np.set_printoptions(precision=2, linewidth=160)
                 logEvent("Added Mass Tensor for rigid body i" + repr(i))
                 logEvent("Aij = \n"+str(self.Aij[i]))
         for dofN, g in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.items()):
@@ -757,7 +762,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].dof,
             self.coefficients.q_rho,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            jacobian,
+            jacobian.getCSRrepresentation()[2],
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
@@ -765,7 +770,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(0, 0)])
         for dofN in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys()):
             global_dofN = self.offset[0] + self.stride[0] * dofN
-            self.nzval[numpy.where(self.colind == global_dofN)] = 0.0  # column
+            self.nzval[np.where(self.colind == global_dofN)] = 0.0  # column
             self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN + 1]] = 0.0  # row
             zeroRow = True
             for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):  # row

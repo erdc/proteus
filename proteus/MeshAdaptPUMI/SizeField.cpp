@@ -77,7 +77,7 @@ int MeshAdaptPUMIDrvr::setSphereSizeField()
     apf::setScalar(size_iso,ent,0,sizeDesired);
   }
   m->end(it);
-  gradeMesh();
+  gradeMesh(1.5);
 }
 
 
@@ -85,6 +85,9 @@ int MeshAdaptPUMIDrvr::calculateSizeField(double L_band)
 //Implementation of banded interface, edge intersection algorithm
 //If mesh edge intersects the 0 level-set, then the adjacent edges need to be refined 
 {
+  if(m->findField("interfaceBand"))
+    apf::destroyField(m->findField("interfaceBand"));
+
   apf::Field* interfaceBand = apf::createLagrangeField(m, "interfaceBand", apf::SCALAR, 1);
   apf::Field *phif = m->findField("phi");
   assert(phif);
@@ -519,6 +522,9 @@ void MeshAdaptPUMIDrvr::predictiveInterfacePropagation()
 void MeshAdaptPUMIDrvr::isotropicIntersect()
 {
   freeField(size_iso);
+  if(m->findField("proteus_size"))
+    apf::destroyField(m->findField("proteus_size"));
+
   size_iso = apf::createFieldOn(m, "proteus_size", apf::SCALAR);
 
   apf::MeshEntity *vert;
@@ -527,7 +533,7 @@ void MeshAdaptPUMIDrvr::isotropicIntersect()
   apf::Field *field = sizeFieldList.front();
   apf::copyData(size_iso,field);
   sizeFieldList.pop();
-  apf::destroyField(field);
+  //apf::destroyField(field);
   while(!sizeFieldList.empty())
   {
     field = sizeFieldList.front();
@@ -539,9 +545,12 @@ void MeshAdaptPUMIDrvr::isotropicIntersect()
       apf::setScalar(size_iso,vert,0,minValue);
     } 
     sizeFieldList.pop();
-    apf::destroyField(field);
+    //apf::destroyField(field);
   }
-  gradeMesh();
+  if(nAdapt < 2) //if first few adapts, need to make sure that gradation is low to allow interface to develop properly
+    gradeMesh(1.1);
+  else
+    gradeMesh(gradingFactor);
 }
 
 //taken from Dan's superconvergent patch recovery code
@@ -566,7 +575,7 @@ void MeshAdaptPUMIDrvr::averageToEntity(apf::Field *ef, apf::Field *vf,
   return;
 }
 
-void minToEntity(apf::Field* ef, apf::Field* vf,
+void MeshAdaptPUMIDrvr::minToEntity(apf::Field* ef, apf::Field* vf,
     apf::MeshEntity* ent)
 {
   apf::Mesh* m = apf::getMesh(ef);
@@ -582,6 +591,7 @@ void minToEntity(apf::Field* ef, apf::Field* vf,
   apf::setScalar(vf, ent, 0, s);
   return;
 }
+
 
 void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field *ef, apf::Field *vf,
                                               apf::MeshEntity *ent)
@@ -1204,9 +1214,9 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //Initialize fields and needed types/variables
   apf::Field* errField;
   //apf::Mesh* m;
-  if(size_field_config=="ERM")
+  if(hasERM)
     errField = m->findField("ErrorRegion");
-  else if(size_field_config=="VMS" || size_field_config=="combined")
+  else if(hasVMS)
     errField = m->findField("VMSH1");
   assert(errField); 
   //apf::Mesh *m = apf::getMesh(vmsErrH1);
@@ -1216,6 +1226,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::MeshElement *element;
   apf::MeshEntity *reg;
   //size_iso = apf::createLagrangeField(m, "proteus_size", apf::SCALAR, 1);
+  if(m->findField("errorSize"))
+    apf::destroyField(m->findField("errorSize"));
   apf::Field *errorSize = apf::createLagrangeField(m, "errorSize", apf::SCALAR, 1);
 
   if (adapt_type_config == "anisotropic"){
@@ -1266,10 +1278,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     element = apf::createMeshElement(m, reg);
 
     if (m->getDimension() == 2)
-      h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
+      //h_old = sqrt(apf::measure(element) * 4 / sqrt(3));
+      h_old = apf::computeLargestHeightInTri(m,reg);
     else
       //h_old = pow(apf::measure(element) * 6 * sqrt(2), 1.0 / 3.0); //edge of a regular tet
-      h_old = apf::computeShortestHeightInTet(m,reg);
+      h_old = apf::computeLargestHeightInTet(m,reg);
     //err_curr = apf::getScalar(vmsErrH1, reg, 0);
     err_curr = apf::getScalar(errField, reg, 0);
     //err_curr = err_vect[0];
@@ -1285,7 +1298,13 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       else
         h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+3.0)); //coarsening
     else //isotropic
-      h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+    {
+      if(target_error/err_curr <= 1)
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+      else
+        h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd));
+        //h_new = h_old * pow((target_error / err_curr),2.0/(2.0*(1.0)+nsd+1.0)); //extra 1.0 to slow down coarsening
+    }
 
     apf::setScalar(errorSize_reg, reg, 0, h_new);
     apf::destroyMeshElement(element);
@@ -1293,15 +1312,43 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   m->end(it);
 
   //Transfer size field from elements to vertices through averaging
+  PCU_Comm_Begin();
   it = m->begin(0);
   while ((v = m->iterate(it)))
   {
     //averageToEntity(errorSize_reg, errorSize, v);
     //volumeAverageToEntity(errorSize_reg, errorSize, v);
-    errorAverageToEntity(errorSize_reg, errorSize,errField, v);
-    //minToEntity(errorSize_reg, errorSize, v);
+    //errorAverageToEntity(errorSize_reg, errorSize,errField, v);
+    minToEntity(errorSize_reg, errorSize, v);
+    if(!m->isOwned(v))
+    {
+        apf::Copies remotes;
+        m->getRemotes(v,remotes);
+        int owningPart=m->getOwner(v);
+        PCU_COMM_PACK(owningPart, remotes[owningPart]);
+        double currentSize = apf::getScalar(errorSize,v,0);
+        PCU_COMM_PACK(owningPart,currentSize);
+    }
+
   }
   m->end(it);
+  PCU_Comm_Send();
+  while(PCU_Comm_Receive())
+  {
+    apf::MeshEntity* receivedEnt;
+    double receivedSize;
+    PCU_COMM_UNPACK(receivedEnt);
+    PCU_COMM_UNPACK(receivedSize);
+
+    double currentSize = apf::getScalar(errorSize,receivedEnt,0);
+
+    if(receivedSize<currentSize)
+    {
+        apf::setScalar(errorSize,receivedEnt,0,receivedSize);
+    }
+
+  }
+
 
 
   //Get the anisotropic size frame
@@ -1621,7 +1668,7 @@ int serialGradation(apf::Mesh* m, std::queue<apf::MeshEntity*> &markedEdges,doub
   return needsParallel;
 }
 
-int MeshAdaptPUMIDrvr::gradeMesh()
+int MeshAdaptPUMIDrvr::gradeMesh(double gradationFactor)
 //Function to grade isotropic mesh through comparison of edge vertex size ratios
 //This implementation accounts for parallel meshes as well
 //First do serial gradation. 

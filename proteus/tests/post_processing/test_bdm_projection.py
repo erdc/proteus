@@ -57,7 +57,7 @@ class TestBDM2Reference1(object):
 
     def _setRelativePath(self):
         self.scriptdir = os.path.dirname(__file__)
-    
+
     def test_BDM2_reference_triangle(self):
         '''
         Test the construction of a BDM2 projection matrix and rhs
@@ -65,7 +65,7 @@ class TestBDM2Reference1(object):
         '''
 
         # ******************* TEST PROJECTION MATRIX CONSTRUCTION ************
-        
+
         # need to override factored BDM projection matrix
         self.bdm2_obj.BDMprojectionMat_element \
                          = np.zeros_like(self.bdm2_obj.BDMprojectionMat_element)
@@ -75,21 +75,21 @@ class TestBDM2Reference1(object):
                                     self.bdm2_obj.vt.ebq[('w*dS_u',0)],
                                     self.bdm2_obj.vt.ebq['n'],
                                     self.bdm2_obj.vt.ebq[('v',0)],
-                                    self.bdm2_obj.q[('w',0)],     
-                                    self.bdm2_obj.weightedInteriorTestGradients,  
-                                    self.bdm2_obj.weightedInteriorDivFreeElement, 
+                                    self.bdm2_obj.q[('w',0)],
+                                    self.bdm2_obj.weightedInteriorTestGradients,
+                                    self.bdm2_obj.weightedInteriorDivFreeElement,
                                     self.bdm2_obj.piola_trial_function,
                                     self.bdm2_obj.edgeFlags,
-                                    self.bdm2_obj.BDMprojectionMat_element)        
+                                    self.bdm2_obj.BDMprojectionMat_element)
 
         #    The following .savetxt command  generates the comparison output.  Be sure
-        #    this is actually generating what you want before you uncomment!  The 
+        #    this is actually generating what you want before you uncomment!  The
         #    currently stored file should be correct.
 
         #    np.savetxt('bdm2_ref_proj_mat.txt', bdm2_obj.BDMprojectionMat_element[0])
         rel_path = "comparison_files/bdm2_ref_proj_mat.txt"
         comparison_matrix = np.loadtxt(os.path.join(self.scriptdir,rel_path), dtype = float)
-        assert np.allclose(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element)
+        np.testing.assert_almost_equal(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element[0],decimal=6)
 
         # ******************** TEST RHS CONSTRUCTION *************************
 
@@ -113,7 +113,7 @@ class TestBDM2Reference1(object):
                                    -1.66666667e-01, -1.66666667e-01, -6.66666667e-01,
                                    -1.66666667e-01, -1.66666667e-01, -6.66666667e-01,
                                    -1.00000000e+00,  5.00000000e-01,  4.33680869e-19])
-        assert np.allclose(comparison_rhs,test_rhs)
+        np.testing.assert_almost_equal(comparison_rhs,test_rhs[0],decimal=6)
 
     def test_BDM2_reference_triangle_full_in_space(self):
         rel_path_1 = "comparison_files/bdm_bdy_func_values.npy"
@@ -126,14 +126,14 @@ class TestBDM2Reference1(object):
 
         self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
 
-        assert np.allclose(self.bdm2_obj.q[('velocity',0)],bdm_values)
+        np.testing.assert_almost_equal(self.bdm2_obj.q[('velocity',0)],bdm_values,decimal=6)
 
     def test_BDM2_reference_triangle_full_not_in_space(self):
         rel_path_1 = "comparison_files/bdm_bdy_func_values_trig.npy"
         rel_path_2 = "comparison_files/bdm_func_values_trig.npy"
         bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
         bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
-        
+
         self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values
         self.bdm2_obj.q[('velocity',0)] = bdm_values
 
@@ -141,7 +141,7 @@ class TestBDM2Reference1(object):
 
         rel_path_3 = "comparison_files/trig_velocity_rep.npy"
         comparison_vec = np.load(os.path.join(self.scriptdir,rel_path_3))
-        assert np.allclose(self.bdm2_obj.q[('velocity',0)],comparison_vec)
+        np.testing.assert_almost_equal(self.bdm2_obj.q[('velocity',0)],comparison_vec,decimal=6)
 
 
 if __name__ == '__main__':

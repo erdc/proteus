@@ -74,7 +74,6 @@ class ParametersHolder:
         logEvent('----------')
         n_base = Numerics_base()
         p_base = Physics_base()
-
         for (idx,model) in enumerate(self.model_list):
             model.initializePhysics()
             model.initializeNumerics()
@@ -84,7 +83,7 @@ class ParametersHolder:
             logEvent('{name} PHYSICS'.format(name=model.name))
             logEvent('-----')
             logEvent('COEFFICIENTS OPTIONS')
-            for key, value in sorted(model.p.CoefficientsOptions.__dict__.items()):
+            for key, value in sorted(model.p.coefficients.__dict__.items()):
                 if key[0] != '_':  # do not print hidden attributes
                     logEvent('{key}: {value}'. format(key=key, value=value))
             logEvent('END OF COEFFICIENTS OPTIONS')
@@ -157,7 +156,7 @@ class ParametersModelBase(FreezableClass):
         self.OptDB = PETSc.Options()
         self.p = Physics_base()
         self.p.name = name
-        self.p.CoefficientsOptions = FreezableClass()
+        # self.p.CoefficientsOptions = FreezableClass()
         self.p._freeze()
         self.n = Numerics_base()
         self.n.name = name
@@ -265,40 +264,14 @@ class ParametersModelRANS2P(ParametersModelBase):
     def __init__(self):
         super(ParametersModelRANS2P, self).__init__(name='rans2p')
         self.timeDiscretization = 'be'
-        copts = self.p.CoefficientsOptions
-        copts.NONCONSERVATIVE_FORM = 1.
-        copts.useMetrics = 1.
-        copts.epsFact_viscosity = epsFact
-        copts.epsFact_density = epsFact
-        copts.forceStrongDirichlet = False
-        copts.weak_bc_penalty_constant = 100.0
-        copts.useRBLES = 0
-        copts.useVF = 0.0
-        copts.timeOrder = 1
-        copts.stokes = False
-        copts.eb_adjoint_sigma = 1.
-        copts.Closure_0_model = None
-        copts.Closure_1_model = None
-        copts.nParticles = 0
-        copts.particle_epsFact = 3.0
-        copts.particle_alpha = 1000.0
-        copts.particle_beta = 1000.0
-        copts.particle_penalty_constant = 1000.0
-        copts.particle_nitsche = 1.0
-        copts.particle_sdfList = None
-        copts.particle_velocityList = None
-        copts.use_ball_as_particle = 0
-        copts.ball_center = None
-        copts.ball_radius = None
-        copts.ball_velocity = None
-        copts.ball_angular_velocity = None
-        copts.ball_center_acceleration = None
-        copts.ball_angular_acceleration = None
-        copts.ball_density = None
-        copts.MOMENTUM_SGE = 1.
-        copts.PRESSURE_SGE = 1.
-        copts.VELOCITY_SGE = 1.
-        copts._freeze()
+        self.p.coefficients = RANS2P.Coefficients(
+            initialize=False,
+            useMetrics=1.,
+            epsFact=epsFact,
+            eb_penalty_constant=100.,
+            particle_epsFact = 3.,
+            useExact=Problem.useExact
+        )
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
         scopts.lag = True
@@ -308,6 +281,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         seopts._freeze()
         # LEVEL MODEL
         self.p.LevelModelType = RANS2P.LevelModel
+        self.n.timeOrder = 1
         # NON LINEAR SOLVER
         self.n.multilevelNonlinearSolver = NonlinearSolvers.Newton
         # NUMERICAL FLUX
@@ -318,10 +292,11 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.n.linear_solver_options_prefix = 'rans2p_'
         self.n.linearSolverConvergenceTest = 'r-true'
         self.n.linearSmoother = LinearSolvers.SimpleNavierStokes3D
+        self.n.conservativeFlux= {0:'pwl-bdm-opt'}
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
-        self.n.maxNonlinearIts = 50
+        self.n.maxNonlinearIts = 100
         self.n.maxLineSearches = 0
         self._freeze()
 
@@ -350,59 +325,36 @@ class ParametersModelRANS2P(ParametersModelBase):
             dragBetaTypes = None
             epsFact_solid = None
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = RANS2P.Coefficients(
-            NONCONSERVATIVE_FORM=copts.NONCONSERVATIVE_FORM,
-            epsFact=copts.epsFact_viscosity,
-            sigma=pparams.surf_tension_coeff,
-            rho_0=pparams.densityA,
-            nu_0=pparams.kinematicViscosityA,
-            rho_1=pparams.densityB,
-            nu_1=pparams.kinematicViscosityB,
-            g=pparams.gravity,
-            nd=nd,
-            ME_model=ME_model,
-            CLSVOF_model=CLSVOF_model,
-            VF_model=VF_model,
-            LS_model=LS_model,
-            Closure_0_model=K_model,
-            Closure_1_model=DISS_model,
-            epsFact_density=copts.epsFact_density,
-            stokes=copts.stokes,
-            useVF=copts.useVF,
-            useRBLES=copts.useRBLES,
-            useMetrics=copts.useMetrics,
-            eb_adjoint_sigma=copts.eb_adjoint_sigma,
-            eb_penalty_constant=copts.weak_bc_penalty_constant,
-            forceStrongDirichlet=copts.forceStrongDirichlet,
-            turbulenceClosureModel=pparams.useRANS,
-            movingDomain=self.p.movingDomain,
-            porosityTypes=porosityTypes,
-            dragAlphaTypes=dragAlphaTypes,
-            dragBetaTypes=dragBetaTypes,
-            epsFact_solid=epsFact_solid,
-            barycenters=domain.barycenters,
-            nParticles=copts.nParticles,
-            particle_epsFact=copts.particle_epsFact,
-            particle_alpha=copts.particle_alpha,
-            particle_beta=copts.particle_beta,
-            particle_penalty_constant=copts.particle_penalty_constant,
-            particle_nitsche=copts.particle_nitsche,
-            particle_sdfList=copts.particle_sdfList,
-            particle_velocityList=copts.particle_velocityList,
-            use_ball_as_particle=copts.use_ball_as_particle,
-            ball_center=copts.ball_center,
-            ball_radius=copts.ball_radius,
-            ball_velocity=copts.ball_velocity,
-            ball_angular_velocity=copts.ball_angular_velocity,
-            ball_center_acceleration=copts.ball_center_acceleration,
-            ball_angular_acceleration=copts.ball_angular_acceleration,
-            ball_density=copts.ball_density,
-            MOMENTUM_SGE=copts.MOMENTUM_SGE,
-            PRESSURE_SGE=copts.PRESSURE_SGE,
-            VELOCITY_SGE=copts.VELOCITY_SGE,
-        )
-         
+        coeffs = self.p.coefficients
+        coeffs.movingDomain = self.p.movingDomain
+        coeffs.sigma = pparams.surf_tension_coeff
+        coeffs.rho_0 = pparams.densityA
+        coeffs.rho_1 = pparams.densityB
+        coeffs.nu_0 = pparams.kinematicViscosityA
+        coeffs.nu_1 = pparams.kinematicViscosityB
+        coeffs.g = np.array(pparams.gravity)
+        coeffs.nd = nd
+        coeffs.ME_model = ME_model
+        coeffs.CLSVOF_model = CLSVOF_model
+        coeffs.VF_model = VF_model
+        coeffs.LS_model = LS_model
+        coeffs.Closure_0_model = K_model
+        coeffs.Closure_1_model = DISS_model
+        coeffs.turbulenceClosureModel = pparams.useRANS
+        coeffs.porosityTypes = porosityTypes
+        coeffs.dragAlphaTypes = dragAlphaTypes
+        coeffs.dragBetaTypes = dragBetaTypes
+        if coeffs.barycenters is None:
+            coeffs.barycenters = domain.barycenters
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['pressure'],
+                                    1: IC['vel_u'],
+                                    2: IC['vel_v']}
+        if nd == 3:
+            self.p.initialConditions[3] = IC['vel_w']
+
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -439,12 +391,11 @@ class ParametersModelRANS2P(ParametersModelBase):
         # TIME
         if self.timeDiscretization=='vbdf':
             self.n.timeIntegration = TimeIntegration.VBDF
-            self.n.timeOrder = self.p.CoefficientsOptions.timeOrder
         elif self.timeDiscretization=='be': #backward euler
             self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
         else:
             raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(scheme=self.timeDiscretization))
- 
+
         self.n.stepController = StepControl.Min_dt_cfl_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
@@ -537,43 +488,20 @@ class ParametersModelRANS2P(ParametersModelBase):
 class ParametersModelRANS3PF(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelRANS3PF, self).__init__(name='rans3p')
-        self.timeOrder = 2
-        self.timeDiscretization = 'vbdf'
-        copts = self.p.CoefficientsOptions
-        copts.useMetrics = 1.
-        copts.epsFact_viscosity = epsFact
-        copts.epsFact_density = epsFact
-        copts.forceStrongDirichlet = False
-        copts.ns_sed_forceStrongDirichlet = False
-        copts.weak_bc_penalty_constant = 100.0
-        copts.useRBLES = 0
-        copts.useVF = 0
-        copts.PSTAB = 0
-        copts.ARTIFICIAL_VISCOSITY = 3
-        copts.INT_BY_PARTS_PRESSURE = 1
-        copts.cE = 1.
-        copts.cMax = 1.
-        copts.forceTerms = None
-        copts.stokes = False
-        copts.eb_adjoint_sigma = 1.
-        copts.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY = 0
-        copts.USE_SUPG = False
-        copts.nParticles = 0
-        copts.particle_epsFact = 3.0
-        copts.particle_alpha = 1000.0
-        copts.particle_beta = 1000.0
-        copts.particle_penalty_constant = 1000.0
-        copts.particle_nitsche = 1.0
-        copts.particle_sdfList = None
-        copts.use_ball_as_particle = 0
-        copts.ball_center = None
-        copts.ball_radius = None
-        copts.ball_velocity = None
-        copts.ball_angular_velocity = None
-        copts.particles = None
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelRANS3PF, self).__init__(name='rans3p', index=None,
+                                                    Problem=Problem)
+        self.p.coefficients = RANS3PF.Coefficients(
+            initialize=False,
+            useMetrics=1.,
+            epsFact_density=epsFact,
+            particle_epsFact=3.,
+            eb_penalty_constant = 100.0,
+            ARTIFICIAL_VISCOSITY=3,
+            INT_BY_PARTS_PRESSURE=1,
+            USE_SUPG=0,
+        )
+
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
         scopts.lag = True
@@ -583,6 +511,8 @@ class ParametersModelRANS3PF(ParametersModelBase):
         seopts._freeze()
         # LEVEL MODEL
         self.p.LevelModelType = RANS3PF.LevelModel
+        # TIME DISCRETIZATION
+        self.timeDiscretization = 'vbdf'
         # NUMERICAL FLUX
         self.n.numericalFluxType = RANS3PF.NumericalFlux
         # LINEAR ALGEBRA
@@ -610,6 +540,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
+
         idxDict = self._Problem.modelIdxDict
         nModelId = self.fetchIndex(idxDict, 'ncls')
 
@@ -617,6 +548,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         LS_model=self.fetchIndex(idxDict,'ncls')
         RD_model=self.fetchIndex(idxDict,'rdls')
         MCORR_model=self.fetchIndex(idxDict,'mcorr')
+
         SED_model=None
         VOS_model=None
         CLSVOF_model = self.fetchIndex(idxDict,'clsvof')
@@ -627,59 +559,35 @@ class ParametersModelRANS3PF(ParametersModelBase):
         DISS_model = self.fetchIndex(idxDict,'dissipation')
 
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        if copts.forceTerms is not None:
-            self.p.forceTerms = copts.forceTerms
-            copts.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY = 1
-        self.p.coefficients = RANS3PF.Coefficients(
-            epsFact=copts.epsFact_viscosity,
-            sigma=pparams.surf_tension_coeff,
-            rho_0=pparams.densityA,
-            nu_0=pparams.kinematicViscosityA,
-            rho_1=pparams.densityB,
-            nu_1=pparams.kinematicViscosityB,
-            g=pparams.gravity,
-            nd=nd,
-            ME_model=V_model,
-            PRESSURE_model=PRESSURE_model,
-            SED_model=SED_model,
-            CLSVOF_model=CLSVOF_model,
-            VOF_model=VOF_model,
-            VOS_model=VOS_model,
-            LS_model=LS_model,
-            Closure_0_model=K_model,
-            Closure_1_model=DISS_model,
-            epsFact_density=copts.epsFact_density,
-            stokes=copts.stokes,
-            useVF=copts.useVF,
-            useRBLES=copts.useRBLES,
-            useMetrics=copts.useMetrics,
-            eb_adjoint_sigma=copts.eb_adjoint_sigma,
-            eb_penalty_constant=copts.weak_bc_penalty_constant,
-            forceStrongDirichlet=copts.forceStrongDirichlet,
-            turbulenceClosureModel=pparams.useRANS,
-            movingDomain=self.p.movingDomain,
-            PSTAB=copts.PSTAB,
-            USE_SUPG=copts.USE_SUPG,
-            ARTIFICIAL_VISCOSITY=copts.ARTIFICIAL_VISCOSITY,
-            INT_BY_PARTS_PRESSURE=copts.INT_BY_PARTS_PRESSURE,
-            cE=copts.cE,
-            cMax=copts.cMax,
-            MULTIPLY_EXTERNAL_FORCE_BY_DENSITY=copts.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY,
-            nParticles=copts.nParticles,
-            particle_epsFact=copts.particle_epsFact,
-            particle_alpha=copts.particle_alpha,
-            particle_beta=copts.particle_beta,
-            particle_penalty_constant=copts.particle_penalty_constant,
-            particle_nitsche=copts.particle_nitsche,
-            particle_sdfList=copts.particle_sdfList,
-            use_ball_as_particle=copts.use_ball_as_particle,
-            ball_center=copts.ball_center,
-            ball_radius=copts.ball_radius,
-            ball_velocity=copts.ball_velocity,
-            ball_angular_velocity=copts.ball_angular_velocity,
-            particles=copts.particles,
-        )
+        coeffs = self.p.coefficients
+        if coeffs.forceTerms is not None:
+            self.p.forceTerms = coeffs.forceTerms
+            coeffs.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY = 1
+        coeffs.nd = nd
+        coeffs.sigma = pparams.surf_tension_coeff
+        coeffs.rho_0 = pparams.densityA
+        coeffs.rho_1 = pparams.densityB
+        coeffs.nu_0 = pparams.kinematicViscosityA
+        coeffs.nu_1 = pparams.kinematicViscosityB
+        coeffs.g = np.array(pparams.gravity)
+        coeffs.nd = nd
+        coeffs.ME_model = V_model
+        coeffs.VOF_model = VOF_model
+        coeffs.CLSVOF_model = CLSVOF_model
+        coeffs.LS_model = LS_model
+        coeffs.SED_model = SED_model
+        coeffs.VOS_model = VOS_model
+        coeffs.PRESSURE_model = PRESSURE_model
+        coeffs.Closure_0_model = K_model
+        coeffs.Closure_1_model = DISS_model
+        coeffs.movingDomain = self.p.movingDomain
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['vel_u'],
+                                    1: IC['vel_v']}
+        if nd == 3:
+            self.p.initialConditions[2] = IC['vel_w']
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
@@ -744,11 +652,12 @@ class ParametersModelRANS3PF(ParametersModelBase):
 class ParametersModelPressure(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelPressure, self).__init__(name='pressure')
-        copts = self.p.CoefficientsOptions
-        copts.useRotationalForm = False
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelPressure, self).__init__(name='pressure', index=None,
+                                                      Problem=Problem)
+        self.p.coefficients = Pres.Coefficients(
+            initialize=False,
+        )
         # LEVEL MODEL
         self.p.LevelModelType = Pres.LevelModel
         # NON LINEAR SOLVER
@@ -776,11 +685,15 @@ class ParametersModelPressure(ParametersModelBase):
         V_model = self.fetch(idxDict,'rans3p')
         PINC_model = self.fetch(idxDict,'pressureIncrement')
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = Pres.Coefficients(modelIndex=PRESSURE_model,
-                                                fluidModelIndex=V_model,
-                                                pressureIncrementModelIndex=PINC_model,
-                                                useRotationalForm=copts.useRotationalForm)
+        coeffs = self.p.coefficients
+        coeffs.modelIndex = PRESSURE_model
+        coeffs.fluidModelIndex = V_model
+        coeffs.pressureIncrementModelIndex = PINC_model
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['pressure']}
+
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -808,8 +721,13 @@ class ParametersModelPressure(ParametersModelBase):
 class ParametersModelPressureInitial(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelPressureInitial, self).__init__(name='pressureInitial')
+    def __init__(self, Problem):
+        super(ParametersModelPressureInitial, self).__init__(name='pressureInitial', index=None,
+                                                             Problem=Problem)
+        self.p.coefficients = PresInit.Coefficients(
+            initialize=False,
+        )
+
         # NUMERICAL FLUX
         self.n.numericalFluxType = NumericalFlux.ConstantAdvection_exterior
         # NON LINEAR SOLVER
@@ -836,10 +754,16 @@ class ParametersModelPressureInitial(ParametersModelBase):
         V_model = self.fetch(idxDict,'rans3p')
         PINIT_model = self.fetch(idxDict,'pressureInitial')
         # COEFFICIENTS
-        self.p.coefficients=PresInit.Coefficients(nd=nd,
-                                                  modelIndex=PINIT_model,
-                                                  fluidModelIndex=V_model,
-                                                  pressureModelIndex=PRESSURE_model)
+        coeffs = self.p.coefficients
+        coeffs.nd = nd
+        coeffs.modelIndex = PINIT_model
+        coeffs.fluidModelIndex = V_model
+        coeffs.pressureModelIndex = PRESSURE_model
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['pressure']}
+
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -874,8 +798,13 @@ class ParametersModelPressureInitial(ParametersModelBase):
 class ParametersModelPressureIncrement(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement')
+    def __init__(self, Problem):
+        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement', index=None,
+                                                               Problem=Problem)
+        self.p.coefficients = PresInc.Coefficients(
+            initialize=False,
+        )
+
         # LEVEL MODEL
         self.p.LevelModelType = PresInc.LevelModel
         # NUMERICAL FLUX
@@ -905,12 +834,17 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         V_model = self.fetch(idxDict,'rans3p')
         PINC_model = self.fetch(idxDict,'pressureIncrement')
         # COEFFICIENTS
-        self.p.coefficients = PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*pparams.densityB,
-                                                   rho_s_min = (1.0-1.0e-8)*pparams.densityA,
-                                                   nd = nd,
-                                                   modelIndex=PINC_model,
-                                                   fluidModelIndex=V_model,
-                                                   fixNullSpace=False)
+        coeffs = self.p.coefficients
+        coeffs.rho_f_min = (1.0-1.0e-8)*pparams.densityB
+        coeffs.rho_s_min = (1.0-1.0e-8)*pparams.densityA
+        coeffs.nd = nd
+        coeffs.modelIndex = PINC_model
+        coeffs.fluidModelIndex = V_model
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['pressure_increment']}
+
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -948,15 +882,15 @@ class ParametersModelKappa(ParametersModelBase):
     def __init__(self):
         super(ParametersModelKappa, self).__init__(name='kappa')
 
-        self.timeOrder = 2
+        self.timeOrder = 1
         self.timeDiscretization = 'be'
-        copts = self.p.CoefficientsOptions
-        copts.closure=None
-        copts.useMetrics = 1.
-        copts.epsFact = epsFact
-        copts.sc_uref = sc_uref
-        copts.sc_beta = sc_beta
-        copts._freeze()
+        self.p.coefficients = Kappa.Coefficients(
+            initialize=False,
+            useMetrics=1.,
+            epsFact=epsFact,
+            sc_uref=sc_uref,
+            sc_beta=sc_beta,
+        )
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
         scopts.lag = True
@@ -1011,29 +945,28 @@ class ParametersModelKappa(ParametersModelBase):
         K_model = self.fetch(idxDict,'kappa')
         DISS_model = self.fetch(idxDict,'dissipation')
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = Kappa.Coefficients(VOS_model=None, # Solid model
-                                                 V_model=V_model, # Fluid model
-                                                 LS_model=LS_model,
-                                                 RD_model=RD_model,
-                                                 dissipation_model=K_model,
-                                                 ME_model=DISS_model,
-                                                 SED_model=None,
-                                                 dissipation_model_flag=pparams.useRANS,  # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
-                                                 c_mu=pparams.cm_u,
-                                                 sigma_k=pparams.sigma_k,  # Prandtl Number
-                                                 rho_0=pparams.densityA,
-                                                 nu_0=pparams.kinematicViscosityA,
-                                                 rho_1=pparams.densityB,
-                                                 nu_1=pparams.kinematicViscosityB,
-                                                 g=pparams.gravity,
-                                                 nd=nd,
-                                                 epsFact=copts.epsFact,
-                                                 useMetrics=copts.useMetrics,
-                                                 sc_uref=copts.sc_uref,
-                                                 sc_beta=copts.sc_beta,
-                                                 default_dissipation=default_dissipation_turbulence,
-                                                 closure=copts.closure)
+        coeffs = self.p.coefficients
+        coeffs.VOS_model = VOS_model
+        coeffs.flowModelIndex = V_model
+        coeffs.LS_modelIndex = LS_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.dissipation_modelIndex = DISS_model
+        coeffs.modelIndex = K_model
+        coeffs.SED_modelIndex = SED_model
+        coeffs.dissipation_model_flag = pparams.useRANS
+        coeffs.c_mu = pparams.c_mu
+        coeffs.sigma_k = pparams.sigma_k
+        coeffs.rho_0 = pparams.densityA
+        coeffs.nu_0 = pparams.kinematicViscosityA
+        coeffs.rho_1 = pparams.densityB
+        coeffs.nu_1 = pparams.kinematicViscosityB
+        coeffs.g = np.array(pparams.gravity)
+        coeffs.nd = nd
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['k']}
+
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1044,23 +977,18 @@ class ParametersModelKappa(ParametersModelBase):
             self.p.diffusiveFluxBoundaryConditions = {0: {0: boundaryConditions['k_DFBC']}}
         else:
             self.p.dirichletConditions = {0: lambda x, flag: domain.bc[flag].k_dirichlet.init_cython()}
-            
+
             self.p.advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].k_advective.init_cython()}
-            
+
             self.p.diffusiveFluxBoundaryConditions = {0: {0:lambda x, flag: domain.bc[flag].k_diffusive.init_cython()}}
-            
+
 
     def _initializeNumerics(self):
         nd = self._Problem.domain.nd
         # TIME
-        if self.timeDiscretization=='vbdf':
-            self.n.timeIntegration = TimeIntegration.VBDF
-            self.n.timeOrder = 2
-        elif self.timeDiscretization: #backward euler
-            self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
-        else:
-            raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(scheme=self.timeDiscretization))
-        self.n.stepController = StepControl.Min_dt_cfl_controller
+        self.n.timeOrder = 1
+        self.n.timeIntegration = TimeIntegration.VBDF#BackwardEuler
+        self.n.stepController = StepControl.Min_dt_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
@@ -1088,15 +1016,13 @@ class ParametersModelDissipation(ParametersModelBase):
     def __init__(self):
         super(ParametersModelDissipation, self).__init__(name='dissipation')
 
-        self.timeOrder = 2
-        self.timeDiscretization = 'be'
-        copts = self.p.CoefficientsOptions
-        copts.closure = None
-        copts.useMetrics = 1.
-        copts.epsFact = epsFact
-        copts.sc_uref = sc_uref
-        copts.sc_beta = sc_beta
-        copts._freeze()
+        self.p.coefficients = Dissipation.Coefficients(
+            initialize=False,
+            useMetrics=1.,
+            epsFact=epsFact,
+            sc_uref=sc_uref,
+            sc_beta=sc_beta,
+        )
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
         scopts.lag = True
@@ -1107,6 +1033,9 @@ class ParametersModelDissipation(ParametersModelBase):
 
         # LEVEL MODEL
         self.p.LevelModelType = Dissipation.LevelModel
+        # TIME DISCRETIZATION
+        # self.n.timeOrder = 2
+        # self.n.timeDiscretization = 'be'
         # NUMERICAL FLUX
         self.n.numericalFluxType = Dissipation.NumericalFlux
         self.n.conservativeFlux = None
@@ -1151,33 +1080,32 @@ class ParametersModelDissipation(ParametersModelBase):
         K_model = self.fetch(idxDict,'kappa')
         DISS_model = self.fetch(idxDict,'dissipation')
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = Dissipation.Coefficients(VOS_model=None,  # Solid model
-                                                 V_model=V_model,  # Fluid model
-                                                 LS_model=LS_model,
-                                                 RD_model=RD_model,
-                                                 kappa_model=K_model,
-                                                 ME_model=DISS_model,
-                                                 SED_model=None,
-                                                 dissipation_model_flag=pparams.useRANS,
-                                                 # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
-                                                 c_mu=pparams.cm_u,
-                                                 c_1=pparams.c_1,
-                                                 c_2=pparams.c_2,
-                                                 c_e=pparams.c_e,
-                                                 sigma_e=pparams.sigma_e,  # Prandtl Number
-                                                 rho_0=pparams.densityA,
-                                                 nu_0=pparams.kinematicViscosityA,
-                                                 rho_1=pparams.densityB,
-                                                 nu_1=pparams.kinematicViscosityB,
-                                                 g=pparams.gravity,
-                                                 nd=nd,
-                                                 epsFact=copts.epsFact,
-                                                 useMetrics=copts.useMetrics,
-                                                 sc_uref=copts.sc_uref,
-                                                 sc_beta=copts.sc_beta,
-                                                 default_kappa=default_kappa_turbulence,
-                                                 closure=copts.closure)
+        coeffs = self.p.coefficients
+        coeffs.VOS_modelIndex = VOS_model
+        coeffs.flowModelIndex = V_model
+        coeffs.LS_modelIndex = LS_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.kappa_modelIndex = K_model
+        coeffs.modelIndex = DISS_model
+        coeffs.SED_modelIndex = SED_model
+        coeffs.c_mu = pparams.c_mu
+        coeffs.c_1 = pparams.c_1
+        coeffs.c_2 = pparams.c_2
+        coeffs.c_e = pparams.c_e
+        coeffs.sigma_e = pparams.sigma_e
+        coeffs.rho_0 = pparams.densityA
+        coeffs.nu_0 = pparams.kinematicViscosityA
+        coeffs.rho_1 = pparams.densityB
+        coeffs.nu_1 = pparams.kinematicViscosityB
+        coeffs.g = np.array(pparams.gravity)
+        coeffs.nd = nd
+        # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
+        coeffs.dissipation_model_flag = pparams.useRANS
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['dissipation']}
+
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1196,15 +1124,9 @@ class ParametersModelDissipation(ParametersModelBase):
     def _initializeNumerics(self):
         nd = self._Problem.domain.nd
         # TIME
-        if self.timeDiscretization == 'vbdf':
-            self.n.timeIntegration = TimeIntegration.VBDF
-            self.n.timeOrder = 2
-        elif self.timeDiscretization:  # backward euler
-            self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
-        else:
-            raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(
-                scheme=self.timeDiscretization))
-        self.n.stepController = StepControl.Min_dt_cfl_controller
+        self.n.timeOrder = 1
+        self.n.timeIntegration = TimeIntegration.BackwardEuler
+        self.n.stepController = StepControl.Min_dt_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
@@ -1226,20 +1148,19 @@ class ParametersModelDissipation(ParametersModelBase):
 
 
 class ParametersModelCLSVOF(ParametersModelBase):
-    def __init__(self):
-        super(ParametersModelCLSVOF, self).__init__(name='clsvof')
-        copts = self.p.CoefficientsOptions
-        copts.useMetrics = 1.
-        copts.epsFactHeaviside = epsFact
-        copts.epsFactDirac = epsFact
-        copts.epsFactRedist = 0.33
-        copts.lambdaFact = 10.
-        copts.outputQuantDOFs = True
-        copts.computeMetrics = 1
-        copts.computeMetricsForBubble = False
-        copts.eps_tolerance_clsvof = False
-        copts.disc_ICs = False
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelCLSVOF, self).__init__(name='clsvof', index=None,
+                                                    Problem=Problem)
+        self.p.coefficients = CLSVOF.Coefficients(
+            initialize=False,
+            useMetrics=1,
+            epsFactHeaviside=epsFact,
+            epsFactDirac=epsFact,
+            epsFactRedist=0.33,
+            lambdaFact=10.,
+            computeMetrics=1,
+        )
+
         # LEVEL MODEL
         self.p.LevelModelType = CLSVOF.LevelModel
         # NUMERICAL FLUX
@@ -1263,24 +1184,24 @@ class ParametersModelCLSVOF(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
+
         idxDict = self._Problem.modelIdxDict
         CLSVOF_model = self.fetch(idxDict,'clsvof')
         V_model = self.fetch(idxDict,'rans2p')
+
         if V_model is None:
             V_model = self.fetch(idxDict,'rans3p')
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = CLSVOF.Coefficients(V_model=V_model,
-                                                  ME_model=CLSVOF_model,
-                                                  useMetrics=copts.useMetrics,
-                                                  epsFactHeaviside=copts.epsFactHeaviside,
-                                                  epsFactDirac=copts.epsFactDirac,
-                                                  epsFactRedist=copts.epsFactRedist,
-                                                  lambdaFact=copts.lambdaFact,
-                                                  outputQuantDOFs=copts.outputQuantDOFs,
-                                                  computeMetrics=copts.computeMetrics,
-                                                  disc_ICs=copts.disc_ICs)
-        self.p.coefficients.variableNames = ['phi']
+        coeffs = self.p.coefficients
+        coeffs.flowModelIndex = V_model
+        coeffs.modelIndex = CLSVOF_model
+        coeffs.movingDomain = self.p.movingDomain
+        coeffs.variableNames = ['phi']
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['clsvof']}
+
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1304,10 +1225,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            if self.p.CoefficientsOptions.eps_tolerance_clsvof:
-                self.nl_atol_res = 1e-12
-            else:
-                self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -1315,15 +1233,17 @@ class ParametersModelCLSVOF(ParametersModelBase):
 class ParametersModelVOF(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelVOF, self).__init__(name='vof')
-        copts = self.p.CoefficientsOptions
-        copts.useMetrics = True
-        copts.checkMass = True
-        copts.sc_uref = sc_uref
-        copts.sc_beta = sc_beta
-        copts.epsFact = epsFact
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelVOF, self).__init__(name='vof', index=None,
+                                                 Problem=Problem)
+        self.p.coefficients = VOF.Coefficients(
+            initialize=False,
+            useMetrics=1.,
+            epsFact=epsFact,
+            sc_uref=sc_uref,
+            sc_beta=sc_beta,
+        )
+        
         # LEVEL MODEL
         self.p.LevelModelType = VOF.LevelModel
         # TIME INTEGRATION
@@ -1364,16 +1284,16 @@ class ParametersModelVOF(ParametersModelBase):
         RD_model = self.fetchIndex(idxDict,'rdls')
 
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = VOF.Coefficients(V_model=V_model,
-                                               RD_model=RD_model,
-                                               ME_model=ME_model,
-                                               checkMass=copts.checkMass,
-                                               useMetrics=copts.useMetrics,
-                                               epsFact=copts.epsFact,
-                                               sc_uref=copts.sc_uref,
-                                               sc_beta=copts.sc_beta,
-                                               movingDomain=self.p.movingDomain)
+        coeffs = self.p.coefficients
+        coeffs.V_model = V_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.modelIndex = ME_model
+        coeffs.movingDomain = self.p.movingDomain
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['vof']}
+
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -1421,7 +1341,7 @@ class ParametersModelVOF(ParametersModelBase):
             self.OptDB.setValue(prefix+'ksp_gmres_restart', 300)
             self.OptDB.setValue(prefix+'ksp_knoll', 1)
             self.OptDB.setValue(prefix+'ksp_max_it', 2000)
-            
+
 
 class ParametersModelNCLS(ParametersModelBase):
     """
@@ -1429,13 +1349,14 @@ class ParametersModelNCLS(ParametersModelBase):
     def __init__(self):
         super(ParametersModelNCLS, self).__init__(name='ncls')
         # PHYSICS
-        copts = self.p.CoefficientsOptions
-        copts.useMetrics = True
-        copts.checkMass = False
-        copts.sc_uref = sc_uref
-        copts.sc_beta = sc_beta
-        copts.epsFact = epsFact
-        copts._freeze()
+        self.p.coefficients = NCLS.Coefficients(
+            initialize=False,
+            useMetrics=1.,
+            checkMass=False,
+            sc_uref=sc_uref,
+            sc_beta=sc_beta,
+            epsFact=epsFact,
+        )
         # LEVEL MODEL
         self.p.LevelModelType = NCLS.LevelModel
         # TIME INTEGRATION
@@ -1472,25 +1393,25 @@ class ParametersModelNCLS(ParametersModelBase):
         elif ('rans3p' in idxDict):
             V_model = self.fetchIndex(idxDict, 'rans3p')
         else:
-            assert False, 'RANS2P or RANS3PF must be used with LS'
 
+        assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
+        RD_model = mparams.rdls.index
+        coeffs = self.p.coefficients
+        coeffs.flowModelIndex = V_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.modelIndex = ME_model
+        coeffs.movingDomain = self.p.movingDomain
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['ncls']}
 
-        RD_model = self.fetchIndex(idxDict, 'rdls') 
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = NCLS.Coefficients(V_model=V_model,
-                                                RD_model=RD_model,
-                                                ME_model=ME_model,
-                                                checkMass=copts.checkMass,
-                                                useMetrics=copts.useMetrics,
-                                                epsFact=copts.epsFact,
-                                                sc_uref=copts.sc_uref,
-                                                sc_beta=copts.sc_beta,
-                                                movingDomain=self.p.movingDomain)
         # BOUNDARY CONDITIONS
+        BC = self._Problem.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
-                if 'phi_DBC' in BC:
-                    self.p.dirichletConditions = {0: BC['phi_DBC']}
+                if 'ncls_DBC' in BC:
+                    self.p.dirichletConditions = {0: BC['ncls_DBC']}
                 else:
                     self.p.dirichletCondtions = {0: lambda x,t: None}
             else:
@@ -1538,15 +1459,15 @@ class ParametersModelNCLS(ParametersModelBase):
 class ParametersModelRDLS(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelRDLS, self).__init__(name='rdls')
-        copts = self.p.CoefficientsOptions
-        copts.useMetrics = True
-        copts.applyRedistancing = True
-        copts.backgroundDiffusionFactor = 0.01
-        copts.epsFact = 0.75
-        copts.ELLIPTIC_REDISTANCING = 0
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelRDLS, self).__init__(name='rdls', index=None,
+                                                  Problem=Problem)
+        self.p.coefficients = RDLS.Coefficients(
+            initialize=False,
+            useMetrics=1.,
+            epsFact=0.75,
+        )
+
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = 0.9
         scopts.lag = False
@@ -1566,8 +1487,11 @@ class ParametersModelRDLS(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'rdls_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.tolFac = 0.
+        #self.n.maxNonlinearIts = 1
         self.n.maxNonlinearIts = 50
         self.n.maxLineSearches = 0
         # freeze attributes
@@ -1581,14 +1505,14 @@ class ParametersModelRDLS(ParametersModelBase):
         rdModelId = self.fetchIndex(idxDict, self.name)
 
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = RDLS.Coefficients(applyRedistancing=copts.applyRedistancing,
-                                                epsFact=copts.epsFact,
-                                                nModelId=nModelId,
-                                                rdModelId=rdModelId,
-                                                useMetrics=copts.useMetrics,
-                                                backgroundDiffusionFactor=copts.backgroundDiffusionFactor,
-                                                ELLIPTIC_REDISTANCING=copts.ELLIPTIC_REDISTANCING)
+        coeffs = self.p.coefficients
+        coeffs.nModelId = nModelId
+        coeffs.rdModelId = rdModelId
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        IC = self._Problem.initialConditions
+        self.p.initialConditions = {0: IC['rdls']}
+        
         # BOUNDARY CONDITIONS
         self.p.dirichletConditions = {0: lambda x, flag: None}
         self.p.weakDirichletConditions = {0: RDLS.setZeroLSweakDirichletBCsSimple}
@@ -1614,7 +1538,7 @@ class ParametersModelRDLS(ParametersModelBase):
         # TOLERANCES
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.1*mesh.he)
+            self.n.nl_atol_res = max(minTol, 0.01*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
@@ -1639,16 +1563,18 @@ class ParametersModelRDLS(ParametersModelBase):
 class ParametersModelMCorr(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelMCorr, self).__init__(name='mcorr')
-        copts = self.p.CoefficientsOptions
-        copts.useMetrics = True
-        copts.checkMass = False
-        copts.applyCorrection = True
-        copts.epsFactHeaviside = epsFact
-        copts.epsFactDirac = epsFact
-        copts.epsFactDiffusion = 10.
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelMCorr, self).__init__(name='mcorr', index=None,
+                                                   Problem=Problem)
+        self.p.coefficients = MCorr.Coefficients(
+            initialize=False,
+            useMetrics=1.,
+            checkMass=False,
+            epsFactHeaviside=epsFact,
+            epsFactDirac=epsFact,
+            epsFactDiffusion=10.,
+        )
+
         # LEVEL MODEL
         self.p.LevelModelType = MCorr.LevelModel
         # TIME
@@ -1663,6 +1589,8 @@ class ParametersModelMCorr(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'mcorr_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.
@@ -1690,18 +1618,13 @@ class ParametersModelMCorr(ParametersModelBase):
             assert False, 'RANS2P or RANS3PF must be used with VOF'
 
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = MCorr.Coefficients(LSModel_index=LS_model,
-                                                 V_model=V_model,
-                                                 me_model=ME_model,
-                                                 VOFModel_index=VOF_model,
-                                                 applyCorrection=copts.applyCorrection,
-                                                 nd=nd,
-                                                 checkMass=copts.checkMass,
-                                                 useMetrics=copts.useMetrics,
-                                                 epsFactHeaviside=copts.epsFactHeaviside,
-                                                 epsFactDirac=copts.epsFactDirac,
-                                                 epsFactDiffusion=copts.epsFactDiffusion)
+        coeffs = self.p.coefficients
+        coeffs.flowModelIndex = V_model
+        coeffs.me_model = ME_model
+        coeffs.VOFModelIndex = VOF_model
+        coeffs.levelSetModelIndex = LS_model
+        coeffs.nd = nd
+        coeffs.initialize()
         # INITIAL CONDITIONS
         class zero_phi:
             def __init__(self):
@@ -1727,7 +1650,7 @@ class ParametersModelMCorr(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
-
+        
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
         if self._Problem.useSuperlu:
@@ -1743,12 +1666,13 @@ class ParametersModelMCorr(ParametersModelBase):
 class ParametersModelAddedMass(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelAddedMass, self).__init__(name='addedMass')
-        copts = self.p.CoefficientsOptions
-        copts.flags_rigidbody = None
-        copts.solve_rate = 0.
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelAddedMass, self).__init__(name='addedMass', index=None,
+                                                       Problem=Problem)
+        self.p.coefficients = AddedMass.Coefficients(
+            initialize=False,
+        )
+
         # LEVEL MODEL
         self.p.LevelModelType = AddedMass.LevelModel
         # TIME
@@ -1766,6 +1690,8 @@ class ParametersModelAddedMass(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'am_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.
@@ -1786,12 +1712,11 @@ class ParametersModelAddedMass(ParametersModelBase):
         else:
             assert self.fetch(idxDict,'rans2p') is not None or self.fetch(idxDict,'rans3p') is not None, 'RANS2P or RANS3PF must be used with addedMass'
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = AddedMass.Coefficients(nd=nd,
-                                                     V_model=V_model,
-                                                     barycenters=domain.barycenters,
-                                                     flags_rigidbody=copts.flags_rigidbody,
-                                                     solve_rate=copts.solve_rate)
+        coeffs = self.p.coefficients
+        coeffs.flowModelIndex = V_model
+        coeffs.barycenters = domain.barycenters
+        coeffs.nd = nd
+        coeffs.initialize()
         # INITIAL CONDITIONS
         IC = self._Problem.initialConditions
         class dp_IC:
@@ -1827,34 +1752,27 @@ class ParametersModelAddedMass(ParametersModelBase):
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
         else:
             self.OptDB.setValue(prefix+'ksp_type', 'cg')
-            self.OptDB.setValue(prefix+'pc_type', 'hypre')
-            self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+            self.OptDB.setValue(prefix+'pc_type', 'gamg')
             self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor')
-        copts = self.p.CoefficientsOptions
-        copts.func = lambda x, t: 1000.
-        copts.he_min = 0.
-        copts.he_max = 1000.
-        copts.epsFact = epsFact
-        copts.epsTimeStep = 0.1
-        copts.nSmoothOut = 0.
-        copts.nSmoothIn = 0.
-        copts.grading = 1.1
-        copts.grading_type = 2
-        copts.resetNodeVelocityArray = None
-        copts.useLS = True
-        copts.fixedNodeMaterialTypes = None
-        copts.fixedElementMaterialTypes = None
-        copts.noNodeVelocityNodeMaterialTypes = None
-        copts.scale_with_nd = False
-        copts.do_firstStep = False
-        copts.ntimes_solved = 1
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor', index=None,
+                                                             Problem=Problem)
+        self.p.coefficients = MoveMeshMonitor.Coefficients(
+            initialize=False,
+            ME_MODEL=None,
+            func=lambda x, t: 1000.,
+            he_min=0.,
+            he_max=1000.,
+            epsFact_density=epsFact,
+            epsTimeStep=0.1,
+            grading_type=2,
+            useLS=True,
+        )
+
         # TIME INTEGRATION
         self.n.timeIntegration = TimeIntegration.NoIntegration
         # NONLINEAR SOLVER
@@ -1884,30 +1802,19 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         idxDict = self._Problem.modelIdxDict
         ME_MODEL = self.index
         assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
-        if self.p.CoefficientsOptions.useLS is True:
-            LS_MODEL = self.fetch(idxDict,'ncls')
+        if self.p.coefficients.useLS is True:
+            LS_MODEL = mparams.ncls.index
         else:
             LS_MODEL = None
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = MoveMeshMonitor.Coefficients(func=copts.func,
-                                                           nd=nd,
-                                                           he_max=copts.he_max,
-                                                           he_min=copts.he_min,
-                                                           ntimes_solved=copts.ntimes_solved,
-                                                           LS_MODEL=LS_MODEL,
-                                                           ME_MODEL=ME_MODEL,
-                                                           fixedNodeMaterialTypes=copts.fixedNodeMaterialTypes,
-                                                           fixedElementMaterialTypes=copts.fixedElementMaterialTypes,
-                                                           noNodeVelocityNodeMaterialTypes=copts.noNodeVelocityNodeMaterialTypes,
-                                                           nSmoothOut=copts.nSmoothOut,
-                                                           nSmoothIn=copts.nSmoothIn,
-                                                           epsTimeStep=copts.epsTimeStep,
-                                                           epsFact_density=copts.epsFact,
-                                                           grading=copts.grading,
-                                                           grading_type=copts.grading_type,
-                                                           scale_with_nd=copts.scale_with_nd,
-                                                           do_firstStep=copts.do_firstStep)
+        coeffs = self.p.coefficients
+        coeffs.LS_MODEL = LS_MODEL
+        coeffs.ME_MODEL = ME_MODEL
+        coeffs.nd = nd
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        self.p.initialConditions = None
+
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: None}
@@ -1944,12 +1851,15 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
 class ParametersModelMoveMeshElastic(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic')
-        copts = self.p.CoefficientsOptions
-        copts.E = 1.
-        copts.nu = 0.3
-        copts._freeze()
+    def __init__(self, Problem):
+        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic', index=None,
+                                                             Problem=Problem)
+        self.p.coefficients = MoveMesh.Coefficients(
+            initialize=False,
+            modelType_block=None,
+            modelParams_block=None,
+        )
+
         # LEVEL MODEL
         self.p.LevelModelType = MoveMesh.LevelModel
         # TIME INTEGRATION
@@ -1965,6 +1875,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
         self.n.tolFac = 0.
+        self.n.linTolFac = 0.
         self.n.maxNonlinearIts = 4
         self.n.maxLineSearches = 0
         # freeze attributes
@@ -1977,9 +1888,8 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         nMediaTypes = len(domain.regionFlags)  # (!) should be region flags
         smTypes = np.zeros((nMediaTypes+1, 2), 'd')
         smFlags = np.zeros((nMediaTypes+1,), 'i')
-        copts = self.p.CoefficientsOptions
-        smTypes[:, 0] = copts.E
-        smTypes[:, 1] = copts.nu
+        smTypes[:, 0] = 1.
+        smTypes[:, 1] = 0.3
         # MODEL INDEXING
         idxDict = self._Problem.modelIdxDict
         ME_model = self.fetch(idxDict,'moveMeshElastic')
@@ -1991,12 +1901,16 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         else:
             assert self.fetch(idxDict,'rans2p') is not None or self.fetch(idxDict,'rans3p') is not None, 'RANS2P or RANS3PF must be used with VOF'
         # COEFFICIENTS
-        copts = self.p.CoefficientsOptions
-        self.p.coefficients = MoveMesh.Coefficients(nd=nd,
-                                                    V_model=V_model,
-                                                    modelType_block=smFlags,
-                                                    modelParams_block=smTypes,
-                                                    meIndex=ME_model)
+        coeffs = self.p.coefficients
+        coeffs.flowModelIndex = V_model
+        coeffs.meIndex = ME_model
+        coeffs.modelType_block = smFlags
+        coeffs.modelParams_block = smTypes
+        coeffs.nd = nd
+        coeffs.initialize()
+        # INITIAL CONDITIONS
+        self.p.initialConditions = None
+
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
@@ -2040,7 +1954,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         if self.n.nl_atol_res is None:
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = 0.001*self.n.nl_atol_res
+            self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
@@ -2072,7 +1986,7 @@ class ParametersPhysical(FreezableClass):
         self.gravity = [0., -9.81, 0.]
         # Turbulence
         self.useRANS = 0
-        self.cm_u = 0.09
+        self.c_mu = 0.09
         self.c_1 = 0.126
         self.c_2 = 1.92
         self.c_e = 0.07

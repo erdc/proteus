@@ -185,7 +185,6 @@ parser.add_option("-F","--generatePartitionedMeshFromFiles",
                   dest="generatePartitionedMeshFromFiles",
                   action="store_true",
                   help="""generate a parallel mesh directly from files (saves memory overhead of storing global mesh)""")
-
 parser.add_option("-S","--save_dof",
                   default=False,
                   dest="save_dof",
@@ -206,17 +205,11 @@ parser.add_option("--TwoPhaseFlow",
                   dest="TwoPhaseFlow",
                   action="store_true",
                   help="To consider TwoPhaseFlow applications")
-parser.add_option("--pumi",
+parser.add_option("--genPUMI",
                   default=False,
-                  dest="pumi",
+                  dest="genPUMI",
                   action="store_true",
                   help="Run with adaptivity")
-parser.add_option("--pumiStage",
-                  help="Stage during PUMI work flow",
-                  action="store",
-                  type="int",
-                  dest="pumiStage",
-                  default=1)
 parser.add_option("-f","--fileName",
                   help="Name of setup file",
                   action="store",
@@ -395,32 +388,9 @@ elif opts.TwoPhaseFlow:
     # PUMI WORKFLOW #
     #################
     # create mesh #
-    if opts.pumi:
-        from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-        if opts.pumiStage == 1:
-            prob.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI()
-        else:
-            prob.domain = Domain.PUMIDomain(dim=prob.nd)
-            he = prob.he #*float(spaceOrder)
-            adaptMeshFlag = 1
-            adaptMesh_nSteps = 5
-            adaptMesh_numIter = 3
-            hmax = he*12.0;
-            hmin = he/4.0;
-            hPhi = he
-            prob.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=hmax,
-                                                             hmin=hmin,
-                                                             hPhi = hPhi,
-                                                             adaptMesh=adaptMeshFlag,
-                                                             numIter=adaptMesh_numIter,
-                                                             numAdaptSteps=adaptMesh_nSteps,
-                                                             sfConfig="isotropic",
-                                                             logType="on",
-                                                             reconstructedFlag=2)
-            #read the geometry and mesh
-            parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
-            prob.domain.MeshOptions.setParallelPartitioningType('element')
-            prob.domain.PUMIMesh.loadModelAndMesh("Reconstructed.dmg","splitMesh/splitMesh.smb")
+    if opts.genPUMI:
+        from proteus.MeshAdaptPUMI import MeshAdapt
+        prob.domain.AdaptManager=MeshAdapt.AdaptManager()
     # END OF PUMI WORKFLOW #
     for (pModule,nModule) in so.pnList:
         log("Loading p module = "+pModule.name)
