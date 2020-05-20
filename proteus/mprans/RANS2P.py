@@ -1538,6 +1538,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.coefficients.force_z:
                     self.q[('force', 2)][eN,k] = self.coefficients.force_z(self.q['x'][eN,k])
 
+        self.var2idxDict={}
+        if self.nSpace_global == 2:
+            self.var2idxDict={'p':0,'u':1,'v':2}
+        else:
+            self.var2idxDict={'p':0,'u':1,'v':2,'w':3}
+
     def getResidual(self, u, r):
         """
         Calculate the element residuals and add in to the global residual
