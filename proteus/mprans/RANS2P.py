@@ -673,7 +673,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeElementQuadrature(self, t, cq):
         # VRANS
         self.numerical_viscosity = numpy.zeros(cq[('u', 1)].shape, 'd')
-        self.q_phi_solid = numpy.ones(cq[('u', 1)].shape, 'd')
+        self.q_phi_solid = 1000*numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_velocity_solid = numpy.zeros(cq[('velocity', 0)].shape, 'd')
         self.q_porosity = numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_dragAlpha = numpy.ones(cq[('u', 1)].shape, 'd')
@@ -1095,7 +1095,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('f', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q[('velocity', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q['velocity_solid'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q['phi_solid'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['phi_solid'] = 10000*numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['x'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
         self.q[('cfl', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('numDiff', 1, 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')

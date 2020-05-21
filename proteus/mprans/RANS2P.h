@@ -15,7 +15,7 @@
 namespace py = pybind11;
 
 #define ZEROVEC {0.,0.,0.}
-const bool UPWIND_DIRICHLET=false;
+const bool UPWIND_DIRICHLET=true;
 
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
@@ -164,13 +164,14 @@ namespace proteus
                               double forcey,
                               double forcez)
     {
-      double mu,norm_n,nu_t=0.0;
+      double mu,norm_n,nu_t;
       //calculate eddy viscosity
       switch (turbulenceClosureModel)
         {
           double norm_S;
         case 1:
           {
+	    //todo: write norm function
             norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] + grad_w[2]*grad_w[2] +
                                0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0]) +
                                0.5*(grad_u[2]+grad_w[0])*(grad_u[2]+grad_w[0]) +
@@ -190,7 +191,6 @@ namespace proteus
             nu_t = cs*h_e*h_e*norm_S;
           }
         }
-      
       eddy_viscosity = nu_t;
       nu += (1.0-LAG_LES)*nu_t + LAG_LES*eddy_viscosity_last;
       mu  = rho*nu;
@@ -536,6 +536,7 @@ namespace proteus
         }
       return index;
     }
+
     void get_distance_to_ith_ball(int n_balls,const double* ball_center, const double* ball_radius,
                                   int I,
                                   const double x, const double y, const double z,
@@ -786,7 +787,7 @@ namespace proteus
                   mom_w_source += rho*D_s*(w_s - w)*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
                   dmom_u_source[0] -= rho*D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
                   dmom_v_source[1] -= rho*D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
-                  dmom_w_source[1] -= rho*D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
+                  dmom_w_source[2] -= rho*D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
                 }
 
               //viscous flux
@@ -860,7 +861,7 @@ namespace proteus
                   mom_v_source += D_s*v*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
                   dmom_v_source[1] += D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
                   mom_w_source += D_s*w*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
-                  dmom_w_source[1] += D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
+                  dmom_w_source[2] += D_s*(fluid_outward_normal[0]*u_s + fluid_outward_normal[1]*v_s + fluid_outward_normal[2]*w_s);
                 }
 
               //viscous flux
@@ -1317,15 +1318,15 @@ namespace proteus
           velocity[0] = f_mass[0];
           if (flowSpeedNormal >= 0.0)
             {
-              flux_umom += n[0]*f_umom[0];
-              flux_vmom += n[0]*f_vmom[0];
-              flux_wmom += n[0]*f_wmom[0];
+              flux_umom += n[0] * f_umom[0];
+              flux_vmom += n[0] * f_vmom[0];
+              flux_wmom += n[0] * f_wmom[0];
             }
           else
             {
               if (NONCONSERVATIVE_FORM > 0.0)
                 {
-                  flux_umom+=(0.0-u)*flowSpeedNormal;
+                  flux_umom += (0.0 - u) * flowSpeedNormal;
                 }
             }
         }
@@ -1401,15 +1402,15 @@ namespace proteus
           velocity[2] = f_mass[2];
           if (flowSpeedNormal >= 0.0)
             {
-              flux_umom+=n[2]*f_umom[2];
-              flux_vmom+=n[2]*f_vmom[2];
-              flux_wmom+=n[2]*f_wmom[2];
+              flux_umom += n[2] * f_umom[2];
+              flux_vmom += n[2] * f_vmom[2];
+              flux_wmom += n[2] * f_wmom[2];
             }
           else
             {
               if (NONCONSERVATIVE_FORM > 0.0)
                 {
-                  flux_wmom+=(0.0-w)*flowSpeedNormal;
+                  flux_wmom += (0.0 - w) * flowSpeedNormal;
                 }
             }
         }
@@ -1419,21 +1420,21 @@ namespace proteus
           velocity[2] = f_mass[2];
           if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
             {
-              flux_umom+=n[2]*f_umom[2];
-              flux_vmom+=n[2]*f_vmom[2];
-              flux_wmom+=n[2]*f_wmom[2];
+              flux_umom += n[2] * f_umom[2];
+              flux_vmom += n[2] * f_vmom[2];
+              flux_wmom += n[2] * f_wmom[2];
             }
           else
             {
               if (NONCONSERVATIVE_FORM > 0.0)
                 {
-                  flux_wmom+=(bc_w-w)*flowSpeedNormal;
+                  flux_wmom += (bc_w - w) * flowSpeedNormal;
                 }
               else
                 {
-                  flux_umom+=n[2]*bc_f_umom[2];
-                  flux_vmom+=n[2]*bc_f_vmom[2];
-                  flux_wmom+=n[2]*bc_f_wmom[2];
+                  flux_umom += n[2] * bc_f_umom[2];
+                  flux_vmom += n[2] * bc_f_vmom[2];
+                  flux_wmom += n[2] * bc_f_wmom[2];
                 }
             }
         }
@@ -1557,6 +1558,7 @@ namespace proteus
       dflux_wmom_du = 0.0;
       dflux_wmom_dv = 0.0;
       dflux_wmom_dw = 0.0;
+      
       flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1]+n[2]*df_umom_du[2];//tricky, works for moving and fixed  domains
       flowSpeedNormal+=NONCONSERVATIVE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]+n[2]*dham_grad[2]);
       if (isDOFBoundary_u != 1)
@@ -1564,17 +1566,17 @@ namespace proteus
           dflux_mass_du += n[0] * df_mass_du[0];
           if (flowSpeedNormal >= 0.0)
             {
-              dflux_umom_du += n[0]*df_umom_du[0];
-              dflux_umom_dv += n[0]*df_umom_dv[0];
-              dflux_umom_dw += n[0]*df_umom_dw[0];
-
-              dflux_vmom_du += n[0]*df_vmom_du[0];
-              dflux_vmom_dv += n[0]*df_vmom_dv[0];
-              dflux_vmom_dw += n[0]*df_vmom_dw[0];
+              dflux_umom_du += n[0] * df_umom_du[0];
+              dflux_umom_dv += n[0] * df_umom_dv[0];
+              dflux_umom_dw += n[0] * df_umom_dw[0];
               
-              dflux_wmom_du += n[0]*df_wmom_du[0];
-              dflux_wmom_dv += n[0]*df_wmom_dv[0];
-              dflux_wmom_dw += n[0]*df_wmom_dw[0];
+              dflux_vmom_du += n[0] * df_vmom_du[0];
+              dflux_vmom_dv += n[0] * df_vmom_dv[0];
+              dflux_vmom_dw += n[0] * df_vmom_dw[0];
+              
+              dflux_wmom_du += n[0] * df_wmom_du[0];
+              dflux_wmom_dv += n[0] * df_wmom_dv[0];
+              dflux_wmom_dw += n[0] * df_wmom_dw[0];
             }
           else
             {
@@ -1592,17 +1594,17 @@ namespace proteus
           dflux_mass_du += n[0] * df_mass_du[0];
           if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
             {
-              dflux_umom_du += n[0]*df_umom_du[0];
-              dflux_umom_dv += n[0]*df_umom_dv[0];
-              dflux_umom_dw += n[0]*df_umom_dw[0];
+              dflux_umom_du += n[0] * df_umom_du[0];
+              dflux_umom_dv += n[0] * df_umom_dv[0];
+              dflux_umom_dw += n[0] * df_umom_dw[0];
               
-              dflux_vmom_du += n[0]*df_vmom_du[0];
-              dflux_vmom_dv += n[0]*df_vmom_dv[0];
-              dflux_vmom_dw += n[0]*df_vmom_dw[0];
+              dflux_vmom_du += n[0] * df_vmom_du[0];
+              dflux_vmom_dv += n[0] * df_vmom_dv[0];
+              dflux_vmom_dw += n[0] * df_vmom_dw[0];
               
-              dflux_wmom_du += n[0]*df_wmom_du[0];
-              dflux_wmom_dv += n[0]*df_wmom_dv[0];
-              dflux_wmom_dw += n[0]*df_wmom_dw[0];
+              dflux_wmom_du += n[0] * df_wmom_du[0];
+              dflux_wmom_dv += n[0] * df_wmom_dv[0];
+              dflux_wmom_dw += n[0] * df_wmom_dw[0];
             }
           else
             {
@@ -1615,9 +1617,9 @@ namespace proteus
               else
                 {
                   if (isDOFBoundary_v != 1)
-                    dflux_vmom_dv += n[0]*df_vmom_dv[0];
+                    dflux_vmom_dv += n[0] * df_vmom_dv[0];
                   if (isDOFBoundary_w != 1)
-                    dflux_wmom_dw += n[0]*df_wmom_dw[0];
+                    dflux_wmom_dw += n[0] * df_wmom_dw[0];
                 }
             }
         }
@@ -1626,17 +1628,17 @@ namespace proteus
           dflux_mass_dv += n[1] * df_mass_dv[1];
           if (flowSpeedNormal >= 0.0)
             {
-              dflux_umom_du += n[1]*df_umom_du[1];
-              dflux_umom_dv += n[1]*df_umom_dv[1];
-              dflux_umom_dw += n[1]*df_umom_dw[1];
+              dflux_umom_du += n[1] * df_umom_du[1];
+              dflux_umom_dv += n[1] * df_umom_dv[1];
+              dflux_umom_dw += n[1] * df_umom_dw[1];
               
-              dflux_vmom_du += n[1]*df_vmom_du[1];
-              dflux_vmom_dv += n[1]*df_vmom_dv[1];
-              dflux_vmom_dw += n[1]*df_vmom_dw[1];
+              dflux_vmom_du += n[1] * df_vmom_du[1];
+              dflux_vmom_dv += n[1] * df_vmom_dv[1];
+              dflux_vmom_dw += n[1] * df_vmom_dw[1];
               
-              dflux_wmom_du += n[1]*df_wmom_du[1];
-              dflux_wmom_dv += n[1]*df_wmom_dv[1];
-              dflux_wmom_dw += n[1]*df_wmom_dw[1];
+              dflux_wmom_du += n[1] * df_wmom_du[1];
+              dflux_wmom_dv += n[1] * df_wmom_dv[1];
+              dflux_wmom_dw += n[1] * df_wmom_dw[1];
             }
           else
             {
@@ -1654,17 +1656,17 @@ namespace proteus
           dflux_mass_dv += n[1] * df_mass_dv[1];
           if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
             {
-              dflux_umom_du += n[1]*df_umom_du[1];
-              dflux_umom_dv += n[1]*df_umom_dv[1];
-              dflux_umom_dw += n[1]*df_umom_dw[1];
-
-              dflux_vmom_du += n[1]*df_vmom_du[1];
-              dflux_vmom_dv += n[1]*df_vmom_dv[1];
-              dflux_vmom_dw += n[1]*df_vmom_dw[1];
+              dflux_umom_du += n[1] * df_umom_du[1];
+              dflux_umom_dv += n[1] * df_umom_dv[1];
+              dflux_umom_dw += n[1] * df_umom_dw[1];
               
-              dflux_wmom_du += n[1]*df_wmom_du[1];
-              dflux_wmom_dv += n[1]*df_wmom_dv[1];
-              dflux_wmom_dw += n[1]*df_wmom_dw[1];
+              dflux_vmom_du += n[1] * df_vmom_du[1];
+              dflux_vmom_dv += n[1] * df_vmom_dv[1];
+              dflux_vmom_dw += n[1] * df_vmom_dw[1];
+              
+              dflux_wmom_du += n[1] * df_wmom_du[1];
+              dflux_wmom_dv += n[1] * df_wmom_dv[1];
+              dflux_wmom_dw += n[1] * df_wmom_dw[1];
             }
           else
             {
@@ -1677,9 +1679,9 @@ namespace proteus
               else
                 {
                   if (isDOFBoundary_u != 1)
-                    dflux_umom_du += n[1]*df_umom_du[1];
+                    dflux_umom_du += n[1] * df_umom_du[1];
                   if (isDOFBoundary_w != 1)
-                    dflux_wmom_dw += n[1]*df_wmom_dw[1];
+                    dflux_wmom_dw += n[1] * df_wmom_dw[1];
                 }
             }
         }
@@ -1688,17 +1690,17 @@ namespace proteus
           dflux_mass_dw+=n[2]*df_mass_dw[2];
           if (flowSpeedNormal >= 0.0)
             {
-              dflux_umom_du += n[2]*df_umom_du[2];
-              dflux_umom_dv += n[2]*df_umom_dv[2];
-              dflux_umom_dw += n[2]*df_umom_dw[2];
+              dflux_umom_du += n[2] * df_umom_du[2];
+              dflux_umom_dv += n[2] * df_umom_dv[2];
+              dflux_umom_dw += n[2] * df_umom_dw[2];
 
-              dflux_vmom_du += n[2]*df_vmom_du[2];
-              dflux_vmom_dv += n[2]*df_vmom_dv[2];
-              dflux_vmom_dw += n[2]*df_vmom_dw[2];
+              dflux_vmom_du += n[2] * df_vmom_du[2];
+              dflux_vmom_dv += n[2] * df_vmom_dv[2];
+              dflux_vmom_dw += n[2] * df_vmom_dw[2];
               
-              dflux_wmom_du += n[2]*df_wmom_du[2];
-              dflux_wmom_dv += n[2]*df_wmom_dv[2];
-              dflux_wmom_dw += n[2]*df_wmom_dw[2];
+              dflux_wmom_du += n[2] * df_wmom_du[2];
+              dflux_wmom_dv += n[2] * df_wmom_dv[2];
+              dflux_wmom_dw += n[2] * df_wmom_dw[2];
             }
           else
             {
@@ -1706,7 +1708,7 @@ namespace proteus
                 {
                   dflux_wmom_du += dmom_u_acc_u * n[0] * (0.0 - w);
                   dflux_wmom_dv += dmom_u_acc_u * n[1] * (0.0 - w);
-                  dflux_wmom_dw += ( dmom_u_acc_u * n[2] * (0.0 - w) - flowSpeedNormal) ;
+                  dflux_wmom_dw += dmom_u_acc_u * n[2] * (0.0 - w) - flowSpeedNormal;
                 }
             }
         }
@@ -1716,17 +1718,17 @@ namespace proteus
           dflux_mass_dw += n[2]*df_mass_dw[2];
           if (UPWIND_DIRICHLET && flowSpeedNormal >= 0.0)
             {
-              dflux_umom_du += n[2]*df_umom_du[2];
-              dflux_umom_dv += n[2]*df_umom_dv[2];
-              dflux_umom_dw += n[2]*df_umom_dw[2];
+              dflux_umom_du += n[2] * df_umom_du[2];
+              dflux_umom_dv += n[2] * df_umom_dv[2];
+              dflux_umom_dw += n[2] * df_umom_dw[2];
 
-              dflux_vmom_du += n[2]*df_vmom_du[2];
-              dflux_vmom_dv += n[2]*df_vmom_dv[2];
-              dflux_vmom_dw += n[2]*df_vmom_dw[2];
+              dflux_vmom_du += n[2] * df_vmom_du[2];
+              dflux_vmom_dv += n[2] * df_vmom_dv[2];
+              dflux_vmom_dw += n[2] * df_vmom_dw[2];
 
-              dflux_wmom_du += n[2]*df_wmom_du[2];
-              dflux_wmom_dv += n[2]*df_wmom_dv[2];
-              dflux_wmom_dw += n[2]*df_wmom_dw[2];
+              dflux_wmom_du += n[2] * df_wmom_du[2];
+              dflux_wmom_dv += n[2] * df_wmom_dv[2];
+              dflux_wmom_dw += n[2] * df_wmom_dw[2];
             }
           else
             {
@@ -1734,14 +1736,14 @@ namespace proteus
                 {
                   dflux_wmom_du += dmom_u_acc_u * n[0] * (0.0 - w);
                   dflux_wmom_dv += dmom_u_acc_u * n[1] * (0.0 - w);
-                  dflux_wmom_dw += ( dmom_u_acc_u * n[2] * (0.0 - w) - flowSpeedNormal) ;
+                  dflux_wmom_dw += dmom_u_acc_u * n[2] * (0.0 - w) - flowSpeedNormal;
                 }
               else
                 {
                   if (isDOFBoundary_u != 1)
-                    dflux_umom_du += n[2]*df_umom_du[2];
+                    dflux_umom_du += n[2] * df_umom_du[2];
                   if (isDOFBoundary_v != 1)
-                    dflux_vmom_dv += n[2]*df_vmom_dv[2];
+                    dflux_vmom_dv += n[2] * df_vmom_dv[2];
                 }
             }
         }
@@ -1749,15 +1751,15 @@ namespace proteus
         {
           if (NONCONSERVATIVE_FORM > 0.0)
             {
-              dflux_umom_dp= -n[0];
-              dflux_vmom_dp= -n[1];
-              dflux_wmom_dp= -n[2];
+              dflux_umom_dp = -n[0];
+              dflux_vmom_dp = -n[1];
+              dflux_wmom_dp = -n[2];
             }
           else
             {
-              dflux_umom_dp= -n[0]*oneByRho;
-              dflux_vmom_dp= -n[1]*oneByRho;
-              dflux_wmom_dp= -n[2]*oneByRho;
+              dflux_umom_dp = -n[0] * oneByRho;
+              dflux_vmom_dp = -n[1] * oneByRho;
+              dflux_wmom_dp = -n[2] * oneByRho;
             }
         }
       if (isFluxBoundary_p == 1)
@@ -2424,20 +2426,21 @@ namespace proteus
                   ck_v.gradTrialFromRef(&vel_grad_trial_ref.data()[k*nDOF_v_trial_element*nSpace],jacInv,vel_grad_trial);
                   for (int i=0; i < nDOF_trial_element; i++)
                     {
-                      p_trial[i] = p_trial_ref[k*nDOF_trial_element + i];
+                      p_trial[i] = p_trial_ref.data()[k*nDOF_trial_element + i];
                       p_grad_trial_ib[i*nSpace + 0] = p_grad_trial[i*nSpace+0];
                       p_grad_trial_ib[i*nSpace + 1] = p_grad_trial[i*nSpace+1];
                       p_grad_trial_ib[i*nSpace + 2] = p_grad_trial[i*nSpace+2];
                     }
                   for (int i=0; i < nDOF_v_trial_element; i++)
                     {
-                      vel_trial[i] = vel_trial_ref[k*nDOF_v_trial_element + i];
+                      vel_trial[i] = vel_trial_ref.data()[k*nDOF_v_trial_element + i];
                       vel_grad_trial_ib[i*nSpace + 0] = vel_grad_trial[i*nSpace+0];
                       vel_grad_trial_ib[i*nSpace + 1] = vel_grad_trial[i*nSpace+1];
                       vel_grad_trial_ib[i*nSpace + 2] = vel_grad_trial[i*nSpace+2];
                     }
                   if (icase == 0)
                     {
+#ifdef IFEMBASIS
                       for (int i=0; i < nDOF_trial_element; i++)
                         {
                           if (fluid_phase == 0)
@@ -2487,15 +2490,16 @@ namespace proteus
                                 }
                             }
                         }
+#endif
 #ifndef IFEM
                       bool prob=false;
                       for (int vi=0; vi < nDOF_v_trial_element; vi++)
                         {
                           //pressure
-                          if (fabs(p_trial_ref[k*nDOF_trial_element + vi] - p_trial[vi]) > 1.0e-8)
+                          if (fabs(p_trial_ref.data()[k*nDOF_trial_element + vi] - p_trial[vi]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_trial_element; vj++)
-                                std::cout<<"Trial "<<p_trial_ref[k*nDOF_trial_element + vj]<<'\t'<<gf_p.VA(vj)<<'\t'<<gf_p.VB(vj)<<std::endl;
+                                std::cout<<"Trial "<<p_trial_ref.data()[k*nDOF_trial_element + vj]<<'\t'<<gf_p.VA(vj)<<'\t'<<gf_p.VB(vj)<<std::endl;
                               prob=true;
                             }
                           if (fabs(p_grad_trial[vi*nSpace + 0] - p_grad_trial_ib[vi*nSpace+0]) > 1.0e-8)
@@ -2504,23 +2508,23 @@ namespace proteus
                                 std::cout<<"Grad Trial x"<<p_grad_trial[vj*nSpace + 0]<<'\t'<<gf_p.VA_x(vj)<<'\t'<<gf_p.VB_x(vj)<<std::endl;
                               prob=true;
                             }
-                          if (fabs(p_grad_trial[vi*nSpace + 1] - p_grad_trial[vi*nSpace+1]) > 1.0e-8)
+                          if (fabs(p_grad_trial[vi*nSpace + 1] - p_grad_trial_ib[vi*nSpace+1]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_trial_element; vj++)
                                 std::cout<<"Grad Trial y "<<p_grad_trial[vj*nSpace + 1]<<'\t'<<gf_p.VA_y(vj)<<'\t'<<gf_p.VB_y(vj)<<std::endl;
                               prob=true;
                             }
-                          if (fabs(p_grad_trial[vi*nSpace + 2] - p_grad_trial[vi*nSpace+2]) > 1.0e-8)
+                          if (fabs(p_grad_trial[vi*nSpace + 2] - p_grad_trial_ib[vi*nSpace+2]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_trial_element; vj++)
                                 std::cout<<"Grad Trial z "<<p_grad_trial[vj*nSpace + 2]<<'\t'<<gf_p.VA_z(vj)<<'\t'<<gf_p.VB_z(vj)<<std::endl;
                               prob=true;
                             }
                           //velocity
-                          if (fabs(vel_trial_ref[k*nDOF_v_trial_element + vi] - vel_trial[vi]) > 1.0e-8)
+                          if (fabs(vel_trial_ref.data()[k*nDOF_v_trial_element + vi] - vel_trial[vi]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_v_trial_element; vj++)
-                                std::cout<<"Trial "<<vel_trial_ref[k*nDOF_v_trial_element + vj]<<'\t'<<gf.VA(vj)<<'\t'<<gf.VB(vj)<<std::endl;
+                                std::cout<<"Trial "<<vel_trial_ref.data()[k*nDOF_v_trial_element + vj]<<'\t'<<gf.VA(vj)<<'\t'<<gf.VB(vj)<<std::endl;
                               prob=true;
                             }
                           if (fabs(vel_grad_trial[vi*nSpace + 0] - vel_grad_trial_ib[vi*nSpace+0]) > 1.0e-8)
@@ -2529,13 +2533,13 @@ namespace proteus
                                 std::cout<<"Grad Trial x"<<vel_grad_trial[vj*nSpace + 0]<<'\t'<<gf.VA_x(vj)<<'\t'<<gf.VB_x(vj)<<std::endl;
                               prob=true;
                             }
-                          if (fabs(vel_grad_trial[vi*nSpace + 1] - vel_grad_trial[vi*nSpace+1]) > 1.0e-8)
+                          if (fabs(vel_grad_trial[vi*nSpace + 1] - vel_grad_trial_ib[vi*nSpace+1]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_v_trial_element; vj++)
                                 std::cout<<"Grad Trial y "<<vel_grad_trial[vj*nSpace + 1]<<'\t'<<gf.VA_y(vj)<<'\t'<<gf.VB_y(vj)<<std::endl;
                               prob=true;
                             }
-                          if (fabs(vel_grad_trial[vi*nSpace + 2] - vel_grad_trial[vi*nSpace+2]) > 1.0e-8)
+                          if (fabs(vel_grad_trial[vi*nSpace + 2] - vel_grad_trial_ib[vi*nSpace+2]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_v_trial_element; vj++)
                                 std::cout<<"Grad Trial z "<<vel_grad_trial[vj*nSpace + 2]<<'\t'<<gf.VA_z(vj)<<'\t'<<gf.VB_z(vj)<<std::endl;
@@ -2590,7 +2594,7 @@ namespace proteus
 #else
                   for (int j=0;j<nDOF_test_element;j++)
                     {
-                      p_test_dV[j] = p_test_ref[k*nDOF_trial_element+j]*dV;
+                      p_test_dV[j] = p_test_ref.data()[k*nDOF_trial_element+j]*dV;
                       for (int I=0;I<nSpace;I++)
                         {
                           p_grad_test_dV[j*nSpace+I]   = p_grad_trial[j*nSpace+I]*dV;//assume test_i = trial_i, not using ib basis here
@@ -2599,7 +2603,7 @@ namespace proteus
                   //precalculate test function products with integration weights
                   for (int j=0;j<nDOF_v_test_element;j++)
                     {
-                      vel_test_dV[j] = vel_test_ref[k*nDOF_v_trial_element+j]*dV;
+                      vel_test_dV[j] = vel_test_ref.data()[k*nDOF_v_trial_element+j]*dV;
                       for (int I=0;I<nSpace;I++)
                         {
                           vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//assume test_i = trial_i
@@ -2793,7 +2797,6 @@ namespace proteus
                   q_rho.data()[eN_k] = rho;
                   //VRANS
                   mass_source = q_mass_source.data()[eN_k];
-                  assert(mass_source == 0.0);
                   //todo: decide if these should be lagged or not?
                   updateDarcyForchheimerTerms_Ergun(NONCONSERVATIVE_FORM,
                                                     /* linearDragFactor, */
@@ -3242,6 +3245,7 @@ namespace proteus
                   double mesh_vel[nSpace];
                   mesh_vel[0] = xt;
                   mesh_vel[1] = yt;
+                  mesh_vel[2] = zt;
                   double H_f=1.0;
                   if (gf.useExact && icase == 0)
                     {
@@ -3300,6 +3304,10 @@ namespace proteus
                                      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_u,Lstar_u_p[i]) +
                                      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_v,Lstar_v_p[i]) +
                                      (1 - PRESSURE_PROJECTION_STABILIZATION) * ck.SubgridError(subgridError_w,Lstar_w_p[i]));
+                          /* elementResidual_p[i] += */
+                          /*   H_s*H_f*(ck.SubgridError(subgridError_u,Lstar_u_p[i]) + */
+                          /*            ck.SubgridError(subgridError_v,Lstar_v_p[i]) + */
+                          /*            ck.SubgridError(subgridError_w,Lstar_w_p[i])); */
                         }
                       if (PRESSURE_PROJECTION_STABILIZATION==1. && mom_uu_diff_ten[1]==0.)
                         {
@@ -3342,7 +3350,6 @@ namespace proteus
                                                        ck.Hamiltonian_weak(mom_w_ham,vel_test_dV[i]) +
                                                        MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridError(subgridError_w,Lstar_w_w[i]) +
                                                        ck.NumericalDiffusion(q_numDiff_w_last.data()[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]));
-
                       elementResidual_u[i] +=  H_s*H_f*MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_u[i]);
                       elementResidual_v[i] +=  H_s*H_f*MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_v[i]);
                       elementResidual_w[i] +=  H_s*H_f*MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_w[i]);
@@ -3420,14 +3427,14 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
         }//elements
       //std::cout<<"p,u,v L2 error integrals (shoudl be non-negative) "<<p_L2<<'\t'<<u_L2<<'\t'<<v_L2<<'\t'<<"Flow Domain Volume = "<<domain_volume<<std::endl;
-      assert(p_L2 >= 0.0);
-      assert(u_L2 >= 0.0);
-      assert(v_L2 >= 0.0);
-      assert(w_L2 >= 0.0);
-      p_L2 = sqrt(p_L2);
-      u_L2 = sqrt(u_L2);
-      v_L2 = sqrt(v_L2);
-      w_L2 = sqrt(w_L2);
+      /* assert(p_L2 >= 0.0); */
+      /* assert(u_L2 >= 0.0); */
+      /* assert(v_L2 >= 0.0); */
+      /* assert(w_L2 >= 0.0); */
+      /* p_L2 = sqrt(p_L2); */
+      /* u_L2 = sqrt(u_L2); */
+      /* v_L2 = sqrt(v_L2); */
+      /* w_L2 = sqrt(w_L2); */
       for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); )
         {
           if(elementIsActive[elementBoundaryElementsArray[(*it)*2+0]] && elementIsActive[elementBoundaryElementsArray[(*it)*2+1]])
@@ -3493,7 +3500,7 @@ namespace proteus
                         p_test_dS[nDOF_test_element],vel_test_dS[nDOF_v_test_element],
                         p_grad_trial_trace[nDOF_trial_element*nSpace],vel_grad_trial_trace[nDOF_v_trial_element*nSpace],
                         p_grad_test_dS[nDOF_trial_element*nSpace],vel_grad_test_dS[nDOF_v_trial_element*nSpace],
-                        normal[2],x_int,y_int,z_int,xt_int,yt_int,zt_int,integralScaling,
+                        normal[nSpace],x_int,y_int,z_int,xt_int,yt_int,zt_int,integralScaling,
                         G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty,
                         force_x,force_y,force_z,force_p_x,force_p_y,force_p_z,force_v_x,force_v_y,force_v_z,r_x,r_y,r_z;
                       //compute information about mapping from reference element to physical element
@@ -4632,8 +4639,8 @@ namespace proteus
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
-                if (p_l2g[eN_i] > nDOF_pressure)
-                  nDOF_pressure=p_l2g[eN_i];
+                if (p_l2g.data()[eN_i] > nDOF_pressure)
+                  nDOF_pressure=p_l2g.data()[eN_i];
               }
           nDOF_pressure +=1;
           std::cout<<"nDOF_pressure "<<nDOF_pressure<<std::endl;
@@ -4681,11 +4688,11 @@ namespace proteus
                                               jacDet,
                                               jacInv,
                                               x,y,z);
-                  dV = fabs(jacDet)*dV_ref[k];
-                  ck.valFromDOF(p_dof.data(),&p_l2g.data()[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
+                  dV = fabs(jacDet)*dV_ref.data()[k];
+                  ck.valFromDOF(p_dof.data(),&p_l2g.data()[eN_nDOF_trial_element],&p_trial_ref.data()[k*nDOF_trial_element],p);
                   p_dv_new += p*H_s*dV;
-                  pa_dv_new += q_u_0[eN_k]*H_s*dV;
-                  pe = p-q_u_0[eN_k];
+                  pa_dv_new += q_u_0.data()[eN_k]*H_s*dV;
+                  pe = p-q_u_0.data()[eN_k];
                   p_L1 += fabs(pe)*H_s*dV;
                   p_L2 += pe*pe*H_s*dV;
                   if (fabs(pe) > p_Linfty)
@@ -5235,13 +5242,14 @@ namespace proteus
                     }
                   for (int i=0; i < nDOF_v_trial_element; i++)
                     {
-                      vel_trial[i] = vel_trial_ref[k*nDOF_v_trial_element + i];
+                      vel_trial[i] = vel_trial_ref.data()[k*nDOF_v_trial_element + i];
                       vel_grad_trial_ib[i*nSpace + 0] = vel_grad_trial[i*nSpace+0];
                       vel_grad_trial_ib[i*nSpace + 1] = vel_grad_trial[i*nSpace+1];
                       vel_grad_trial_ib[i*nSpace + 2] = vel_grad_trial[i*nSpace+2];
                     }
                   if (icase == 0)
                     {
+#ifdef IFEMBASIS
                       for (int i=0; i < nDOF_trial_element; i++)
                         {
                           if (fluid_phase == 0)
@@ -5291,6 +5299,7 @@ namespace proteus
                                 }
                             }
                         }
+#endif
 #ifndef IFEM
                       bool prob=false;
                       for (int vi=0; vi < nDOF_v_trial_element; vi++)
@@ -5308,13 +5317,13 @@ namespace proteus
                                 std::cout<<"Grad Trial x"<<p_grad_trial[vj*nSpace + 0]<<'\t'<<gf_p.VA_x(vj)<<'\t'<<gf_p.VB_x(vj)<<std::endl;
                               prob=true;
                             }
-                          if (fabs(p_grad_trial[vi*nSpace + 1] - p_grad_trial[vi*nSpace+1]) > 1.0e-8)
+                          if (fabs(p_grad_trial[vi*nSpace + 1] - p_grad_trial_ib[vi*nSpace+1]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_trial_element; vj++)
                                 std::cout<<"Grad Trial y "<<p_grad_trial[vj*nSpace + 1]<<'\t'<<gf_p.VA_y(vj)<<'\t'<<gf_p.VB_y(vj)<<std::endl;
                               prob=true;
                             }
-                          if (fabs(p_grad_trial[vi*nSpace + 2] - p_grad_trial[vi*nSpace+2]) > 1.0e-8)
+                          if (fabs(p_grad_trial[vi*nSpace + 2] - p_grad_trial_ib[vi*nSpace+2]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_trial_element; vj++)
                                 std::cout<<"Grad Trial z "<<p_grad_trial[vj*nSpace + 2]<<'\t'<<gf_p.VA_z(vj)<<'\t'<<gf_p.VB_z(vj)<<std::endl;
@@ -5333,13 +5342,13 @@ namespace proteus
                                 std::cout<<"Grad Trial x"<<vel_grad_trial[vj*nSpace + 0]<<'\t'<<gf.VA_x(vj)<<'\t'<<gf.VB_x(vj)<<std::endl;
                               prob=true;
                             }
-                          if (fabs(vel_grad_trial[vi*nSpace + 1] - vel_grad_trial[vi*nSpace+1]) > 1.0e-8)
+                          if (fabs(vel_grad_trial[vi*nSpace + 1] - vel_grad_trial_ib[vi*nSpace+1]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_v_trial_element; vj++)
                                 std::cout<<"Grad Trial y "<<vel_grad_trial[vj*nSpace + 1]<<'\t'<<gf.VA_y(vj)<<'\t'<<gf.VB_y(vj)<<std::endl;
                               prob=true;
                             }
-                          if (fabs(vel_grad_trial[vi*nSpace + 2] - vel_grad_trial[vi*nSpace+2]) > 1.0e-8)
+                          if (fabs(vel_grad_trial[vi*nSpace + 2] - vel_grad_trial_ib[vi*nSpace+2]) > 1.0e-8)
                             {
                               for (int vj=0; vj < nDOF_v_trial_element; vj++)
                                 std::cout<<"Grad Trial z "<<vel_grad_trial[vj*nSpace + 2]<<'\t'<<gf.VA_z(vj)<<'\t'<<gf.VB_z(vj)<<std::endl;
@@ -5366,9 +5375,9 @@ namespace proteus
                   ck_v.gradFromDOF(v_dof.data(),&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_ib,grad_v);
                   ck_v.gradFromDOF(w_dof.data(),&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_ib,grad_w);
                   ck.gradFromDOF(p_dof.data(),&p_l2g[eN_nDOF_trial_element],p_grad_trial_ib,grad_p_old);
-                  ck_v.gradFromDOF(u_dof.data(),&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_ib,grad_u_old);
-                  ck_v.gradFromDOF(v_dof.data(),&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_ib,grad_v_old);
-                  ck_v.gradFromDOF(w_dof.data(),&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_ib,grad_w_old);
+                  ck_v.gradFromDOF(u_old_dof.data(),&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_ib,grad_u_old);
+                  ck_v.gradFromDOF(v_old_dof.data(),&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_ib,grad_v_old);
+                  ck_v.gradFromDOF(w_old_dof.data(),&vel_l2g[eN_nDOF_v_trial_element],vel_grad_trial_ib,grad_w_old);
                   //precalculate test function products with integration weights
 #ifdef IFEMGALERKIN
                   for (int j=0;j<nDOF_test_element;j++)
@@ -5434,8 +5443,8 @@ namespace proteus
                   //calculate pde coefficients and derivatives at quadrature points
                   //
                   double eddy_viscosity(0.);//not really interested in saving eddy_viscosity in jacobian
-                  const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-                  const double H_s = gf_s.H(particle_eps, phi_solid[eN_k]);
+                  const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
+                  const double H_s = gf_s.H(particle_eps, phi_solid.data()[eN_k]);
                   double rho,nu;
                   if (gf.useExact)
                     {
@@ -5776,6 +5785,7 @@ namespace proteus
                       register int j_nSpace = j*nSpace;
                       dpdeResidual_p_u[j]=ck.AdvectionJacobian_strong(dmass_adv_u,&vel_grad_trial_ib[j_nSpace]);
                       dpdeResidual_p_v[j]=ck.AdvectionJacobian_strong(dmass_adv_v,&vel_grad_trial_ib[j_nSpace]);
+                      dpdeResidual_p_w[j]=ck.AdvectionJacobian_strong(dmass_adv_w,&vel_grad_trial_ib[j_nSpace]);
                       dpdeResidual_u_u[j]=ck.MassJacobian_strong(dmom_u_acc_u_t,vel_trial[j]) +
                         ck.HamiltonianJacobian_strong(dmom_ham_grad_sge,&vel_grad_trial_ib[j_nSpace]) +
                         ck.AdvectionJacobian_strong(dmom_adv_sge,&vel_grad_trial_ib[j_nSpace]) -
@@ -6052,6 +6062,9 @@ namespace proteus
                                                                     (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) +
                                                                     (1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_w_p[j],Lstar_w_p[i]) +
                                                                     PRESSURE_PROJECTION_STABILIZATION*ck.pressureProjection_weak(mom_uu_diff_ten[1], p_trial[j], 1./3., p_test_ref.data()[k*nDOF_test_element +i],dV));
+                              /* elementJacobian_p_p[i][j] += H_s*H_f*(ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) + */
+                              /*                                       ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) + */
+                              /*                                       ck.SubgridErrorJacobian(dsubgridError_w_p[j],Lstar_w_p[i])); */
                             }
                         }
                     }
@@ -6069,9 +6082,12 @@ namespace proteus
                                                                 ck.MassJacobian_weak(dmass_ham_w,vel_trial[j],p_test_dV[i]));
                           if (nDOF_test_element == nDOF_v_trial_element)
                             {
-                              elementJacobian_p_u[i][j] += H_s*H_f*(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]);
-                              elementJacobian_p_v[i][j] += H_s*H_f*(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]);
-                              elementJacobian_p_w[i][j] += H_s*H_f*(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_p[i]);
+                              /* elementJacobian_p_u[i][j] += H_s*H_f*(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]); */
+                              /* elementJacobian_p_v[i][j] += H_s*H_f*(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]); */
+                              /* elementJacobian_p_w[i][j] += H_s*H_f*(1-PRESSURE_PROJECTION_STABILIZATION)*ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_p[i]); */
+                              elementJacobian_p_u[i][j] += H_s*H_f*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]);
+                              elementJacobian_p_v[i][j] += H_s*H_f*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]);
+                              elementJacobian_p_w[i][j] += H_s*H_f*ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_p[i]);
                             }
                         }
                     }
@@ -6133,12 +6149,12 @@ namespace proteus
                                                                 ck.ReactionJacobian_weak(dmom_v_source[1]+NONCONSERVATIVE_FORM*dmom_v_acc_v*div_mesh_velocity,vel_trial[j],vel_test_dV[i]) +
                                                                 MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
                                                                 MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) +
-                                                                ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial_ib[j_nSpace],&vel_grad_test_dV[i_nSpace]));
+                                                                ck.NumericalDiffusionJacobian(q_numDiff_v_last.data()[eN_k],&vel_grad_trial_ib[j_nSpace],&vel_grad_test_dV[i_nSpace]));
                           elementJacobian_v_w[i][j] += H_s*H_f*(ck.HamiltonianJacobian_weak(dmom_v_ham_grad_w,&vel_grad_trial_ib[j_nSpace],vel_test_dV[i]) +
                                                                 ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial[j],&vel_grad_test_dV[i_nSpace]) +
                                                                 ck.MassJacobian_weak(dmom_v_ham_w,vel_trial[j],vel_test_dV[i]) + //cek hack for nonlinear hamiltonian
                                                                 ck.SimpleDiffusionJacobian_weak(sdInfo_v_w_rowptr.data(),sdInfo_v_w_colind.data(),mom_vw_diff_ten,&vel_grad_trial_ib[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
-                                                                ck.ReactionJacobian_weak(dmom_w_source[2],vel_trial[j],vel_test_dV[i]) +
+                                                                ck.ReactionJacobian_weak(dmom_v_source[2],vel_trial[j],vel_test_dV[i]) +
                                                                 MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_w[j],Lstar_p_v[i]));
                           elementJacobian_w_u[i][j] += H_s*H_f*(ck.HamiltonianJacobian_weak(dmom_w_ham_grad_u,&vel_grad_trial_ib[j_nSpace],vel_test_dV[i]) +
                                                                 ck.AdvectionJacobian_weak(dmom_w_adv_u,vel_trial[j],&vel_grad_test_dV[i_nSpace]) +
@@ -6160,7 +6176,7 @@ namespace proteus
                                                                 ck.ReactionJacobian_weak(dmom_w_source[2]+NONCONSERVATIVE_FORM*dmom_w_acc_w*div_mesh_velocity,vel_trial[j],vel_test_dV[i]) +
                                                                 MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_w[j],Lstar_p_w[i]) +
                                                                 MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_w[i]) +
-                                                                ck.NumericalDiffusionJacobian(q_numDiff_w_last[eN_k],&vel_grad_trial_ib[j_nSpace],&vel_grad_test_dV[i_nSpace]));
+                                                                ck.NumericalDiffusionJacobian(q_numDiff_w_last.data()[eN_k],&vel_grad_trial_ib[j_nSpace],&vel_grad_test_dV[i_nSpace]));
                         }//j
                     }//i
                   if (nParticles > 0)
@@ -6202,8 +6218,7 @@ namespace proteus
                               elementJacobian_w_w[i][j] += H_f*(ck.MassJacobian_weak(dmom_w_ham_w_s,vel_trial[j],vel_test_dV[i]) +
                                                                 ck.HamiltonianJacobian_weak(dmom_w_ham_grad_w_s,&vel_grad_trial_ib[j_nSpace],vel_test_dV[i]) +
                                                                 ck.AdvectionJacobian_weak(dmom_w_adv_w_s,vel_trial[j],&vel_grad_test_dV[i_nSpace]) +
-                                                                ck.ReactionJacobian_weak(dmom_w_source_s[2],vel_trial[j],vel_test_dV[i]));
-                              
+                                                                ck.ReactionJacobian_weak(dmom_w_source_s[2],vel_trial[j],vel_test_dV[i]));                              
                             }//j
                         }//i
                     }
@@ -6323,7 +6338,7 @@ namespace proteus
                     p_test_dS[nDOF_test_element],vel_test_dS[nDOF_v_test_element],
                     p_grad_trial_trace[nDOF_trial_element*nSpace],vel_grad_trial_trace[nDOF_v_trial_element*nSpace],
                     p_grad_test_dS[nDOF_trial_element*nSpace],vel_grad_test_dS[nDOF_v_trial_element*nSpace],
-                    normal[2],x_int,y_int,z_int,xt_int,yt_int,zt_int,integralScaling,
+                    normal[nSpace],x_int,y_int,z_int,xt_int,yt_int,zt_int,integralScaling,
                     G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty,
                     force_x,force_y,force_z,force_p_x,force_p_y,force_p_z,force_v_x,force_v_y,force_v_z,r_x,r_y,r_z;
                   //compute information about mapping from reference element to physical element
@@ -6501,9 +6516,9 @@ namespace proteus
                 {
                   int ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb;
                   int ebN_local_kb_j = ebN_local_kb*nDOF_mesh_trial_element+j;
-                  x += mesh_dof_ref[j*3+0]*mesh_trial_trace_ref[ebN_local_kb_j]; 
-                  y += mesh_dof_ref[j*3+1]*mesh_trial_trace_ref[ebN_local_kb_j]; 
-                  z += mesh_dof_ref[j*3+2]*mesh_trial_trace_ref[ebN_local_kb_j];
+                  x += mesh_dof_ref[j*3+0]*mesh_trial_trace_ref.data()[ebN_local_kb_j]; 
+                  y += mesh_dof_ref[j*3+1]*mesh_trial_trace_ref.data()[ebN_local_kb_j]; 
+                  z += mesh_dof_ref[j*3+2]*mesh_trial_trace_ref.data()[ebN_local_kb_j];
                 }
               xb_ref_calc[3*kb+0] = x;
               xb_ref_calc[3*kb+1] = y;
@@ -6686,7 +6701,7 @@ namespace proteus
                 dS,
                 p_test_dS[nDOF_test_element],
                 vel_test_dS[nDOF_v_test_element],
-                normal[2],
+                normal[nSpace],
                 x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
                 vel_grad_test_dS[nDOF_v_trial_element*nSpace],
                 //VRANS
@@ -6754,6 +6769,7 @@ namespace proteus
               ck_v.gradFromDOF(u_old_dof.data(),&vel_l2g.data()[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_u_old);
               ck_v.gradFromDOF(v_old_dof.data(),&vel_l2g.data()[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_v_old);
               ck_v.gradFromDOF(w_old_dof.data(),&vel_l2g.data()[eN_nDOF_v_trial_element],vel_grad_trial_trace,grad_w_old);
+              ck.valFromDOF(phi_solid_nodes.data(),&p_l2g.data()[eN_nDOF_trial_element],&p_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],phi_s_ext);
               //precalculate test function products with integration weights
               for (int j=0;j<nDOF_test_element;j++)
                 {
@@ -6884,8 +6900,8 @@ namespace proteus
                                    0.0,
                                    0.0);
               //cek needs to be fixed for two-phase ifem
-              H = (1.0-useVF)*gf.H(eps_rho,bc_ebqe_phi_ext[ebNE_kb]) + useVF*fmin(1.0,fmax(0.0,bc_ebqe_vf_ext[ebNE_kb]));
-              ImH = (1.0-useVF)*gf.ImH(eps_rho,bc_ebqe_phi_ext[ebNE_kb]) + useVF*(1.0-fmin(1.0,fmax(0.0,bc_ebqe_vf_ext[ebNE_kb])));
+              H = (1.0-useVF)*gf.H(eps_rho,bc_ebqe_phi_ext.data()[ebNE_kb]) + useVF*fmin(1.0,fmax(0.0,bc_ebqe_vf_ext.data()[ebNE_kb]));
+              ImH = (1.0-useVF)*gf.ImH(eps_rho,bc_ebqe_phi_ext.data()[ebNE_kb]) + useVF*(1.0-fmin(1.0,fmax(0.0,bc_ebqe_vf_ext.data()[ebNE_kb])));
               rho  = rho_0*ImH + rho_1*H;
               nu  = nu_0*ImH + nu_1*H;
               //
@@ -7367,98 +7383,105 @@ namespace proteus
                         {
                           register int eN_j = eN*nDOF_v_trial_element+j;
                           register int ebN_i_j = ebN*4*nDOF_v_test_X_v_trial_element + i*nDOF_v_trial_element + j,ebN_local_kb_j=ebN_local_kb*nDOF_v_trial_element+j;
-                          globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] += H_s*(fluxJacobian_u_u[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_u.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_u_u_rowptr.data(),
-                                                                                                                                                                                     sdInfo_u_u_colind.data(),
-                                                                                                                                                                                     mom_uu_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
-                          globalJacobian.data()[csrRowIndeces_u_v.data()[eN_i] + csrColumnOffsets_eb_u_v.data()[ebN_i_j]] += H_s*(fluxJacobian_u_v[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_u.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_u_v_rowptr.data(),
-                                                                                                                                                                                     sdInfo_u_v_colind.data(),
-                                                                                                                                                                                     mom_uv_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
-                          globalJacobian.data()[csrRowIndeces_u_w.data()[eN_i] + csrColumnOffsets_eb_u_w.data()[ebN_i_j]] += H_s*(fluxJacobian_u_w[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_w.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_u.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_u_w_rowptr.data(),
-                                                                                                                                                                                     sdInfo_u_w_colind.data(),
-                                                                                                                                                                                     mom_uw_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
-
-                          globalJacobian.data()[csrRowIndeces_v_u.data()[eN_i] + csrColumnOffsets_eb_v_u.data()[ebN_i_j]] += H_s*(fluxJacobian_v_u[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_v.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_v_u_rowptr.data(),
-                                                                                                                                                                                     sdInfo_v_u_colind.data(),
-                                                                                                                                                                                     mom_vu_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
-                          globalJacobian.data()[csrRowIndeces_v_v.data()[eN_i] + csrColumnOffsets_eb_v_v.data()[ebN_i_j]] += H_s*(fluxJacobian_v_v[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_v.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_v_v_rowptr.data(),
-                                                                                                                                                                                     sdInfo_v_v_colind.data(),
-                                                                                                                                                                                     mom_vv_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
-                          globalJacobian.data()[csrRowIndeces_v_w.data()[eN_i] + csrColumnOffsets_eb_v_w.data()[ebN_i_j]] += H_s*(fluxJacobian_v_w[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_w.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_v.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_v_w_rowptr.data(),
-                                                                                                                                                                                     sdInfo_v_w_colind.data(),
-                                                                                                                                                                                     mom_vw_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
-
-                          globalJacobian.data()[csrRowIndeces_w_u.data()[eN_i] + csrColumnOffsets_eb_w_u.data()[ebN_i_j]] += H_s*(fluxJacobian_w_u[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_w.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_w_u_rowptr.data(),
-                                                                                                                                                                                     sdInfo_w_u_colind.data(),
-                                                                                                                                                                                     mom_wu_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
-                          globalJacobian.data()[csrRowIndeces_w_v.data()[eN_i] + csrColumnOffsets_eb_w_v.data()[ebN_i_j]] += H_s*(fluxJacobian_w_v[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_w.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_w_v_rowptr.data(),
-                                                                                                                                                                                     sdInfo_w_v_colind.data(),
-                                                                                                                                                                                     mom_wv_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
-                          globalJacobian.data()[csrRowIndeces_w_w.data()[eN_i] + csrColumnOffsets_eb_w_w.data()[ebN_i_j]] += H_s*(fluxJacobian_w_w[j]*vel_test_dS[i]+
-                                                                                                                                  ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_w.data()[ebNE_kb],
-                                                                                                                                                                                     isDiffusiveFluxBoundary_w.data()[ebNE_kb],
-                                                                                                                                                                                     eb_adjoint_sigma,
-                                                                                                                                                                                     vel_trial_trace_ref.data()[ebN_local_kb_j],
-                                                                                                                                                                                     normal,
-                                                                                                                                                                                     sdInfo_w_w_rowptr.data(),
-                                                                                                                                                                                     sdInfo_w_w_colind.data(),
-                                                                                                                                                                                     mom_ww_diff_ten_ext,
-                                                                                                                                                                                     &vel_grad_test_dS[i*nSpace]));
+                          globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_u_u[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_u.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_u_u_rowptr.data(),
+										    sdInfo_u_u_colind.data(),
+										    mom_uu_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
+                          globalJacobian.data()[csrRowIndeces_u_v.data()[eN_i] + csrColumnOffsets_eb_u_v.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_u_v[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_u.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_u_v_rowptr.data(),
+										    sdInfo_u_v_colind.data(),
+										    mom_uv_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
+                          globalJacobian.data()[csrRowIndeces_u_w.data()[eN_i] + csrColumnOffsets_eb_u_w.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_u_w[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_w.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_u.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_u_w_rowptr.data(),
+										    sdInfo_u_w_colind.data(),
+										    mom_uw_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
+			  globalJacobian.data()[csrRowIndeces_v_u.data()[eN_i] + csrColumnOffsets_eb_v_u.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_v_u[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_v.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_v_u_rowptr.data(),
+										    sdInfo_v_u_colind.data(),
+										    mom_vu_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
+                          globalJacobian.data()[csrRowIndeces_v_v.data()[eN_i] + csrColumnOffsets_eb_v_v.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_v_v[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_v.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_v_v_rowptr.data(),
+										    sdInfo_v_v_colind.data(),
+										    mom_vv_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
+                          globalJacobian.data()[csrRowIndeces_v_w.data()[eN_i] + csrColumnOffsets_eb_v_w.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_v_w[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_w.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_v.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_v_w_rowptr.data(),
+										    sdInfo_v_w_colind.data(),
+										    mom_vw_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
+                          globalJacobian.data()[csrRowIndeces_w_u.data()[eN_i] + csrColumnOffsets_eb_w_u.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_w_u[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_w.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_w_u_rowptr.data(),
+										    sdInfo_w_u_colind.data(),
+										    mom_wu_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
+                          globalJacobian.data()[csrRowIndeces_w_v.data()[eN_i] + csrColumnOffsets_eb_w_v.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_w_v[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_w.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_w_v_rowptr.data(),
+										    sdInfo_w_v_colind.data(),
+										    mom_wv_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
+                          globalJacobian.data()[csrRowIndeces_w_w.data()[eN_i] + csrColumnOffsets_eb_w_w.data()[ebN_i_j]] +=
+			    H_s*(fluxJacobian_w_w[j]*vel_test_dS[i]+
+				 ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_w.data()[ebNE_kb],
+										    isDiffusiveFluxBoundary_w.data()[ebNE_kb],
+										    eb_adjoint_sigma,
+										    vel_trial_trace_ref.data()[ebN_local_kb_j],
+										    normal,
+										    sdInfo_w_w_rowptr.data(),
+										    sdInfo_w_w_colind.data(),
+										    mom_ww_diff_ten_ext,
+										    &vel_grad_test_dS[i*nSpace]));
                         }//j
                     }//i
                 }
