@@ -164,7 +164,7 @@ namespace proteus
                               double forcey,
                               double forcez)
     {
-      double mu,norm_n,nu_t=0.0;
+      double mu,norm_n,nu_t;
       //calculate eddy viscosity
       switch (turbulenceClosureModel)
         {
@@ -174,6 +174,7 @@ namespace proteus
             norm_S = sqrt(2.0*(grad_u[0]*grad_u[0] + grad_v[1]*grad_v[1] +
                                0.5*(grad_u[1]+grad_v[0])*(grad_u[1]+grad_v[0])));
             nu_t = smagorinskyConstant*smagorinskyConstant*h_e*h_e*norm_S;
+	    break;
           }
         case 2:
           {
@@ -184,7 +185,12 @@ namespace proteus
             if (re > 1.0)
               cs=0.027*pow(10.0,-3.23*pow(re,-0.92));
             nu_t = cs*h_e*h_e*norm_S;
+	    break;
           }
+	default:
+	  {
+	    nu_t=0.0;
+	  }
         }
       eddy_viscosity = nu_t;
       nu += (1.0-LAG_LES)*nu_t + LAG_LES*eddy_viscosity_last;
@@ -729,6 +735,7 @@ namespace proteus
       /* uc = sqrt(u*u+v*v*+w*w);  */
       /* duc_du = u/(uc+1.0e-12); */
       /* duc_dv = v/(uc+1.0e-12); */
+      /* duc_dw = w/(uc+1.0e-12); */
       //semi-implicit quadratic term
       uc = sqrt(uStar*uStar+vStar*vStar);
       duc_du = 0.0;
@@ -2130,7 +2137,7 @@ namespace proteus
                   q_x.data()[eN_k_3d + 0] = x;
                   q_x.data()[eN_k_3d + 1] = y;
                   double ball_n[nSpace];
-                  if (use_ball_as_particle == 1)
+                  if (use_ball_as_particle == 1 && nParticles > 0)
                     {
                       int ball_index=get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),x,y,z,distance_to_solids.data()[eN_k]);
                       get_normal_to_ith_ball(nParticles, ball_center.data(), ball_radius.data(),ball_index,x,y,z,ball_n[0],ball_n[1]);
@@ -2294,7 +2301,6 @@ namespace proteus
                   q_rho.data()[eN_k] = rho;
                   //VRANS
                   mass_source = q_mass_source.data()[eN_k];
-                  assert(mass_source == 0.0);
                   //todo: decide if these should be lagged or not?
                   updateDarcyForchheimerTerms_Ergun(NONCONSERVATIVE_FORM,
                                                     /* linearDragFactor, */
@@ -2317,12 +2323,12 @@ namespace proteus
                                                     w,
                                                     q_velocity_sge.data()[eN_k_nSpace+0],
                                                     q_velocity_sge.data()[eN_k_nSpace+1],
-                                                    q_velocity_sge.data()[eN_k_nSpace+1],//cek hack, should not be used
+                                                    q_velocity_sge.data()[eN_k_nSpace+1],//dummy entry for 2D
                                                     eps_solid.data()[elementFlags.data()[eN]],
                                                     phi_solid.data()[eN_k],
                                                     q_velocity_solid.data()[eN_k_nSpace+0],
                                                     q_velocity_solid.data()[eN_k_nSpace+1],
-                                                    q_velocity_solid.data()[eN_k_nSpace+1],//cek hack, should not be used
+                                                    q_velocity_solid.data()[eN_k_nSpace+1],//dummy entry for 2D
                                                     mom_u_source,
                                                     mom_v_source,
                                                     mom_w_source,
@@ -2611,7 +2617,7 @@ namespace proteus
                                                w,
                                                q_velocity_sge.data()[eN_k_nSpace+0],
                                                q_velocity_sge.data()[eN_k_nSpace+1],
-                                               q_velocity_sge.data()[eN_k_nSpace+1],
+                                               q_velocity_sge.data()[eN_k_nSpace+1],//dummy entry for 2D
                                                particle_eps,
                                                grad_u,
                                                grad_v,
@@ -2767,10 +2773,8 @@ namespace proteus
                                                        ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) +
                                                        MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridError(subgridError_v,Lstar_v_v[i]) +
                                                        ck.NumericalDiffusion(q_numDiff_v_last.data()[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]));
-
                       elementResidual_u[i] +=  H_s*H_f*MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_u[i]);
-                      elementResidual_v[i] +=  H_s*H_f*MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_v[i]);
-                      
+                      elementResidual_v[i] +=  H_s*H_f*MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridError(subgridError_p,Lstar_p_v[i]);                      
                       if (nParticles > 0)//solid boundary terms
                         {
                           elementResidual_u[i] += H_f*(ck.Advection_weak(mom_u_adv_s,&vel_grad_test_dV[i_nSpace]) +
@@ -2837,12 +2841,12 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
         }//elements
       //std::cout<<"p,u,v L2 error integrals (shoudl be non-negative) "<<p_L2<<'\t'<<u_L2<<'\t'<<v_L2<<'\t'<<"Flow Domain Volume = "<<domain_volume<<std::endl;
-      assert(p_L2 >= 0.0);
-      assert(u_L2 >= 0.0);
-      assert(v_L2 >= 0.0);
-      p_L2 = sqrt(p_L2);
-      u_L2 = sqrt(u_L2);
-      v_L2 = sqrt(v_L2);
+      /* assert(p_L2 >= 0.0); */
+      /* assert(u_L2 >= 0.0); */
+      /* assert(v_L2 >= 0.0); */
+      /* p_L2 = sqrt(p_L2); */
+      /* u_L2 = sqrt(u_L2); */
+      /* v_L2 = sqrt(v_L2); */
       for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); )
         {
           if(elementIsActive[elementBoundaryElementsArray[(*it)*2+0]] && elementIsActive[elementBoundaryElementsArray[(*it)*2+1]])
@@ -3301,7 +3305,7 @@ namespace proteus
               //calculate the pde coefficients using the solution and the boundary values for the solution
               //
               double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
-              if (use_ball_as_particle == 1)
+              if (use_ball_as_particle == 1 && nParticles > 0)
                 {
                   get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),x_ext,y_ext,z_ext,ebqe_phi_s.data()[ebNE_kb]);
                 }
@@ -3841,7 +3845,6 @@ namespace proteus
           for (int i=0;i<nDOF_v_test_element;i++)
             {
               int eN_i = eN*nDOF_v_test_element+i;
-
               globalResidual.data()[offset_u+stride_u*rvel_l2g.data()[eN_i]]+=elementResidual_u[i];
               globalResidual.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]]+=elementResidual_v[i];
             }//i
@@ -3861,8 +3864,8 @@ namespace proteus
             for (int i=0;i<nDOF_test_element;i++)
               {
                 int eN_i = eN*nDOF_test_element+i;
-                if (p_l2g[eN_i] > nDOF_pressure)
-                  nDOF_pressure=p_l2g[eN_i];
+                if (p_l2g.data()[eN_i] > nDOF_pressure)
+                  nDOF_pressure=p_l2g.data()[eN_i];
               }
           nDOF_pressure +=1;
           std::cout<<"nDOF_pressure "<<nDOF_pressure<<std::endl;
@@ -4621,7 +4624,7 @@ namespace proteus
                   porosity = q_porosity.data()[eN_k];
                   //
                   double ball_n[nSpace];
-                  if (use_ball_as_particle == 1)
+                  if (use_ball_as_particle == 1 && nParticles > 0)
                     {
                       int ball_index=get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),x,y,z,distance_to_solids.data()[eN_k]);
                       get_normal_to_ith_ball(nParticles, ball_center.data(), ball_radius.data(),ball_index,x,y,z,ball_n[0],ball_n[1]);
@@ -4634,8 +4637,8 @@ namespace proteus
                   //calculate pde coefficients and derivatives at quadrature points
                   //
                   double eddy_viscosity(0.);//not really interested in saving eddy_viscosity in jacobian
-                  const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-                  const double H_s = gf_s.H(particle_eps, phi_solid[eN_k]);
+                  const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
+                  const double H_s = gf_s.H(particle_eps, phi_solid.data()[eN_k]);
                   double rho,nu;
                   if (gf.useExact)
                     {
@@ -4786,12 +4789,12 @@ namespace proteus
                                                     w,
                                                     q_velocity_sge.data()[eN_k_nSpace+0],
                                                     q_velocity_sge.data()[eN_k_nSpace+1],
-                                                    q_velocity_sge.data()[eN_k_nSpace+1],//cek hack, should not be used
+                                                    q_velocity_sge.data()[eN_k_nSpace+1],//dummy entry for 2D
                                                     eps_solid.data()[elementFlags.data()[eN]],
                                                     phi_solid.data()[eN_k],
                                                     q_velocity_solid.data()[eN_k_nSpace+0],
                                                     q_velocity_solid.data()[eN_k_nSpace+1],
-                                                    q_velocity_solid.data()[eN_k_nSpace+1],//cek hack, should not be used
+                                                    q_velocity_solid.data()[eN_k_nSpace+1],//dummy entry for 2D
                                                     mom_u_source,
                                                     mom_v_source,
                                                     mom_w_source,
@@ -5119,7 +5122,7 @@ namespace proteus
                                                w,
                                                q_velocity_sge.data()[eN_k_nSpace+0],
                                                q_velocity_sge.data()[eN_k_nSpace+1],
-                                               q_velocity_sge.data()[eN_k_nSpace+1],
+                                               q_velocity_sge.data()[eN_k_nSpace+1],//dummy entry for 2D
                                                particle_eps,
                                                grad_u,
                                                grad_v,
@@ -5234,14 +5237,12 @@ namespace proteus
                                                                 MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
                                                                 MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) +
                                                                 ck.NumericalDiffusionJacobian(q_numDiff_u_last.data()[eN_k],&vel_grad_trial_ib[j_nSpace],&vel_grad_test_dV[i_nSpace]));
-                          
                           elementJacobian_u_v[i][j] += H_s*H_f*(ck.HamiltonianJacobian_weak(dmom_u_ham_grad_v,&vel_grad_trial_ib[j_nSpace],vel_test_dV[i]) +
                                                                 ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial[j],&vel_grad_test_dV[i_nSpace]) +
                                                                 ck.MassJacobian_weak(dmom_u_ham_v,vel_trial[j],vel_test_dV[i]) + //cek hack for nonlinear hamiltonian
                                                                 ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr.data(),sdInfo_u_v_colind.data(),mom_uv_diff_ten,&vel_grad_trial_ib[j_nSpace],&vel_grad_test_dV[i_nSpace]) +
                                                                 ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial[j],vel_test_dV[i]) +
-                                                                MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]));
-                          
+                                                                MOMENTUM_SGE*PRESSURE_SGE*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]));                          
                           elementJacobian_v_u[i][j] += H_s*H_f*(ck.HamiltonianJacobian_weak(dmom_v_ham_grad_u,&vel_grad_trial_ib[j_nSpace],vel_test_dV[i]) +
                                                                 ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial[j],&vel_grad_test_dV[i_nSpace]) +
                                                                 ck.MassJacobian_weak(dmom_v_ham_u,vel_trial[j],vel_test_dV[i]) + //cek hack for nonlinear hamiltonian
@@ -5836,7 +5837,7 @@ namespace proteus
               //calculate the internal and external trace of the pde coefficients
               //
               double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now
-              if (use_ball_as_particle == 1)
+              if (use_ball_as_particle == 1 && nParticles > 0)
                 {
                   get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),x_ext,y_ext,z_ext,ebqe_phi_s.data()[ebNE_kb]);
                 }
@@ -5940,8 +5941,8 @@ namespace proteus
                                    0.0,
                                    0.0);
               //cek needs to be fixed for two-phase ifem
-              H = (1.0-useVF)*gf.H(eps_rho,bc_ebqe_phi_ext[ebNE_kb]) + useVF*fmin(1.0,fmax(0.0,bc_ebqe_vf_ext[ebNE_kb]));
-              ImH = (1.0-useVF)*gf.ImH(eps_rho,bc_ebqe_phi_ext[ebNE_kb]) + useVF*(1.0-fmin(1.0,fmax(0.0,bc_ebqe_vf_ext[ebNE_kb])));
+              H = (1.0-useVF)*gf.H(eps_rho,bc_ebqe_phi_ext.data()[ebNE_kb]) + useVF*fmin(1.0,fmax(0.0,bc_ebqe_vf_ext.data()[ebNE_kb]));
+              ImH = (1.0-useVF)*gf.ImH(eps_rho,bc_ebqe_phi_ext.data()[ebNE_kb]) + useVF*(1.0-fmin(1.0,fmax(0.0,bc_ebqe_vf_ext.data()[ebNE_kb])));
               rho  = rho_0*ImH + rho_1*H;
               nu  = nu_0*ImH + nu_1*H;
               //
@@ -6805,8 +6806,8 @@ namespace proteus
 
                 int j_nSpace = j*nSpace;
 
-                //local_matrix_p_p[i][j] -= ck.HamiltonianJacobian_weak(dmass_adv_p,&p_grad_test_dV[i_nSpace],p_trial_ref.data()[j]);
-                local_matrix_p_p[i][j] += ck.HamiltonianJacobian_weak(dmass_adv_p ,&p_grad_trial[j_nSpace]  ,p_test_dV[i]);
+                local_matrix_p_p[i][j] -= ck.HamiltonianJacobian_weak(dmass_adv_p,&p_grad_test_dV[i_nSpace],p_trial_ref.data()[j]);
+                //local_matrix_p_p[i][j] += ck.HamiltonianJacobian_weak(dmass_adv_p ,&p_grad_trial[j_nSpace]  ,p_test_dV[i]);
                 local_matrix_u_u[i][j] += ck.HamiltonianJacobian_weak(dmom_u_adv_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]);
                 local_matrix_v_v[i][j] += ck.HamiltonianJacobian_weak(dmom_v_adv_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]);
               }
