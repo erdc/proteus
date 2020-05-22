@@ -3071,7 +3071,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             argsDict["vel_trial_trace_ref"] = self.u[0].femSpace.psi_trace
             argsDict["ebqe_velocity"] = self.ebqe[('velocity', 0)]
             argsDict["velocityAverage"] = self.ebq_global[('velocityAverage', 0)]
-            self.rans3pf.calculateVelocityAverage(args)
+            self.rans3pf.calculateVelocityAverage(argsDict)
             if self.movingDomain:
                 log("Element Quadrature", level=3)
                 self.calculateElementQuadrature(domainMoved=True)
