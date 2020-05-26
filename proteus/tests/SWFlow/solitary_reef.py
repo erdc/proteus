@@ -2,13 +2,14 @@ from __future__ import division
 from builtins import object
 from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
-from proteus.Domain import RectangularDomain
+from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 from proteus.Gauges import PointGauges
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
+import os
 
 """
 We reproduce the 2009-2010 experiments of [Swigler, 2009] and
@@ -31,7 +32,10 @@ opts = Context.Options([
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs", False, "Use reflecting BCs")
+    ("structured", True, "Structured or unstructured mesh"),
+    ("he", 0.5, "Mesh size for unstructured mesh"),
+    ("reflecting_BCs", False, "Use reflecting BCs"),
+    ("want_gauges", False, "Output for water height point gauge")
 ])
 
 ###################
@@ -39,14 +43,21 @@ opts = Context.Options([
 ###################
 L = (48.8, 26.5)  # this is length in x direction and y direction
 refinement = opts.refinement
-domain = RectangularDomain(L=L, x=[0, -13.25, 0])
+rectangle = RectangularDomain(L=L, x=[0, -13.25, 0])
 
 # CREATE REFINEMENT #
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 2) + 1
 he = old_div(L[0], float(nnx - 1))
-triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
+if opts.structured:
+    domain = rectangle
+else:
+    rectangle.writePoly("reef")
+    domain = PlanarStraightLineGraphDomain(fileprefix="reef")
+    domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
+    nnx = None
+    nny = None
 
 ###############################
 #  CONSTANTS NEEDED FOR SETUP #
@@ -188,7 +199,6 @@ boundaryConditions = {'water_height': lambda x, flag: None,
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-want_gauges = False
 heightPointGauges = PointGauges(gauges=((('h'), ((7.5, 0.0,  0),
                                                  (13.0, 0.0, 0),
                                                  (21.0, 0.0, 0),
@@ -198,7 +208,7 @@ heightPointGauges = PointGauges(gauges=((('h'), ((7.5, 0.0,  0),
                                                  (25.0, 0.0, 0),
                                                  (25.0, 5.0, 0),
                                                  (25.0, 10.0, 0))),),
-                                activeTime=(0., opts.final_time),
+                                activeTime=(0.01, opts.final_time),
                                 fileName='reef_wave_gauges.csv')
 
 # ********************************************* #
@@ -207,7 +217,7 @@ heightPointGauges = PointGauges(gauges=((('h'), ((7.5, 0.0,  0),
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
-                                              structured=True,
+                                              structured=opts.structured,
                                               he=he,
                                               nnx=nnx,
                                               nny=nny,
@@ -219,5 +229,5 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=None)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
-if want_gauges:
+if opts.want_gauges:
     mySWFlowProblem.auxiliaryVariables = [heightPointGauges]
