@@ -920,7 +920,7 @@ class RelaxationZone:
         coordinates of center of the zone
     orientation: array_like
         orientation for absorption/generation zones: from boundary to tank
-    epsFact_solid: float
+    epsFact_porous: float
         half the zone length
     waves: Optional[proteus.WaveTools]
         class instance of a wave from proteus.WaveTools (must be set for
@@ -944,7 +944,7 @@ class RelaxationZone:
         VOF value of air (default: 1)
     """
 
-    def __cinit__(self, zone_type, center, orientation, epsFact_solid,
+    def __cinit__(self, zone_type, center, orientation, epsFact_porous,
                   waves=None, shape=None, wind_speed=np.array([0., 0., 0.]),
                   dragAlpha=old_div(0.5, 1.005e-6), dragBeta=0., porosity=1., vert_axis=None, smoothing=0.,
                   vof_water=0., vof_air=1.):
@@ -959,7 +959,7 @@ class RelaxationZone:
         if waves is not None:
             self.waves = __cppClass_WavesCharacteristics(waves=waves, wind_speed=wind_speed, vert_axis=vert_axis,
                                                          smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
-        self.epsFact_solid = epsFact_solid
+        self.epsFact_porous = epsFact_porous
         self.dragAlpha = dragAlpha
         self.dragBeta = dragBeta
         self.porosity = porosity
@@ -970,18 +970,18 @@ class RelaxationZone:
             # self.u = &self.waves.u
             # self.eta = &self.waves.eta
             self.uu = self.__cpp_calculate_vel_wave
-            self.phi = self.__cpp_calculate_phi_solid
+            self.phi = self.__cpp_calculate_phi_porous_sponge
         elif self.zone_type == 'absorption':
             self.uu = self.__cpp_calculate_vel_zero
-            self.phi = self.__cpp_calculate_phi_solid
+            self.phi = self.__cpp_calculate_phi_porous_sponge
         elif self.zone_type == 'porous':
             self.uu = self.__cpp_calculate_vel_zero
-            self.phi = self.__cpp_calculate_phi_solid_porous
+            self.phi = self.__cpp_calculate_phi_porous
 
     def calculate_phi(self, x):
         return self.phi(self, x)
 
-    def __cpp_calculate_phi_solid(self, x):
+    def __cpp_calculate_phi_porous_sponge(self, x):
         """
         Used for RelaxationZone only
         """
@@ -999,8 +999,9 @@ class RelaxationZone:
         phi = o[0] * d[0] + o[1] * d[1] + o[2] * d[2]
         return phi
 
-    def __cpp_calculate_phi_solid_porous(self, x):
-        return self.epsFact_solid
+    def __cpp_calculate_phi_porous(self, x):
+        IN_POROUS_ZONE=-10000.0
+        return IN_POROUS_ZONE
 
     def calculate_vel(self, x, t):
         cython.declare(d=cython.double[3], o=cython.double[3])
@@ -1081,8 +1082,8 @@ class RelaxationZoneWaveGenerator:
             nk = m.coefficients.q_phi.shape[1]
             t = m.timeIntegration.t
             qx = m.q['x']
-            q_phi_solid = m.coefficients.q_phi_solid
-            q_velocity_solid = m.coefficients.q_velocity_solid
+            q_phi_porous = m.coefficients.q_phi_porous
+            q_velocity_porous = m.coefficients.q_velocity_porous
             mTypes = m.mesh.elementMaterialTypes
             # costly loop
             for eN in range(nE):
@@ -1095,14 +1096,14 @@ class RelaxationZoneWaveGenerator:
                             x[1] = qx[eN, k, 1]
                             x[2] = qx[eN, k, 2]
                             phi = zone.calculate_phi(x)
-                            q_phi_solid[eN, k] = phi
+                            q_phi_porous[eN, k] = phi
                             u = zone.calculate_vel(x, t)
-                            q_velocity_solid[eN, k, 0] = u[0]
-                            q_velocity_solid[eN, k, 1] = u[1]
+                            q_velocity_porous[eN, k, 0] = u[0]
+                            q_velocity_porous[eN, k, 1] = u[1]
                             if self.nd > 2:
-                                q_velocity_solid[eN, k, 2] = u[2]
-            m.q['phi_solid'] = q_phi_solid
-            m.q['velocity_solid'] = q_velocity_solid
+                                q_velocity_porous[eN, k, 2] = u[2]
+            m.q['phi_porous'] = q_phi_porous
+            m.q['velocity_porous'] = q_velocity_porous
 
 
 class __cppClass_WavesCharacteristics:
@@ -1472,7 +1473,7 @@ class WallFunctions(AuxiliaryVariables.AV_base):
         else:
             u0, u1, u2 = self.extractVelocity(x, t, n)
         self.meanV = np.array([u0, u1, u2])
-        # projection of u vector over an ortoganal plane to b_or
+        # projection of u vector over an ortoganal plane to n
         self.tanU = self.meanV - self.meanV * (n**2)
         # tangential unit vector
         self.tV = old_div(self.tanU,np.sqrt(np.sum(self.tanU**2)))

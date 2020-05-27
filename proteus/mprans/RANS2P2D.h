@@ -700,11 +700,11 @@ namespace proteus
                                            const double uStar,
                                            const double vStar,
                                            const double wStar,
-                                           const double eps_s,
-                                           const double phi_s,
-                                           const double u_s,
-                                           const double v_s,
-                                           const double w_s,
+                                           const double eps_porous,
+                                           const double phi_porous,
+                                           const double u_porous,
+                                           const double v_porous,
+                                           const double w_porous,
                                            double& mom_u_source,
                                            double& mom_v_source,
                                            double& mom_w_source,
@@ -712,7 +712,7 @@ namespace proteus
                                            double dmom_v_source[nSpace],
                                            double dmom_w_source[nSpace])
     {
-      double rho,mu,nu,H_mu,ImH_mu, uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+      double rho,mu,nu,H_mu,ImH_mu, uc,duc_du,duc_dv,duc_dw,viscosity,H_porous;
       H_mu = (1.0-useVF)*gf.H(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       ImH_mu = (1.0-useVF)*gf.ImH(eps_mu,phi)+useVF*(1.0-fmin(1.0,fmax(0.0,vf)));
       nu  = nu_0*ImH_mu+nu_1*H_mu;
@@ -726,10 +726,10 @@ namespace proteus
         {
           viscosity = nu;
         }
-      double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
+      double x = fmax(0.0, fmin( 1.0, 0.5+phi_porous/(2.0*eps_porous)));//0 at phi_porous = -eps, 1 at phi_porous=eps
 
       // Relaxation function, Jacobsen et al. 2011, Mayer et al 1998
-      H_s = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+      H_porous = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
 
       //implicit
       /* uc = sqrt(u*u+v*v*+w*w);  */
@@ -741,14 +741,14 @@ namespace proteus
       duc_du = 0.0;
       duc_dv = 0.0;
 
-      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
-      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
+      mom_u_source += H_porous*viscosity*(alpha + beta*uc)*(u-u_porous);
+      mom_v_source += H_porous*viscosity*(alpha + beta*uc)*(v-v_porous);
 
-      dmom_u_source[0] = H_s*viscosity*(alpha + beta*uc + beta*duc_du*(u-u_s));
-      dmom_u_source[1] = H_s*viscosity*beta*duc_dv*(u-u_s);
+      dmom_u_source[0] = H_porous*viscosity*(alpha + beta*uc + beta*duc_du*(u-u_porous));
+      dmom_u_source[1] = H_porous*viscosity*beta*duc_dv*(u-u_porous);
 
-      dmom_v_source[0] = H_s*viscosity*beta*duc_du*(v-v_s);
-      dmom_v_source[1] = H_s*viscosity*(alpha + beta*uc + beta*duc_dv*(v-v_s));
+      dmom_v_source[0] = H_porous*viscosity*beta*duc_du*(v-v_porous);
+      dmom_v_source[1] = H_porous*viscosity*(alpha + beta*uc + beta*duc_dv*(v-v_porous));
     }
 
     inline
@@ -1479,7 +1479,9 @@ namespace proteus
       double C_b = args.m_dscalar["C_b"];
       const xt::pyarray<double>& eps_solid = args.m_darray["eps_solid"];
       xt::pyarray<double>& phi_solid = args.m_darray["phi_solid"];
-      const xt::pyarray<double>& q_velocity_solid = args.m_darray["q_velocity_solid"];
+      const xt::pyarray<double>& eps_porous = args.m_darray["eps_porous"];
+      xt::pyarray<double>& phi_porous = args.m_darray["phi_porous"];
+      const xt::pyarray<double>& q_velocity_porous = args.m_darray["q_velocity_porous"];
       const xt::pyarray<double>& q_porosity = args.m_darray["q_porosity"];
       const xt::pyarray<double>& q_dragAlpha = args.m_darray["q_dragAlpha"];
       const xt::pyarray<double>& q_dragBeta = args.m_darray["q_dragBeta"];
@@ -2324,11 +2326,11 @@ namespace proteus
                                                     q_velocity_sge.data()[eN_k_nSpace+0],
                                                     q_velocity_sge.data()[eN_k_nSpace+1],
                                                     q_velocity_sge.data()[eN_k_nSpace+1],//dummy entry for 2D
-                                                    eps_solid.data()[elementFlags.data()[eN]],
-                                                    phi_solid.data()[eN_k],
-                                                    q_velocity_solid.data()[eN_k_nSpace+0],
-                                                    q_velocity_solid.data()[eN_k_nSpace+1],
-                                                    q_velocity_solid.data()[eN_k_nSpace+1],//dummy entry for 2D
+                                                    eps_porous.data()[elementFlags.data()[eN]],
+                                                    phi_porous.data()[eN_k],
+                                                    q_velocity_porous.data()[eN_k_nSpace+0],
+                                                    q_velocity_porous.data()[eN_k_nSpace+1],
+                                                    q_velocity_porous.data()[eN_k_nSpace+1],//dummy entry for 2D
                                                     mom_u_source,
                                                     mom_v_source,
                                                     mom_w_source,
@@ -4001,7 +4003,9 @@ namespace proteus
       double C_b = args.m_dscalar["C_b"];
       const xt::pyarray<double>& eps_solid = args.m_darray["eps_solid"];
       const xt::pyarray<double>& phi_solid = args.m_darray["phi_solid"];
-      const xt::pyarray<double>& q_velocity_solid = args.m_darray["q_velocity_solid"];
+      const xt::pyarray<double>& eps_porous = args.m_darray["eps_porous"];
+      const xt::pyarray<double>& phi_porous = args.m_darray["phi_porous"];
+      const xt::pyarray<double>& q_velocity_porous = args.m_darray["q_velocity_porous"];
       const xt::pyarray<double>& q_porosity = args.m_darray["q_porosity"];
       const xt::pyarray<double>& q_dragAlpha = args.m_darray["q_dragAlpha"];
       const xt::pyarray<double>& q_dragBeta = args.m_darray["q_dragBeta"];
@@ -4790,11 +4794,11 @@ namespace proteus
                                                     q_velocity_sge.data()[eN_k_nSpace+0],
                                                     q_velocity_sge.data()[eN_k_nSpace+1],
                                                     q_velocity_sge.data()[eN_k_nSpace+1],//dummy entry for 2D
-                                                    eps_solid.data()[elementFlags.data()[eN]],
-                                                    phi_solid.data()[eN_k],
-                                                    q_velocity_solid.data()[eN_k_nSpace+0],
-                                                    q_velocity_solid.data()[eN_k_nSpace+1],
-                                                    q_velocity_solid.data()[eN_k_nSpace+1],//dummy entry for 2D
+                                                    eps_porous.data()[elementFlags.data()[eN]],
+                                                    phi_porous.data()[eN_k],
+                                                    q_velocity_porous.data()[eN_k_nSpace+0],
+                                                    q_velocity_porous.data()[eN_k_nSpace+1],
+                                                    q_velocity_porous.data()[eN_k_nSpace+1],//dummy entry for 2D
                                                     mom_u_source,
                                                     mom_v_source,
                                                     mom_w_source,

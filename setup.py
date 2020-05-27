@@ -237,7 +237,7 @@ EXTENSIONS_TO_BUILD = [
               language='c++',
               extra_compile_args=PROTEUS_OPT,
               include_dirs=[numpy.get_include(),'proteus']),
-    Extension("mprans.BoundaryConditions",['proteus/mprans/BoundaryConditions.py'],
+    Extension("mprans.BoundaryConditions",['proteus/mprans/BoundaryConditions.py','proteus/mprans/BoundaryConditions.pxd'],
               language='c++',
               extra_compile_args=PROTEUS_OPT,
               include_dirs=[numpy.get_include(),'proteus']),
