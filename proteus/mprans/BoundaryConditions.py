@@ -1439,8 +1439,6 @@ class WallFunctions(AuxiliaryVariables.AV_base):
         Extraction of the velocity at y+ distance from the boundary.
         """
         coords = self.setYplusNormalDirection(x, t, n)
-        print (str(x)+"\t"+str(coords)+"\n")
-        print (str(n)+"\n")
         xi, element, rank = self.findElementContainingCoords(coords)
         if rank is not None:
             u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
@@ -1468,6 +1466,7 @@ class WallFunctions(AuxiliaryVariables.AV_base):
             Switch for initializing the module.
             True only during the first time step.
         """
+        n=np.pad(n,(0,3-n.shape[0]))
         if uInit is True or self.model is None:
             u0, u1, u2 = self.U0
         else:
