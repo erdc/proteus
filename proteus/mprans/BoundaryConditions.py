@@ -1466,7 +1466,7 @@ class WallFunctions(AuxiliaryVariables.AV_base):
             Switch for initializing the module.
             True only during the first time step.
         """
-        n=np.pad(n,(0,3-n.shape[0]))
+        n=np.pad(n,(0,3-n.shape[0]),mode='constant',constant_values=0.0)
         if uInit is True or self.model is None:
             u0, u1, u2 = self.U0
         else:
