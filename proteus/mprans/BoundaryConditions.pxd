@@ -132,6 +132,7 @@ cdef class RelaxationZone:
         double dragBeta
         double porosity
         double epsFact_solid
+        double epsFact_porous
         double vert_axis	
         double[:] center
         double[:] orientation
@@ -145,8 +146,8 @@ cdef class RelaxationZone:
     cdef double calculate_phi(self, double* x)
     @cython.locals(d1=double, d2=double, d3=double, phi=double,
                    o1=double, o2=double, o3=double)
-    cdef double __cpp_calculate_phi_solid(self, double[3] x)
-    cdef double __cpp_calculate_phi_solid_porous(self, double[3] x)
+    cdef double __cpp_calculate_phi_porous(self, double[3] x)
+    cdef double __cpp_calculate_phi_porous_sponge(self, double[3] x)
 
 cdef class RelaxationZoneWaveGenerator:
     cdef int nd  # dimension
@@ -163,7 +164,7 @@ cdef class RelaxationZoneWaveGenerator:
     cpdef void calculate(self)
     @cython.locals(m=object, zone=RelaxationZone, mType=int, nE=int, nk=int,
                     qx=double_memview3, x=cython.double[3], t=double, nl=int,
-                    q_phi_solid=double_memview2,  phi=double,
+                    q_phi_porous=double_memview2,  phi=double,
                    q_velocity_solid=double_memview3, u=double_memview1, mTypes=int_memview1)
     cdef void __cpp_iterate(self)  # main iteration loop
 

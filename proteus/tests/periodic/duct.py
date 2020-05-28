@@ -291,13 +291,13 @@ else:
         def getDBC_v_duct(x,flag):
             if onLeft(x) or onTop(x) or onBottom(x):
                 return lambda x,t: 0.0
-            if opts.weak and onRight(x):
+            if onRight(x):
                 return lambda x,t: 0.0
 
         def getDBC_w_duct(x,flag):
             if onLeft(x) or onTop(x) or onBottom(x):
                 return lambda x,t: 0.0
-            if opts.weak and onRight(x):
+            if onRight(x):
                 return lambda x,t: 0.0
 
         p.dirichletConditions = {0:getDBC_pressure_duct,
