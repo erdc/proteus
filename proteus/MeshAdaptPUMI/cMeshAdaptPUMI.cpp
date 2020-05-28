@@ -18,7 +18,6 @@
 
 #include <apfShape.h>
 
-#include "PyEmbeddedFunctions.h"
 
 extern double dt_err;
 #ifdef PROTEUS_USE_SIMMETRIX
@@ -588,12 +587,12 @@ int MeshAdaptPUMIDrvr::willAdapt()
   if(hasInterface or hasIBM)
   {
     adaptFlag += willInterfaceAdapt(); 
-    std::cout<<"willInterfaceAdapt "<<adaptFlag<<std::endl;
+    logEvent("will adapt because of interface",4);
   }
   if(hasVMS)
   {
     adaptFlag += willErrorAdapt_reference();
-    std::cout<<"willErrorAdapt "<<adaptFlag<<std::endl;
+    logEvent("will adapt because of error",4);
   }
   //TODO: need to do AllReduce here instead of in each function
   if(adaptFlag > 0)
@@ -732,9 +731,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       freeField(errRel_reg); 
   }
 */
-  std::cout<<"before problem\n";
   isotropicIntersect();
-  std::cout<<"after problem\n";
 
   if(logging_config=="on"){
     char namebuffer[50];
