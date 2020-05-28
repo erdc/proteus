@@ -390,7 +390,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def preStep(self, t, firstStep=False):
         if firstStep:
             # Init boundaryIndex
-            assert self.model.boundaryIndex is None and self.model.normalx is not None , "Check boundaryIndex, normalx and normaly"
+            assert self.model.boundaryIndex is None and self.model.normalx is not None, "Check boundaryIndex, normalx and normaly"
             self.model.boundaryIndex = []
             for i in range(self.model.normalx.size):
                 if self.model.normalx[i] != 0 or self.model.normaly[i] != 0:
@@ -1288,7 +1288,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #---To get hEps for all processors
         comm = Comm.get()
         if comm.size() > 1:
-            self.hEps = comm.globalMax(eps * self.u[0].dof.max())
+            self.hEps = eps * comm.globalMax(self.u[0].dof.max())
         # size_of_domain used in relaxation of bounds
         self.size_of_domain = self.mesh.globalMesh.volume
         # normal vectors
@@ -1710,6 +1710,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_eb_hv_hv"] = self.csrColumnOffsets_eb[(2, 2)]
         argsDict["dt"] = self.timeIntegration.dt
         self.calculateJacobian(argsDict)
+
+        if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
+            for dummy, index in enumerate(self.boundaryIndex):
+                global_dofN = self.offset[1] + self.stride[1] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+                global_dofN = self.offset[2] + self.stride[2] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+            #
+        #
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:

@@ -732,11 +732,12 @@ public:
               fmin(fmin(ri, Lij_array[ij]), fmin(rj, Lij_array[ij]));
 
           // COMPUTE LIMITED FLUX //
-          ith_Limiter_times_FluxCorrectionMatrix1 += Lij * FCT_h[ij];
-          ith_Limiter_times_FluxCorrectionMatrix2 += Lij * FCT_hu[ij];
-          ith_Limiter_times_FluxCorrectionMatrix3 += Lij * FCT_hv[ij];
-          ith_Limiter_times_FluxCorrectionMatrix4 += Lij * FCT_heta[ij];
-          ith_Limiter_times_FluxCorrectionMatrix5 += Lij * FCT_hw[ij];
+          ith_Limiter_times_FluxCorrectionMatrix1 += Lij_array[ij] * FCT_h[ij];
+          ith_Limiter_times_FluxCorrectionMatrix2 += Lij_array[ij] * FCT_hu[ij];
+          ith_Limiter_times_FluxCorrectionMatrix3 += Lij_array[ij] * FCT_hv[ij];
+          ith_Limiter_times_FluxCorrectionMatrix4 +=
+              Lij_array[ij] * FCT_heta[ij];
+          ith_Limiter_times_FluxCorrectionMatrix5 += Lij_array[ij] * FCT_hw[ij];
 
           // update ij
           ij += 1;
@@ -1673,12 +1674,13 @@ public:
             ///////////////////////
             double dEVij = cE * fmax(global_entropy_residual[i],
                                      global_entropy_residual[j]);
-            // dHij = fmin(dLowij, dEVij);
-            // muHij = fmin(muLowij, dEVij);
-            dHij = dLowij *
-                   fmax(global_entropy_residual[i], global_entropy_residual[j]);
-            muHij = muLowij * fmax(global_entropy_residual[i],
-                                   global_entropy_residual[j]);
+            dHij = fmin(dLowij, dEVij);
+            muHij = fmin(muLowij, dEVij);
+            // dHij = dLowij *
+            //        fmax(global_entropy_residual[i],
+            //        global_entropy_residual[j]);
+            // muHij = muLowij * fmax(global_entropy_residual[i],
+            //                        global_entropy_residual[j]);
 
             // This is if we want smoothness indicator based viscosity
             // dHij = fmax(psi[i], psi[j]) * dLij;
