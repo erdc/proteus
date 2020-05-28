@@ -681,9 +681,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeElementQuadrature(self, t, cq):
         # VRANS
         self.numerical_viscosity = numpy.zeros(cq[('u', 1)].shape, 'd')
-        self.q_phi_solid = 1000*numpy.ones(cq[('u', 1)].shape, 'd')
+        INSIDE_FLUID_DOMAIN=1000.0#ensure no embedded solid boundaries by default
+        self.q_phi_solid = INSIDE_FLUID_DOMAIN*numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_velocity_solid = numpy.zeros(cq[('velocity', 0)].shape, 'd')
-        self.q_phi_porous = 1000*numpy.ones(cq[('u', 1)].shape, 'd')
+        self.q_phi_porous = INSIDE_FLUID_DOMAIN*numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_velocity_porous = numpy.zeros(cq[('velocity', 0)].shape, 'd')
         self.q_porosity = numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_dragAlpha = numpy.ones(cq[('u', 1)].shape, 'd')

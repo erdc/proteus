@@ -3135,6 +3135,15 @@ namespace proteus
                           /*       std::cout<<level_set_normal[I]<<'\t'<<particle_signed_distance_normals[eN_k_3d+I]<<std::endl; */
                           /*   } */
                         }
+		      else
+			{
+			  if (use_ball_as_particle)
+			    for (int I=0;I<nSpace;I++)
+			      level_set_normal[I] = ball_n[I];
+			  else
+			    for (int I=0;I<nSpace;I++)
+			      level_set_normal[I] = particle_signed_distance_normals.data()[eN_k_3d+I];
+			}
                       updateSolidParticleTerms(NONCONSERVATIVE_FORM,
                                                eN < nElements_owned,
                                                particle_nitsche,
@@ -5953,6 +5962,15 @@ namespace proteus
                           /*       std::cout<<level_set_normal[I]<<'\t'<<particle_signed_distance_normals[eN_k_3d+I]<<std::endl; */
                           /*   } */
                         }
+		      else
+			{
+			  if (use_ball_as_particle)
+			    for (int I=0;I<nSpace;I++)
+			      level_set_normal[I] = ball_n[I];
+			  else
+			    for (int I=0;I<nSpace;I++)
+			      level_set_normal[I] = particle_signed_distance_normals.data()[eN_k_3d+I];
+			}
                       updateSolidParticleTerms(NONCONSERVATIVE_FORM,
                                                eN < nElements_owned,
                                                particle_nitsche,
@@ -5960,7 +5978,6 @@ namespace proteus
                                                nParticles,
                                                nQuadraturePoints_global,
                                                &particle_signed_distances.data()[eN_k],
-                                               //&particle_signed_distance_normals.data()[eN_k_3d],
                                                level_set_normal,
                                                &particle_velocities.data()[eN_k_3d],
                                                particle_centroids.data(),
