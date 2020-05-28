@@ -147,6 +147,9 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
                                                                          globalMax(self.numDiff_last[2].max()),
                                                                          globalMax(self.numDiff_last[3].max())))
+
+INSIDE_FLUID_DOMAIN=10000.0#ensure no embedded solid boundaries by default
+
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
@@ -681,7 +684,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeElementQuadrature(self, t, cq):
         # VRANS
         self.numerical_viscosity = numpy.zeros(cq[('u', 1)].shape, 'd')
-        INSIDE_FLUID_DOMAIN=10000.0#ensure no embedded solid boundaries by default
         self.q_phi_solid = INSIDE_FLUID_DOMAIN*numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_velocity_solid = numpy.zeros(cq[('velocity', 0)].shape, 'd')
         self.q_phi_porous = INSIDE_FLUID_DOMAIN*numpy.ones(cq[('u', 1)].shape, 'd')
