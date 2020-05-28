@@ -3,6 +3,7 @@
 #include <apfMesh2.h>
 #include <apfNumbering.h>
 #include <queue>
+#include "PyEmbeddedFunctions.h"
 
 /**
    \file MeshAdaptPUMI.h
