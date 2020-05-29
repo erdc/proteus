@@ -23,3 +23,10 @@ proteus/tests/cylinder2D/conforming_rans3p/plot_lift_drag_from_pv_files.ipynb fi
 proteus/tests/cylinder2D/ibm_method/plot_lift_drag_force_from_particle.ipynb filter=lfs diff=lfs merge=lfs -text
 proteus/tests/cylinder2D/ibm_rans2p/plot_lift_drag_force_from_particle.ipynb filter=lfs diff=lfs merge=lfs -text
 proteus/tests/cylinder2D/sbm_method/plot_lift_drag_force_from_particle.ipynb filter=lfs diff=lfs merge=lfs -text
+proteus/tests/linalgebra_tests/jac.bin filter=lfs diff=lfs merge=lfs -text
+proteus/tests/solver_tests/import_modules/Ap_rho.bin filter=lfs diff=lfs merge=lfs -text
+proteus/tests/solver_tests/import_modules/Np_rho.bin filter=lfs diff=lfs merge=lfs -text
+proteus/tests/solver_tests/import_modules/Qp_dens.bin filter=lfs diff=lfs merge=lfs -text
+proteus/tests/solver_tests/import_modules/Qp_visc.bin filter=lfs diff=lfs merge=lfs -text
+proteus/tests/solver_tests/import_modules/input_vec_tppcd.bin filter=lfs diff=lfs merge=lfs -text
+proteus/tests/solver_tests/import_modules/saddle_point_small.bin filter=lfs diff=lfs merge=lfs -text
