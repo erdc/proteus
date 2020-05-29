@@ -333,7 +333,7 @@ class TestShapeRANS(unittest.TestCase):
 
     def test_absorption_zones(self):
         flag = 1
-        epsFact_solid = 0.5
+        epsFact_porous = 0.5
         center = [0.5, 0., 0.]
         orientation = [1., 0., 0.]
         dragAlpha = old_div(0.5,1.005e-6)
@@ -342,7 +342,7 @@ class TestShapeRANS(unittest.TestCase):
         domain = create_domain2D()
         # for custom (same principle for rectangle or cuboid or STL)
         custom = create_custom2D(domain, 'mprans')
-        custom.setAbsorptionZones(flags=flag, epsFact_solid=epsFact_solid,
+        custom.setAbsorptionZones(flags=flag, epsFact_porous=epsFact_porous,
                                   center=center, orientation=orientation,vert_axis=0,
                                   dragAlpha=dragAlpha, dragBeta=dragBeta,
                                   porosity=porosity)
@@ -446,7 +446,7 @@ class TestShapeRANS(unittest.TestCase):
 
     def test_generation_zones(self):
         flag = 1
-        epsFact_solid = 0.5
+        epsFact_porous = 0.5
         center = [0.5, 0., 0.]
         orientation = [1., 0., 0.]
         dragAlpha = old_div(0.5,1.005e-6)
@@ -459,7 +459,7 @@ class TestShapeRANS(unittest.TestCase):
         domain = create_domain2D()
         # for custom (same principle for rectangle or cuboid or STL)
         custom = create_custom2D(domain, 'mprans')
-        custom.setGenerationZones(flags=flag, epsFact_solid=epsFact_solid,
+        custom.setGenerationZones(flags=flag, epsFact_porous=epsFact_porous,
                                   center=center, orientation=orientation,
                                   vert_axis=0,waves=waves, dragAlpha=dragAlpha,
                                   dragBeta=dragBeta, porosity=porosity)

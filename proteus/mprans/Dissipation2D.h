@@ -602,7 +602,7 @@ namespace proteus
         double c_e = args.m_dscalar["c_e"];
         double rho_0 = args.m_dscalar["rho_0"];
         double rho_1 = args.m_dscalar["rho_1"];
-        double sedFlag = args.m_dscalar["sedFlag"];
+        double sedFlag = args.m_iscalar["sedFlag"];
         xt::pyarray<double>& q_vos = args.m_darray["q_vos"];
         xt::pyarray<double>& q_vos_gradc = args.m_darray["q_vos_gradc"];
         xt::pyarray<double>& ebqe_q_vos = args.m_darray["ebqe_q_vos"];
@@ -1208,7 +1208,7 @@ namespace proteus
         xt::pyarray<double>& q_kappa = args.m_darray["q_kappa"];
         xt::pyarray<double>& q_grad_kappa = args.m_darray["q_grad_kappa"];
         xt::pyarray<double>& q_porosity = args.m_darray["q_porosity"];
-        double sedFlag = args.m_dscalar["sedFlag"];
+        double sedFlag = args.m_iscalar["sedFlag"];
         xt::pyarray<double>& q_vos = args.m_darray["q_vos"];
         xt::pyarray<double>& q_vos_gradc = args.m_darray["q_vos_gradc"];
         xt::pyarray<double>& ebqe_q_vos = args.m_darray["ebqe_q_vos"];

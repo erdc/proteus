@@ -147,6 +147,9 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
                                                                          globalMax(self.numDiff_last[2].max()),
                                                                          globalMax(self.numDiff_last[3].max())))
+
+INSIDE_FLUID_DOMAIN=10000.0#ensure no embedded solid boundaries by default
+
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
@@ -195,6 +198,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  porosityTypes=None,
                  killNonlinearDrag=False,
                  epsFact_solid=None,
+                 epsFact_porous=None,
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=100.0,
                  forceStrongDirichlet=False,
@@ -316,6 +320,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.eb_penalty_constant = eb_penalty_constant
         self.movingDomain = movingDomain
         self.epsFact_solid = epsFact_solid
+        self.epsFact_porous = epsFact_porous
         self.useConstant_he = useConstant_he
         self.useVF = useVF
         self.useRBLES = useRBLES
@@ -501,6 +506,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.model.q[('u', 2)][eN,k] = self.analyticalSolution[2].uOfXT(self.model.q['x'][eN,k],0.)
         self.model.q['phi_solid'] = self.q_phi_solid
         self.model.q['velocity_solid'] = self.q_velocity_solid
+        self.model.q['phi_porous'] = self.q_phi_porous
+        self.model.q['velocity_porous'] = self.q_velocity_porous
         if self.CLSVOF_model is not None: # use CLSVOF
             # LS part #
             self.q_phi = modelList[self.CLSVOF_model].q[('u', 0)]
@@ -586,6 +593,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.epsFact_solid = numpy.ones(self.model.mesh.elementMaterialTypes.max() + 1)
         assert len(self.epsFact_solid) > self.model.mesh.elementMaterialTypes.max(
         ), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
+        if self.epsFact_porous is None:
+            self.epsFact_porous = numpy.ones(self.model.mesh.elementMaterialTypes.max() + 1)
+        assert len(self.epsFact_porous) > self.model.mesh.elementMaterialTypes.max(
+        ), "epsFact_porous  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
         if self.phaseFunction != None:
             from proteus.ctransportCoefficients import smoothedHeaviside
             if self.useConstant_he:
@@ -673,8 +684,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeElementQuadrature(self, t, cq):
         # VRANS
         self.numerical_viscosity = numpy.zeros(cq[('u', 1)].shape, 'd')
-        self.q_phi_solid = numpy.ones(cq[('u', 1)].shape, 'd')
+        self.q_phi_solid = INSIDE_FLUID_DOMAIN*numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_velocity_solid = numpy.zeros(cq[('velocity', 0)].shape, 'd')
+        self.q_phi_porous = INSIDE_FLUID_DOMAIN*numpy.ones(cq[('u', 1)].shape, 'd')
+        self.q_velocity_porous = numpy.zeros(cq[('velocity', 0)].shape, 'd')
         self.q_porosity = numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_dragAlpha = numpy.ones(cq[('u', 1)].shape, 'd')
         self.q_dragAlpha.fill(self.dragAlpha)
@@ -1095,7 +1108,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('f', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q[('velocity', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q['velocity_solid'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q['phi_solid'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['phi_solid'] = INSIDE_FLUID_DOMAIN*numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['velocity_porous'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        self.q['phi_porous'] = INSIDE_FLUID_DOMAIN*numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['x'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
         self.q[('cfl', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('numDiff', 1, 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -1522,7 +1537,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r : :class:`numpy.ndarray`
             Stores the calculated residual vector.
         """
-
+        assert(np.all(np.isfinite(u)))
+        assert(np.all(np.isfinite(r)))
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -1653,6 +1669,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["eps_solid"] = self.coefficients.epsFact_solid
         argsDict["phi_solid"] = self.coefficients.q_phi_solid
         argsDict["q_velocity_solid"] = self.coefficients.q_velocity_solid
+        argsDict["eps_porous"] = self.coefficients.epsFact_porous
+        argsDict["phi_porous"] = self.coefficients.q_phi_porous
+        argsDict["q_velocity_porous"] = self.coefficients.q_velocity_porous
         argsDict["q_porosity"] = self.coefficients.q_porosity
         argsDict["q_dragAlpha"] = self.coefficients.q_dragAlpha
         argsDict["q_dragBeta"] = self.coefficients.q_dragBeta
@@ -1990,6 +2009,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["eps_solid"] = self.coefficients.epsFact_solid
         argsDict["phi_solid"] = self.coefficients.q_phi_solid
         argsDict["q_velocity_solid"] = self.coefficients.q_velocity_solid
+        argsDict["eps_porous"] = self.coefficients.epsFact_porous
+        argsDict["phi_porous"] = self.coefficients.q_phi_porous
+        argsDict["q_velocity_porous"] = self.coefficients.q_velocity_porous
         argsDict["q_porosity"] = self.coefficients.q_porosity
         argsDict["q_dragAlpha"] = self.coefficients.q_dragAlpha
         argsDict["q_dragBeta"] = self.coefficients.q_dragBeta
@@ -2161,7 +2183,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["useExact"] = int(self.coefficients.useExact)
         argsDict["isActiveDOF"] = self.isActiveDOF
         self.rans2p.calculateJacobian(argsDict)
-        
+        assert(np.all(np.isfinite(jacobian.getCSRrepresentation()[2])))
+        print("norm jac ",np.linalg.norm(jacobian.getCSRrepresentation()[2]))
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
         else:

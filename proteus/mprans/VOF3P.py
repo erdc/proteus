@@ -1214,8 +1214,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["min_u_bc"] = self.min_u_bc
         argsDict["max_u_bc"] = self.max_u_bc
         argsDict["quantDOFs"] = self.quantDOFs
-        print(self.uTilde_dof.dtype)
-        print(self.uTilde_dof)
         self.calculateResidual(argsDict)
 
         if self.forceStrongConditions:
