@@ -2,7 +2,7 @@ from __future__ import division
 from builtins import object
 from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
-from proteus.Domain import RectangularDomain
+from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
@@ -17,7 +17,7 @@ We consider the 1995 laboratory experiments conducted by
 Vicksburg, Mississippi. The laboratory experiments were motivated by
 several tsunami events in the 1990s where large unexpected run-up
 heights were observed on the back (or lee) side of small
-islands.
+islands. There are two cases defined here, Case B and Case C.
 """
 
 # *************************** #
@@ -25,11 +25,15 @@ islands.
 # *************************** #
 opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 10.0, "Final time for simulation"),
+    ("final_time", 12.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs", False, "Use reflecting BCs")
+    ("structured", True, "Structured or unstructured mesh"),
+    ("he", 0.5, "Mesh size for unstructured mesh"),
+    ("reflecting_BCs", False, "Use reflecting BCs"),
+    ("want_gauges", False, "Output for water height point gauge"),
+    ("which_case", 0, "which_case = {0,1} for {case_C, case_B}")
 ])
 
 ###################
@@ -37,14 +41,21 @@ opts = Context.Options([
 ###################
 L = (25.0, 30.0)  # this is length in x direction and y direction
 refinement = opts.refinement
-domain = RectangularDomain(L=L)
+rectangle = RectangularDomain(L=L)
 
 # CREATE REFINEMENT #
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 2) + 1
 he = old_div(L[0], float(nnx - 1))
-triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
+if opts.structured:
+    domain = rectangle
+else:
+    rectangle.writePoly("island")
+    domain = PlanarStraightLineGraphDomain(fileprefix="island")
+    domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
+    nnx = None
+    nny = None
 
 ###############################
 #  CONSTANTS NEEDED FOR SETUP #
@@ -54,7 +65,11 @@ g = 9.81
 # stuff for solitary wave
 h0 = 0.32
 alpha = 0.181 * h0
-xs = 7.56
+xs = 7.56023
+if opts.which_case==1:
+    alpha = 0.091
+    xs = 6.81474
+
 r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
 c = np.sqrt(g * (h0 + alpha))
 
@@ -77,7 +92,6 @@ def bathymetry_function(X):
     x = X[0]
     y = X[1]
     radius = np.sqrt((x - 12.96)**2 + (y - 13.80)**2)
-
     conds = [radius <= rcone, radius > rcone]
     bath = [lambda radius: np.minimum(
         htop, hcone - radius / scone), lambda radius: 0.0]
@@ -158,16 +172,15 @@ boundaryConditions = {'water_height': lambda x, flag: None,
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-want_gauges = False
-heightPointGauges = PointGauges(gauges=((('h',), ((7.56, 16.05,  0),
-                                                 (7.56, 14.55, 0),
-                                                 (7.56, 13.05, 0),
-                                                 (7.56, 11.55, 0),
+heightPointGauges = PointGauges(gauges=((('h',), ((xs, 16.05, 0),
+                                                 (xs, 14.55, 0),
+                                                 (xs, 13.05, 0),
+                                                 (xs, 11.55, 0),
                                                  (9.36, 13.80, 0),
                                                  (10.36, 13.80, 0),
                                                  (12.96, 11.22, 0),
                                                  (15.56, 13.80, 0))),),
-                                activeTime=(0., opts.final_time),
+                                activeTime=(0.01, opts.final_time),
                                 fileName='island_wave_gauges.csv')
 # ********************************************* #
 # ********** Create my SWFlowProblem ********** #
@@ -175,7 +188,7 @@ heightPointGauges = PointGauges(gauges=((('h',), ((7.56, 16.05,  0),
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
-                                              structured=True,
+                                              structured=opts.structured,
                                               he=he,
                                               nnx=nnx,
                                               nny=nny,
@@ -187,5 +200,5 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=None)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
-if want_gauges:
+if opts.want_gauges:
     mySWFlowProblem.auxiliaryVariables = [heightPointGauges]

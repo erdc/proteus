@@ -472,7 +472,7 @@ class Newton(NonlinearSolver):
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None,linear=False):
-        r""" Solves the non-linear system :math:`F(u) = b`.
+        """ Solves the non-linear system :math:`F(u) = b`.
 
         Parameters
         ----------
@@ -755,6 +755,8 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.secondCallCalculateResidual = 0
         self.computeResidual(u,r,b)
         u[:] = r
+        if par_u is not None:
+            par_u.scatter_forward_insert()
 
         ############################
         # FCT STEP ON WATER HEIGHT #
@@ -767,7 +769,6 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         #############################################
         self.F.secondCallCalculateResidual = 1
         self.computeResidual(u,r,b)
-
         self.F.check_positivity_water_height=True
 
         # Compute infinity norm of vel-x. This is for 1D well balancing test
@@ -789,6 +790,7 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.secondCallCalculateResidual = 0
         logEvent(" Entropy viscosity solution with consistent mass matrix", level=1)
         Newton.solve(self,u,r,b,par_u,par_r,linear=True)
+
         ############################
         # FCT STEP ON WATER HEIGHT #
         ############################
