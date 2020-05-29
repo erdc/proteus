@@ -2184,7 +2184,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["isActiveDOF"] = self.isActiveDOF
         self.rans2p.calculateJacobian(argsDict)
         assert(np.all(np.isfinite(jacobian.getCSRrepresentation()[2])))
-        print("norm jac ",np.linalg.norm(jacobian.getCSRrepresentation()[2]))
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
         else:
