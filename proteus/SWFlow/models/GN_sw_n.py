@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from GN_sw_p import *
+from proteus.Transport import Comm
 
 # *********************************************** #
 # ********** Read from mySWFlowProblem ********** #
@@ -72,7 +73,11 @@ numericalFluxType = GN_SW2DCV.NumericalFlux
 # ************************************ #
 matrix = SparseMatrix
 multilevelLinearSolver = LU
-levelLinearSolver =  LU  #KSP_petsc4py
+levelLinearSolver = LU
+# change solver for parallel runs
+comm = Comm.get()
+if comm.size() > 1:
+    levelLinearSolver = KSP_petsc4py
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 

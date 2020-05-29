@@ -1,6 +1,0 @@
-tank2d.1.neigh filter=lfs diff=lfs merge=lfs -text
-tank2d.1.poly filter=lfs diff=lfs merge=lfs -text
-tank2d.edge filter=lfs diff=lfs merge=lfs -text
-tank2d.ele filter=lfs diff=lfs merge=lfs -text
-tank2d.node filter=lfs diff=lfs merge=lfs -text
-tank2d.poly filter=lfs diff=lfs merge=lfs -text

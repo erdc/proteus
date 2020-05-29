@@ -4,14 +4,14 @@ from builtins import str
 from builtins import range
 from past.utils import old_div
 import proteus
-from proteus import Quadrature, Comm, cfemIntegrals, LinearAlgebraTools
+from proteus import FemTools
+from proteus import LinearAlgebraTools as LAT
 from proteus.mprans.cSW2DCV import *
 import numpy as np
-from proteus.Transport import OneLevelTransport
-from proteus.Transport import TC_base, C0_AffineQuadraticOnSimplexWithNodalBasis
-from proteus.Transport import NonlinearEquation, logEvent, memory, BackwardEuler
-from proteus.Transport import FluxBoundaryConditions, DOFBoundaryConditions
-from proteus.Transport import SparseMat, globalMax
+from proteus.Transport import OneLevelTransport, TC_base, NonlinearEquation
+from proteus.Transport import Quadrature, logEvent, memory, BackwardEuler
+from proteus.Transport import FluxBoundaryConditions, Comm, DOFBoundaryConditions
+from proteus.Transport import cfemIntegrals, globalMax, SparseMat
 from . import cArgumentsDict
 
 class NumericalFlux(proteus.NumericalFlux.ShallowWater_2D):
@@ -96,7 +96,8 @@ class RKEV(proteus.TimeIntegration.SSP):
         argsDict["debug"] = 0
         adjusted_maxCFL = self.transport.sw2d.calculateEdgeBasedCFL(argsDict)
 
-        maxCFL = max(maxCFL, max(adjusted_maxCFL, globalMax(self.edge_based_cfl.max())))
+        maxCFL = max(maxCFL, max(adjusted_maxCFL,
+                                 globalMax(self.edge_based_cfl.max())))
         self.dt = old_div(self.runCFL, maxCFL)
 
         if self.dtLast is None:
@@ -104,7 +105,10 @@ class RKEV(proteus.TimeIntegration.SSP):
         if old_div(self.dt, self.dtLast) > self.dtRatioMax:
             self.dt = self.dtLast * self.dtRatioMax
         self.t = self.tLast + self.dt
-        self.substeps = [self.t for i in range(self.nStages)]  # Ignoring dif. time step levels
+        # Ignoring dif. time step levels
+        self.substeps = [self.t for i in range(self.nStages)]
+
+        assert (self.dt > 1E-8), ("Time step is probably getting too small: ", self.dt, adjusted_maxCFL)
 
     def initialize_dt(self, t0, tOut, q):
         """
@@ -284,7 +288,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         reaction = {}
         hamiltonian = {}
         if nd == 2:
-            variableNames = ['h', 'u', 'v']
+            variableNames = ['h', 'h_u', 'h_v']
             mass = {0: {0: 'linear'},
                     1: {0: 'linear', 1: 'linear'},
                     2: {0: 'linear', 2: 'linear'}}
@@ -312,7 +316,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             reaction = {1: {0: 'linear'},
                         2: {0: 'linear'}}
             TC_base.__init__(self,
-                             3,
+                             3, # Number of components
                              mass,
                              advection,
                              diffusion,
@@ -336,7 +340,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.b.dof = mesh.nodeArray[:, 2].copy()
         else:
             self.b.dof = self.bathymetry[0]([x, y])
-        #self.b.dof[:] = 0. #TMP
 
     def initializeElementQuadrature(self, t, cq):
         pass
@@ -421,7 +424,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phiTrialIsTrial = True
         self.u = uDict
         self.Hess = False
-        if isinstance(self.u[0].femSpace, C0_AffineQuadraticOnSimplexWithNodalBasis):
+        if isinstance(self.u[0].femSpace, FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis):
             self.Hess = True
         self.ua = {}  # analytical solutions
         self.phi = phiDict
@@ -433,22 +436,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for ci in range(1, coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         # Simplicial Mesh
-        self.mesh = self.u[0].femSpace.mesh  # assume the same mesh for  all components for now
+        # assume the same mesh for  all components for now
+        self.mesh = self.u[0].femSpace.mesh
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
-        self.dirichletNodeSetList = None  # explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        # explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        self.dirichletNodeSetList = None
         self.coefficients = coefficients
         # cek hack? give coefficients a bathymetriy array
         import copy
         self.coefficients.b = self.u[0].copy()
-        self.coefficients.b.name='b'
+        self.coefficients.b.name = 'b'
         self.coefficients.b.dof.fill(0.0)
         #
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
         self.stabilization = stabilization
         self.shockCapturing = shockCapturing
-        self.conservativeFlux = conservativeFluxDict  # no velocity post-processing for now
+        # no velocity post-processing for now
+        self.conservativeFlux = conservativeFluxDict
         self.fluxBoundaryConditions = fluxBoundaryConditionsDict
         self.advectiveFluxBoundaryConditionsSetterDict = advectiveFluxBoundaryConditionsSetterDict
         self.diffusiveFluxBoundaryConditionsSetterDictDict = diffusiveFluxBoundaryConditionsSetterDictDict
@@ -463,7 +469,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         # calculate some dimensions
         #
-        self.nSpace_global = self.u[0].femSpace.nSpace_global  # assume same space dim for all variables
+        # assume same space dim for all variables
+        self.nSpace_global = self.u[0].femSpace.nSpace_global
         self.nDOF_trial_element = [u_j.femSpace.max_nDOF_element for u_j in list(self.u.values())]
         self.nDOF_phi_trial_element = [phi_k.femSpace.max_nDOF_element for phi_k in list(self.phi.values())]
         self.n_phi_ip_element = [phi_k.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for phi_k in list(self.phi.values())]
@@ -698,8 +705,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # For FCT
         self.extendedSourceTerm_hu=None
         self.extendedSourceTerm_hv=None
+        self.new_SourceTerm_hu = None
+        self.new_SourceTerm_hv = None
         self.dH_minus_dL = None
         self.muH_minus_muL = None
+        self.size_of_domain = None # for relaxation of bounds
         # NORMALS
         self.COMPUTE_NORMALS = 1
         self.normalx = None
@@ -707,7 +717,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.boundaryIndex = None
         self.reflectingBoundaryConditions = False
 
-        if 'reflecting_BCs' in dir(options) and options.reflecting_BCs==1:
+        if 'reflecting_BCs' in dir(options) and options.reflecting_BCs == 1:
             self.reflectingBoundaryConditions = True
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = None
@@ -819,10 +829,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateJacobian = self.sw2d.calculateMassMatrix
         #
-        self.dofsXCoord=None
-        self.dofsYCoord=None
-        self.constrainedDOFsIndices=None
-        self.dataStructuresInitialized=False
+        self.dofsXCoord = None
+        self.dofsYCoord = None
+        self.constrainedDOFsIndices = None
+        self.dataStructuresInitialized = False
+
+        # PARALLEL VECTORS #
+        self.par_normalx = None
+        self.par_normaly = None
+        self.par_ML = None
 
     def FCTStep(self):
         # NOTE: this function is meant to be called within the solver
@@ -867,6 +882,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["hBT"] = self.hBT
         argsDict["huBT"] = self.huBT
         argsDict["hvBT"] = self.hvBT
+        argsDict["new_SourceTerm_hu"] = self.new_SourceTerm_hu
+        argsDict["new_SourceTerm_hv"] = self.new_SourceTerm_hv
+        argsDict["size_of_domain"] = self.size_of_domain
         self.sw2d.convexLimiting(argsDict)
 
         # Pass the post processed hnp1 solution to global solution u
@@ -876,10 +894,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def getDOFsCoord(self):
         # get x,y coordinates of all DOFs #
-        self.dofsXCoord = np.zeros(self.u[0].dof.shape,'d')
-        self.dofsYCoord = np.zeros(self.u[0].dof.shape,'d')
-        self.dofsXCoord[:] = self.mesh.nodeArray[:,0]
-        self.dofsYCoord[:] = self.mesh.nodeArray[:,1]
+        self.dofsXCoord = np.zeros(self.u[0].dof.shape, 'd')
+        self.dofsYCoord = np.zeros(self.u[0].dof.shape, 'd')
+        self.dofsXCoord[:] = self.mesh.nodeArray[:, 0]
+        self.dofsYCoord[:] = self.mesh.nodeArray[:, 1]
     #
 
     def getCMatrices(self):
@@ -909,7 +927,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # fill vector colind_cMatrix
         i_cMatrix = 0  # ith row of cMatrix
-        for i in range(rowptr.size - 1):  # 0 to total num of DOFs (i.e. num of rows of jacobian)
+        # 0 to total num of DOFs (i.e. num of rows of jacobian)
+        for i in range(rowptr.size - 1):
             if (i % 3 == 0):  # Just consider the rows related to the h variable
                 for j, offset in enumerate(range(rowptr[i], rowptr[i + 1])):
                     offset_cMatrix = list(range(rowptr_cMatrix[i_cMatrix], rowptr_cMatrix[i_cMatrix + 1]))
@@ -998,6 +1017,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                   self.csrColumnOffsets[(0, 0)] // 3,
                                                                   elementMassMatrix,
                                                                   self.MC_global)
+
         diamD2 = np.sum(self.q['abs(det(J))'][:] * self.elementQuadratureWeights[('u', 0)])
         self.ML = np.zeros((self.nFreeDOF_global[0],), 'd')
         self.hReg = np.zeros((self.nFreeDOF_global[0],), 'd')
@@ -1013,7 +1033,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                          self.nDOF_test_element[0],
                                          self.nDOF_trial_element[0]), 'd')
             self.cterm_a[d] = nzval_cMatrix.copy()
-            self.cterm_global[d] = LinearAlgebraTools.SparseMat(self.nFreeDOF_global[0],
+            self.cterm_global[d] = LAT.SparseMat(self.nFreeDOF_global[0],
                                                                 self.nFreeDOF_global[0],
                                                                 nnz_cMatrix,
                                                                 self.cterm_a[d],
@@ -1039,7 +1059,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                    self.nDOF_test_element[0],
                                                    self.nDOF_trial_element[0]), 'd')
             self.cterm_a_transpose[d] = nzval_cMatrix.copy()
-            self.cterm_global_transpose[d] = LinearAlgebraTools.SparseMat(self.nFreeDOF_global[0],
+            self.cterm_global_transpose[d] = LAT.SparseMat(self.nFreeDOF_global[0],
                                                                           self.nFreeDOF_global[0],
                                                                           nnz_cMatrix,
                                                                           self.cterm_a_transpose[d],
@@ -1065,7 +1085,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr_cMatrix, colind_cMatrix, self.Cy = self.cterm_global[1].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, self.CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, self.CTy = self.cterm_global_transpose[1].getCSRrepresentation()
-        self.numDOFsPerEqn = self.u[0].dof.size  # (mql): I am assuming all variables live on the same FE space
+        # (mql): I am assuming all variables live on the same FE space
+        self.numDOFsPerEqn = self.u[0].dof.size
         self.numNonZeroEntries = len(self.Cx)
     #
 
@@ -1106,8 +1127,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hu_dof_old = np.copy(self.u[1].dof)
         self.hv_dof_old = np.copy(self.u[2].dof)
         # hEps
-        eps = 1E-14
+        eps = 1E-7
         self.hEps = eps * self.u[0].dof.max()
+        #---To get hEps for all processors
+        comm = Comm.get()
+        if comm.size() > 1:
+            self.hEps = eps * comm.globalMax(self.u[0].dof.max())
+        # size_of_domain used in relaxation of bounds
+        self.size_of_domain = self.mesh.globalMesh.volume
         # normal vectors
         self.normalx = np.zeros(self.u[0].dof.shape, 'd')
         self.normaly = np.zeros(self.u[0].dof.shape, 'd')
@@ -1126,7 +1153,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.muH_minus_muL = np.zeros(self.Cx.shape, 'd')
         self.extendedSourceTerm_hu = np.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_hv = np.zeros(self.u[0].dof.shape, 'd')
-        self.dataStructuresInitialized=True
+        self.new_SourceTerm_hu = np.zeros(self.u[0].dof.shape, 'd')
+        self.new_SourceTerm_hv = np.zeros(self.u[0].dof.shape, 'd')
+        # PARALLEL VECTORS #
+        n=self.u[0].par_dof.dim_proc
+        N=self.u[0].femSpace.dofMap.nDOF_all_processes
+        nghosts = self.u[0].par_dof.nghosts
+        subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
+        #
+        self.par_normalx = LAT.ParVec_petsc4py(self.normalx,
+                                                                      bs=1,
+                                                                      n=n,N=N,nghosts=nghosts,
+                                                                      subdomain2global=subdomain2global)
+        self.par_normaly = LAT.ParVec_petsc4py(self.normaly,
+                                                                      bs=1,
+                                                                      n=n,N=N,nghosts=nghosts,
+                                                                      subdomain2global=subdomain2global)
+        self.par_ML = LAT.ParVec_petsc4py(self.ML,
+                                                                 bs=1,
+                                                                 n=n,N=N,nghosts=nghosts,
+                                                                 subdomain2global=subdomain2global)
+        self.par_ML.scatter_forward_insert()
+        self.dataStructuresInitialized = True
     #
 
     def getResidual(self, u, r):
@@ -1170,7 +1218,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         # CHECK POSITIVITY OF WATER HEIGHT #
         if (self.check_positivity_water_height == True):
-            assert self.u[0].dof.min() >= 0, ("Negative water height: ", self.u[0].dof.min())
+            assert self.u[0].dof.min() >= -1E-6 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min())
         #
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
@@ -1302,9 +1350,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["huBT"] = self.huBT
         argsDict["hvBT"] = self.hvBT
         argsDict["lstage"] = self.timeIntegration.lstage
+        argsDict["new_SourceTerm_hu"] = self.new_SourceTerm_hu
+        argsDict["new_SourceTerm_hv"] = self.new_SourceTerm_hv
         self.calculateResidual(argsDict)
 
-        self.COMPUTE_NORMALS = 0
+        if self.COMPUTE_NORMALS==1:
+            self.par_normalx.scatter_forward_insert()
+            self.par_normaly.scatter_forward_insert()
+            self.COMPUTE_NORMALS = 0
+        #
+
+        if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
+            for dummy, index in enumerate(self.boundaryIndex):
+                r[self.offset[1]+self.stride[1]*index]=0.
+                r[self.offset[2]+self.stride[2]*index]=0.
+            #
+        #
+
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
@@ -1316,7 +1378,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     global_dofN = self.offset[cj] + self.stride[cj] * index
                     r[global_dofN] = 0.
         #
-        logEvent("Global residual", level=9, data=r)
+        logEvent("Global residual SWEs: ", level=9, data=r)
         # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
 
@@ -1431,6 +1493,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_eb_hv_hv"] = self.csrColumnOffsets_eb[(2, 2)]
         argsDict["dt"] = self.timeIntegration.dt
         self.calculateJacobian(argsDict)
+
+        if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
+            for dummy, index in enumerate(self.boundaryIndex):
+                global_dofN = self.offset[1] + self.stride[1] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+                global_dofN = self.offset[2] + self.stride[2] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+            #
+        #
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
