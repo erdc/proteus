@@ -30,3 +30,14 @@ proteus/tests/solver_tests/import_modules/Qp_dens.bin filter=lfs diff=lfs merge=
 proteus/tests/solver_tests/import_modules/Qp_visc.bin filter=lfs diff=lfs merge=lfs -text
 proteus/tests/solver_tests/import_modules/input_vec_tppcd.bin filter=lfs diff=lfs merge=lfs -text
 proteus/tests/solver_tests/import_modules/saddle_point_small.bin filter=lfs diff=lfs merge=lfs -text
+docs/source/_static/proteus.png filter=lfs diff=lfs merge=lfs -text
+proteus/tests/MeshAdaptPUMI/Couette2D.msh filter=lfs diff=lfs merge=lfs -text
+proteus/tests/MeshAdaptPUMI/Prism.dmg filter=lfs diff=lfs merge=lfs -text
+proteus/tests/MeshAdaptPUMI/Rectangle.dmg filter=lfs diff=lfs merge=lfs -text
+proteus/tests/MeshAdaptPUMI/Rectangle0.smb filter=lfs diff=lfs merge=lfs -text
+proteus/tests/MeshAdaptPUMI/Rectangle1.smb filter=lfs diff=lfs merge=lfs -text
+proteus/tests/MeshAdaptPUMI/TwoQuads.dmg filter=lfs diff=lfs merge=lfs -text
+proteus/tests/MeshAdaptPUMI/TwoQuads0.smb filter=lfs diff=lfs merge=lfs -text
+proteus/tests/MeshAdaptPUMI/cube.dmg filter=lfs diff=lfs merge=lfs -text
+proteus/tests/ci/hex_cube_3x3.h5 filter=lfs diff=lfs merge=lfs -text
+proteus/tests/hex_cube_3x3.h5 filter=lfs diff=lfs merge=lfs -text
