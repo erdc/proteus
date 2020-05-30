@@ -1381,7 +1381,7 @@ class XdmfWriter(object):
                             if ar.has_h5py:
                                 ar.create_dataset_sync('nodes'+spaceSuffix+str(tCount),
                                                        offsets = dofMap.dof_offsets_subdomain_owned,
-                                                       data = lagrangeNodesArray[:dofMap.dof_offsets_subdomain_owneda[ar.rank+1]-dofMap.dof_offsets_subdomain_owned[ar.rank]])
+                                                       data = lagrangeNodesArray[:dofMap.dof_offsets_subdomain_owned[ar.rank+1]-dofMap.dof_offsets_subdomain_owned[ar.rank]])
                             else:
                                 assert False, "global_sync not implemented for pytables"
                     else:
