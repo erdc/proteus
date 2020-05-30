@@ -271,7 +271,7 @@ docs:
 	@echo "make install"
 	@echo "************************************"
 
-	-${PROTEUS_ENV} pip install sphinx sphinx_rtd_theme breathe exhale
+	-${PROTEUS_ENV} pip3 install sphinx sphinx_rtd_theme breathe exhale
 	cd docs && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 
 	@echo "**********************************"
