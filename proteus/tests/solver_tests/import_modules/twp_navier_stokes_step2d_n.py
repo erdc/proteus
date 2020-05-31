@@ -1,18 +1,18 @@
 from __future__ import absolute_import
 from importlib import reload
 from proteus import *
+from proteus.default_n import *
+from proteus import defaults
+defaults.reset_default_n()
 try:
     from . import step2d
 except:
     import step2d
-    
+reload(step2d)    
 try:
     from .step2d import *
 except:
     from step2d import *
-from proteus.default_n import *
-from proteus import defaults
-defaults.reset_default_n()
 try:
     from . import twp_navier_stokes_step2d_p
 except:
@@ -176,3 +176,4 @@ nl_atol_res = ns_nl_atol_res
 maxNonlinearIts = 100
 maxLineSearches =0
 
+conservativeFlux=None

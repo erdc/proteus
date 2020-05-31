@@ -2,8 +2,8 @@ from __future__ import absolute_import
 import proteus
 from proteus import *
 from proteus.default_p import *
-from proteus import defaults
-defaults.reset_default_p()
+
+reload(proteus.default_p)
 
 """
 flow equation for transient, single phase flow example

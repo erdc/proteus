@@ -8,7 +8,11 @@ from proteus.default_p import *
 from proteus import defaults
 defaults.reset_default_p()
 import sys
-
+try:
+    from . import step2d
+except:
+    import step2d
+reload(step2d)
 try:
     from .step2d import *
 except:

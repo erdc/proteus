@@ -23,12 +23,10 @@ import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 from proteus import iproteus
-from proteus import defaults
+from proteus import (defaults, default_p, default_n)
 from importlib import reload
-reload(PETSc)
-reload(iproteus)
 opts=iproteus.opts
-
+import_modules = os.path.join(os.path.dirname(__file__),'import_modules')
 def load_simulation(context_options_str=None):
     """
     Loads a two-phase step problem with settings
@@ -43,14 +41,18 @@ def load_simulation(context_options_str=None):
     """
     from proteus import Context
     from proteus import default_s
+    reload(PETSc)
+    reload(iproteus)
+    reload(default_p)
+    reload(default_n)
     reload(default_s)
     Profiling.openLog("proteus.log",11)
     Profiling.verbose=True
     Context.contextOptionsString=context_options_str
 
-    step2d_so = defaults.load_system('step2d_so','import_modules')
-    twp_navier_stokes_step2d_p = defaults.load_physics('twp_navier_stokes_step2d_p','import_modules')
-    twp_navier_stokes_step2d_n = defaults.load_numerics('twp_navier_stokes_step2d_n','import_modules')
+    step2d_so = defaults.load_system('step2d_so',import_modules)
+    twp_navier_stokes_step2d_p = defaults.load_physics('twp_navier_stokes_step2d_p',import_modules)
+    twp_navier_stokes_step2d_n = defaults.load_numerics('twp_navier_stokes_step2d_n',import_modules)
     
     pList = [twp_navier_stokes_step2d_p]
     nList = [twp_navier_stokes_step2d_n]
@@ -170,7 +172,7 @@ def test_step_slip_FullRun():
     print(L1,L2,L3)
     assert L1[0][1]==2
     assert L2[0][1]==11
-    assert L3[0][1]==14
+    assert L3[0][1]==12
 
 @pytest.mark.LinearSolvers
 def test_step_noslip_FullRun():
