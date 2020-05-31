@@ -1,9 +1,0 @@
-tank3d.neigh filter=lfs diff=lfs merge=lfs -text
-tank3d.node filter=lfs diff=lfs merge=lfs -text
-tank3d.ply filter=lfs diff=lfs merge=lfs -text
-tank3d.poly filter=lfs diff=lfs merge=lfs -text
-tank3d.asy filter=lfs diff=lfs merge=lfs -text
-tank3d.edge filter=lfs diff=lfs merge=lfs -text
-tank3d.ele filter=lfs diff=lfs merge=lfs -text
-tank3d.face filter=lfs diff=lfs merge=lfs -text
-tank3d_boundaryLegend.asy filter=lfs diff=lfs merge=lfs -text
