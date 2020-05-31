@@ -7,9 +7,9 @@ from proteus.iproteus import *
 import unittest
 import numpy as np
 import numpy.testing as npt
-from importlib import import_module
+from importlib import import_module, reload
 from petsc4py import PETSc
-
+reload(PETSc)
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
 class TestAddedMass2D(unittest.TestCase):
@@ -40,6 +40,9 @@ class TestAddedMass2D(unittest.TestCase):
 
     def test_AddedMass_2D(self):
         from proteus import defaults
+        defaults.reset_default_p()
+        defaults.reset_default_n()
+        defaults.reset_default_so()
         from . import addedmass2D as am2D
         am2D.myTpFlowProblem.initializeAll()
         so = am2D.myTpFlowProblem.so
@@ -57,6 +60,7 @@ class TestAddedMass2D(unittest.TestCase):
         Profiling.verbose = True
         # PETSc solver configuration
         OptDB = PETSc.Options()
+        OptDB.clear()
         dirloc = os.path.dirname(os.path.realpath(__file__))
         with open(os.path.join(dirloc, "petsc.options.superlu_dist")) as f:
             all = f.read().split()

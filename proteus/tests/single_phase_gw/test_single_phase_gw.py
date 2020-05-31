@@ -18,10 +18,9 @@ import numpy as np
 import numpy.testing as npt
 
 from proteus.iproteus import *
+from proteus import defaults
 
-from . import sp_gw_p
-from . import sp_gw_c0p1_n
-from . import sp_gw_ncp1_n
+import_modules = os.path.dirname(os.path.abspath(__file__))
 
 class TestSinglePhaseGW(object):
 
@@ -49,10 +48,10 @@ class TestSinglePhaseGW(object):
                     print ("Error: %s - %s" %(e.filename,e.strerror))
             else:
                 pass
-
+    
     def test_c0p1(self):
-        reload(sp_gw_p)
-        reload(sp_gw_c0p1_n)
+        sp_gw_p = defaults.load_physics(os.path.join(import_modules,'sp_gw_p'))
+        sp_gw_c0p1_n = defaults.load_numerics(os.path.join(import_modules,'sp_gw_c0p1_n'))
         pList = [sp_gw_p]
         nList = [sp_gw_c0p1_n]    
         so = default_so
@@ -84,8 +83,8 @@ class TestSinglePhaseGW(object):
         assert (not failed)
 
     def test_ncp1(self):
-        reload(sp_gw_p)
-        reload(sp_gw_ncp1_n)
+        sp_gw_p = defaults.load_physics(os.path.join(import_modules,'sp_gw_p'))
+        sp_gw_ncp1_n = defaults.load_numerics(os.path.join(import_modules,'sp_gw_ncp1_n'))
         pList = [sp_gw_p]
         nList = [sp_gw_ncp1_n]    
         so = default_so
@@ -102,6 +101,7 @@ class TestSinglePhaseGW(object):
         #set ksp options
         from petsc4py import PETSc
         OptDB = PETSc.Options()
+        OptDB.clear()
         OptDB.setValue('ksp_type','preonly')
         OptDB.setValue('pc_type','lu')
         OptDB.setValue('pc_factor_mat_solver_package','superlu_dist')

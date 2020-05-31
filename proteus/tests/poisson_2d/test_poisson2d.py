@@ -82,7 +82,7 @@ class TestPoisson2D(object):
                 nList[0].femSpaces[0]  = default_n.DG_AffineQuadraticOnSimplexWithNodalBasis
             if bcType is 'strong':
                 nList[0].numericalFluxType.useStrongDirichletConstraints=True
-        nList[0].nn=51
+        nList[0].nnx=nList[0].nny=nList[0].nn=51
         reload(default_so)
         so = default_so
         so.name = pList[0].name = "poisson_2d_{0}_{1}_{2}_pe{3}".format(femSpace, bcType,solverType,repr(comm.size()))
@@ -94,7 +94,7 @@ class TestPoisson2D(object):
         opts.gatherArchive=True
         nList[0].linearSolver=default_n.KSP_petsc4py
         nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-        OptDB = PETSc.Options()
+        OptDB = nList[0].OptDB
         soln_name = so.name
         if solverType is 'direct':
             OptDB.clear()
@@ -174,7 +174,7 @@ def test_load_vector_use_weak(use_weak_dirichlet):
         nList[0].linearSolver=default_n.KSP_petsc4py
         nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
         nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-    OptDB = PETSc.Options()
+    OptDB = nList[0].OptDB
     soln_name = so.name
     OptDB.clear()
     OptDB.setValue('ksp_type','bcgsl')

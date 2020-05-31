@@ -17,18 +17,17 @@ import petsc4py
 import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
-import nseDrivenCavity_2d_n
-import nseDrivenCavity_2d_p
+from proteus import defaults
 from NavierStokes_ST_LS_SO_VV import NavierStokes_ST_LS_SO_VV
-
+import_modules = os.path.join(os.path.dirname(os.path.realpath(__file__)),'import_modules')
 @pytest.mark.LinearSolvers
 @pytest.mark.modelTest
 @pytest.mark.navierstokesTest
 class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
 
     def setup_method(self):
-        reload(nseDrivenCavity_2d_p)
-        reload(nseDrivenCavity_2d_n)
+        nseDrivenCavity_2d_p = defaults.load_physics('nseDrivenCavity_2d_p',import_modules)
+        nseDrivenCavity_2d_n = defaults.load_numerics('nseDrivenCavity_2d_n',import_modules)
         self.pList = [nseDrivenCavity_2d_p]
         self.nList = [nseDrivenCavity_2d_n]
         self.so = default_so
@@ -70,26 +69,26 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         - THQuads
         - LSC
         """
-        nseDrivenCavity_2d_p.coefficients = NavierStokes_ST_LS_SO_VV(epsFact=0.0,
-                                                                     sigma=0.0,
-                                                                     rho_0=1.0,
-                                                                     nu_0=1.0,
-                                                                     rho_1=1.0,
-                                                                     nu_1=1.0,
-                                                                     g=[0.0,0.0],
-                                                                     nd=2,
-                                                                     LS_model=None,
-                                                                     KN_model=None,
-                                                                     epsFact_density=None,
-                                                                     stokes=False);
+        self.pList[0].coefficients = NavierStokes_ST_LS_SO_VV(epsFact=0.0,
+                                                              sigma=0.0,
+                                                              rho_0=1.0,
+                                                              nu_0=1.0,
+                                                              rho_1=1.0,
+                                                              nu_1=1.0,
+                                                              g=[0.0,0.0],
+                                                              nd=2,
+                                                              LS_model=None,
+                                                              KN_model=None,
+                                                              epsFact_density=None,
+                                                              stokes=False);
 
-        nseDrivenCavity_2d_p.coefficients.variableNames = ['p','u','v']
+        self.pList[0].coefficients.variableNames = ['p','u','v']
 
-        nseDrivenCavity_2d_p.dirichletConditions = {0:nseDrivenCavity_2d_p.getDBCp,
-                                                    1:nseDrivenCavity_2d_p.getDBCu,
-                                                    2:nseDrivenCavity_2d_p.getDBCv}
-        nseDrivenCavity_2d_n.nLevels = 1
-        nseDrivenCavity_2d_n.linearSmoother = nseDrivenCavity_2d_n.Schur_LSC
+        self.pList[0].dirichletConditions = {0:self.pList[0].getDBCp,
+                                             1:self.pList[0].getDBCu,
+                                             2:self.pList[0].getDBCv}
+        self.nList[0].nLevels = 1
+        self.nList[0].linearSmoother = self.nList[0].Schur_LSC
         self.so.tnList = self.nList[0].tnList
         self._setPETSc(petsc_file = os.path.join(self._scriptdir,'import_modules/petsc.options.schur_lsc'))
         self._runTest()

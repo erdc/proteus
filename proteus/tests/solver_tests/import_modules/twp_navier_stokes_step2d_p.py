@@ -5,6 +5,8 @@ from __future__ import absolute_import
 from builtins import object
 from proteus import *
 from proteus.default_p import *
+from proteus import defaults
+defaults.reset_default_p()
 import sys
 
 try:

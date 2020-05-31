@@ -23,6 +23,7 @@ class TestCLSVOF(object):
 
     @classmethod
     def setup_class(cls):
+        default_n.conservativeFlux=None
         pass
 
     @classmethod

@@ -224,7 +224,7 @@ class ParametersModelBase(FreezableClass):
         # self.n.linearSmoother = None
         # NUMERICAL FLUX
         # self.n.massLumping = False
-        # self.n.conservativeFlux = None
+        self.n.conservativeFlux = None
         # TOLERANCES
         self.n.nl_atol_res = None
         self.n.l_atol_res = None
@@ -337,7 +337,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.n.linear_solver_options_prefix = 'rans2p_'
         self.n.linearSolverConvergenceTest = 'r-true'
         self.n.linearSmoother = LinearSolvers.SimpleNavierStokes3D
-        self.n.conservativeFlux= {0:'pwl-bdm-opt'}
+        self.n.conservativeFlux= None#{0:'pwl-bdm-opt'}
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.

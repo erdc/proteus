@@ -5,7 +5,7 @@ import proteus.test_utils.TestTools as TestTools
 import proteus.LinearAlgebraTools as LAT
 import proteus.LinearSolvers as LS
 from proteus.iproteus import *
-
+from proteus import defaults
 
 import os
 import sys
@@ -16,10 +16,9 @@ import pickle
 import petsc4py
 from petsc4py import PETSc
 import pytest
+import_modules = os.path.join(os.path.dirname(os.path.realpath(__file__)),'import_modules')
 
 TestTools.addSubFolders( inspect.currentframe() )
-import stokesDrivenCavity_2d_p
-import stokesDrivenCavity_2d_n       
 def create_petsc_vecs(matrix_A):
     """
     Creates a right-hand-side and solution PETSc vector for
@@ -50,15 +49,8 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
     """Run a Stokes test with mumps LU factorization """
 
     def setup_method(self):
-        reload(stokesDrivenCavity_2d_p)
-        reload(stokesDrivenCavity_2d_n)
-        self.pList = [stokesDrivenCavity_2d_p]
-        self.nList = [stokesDrivenCavity_2d_n]
-        self.so = default_so
-        self.so.tnList = [0.,1.]
-        self.so.name = self.pList[0].name
-        self.so.sList = self.pList[0].name
-        self.so.sList = [default_s]
+        stokesDrivenCavity_2d_p = defaults.load_physics('stokesDrivenCavity_2d_p',import_modules)
+        stokesDrivenCavity_2d_n = defaults.load_numerics('stokesDrivenCavity_2d_n',import_modules)
 
     def teardown_method(self):
         """Tear down function. """
@@ -75,21 +67,22 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         self.remove_files(FileList)
 
     def _setPETSc(self):
-        petsc4py.PETSc.Options().clear()
-        petsc4py.PETSc.Options().setValue("ksp_type","fgmres")
-        petsc4py.PETSc.Options().setValue("ksp_atol",1e-20)
-        petsc4py.PETSc.Options().setValue("ksp_atol",1e-12)
-        petsc4py.PETSc.Options().setValue("pc_fieldsplit_type","schur")
-        petsc4py.PETSc.Options().setValue("pc_fieldsplit_schur_fact_type","upper")
-        petsc4py.PETSc.Options().setValue("fieldsplit_velocity_ksp_type","preonly")
-        petsc4py.PETSc.Options().setValue("fieldsplit_velocity_pc_type","lu")
-        petsc4py.PETSc.Options().setValue("fieldsplit_pressure_ksp_type","preonly")
+        self.nList[0].OptDB.clear()
+        self.nList[0].OptDB.setValue("ksp_type","fgmres")
+        self.nList[0].OptDB.setValue("ksp_atol",1e-20)
+        self.nList[0].OptDB.setValue("ksp_atol",1e-12)
+        self.nList[0].OptDB.setValue("pc_type","fieldsplit")
+        self.nList[0].OptDB.setValue("pc_fieldsplit_type","schur")
+        self.nList[0].OptDB.setValue("pc_fieldsplit_schur_fact_type","upper")
+        self.nList[0].OptDB.setValue("fieldsplit_velocity_ksp_type","preonly")
+        self.nList[0].OptDB.setValue("fieldsplit_velocity_pc_type","lu")
+        self.nList[0].OptDB.setValue("fieldsplit_pressure_ksp_type","preonly")
 
     def _setPETSc_LU(self):
-        petsc4py.PETSc.Options().clear()
-        petsc4py.PETSc.Options().setValue("ksp_type","preonly")
-        petsc4py.PETSc.Options().setValue("pc_type","lu")
-        petsc4py.PETSc.Options().setValue("pc_factor_mat_solver_package","mumps")
+        self.nList[0].OptDB.clear()
+        self.nList[0].OptDB.setValue("ksp_type","preonly")
+        self.nList[0].OptDB.setValue("pc_type","lu")
+        self.nList[0].OptDB.setValue("pc_factor_mat_solver_package","superlu_dist")
 
     def _runTest(self):
         Profiling.openLog('proteus.log',11)
@@ -110,7 +103,19 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
 
     @pytest.mark.slowTest
     def test_01_FullRun(self):
-        stokesDrivenCavity_2d_n.linearSmoother = proteus.LinearSolvers.Schur_Qp
+        stokesDrivenCavity_2d_p = defaults.load_physics('stokesDrivenCavity_2d_p',import_modules)
+        stokesDrivenCavity_2d_n = defaults.load_numerics('stokesDrivenCavity_2d_n',import_modules)
+        self.pList = [stokesDrivenCavity_2d_p]
+        self.nList = [stokesDrivenCavity_2d_n]
+        self.nList[0].linearSmoother = proteus.LinearSolvers.Schur_Qp
+        self.pList = [stokesDrivenCavity_2d_p]
+        self.nList = [stokesDrivenCavity_2d_n]
+        defaults.reset_default_so()
+        self.so = default_so
+        self.so.tnList = [0.,1.]
+        self.so.name = self.pList[0].name
+        self.so.sList = self.pList[0].name
+        self.so.sList = [default_s]
         self._setPETSc()
         self._runTest()
         relpath = 'comparison_files/Qp_expected.log'
@@ -124,8 +129,21 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
 
     @pytest.mark.slowTest
     def test_02_FullRun(self):
+        stokesDrivenCavity_2d_p = defaults.load_physics('stokesDrivenCavity_2d_p',import_modules)
+        stokesDrivenCavity_2d_n = defaults.load_numerics('stokesDrivenCavity_2d_n',import_modules)
+        self.pList = [stokesDrivenCavity_2d_p]
+        self.nList = [stokesDrivenCavity_2d_n]
+        self.pList = [stokesDrivenCavity_2d_p]
+        self.nList = [stokesDrivenCavity_2d_n]
+        defaults.reset_default_so()
+        self.so = default_so
+        self.so.tnList = [0.,1.]
+        self.so.name = self.pList[0].name
+        self.so.sList = self.pList[0].name
+        self.so.sList = [default_s]
         self._setPETSc_LU()
         self._runTest()
+
 
 def initialize_schur_ksp_obj(matrix_A, schur_approx):
     """
@@ -171,6 +189,7 @@ def initialize_petsc_options(request):
     petsc_options.setValue('ksp_atol',1e-16)
     petsc_options.setValue('ksp_rtol',1.0e-12)
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
+    petsc_options.setValue('pc_type','fieldsplit')
     petsc_options.setValue('pc_fieldsplit_type','schur')
     petsc_options.setValue('pc_fieldsplit_schur_fact_type','upper')
     petsc_options.setValue('pc_fieldsplit_schur_precondition','user')
@@ -186,7 +205,6 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     boundary conditions are pure Dirichlet. """
     mat_A = load_nse_cavity_matrix
     b, x = create_petsc_vecs(mat_A)
-    petsc_options = initialize_petsc_options
 
     solver_info = LS.ModelInfo('interlaced',
                                3,
@@ -194,6 +212,7 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     schur_approx = LS.Schur_Sp(L=mat_A,
                                prefix='',
                                solver_info=solver_info)
+    petsc_options = initialize_petsc_options
     ksp_obj = initialize_schur_ksp_obj(mat_A,schur_approx)
     ksp_obj.solve(b,x)
 

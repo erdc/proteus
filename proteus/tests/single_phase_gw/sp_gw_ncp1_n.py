@@ -4,7 +4,8 @@ from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
 from .sp_gw_p import *
-reload(proteus.default_n)
+from proteus import defaults
+defaults.reset_default_n()
 
 #fixed time step
 timeIntegration = BackwardEuler

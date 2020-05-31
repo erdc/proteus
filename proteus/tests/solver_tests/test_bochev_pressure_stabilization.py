@@ -19,15 +19,11 @@ import pytest
 from petsc4py import PETSc
 
 TestTools.addSubFolders( inspect.currentframe() )
-from proteus import default_p, default_n, default_so, default_s
-reload(default_p)
-reload(default_n)
-reload(default_so)
-reload(default_s)
-import cavity2d
-import twp_navier_stokes_cavity_2d_so
-import twp_navier_stokes_cavity_2d_p
-import twp_navier_stokes_cavity_2d_n
+from proteus import defaults
+import_modules = os.path.join(os.path.dirname(os.path.abspath(__file__)),'import_modules')
+twp_navier_stokes_cavity_2d_so = defaults.load_system('twp_navier_stokes_cavity_2d_so',import_modules)
+twp_navier_stokes_cavity_2d_p = defaults.load_physics('twp_navier_stokes_cavity_2d_p',import_modules)
+twp_navier_stokes_cavity_2d_n = defaults.load_numerics('twp_navier_stokes_cavity_2d_n',import_modules)
 
 def clean_up_directory():
     FileList = ['forceHistory_p',
@@ -51,6 +47,7 @@ def initialize_tp_pcd_options(request):
     petsc_options.setValue('rans2p_ksp_atol',1e-12)
     petsc_options.setValue('rans2p_ksp_rtol',1e-12)
     petsc_options.setValue('rans2p_ksp_gmres_modifiedgramschmidt','')
+    petsc_options.setValue('rans2p_pc_type','fieldsplit')
     petsc_options.setValue('rans2p_pc_fieldsplit_type','schur')
     petsc_options.setValue('rans2p_pc_fieldsplit_schur_fact_type','upper')
     petsc_options.setValue('rans2p_pc_fieldsplit_schur_precondition','user')
@@ -71,6 +68,7 @@ def load_cavity_problem(request):
     pList = [twp_navier_stokes_cavity_2d_p]
     nList = [twp_navier_stokes_cavity_2d_n]
     so = twp_navier_stokes_cavity_2d_so
+    from proteus import default_s
     so.sList = [default_s]
     yield pList, nList, so
     

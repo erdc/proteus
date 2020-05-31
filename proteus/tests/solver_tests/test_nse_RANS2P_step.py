@@ -22,25 +22,12 @@ from petsc4py import PETSc
 import pytest
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
-from proteus import default_p, default_n, default_so, default_s
 from proteus import iproteus
+from proteus import defaults
 from importlib import reload
+reload(PETSc)
 reload(iproteus)
 opts=iproteus.opts
-reload(default_p)
-reload(default_n)
-reload(default_so)
-reload(default_s)
-try:
-    from .import_modules import step2d_so
-    from .import_modules import step2d
-    from .import_modules import twp_navier_stokes_step2d_p
-    from .import_modules import twp_navier_stokes_step2d_n
-except:
-    from import_modules import step2d_so
-    from import_modules import step2d
-    from import_modules import twp_navier_stokes_step2d_p
-    from import_modules import twp_navier_stokes_step2d_n
 
 def load_simulation(context_options_str=None):
     """
@@ -55,15 +42,16 @@ def load_simulation(context_options_str=None):
 
     """
     from proteus import Context
+    from proteus import default_s
+    reload(default_s)
     Profiling.openLog("proteus.log",11)
     Profiling.verbose=True
     Context.contextOptionsString=context_options_str
 
-    reload(step2d_so)
-    reload(step2d)
-    reload(twp_navier_stokes_step2d_p)
-    reload(twp_navier_stokes_step2d_n)
-
+    step2d_so = defaults.load_system('step2d_so','import_modules')
+    twp_navier_stokes_step2d_p = defaults.load_physics('twp_navier_stokes_step2d_p','import_modules')
+    twp_navier_stokes_step2d_n = defaults.load_numerics('twp_navier_stokes_step2d_n','import_modules')
+    
     pList = [twp_navier_stokes_step2d_p]
     nList = [twp_navier_stokes_step2d_n]
     pList[0].name = 'step2d'        
@@ -90,6 +78,7 @@ def initialize_petsc_options():
     petsc_options.setValue('ksp_gmres_restart', 300)
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt', 1)
     petsc_options.setValue('ksp_pc_side','right')
+    petsc_options.setValue('pc_type', 'fieldsplit')
     petsc_options.setValue('pc_fieldsplit_type', 'schur')
     petsc_options.setValue('pc_fieldsplit_schur_fact_type', 'upper')
     petsc_options.setValue('pc_fieldsplit_schur_precondition', 'user')
@@ -179,9 +168,9 @@ def test_step_slip_FullRun():
     L2 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,1)])
     L3 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,2)])
     print(L1,L2,L3)
-    assert L1[0][1]==5
-    assert L2[0][1]==6
-    assert L3[0][1]==9
+    assert L1[0][1]==2
+    assert L2[0][1]==11
+    assert L3[0][1]==14
 
 @pytest.mark.LinearSolvers
 def test_step_noslip_FullRun():
@@ -199,9 +188,9 @@ def test_step_noslip_FullRun():
     L2 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,1)])
     L3 = actual_log.get_ksp_resid_it_info([(' step2d ',1.0,0,2)])
     print(L1,L2,L3)
-    assert L1[0][1]==5
-    assert L2[0][1]==6
-    assert L3[0][1]==9
+    assert L1[0][1]==2
+    assert L2[0][1]==20
+    assert L3[0][1]==23
 
 @pytest.mark.LinearSolvers
 def test_Schur_Sp_solve():
@@ -221,7 +210,7 @@ def test_Schur_Sp_solve():
     assert ksp_obj.converged == True
     assert ksp_obj.reason == 2
     assert float(ksp_obj.norm) < 1.0e-5
-    assert ksp_obj.its == 9
+    assert ksp_obj.its == 63
     
 def create_petsc_vecs(matrix_A):
     """
@@ -369,7 +358,7 @@ def test_amg_iteration_matrix_noslip():
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                    index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 5
+    assert F_ksp.its == 51
 
     PETSc.Options().setValue('pc_hypre_boomeramg_relax_type_all','sequential-Gauss-Seidel')
     F_ksp = initialize_asm_ksp_obj(mat_A.createSubMatrix(index_sets[0],
@@ -378,7 +367,7 @@ def test_amg_iteration_matrix_noslip():
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 6
+    assert F_ksp.its == 55
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -390,7 +379,7 @@ def test_amg_iteration_matrix_noslip():
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 8
+    assert F_ksp.its == 88
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -403,7 +392,7 @@ def test_amg_iteration_matrix_noslip():
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 8
+    assert F_ksp.its == 88
 
 def test_amg_iteration_matrix_slip():
     mat_A = load_matrix_step_slip()
@@ -427,7 +416,7 @@ def test_amg_iteration_matrix_slip():
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                    index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 6
+    assert F_ksp.its == 7
 
 @pytest.mark.amg
 def test_amg_basic():
@@ -443,7 +432,7 @@ def test_amg_basic():
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))   
     F_ksp.solve(b,x)
-    assert F_ksp.its == 5
+    assert F_ksp.its == 51
 
 @pytest.mark.amg
 def test_amg_iteration_performance():
@@ -458,7 +447,7 @@ def test_amg_iteration_performance():
                                                 index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 11
+    assert F_ksp.its == 174
 
 @pytest.mark.amg
 def test_amg_step_problem_noslip():
@@ -472,7 +461,7 @@ def test_amg_step_problem_noslip():
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 6
+    assert F_ksp.its == 80
 
 @pytest.mark.amg
 def test_amg_step_problem_slip():
@@ -486,7 +475,7 @@ def test_amg_step_problem_slip():
     b, x = create_petsc_vecs(mat_A.createSubMatrix(index_sets[0],
                                                 index_sets[0]))
     F_ksp.solve(b,x)
-    assert F_ksp.its == 5
+    assert F_ksp.its == 68
 
 
 if __name__ == '__main__':
