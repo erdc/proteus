@@ -1,6 +1,0 @@
-comparison_GN_steady_h_t2.csv filter=lfs diff=lfs merge=lfs -text
-comparison_dam3Bumps_h_t2.csv filter=lfs diff=lfs merge=lfs -text
-comparison_parab1D_h_t2.csv filter=lfs diff=lfs merge=lfs -text
-comparison_seawall_h_t2.csv filter=lfs diff=lfs merge=lfs -text
-comparison_solitary_reef_h_t2.csv filter=lfs diff=lfs merge=lfs -text
-comparison_solitary_wave_h_t2.csv filter=lfs diff=lfs merge=lfs -text
