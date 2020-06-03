@@ -184,7 +184,7 @@ class VelocityPostProcessingAlgorithmBase(object):
                 self.fluxElementBoundaries[ci] = numpy.ones((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
             else:
                 self.fluxElementBoundaries[ci] = numpy.zeros((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
-            print(self.vt)
+
             for cj,fbcObject  in self.vt.fluxBoundaryConditionsObjectsDict.items():
                 for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.items():
                     if cj == ci:
