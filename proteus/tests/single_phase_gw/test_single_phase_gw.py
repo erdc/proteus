@@ -64,20 +64,9 @@ class TestSinglePhaseGW(object):
         opts.profile=True
         opts.gatherArchive=True
         nList[0].femSpaces[0]  = default_n.C0_AffineLinearOnSimplexWithNodalBasis
-        nList[0].linearSolver=default_n.KSP_petsc4py
-        nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
         nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-        #set ksp options
-        from petsc4py import PETSc
-        OptDB = PETSc.Options()
-        OptDB.setValue('ksp_type','bcgsl')
-        OptDB.setValue('pc_type','asm')
-        OptDB.setValue('pc_asm_type','restrict')
-        OptDB.setValue('pc_asm_overlap','2')
-        OptDB.setValue('ksp_atol','1.0e-10')
-        OptDB.setValue('ksp_rtol','0.0')
-        #nList[0].linearSolver=default_n.LU
-        #nList[0].multilevelLinearSolver=default_n.LU
+        nList[0].linearSolver=default_n.LU
+        nList[0].multilevelLinearSolver=default_n.LU
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         failed = ns.calculateSolution(sim_name)
         self.aux_names.append(pList[0].name)

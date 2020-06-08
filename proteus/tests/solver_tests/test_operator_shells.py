@@ -112,6 +112,7 @@ def create_simple_saddle_point_problem(request):
     yield output_data
 
 def setup_LSC_shell(petsc_options, fixture_data):
+    petsc_options.clear()
     petsc_options.setValue('innerLSCsolver_BTinvBt_ksp_type','preonly')
     petsc_options.setValue('innerLSCsolver_T_ksp_type','preonly')
     petsc_options.setValue('innerLSCsolver_BTinvBt_pc_type','lu')

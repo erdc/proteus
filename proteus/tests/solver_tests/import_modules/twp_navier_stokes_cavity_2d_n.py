@@ -6,6 +6,8 @@ except:
     import cavity2d
 
 from proteus.default_n import *
+from proteus import defaults
+defaults.reset_default_n()
 try:
     from .twp_navier_stokes_cavity_2d_p import *
 except:

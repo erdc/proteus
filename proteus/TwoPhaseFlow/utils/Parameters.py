@@ -224,7 +224,7 @@ class ParametersModelBase(FreezableClass):
         # self.n.linearSmoother = None
         # NUMERICAL FLUX
         # self.n.massLumping = False
-        # self.n.conservativeFlux = None
+        self.n.conservativeFlux = None
         # TOLERANCES
         self.n.nl_atol_res = None
         self.n.l_atol_res = None

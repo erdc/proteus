@@ -51,6 +51,7 @@ class TestBernstein(object):
         poisson_n.nnx=poisson_p.nn
         poisson_n.nny=poisson_p.nn
         poisson_n.nnz=1
+        poisson_n.conservativeFlux=None
         # Update name
         self.so.name = "2D_"+self.pList[0].name+"_hex_degree2"
         # NUMERICAL SOLUTION #
@@ -121,6 +122,7 @@ class TestBernstein(object):
         poisson_n.nnx=poisson_p.nn
         poisson_n.nny=poisson_p.nn
         poisson_n.nnz=poisson_p.nn
+        poisson_n.conservativeFlux=None
         # Update name
         self.so.name = "3D_"+self.pList[0].name+"_hex_degree2"
         # NUMERICAL SOLUTION #
