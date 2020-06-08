@@ -1,6 +1,0 @@
-mesh.ele filter=lfs diff=lfs merge=lfs -text
-mesh.edge filter=lfs diff=lfs merge=lfs -text
-mesh.node filter=lfs diff=lfs merge=lfs -text
-mesh.poly filter=lfs diff=lfs merge=lfs -text
-mesh.1.neigh filter=lfs diff=lfs merge=lfs -text
-mesh.1.poly filter=lfs diff=lfs merge=lfs -text

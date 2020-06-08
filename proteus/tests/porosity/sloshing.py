@@ -188,7 +188,7 @@ twoLayer=opts.twoLayer
 domain.porosityTypes =np.array([1.0,1.0,1.0],'d')
 domain.dragAlphaTypes=np.array([0.0,0.0,0.0],'d')
 domain.dragBetaTypes =np.array([0.0,0.0,0.0],'d')
-domain.epsFact_solid =np.array([0.0,0.0,0.0],'d')
+domain.epsFact_porous =np.array([0.0,0.0,0.0],'d')
 if twoLayer:
     domain.porosityTypes[2] = 0.3
     domain.dragAlphaTypes[2] = 1.0e8

@@ -1,4 +1,4 @@
-FROM erdc/stack_base:latest
+FROM erdc/stack:latest
 
 MAINTAINER Proteus Project <proteus@googlegroups.com>
 

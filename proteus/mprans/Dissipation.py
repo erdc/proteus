@@ -4,7 +4,7 @@ from past.utils import old_div
 import proteus
 from proteus.mprans.cDissipation import *
 from proteus.mprans.cDissipation2D import *
-import numpy
+import numpy as np
 from proteus import Profiling as prof
 from proteus import cfemIntegrals
 from . import cArgumentsDict
@@ -219,11 +219,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         diffusion = {0: {0: {0: 'nonlinear', }}}
         reaction = {0: {0: 'nonlinear'}}
         if self.nd == 2:
-            sdInfo = {(0, 0): (numpy.array([0, 1, 2], dtype='i'),
-                               numpy.array([0, 1], dtype='i'))}
+            sdInfo = {(0, 0): (np.array([0, 1, 2], dtype='i'),
+                               np.array([0, 1], dtype='i'))}
         else:
-            sdInfo = {(0, 0): (numpy.array([0, 1, 2, 3], dtype='i'),
-                               numpy.array([0, 1, 2], dtype='i'))}
+            sdInfo = {(0, 0): (np.array([0, 1, 2, 3], dtype='i'),
+                               np.array([0, 1, 2], dtype='i'))}
         proteus.TransportCoefficients.TC_base.__init__(self,
                          nc,
                          mass,
@@ -302,15 +302,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 self.ebq_phi = None
         else:
-            self.q_phi =-numpy.ones( modelList[self.kappa_modelIndex].q[('u', 0)].shape, 'd')
-            #self.ebq_phi =-numpy.ones( modelList[self.dissipation_modelIndex].ebq[('u', 0)].shape, 'd')
-            self.ebqe_phi = -numpy.ones( modelList[self.kappa_modelIndex].ebqe[('u', 0)].shape, 'd')
+            self.q_phi =-np.ones( modelList[self.kappa_modelIndex].q[('u', 0)].shape, 'd')
+            #self.ebq_phi =-np.ones( modelList[self.dissipation_modelIndex].ebq[('u', 0)].shape, 'd')
+            self.ebqe_phi = -np.ones( modelList[self.kappa_modelIndex].ebqe[('u', 0)].shape, 'd')
         # flow model
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.u_old_dof = np.copy(self.model.u[0].dof)
 
         assert self.flowModelIndex is not None, "Dissipation: invalid index for flow model allowed range: [0,%s]" % len(modelList)
         # print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))
         if self.flowModelIndex is not None:  # keep for debugging for now
+            self.model.ebqe['n'][:] = modelList[self.flowModelIndex].ebqe['n']
             if ('velocity', 0) in modelList[self.flowModelIndex].q:
                 self.q_v = modelList[self.flowModelIndex].q[('velocity', 0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity', 0)]
@@ -356,20 +357,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if hasattr(modelList[self.flowModelIndex].coefficients, 'q_porosity'):
                 self.q_porosity = modelList[self.flowModelIndex].coefficients.q_porosity
             else:
-                self.q_porosity = numpy.ones(self.q[('u', 0)].shape, 'd')
+                self.q_porosity = np.ones(self.q[('u', 0)].shape, 'd')
             if hasattr(modelList[self.flowModelIndex].coefficients, 'ebqe_porosity'):
                 self.ebqe_porosity = modelList[self.flowModelIndex].coefficients.ebqe_porosity
             else:
-                self.ebqe_porosity = numpy.ones( modelList[self.flowModelIndex].ebqe[('velocity', 0)].shape, 'd')
+                self.ebqe_porosity = np.ones( modelList[self.flowModelIndex].ebqe[('velocity', 0)].shape, 'd')
         else:
-            self.velocity_dof_u = numpy.zeros(self.model.u[0].dof.shape, 'd')
-            self.velocity_dof_v = numpy.zeros(self.model.u[0].dof.shape, 'd')
+            self.velocity_dof_u = np.zeros(self.model.u[0].dof.shape, 'd')
+            self.velocity_dof_v = np.zeros(self.model.u[0].dof.shape, 'd')
             if self.nd == 2:
                 self.velocity_dof_w = self.velocity_dof_v.copy()
             else:
-                self.velocity_dof_w = numpy.zeros(self.model.u[0].dof.shape, 'd')
-            self.q_porosity = numpy.ones(self.q[('u', 0)].shape, 'd')
-            self.ebqe_porosity = numpy.ones(self.ebqe[('u', 0)].shape, 'd')
+                self.velocity_dof_w = np.zeros(self.model.u[0].dof.shape, 'd')
+            self.q_porosity = np.ones(self.q[('u', 0)].shape, 'd')
+            self.ebqe_porosity = np.ones(self.ebqe[('u', 0)].shape, 'd')
 
         #
         #assert self.kappa_modelIndex is not None and self.kappa_modelIndex < len(modelList), "Dissipation: invalid index for dissipation model allowed range: [0,%s]" % len(modelList)
@@ -381,14 +382,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if ('u', 0) in modelList[self.kappa_modelIndex].ebq:
                 self.ebq_kappa = modelList[self.kappa_modelIndex].ebq[('u', 0)]
         else:
-            self.q_kappa = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
+            self.q_kappa = np.zeros(self.model.q[('u', 0)].shape, 'd')
             self.q_kappa.fill(self.default_kappa)
-            self.ebqe_kappa = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
+            self.ebqe_kappa = np.zeros(self.model.ebqe[('u', 0)].shape, 'd')
             self.ebqe_kappa.fill(self.default_kappa)
-            self.q_grad_kappa = numpy.zeros(self.model.q[('grad(u)', 0)].shape, 'd')
+            self.q_grad_kappa = np.zeros(self.model.q[('grad(u)', 0)].shape, 'd')
 
             if ('u', 0) in self.model.ebq:
-                self.ebq_kappa = numpy.zeros(self.model.ebq[('u', 0)].shape, 'd')
+                self.ebq_kappa = np.zeros(self.model.ebq[('u', 0)].shape, 'd')
                 self.ebq_kappa.fill(self.default_kappa)
             #
         if self.VOS_modelIndex is not None:
@@ -414,39 +415,39 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def initializeElementQuadrature(self, t, cq):
         if self.flowModelIndex is None:
-            self.q_v = numpy.ones(cq[('f', 0)].shape, 'd')
-            self.q_grad_u = numpy.ones(cq[('grad(u)', 0)].shape, 'd')
-            self.q_grad_v = numpy.ones(cq[('grad(u)', 0)].shape, 'd')
+            self.q_v = np.ones(cq[('f', 0)].shape, 'd')
+            self.q_grad_u = np.ones(cq[('grad(u)', 0)].shape, 'd')
+            self.q_grad_v = np.ones(cq[('grad(u)', 0)].shape, 'd')
             if self.nd == 2:
                 self.q_grad_w = self.q_grad_v.copy()
             else:
-                self.q_grad_w = numpy.ones(cq[('grad(u)', 0)].shape, 'd')
+                self.q_grad_w = np.ones(cq[('grad(u)', 0)].shape, 'd')
         if self.kappa_modelIndex is None:
-            self.q_kappa = numpy.ones(cq[('u', 0)].shape, 'd')
+            self.q_kappa = np.ones(cq[('u', 0)].shape, 'd')
             self.q_kappa.fill(self.default_kappa)
-            self.q_grad_kappa = numpy.zeros(cq[('grad(u)', 0)].shape, 'd')
+            self.q_grad_kappa = np.zeros(cq[('grad(u)', 0)].shape, 'd')
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         if self.flowModelIndex is None:
-            self.ebq_v = numpy.ones(cebq[('f', 0)].shape, 'd')
-            self.ebq_grad_u = numpy.ones(cebq[('grad(u)', 0)].shape, 'd')
-            self.ebq_grad_v = numpy.ones(cebq[('grad(u)', 0)].shape, 'd')
+            self.ebq_v = np.ones(cebq[('f', 0)].shape, 'd')
+            self.ebq_grad_u = np.ones(cebq[('grad(u)', 0)].shape, 'd')
+            self.ebq_grad_v = np.ones(cebq[('grad(u)', 0)].shape, 'd')
             if self.nd == 2:
                 self.ebq_grad_w = self.ebq_grad_v.copy()
             else:
-                self.ebq_grad_w = numpy.ones(cebq[('grad(u)', 0)].shape, 'd')
+                self.ebq_grad_w = np.ones(cebq[('grad(u)', 0)].shape, 'd')
         if self.kappa_modelIndex is None:
-            self.ebq_kappa = numpy.ones(cebq[('u', 0)].shape, 'd')
+            self.ebq_kappa = np.ones(cebq[('u', 0)].shape, 'd')
             self.ebq_kappa.fill(self.default_kappa)
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         if self.flowModelIndex is None:
-            self.ebqe_v = numpy.ones(cebqe[('f', 0)].shape, 'd')
-            self.ebqe_grad_u = numpy.ones(cebqe[('grad(u)', 0)].shape, 'd')
-            self.ebqe_grad_v = numpy.ones(cebqe[('grad(u)', 0)].shape, 'd')
-            self.ebqe_grad_w = numpy.ones(cebqe[('grad(u)', 0)].shape, 'd')
+            self.ebqe_v = np.ones(cebqe[('f', 0)].shape, 'd')
+            self.ebqe_grad_u = np.ones(cebqe[('grad(u)', 0)].shape, 'd')
+            self.ebqe_grad_v = np.ones(cebqe[('grad(u)', 0)].shape, 'd')
+            self.ebqe_grad_w = np.ones(cebqe[('grad(u)', 0)].shape, 'd')
         if self.kappa_modelIndex is None:
-            self.ebqe_kappa = numpy.ones(cebqe[('u', 0)].shape, 'd')
+            self.ebqe_kappa = np.ones(cebqe[('u', 0)].shape, 'd')
             self.ebqe_kappa.fill(self.default_kappa)
 
     def preStep(self, t, firstStep=False):
@@ -454,7 +455,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
-        self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.u_old_dof = np.copy(self.model.u[0].dof)
 
         for eN in range(self.model.q[('u',0)].shape[0]):
             for k in range(self.model.q[('u',0)].shape[1]):                
@@ -771,35 +772,40 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe = {}
         self.phi_ip = {}
         # mesh
-        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary, 3), 'd')
-        self.q[('u', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('grad(u)', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary, 3), 'd')
+        self.ebqe['n'] = np.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('grad(u)', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         #diffusion, isotropic
-        self.q[('a', 0, 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q[('da', 0, 0, 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        self.q[('a', 0, 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
+        self.q[('da', 0, 0, 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         # linear potential
         self.q[('phi', 0)] = self.q[('u', 0)]
         self.q[('grad(phi)', 0)] = self.q[('grad(u)', 0)]
-        self.q[('dphi', 0, 0)] = numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dphi', 0, 0)] = np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         # mass
         self.q[('m', 0)] = self.q[('u', 0)]
-        self.q[('m_last', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('m_last', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_tmp', 0)] = self.q[('u', 0)]
-        self.q[('cfl', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('numDiff', 0, 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.ebqe[('u', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('grad(u)', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+        self.q[('cfl', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('numDiff', 0, 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.ebqe[('u', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('grad(u)', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                  self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
-        self.ebqe[('advectiveFlux_bc_flag', 0)] = numpy.zeros(
+        self.ebqe[('advectiveFlux_bc_flag', 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
-        self.ebqe[('advectiveFlux_bc', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('advectiveFlux', 0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('diffusiveFlux_bc_flag', 0, 0)] = numpy.zeros(
+        self.ebqe[('advectiveFlux_bc', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('advectiveFlux', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('diffusiveFlux_bc_flag', 0, 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
-        self.ebqe[('diffusiveFlux_bc', 0, 0)] = numpy.zeros(
+        self.ebqe[('diffusiveFlux_bc', 0, 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('penalty')] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('penalty')] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.points_elementBoundaryQuadrature = set()
         self.scalars_elementBoundaryQuadrature = set([('u', ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature = set()
@@ -808,9 +814,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,), 'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
-            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+            self.inflowBoundaryBC[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,), 'i')
+            self.inflowBoundaryBC_values[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nDOF_trial_element[cj]), 'd')
+            self.inflowFlux[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.internalNodes = set(range(self.mesh.nNodes_global))
         # identify the internal nodes this is ought to be in mesh
         # \todo move this to mesh
@@ -823,7 +829,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global, i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray = numpy.zeros((self.nNodes_internal,), 'i')
+        self.internalNodesArray = np.zeros((self.nNodes_internal,), 'i')
         for nI, n in enumerate(self.internalNodes):
             self.internalNodesArray[nI] = n
         #
@@ -896,23 +902,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # TODO get rid of this
         # mwf can I use the numericalFlux's flag information?
         for ci, fbcObject in list(self.fluxBoundaryConditionsObjectsDict.items()):
-            self.ebqe[('advectiveFlux_bc_flag', ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
+            self.ebqe[('advectiveFlux_bc_flag', ci)] = np.zeros(self.ebqe[('advectiveFlux_bc', ci)].shape, 'i')
             for t, g in list(fbcObject.advectiveFluxBoundaryConditionsDict.items()):
                 if ci in self.coefficients.advection:
                     self.ebqe[('advectiveFlux_bc', ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                     self.ebqe[('advectiveFlux_bc_flag', ci)][t[0], t[1]] = 1
 
             for ck, diffusiveFluxBoundaryConditionsDict in list(fbcObject.diffusiveFluxBoundaryConditionsDictDict.items()):
-                self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = numpy.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
+                self.ebqe[('diffusiveFlux_bc_flag', ck, ci)] = np.zeros(self.ebqe[('diffusiveFlux_bc', ck, ci)].shape, 'i')
                 for t, g in list(diffusiveFluxBoundaryConditionsDict.items()):
                     self.ebqe[('diffusiveFlux_bc', ck, ci)][t[0], t[1]] = g(self.ebqe[('x')][t[0], t[1]], self.timeIntegration.t)
                     self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
         if hasattr(self.numericalFlux, 'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
         if not hasattr(self.numericalFlux, 'isDOFBoundary'):
-            self.numericalFlux.isDOFBoundary = {0: numpy.zeros(self.ebqe[('u', 0)].shape, 'i')}
+            self.numericalFlux.isDOFBoundary = {0: np.zeros(self.ebqe[('u', 0)].shape, 'i')}
         if not hasattr(self.numericalFlux, 'ebqe'):
-            self.numericalFlux.ebqe = {('u', 0): numpy.zeros(self.ebqe[('u', 0)].shape, 'd')}
+            self.numericalFlux.ebqe = {('u', 0): np.zeros(self.ebqe[('u', 0)].shape, 'd')}
         # TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag = 0
@@ -980,7 +986,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.movingDomain = False
         self.MOVING_DOMAIN = 0.0
         if self.mesh.nodeVelocityArray is None:
-            self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape, 'd')
+            self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape, 'd')
     # mwf these are getting called by redistancing classes,
 
     def calculateCoefficients(self):
@@ -1125,7 +1131,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape, 'd')
+            self.globalResidualDummy = np.zeros(r.shape, 'd')
 
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,

@@ -30,6 +30,7 @@ if domain is None:
 # ******************************** #
 # ********** PARAMETERS ********** #
 # ******************************** #
+
 # PHYSICAL PARAMETERS #
 g = physical_parameters['gravity']
 LINEAR_FRICTION = physical_parameters['LINEAR_FRICTION']

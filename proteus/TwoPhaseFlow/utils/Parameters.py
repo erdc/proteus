@@ -318,12 +318,13 @@ class ParametersModelRANS2P(ParametersModelBase):
             porosityTypes = domain.porosityTypes
             dragAlphaTypes = domain.dragAlphaTypes
             dragBetaTypes = domain.dragBetaTypes
-            epsFact_solid = domain.epsFact_solid
+            epsFact_porous = domain.epsFact_porous
         else:
             porosityTypes = None
             dragAlphaTypes = None
             dragBetaTypes = None
             epsFact_solid = None
+            epsFact_porous = None
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.movingDomain = self.p.movingDomain
@@ -1834,14 +1835,9 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
-            self.OptDB.setValue(prefix+'ksp_type', 'preonly')
-            self.OptDB.setValue(prefix+'pc_type', 'lu')
-            self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
-        else:
-            self.OptDB.setValue(prefix+'ksp_type', 'cg')
-            self.OptDB.setValue(prefix+'pc_type', 'hypre')
-            self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
         # self.OptDB.setValue(prefix+'ksp_constant_null_space', 1)
         # self.OptDB.setValue(prefix+'pc_factor_shift_type', 'NONZERO')
         # self.OptDB.setValue(prefix+'pc_factor_shift_amount', 1e-10)

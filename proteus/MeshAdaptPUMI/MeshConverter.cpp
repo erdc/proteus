@@ -47,7 +47,7 @@ static apf::Numbering* numberOwnedEntitiesFirst(apf::Mesh* m, int dimension,int 
 int MeshAdaptPUMIDrvr::constructFromSerialPUMIMesh(Mesh& mesh)
 {
   assert(m != 0);
-  std::cout << "Constructing global data structures\n"; 
+  logEvent("Constructing global data structures",4);
 
   int dim = m->getDimension();
   mesh.nElements_global = m->count(dim);
@@ -508,7 +508,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
 
 int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
 {
-  std::cout<<"Starting to update material arrays\n";
+  logEvent("Starting to update material arrays",4);
   int geomTag;
   apf::ModelEntity* geomEnt;
   apf::MeshIterator* it;
@@ -606,7 +606,6 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
   m->end(it);
 
   apf::destroyField(nodeMaterials);
-  std::cout<<"Finished faces and verts\n";
 
   //Loop over regions
   dim = m->getDimension();

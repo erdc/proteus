@@ -1,4 +1,4 @@
-FROM erdc/stack_base:gcc9
+FROM erdc/stack:latest-gcc9
 
 MAINTAINER Proteus Project <proteus@googlegroups.com>
 
