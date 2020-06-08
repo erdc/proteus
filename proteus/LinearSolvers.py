@@ -24,6 +24,7 @@ from petsc4py import PETSc as p4pyPETSc
 from math import *
 import math
 from .Profiling import logEvent
+from .mprans import cArgumentsDict
 
 class LinearSolver(object):
     """ The base class for linear solvers.
@@ -411,14 +412,6 @@ class KSP_petsc4py(LinearSolver):
 
         self.setResTol(rtol_r,atol_r)
 
-        convergenceTest = 'r-true'
-        if convergenceTest == 'r-true':
-            self.r_work = self.petsc_L.getVecLeft()
-            self.rnorm0 = None
-            self.ksp.setConvergenceTest(self._converged_trueRes)
-        else:
-            self.r_work = None
-
         if prefix is not None:
             self.ksp.setOptionsPrefix(prefix)
         if Preconditioner is not None:
@@ -429,6 +422,13 @@ class KSP_petsc4py(LinearSolver):
         # set null space class
         self.null_space = self._set_null_space_class()
 
+        if convergenceTest == 'r-true':
+            self.r_work = self.petsc_L.getVecLeft()
+            self.rnorm0 = None
+            self.ksp.setConvergenceTest(self._converged_trueRes)
+        else:
+            self.r_work = None
+            
     def setResTol(self,rtol,atol):
         """ Set the ksp object's residual and maximum interations. """
         self.rtol_r = rtol
@@ -3480,76 +3480,94 @@ class OperatorConstructor_rans2p(OperatorConstructor):
         nu_1 = density_scaling*self.model.coefficients.nu_1 + (1-density_scaling)*1        
 
         self.TPScaledAdvectionOperator.getCSRrepresentation()[2].fill(0.)
-        self.model.rans2p.getTwoPhaseAdvectionOperator(self.model.u[0].femSpace.elementMaps.psi,
-                                                       self.model.u[0].femSpace.elementMaps.grad_psi,
-                                                       self.model.mesh.nodeArray,
-                                                       self.model.mesh.elementNodesArray,
-                                                       self.model.elementQuadratureWeights[('u',0)],
-                                                       self.model.u[0].femSpace.psi,
-                                                       self.model.u[0].femSpace.grad_psi,
-                                                       self.model.u[1].femSpace.psi,
-                                                       self.model.u[1].femSpace.grad_psi,
-                                                       self.model.elementDiameter,
-                                                       self.model.mesh.nodeDiametersArray,
-                                                       self.model.mesh.nElements_global,
-                                                       self.model.coefficients.useMetrics,
-                                                       self.model.coefficients.epsFact_density,
-                                                       self.model.coefficients.epsFact,
-                                                       rho_0,
-                                                       nu_0,
-                                                       rho_1,
-                                                       nu_1,
-                                                       self.model.u[1].femSpace.dofMap.l2g,
-                                                       self.model.u[1].dof,
-                                                       self.model.u[2].dof,
-                                                       self.model.u[3].dof,
-                                                       self.model.coefficients.useVF,
-                                                       self.model.coefficients.q_vf,
-                                                       self.model.coefficients.q_phi,
-                                                       self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
-                                                       self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
-                                                       self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
-                                                       self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
-                                                       self.TPScaledAdvectionOperator.getCSRrepresentation()[2])
+
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.model.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.model.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.model.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.model.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.model.elementQuadratureWeights[('u',0)]
+        argsDict["p_trial_ref"] = self.model.u[0].femSpace.psi
+        argsDict["p_grad_trial_ref"] = self.model.u[0].femSpace.grad_psi
+        argsDict["vel_trial_ref"] = self.model.u[1].femSpace.psi
+        argsDict["vel_grad_trial_ref"] = self.model.u[1].femSpace.grad_psi
+        argsDict["elementDiameter"] = self.model.elementDiameter
+        argsDict["nodeDiametersArray"] = self.model.mesh.nodeDiametersArray
+        argsDict["nElements_global"] = self.model.mesh.nElements_global
+        argsDict["useMetrics"] = self.model.coefficients.useMetrics
+        argsDict["epsFact_rho"] = self.model.coefficients.epsFact_density
+        argsDict["epsFact_mu"] = self.model.coefficients.epsFact
+        argsDict["rho_0"] = rho_0
+        argsDict["nu_0"] = nu_0
+        argsDict["rho_1"] = rho_1
+        argsDict["nu_1"] = nu_1
+        argsDict["vel_l2g"] = self.model.u[1].femSpace.dofMap.l2g
+        argsDict["u_dof"] = self.model.u[1].dof
+        argsDict["v_dof"] = self.model.u[2].dof
+        argsDict["w_dof"] = self.model.u[3].dof
+        argsDict["useVF"] = self.model.coefficients.useVF
+        argsDict["&vf"] = self.model.coefficients.q_vf
+        argsDict["&phi"] = self.model.coefficients.q_phi
+        argsDict["csrRowIndeces_p_p"] = self.model.csrRowIndeces[(0,0)]
+        argsDict["csrColumnOffsets_p_p"] = self.model.csrColumnOffsets[(0,0)]
+        argsDict["csrRowIndeces_u_u"] = self.model.csrRowIndeces[(1,1)]
+        argsDict["csrColumnOffsets_u_u"] = self.model.csrColumnOffsets[(1,1)]
+        argsDict["csrRowIndeces_v_v"] = self.model.csrRowIndeces[(2,2)]
+        argsDict["csrColumnOffsets_v_v"] = self.model.csrColumnOffsets[(2,2)]
+        argsDict["csrRowIndeces_w_w"] = self.model.csrRowIndeces[(3,3)]
+        argsDict["csrColumnOffsets_w_w"] = self.model.csrColumnOffsets[(3,3)]
+        argsDict["advection_matrix"] = self.TPScaledAdvectionOperator.getCSRrepresentation()[2]
+        self.model.rans2p.getTwoPhaseAdvectionOperator(argsDict)
 
     def updateTPInvScaledLaplaceOperator(self):
         """ Create a discrete two phase laplace operator matrix. """
         self.TPInvScaledLaplaceOperator.getCSRrepresentation()[2].fill(0.)
-        self.model.rans2p.getTwoPhaseInvScaledLaplaceOperator(self.model.u[0].femSpace.elementMaps.psi,
-                                                              self.model.u[0].femSpace.elementMaps.grad_psi,
-                                                              self.model.mesh.nodeArray,
-                                                              self.model.mesh.elementNodesArray,
-                                                              self.model.elementQuadratureWeights[('u',0)],
-                                                              self.model.u[0].femSpace.grad_psi,
-                                                              self.model.u[1].femSpace.grad_psi,
-                                                              self.model.elementDiameter,
-                                                              self.model.mesh.nodeDiametersArray,
-                                                              self.model.mesh.nElements_global,
-                                                              self.model.coefficients.useMetrics,
-                                                              self.model.coefficients.epsFact_density,
-                                                              self.model.coefficients.epsFact,
-                                                              self.model.coefficients.rho_0,
-                                                              self.model.coefficients.nu_0,
-                                                              self.model.coefficients.rho_1,
-                                                              self.model.coefficients.nu_1,
-                                                              self.model.u[0].femSpace.dofMap.l2g,
-                                                              self.model.u[1].femSpace.dofMap.l2g,
-                                                              self.model.u[0].dof,
-                                                              self.model.u[1].dof,
-                                                              self.model.u[2].dof,
-                                                              self.model.u[3].dof,
-                                                              self.model.coefficients.useVF,
-                                                              self.model.coefficients.q_vf,
-                                                              self.model.coefficients.q_phi,
-                                                              self.model.coefficients.sdInfo[(1,1)][0],self.model.coefficients.sdInfo[(1,1)][1],
-                                                              self.model.coefficients.sdInfo[(1,1)][0],self.model.coefficients.sdInfo[(1,1)][1],
-                                                              self.model.coefficients.sdInfo[(2,2)][0],self.model.coefficients.sdInfo[(2,2)][1],
-                                                              self.model.coefficients.sdInfo[(3,3)][0],self.model.coefficients.sdInfo[(3,3)][1],
-                                                              self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
-                                                              self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
-                                                              self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
-                                                              self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
-                                                              self.TPInvScaledLaplaceOperator.getCSRrepresentation()[2])
+
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.model.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.model.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.model.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.model.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.model.elementQuadratureWeights[('u',0)]
+        argsDict["p_grad_trial_ref"] = self.model.u[0].femSpace.grad_psi
+        argsDict["vel_grad_trial_ref"] = self.model.u[1].femSpace.grad_psi
+        argsDict["elementDiameter"] = self.model.elementDiameter
+        argsDict["nodeDiametersArray"] = self.model.mesh.nodeDiametersArray
+        argsDict["nElements_global"] = self.model.mesh.nElements_global
+        argsDict["useMetrics"] = self.model.coefficients.useMetrics
+        argsDict["epsFact_rho"] = self.model.coefficients.epsFact_density
+        argsDict["epsFact_mu"] = self.model.coefficients.epsFact
+        argsDict["rho_0"] = self.model.coefficients.rho_0
+        argsDict["nu_0"] = self.model.coefficients.nu_0
+        argsDict["rho_1"] = self.model.coefficients.rho_1
+        argsDict["nu_1"] = self.model.coefficients.nu_1
+        argsDict["p_l2g"] = self.model.u[0].femSpace.dofMap.l2g
+        argsDict["vel_l2g"] = self.model.u[1].femSpace.dofMap.l2g
+        argsDict["p_dof"] = self.model.u[0].dof
+        argsDict["u_dof"] = self.model.u[1].dof
+        argsDict["v_dof"] = self.model.u[2].dof
+        argsDict["w_dof"] = self.model.u[3].dof
+        argsDict["useVF"] = self.model.coefficients.useVF
+        argsDict["vf"] = self.model.coefficients.q_vf
+        argsDict["phi"] = self.model.coefficients.q_phi
+        argsDict["sdInfo_p_p_rowptr"] = self.model.coefficients.sdInfo[(1,1)][0]
+        argsDict["sdInfo_p_p_colind"] = self.model.coefficients.sdInfo[(1,1)][1]
+        argsDict["sdInfo_u_u_rowptr"] = self.model.coefficients.sdInfo[(1,1)][0]
+        argsDict["sdInfo_u_u_colind"] = self.model.coefficients.sdInfo[(1,1)][1]
+        argsDict["sdInfo_v_v_rowptr"] = self.model.coefficients.sdInfo[(2,2)][0]
+        argsDict["sdInfo_v_v_colind"] = self.model.coefficients.sdInfo[(2,2)][1]
+        argsDict["sdInfo_w_w_rowptr"] = self.model.coefficients.sdInfo[(3,3)][0]
+        argsDict["sdInfo_w_w_colind"] = self.model.coefficients.sdInfo[(3,3)][1]
+        argsDict["csrRowIndeces_p_p"] = self.model.csrRowIndeces[(0,0)]
+        argsDict["csrColumnOffsets_p_p"] = self.model.csrColumnOffsets[(0,0)]
+        argsDict["csrRowIndeces_u_u"] = self.model.csrRowIndeces[(1,1)]
+        argsDict["csrColumnOffsets_u_u"] = self.model.csrColumnOffsets[(1,1)]
+        argsDict["csrRowIndeces_v_v"] = self.model.csrRowIndeces[(2,2)]
+        argsDict["csrColumnOffsets_v_v"] = self.model.csrColumnOffsets[(2,2)]
+        argsDict["csrRowIndeces_w_w"] = self.model.csrRowIndeces[(3,3)]
+        argsDict["csrColumnOffsets_w_w"] = self.model.csrColumnOffsets[(3,3)]
+        argsDict["laplace_matrix"] = self.TPInvScaledLaplaceOperator.getCSRrepresentation()[2]
+        self.model.rans2p.getTwoPhaseInvScaledLaplaceOperator(argsDict)
 
     def updateTwoPhaseMassOperator_rho(self,
                                        density_scaling = True,
@@ -3573,43 +3591,50 @@ class OperatorConstructor_rans2p(OperatorConstructor):
         nu_1 = density_scaling*self.model.coefficients.nu_1 + (1-density_scaling)*1
 
         self.TPScaledMassOperator.getCSRrepresentation()[2].fill(0.)
-        self.model.rans2p.getTwoPhaseScaledMassOperator(1,
-                                                        0,      #numerical-viscosity is not relevant for density mass matrix.
-                                                        lumped,
-                                                        self.model.u[0].femSpace.elementMaps.psi,
-                                                        self.model.u[0].femSpace.elementMaps.grad_psi,
-                                                        self.model.mesh.nodeArray,
-                                                        self.model.mesh.elementNodesArray,
-                                                        self.model.elementQuadratureWeights[('u',0)],
-                                                        self.model.u[0].femSpace.psi,
-                                                        self.model.u[0].femSpace.psi,
-                                                        self.model.u[1].femSpace.psi,
-                                                        self.model.u[1].femSpace.psi,
-                                                        self.model.elementDiameter,
-                                                        self.model.mesh.nodeDiametersArray,
-                                                        self.model.coefficients.numerical_viscosity,
-                                                        self.model.mesh.nElements_global,
-                                                        self.model.coefficients.useMetrics,
-                                                        self.model.coefficients.epsFact_density,
-                                                        self.model.coefficients.epsFact,
-                                                        rho_0,
-                                                        nu_0,
-                                                        rho_1,
-                                                        nu_1,
-                                                        self.model.u[0].femSpace.dofMap.l2g,
-                                                        self.model.u[1].femSpace.dofMap.l2g,
-                                                        self.model.u[0].dof,
-                                                        self.model.u[1].dof,
-                                                        self.model.u[2].dof,
-                                                        self.model.u[3].dof,
-                                                        self.model.coefficients.useVF,
-                                                        self.model.coefficients.q_vf,
-                                                        self.model.coefficients.q_phi,
-                                                        self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
-                                                        self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
-                                                        self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
-                                                        self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
-                                                        self.TPScaledMassOperator.getCSRrepresentation()[2])
+
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["scale_type"] = 1
+        argsDict["use_numerical_viscosity"] = 0
+        argsDict["lumped"] = lumped
+        argsDict["&mesh_trial_ref"] = self.model.u[0].femSpace.elementMaps.psi
+        argsDict["&mesh_grad_trial_ref"] = self.model.u[0].femSpace.elementMaps.grad_psi
+        argsDict["&mesh_dof"] = self.model.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.model.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.model.elementQuadratureWeights[('u',0)]
+        argsDict["p_trial_ref"] = self.model.u[0].femSpace.psi
+        argsDict["p_test_ref"] = self.model.u[0].femSpace.psi
+        argsDict["vel_trial_ref"] = self.model.u[1].femSpace.psi
+        argsDict["vel_test_ref"] = self.model.u[1].femSpace.psi
+        argsDict["elementDiameter"] = self.model.elementDiameter
+        argsDict["nodeDiametersArray"] = self.model.mesh.nodeDiametersArray
+        argsDict["numerical_viscosity"] = self.model.coefficients.numerical_viscosity
+        argsDict["nElements_global"] = self.model.mesh.nElements_global
+        argsDict["useMetrics"] = self.model.coefficients.useMetrics
+        argsDict["epsFact_rho"] = self.model.coefficients.epsFact_density
+        argsDict["epsFact_mu"] = self.model.coefficients.epsFact
+        argsDict["rho_0"] = rho_0
+        argsDict["nu_0"] = nu_0
+        argsDict["rho_1"] = rho_1
+        argsDict["nu_1"] = nu_1
+        argsDict["p_l2g"] = self.model.u[0].femSpace.dofMap.l2g
+        argsDict["vel_l2g"] = self.model.u[1].femSpace.dofMap.l2g
+        argsDict["p_dof"] = self.model.u[0].dof
+        argsDict["u_dof"] = self.model.u[1].dof
+        argsDict["v_dof"] = self.model.u[2].dof
+        argsDict["w_dof"] = self.model.u[3].dof
+        argsDict["useVF"] = self.model.coefficients.useVF
+        argsDict["vf"] = self.model.coefficients.q_vf
+        argsDict["phi"] = self.model.coefficients.q_phi
+        argsDict["csrRowIndeces_p_p"] = self.model.csrRowIndeces[(0,0)]
+        argsDict["csrColumnOffsets_p_p"] = self.model.csrColumnOffsets[(0,0)]
+        argsDict["csrRowIndeces_u_u"] = self.model.csrRowIndeces[(1,1)]
+        argsDict["csrColumnOffsets_u_u"] = self.model.csrColumnOffsets[(1,1)]
+        argsDict["csrRowIndeces_v_v"] = self.model.csrRowIndeces[(2,2)]
+        argsDict["csrColumnOffsets_v_v"] = self.model.csrColumnOffsets[(2,2)]
+        argsDict["csrRowIndeces_w_w"] = self.model.csrRowIndeces[(3,3)]
+        argsDict["csrColumnOffsets_w_w"] = self.model.csrColumnOffsets[(3,3)]
+        argsDict["mass_matrix"] = self.TPScaledMassOperator.getCSRrepresentation()[2]
+        self.model.rans2p.getTwoPhaseScaledMassOperator(argsDict)
 
     def updateTwoPhaseInvScaledMassOperator(self,
                                             numerical_viscosity = True,
@@ -3624,43 +3649,50 @@ class OperatorConstructor_rans2p(OperatorConstructor):
             No (False)
         """
         self.TPInvScaledMassOperator.getCSRrepresentation()[2].fill(0.)
-        self.model.rans2p.getTwoPhaseScaledMassOperator(0,
-                                                        numerical_viscosity,
-                                                        lumped,
-                                                        self.model.u[0].femSpace.elementMaps.psi,
-                                                        self.model.u[0].femSpace.elementMaps.grad_psi,
-                                                        self.model.mesh.nodeArray,
-                                                        self.model.mesh.elementNodesArray,
-                                                        self.model.elementQuadratureWeights[('u',0)],
-                                                        self.model.u[0].femSpace.psi,
-                                                        self.model.u[0].femSpace.psi,
-                                                        self.model.u[1].femSpace.psi,
-                                                        self.model.u[1].femSpace.psi,
-                                                        self.model.elementDiameter,
-                                                        self.model.mesh.nodeDiametersArray,
-                                                        self.model.coefficients.numerical_viscosity,
-                                                        self.model.mesh.nElements_global,
-                                                        self.model.coefficients.useMetrics,
-                                                        self.model.coefficients.epsFact_density,
-                                                        self.model.coefficients.epsFact,
-                                                        self.model.coefficients.rho_0,
-                                                        self.model.coefficients.nu_0,
-                                                        self.model.coefficients.rho_1,
-                                                        self.model.coefficients.nu_1,
-                                                        self.model.u[0].femSpace.dofMap.l2g,
-                                                        self.model.u[1].femSpace.dofMap.l2g,
-                                                        self.model.u[0].dof,
-                                                        self.model.u[1].dof,
-                                                        self.model.u[2].dof,
-                                                        self.model.u[3].dof,
-                                                        self.model.coefficients.useVF,
-                                                        self.model.coefficients.q_vf,
-                                                        self.model.coefficients.q_phi,
-                                                        self.model.csrRowIndeces[(0,0)],self.model.csrColumnOffsets[(0,0)],
-                                                        self.model.csrRowIndeces[(1,1)],self.model.csrColumnOffsets[(1,1)],
-                                                        self.model.csrRowIndeces[(2,2)],self.model.csrColumnOffsets[(2,2)],
-                                                        self.model.csrRowIndeces[(3,3)],self.model.csrColumnOffsets[(3,3)],
-                                                        self.TPInvScaledMassOperator.getCSRrepresentation()[2])
+
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["scale_type"] = 0
+        argsDict["use_numerical_viscosity"] = numerical_viscosity
+        argsDict["lumped"] = lumped
+        argsDict["&mesh_trial_ref"] = self.model.u[0].femSpace.elementMaps.psi
+        argsDict["&mesh_grad_trial_ref"] = self.model.u[0].femSpace.elementMaps.grad_psi
+        argsDict["&mesh_dof"] = self.model.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.model.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.model.elementQuadratureWeights[('u',0)]
+        argsDict["p_trial_ref"] = self.model.u[0].femSpace.psi
+        argsDict["p_test_ref"] = self.model.u[0].femSpace.psi
+        argsDict["vel_trial_ref"] = self.model.u[1].femSpace.psi
+        argsDict["vel_test_ref"] = self.model.u[1].femSpace.psi
+        argsDict["elementDiameter"] = self.model.elementDiameter
+        argsDict["nodeDiametersArray"] = self.model.mesh.nodeDiametersArray
+        argsDict["numerical_viscosity"] = self.model.coefficients.numerical_viscosity
+        argsDict["nElements_global"] = self.model.mesh.nElements_global
+        argsDict["useMetrics"] = self.model.coefficients.useMetrics
+        argsDict["epsFact_rho"] = self.model.coefficients.epsFact_density
+        argsDict["epsFact_mu"] = self.model.coefficients.epsFact
+        argsDict["rho_0"] = self.model.coefficients.rho_0
+        argsDict["nu_0"] = self.model.coefficients.nu_0
+        argsDict["rho_1"] = self.model.coefficients.rho_1
+        argsDict["nu_1"] = self.model.coefficients.nu_1
+        argsDict["p_l2g"] = self.model.u[0].femSpace.dofMap.l2g
+        argsDict["vel_l2g"] = self.model.u[1].femSpace.dofMap.l2g
+        argsDict["p_dof"] = self.model.u[0].dof
+        argsDict["u_dof"] = self.model.u[1].dof
+        argsDict["v_dof"] = self.model.u[2].dof
+        argsDict["w_dof"] = self.model.u[3].dof
+        argsDict["useVF"] = self.model.coefficients.useVF
+        argsDict["vf"] = self.model.coefficients.q_vf
+        argsDict["phi"] = self.model.coefficients.q_phi
+        argsDict["csrRowIndeces_p_p"] = self.model.csrRowIndeces[(0,0)]
+        argsDict["csrColumnOffsets_p_p"] = self.model.csrColumnOffsets[(0,0)]
+        argsDict["csrRowIndeces_u_u"] = self.model.csrRowIndeces[(1,1)]
+        argsDict["csrColumnOffsets_u_u"] = self.model.csrColumnOffsets[(1,1)]
+        argsDict["csrRowIndeces_v_v"] = self.model.csrRowIndeces[(2,2)]
+        argsDict["csrColumnOffsets_v_v"] = self.model.csrColumnOffsets[(2,2)]
+        argsDict["csrRowIndeces_w_w"] = self.model.csrRowIndeces[(3,3)]
+        argsDict["csrColumnOffsets_w_w"] = self.model.csrColumnOffsets[(3,3)]
+        argsDict["mass_matrix"] = self.TPInvScaledMassOperator.getCSRrepresentation()[2]
+        self.model.rans2p.getTwoPhaseScaledMassOperator(argsDict)
 
 class OperatorConstructor_oneLevel(OperatorConstructor):
     """

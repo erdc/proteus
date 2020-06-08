@@ -608,17 +608,9 @@ void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field *ef, apf::Field *vf,
     testElement = apf::createMeshElement(m, elements[i]);
     s += apf::getScalar(ef, elements[i], 0)*apf::measure(testElement);
     VolumeTotal += apf::measure(testElement);
-    if (comm_rank == 0)
-    {
-      std::cout << "What is s " << s << " Volume? " << apf::measure(testElement) << " scale? " << apf::getScalar(ef, elements[i], 0) << std::endl;
-    }
     apf::destroyMeshElement(testElement);
   }
   s /= VolumeTotal;
-  if (comm_rank == 0)
-  {
-    std::cout << "What is s final? " << s << std::endl;
-  }
   apf::setScalar(vf, ent, 0, s);
   return;
 }
@@ -891,7 +883,7 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
     if(scale[2]/scale[0] > maxAspect)
       scale[2] = maxAspect*scale[0];
     if(scale[1]/scale[0] > maxAspect || scale[2]/scale[0] > maxAspect){
-      std::cout<<"Scales reached maximum aspect ratio\n";
+      logEvent("Scales reached maximum aspect ratio",4);
     }
   }
   //*/
@@ -1147,8 +1139,7 @@ static void SmoothField(apf::Field *f)
 void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error,double totalError){
   //Implemented for 3D and for serial case only so far
   //Need to communicate target error in parallel
-  if(PCU_Comm_Self()>0) 
-    std::cout<<"WARNING/ERROR:Parallel implementation is not completed yet\n";
+  logEvent("WARNING/ERROR:Parallel implementation is not completed yet",4);
   if(m->getDimension()==2){
     target_error = totalError/sqrt(m->count(m->getDimension()));
     if(PCU_Comm_Self()==0)
@@ -1177,8 +1168,6 @@ void getTargetError(apf::Mesh* m, apf::Field* errField, double &target_error,dou
     }
   }
   m->end(it);
-  if(PCU_Comm_Self()==0)
-    std::cout<<"Past creation of vector\n";
   if(errVect.size()==0){
     target_error = totalError/sqrt(m->count(m->getDimension()));
   }
@@ -1678,8 +1667,7 @@ int MeshAdaptPUMIDrvr::gradeMesh(double gradationFactor)
 //Communicate to remote copies that a size was modified, and flag adjacent edges to remote copies for further gradation
 {
   //
-  if(comm_rank==0)
-    std::cout<<"Starting grading\n";
+  logEvent("Starting grading",4);
   apf::MeshEntity* edge;
   apf::Adjacent edgAdjVert;
   apf::Adjacent vertAdjEdg;
@@ -1721,7 +1709,7 @@ int MeshAdaptPUMIDrvr::gradeMesh(double gradationFactor)
       PCU_COMM_UNPACK(receivedSize);
 
       if(!m->isOwned(ent)){
-        std::cout<<"THERE WAS AN ERROR"<<std::endl;
+        logEvent("THERE WAS AN ERROR",4);
         std::exit(1);
       }
 
@@ -1770,7 +1758,7 @@ int MeshAdaptPUMIDrvr::gradeMesh(double gradationFactor)
       assert(!m->isOwned(ent));
 
       if(m->isOwned(ent)){
-        std::cout<<"Problem occurred\n";
+        logEvent("Problem occurred",4);
         std::exit(1);
       }
 
@@ -1801,8 +1789,7 @@ int MeshAdaptPUMIDrvr::gradeMesh(double gradationFactor)
   m->destroyTag(isMarked);
 
   //apf::synchronize(size_iso);
-  if(comm_rank==0)
-    std::cout<<"Completed grading\n";
+  logEvent("Completed grading",4);
   return needsParallel;
 }
 

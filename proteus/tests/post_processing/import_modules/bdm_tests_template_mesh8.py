@@ -82,7 +82,7 @@ n.elementQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd,4)
 n.elementBoundaryQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd-1,4)
 n.nn = 3
 n.nLevels = 1
-
+n.triangleFlag=2
 n.subgridError = None
 n.shockCapturing = None
 n.multilevelNonlinearSolver = pr.NonlinearSolvers.Newton

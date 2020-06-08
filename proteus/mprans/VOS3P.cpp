@@ -22,7 +22,7 @@ PYBIND11_MODULE(cVOS3P, m)
 {
     xt::import_numpy();
 
-    py::class_<cppVOS3P_base>(m, "VOS3P")
+    py::class_<cppVOS3P_base>(m, "cppVOS3P_base")
         .def(py::init(&proteus::newVOS3P))
         .def("calculateResidual", &cppVOS3P_base::calculateResidual)
         .def("calculateJacobian", &cppVOS3P_base::calculateJacobian)

@@ -1143,7 +1143,9 @@ class NS_base(object):  # (HasTraits):
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
-
+                                if Profiling.logLevel > 10:
+                                    model.viewJacobian(file_prefix='dump_{0:s}_{1:s}_{2:s}'.format(runName, model.name,repr(self.tSubstep)))
+                                    
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
                                     input("Hit any key to continue")

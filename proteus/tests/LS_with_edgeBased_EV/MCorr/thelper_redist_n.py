@@ -72,4 +72,4 @@ else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
 
-conservativeFlux = {}
+conservativeFlux = None

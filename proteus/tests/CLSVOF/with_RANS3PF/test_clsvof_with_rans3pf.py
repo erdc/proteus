@@ -38,6 +38,8 @@ class TestCLSVOF_with_RANS3PF(object):
         pass
 
     def reload_modules(self):
+        reload(default_n)
+        reload(default_p)
         reload(default_so)
         reload(multiphase)
         reload(multiphase_so)

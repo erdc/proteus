@@ -10,6 +10,8 @@ from math import sqrt
 from proteus.Transport import OneLevelTransport, TC_base, NonlinearEquation
 from proteus import Quadrature, FemTools, Comm, Archiver, cfemIntegrals
 from proteus.Profiling import logEvent, memory
+from proteus import cmeshTools
+from . import cArgumentsDict
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
@@ -33,6 +35,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.gravityStep = True
         self.meIndex = meIndex
         self.dt_last = None
+        self.dt_last_last = None
         self.solidsList = []
         self.nullSpace = nullSpace
         if initialize:
@@ -136,7 +139,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             dt = self.dt_last
         self.mesh.nodeVelocityArray /= dt
+        #this is needed for proper restarting
+        if(self.dt_last is not None):
+            self.dt_last_last = self.dt_last
+
         self.dt_last = self.model.timeIntegration.dt
+
+        #update nodal/element diameters:
+        #TODO: unclear if this needs to apply to all mesh types
+        if self.nd == 2:  
+           cmeshTools.computeGeometricInfo_triangle(self.mesh.subdomainMesh.cmesh)
+           self.mesh.buildFromC(self.mesh.cmesh)
+        if self.nd == 3:  
+           cmeshTools.computeGeometricInfo_tetrahedron(self.mesh.subdomainMesh.cmesh)
+           self.mesh.buildFromC(self.mesh.cmesh)
+
         copyInstructions = {'clear_uList': True}
         return copyInstructions
 
@@ -572,55 +589,58 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(self.nc):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
-        self.moveMesh.calculateResidual(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_global,
-            self.mesh.elementMaterialTypes,
-            self.coefficients.nMaterialProperties,
-            self.coefficients.materialProperties,
-            self.u[0].femSpace.dofMap.l2g,
-            self.u[0].dof,
-            self.u[1].dof,
-            self.u[2].dof,
-            self.coefficients.bodyForce,
-            self.offset[0], self.offset[1], self.offset[2],
-            self.stride[0], self.stride[1], self.stride[2],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.numericalFlux.isDOFBoundary[0],
-            self.numericalFlux.isDOFBoundary[1],
-            self.numericalFlux.isDOFBoundary[2],
-            self.ebqe[('stressFlux_bc_flag', 0)],
-            self.ebqe[('stressFlux_bc_flag', 1)],
-            self.ebqe[('stressFlux_bc_flag', 2)],
-            self.numericalFlux.ebqe[('u', 0)],
-            self.numericalFlux.ebqe[('u', 1)],
-            self.numericalFlux.ebqe[('u', 2)],
-            self.ebqe[('stressFlux_bc', 0)],
-            self.ebqe[('stressFlux_bc', 1)],
-            self.ebqe[('stressFlux_bc', 2)])
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["disp_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["disp_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["disp_test_ref"] = self.u[0].femSpace.psi
+        argsDict["disp_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["disp_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["disp_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["disp_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["disp_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["materialTypes"] = self.mesh.elementMaterialTypes
+        argsDict["nMaterialProperties"] = self.coefficients.nMaterialProperties
+        argsDict["materialProperties"] = self.coefficients.materialProperties
+        argsDict["disp_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["v_dof"] = self.u[1].dof
+        argsDict["w_dof"] = self.u[2].dof
+        argsDict["bodyForce"] = self.coefficients.bodyForce
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["offset_v"] = self.offset[1]
+        argsDict["offset_w"] = self.offset[2]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["stride_v"] = self.stride[1]
+        argsDict["stride_w"] = self.stride[2]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["isDOFBoundary_v"] = self.numericalFlux.isDOFBoundary[1]
+        argsDict["isDOFBoundary_w"] = self.numericalFlux.isDOFBoundary[2]
+        argsDict["isStressFluxBoundary_u"] = self.ebqe[('stressFlux_bc_flag', 0)]
+        argsDict["isStressFluxBoundary_v"] = self.ebqe[('stressFlux_bc_flag', 1)]
+        argsDict["isStressFluxBoundary_w"] = self.ebqe[('stressFlux_bc_flag', 2)]
+        argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u', 0)]
+        argsDict["ebqe_bc_v_ext"] = self.numericalFlux.ebqe[('u', 1)]
+        argsDict["ebqe_bc_w_ext"] = self.numericalFlux.ebqe[('u', 2)]
+        argsDict["ebqe_bc_stressFlux_u_ext"] = self.ebqe[('stressFlux_bc', 0)]
+        argsDict["ebqe_bc_stressFlux_v_ext"] = self.ebqe[('stressFlux_bc', 1)]
+        argsDict["ebqe_bc_stressFlux_w_ext"] = self.ebqe[('stressFlux_bc', 2)]
+        self.moveMesh.calculateResidual(argsDict)
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
@@ -649,64 +669,73 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 0)] = self.csrColumnOffsets[(0, 1)]
             self.csrColumnOffsets_eb[(2, 1)] = self.csrColumnOffsets[(0, 1)]
             self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
-        self.moveMesh.calculateJacobian(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            self.mesh.nElements_global,
-            self.mesh.elementMaterialTypes,
-            self.coefficients.nMaterialProperties,
-            self.coefficients.materialProperties,
-            self.u[0].femSpace.dofMap.l2g,
-            self.u[0].dof,
-            self.u[1].dof,
-            self.u[2].dof,
-            self.coefficients.bodyForce,
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            self.csrRowIndeces[(0, 1)], self.csrColumnOffsets[(0, 1)],
-            self.csrRowIndeces[(0, 2)], self.csrColumnOffsets[(0, 2)],
-            self.csrRowIndeces[(1, 0)], self.csrColumnOffsets[(1, 0)],
-            self.csrRowIndeces[(1, 1)], self.csrColumnOffsets[(1, 1)],
-            self.csrRowIndeces[(1, 2)], self.csrColumnOffsets[(1, 2)],
-            self.csrRowIndeces[(2, 0)], self.csrColumnOffsets[(2, 0)],
-            self.csrRowIndeces[(2, 1)], self.csrColumnOffsets[(2, 1)],
-            self.csrRowIndeces[(2, 2)], self.csrColumnOffsets[(2, 2)],
-            jacobian.getCSRrepresentation()[2],
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.numericalFlux.isDOFBoundary[0],
-            self.numericalFlux.isDOFBoundary[1],
-            self.numericalFlux.isDOFBoundary[2],
-            self.ebqe[('stressFlux_bc_flag', 0)],
-            self.ebqe[('stressFlux_bc_flag', 1)],
-            self.ebqe[('stressFlux_bc_flag', 2)],
-            self.csrColumnOffsets_eb[(0, 0)],
-            self.csrColumnOffsets_eb[(0, 1)],
-            self.csrColumnOffsets_eb[(0, 2)],
-            self.csrColumnOffsets_eb[(1, 0)],
-            self.csrColumnOffsets_eb[(1, 1)],
-            self.csrColumnOffsets_eb[(1, 2)],
-            self.csrColumnOffsets_eb[(2, 0)],
-            self.csrColumnOffsets_eb[(2, 1)],
-            self.csrColumnOffsets_eb[(2, 2)])
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["disp_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["disp_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["disp_test_ref"] = self.u[0].femSpace.psi
+        argsDict["disp_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["disp_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["disp_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["disp_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["disp_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["materialTypes"] = self.mesh.elementMaterialTypes
+        argsDict["nMaterialProperties"] = self.coefficients.nMaterialProperties
+        argsDict["materialProperties"] = self.coefficients.materialProperties
+        argsDict["disp_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["v_dof"] = self.u[1].dof
+        argsDict["w_dof"] = self.u[2].dof
+        argsDict["bodyForce"] = self.coefficients.bodyForce
+        argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["csrRowIndeces_u_v"] = self.csrRowIndeces[(0, 1)]
+        argsDict["csrColumnOffsets_u_v"] = self.csrColumnOffsets[(0, 1)]
+        argsDict["csrRowIndeces_u_w"] = self.csrRowIndeces[(0, 2)]
+        argsDict["csrColumnOffsets_u_w"] = self.csrColumnOffsets[(0, 2)]
+        argsDict["csrRowIndeces_v_u"] = self.csrRowIndeces[(1, 0)]
+        argsDict["csrColumnOffsets_v_u"] = self.csrColumnOffsets[(1, 0)]
+        argsDict["csrRowIndeces_v_v"] = self.csrRowIndeces[(1, 1)]
+        argsDict["csrColumnOffsets_v_v"] = self.csrColumnOffsets[(1, 1)]
+        argsDict["csrRowIndeces_v_w"] = self.csrRowIndeces[(1, 2)]
+        argsDict["csrColumnOffsets_v_w"] = self.csrColumnOffsets[(1, 2)]
+        argsDict["csrRowIndeces_w_u"] = self.csrRowIndeces[(2, 0)]
+        argsDict["csrColumnOffsets_w_u"] = self.csrColumnOffsets[(2, 0)]
+        argsDict["csrRowIndeces_w_v"] = self.csrRowIndeces[(2, 1)]
+        argsDict["csrColumnOffsets_w_v"] = self.csrColumnOffsets[(2, 1)]
+        argsDict["csrRowIndeces_w_w"] = self.csrRowIndeces[(2, 2)]
+        argsDict["csrColumnOffsets_w_w"] = self.csrColumnOffsets[(2, 2)]
+        argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["isDOFBoundary_v"] = self.numericalFlux.isDOFBoundary[1]
+        argsDict["isDOFBoundary_w"] = self.numericalFlux.isDOFBoundary[2]
+        argsDict["isStressFluxBoundary_u"] = self.ebqe[('stressFlux_bc_flag', 0)]
+        argsDict["isStressFluxBoundary_v"] = self.ebqe[('stressFlux_bc_flag', 1)]
+        argsDict["isStressFluxBoundary_w"] = self.ebqe[('stressFlux_bc_flag', 2)]
+        argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0, 0)]
+        argsDict["csrColumnOffsets_eb_u_v"] = self.csrColumnOffsets_eb[(0, 1)]
+        argsDict["csrColumnOffsets_eb_u_w"] = self.csrColumnOffsets_eb[(0, 2)]
+        argsDict["csrColumnOffsets_eb_v_u"] = self.csrColumnOffsets_eb[(1, 0)]
+        argsDict["csrColumnOffsets_eb_v_v"] = self.csrColumnOffsets_eb[(1, 1)]
+        argsDict["csrColumnOffsets_eb_v_w"] = self.csrColumnOffsets_eb[(1, 2)]
+        argsDict["csrColumnOffsets_eb_w_u"] = self.csrColumnOffsets_eb[(2, 0)]
+        argsDict["csrColumnOffsets_eb_w_v"] = self.csrColumnOffsets_eb[(2, 1)]
+        argsDict["csrColumnOffsets_eb_w_w"] = self.csrColumnOffsets_eb[(2, 2)]
+        self.moveMesh.calculateJacobian(argsDict)
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0  # probably want to add some scaling to match non-dirichlet diagonals in linear system

@@ -7,8 +7,10 @@ from proteus.iproteus import *
 import unittest
 import numpy as np
 import numpy.testing as npt
-from importlib import import_module
+from importlib import import_module, reload
 from petsc4py import PETSc
+reload(PETSc)
+import pytest
 
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,8 +40,12 @@ class TestAddedMass3D(unittest.TestCase):
         #    else:
         #        pass
 
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def test_AddedMass_3D(self):
         from proteus import defaults
+        defaults.reset_default_p()
+        defaults.reset_default_n()
+        defaults.reset_default_so()
         from . import addedmass3D as am3D
         am3D.myTpFlowProblem.initializeAll()
         so = am3D.myTpFlowProblem.so
@@ -57,6 +63,7 @@ class TestAddedMass3D(unittest.TestCase):
         Profiling.verbose = True
         # PETSc solver configuration
         OptDB = PETSc.Options()
+        OptDB.clear()
         dirloc = os.path.dirname(os.path.realpath(__file__))
         with open(os.path.join(dirloc, "petsc.options.superlu_dist")) as f:
             all = f.read().split()

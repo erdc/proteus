@@ -6212,8 +6212,8 @@ def triangleVerticesToNormals(elementVertices):
                          (1., 0., 0.),
                          (0., 0., 0.)))
 
-    for set, out in zip(sets, outs):
-        vertices = elementVertices[[set]]
+    for seti, out in zip(sets, outs):
+        vertices = elementVertices[np.array(seti,'i')]
         ab = vertices[1] - vertices[0]
         v_out = vertices[0] - elementVertices[out]
         normal = rotate.dot(ab)
@@ -6235,8 +6235,8 @@ def tetrahedronVerticesToNormals(elementVertices):
 
     faces = []
 
-    for set, out in zip(sets, outs):
-        vertices = elementVertices[[set]]
+    for seti, out in zip(sets, outs):
+        vertices = elementVertices[np.array(seti,'i')]
         ab = vertices[1] - vertices[0]
         ac = vertices[2] - vertices[0]
         normal = np.cross(ab, ac)
