@@ -407,7 +407,7 @@ class BC_RANS(BoundaryConditions.BC_Base):
         self.hx_dirichlet.uOfXT = lambda x, t, n=None: body.hx(x, t)
         self.hy_dirichlet.uOfXT = lambda x, t, n=None: body.hy(x, t)
         self.hz_dirichlet.uOfXT = lambda x, t, n=None: body.hz(x, t)
-
+        
     def setTurbulentDirichlet(self, kVal, dissipationVal):
         """
         Sets only dirichlet conditions for turbulence at the boundary.
