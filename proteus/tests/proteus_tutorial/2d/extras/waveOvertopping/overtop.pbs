@@ -1,0 +1,22 @@
+#!/bin/csh                                                                                         
+#PBS -A ERDCV00898ENQ                                                                              
+#PBS -l walltime=1:00:00                                                                          
+#PBS -l select=1:ncpus=44:mpiprocs=44                                                              
+#PBS -l place=scatter:excl                                                                         
+#PBS -q debug                                                                                   
+#PBS -N Overtopping                                                                                         
+#PBS -j oe                                                                                         
+#PBS -l application=proteus                                                                        
+#PBS -V                                                                                            
+#PBS -m eba                                                                                                    
+
+module load proteus
+                                                                                       
+cd $PBS_O_WORKDIR
+mkdir $WORKDIR/training/template.$PBS_JOBID
+cp Overtopping_constant_slope.py $WORKDIR/training/template.$PBS_JOBID
+cp overtop.pbs $WORKDIR/training/template.$PBS_JOBID
+cd $WORKDIR/training/template.$PBS_JOBID
+
+aprun -n ${BC_MPI_TASKS_ALLOC} parun --TwoPhaseFlow -f Overtopping_constant_slope.py -l 5 -F -C "he=0.05" -D test
+#aprun -n 1 parun --TwoPhaseFlow -f template_st.py -l 5 -F -C "he=0.005" -D test

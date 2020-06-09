@@ -1,0 +1,9 @@
+-rans2p_ksp_type preonly -rans2p_pc_type lu -rans2p_pc_factor_mat_solver_type mumps
+-ncls_ksp_type   preonly -ncls_pc_type   lu -ncls_pc_factor_mat_solver_type   mumps
+-vof_ksp_type    preonly -vof_pc_type    lu -vof_pc_factor_mat_solver_type    mumps
+-rdls_ksp_type   preonly -rdls_pc_type   lu -rdls_pc_factor_mat_solver_type   mumps
+-mcorr_ksp_type  preonly -mcorr_pc_type  lu -mcorr_pc_factor_mat_solver_type  mumps
+-kappa_ksp_type preonly -kappa_pc_type lu -kappa_pc_factor_mat_solver_type mumps
+-dissipation_ksp_type preonly -dissipation_pc_type lu -dissipation_pc_factor_mat_solver_type mumps
+-mesh_ksp_type preonly -mesh_pc_type lu -mesh_pc_factor_mat_solver_type mumps
+-am_ksp_type cg -am_ksp_constant_null_space -am_pc_type hypre -am_pc_hypre_type boomeramg -am_pc_factor_shift_type NONZERO -am_pc_factor_shift_amount 1.0e-10
