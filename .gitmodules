@@ -7,4 +7,4 @@
 	url = git://github.com/erdc/stack
 [submodule "proteus/tests/proteus_tutorial"]
 	path = proteus/tests/proteus_tutorial
-	url = https://github.com/erdc/proteus_tutorial.git
+	url = git://github.com/erdc/proteus_tutorial.git
