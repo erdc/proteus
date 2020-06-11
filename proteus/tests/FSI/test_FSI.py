@@ -43,7 +43,7 @@ class TestIBM(unittest.TestCase):
                     'addedmass3D_so.log'
                     ]
         for file in FileList:
-            if os.path.isfile(file):
+            if os.path.isfile(file) and comm.isMaster():
                 os.remove(file)
             else:
                 pass
