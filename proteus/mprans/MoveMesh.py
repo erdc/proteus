@@ -146,11 +146,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.dt_last = self.model.timeIntegration.dt
 
         #update nodal/element diameters:
-        #TODO: unclear if this needs to apply to all mesh types
-        if self.nd == 2:  
-           cmeshTools.computeGeometricInfo_triangle(self.mesh.subdomainMesh.cmesh)
-        if self.nd == 3:  
-           cmeshTools.computeGeometricInfo_tetrahedron(self.mesh.subdomainMesh.cmesh)
+        #TODO: unclear if this needs to apply to all mesh types, look into parallel communication of geometric info
+        #if self.nd == 2:  
+        #   #cmeshTools.computeGeometricInfo_triangle(self.mesh.cmesh)
+        #   cmeshTools.computeGeometricInfo_triangle(self.mesh.subdomainMesh.cmesh)
+        #if self.nd == 3:  
+        #   cmeshTools.computeGeometricInfo_tetrahedron(self.mesh.subdomainMesh.cmesh)
 
         copyInstructions = {'clear_uList': True}
         return copyInstructions
