@@ -147,12 +147,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         #update nodal/element diameters:
         #TODO: unclear if this needs to apply to all mesh types
-        if self.nd == 2:  
-           cmeshTools.computeGeometricInfo_triangle(self.mesh.subdomainMesh.cmesh)
-           self.mesh.buildFromC(self.mesh.cmesh)
-        if self.nd == 3:  
-           cmeshTools.computeGeometricInfo_tetrahedron(self.mesh.subdomainMesh.cmesh)
-           self.mesh.buildFromC(self.mesh.cmesh)
+        #if self.nd == 2:  
+        #   cmeshTools.computeGeometricInfo_triangle(self.mesh.subdomainMesh.cmesh)
+        #   self.mesh.buildFromC(self.mesh.cmesh)
+        #if self.nd == 3:  
+        #   cmeshTools.computeGeometricInfo_tetrahedron(self.mesh.subdomainMesh.cmesh)
+        #   self.mesh.buildFromC(self.mesh.cmesh)
 
         copyInstructions = {'clear_uList': True}
         return copyInstructions

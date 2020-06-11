@@ -1508,6 +1508,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
+        self.errors = np.zeros((3,5),'d')
         self.velocityErrorNodal = self.u[0].dof.copy()
         logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
 
@@ -1836,7 +1837,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["distance_to_solids"] = self.coefficients.phisField
         argsDict["useExact"] = int(self.coefficients.useExact)
         argsDict["isActiveDOF"] = self.isActiveDOF
-        argsDict["normalize_pressure"] = self.coefficients.normalize_pressure
+        argsDict["normalize_pressure"] = int(self.coefficients.normalize_pressure)
+        argsDict["errors"]=self.errors
         self.rans2p.calculateResidual(argsDict)
         try:
             #is sensitive to inactive DOF at velocity due to time derivative
@@ -1913,15 +1915,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                 g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) 
                             if self.MOVING_DOMAIN == 1.0:
                                 r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
+                        assert(abs(r[self.offset[cj] + self.stride[cj] * dofN]) < 1.0e-8)
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax), level=2)
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
         logEvent("Global residual", level=9, data=r)
-        # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-
+        logEvent("""
+p_1.append({:21.16e})
+u_1.append({:21.16e})
+v_1.append({:21.16e})
+w_1.append({:21.16e})
+velocity_1.append({:21.16e})
+p_2.append({:21.16e})
+u_2.append({:21.16e})
+v_2.append({:21.16e})
+w_2.append({:21.16e})
+velocity_2.append({:21.16e})
+p_I.append({:21.16e})
+u_I.append({:21.16e})
+v_I.append({:21.16e})
+w_I.append({:21.16e})
+velocity_I.append({:21.16e})
+        """.format(*self.errors.flatten().tolist()))
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
