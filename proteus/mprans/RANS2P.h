@@ -3399,6 +3399,7 @@ namespace proteus
                     }
                 }//k
             }//fluid_phase
+#ifdef USEMAXNUMDIFF
           for(int k=0;k<nQuadraturePoints_element;k++)
             {
               //compute indices and declare local storage
@@ -3407,6 +3408,7 @@ namespace proteus
               q_numDiff_v.data()[eN_k] = numDiffMax;
               q_numDiff_w.data()[eN_k] = numDiffMax;
             }
+#endif
           //
           //load element into global residual and save element residual
           //
@@ -7979,7 +7981,8 @@ namespace proteus
 
                 int j_nSpace = j*nSpace;
 
-                local_matrix_p_p[i][j] += ck.HamiltonianJacobian_weak(dmass_adv_p ,&p_grad_trial[j_nSpace]  ,p_test_dV[i]);
+                local_matrix_p_p[i][j] -= ck.HamiltonianJacobian_weak(dmass_adv_p,&p_grad_test_dV[i_nSpace],p_trial_ref.data()[j]);
+                //local_matrix_p_p[i][j] += ck.HamiltonianJacobian_weak(dmass_adv_p ,&p_grad_trial[j_nSpace]  ,p_test_dV[i]);
                 local_matrix_u_u[i][j] += ck.HamiltonianJacobian_weak(dmom_u_adv_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]);
                 local_matrix_v_v[i][j] += ck.HamiltonianJacobian_weak(dmom_v_adv_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]);
                 local_matrix_w_w[i][j] += ck.HamiltonianJacobian_weak(dmom_w_adv_w,&vel_grad_trial[j_nSpace],vel_test_dV[i]);

@@ -181,6 +181,7 @@ namespace equivalent_polynomials
     inline void _calculate_basis_coefficients(const double ma, const double mb);
     inline void _calculate_basis(const double* xi,double* va, double* vb)
     {
+      //2D specific but won't break in 3D
       for (int i=0;i<nN;i++)
         {
           va[i] = _a1[i] + _a2[i]*xi[0] + _a3[i]*xi[1];
@@ -390,6 +391,7 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_basis_coefficients(const double ma, const double mb)
   {
+    assert(nSpace == 2);
     assert(nN==3);
     double nx=0.0,ny=0.0;
     for (int J=0;J<2;J++)

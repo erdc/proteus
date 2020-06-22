@@ -504,6 +504,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.model.q[('u', 0)][eN,k] = self.analyticalSolution[0].uOfXT(self.model.q['x'][eN,k],0.)
                     self.model.q[('u', 1)][eN,k] = self.analyticalSolution[1].uOfXT(self.model.q['x'][eN,k],0.)
                     self.model.q[('u', 2)][eN,k] = self.analyticalSolution[2].uOfXT(self.model.q['x'][eN,k],0.)
+                    if self.nd == 3:
+                        self.model.q[('u', 3)][eN,k] = self.analyticalSolution[3].uOfXT(self.model.q['x'][eN,k],0.)
         self.model.q['phi_solid'] = self.q_phi_solid
         self.model.q['velocity_solid'] = self.q_velocity_solid
         self.model.q['phi_porous'] = self.q_phi_porous
@@ -808,6 +810,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
+        if self.analyticalSolution is not None:
+            for eN in range(self.model.q['x'].shape[0]):
+                for k in range(self.model.q['x'].shape[1]):
+                    self.model.q[('u', 0)][eN,k] = self.analyticalSolution[0].uOfXT(self.model.q['x'][eN,k],t)
+                    self.model.q[('u', 1)][eN,k] = self.analyticalSolution[1].uOfXT(self.model.q['x'][eN,k],t)
+                    self.model.q[('u', 2)][eN,k] = self.analyticalSolution[2].uOfXT(self.model.q['x'][eN,k],t)
+                    if self.nd == 3:
+                        self.model.q[('u', 3)][eN,k] = self.analyticalSolution[3].uOfXT(self.model.q['x'][eN,k],t)
 
         if self.nParticles > 0 and self.use_ball_as_particle == 0:
             self.phi_s[:] = 1e10
@@ -1850,6 +1860,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]:self.offset[0]+self.stride[0]*self.u[0].dof.shape[0]:self.stride[0]]==1.0, self.u[0].dof,0.0)
                 self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]:self.offset[1]+self.stride[1]*self.u[1].dof.shape[0]:self.stride[1]]==1.0, self.u[1].dof,self.coefficients.ball_velocity[0][0])
                 self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]:self.offset[2]+self.stride[2]*self.u[2].dof.shape[0]:self.stride[2]]==1.0, self.u[2].dof,self.coefficients.ball_velocity[0][1])
+                if self.nSpace_global == 3:
+                    self.u[3].dof[:] = np.where(self.isActiveDOF[self.offset[3]:self.offset[3]+self.stride[3]*self.u[3].dof.shape[0]:self.stride[3]]==1.0, self.u[3].dof,self.coefficients.ball_velocity[0][2])
+            else:
+                self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]:self.offset[0]+self.stride[0]*self.u[0].dof.shape[0]:self.stride[0]]==1.0, self.u[0].dof,0.0)
+                self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]:self.offset[1]+self.stride[1]*self.u[1].dof.shape[0]:self.stride[1]]==1.0, self.u[1].dof,0.0)
+                self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]:self.offset[2]+self.stride[2]*self.u[2].dof.shape[0]:self.stride[2]]==1.0, self.u[2].dof,0.0)
+                if self.nSpace_global == 3:
+                    self.u[3].dof[:] = np.where(self.isActiveDOF[self.offset[3]:self.offset[3]+self.stride[3]*self.u[3].dof.shape[0]:self.stride[3]]==1.0, self.u[3].dof,0.0)
+
             #tmp = u.copy()
             #check that inactive DOF can be set arbitrarily
             #u[:] = np.where(self.isActiveDOF==1.0,u,-1000.0)
@@ -1923,7 +1942,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.accumulateSubgridMassHistory(self.q)
         logEvent("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
-        logEvent("""
+        if self.coefficients.analyticalSolution is not None:
+            logEvent("""
 p_1.append({:21.16e})
 u_1.append({:21.16e})
 v_1.append({:21.16e})
@@ -1939,7 +1959,8 @@ u_I.append({:21.16e})
 v_I.append({:21.16e})
 w_I.append({:21.16e})
 velocity_I.append({:21.16e})
-        """.format(*self.errors.flatten().tolist()))
+""".format(*self.errors.flatten().tolist()))
+    
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
@@ -2229,16 +2250,16 @@ velocity_I.append({:21.16e})
                 else:
                     self.nzval[i] = 0.0
         #check that inactive DOF have no non-zero coefficients in active rows
-        for global_dofN_a in np.argwhere(self.isActiveDOF==1.0):
-            global_dofN = global_dofN_a[0]
-            for i in range(
-                    self.rowptr[global_dofN],
-                    self.rowptr[global_dofN + 1]):
-                if(self.isActiveDOF[self.colind[i]] == 0.0):
-                    #pass
-                    assert(self.nzval[i] == 0.0), ("row", global_dofN, "column", self.colind[i], "val", self.nzval[i],
-                                                   self.offset[0], self.offset[1], self.offset[2], self.offset[3],
-                                                   self.stride[0], self.stride[1], self.stride[2], self.stride[3])
+        # for global_dofN_a in np.argwhere(self.isActiveDOF==1.0):
+        #     global_dofN = global_dofN_a[0]
+        #     for i in range(
+        #             self.rowptr[global_dofN],
+        #             self.rowptr[global_dofN + 1]):
+        #         if(self.isActiveDOF[self.colind[i]] == 0.0):
+        #             #pass
+        #             assert(self.nzval[i] == 0.0), ("row", global_dofN, "column", self.colind[i], "val", self.nzval[i],
+        #                                            self.offset[0], self.offset[1], self.offset[2], self.offset[3],
+        #                                            self.stride[0], self.stride[1], self.stride[2], self.stride[3])
 
                 
         logEvent("Jacobian ", level=10, data=jacobian)
