@@ -1536,7 +1536,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.coefficients.force_y:
                     self.q[('force', 1)][eN,k] = self.coefficients.force_y(self.q['x'][eN,k])
                 if self.coefficients.force_z:
-                    self.q[('force', 1)][eN,k] = self.coefficients.force_z(self.q['x'][eN,k])
+                    self.q[('force', 2)][eN,k] = self.coefficients.force_z(self.q['x'][eN,k])
 
     def getResidual(self, u, r):
         """
@@ -1833,9 +1833,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["ebq_global_grad_phi_s"] = self.coefficients.ebq_global_grad_phi_s
         argsDict["ebq_particle_velocity_s"] = self.coefficients.ebq_particle_velocity_s
         argsDict["nParticles"] = self.coefficients.nParticles
-        argsDict["&particle_netForces"] = self.coefficients.particle_netForces
-        argsDict["&particle_netMoments"] = self.coefficients.particle_netMoments
-        argsDict["&particle_surfaceArea"] = self.coefficients.particle_surfaceArea
+        argsDict["particle_netForces"] = self.coefficients.particle_netForces
+        argsDict["particle_netMoments"] = self.coefficients.particle_netMoments
+        argsDict["particle_surfaceArea"] = self.coefficients.particle_surfaceArea
         argsDict["nElements_owned"] = int(self.mesh.nElements_owned)
         argsDict["particle_nitsche"] = self.coefficients.particle_nitsche
         argsDict["particle_epsFact"] = self.coefficients.particle_epsFact
@@ -1850,6 +1850,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["normalize_pressure"] = int(self.coefficients.normalize_pressure)
         argsDict["errors"]=self.errors
         self.rans2p.calculateResidual(argsDict)
+        if self.forceStrongConditions:
+            try:
+                for cj in range(len(self.dirichletConditionsForceDOF)):
+                    for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
+                        if cj == 0:
+                            r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
+                                g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t, n=np.zeros((self.nSpace_global,),'d'))
+                        else:
+                            r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
+                                g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t, n=np.zeros((self.nSpace_global,),'d')) 
+                            if self.MOVING_DOMAIN == 1.0:
+                                r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
+            except:
+                for cj in range(len(self.dirichletConditionsForceDOF)):
+                    for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
+                        if cj == 0:
+                            r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
+                                g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
+                        else:
+                            r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
+                                g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) 
+                            if self.MOVING_DOMAIN == 1.0:
+                                r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
+                        #assert(abs(r[self.offset[cj] + self.stride[cj] * dofN]) < 1.0e-8)
+
         try:
             #is sensitive to inactive DOF at velocity due to time derivative
             #self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = 0.0
@@ -1910,31 +1935,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
             logEvent("particle i=" + repr(i)+ " stress force " + repr(self.coefficients.particle_netForces[i+self.coefficients.nParticles]))
             logEvent("particle i=" + repr(i)+ " pressure force " + repr(self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]))
-
-        if self.forceStrongConditions:
-            try:
-                for cj in range(len(self.dirichletConditionsForceDOF)):
-                    for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
-                        if cj == 0:
-                            r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
-                                g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t, n=np.zeros((self.nSpace_global,),'d'))
-                        else:
-                            r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
-                                g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t, n=np.zeros((self.nSpace_global,),'d')) 
-                            if self.MOVING_DOMAIN == 1.0:
-                                r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
-            except:
-                for cj in range(len(self.dirichletConditionsForceDOF)):
-                    for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
-                        if cj == 0:
-                            r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
-                                g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
-                        else:
-                            r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - \
-                                g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) 
-                            if self.MOVING_DOMAIN == 1.0:
-                                r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
-                        assert(abs(r[self.offset[cj] + self.stride[cj] * dofN]) < 1.0e-8)
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax), level=2)

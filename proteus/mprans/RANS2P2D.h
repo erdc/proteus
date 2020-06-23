@@ -1630,9 +1630,9 @@ namespace proteus
       xt::pyarray<double>& ebq_global_grad_phi_s = args.m_darray["ebq_global_grad_phi_s"];
       xt::pyarray<double>& ebq_particle_velocity_s = args.m_darray["ebq_particle_velocity_s"];
       int nParticles = args.m_iscalar["nParticles"];
-      xt::pyarray<double> &particle_netForces = args.m_darray["&particle_netForces"];
-      xt::pyarray<double> &particle_netMoments = args.m_darray["&particle_netMoments"];
-      xt::pyarray<double> &particle_surfaceArea = args.m_darray["&particle_surfaceArea"];
+      xt::pyarray<double>& particle_netForces = args.m_darray["particle_netForces"];
+      xt::pyarray<double>& particle_netMoments = args.m_darray["particle_netMoments"];
+      xt::pyarray<double>& particle_surfaceArea = args.m_darray["particle_surfaceArea"];
       int nElements_owned = args.m_iscalar["nElements_owned"];
       double particle_nitsche = args.m_dscalar["particle_nitsche"];
       double particle_epsFact = args.m_dscalar["particle_epsFact"];
@@ -4195,7 +4195,7 @@ namespace proteus
       const bool useExact = args.m_iscalar["useExact"];
       xt::pyarray<double>& isActiveDOF = args.m_darray["isActiveDOF"];
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-      std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3*3), particle_netMoments(nParticles*3);
+      std::valarray<double> particle_surfaceArea_tmp(nParticles), particle_netForces_tmp(nParticles*3*3), particle_netMoments_tmp(nParticles*3);
       gf.useExact = false;//useExact;
       gf_p.useExact = false;//useExact;
       gf_s.useExact = useExact;
@@ -5194,9 +5194,9 @@ namespace proteus
                                                dmass_ham_u_s,
                                                dmass_ham_v_s,
                                                dmass_ham_w_s,
-                                               &particle_netForces[0],
-                                               &particle_netMoments[0],
-                                               &particle_surfaceArea[0]);
+                                               &particle_netForces_tmp[0],
+                                               &particle_netMoments_tmp[0],
+                                               &particle_surfaceArea_tmp[0]);
                     }
                   //cek todo add RBLES terms consistent to residual modifications or ignore the partials w.r.t the additional RBLES terms
                   double H_f=1.0;
