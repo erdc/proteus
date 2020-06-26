@@ -75,6 +75,7 @@ class MeshAdaptPUMIDrvr{
   //analytic geometry
   gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
   void updateSphereCoordinates(double*sphereCenter);
+  void initialAdapt_analytic();
 
   //Quality Check Functions
   double getMinimumQuality();

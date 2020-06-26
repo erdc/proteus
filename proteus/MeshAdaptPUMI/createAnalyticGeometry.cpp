@@ -570,12 +570,29 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
  
   makeSphere(model);
   
+  //initial adapt
+  initialAdapt_analytic();
+
   //add the box
   makeBox(model);
 
   //apf::writeVtkFiles("initialInitial",m);
   setParameterization(model,m);
   m->verify();
+
+  return model;
+}
+
+
+
+void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
+{
+  xyz_offset[0] = sphereCenter[0];
+  xyz_offset[1] = sphereCenter[1];
+  xyz_offset[2] = sphereCenter[2];
+}
+
+void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
 
   //apf::Field* size_initial = apf::createLagrangeField(m,"size_initial",apf::SCALAR,1);
   size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
@@ -633,17 +650,5 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   
   //apf::writeVtkFiles("initialAdapt2",m);
   freeField(size_iso);
-
-  return model;
 }
-
-
-
-void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
-{
-  xyz_offset[0] = sphereCenter[0];
-  xyz_offset[1] = sphereCenter[1];
-  xyz_offset[2] = sphereCenter[2];
-}
-
 
