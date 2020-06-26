@@ -384,38 +384,9 @@ void makeBox(gmi_model* model)
 
   //reparam edges onto face
 
-  //int edgeMap[12] = {50,48,46,52,11,16,20,6,73,72,71,74};
   int edgeLoop[6][4] = {{50,72,11,73},{72,48,71,16},{46,74,20,71},{52,73,6,74},{50,52,46,48},{11,16,20,6}}; 
   int edgeReparamLoop[6][4] = {{0,3,2,1},{1,0,3,2},{0,1,2,3},{0,1,2,3},{0,1,2,3},{0,3,2,1}}; 
-  //int faceLoop[6] = {80,78,76,82,42,24};
-
-  //int faceMap[6] = {0,1,2,3,4,5};
-  //int faceLoop[6][4] = {{0,9,4,8},{9,1,10,5},{2,11,6,10},{3,8,7,11},{0,3,2,1},{4,5,6,7}}; 
   
-/*
-  typedef void (*ParametricFunctionArray) (double const p[2], double x[3], void*);
-  ParametricFunctionArray faceFunction[] = 
-    {
-      face0,
-      face1,
-      face2,
-      face3,
-      face4,
-      face5,
-    };
-  for(int i=0; i<6;i++)
-  {
-    b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_face[i]));
-    for(int j=0; j<4;j++)
-    {
-      agm_use faceUse = add_adj(model, b, edgeLoop[i][j]);
-      gmi_add_analytic_reparam(model, faceUse, faceFunction[i], 0);
-    }
-  }
-  
-
-*/
-
   typedef void (*ParametricFunctionArray) (double const from[2], double to[2], void*);
   ParametricFunctionArray edgeFaceFunction[] = 
     {
@@ -436,14 +407,6 @@ void makeBox(gmi_model* model)
   }
 
 
-  //make region
-/*
-  int regionPeriodic[3] = {0, 0, 0};
-  double regionRanges[3][2] = {{0,0},{0,0},{0.0}};
-  gmi_ent* g_region;
-  g_region = gmi_add_analytic(model, 3, 92, regionFunction, regionPeriodic, regionRanges, 0);
-  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_region));
-*/
   gmi_add_analytic_cell(model,3,92);
 
   b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,3,92)));
@@ -453,18 +416,6 @@ void makeBox(gmi_model* model)
     gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
   }
 
-/*
-  //add edge adjacencies to region?
-  it doesn't seem like i need to do this
-  for(int i=0;i<12;i++)
-  {
-    agm_use regionUse = add_adj(model,b,1,edgeMap[i]);
-    gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
-  }
-*/
-
-  //get the sphere reparameterizations onto box
-  //b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,3,92)));
   agm_use regionUse = add_adj(model, b, 123);
   gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
 
@@ -494,6 +445,7 @@ void makeSphere(gmi_model* model)
   gmi_add_analytic(model, 2, sphereFaceID, sphereFace, faPer, faRan, 0);
 }
 
+//model tags are based off gmsh default outputs...
 void setParameterization(gmi_model* model,apf::Mesh2* m)
 {
 
