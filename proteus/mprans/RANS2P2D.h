@@ -2808,6 +2808,7 @@ namespace proteus
                     }
                 }//k
             }//fluid_phase
+#ifdef MAXNUMDIFF
           for(int k=0;k<nQuadraturePoints_element;k++)
             {
               //compute indices and declare local storage
@@ -2816,6 +2817,7 @@ namespace proteus
               q_numDiff_v.data()[eN_k] = numDiffMax;
               q_numDiff_w.data()[eN_k] = numDiffMax;
             }
+#endif
           //
           //load element into global residual and save element residual
           //
