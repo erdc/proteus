@@ -423,6 +423,106 @@ void makeBox(gmi_model* model)
   return;
 }
 
+class Box{
+    public:
+        void makeBox(gmi_model*);
+};
+
+void Box::makeBox(gmi_model* model)
+{
+  //making a box
+
+  int vertPer = 0;
+  double vertRan[1][2] = {{0.0,0.0}};
+  int vertexMap[4] = {58,5,10,56};
+  gmi_ent* g_vert[4];
+  g_vert[0] = gmi_add_analytic(model, 0, 58, vert0, &vertPer, vertRan, 0);
+  g_vert[1] = gmi_add_analytic(model, 0, 5, vert1, &vertPer, vertRan, 0);
+  g_vert[2] = gmi_add_analytic(model, 0, 10, vert2, &vertPer, vertRan, 0);
+  g_vert[3] = gmi_add_analytic(model, 0, 56, vert3, &vertPer, vertRan, 0);
+
+  int edgePer = 0;
+  double edgeRan[1][2] = {{0.0,1.0}};
+  gmi_ent* g_edge[4];
+
+  g_edge[0] = gmi_add_analytic(model, 1, 50, edge0, &edgePer, edgeRan, 0);
+  g_edge[1] = gmi_add_analytic(model, 1, 48, edge1, &edgePer, edgeRan, 0);
+  g_edge[2] = gmi_add_analytic(model, 1, 46, edge2, &edgePer, edgeRan, 0);
+  g_edge[3] = gmi_add_analytic(model, 1, 52, edge3, &edgePer, edgeRan, 0);
+
+  //reparameterize vertices on edges
+  agm_bdry b;
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[0]));
+  agm_use edgeUse0 = add_adj(model, b, vertexMap[0]);
+  agm_use edgeUse0_1 = add_adj(model,b,vertexMap[1]);
+  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
+  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
+
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[1]));
+  edgeUse0 = add_adj(model, b, vertexMap[1]);
+  edgeUse0_1 = add_adj(model,b,vertexMap[2]);
+  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
+  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
+
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[2]));
+  edgeUse0 = add_adj(model, b, vertexMap[2]);
+  edgeUse0_1 = add_adj(model,b,vertexMap[3]);
+  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_one, 0);
+  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_zero, 0);
+
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[3]));
+  edgeUse0 = add_adj(model, b, vertexMap[3]);
+  edgeUse0_1 = add_adj(model,b,vertexMap[0]);
+  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_one, 0);
+  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_zero, 0);
+
+  //make faces
+
+  int facePeriodic[2] = {0, 0};
+  double faceRanges[2][2] = {{0,1.0},{0,1.0}};
+  gmi_ent* g_face[6];
+  g_face[0] = gmi_add_analytic(model, 2, 80, face0, facePeriodic, faceRanges, 0);
+
+  //reparam edges onto face
+
+  int edgeLoop[1][4] = {{50,48,46,52}}; 
+  int edgeReparamLoop[1][4] = {{0,1,2,3}}; 
+  
+  typedef void (*ParametricFunctionArray) (double const from[2], double to[2], void*);
+  ParametricFunctionArray edgeFaceFunction[] = 
+    {
+      reparamEdge_0,
+      reparamEdge_1,
+      reparamEdge_2,
+      reparamEdge_3,
+    };
+
+  for(int i=0; i<1;i++)
+  {
+    b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_face[i]));
+    for(int j=0; j<4;j++)
+    {
+      agm_use faceUse = add_adj(model, b, edgeLoop[i][j]);
+      gmi_add_analytic_reparam(model, faceUse, edgeFaceFunction[edgeReparamLoop[i][j]], 0);
+    }
+  }
+
+
+  gmi_add_analytic_cell(model,2,92);
+
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,92)));
+  for(int i=0; i<1;i++)
+  {
+    agm_use regionUse = add_adj(model, b, faceLoop[i]);
+    gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
+  }
+
+  agm_use regionUse = add_adj(model, b, 123);
+  gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
+
+
+  return;
+}
 
 //create sphere
 const double pi = apf::pi;
@@ -443,6 +543,33 @@ void makeSphere(gmi_model* model)
   double faRan[2][2] = {{0,6.28318530718},{0.0,apf::pi}};
 
   gmi_add_analytic(model, 2, sphereFaceID, sphereFace, faPer, faRan, 0);
+}
+
+class Sphere{
+    public:
+    int faceID = 123;
+    double radius;
+    double offset[3];
+    int dim; 
+    Sphere(int x){
+        dim = x;
+    }
+    //void sphereFaces(double const*, double*, void*);
+    //void circleFace(double const, double, void*);
+    void makeSphere(gmi_model*);
+    
+};
+
+void Sphere::makeSphere(gmi_model* model)
+{ 
+  int faPer[2] = {1, 0};
+  double faRan[2][2] = {{0,6.28318530718},{0.0,apf::pi}};
+  if(dim==2){
+    faRan[1][1] = 0.0; 
+  }
+
+  sphereRadius = radius;
+  gmi_add_analytic(model, dim-1, sphereFaceID, sphereFace, faPer, faRan, 0);
 }
 
 //model tags are based off gmsh default outputs...
@@ -551,47 +678,6 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
   m->acceptChanges();
 }
 
-gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCenter, double radius)
-{
-  sphereRadius = radius;
-  boxLength = boxDim[0];
-  boxWidth = boxDim[1];
-  boxHeight = boxDim[2];
-  xyz_offset[0] = sphereCenter[0];
-  xyz_offset[1] = sphereCenter[1];
-  xyz_offset[2] = sphereCenter[2];
-  
-  lion_set_verbosity(1);
-
-  //create the analytic model 
-  gmi_model* model = gmi_make_analytic();
-  
-  //add the sphere
- 
-  makeSphere(model);
-  
-  //initial adapt
-  initialAdapt_analytic();
-
-  //add the box
-  makeBox(model);
-
-  //apf::writeVtkFiles("initialInitial",m);
-  setParameterization(model,m);
-  m->verify();
-
-  return model;
-}
-
-
-
-void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
-{
-  xyz_offset[0] = sphereCenter[0];
-  xyz_offset[1] = sphereCenter[1];
-  xyz_offset[2] = sphereCenter[2];
-}
-
 void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
 
   //apf::Field* size_initial = apf::createLagrangeField(m,"size_initial",apf::SCALAR,1);
@@ -650,5 +736,79 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   
   //apf::writeVtkFiles("initialAdapt2",m);
   freeField(size_iso);
+}
+
+
+void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
+{
+  xyz_offset[0] = sphereCenter[0];
+  xyz_offset[1] = sphereCenter[1];
+  xyz_offset[2] = sphereCenter[2];
+}
+
+gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCenter, double radius)
+{
+  sphereRadius = radius;
+  boxLength = boxDim[0];
+  boxWidth = boxDim[1];
+  boxHeight = boxDim[2];
+  xyz_offset[0] = sphereCenter[0];
+  xyz_offset[1] = sphereCenter[1];
+  xyz_offset[2] = sphereCenter[2];
+  
+  //lion_set_verbosity(1);
+
+  //create the analytic model 
+  gmi_model* model = gmi_make_analytic();
+  
+  //add the sphere
+ 
+  makeSphere(model);
+  
+  //add the box
+  makeBox(model);
+
+  //initial adapt
+  initialAdapt_analytic();
+
+  //apf::writeVtkFiles("initialInitial",m);
+  setParameterization(model,m);
+  m->verify();
+
+  return model;
+}
+
+gmi_model* MeshAdaptPUMIDrvr::createCircleInBox(double* boxDim,double*sphereCenter, double radius)
+{
+  Sphere* circle = new Sphere(2);
+  circle->radius = radius;
+  boxLength = boxDim[0];
+  boxWidth = boxDim[1];
+  boxHeight = boxDim[2];
+  xyz_offset[0] = sphereCenter[0];
+  xyz_offset[1] = sphereCenter[1];
+  xyz_offset[2] = sphereCenter[2];
+  
+  //lion_set_verbosity(1);
+
+  //create the analytic model 
+  gmi_model* model = gmi_make_analytic();
+  
+  //add the sphere
+ 
+  circle->makeSphere(model);
+  
+  //add the box
+  Box* box;  
+  box->makeBox(model);
+
+  //initial adapt
+  initialAdapt_analytic();
+
+  //apf::writeVtkFiles("initialInitial",m);
+  setParameterization(model,m); //need to modify
+  m->verify();
+
+  return model;
 }
 

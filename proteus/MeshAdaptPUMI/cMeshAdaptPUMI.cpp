@@ -164,7 +164,11 @@ int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile,double* boxDim,d
   m->verify();
 
   //create analytic geometry 
-  gmi_model* testModel = createSphereInBox(boxDim,sphereCenter,radius);
+  gmi_model* testModel;
+  if(m->getDimension()==2)
+    testModel = createCircleInBox(boxDim,sphereCenter,radius);
+  else
+    testModel = createSphereInBox(boxDim,sphereCenter,radius);
   m->verify();
 
 
