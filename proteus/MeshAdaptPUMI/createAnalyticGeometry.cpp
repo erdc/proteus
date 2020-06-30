@@ -251,9 +251,6 @@ void reparamEdge_3(double const from[2], double to[2], void*)
 }
 
 
-
-
-
 void regionFunction(double const p[2], double x[3], void*)
 {
   (void)p;
@@ -497,6 +494,8 @@ void Box::makeBox(gmi_model* model)
       reparamEdge_3,
     };
 
+  gmi_add_analytic_cell(model,2,92);
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,92)));
   for(int i=0; i<1;i++)
   {
     b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_face[i]));
@@ -505,16 +504,6 @@ void Box::makeBox(gmi_model* model)
       agm_use faceUse = add_adj(model, b, edgeLoop[i][j]);
       gmi_add_analytic_reparam(model, faceUse, edgeFaceFunction[edgeReparamLoop[i][j]], 0);
     }
-  }
-
-
-  gmi_add_analytic_cell(model,2,92);
-
-  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,92)));
-  for(int i=0; i<1;i++)
-  {
-    agm_use regionUse = add_adj(model, b, faceLoop[i]);
-    gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
   }
 
   agm_use regionUse = add_adj(model, b, 123);
@@ -598,6 +587,7 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
   }
   m->setModel(model);
   m->acceptChanges();
+    
 
   //Need to set the parametric coordinates of each of the boundary vertices
   std::map<int,int> edgeParam;
@@ -631,13 +621,13 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
       apf::Vector3 newParam;
       m->getPoint(ent,0,pt);
       m->getParam(ent,oldParam);
-      if(modelType==1)
+      if(modelType==1 && modelTag!=sphereFaceID)
       {
         int relevantIndex = edgeParam[modelTag];
         newParam[0]=pt[relevantIndex]/edgeLengths[relevantIndex];
         m->setParam(ent,newParam);
       }
-      else if (modelType==2 && modelTag!=sphereFaceID)
+      else if (modelType==2 && modelTag!=sphereFaceID && m->getDimension()>2)
       {
         int* relevantIndex = faceParam[modelTag][0]; //size is 2
         newParam[0] = pt[relevantIndex[0]]/edgeLengths[relevantIndex[0]];
@@ -672,6 +662,36 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
 
         m->setParam(ent,newParam);
       }
+      else if (modelType==1 && modelTag == sphereFaceID) //2D version
+      {
+        double argy = (pt[1]-xyz_offset[1]);
+        double argx = (pt[0]-xyz_offset[0]);
+        if(argx == 0 && argy ==0)
+          newParam[0] = 0.0; // not sure if this will happen or if this is right
+        else 
+          newParam[0] = atan2(argy,argx);
+/*
+        double arg2 = (pt[2]-xyz_offset[2])/sphereRadius;
+        if(arg2 < -1.0)
+          arg2 = -1.0;
+        else if (arg2 > 1.0)
+          arg2 = 1.0; 
+
+        newParam[1] = acos(arg2);
+        if(newParam[0]<0)
+          newParam[0] = newParam[0]+2*apf::pi;
+        if(newParam[0]>2*apf::pi)
+          newParam[0] = newParam[0]-2*apf::pi;
+        //this is probably unnecessary
+        if(newParam[1]<0.0)
+          newParam[1] = -1*newParam[1];
+        if(newParam[1]>apf::pi)
+          newParam[1] = -1*(newParam[1]-2.0*apf::pi);
+*/
+
+        m->setParam(ent,newParam);
+      }
+
     } //end if
   } //end while
   m->end(it);
@@ -697,7 +717,7 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
 
   gradeMesh(1.5);
    
-
+  std::cout<<"adapt0\n";
   ma::Input* in = ma::configure(m,size_iso);
   in->maximumIterations = 10;
   in->shouldSnap = true;
@@ -705,6 +725,7 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   in->shouldFixShape = true;
   in->debugFolder="./debug_fine";
   ma::adaptVerbose(in,false);
+  std::cout<<"adapt1\n";
   m->verify();
   
   //apf::writeVtkFiles("initialAdapt",m);
@@ -768,13 +789,14 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   //add the box
   makeBox(model);
 
-  //initial adapt
-  initialAdapt_analytic();
-
   //apf::writeVtkFiles("initialInitial",m);
   setParameterization(model,m);
   m->verify();
 
+  //initial adapt
+  initialAdapt_analytic();
+
+  m->verify();
   return model;
 }
 
@@ -802,11 +824,13 @@ gmi_model* MeshAdaptPUMIDrvr::createCircleInBox(double* boxDim,double*sphereCent
   Box* box;  
   box->makeBox(model);
 
+  //apf::writeVtkFiles("initialInitial",m);
+  setParameterization(model,m); //need to modify
+  m->verify();
+
   //initial adapt
   initialAdapt_analytic();
 
-  //apf::writeVtkFiles("initialInitial",m);
-  setParameterization(model,m); //need to modify
   m->verify();
 
   return model;
