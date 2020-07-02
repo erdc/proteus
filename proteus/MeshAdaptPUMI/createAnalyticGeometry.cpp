@@ -236,17 +236,17 @@ void reparamEdge_0(double const from[2], double to[2], void*)
 void reparamEdge_1(double const from[2], double to[2], void*)
 {
   to[0] = 0.0;
-  to[1] = from[0];
+  to[1] = 1.0-from[0];
 }
 void reparamEdge_2(double const from[2], double to[2], void*)
 {
-  to[0] = from[0];
+  to[0] = 1.0 - from[0];
   to[1] = 1.0;
 }
 
 void reparamEdge_3(double const from[2], double to[2], void*)
 {
-  to[0] = 1.0;
+  to[0] = 1.0; 
   to[1] = from[0];
 }
 
@@ -464,51 +464,41 @@ void Box::makeBox(gmi_model* model)
   b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[2]));
   edgeUse0 = add_adj(model, b, vertexMap[2]);
   edgeUse0_1 = add_adj(model,b,vertexMap[3]);
-  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_one, 0);
-  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_zero, 0);
+  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
+  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
 
   b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[3]));
   edgeUse0 = add_adj(model, b, vertexMap[3]);
   edgeUse0_1 = add_adj(model,b,vertexMap[0]);
-  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_one, 0);
-  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_zero, 0);
-
-  //make faces
-
-  int facePeriodic[2] = {0, 0};
-  double faceRanges[2][2] = {{0,1.0},{0,1.0}};
-  gmi_ent* g_face[6];
-  g_face[0] = gmi_add_analytic(model, 2, 80, face0, facePeriodic, faceRanges, 0);
+  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
+  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
 
   //reparam edges onto face
+  int edgeLoop[4] = {50,48,46,52}; 
 
-  int edgeLoop[1][4] = {{50,48,46,52}}; 
-  int edgeReparamLoop[1][4] = {{0,1,2,3}}; 
-  
+  //gmi_add_analytic_cell(model,2,92);
+  int faPer[2] = {0, 0};
+  double faRan[2][2] = {{0,1},{0,1}};
+
   typedef void (*ParametricFunctionArray) (double const from[2], double to[2], void*);
   ParametricFunctionArray edgeFaceFunction[] = 
     {
       reparamEdge_0,
-      reparamEdge_1,
-      reparamEdge_2,
       reparamEdge_3,
+      reparamEdge_2,
+      reparamEdge_1,
     };
 
-  gmi_add_analytic_cell(model,2,92);
+  gmi_ent* f = gmi_add_analytic(model, 2, 92, face4, faPer, faRan, 0);
   b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,92)));
-  for(int i=0; i<1;i++)
+  for(int i=0; i<4;i++)
   {
-    b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_face[i]));
-    for(int j=0; j<4;j++)
-    {
-      agm_use faceUse = add_adj(model, b, edgeLoop[i][j]);
-      gmi_add_analytic_reparam(model, faceUse, edgeFaceFunction[edgeReparamLoop[i][j]], 0);
-    }
+    agm_use regionUse = add_adj(model, b, edgeLoop[i]);
+    gmi_add_analytic_reparam(model, regionUse, edgeFaceFunction[i], 0);
   }
 
   agm_use regionUse = add_adj(model, b, 123);
   gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
-
 
   return;
 }
@@ -670,25 +660,92 @@ void setParameterization(gmi_model* model,apf::Mesh2* m)
           newParam[0] = 0.0; // not sure if this will happen or if this is right
         else 
           newParam[0] = atan2(argy,argx);
-/*
-        double arg2 = (pt[2]-xyz_offset[2])/sphereRadius;
-        if(arg2 < -1.0)
-          arg2 = -1.0;
-        else if (arg2 > 1.0)
-          arg2 = 1.0; 
 
-        newParam[1] = acos(arg2);
-        if(newParam[0]<0)
-          newParam[0] = newParam[0]+2*apf::pi;
-        if(newParam[0]>2*apf::pi)
-          newParam[0] = newParam[0]-2*apf::pi;
-        //this is probably unnecessary
-        if(newParam[1]<0.0)
-          newParam[1] = -1*newParam[1];
-        if(newParam[1]>apf::pi)
-          newParam[1] = -1*(newParam[1]-2.0*apf::pi);
-*/
+        m->setParam(ent,newParam);
+      }
 
+    } //end if
+  } //end while
+  m->end(it);
+  m->acceptChanges();
+}
+
+void setParameterization2D(gmi_model* model,apf::Mesh2* m)
+{
+  //Get the classification of each entity in the SimMesh
+  apf::MeshEntity* ent;
+  for(int i =0;i<3;i++)
+  {
+    apf::MeshIterator* it = m->begin(i);
+    while( (ent = m->iterate(it)))
+    {
+      apf::ModelEntity* g_ent = m->toModel(ent);
+      int modelTag = m->getModelTag(g_ent);
+      int modelType = m->getModelType(g_ent);
+      if(modelType==2 && modelTag!=92)
+        std::cout<<"model tag,type "<<modelTag<<" "<<modelType<<std::endl;
+      if(modelTag > 139 && modelTag< 148)
+      {
+        m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,sphereFaceID));
+      }
+      else
+        m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,modelTag));
+
+    }
+    m->end(it);
+  }
+  m->setModel(model);
+  m->acceptChanges();
+
+  //Need to set the parametric coordinates of each of the boundary vertices
+  std::map<int,int> edgeParam;
+  const int numEdges = 4;
+  int edgeScales[numEdges] = {0,1,0,1};
+  double edgeLengths[2] = {boxLength,boxWidth};
+  for(int i=0;i<numEdges;i++)
+  {
+    edgeParam[edgeMap[i]] = edgeScales[i];
+  }
+
+  apf::MeshIterator* it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+    apf::ModelEntity* g_ent = m->toModel(ent);
+    
+    apf::MeshEntity* ev[2];
+    m->getDownward(ent,0,ev);
+    int modelTag = m->getModelTag(g_ent);
+    int modelType = m->getModelType(g_ent);
+    if(modelType<3 && modelType!=0)
+    {
+      apf::Vector3 pt;
+      apf::Vector3 oldParam;
+      apf::Vector3 newParam(0.0,0.0,0.0);
+      m->getPoint(ent,0,pt);
+      m->getParam(ent,oldParam);
+      if(modelType==1 && modelTag!=sphereFaceID)
+      {
+        int relevantIndex = edgeParam[modelTag];
+        newParam[0]=pt[relevantIndex]/edgeLengths[relevantIndex];
+        std::cout<<"model tag "<<modelTag<<" newParam "<<newParam<<" old Param "<<oldParam<<" pt "<<pt<<std::endl;
+        m->setParam(ent,newParam);
+      }
+      else if (modelType==1 && modelTag == sphereFaceID) //2D version
+      {
+        std::cout<<"xyz offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<std::endl;
+        double argy = (pt[1]-xyz_offset[1]);
+        double argx = (pt[0]-xyz_offset[0]);
+        if(argx == 0 && argy ==0)
+          newParam[0] = 0.0; // not sure if this will happen or if this is right
+        else 
+          newParam[0] = atan2(argy,argx);
+
+        m->setParam(ent,newParam);
+      }
+      else if (modelType==2)
+      {
+        newParam[0] = pt[0]/boxLength;
+        newParam[1] = pt[1]/boxWidth;
         m->setParam(ent,newParam);
       }
 
@@ -704,20 +761,32 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* ent;
+  hmin = 0.04;
+  hmax = 0.1;
+  std::cout<<"hmin, hmax "<<hmin<<" "<<hmax<<std::endl;
+  std::cout<<"xyz offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<" "<<xyz_offset[2]<<std::endl;
   while( (ent = m->iterate(it)) )
   {
+/*
     apf::Vector3 pt;
     m->getPoint(ent,0,pt);
     if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < sphereRadius*1.5)
+    {
       apf::setScalar(size_iso,ent,0,hmin);
+    }
     else
+    {
       apf::setScalar(size_iso,ent,0,hmax);
+    }
+*/
+      apf::setScalar(size_iso,ent,0,hmin);
   }
   m->end(it);
 
-  gradeMesh(1.5);
+  //gradeMesh(1.5);
    
   std::cout<<"adapt0\n";
+  apf::writeVtkFiles("initialProteus",m);
   ma::Input* in = ma::configure(m,size_iso);
   in->maximumIterations = 10;
   in->shouldSnap = true;
@@ -731,6 +800,7 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   //apf::writeVtkFiles("initialAdapt",m);
   freeField(size_iso);
 
+/*
   size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
   it = m->begin(0);
   while( (ent = m->iterate(it)) )
@@ -757,6 +827,7 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   
   //apf::writeVtkFiles("initialAdapt2",m);
   freeField(size_iso);
+*/
 }
 
 
@@ -811,21 +882,21 @@ gmi_model* MeshAdaptPUMIDrvr::createCircleInBox(double* boxDim,double*sphereCent
   xyz_offset[1] = sphereCenter[1];
   xyz_offset[2] = sphereCenter[2];
   
-  //lion_set_verbosity(1);
+  lion_set_verbosity(1);
 
   //create the analytic model 
   gmi_model* model = gmi_make_analytic();
   
   //add the sphere
  
-  circle->makeSphere(model);
+  //circle->makeSphere(model);
   
   //add the box
   Box* box;  
   box->makeBox(model);
 
   //apf::writeVtkFiles("initialInitial",m);
-  setParameterization(model,m); //need to modify
+  setParameterization2D(model,m); //need to modify
   m->verify();
 
   //initial adapt
