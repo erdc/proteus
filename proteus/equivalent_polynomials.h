@@ -4,6 +4,7 @@
 #include <cassert>
 #include <iostream>
 #include "equivalent_polynomials_coefficients.h"
+#include "equivalent_polynomials_coefficients_quad.h"
 #include "equivalent_polynomials_utils.h"
 
 namespace equivalent_polynomials
@@ -97,16 +98,17 @@ namespace equivalent_polynomials
     {
       assert(q >= 0);
       assert(q < nQ);
-      _D_q = _D[q];
       if(inside_out)
         {
           _H_q   = _ImH[q];
           _ImH_q = _H[q];
+          _D_q = _D[q];
         }
       else
         {
           _H_q   = _H[q];
           _ImH_q = _ImH[q];
+	  _D_q = _D[q];
         }
       //basis functions already adjusted for inside_out
       for(int i=0;i<nN;i++)
@@ -120,16 +122,17 @@ namespace equivalent_polynomials
     {
       assert(ebq >= 0);
       assert(ebq < nEBQ);
-      _D_q = _D_ebq[ebq];
       if(inside_out)
         {
           _H_q   = _ImH_ebq[ebq];
           _ImH_q = _H_ebq[ebq];
+	  _D_q = _D_ebq[ebq];
         }
       else
         {
           _H_q   = _H_ebq[ebq];
           _ImH_q = _ImH_ebq[ebq];
+	  _D_q = _D_ebq[ebq];
         }
       //basis functions already adjusted for inside_out
       for(int i=0;i<nN;i++)
@@ -157,7 +160,7 @@ namespace equivalent_polynomials
     {
       return level_set_normal;
     }
-    bool inside_out;
+    bool inside_out, quad_cut;
     static const unsigned int nN=nSpace+1;
     double phi_dof_corrected[nN];
   private:
@@ -167,13 +170,14 @@ namespace equivalent_polynomials
     double phi[nN], nodes[nN*3];
     double _a1[nN],_a2[nN],_a3[nN],
       _b1[nN],_b2[nN],_b3[nN];
-    double Jac[nSpace*nSpace], inv_Jac[nSpace*nSpace];
-    double level_set_normal[nSpace], X_0[nSpace], phys_nodes_cut[(nN-1)*3];
+    double Jac[nSpace*nSpace], inv_Jac[nSpace*nSpace], det_Jac;
+    double level_set_normal[nSpace], X_0[nSpace], phys_nodes_cut[(nN-1)*3], THETA_01, THETA_02, THETA_31, THETA_32, phys_nodes_cut_quad_01[3],phys_nodes_cut_quad_02[3],phys_nodes_cut_quad_31[3],phys_nodes_cut_quad_32[3];
     static const unsigned int nDOF=((nSpace-1)/2)*(nSpace-2)*(nP+1)*(nP+2)*(nP+3)/6 + (nSpace-1)*(3-nSpace)*(nP+1)*(nP+2)/2 + (2-nSpace)*((3-nSpace)/2)*(nP+1);
     double Ainv[nDOF*nDOF];
     double C_H[nDOF], C_ImH[nDOF], C_D[nDOF];
     inline int _calculate_permutation(const double* phi_dof, const double* phi_nodes);
     inline void _calculate_cuts();
+    inline void _calculate_cuts_quad();
     inline void _calculate_C();
     inline void _correct_phi(const double* phi_dof, const double* phi_nodes);
     double _H[nQ], _ImH[nQ], _D[nQ], _va[nQ*nN], _vb[nQ*nN];
@@ -193,31 +197,56 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_C()
   {
-    register double b_H[nDOF], b_ImH[nDOF], b_dH[nDOF*nSpace];
-    _calculate_b<nSpace,nP>(X_0, b_H, b_ImH, b_dH);
-
-    register double Jt_dphi_dx[nSpace];
-    for (unsigned int I=0; I < nSpace; I++)
+    register double b_H[nDOF], b_ImH[nDOF], b_dH[nDOF*nSpace], b_D[nDOF*nSpace];
+    if (quad_cut)
       {
-        Jt_dphi_dx[I] = 0.0;
-        for(unsigned int J=0; J < nSpace; J++)
-          Jt_dphi_dx[I] += Jac[J*nSpace + I]*level_set_normal[J];
+	_calculate_b<nP>(THETA_01,THETA_02,THETA_31,THETA_32,
+			 phys_nodes_cut_quad_01,
+			 phys_nodes_cut_quad_02,
+			 phys_nodes_cut_quad_31,
+			 phys_nodes_cut_quad_32,
+			 b_H, b_ImH, b_D);
+	for (unsigned int i=0; i < nDOF; i++)
+	  {
+	    C_H[i] = 0.0;
+	    C_ImH[i] = 0.0;
+	    C_D[i] = 0.0;
+	    for (unsigned int j=0; j < nDOF; j++)
+	      {
+		C_H[i]   += Ainv[i*nDOF + j]*b_H[j];
+		C_ImH[i] += Ainv[i*nDOF + j]*b_ImH[j];
+		C_D[i]   += Ainv[i*nDOF + j]*b_D[j];
+	      }
+	    C_D[i] /= det_Jac;
+	  }
       }
-    for (unsigned int i=0; i < nDOF; i++)
+    else
       {
-        C_H[i] = 0.0;
-        C_ImH[i] = 0.0;
-        C_D[i] = 0.0;
-        for (unsigned int j=0; j < nDOF; j++)
-          {
-            C_H[i]   += Ainv[i*nDOF + j]*b_H[j];
-            C_ImH[i] += Ainv[i*nDOF + j]*b_ImH[j];
-            for (unsigned  int I=0; I < nSpace; I++)
-              {
-                if (fabs(Jt_dphi_dx[I]) > 0.0)
-                  C_D[i]   -= Ainv[i*nDOF + j]*b_dH[j*nSpace+I]/(Jt_dphi_dx[I]);
-              }
-          }
+	_calculate_b<nSpace,nP>(X_0, b_H, b_ImH, b_dH);
+	
+	register double Jt_dphi_dx[nSpace];
+	for (unsigned int I=0; I < nSpace; I++)
+	  {
+	    Jt_dphi_dx[I] = 0.0;
+	    for(unsigned int J=0; J < nSpace; J++)
+	      Jt_dphi_dx[I] += Jac[J*nSpace + I]*level_set_normal[J];
+	  }
+	for (unsigned int i=0; i < nDOF; i++)
+	  {
+	    C_H[i] = 0.0;
+	    C_ImH[i] = 0.0;
+	    C_D[i] = 0.0;
+	    for (unsigned int j=0; j < nDOF; j++)
+	      {
+		C_H[i]   += Ainv[i*nDOF + j]*b_H[j];
+		C_ImH[i] += Ainv[i*nDOF + j]*b_ImH[j];
+		for (unsigned  int I=0; I < nSpace; I++)
+		  {
+		    if (fabs(Jt_dphi_dx[I]) > 0.0)
+		      C_D[i]   -= Ainv[i*nDOF + j]*b_dH[j*nSpace+I]/(Jt_dphi_dx[I]);
+		  }
+	      }
+	  }
       }
   }
   
@@ -227,6 +256,7 @@ namespace equivalent_polynomials
     int p_i, pcount=0, n_i, ncount=0, z_i, zcount=0;
     root_node=0;
     inside_out=false;
+    quad_cut=false;
     for (unsigned int i=0; i < nN; i++)
       {
         if(phi_dof[i] > 0.0)
@@ -253,9 +283,20 @@ namespace equivalent_polynomials
       {
         return -1;
       }
+    else if(ncount == 1)
+      {
+        if (zcount == nN-1)//interface is on an element boundary, integrate this orientation
+	  {
+	    root_node = n_i;
+	  }
+        else
+          {
+	    root_node = n_i;
+          }
+      }
     else if(pcount == 1)
       {
-        if (zcount == nN-1)//interface is on an element boundary, only integrate once
+        if (zcount == nN-1)//interface is on an element boundary, don't integrate this orientation
           return 1;
         else
           {
@@ -270,9 +311,11 @@ namespace equivalent_polynomials
               }
           }
       }
-    else if(ncount == 1)
+    else if (nSpace == 3 && pcount == 2 && ncount == 2)
       {
-        root_node = n_i;
+	//special case only in 3D
+	quad_cut = true;
+	root_node = n_i;
       }
     else
       {
@@ -289,6 +332,29 @@ namespace equivalent_polynomials
     for(unsigned int i=0; i < nN; i++)
       {
         permutation[i] = (root_node+i)%nN;
+      }
+    if(quad_cut)
+      {
+        if(phi_dof[permutation[nN-1]] > 0.0)
+	  {
+	    int tmp=permutation[nN-1];
+	    if (phi_dof[permutation[nN-2]] < 0.0)
+	      {
+		permutation[nN-1] = permutation[nN-2];
+		permutation[nN-2] = tmp;
+	      }
+	    else if (phi_dof[permutation[nN-3]] < 0.0)
+	      {
+		permutation[nN-1] = permutation[nN-3];
+		permutation[nN-3] = tmp;
+	      }
+	    else
+	      assert(false);
+	  }
+	assert(phi_dof[permutation[0]] < 0.0);
+	assert(phi_dof[permutation[3]] < 0.0);
+	assert(phi_dof[permutation[1]] > 0.0);
+	assert(phi_dof[permutation[2]] > 0.0);
       }
     for(unsigned int i=0; i < nN; i++)
       {
@@ -307,15 +373,24 @@ namespace equivalent_polynomials
             JacTest[I*nSpace+i] = phi_nodes[(1+i)*3 + I] - phi_nodes[I];
           }
       }
-    double det_Jac = det<nSpace>(Jac);
+    det_Jac = det<nSpace>(Jac);
     double det_JacTest = det<nSpace>(JacTest);
     /* assert(det_JacTest >= 0.0); */
     /* assert(det_Jac >= 0.0); */
     if(det_Jac < 0.0)
       {
-        double tmp = permutation[nN-1];
-        permutation[nN-1] = permutation[nN-2];
-        permutation[nN-2] = tmp;
+	if (quad_cut)//flip the two internal positive nodes
+	  {
+	    double tmp = permutation[2];
+	    permutation[2] = permutation[1];
+	    permutation[1] = tmp;
+	  }
+	else//flip the last two nodes
+	  {
+	    double tmp = permutation[nN-1];
+	    permutation[nN-1] = permutation[nN-2];
+	    permutation[nN-2] = tmp;
+	  }
         for(unsigned int i=0; i < nN; i++)
           {
             phi[i] = phi_dof[permutation[i]];
@@ -364,14 +439,41 @@ namespace equivalent_polynomials
   }
   
   template<int nSpace, int nP, int nQ, int nEBQ>
+  inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_cuts_quad()
+  {
+    THETA_01 = 0.5 - 0.5*(phi[1] + phi[0])/(phi[1]-phi[0]);
+    THETA_02 = 0.5 - 0.5*(phi[2] + phi[0])/(phi[2]-phi[0]);
+    THETA_31 = 0.5 - 0.5*(phi[1] + phi[3])/(phi[1]-phi[3]);
+    THETA_32 = 0.5 - 0.5*(phi[2] + phi[3])/(phi[2]-phi[3]);
+    for (unsigned int I=0; I < 3; I++)
+      {
+	phys_nodes_cut_quad_01[I] = (1-THETA_01)*nodes[I] + THETA_01*nodes[1*3 + I];
+	phys_nodes_cut_quad_02[I] = (1-THETA_02)*nodes[I] + THETA_02*nodes[2*3 + I];
+	phys_nodes_cut_quad_31[I] = (1-THETA_31)*nodes[3*3 + I] + THETA_31*nodes[1*3 + I];
+	phys_nodes_cut_quad_32[I] = (1-THETA_32)*nodes[3*3 + I] + THETA_32*nodes[2*3 + I];
+      }
+  }
+  
+  template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_correct_phi(const double* phi_dof, const double* phi_nodes)
   {
     register double cut_barycenter[3] ={0.,0.,0.};
     const double one_by_nNm1 = 1.0/(nN-1.0);
-    for (unsigned int i=0; i < nN-1;i++)
+    if (quad_cut)
       {
-        for (unsigned int I=0; I < nSpace; I++)
-          cut_barycenter[I] += phys_nodes_cut[i*3+I]*one_by_nNm1;
+	for (unsigned int I=0; I < nSpace; I++)
+	  cut_barycenter[I] += 0.25*(phys_nodes_cut_quad_01[I] +
+				     phys_nodes_cut_quad_02[I] +
+				     phys_nodes_cut_quad_31[I] +
+				     phys_nodes_cut_quad_32[I]);
+      }
+    else
+      {
+	for (unsigned int i=0; i < nN-1;i++)
+	  {
+	    for (unsigned int I=0; I < nSpace; I++)
+	      cut_barycenter[I] += phys_nodes_cut[i*3+I]*one_by_nNm1;
+	  }
       }
     for (unsigned int i=0; i < nN;i++)
       {
@@ -473,13 +575,25 @@ namespace equivalent_polynomials
           }
         return icase;
       }
-    _calculate_cuts();//X_0, array of interface cuts on reference simplex
-    _calculate_normal<nSpace>(phys_nodes_cut, level_set_normal);//normal to interface
+    if (quad_cut)
+      {
+	_calculate_cuts_quad();//THETA_* for quad cut in 3D
+	_calculate_normal_quad(phys_nodes_cut_quad_01,
+			       phys_nodes_cut_quad_02,
+			       phys_nodes_cut_quad_31,
+			       phys_nodes_cut_quad_32,
+			       level_set_normal);//normal to interface
+      }
+    else
+      {
+	_calculate_cuts();//X_0, array of interface cuts on reference simplex
+	_calculate_normal<nSpace>(phys_nodes_cut, level_set_normal);//normal to interface
+      }
     double ma_scale,mb_scale;
     if (scale)
       {
         //cek hack - 2D, pressure basis for discontinuous density
-        double jump_scale = level_set_normal[1]*(1.0-2.0*double(inside_out)),
+        double jump_scale = level_set_normal[1],
           m_average = 0.5*(ma + mb),
           m_jump = 0.5*(mb - ma);
         mb_scale = m_average + jump_scale*m_jump;//mb when jump_scale=1
@@ -596,6 +710,9 @@ namespace equivalent_polynomials
       }
     set_boundary_quad(0);
       }
+    if (inside_out)
+      for (unsigned int I=0; I<nSpace;I++)
+    	level_set_normal[I]*=-1.0;
     return icase;
   }
 
