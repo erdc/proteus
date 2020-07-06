@@ -257,6 +257,44 @@ void regionFunction(double const p[2], double x[3], void*)
   (void)x;
 }
 
+//from edge parameterization to face parameterization
+/*
+void reparam_Circle(double const from[2], double to[2], void*){
+    double x = from[0]*boxLength;
+    double y = from[1]*boxWidth;
+    std::cout<<"from[0],from[1],x,y "<<from[0]<<" "<<from[1]<<x<<" "<<y<<std::endl;
+    double eps = 1e-12;
+    double radial = (x-xyz_offset[0])*(x-xyz_offset[0])+(y-xyz_offset[1])*(y-xyz_offset[1]);
+    if(abs(radial-sphereRadius) < eps){
+     
+        double argy = (y-xyz_offset[1]);
+        double argx = (x-xyz_offset[0]);
+        if(argx == 0 && argy ==0)
+            to[0] = 0.0; // not sure if this will happen or if this is right
+        else 
+            to[0] = atan2(argy,argx);
+        to[1] = 0;
+    }
+    else{
+        to[0] = from[0];
+        to[1] = from[1];
+    }
+}
+*/
+
+void reparam_Circle(double const from[2], double to[2], void*){
+
+    //given theta, need to get y and x in parameterized form
+    double x = sphereRadius*cos(from[0])+xyz_offset[0];
+    double y = sphereRadius*sin(from[0])+xyz_offset[1];
+    to[0] = x/boxLength;
+    to[1] = y/boxWidth;
+    std::cout<<"box length width "<< boxLength<<" "<<boxWidth<<std::endl;
+    std::cout<<"from "<<from[0]<<" "<<from[1]<<" x "<<x<<" "<<y<<" to? "<<to[0]<<" "<<to[1]<<std::endl;
+}
+
+
+
 
 void makeBox(gmi_model* model)
 {
@@ -490,15 +528,19 @@ void Box::makeBox(gmi_model* model)
     };
 
   gmi_ent* f = gmi_add_analytic(model, 2, 92, face4, faPer, faRan, 0);
+  //gmi_ent* f = gmi_add_analytic(model, 2, 92, regionFunction, faPer, faRan, 0);
+  //gmi_add_analytic_cell(model, 2, 92);
   b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,92)));
   for(int i=0; i<4;i++)
   {
     agm_use regionUse = add_adj(model, b, edgeLoop[i]);
     gmi_add_analytic_reparam(model, regionUse, edgeFaceFunction[i], 0);
+    //gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
   }
 
   agm_use regionUse = add_adj(model, b, 123);
-  gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
+  gmi_add_analytic_reparam(model, regionUse, reparam_Circle, 0);
+  //gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
 
   return;
 }
@@ -515,6 +557,14 @@ void sphereFace(double const p[2], double x[3], void*)
   x[1] = xyz_offset[1]+sphereRadius*sin(p[0]) * sin(p[1]);
   x[2] = xyz_offset[2]+sphereRadius*cos(p[1]);
 }
+
+void sphereFace2D(double const p[2], double x[3], void*)
+{
+  x[0] = xyz_offset[0]+sphereRadius*cos(p[0]);
+  x[1] = xyz_offset[1]+sphereRadius*sin(p[0]);
+  x[2] = 0.0;
+}
+
 
 void makeSphere(gmi_model* model)
 {
@@ -548,7 +598,8 @@ void Sphere::makeSphere(gmi_model* model)
   }
 
   sphereRadius = radius;
-  gmi_add_analytic(model, dim-1, sphereFaceID, sphereFace, faPer, faRan, 0);
+  gmi_add_analytic(model, dim-1, sphereFaceID, sphereFace2D, faPer, faRan, 0);
+  //gmi_add_analytic(model, dim-1, sphereFaceID, NULL, faPer, faRan, 0);
 }
 
 //model tags are based off gmsh default outputs...
@@ -761,13 +812,8 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* ent;
-  hmin = 0.04;
-  hmax = 0.1;
-  std::cout<<"hmin, hmax "<<hmin<<" "<<hmax<<std::endl;
-  std::cout<<"xyz offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<" "<<xyz_offset[2]<<std::endl;
   while( (ent = m->iterate(it)) )
   {
-/*
     apf::Vector3 pt;
     m->getPoint(ent,0,pt);
     if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < sphereRadius*1.5)
@@ -778,8 +824,6 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
     {
       apf::setScalar(size_iso,ent,0,hmax);
     }
-*/
-      apf::setScalar(size_iso,ent,0,hmin);
   }
   m->end(it);
 
@@ -796,6 +840,7 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   ma::adaptVerbose(in,false);
   std::cout<<"adapt1\n";
   m->verify();
+  apf::writeVtkFiles("finalProteus",m);
   
   //apf::writeVtkFiles("initialAdapt",m);
   freeField(size_iso);
@@ -889,7 +934,7 @@ gmi_model* MeshAdaptPUMIDrvr::createCircleInBox(double* boxDim,double*sphereCent
   
   //add the sphere
  
-  //circle->makeSphere(model);
+  circle->makeSphere(model);
   
   //add the box
   Box* box;  
