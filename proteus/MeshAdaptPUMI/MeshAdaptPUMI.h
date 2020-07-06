@@ -110,6 +110,7 @@ class MeshAdaptPUMIDrvr{
   bool hasAnalyticSphere;
   bool useProteus; 
   bool useProteusAniso;
+  bool isAnalytic;
 
   
 

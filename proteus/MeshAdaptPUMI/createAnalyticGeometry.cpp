@@ -289,8 +289,8 @@ void reparam_Circle(double const from[2], double to[2], void*){
     double y = sphereRadius*sin(from[0])+xyz_offset[1];
     to[0] = x/boxLength;
     to[1] = y/boxWidth;
-    std::cout<<"box length width "<< boxLength<<" "<<boxWidth<<std::endl;
-    std::cout<<"from "<<from[0]<<" "<<from[1]<<" x "<<x<<" "<<y<<" to? "<<to[0]<<" "<<to[1]<<std::endl;
+    //std::cout<<"box length width "<< boxLength<<" "<<boxWidth<<std::endl;
+    //std::cout<<"from "<<from[0]<<" "<<from[1]<<" x "<<x<<" "<<y<<" to? "<<to[0]<<" "<<to[1]<<std::endl;
 }
 
 
@@ -733,8 +733,6 @@ void setParameterization2D(gmi_model* model,apf::Mesh2* m)
       apf::ModelEntity* g_ent = m->toModel(ent);
       int modelTag = m->getModelTag(g_ent);
       int modelType = m->getModelType(g_ent);
-      if(modelType==2 && modelTag!=92)
-        std::cout<<"model tag,type "<<modelTag<<" "<<modelType<<std::endl;
       if(modelTag > 139 && modelTag< 148)
       {
         m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,sphereFaceID));
@@ -778,12 +776,12 @@ void setParameterization2D(gmi_model* model,apf::Mesh2* m)
       {
         int relevantIndex = edgeParam[modelTag];
         newParam[0]=pt[relevantIndex]/edgeLengths[relevantIndex];
-        std::cout<<"model tag "<<modelTag<<" newParam "<<newParam<<" old Param "<<oldParam<<" pt "<<pt<<std::endl;
+        //std::cout<<"model tag "<<modelTag<<" newParam "<<newParam<<" old Param "<<oldParam<<" pt "<<pt<<std::endl;
         m->setParam(ent,newParam);
       }
       else if (modelType==1 && modelTag == sphereFaceID) //2D version
       {
-        std::cout<<"xyz offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<std::endl;
+        //std::cout<<"xyz offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<std::endl;
         double argy = (pt[1]-xyz_offset[1]);
         double argx = (pt[0]-xyz_offset[0]);
         if(argx == 0 && argy ==0)
@@ -807,7 +805,7 @@ void setParameterization2D(gmi_model* model,apf::Mesh2* m)
 }
 
 void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
-
+  //at this point, hmin and hmax haven't been set yet
   //apf::Field* size_initial = apf::createLagrangeField(m,"size_initial",apf::SCALAR,1);
   size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
@@ -945,7 +943,8 @@ gmi_model* MeshAdaptPUMIDrvr::createCircleInBox(double* boxDim,double*sphereCent
   m->verify();
 
   //initial adapt
-  initialAdapt_analytic();
+  //initialAdapt_analytic();
+  isAnalytic=1;
 
   m->verify();
 

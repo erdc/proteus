@@ -84,6 +84,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr()
   initialReconstructed = 0;
   maxAspect = 2.0;//maxAspectRatio;
   hasIBM=hasInterface=hasVMS=hasERM=hasAniso=hasAnalyticSphere=useProteus=useProteusAniso=0;
+  isAnalytic=0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -797,6 +798,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->shouldRunPostZoltan = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
+/*
   if(size_field_config == "meshQuality")
   {
     in->shouldSnap = true;
@@ -804,6 +806,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   }
   else
     in->shouldSnap = false;
+*/
+  in->shouldSnap=isAnalytic;
   //in->goodQuality = 0.16;//0.027;
   //double mass_before = getTotalMass();
   
