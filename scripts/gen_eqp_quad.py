@@ -26,6 +26,13 @@ namespace equivalent_polynomials
                            double* b_H, double* b_ImH, double* b_D);
 
 """)
+use_simplify=True
+
+def simplify(expression):
+    if use_simplify:
+        return sympy.simplify(expression)
+    else:
+        return expression
 
 for nSpace in range(3,4):
     for order in range(1,5):
@@ -105,20 +112,19 @@ for nSpace in range(3,4):
             Y2 = v32[1]*x + v02[1]*y + v01[1]*(1-x-y)
             Z2 = v32[2]*x + v02[2]*y + v01[2]*(1-x-y)
             for i in range(nDOF):
-                b_H.append(sympy.simplify(sympy.simplify(intpoly.polytope_integrate(sub_tet0, basis[i])) +
-                                          sympy.simplify(intpoly.polytope_integrate(sub_tet1, basis[i])) +
-                                          sympy.simplify(intpoly.polytope_integrate(sub_tet2, basis[i]))))
-                b_1mH.append(sympy.simplify(intpoly.polytope_integrate(unit_tet, basis[i])
-                                            - sympy.simplify(sympy.simplify(intpoly.polytope_integrate(sub_tet0, basis[i])) +
-                                                             sympy.simplify(intpoly.polytope_integrate(sub_tet1, basis[i])) +
-                                                             sympy.simplify(intpoly.polytope_integrate(sub_tet2, basis[i])))))
-                subtris = sympy.simplify(J1*intpoly.polytope_integrate(interface,sympy.expand(basis[i].subs([(x,X1),
-                                                                                                             (y,Y1),
-                                                                                                             (z,Z1)])))
-                                         +
-                                         J2*intpoly.polytope_integrate(interface,sympy.expand(basis[i].subs([(x,X2),
-                                                                                                             (y,Y2),
-                                                                                                             (z,Z2)]))))
+                frag = simplify(simplify(intpoly.polytope_integrate(sub_tet0, basis[i])) +
+                                simplify(intpoly.polytope_integrate(sub_tet1, basis[i])) +
+                                simplify(intpoly.polytope_integrate(sub_tet2, basis[i])))
+                b_1mH.append(frag)
+                b_H.append(simplify(intpoly.polytope_integrate(unit_tet, basis[i])
+                                    - frag))
+                subtris = simplify(J1*intpoly.polytope_integrate(interface,sympy.expand(basis[i].subs([(x,X1),
+                                                                                                       (y,Y1),
+                                                                                                       (z,Z1)])))
+                                   +
+                                   J2*intpoly.polytope_integrate(interface,sympy.expand(basis[i].subs([(x,X2),
+                                                                                                       (y,Y2),
+                                                                                                       (z,Z2)]))))
                 b_D.append(subtris)
 
         f.write("""  template<>
@@ -136,7 +142,7 @@ inline void _calculate_b<{1:d}>(double theta01, double theta02, double theta31, 
         for i in range(len(b_H)):
             f.write("    b_H[{0:d}] = {1:s};\n".format(i,cxxcode(b_H[i])))
             f.write("    b_ImH[{0:d}] = {1:s};\n".format(i,cxxcode(b_1mH[i])))
-            f.write("    b_D[{0:d}] = {1:s};\n".format(i*nSpace,cxxcode(b_D[i])))
+            f.write("    b_D[{0:d}] = {1:s};\n".format(i,cxxcode(b_D[i])))
         f.write("""  }
 
 """)

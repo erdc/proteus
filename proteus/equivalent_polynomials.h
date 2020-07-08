@@ -261,12 +261,14 @@ namespace equivalent_polynomials
       {
         if(phi_dof[i] > 0.0)
           {
-            p_i = i;
+	    if (pcount == 0)
+	      p_i = i;
             pcount  += 1;
           }
         else if(phi_dof[i] < 0.0)
           {
-            n_i = i;
+	    if (ncount == 0)
+	      n_i = i;
             ncount += 1;
           }
         else
@@ -636,6 +638,7 @@ namespace equivalent_polynomials
     for(unsigned int i=0; i < nN - 1; i++)
       for(unsigned int I=0; I < nSpace; I++)
         Jac_0[I*nSpace+i] = phi_nodes[(1+i)*3 + I] - phi_nodes[I];
+
     if (not isBoundary)
       {
     for(unsigned int q=0; q < nQ; q++)
