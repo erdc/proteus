@@ -293,9 +293,6 @@ void reparam_Circle(double const from[2], double to[2], void*){
     //std::cout<<"from "<<from[0]<<" "<<from[1]<<" x "<<x<<" "<<y<<" to? "<<to[0]<<" "<<to[1]<<std::endl;
 }
 
-
-
-
 void makeBox(gmi_model* model)
 {
   //making a box
@@ -733,6 +730,7 @@ void setParameterization2D(gmi_model* model,apf::Mesh2* m)
       apf::ModelEntity* g_ent = m->toModel(ent);
       int modelTag = m->getModelTag(g_ent);
       int modelType = m->getModelType(g_ent);
+      //std::cout<<"modelTag "<<modelTag<<" modelType "<<modelType<<std::endl;
       if(modelTag > 139 && modelTag< 148)
       {
         m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,sphereFaceID));
@@ -814,6 +812,7 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   {
     apf::Vector3 pt;
     m->getPoint(ent,0,pt);
+/*
     if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < sphereRadius*1.5)
     {
       apf::setScalar(size_iso,ent,0,hmin);
@@ -822,12 +821,13 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
     {
       apf::setScalar(size_iso,ent,0,hmax);
     }
+*/
+      apf::setScalar(size_iso,ent,0,0.1);
   }
   m->end(it);
 
   //gradeMesh(1.5);
    
-  std::cout<<"adapt0\n";
   apf::writeVtkFiles("initialProteus",m);
   ma::Input* in = ma::configure(m,size_iso);
   in->maximumIterations = 10;
@@ -836,28 +836,29 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   in->shouldFixShape = true;
   in->debugFolder="./debug_fine";
   ma::adaptVerbose(in,false);
-  std::cout<<"adapt1\n";
   m->verify();
-  apf::writeVtkFiles("finalProteus",m);
+  apf::writeVtkFiles("middleProteus",m);
   
   //apf::writeVtkFiles("initialAdapt",m);
   freeField(size_iso);
 
-/*
   size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
   it = m->begin(0);
   while( (ent = m->iterate(it)) )
   {
+/*
     apf::Vector3 pt;
     m->getPoint(ent,0,pt);
     if(sqrt( (pt[0]-xyz_offset[0])*(pt[0]-xyz_offset[0])+ (pt[1]-xyz_offset[1])*(pt[1]-xyz_offset[1]) + (pt[2]-xyz_offset[2])*(pt[2]-xyz_offset[2])) < sphereRadius*1.5)
       apf::setScalar(size_iso,ent,0,hmin);
     else
       apf::setScalar(size_iso,ent,0,hmax);
+*/
+      apf::setScalar(size_iso,ent,0,0.01);
   }
   m->end(it);
 
-  gradeMesh(1.5);
+  //gradeMesh(1.5);
    
   in = ma::configure(m,size_iso);
   in->maximumIterations = 10;
@@ -868,9 +869,9 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   ma::adaptVerbose(in,false);
   m->verify();
   
+  apf::writeVtkFiles("finalProteus",m);
   //apf::writeVtkFiles("initialAdapt2",m);
   freeField(size_iso);
-*/
 }
 
 
@@ -916,8 +917,8 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
 
 gmi_model* MeshAdaptPUMIDrvr::createCircleInBox(double* boxDim,double*sphereCenter, double radius)
 {
-  Sphere* circle = new Sphere(2);
-  circle->radius = radius;
+  Sphere circle = Sphere(2);
+  circle.radius = radius;
   boxLength = boxDim[0];
   boxWidth = boxDim[1];
   boxHeight = boxDim[2];
@@ -932,13 +933,12 @@ gmi_model* MeshAdaptPUMIDrvr::createCircleInBox(double* boxDim,double*sphereCent
   
   //add the sphere
  
-  circle->makeSphere(model);
+  circle.makeSphere(model);
   
   //add the box
-  Box* box;  
-  box->makeBox(model);
+  Box box;  
+  box.makeBox(model);
 
-  //apf::writeVtkFiles("initialInitial",m);
   setParameterization2D(model,m); //need to modify
   m->verify();
 
