@@ -1915,7 +1915,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             r*=self.isActiveDOF
             #print(r[np.argwhere(self.isActiveDOF==0.0)])
         except:
-            assert((self.isActiveDOF == 1.0).all())
+            #assert((self.isActiveDOF == 1.0).all())
             pass
         from mpi4py import MPI
         comm = MPI.COMM_WORLD

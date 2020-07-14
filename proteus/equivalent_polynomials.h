@@ -201,11 +201,18 @@ namespace equivalent_polynomials
     if (quad_cut)
       {
 	_calculate_b<nP>(THETA_01,THETA_02,THETA_31,THETA_32,
-			 phys_nodes_cut_quad_01,
-			 phys_nodes_cut_quad_02,
-			 phys_nodes_cut_quad_31,
-			 phys_nodes_cut_quad_32,
+			 phi_dof_corrected[permutation[0]],
+			 phi_dof_corrected[permutation[1]],
+			 phi_dof_corrected[permutation[2]],
+			 phi_dof_corrected[permutation[3]],
 			 b_H, b_ImH, b_D);
+	if (inside_out)//todo handle insdie out for H/ImH/D in a simplified/unified way 
+	  {
+	    for (unsigned int i=0; i < nDOF; i++)
+	      {
+		b_D[i] = -b_D[i];
+	      }
+	  }
 	for (unsigned int i=0; i < nDOF; i++)
 	  {
 	    C_H[i] = 0.0;
@@ -217,7 +224,8 @@ namespace equivalent_polynomials
 		C_ImH[i] += Ainv[i*nDOF + j]*b_ImH[j];
 		C_D[i]   += Ainv[i*nDOF + j]*b_D[j];
 	      }
-	    C_D[i] /= det_Jac;
+	    //only if direct boundary integral is used
+	    //C_D[i] /= det_Jac;
 	  }
       }
     else
@@ -484,7 +492,7 @@ namespace equivalent_polynomials
           {
             phi_dof_corrected[i] += level_set_normal[I]*(phi_nodes[i*3+I] - cut_barycenter[I]);             
           }
-        //todo: decide if we should just use a consistant normal
+        //ensure sdf sign convention consistent with input phi
         if (phi_dof_corrected[i]*phi_dof[i] < 0.0)
           {
             phi_dof_corrected[i]*=-1.0;
@@ -608,7 +616,6 @@ namespace equivalent_polynomials
         ma_scale = ma;
         mb_scale = mb;
       }
-    //std::cout<<"eqp "<<inside_out<<'\t'<<level_set_normal[1]<<'\t'<<mb_scale<<'\t'<<mb<<'\t'<<ma_scale<<'\t'<<ma<<std::endl;
     if (inside_out)
       {
         if (nN==3)
@@ -631,8 +638,8 @@ namespace equivalent_polynomials
         if (nN==3)
           _calculate_basis_coefficients(ma_scale, mb_scale);
       }
-    _calculate_C();//coefficients of equiv poly
     _correct_phi(phi_dof, phi_nodes);
+    _calculate_C();//coefficients of equiv poly
     //compute the default affine map based on phi_nodes[0]
     double Jac_0[nSpace*nSpace];
     for(unsigned int i=0; i < nN - 1; i++)

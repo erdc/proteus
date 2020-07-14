@@ -22,7 +22,7 @@ namespace equivalent_polynomials
 {
   template<int nP>
   inline void _calculate_b(double theta01, double theta02, double theta31, double theta32, 
-                           double* n01, double* n02, double* n31, double* n32, 
+                           double phi0, double phi1, double phi2, double phi3, 
                            double* b_H, double* b_ImH, double* b_D);
 
 """)
@@ -33,119 +33,96 @@ def simplify(expression):
         return sympy.simplify(expression)
     else:
         return expression
+nSpace=3
+maxOrder = 5
+nDOF1D=maxOrder + 1
+unit_tet = [[(0, 0, 0),
+             (1, 0, 0),
+             (0, 1, 0),
+             (0, 0, 1)],
+            [1, 2, 3],
+            [2, 3, 0],
+            [3, 0, 1],
+            [0, 1, 2]]
+n0=(0,0,0)
+n1=(1,0,0)
+n2=(0,1,0)
+n3=(0,0,1)
+theta01,theta02,theta31,theta32 = sympy.symbols('theta01,theta02,theta31,theta32')
+phi0,phi1,phi2,phi3 = sympy.symbols('phi0,phi1,phi2,phi3')
+n01 = (theta01,0,0)
+n02 = (0,theta02,0)
+n31 = (theta31, 0,        1-theta31)
+n32 = (0,        theta32, 1-theta32)
+sub_tet0 = [[n1,#0
+             n01,#1
+             n02,#2
+             n31],#3
+            [3, 2, 1], #n31, n02, n01
+            [2, 3, 0], #n02, n31, n1
+            [0, 3, 1], #n1, n31, n01
+            [0, 1, 2]] #n1, n01, n02
+sub_tet1 = [[n2,#0
+             n02,#1
+             n32,#2
+             n31],#3
+            [1, 3, 2], #n02, n31, n32
+            [0, 2, 3], #n2, n32, n31
+            [3, 1, 0], #n31, n02, n2
+            [0, 1, 2]] #n2, n02, n32
+sub_tet2 = [[n1,#0
+             n2,#1
+             n02,#2
+             n31],#3
+            [2, 3, 1], #n02, n31, n2
+            [2, 0, 3], #n02, n1, n31
+            [3, 0, 1], #n31, n1, n2
+            [1, 0, 2]] #n2, n1, n02
 
-for nSpace in range(3,4):
-    for order in range(1,5):
-        nDOF1D=order + 1
-        if nSpace == 3:
-            basis = [x**i*y**j*z**k for i in range(nDOF1D) for j in range(nDOF1D-i) for k in range(nDOF1D-i-j)]
-            nDOF = len(basis)
-            test_nDOF = sympy.factor(Sum(Sum(Sum(1,(K,0,N-I-J-1)),(J,0,N-I-1)),(I,0,N-1)).doit())
-            unit_tet = [[(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)],
-                        [1, 2, 3], [2, 3, 0], [3, 0, 1], [0, 1, 2]]
-        assert(test_nDOF.evalf(subs={'N':nDOF1D}) == nDOF)
-        b_H=[]
-        b_1mH=[]
-        b_D=[]
-        if nSpace == 3:
-            n0=(0,0,0)
-            n1=(1,0,0)
-            n2=(0,1,0)
-            n3=(0,0,1)
-            theta01,theta02,theta31,theta32 = sympy.symbols('theta01,theta02,theta31,theta32')
-            n01 = (theta01,0,0)
-            n02 = (0,theta02,0)
-            n31 = (theta31, 0,        1-theta31)
-            n32 = (0,        theta32, 1-theta32)
-            sub_tet0 = [[n1,#0
-                         n01,#1
-                         n02,#2
-                         n31],#3
-                        [3, 2, 1], 
-                        [2, 3, 0], 
-                        [0, 3, 1], 
-                        [0, 2, 1]]
-            sub_tet1 = [[n2,#0
-                         n02,#1
-                         n32,#2
-                         n31],#3
-                        [1, 3, 2], 
-                        [0, 2, 3], 
-                        [3, 1, 0], 
-                        [0, 1, 2]]
-            sub_tet2 = [[n1,#0
-                         n2,#1
-                         n02,#2
-                         n31],#3
-                        [1, 3, 2], 
-                        [2, 0, 3], 
-                        [3, 0, 1], 
-                        [1, 0, 2]]
+b_H={}
+b_1mH={}
+b_D={}
+for i in range(nDOF1D):
+    for j in range(nDOF1D-i):
+        for k in range(nDOF1D-i-j):
+            basis_ijk = x**i*y**j*z**k
+            print("basis function ", i, j, k)
+            T0 = simplify(intpoly.polytope_integrate(sub_tet0, basis_ijk))
+            T1 = simplify(intpoly.polytope_integrate(sub_tet1, basis_ijk))
+            T2 = simplify(intpoly.polytope_integrate(sub_tet2, basis_ijk))
+            frag = simplify(T0 + T1 + T2)
+            b_H[(i,j,k)] = frag 
+            b_1mH[(i,j,k)] = intpoly.polytope_integrate(unit_tet, basis_ijk) - frag
+            theta01_expr = 0.5 - 0.5*(phi1 + phi0)/(phi1-phi0)
+            theta02_expr = 0.5 - 0.5*(phi2 + phi0)/(phi2-phi0)
+            theta31_expr = 0.5 - 0.5*(phi1 + phi3)/(phi1-phi3)
+            theta32_expr = 0.5 - 0.5*(phi2 + phi3)/(phi2-phi3)
+            b_D[(i,j,k)] = frag.diff(theta01,simplify=use_simplify)*(theta01_expr.diff(phi0,simplify=False) + theta01_expr.diff(phi1,simplify=False)) + \
+                           frag.diff(theta02,simplify=use_simplify)*(theta02_expr.diff(phi0,simplify=False) + theta02_expr.diff(phi2,simplify=False)) + \
+                           frag.diff(theta31,simplify=use_simplify)*(theta31_expr.diff(phi3,simplify=False) + theta31_expr.diff(phi1,simplify=False)) + \
+                           frag.diff(theta32,simplify=use_simplify)*(theta32_expr.diff(phi3,simplify=False) + theta32_expr.diff(phi2,simplify=False))
 
-            interface = Triangle(Point(0, 0), Point(0, 1), Point(1, 0))
-            n01_x,n01_y,n01_z=sympy.symbols('n01_x,n01_y,n01_z')
-            n02_x,n02_y,n02_z=sympy.symbols('n02_x,n02_y,n02_z')
-            n31_x,n31_y,n31_z=sympy.symbols('n31_x,n31_y,n31_z')
-            n32_x,n32_y,n32_z=sympy.symbols('n32_x,n32_y,n32_z')
-            v01 = Matrix([n01_x,n01_y,n01_z])
-            v02 = Matrix([n02_x,n02_y,n02_z])
-            v31 = Matrix([n31_x,n31_y,n31_z])
-            v32 = Matrix([n32_x,n32_y,n32_z])
-            
-            normalDir1 = (v31-v01).cross(v32-v01)
-            J1=normalDir1.norm()
-            nx1 = normalDir1[0]
-            ny1 = normalDir1[1]
-            nz1 = normalDir1[2]
-            phi1 = (nx1*x + ny1*y + nz1*z - v01.dot(normalDir1))/J1
-            X1 = v31[0]*x + v32[0]*y + v01[0]*(1-x-y)
-            Y1 = v31[1]*x + v32[1]*y + v01[1]*(1-x-y)
-            Z1 = v31[2]*x + v32[2]*y + v01[2]*(1-x-y)
-            
-            normalDir2 = (v32-v01).cross(v02-v01)
-            J2=normalDir2.norm()
-            nx2 = normalDir2[0]
-            ny2 = normalDir2[1]
-            nz2 = normalDir2[2]
-            phi2 = (nx2*x + ny2*y + nz2*z - v01.dot(normalDir2))/J2
-            X2 = v32[0]*x + v02[0]*y + v01[0]*(1-x-y)
-            Y2 = v32[1]*x + v02[1]*y + v01[1]*(1-x-y)
-            Z2 = v32[2]*x + v02[2]*y + v01[2]*(1-x-y)
-            for i in range(nDOF):
-                frag = simplify(simplify(intpoly.polytope_integrate(sub_tet0, basis[i])) +
-                                simplify(intpoly.polytope_integrate(sub_tet1, basis[i])) +
-                                simplify(intpoly.polytope_integrate(sub_tet2, basis[i])))
-                b_1mH.append(frag)
-                b_H.append(simplify(intpoly.polytope_integrate(unit_tet, basis[i])
-                                    - frag))
-                subtris = simplify(J1*intpoly.polytope_integrate(interface,sympy.expand(basis[i].subs([(x,X1),
-                                                                                                       (y,Y1),
-                                                                                                       (z,Z1)])))
-                                   +
-                                   J2*intpoly.polytope_integrate(interface,sympy.expand(basis[i].subs([(x,X2),
-                                                                                                       (y,Y2),
-                                                                                                       (z,Z2)]))))
-                b_D.append(subtris)
-
-        f.write("""  template<>
-inline void _calculate_b<{1:d}>(double theta01, double theta02, double theta31, double theta32, 
-                                double* n01, double* n02, double* n31, double* n32, 
+for order in range(1,maxOrder):
+    nDOF1D=order + 1
+    print("Order ", order)
+    f.write("""  template<>
+inline void _calculate_b<{0:d}>(double theta01, double theta02, double theta31, double theta32,
+                                double phi0, double phi1, double phi2, double phi3,
                                 double* b_H, double* b_ImH, double* b_D)
   {{
-""".format(nSpace, order))
-        if nSpace == 3:
-            f.write("""    const double n01_x(n01[0]),n01_y(n01[1]),n01_z(n01[2]);
-    const double n02_x(n02[0]),n02_y(n02[1]),n02_z(n02[2]);
-    const double n31_x(n31[0]),n31_y(n31[1]),n31_z(n31[2]);
-    const double n32_x(n32[0]),n32_y(n32[1]),n32_z(n32[2]);
-""")
-        for i in range(len(b_H)):
-            f.write("    b_H[{0:d}] = {1:s};\n".format(i,cxxcode(b_H[i])))
-            f.write("    b_ImH[{0:d}] = {1:s};\n".format(i,cxxcode(b_1mH[i])))
-            f.write("    b_D[{0:d}] = {1:s};\n".format(i,cxxcode(b_D[i])))
-        f.write("""  }
+""".format(order))
+    n=0
+    for i in range(nDOF1D):
+        for j in range(nDOF1D-i):
+            for k in range(nDOF1D-i-j):
+                f.write("    b_H[{0:d}] = {1:s};\n".format(n,cxxcode(b_H[(i,j,k)])))
+                f.write("    b_ImH[{0:d}] = {1:s};\n".format(n,cxxcode(b_1mH[(i,j,k)])))
+                f.write("    b_D[{0:d}] = {1:s};\n".format(n,cxxcode(b_D[(i,j,k)])))
+                n+=1
+    f.write("""  }
 
 """)
+
 f.write("""}//equivalent_polynomials
 #endif
 """)
