@@ -3401,7 +3401,7 @@ namespace proteus
                     }
                 }//k
             }//fluid_phase
-#ifdef USEMAXNUMDIFF
+#ifdef MAXNUMDIFF
           for(int k=0;k<nQuadraturePoints_element;k++)
             {
               //compute indices and declare local storage
