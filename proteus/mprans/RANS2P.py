@@ -1583,9 +1583,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
         r.fill(0.0)
         try:
-            self.isActiveDOF[:] = 0.0
+            self.isActiveR[:] = 0.0
+            self.isActiveDOF_p[:] = 0.0
+            self.isActiveDOF_vel[:] = 0.0
         except AttributeError:
-            self.isActiveDOF = np.zeros_like(r)
+            self.isActiveR = np.zeros_like(r)
+            self.isActiveDOF_p = np.zeros_like(self.u[0].dof)
+            self.isActiveDOF_vel = np.zeros_like(self.u[1].dof)
         self.Ct_sge = 4.0
         self.Cd_sge = 36.0
         self.coefficients.wettedAreas[:] = 0.0
@@ -1846,7 +1850,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["phi_solid_nodes"] = self.coefficients.phi_s
         argsDict["distance_to_solids"] = self.coefficients.phisField
         argsDict["useExact"] = int(self.coefficients.useExact)
-        argsDict["isActiveDOF"] = self.isActiveDOF
+        argsDict["isActiveR"] = self.isActiveR
+        argsDict["isActiveDOF_p"] = self.isActiveDOF_p
+        argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
         argsDict["normalize_pressure"] = int(self.coefficients.normalize_pressure)
         argsDict["errors"]=self.errors
         self.rans2p.calculateResidual(argsDict)
@@ -1874,49 +1880,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             if self.MOVING_DOMAIN == 1.0:
                                 r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
                         #assert(abs(r[self.offset[cj] + self.stride[cj] * dofN]) < 1.0e-8)
-
+                        
         try:
             #is sensitive to inactive DOF at velocity due to time derivative
-            #self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = 0.0
-            #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = self.coefficients.ball_velocity[0][0]
-            #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = self.coefficients.ball_velocity[0][1]
-            #u[self.isActiveDOF==0.0] = 0.0
             if self.coefficients.nParticles ==1:
-                self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]:self.offset[0]+self.stride[0]*self.u[0].dof.shape[0]:self.stride[0]]==1.0, self.u[0].dof,0.0)
-                self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]:self.offset[1]+self.stride[1]*self.u[1].dof.shape[0]:self.stride[1]]==1.0, self.u[1].dof,self.coefficients.ball_velocity[0][0])
-                self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]:self.offset[2]+self.stride[2]*self.u[2].dof.shape[0]:self.stride[2]]==1.0, self.u[2].dof,self.coefficients.ball_velocity[0][1])
+                self.u[0].dof[:] = np.where(self.isActiveDOF_p==1.0, self.u[0].dof,0.0)
+                self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,self.coefficients.ball_velocity[0][0])
+                self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,self.coefficients.ball_velocity[0][1])
                 if self.nSpace_global == 3:
-                    self.u[3].dof[:] = np.where(self.isActiveDOF[self.offset[3]:self.offset[3]+self.stride[3]*self.u[3].dof.shape[0]:self.stride[3]]==1.0, self.u[3].dof,self.coefficients.ball_velocity[0][2])
+                    self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,self.coefficients.ball_velocity[0][2])
             else:
-                self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]:self.offset[0]+self.stride[0]*self.u[0].dof.shape[0]:self.stride[0]]==1.0, self.u[0].dof,0.0)
-                self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]:self.offset[1]+self.stride[1]*self.u[1].dof.shape[0]:self.stride[1]]==1.0, self.u[1].dof,0.0)
-                self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]:self.offset[2]+self.stride[2]*self.u[2].dof.shape[0]:self.stride[2]]==1.0, self.u[2].dof,0.0)
+                self.u[0].dof[:] = np.where(self.isActiveDOF_p==1.0, self.u[0].dof,0.0)
+                self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,0.0)
+                self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,0.0)
                 if self.nSpace_global == 3:
-                    self.u[3].dof[:] = np.where(self.isActiveDOF[self.offset[3]:self.offset[3]+self.stride[3]*self.u[3].dof.shape[0]:self.stride[3]]==1.0, self.u[3].dof,0.0)
-
-            #tmp = u.copy()
-            #check that inactive DOF can be set arbitrarily
-            #u[:] = np.where(self.isActiveDOF==1.0,u,-1000.0)
-            #assert((tmp == u).all())
-            #print("inactive ",u[self.isActiveDOF==0.0])
-            #import pdb
-            #pdb.set_trace()
-            #test that solution doesn't depend on inactive DOF
-            #u[self.isActiveDOF==0.0] = -1000.0
-            #self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = -1000.0
-            #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = -1000.0
-            #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = -1000.0
-            #u[self.isActiveDOF==0.0] = 0.0
-            #self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = 0.0
-            #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = 0.0
-            #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = 0.0
-            #print("ball velocity x at nodes", self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]] == 0.0])
-            #print("ball velocity y at nodes", self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]] == 0.0])
-            r*=self.isActiveDOF
-            #print(r[np.argwhere(self.isActiveDOF==0.0)])
+                    self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,0.0)
+            r*=self.isActiveR
         except:
-            #assert((self.isActiveDOF == 1.0).all())
-            pass
+            assert((self.isActiveR == 1.0).all())
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         
@@ -2220,7 +2201,9 @@ velocity_I.append({:21.16e})
         argsDict["particle_penalty_constant"] = self.coefficients.particle_penalty_constant
         argsDict["ghost_penalty_constant"] = self.coefficients.ghost_penalty_constant
         argsDict["useExact"] = int(self.coefficients.useExact)
-        argsDict["isActiveDOF"] = self.isActiveDOF
+        argsDict["isActiveR"] = self.isActiveR
+        argsDict["isActiveDOF_p"] = self.isActiveDOF_p
+        argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
         self.rans2p.calculateJacobian(argsDict)
         assert(np.all(np.isfinite(jacobian.getCSRrepresentation()[2])))
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
@@ -2238,7 +2221,7 @@ velocity_I.append({:21.16e})
                         else:
                             self.nzval[i] = 0.0
                             # print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-        for global_dofN_a in np.argwhere(self.isActiveDOF==0.0):
+        for global_dofN_a in np.argwhere(self.isActiveR==0.0):
             #assert(False)
             global_dofN = global_dofN_a[0]
             #print("inactive ", global_dofN)
@@ -2250,12 +2233,12 @@ velocity_I.append({:21.16e})
                 else:
                     self.nzval[i] = 0.0
         #check that inactive DOF have no non-zero coefficients in active rows
-        # for global_dofN_a in np.argwhere(self.isActiveDOF==1.0):
+        # for global_dofN_a in np.argwhere(self.isActiveR==1.0):
         #     global_dofN = global_dofN_a[0]
         #     for i in range(
         #             self.rowptr[global_dofN],
         #             self.rowptr[global_dofN + 1]):
-        #         if(self.isActiveDOF[self.colind[i]] == 0.0):
+        #         if(self.isActiveR[self.colind[i]] == 0.0):
         #             #pass
         #             assert(self.nzval[i] == 0.0), ("row", global_dofN, "column", self.colind[i], "val", self.nzval[i],
         #                                            self.offset[0], self.offset[1], self.offset[2], self.offset[3],

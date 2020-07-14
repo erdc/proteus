@@ -1643,7 +1643,9 @@ namespace proteus
       xt::pyarray<double>& phi_solid_nodes = args.m_darray["phi_solid_nodes"];
       xt::pyarray<double>& distance_to_solids = args.m_darray["distance_to_solids"];
       bool useExact = args.m_iscalar["useExact"];
-      xt::pyarray<double>& isActiveDOF = args.m_darray["isActiveDOF"];
+      xt::pyarray<double>& isActiveR = args.m_darray["isActiveR"];
+      xt::pyarray<double>& isActiveDOF_p = args.m_darray["isActiveDOF_p"];
+      xt::pyarray<double>& isActiveDOF_vel = args.m_darray["isActiveDOF_vel"];
       const bool normalize_pressure = args.m_iscalar["normalize_pressure"];
       xt::pyarray<double>& errors = args.m_darray["errors"];
       logEvent("Entered mprans calculateResidual",6);
@@ -2840,8 +2842,11 @@ namespace proteus
                 }
               globalResidual.data()[offset_p+stride_p*rp_l2g.data()[eN_i]]+=elementResidual_p[i];
               if (element_active)
-                isActiveDOF.data()[offset_p+stride_p*rp_l2g.data()[eN_i]] = 1.0;
-            }
+		{
+		  isActiveR.data()[offset_p+stride_p*rp_l2g.data()[eN_i]] = 1.0;
+		  isActiveDOF_p.data()[p_l2g.data()[eN_i]] = 1.0;
+		}
+	    }
           for(int i=0;i<nDOF_v_test_element;i++)
             {
               register int eN_i=eN*nDOF_v_test_element+i;
@@ -2854,8 +2859,9 @@ namespace proteus
               globalResidual.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]]+=elementResidual_v[i];
               if (element_active)
                 {
-                  isActiveDOF.data()[offset_u+stride_u*rvel_l2g.data()[eN_i]] = 1.0;
-                  isActiveDOF.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]] = 1.0;
+                  isActiveR.data()[offset_u+stride_u*rvel_l2g.data()[eN_i]] = 1.0;
+                  isActiveR.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]] = 1.0;
+                  isActiveDOF_vel.data()[vel_l2g.data()[eN_i]] = 1.0;
                 }
             }//i
           mesh_volume_conservation += mesh_volume_conservation_element;
