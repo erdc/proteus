@@ -257,31 +257,7 @@ void regionFunction(double const p[2], double x[3], void*)
   (void)x;
 }
 
-//from edge parameterization to face parameterization
-/*
-void reparam_Circle(double const from[2], double to[2], void*){
-    double x = from[0]*boxLength;
-    double y = from[1]*boxWidth;
-    std::cout<<"from[0],from[1],x,y "<<from[0]<<" "<<from[1]<<x<<" "<<y<<std::endl;
-    double eps = 1e-12;
-    double radial = (x-xyz_offset[0])*(x-xyz_offset[0])+(y-xyz_offset[1])*(y-xyz_offset[1]);
-    if(abs(radial-sphereRadius) < eps){
-     
-        double argy = (y-xyz_offset[1]);
-        double argx = (x-xyz_offset[0]);
-        if(argx == 0 && argy ==0)
-            to[0] = 0.0; // not sure if this will happen or if this is right
-        else 
-            to[0] = atan2(argy,argx);
-        to[1] = 0;
-    }
-    else{
-        to[0] = from[0];
-        to[1] = from[1];
-    }
-}
-*/
-
+//from circle to box
 void reparam_Circle(double const from[2], double to[2], void*){
 
     //given theta, need to get y and x in parameterized form
@@ -289,8 +265,6 @@ void reparam_Circle(double const from[2], double to[2], void*){
     double y = sphereRadius*sin(from[0])+xyz_offset[1];
     to[0] = x/boxLength;
     to[1] = y/boxWidth;
-    //std::cout<<"box length width "<< boxLength<<" "<<boxWidth<<std::endl;
-    //std::cout<<"from "<<from[0]<<" "<<from[1]<<" x "<<x<<" "<<y<<" to? "<<to[0]<<" "<<to[1]<<std::endl;
 }
 
 void makeBox(gmi_model* model)
@@ -455,7 +429,35 @@ void makeBox(gmi_model* model)
   return;
 }
 
-class Box{
+typedef void (*EntityMapArray) (double const p[2], double x[3], void*);
+typedef void (*ParametricFunctionArray) (double const from[2], double to[2], void*);
+
+struct Enclosure{
+    
+    std::vector<int> vertexMap;
+    double vertRan[1][2]={{0.0,0.0}};
+    int vertPer=0;
+
+    std::vector<int> edgeMap;
+    int edgePer = 0;
+    double edgeRan[1][2] = {{0.0,1.0}};
+
+    int faPer[2] = {0, 0};
+    double faRan[2][2] = {{0,1},{0,1}};
+    int regionID = 92; // fixed ID
+};
+
+/*
+class AnalyticGeom(int dim, info){
+
+    //Box; 
+    //Sphere;
+    public:
+        model createGeometry()
+            create2Dbox;
+            create3Dbox;
+*/
+class Box : public Enclosure{
     public:
         void makeBox(gmi_model*);
 };
@@ -463,59 +465,45 @@ class Box{
 void Box::makeBox(gmi_model* model)
 {
   //making a box
+  vertexMap = {58,5,10,56};
+  gmi_ent* g_vert[vertexMap.size()];
+  
+  EntityMapArray vertexPoints[] = {
+        vert0,
+        vert1,
+        vert2,
+        vert3
+    };
 
-  int vertPer = 0;
-  double vertRan[1][2] = {{0.0,0.0}};
-  int vertexMap[4] = {58,5,10,56};
-  gmi_ent* g_vert[4];
-  g_vert[0] = gmi_add_analytic(model, 0, 58, vert0, &vertPer, vertRan, 0);
-  g_vert[1] = gmi_add_analytic(model, 0, 5, vert1, &vertPer, vertRan, 0);
-  g_vert[2] = gmi_add_analytic(model, 0, 10, vert2, &vertPer, vertRan, 0);
-  g_vert[3] = gmi_add_analytic(model, 0, 56, vert3, &vertPer, vertRan, 0);
+  for(auto i=0; i<vertexMap.size();i++)
+    g_vert[i] = gmi_add_analytic(model, 0, vertexMap[i], vertexPoints[i], &vertPer, vertRan, 0); 
 
-  int edgePer = 0;
-  double edgeRan[1][2] = {{0.0,1.0}};
-  gmi_ent* g_edge[4];
+  edgeMap = {50,48,46,52};
+  gmi_ent* g_edge[edgeMap.size()];
 
-  g_edge[0] = gmi_add_analytic(model, 1, 50, edge0, &edgePer, edgeRan, 0);
-  g_edge[1] = gmi_add_analytic(model, 1, 48, edge1, &edgePer, edgeRan, 0);
-  g_edge[2] = gmi_add_analytic(model, 1, 46, edge2, &edgePer, edgeRan, 0);
-  g_edge[3] = gmi_add_analytic(model, 1, 52, edge3, &edgePer, edgeRan, 0);
+  EntityMapArray edgeEntities[] = {
+        edge0,
+        edge1,
+        edge2,
+        edge3
+    };
+
+  for(int i=0;i<edgeMap.size();i++)
+    g_edge[i] = gmi_add_analytic(model, 1, edgeMap[i], edgeEntities[i], &edgePer, edgeRan, 0);
 
   //reparameterize vertices on edges
   agm_bdry b;
-  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[0]));
-  agm_use edgeUse0 = add_adj(model, b, vertexMap[0]);
-  agm_use edgeUse0_1 = add_adj(model,b,vertexMap[1]);
-  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
-  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
+  std::vector<std::pair<int,int>> indexPairs = {{0,1}, {1,2}, {2,3}, {3,0}};
 
-  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[1]));
-  edgeUse0 = add_adj(model, b, vertexMap[1]);
-  edgeUse0_1 = add_adj(model,b,vertexMap[2]);
-  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
-  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
+  for(int i=0;i<edgeMap.size();i++){
 
-  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[2]));
-  edgeUse0 = add_adj(model, b, vertexMap[2]);
-  edgeUse0_1 = add_adj(model,b,vertexMap[3]);
-  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
-  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
+    b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[i]));
+    agm_use edgeUse0 = add_adj(model, b, vertexMap[indexPairs[i].first]);
+    agm_use edgeUse0_1 = add_adj(model,b,vertexMap[indexPairs[i].second]);
+    gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
+    gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
+  }
 
-  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(g_edge[3]));
-  edgeUse0 = add_adj(model, b, vertexMap[3]);
-  edgeUse0_1 = add_adj(model,b,vertexMap[0]);
-  gmi_add_analytic_reparam(model, edgeUse0, reparamVert_zero, 0);
-  gmi_add_analytic_reparam(model, edgeUse0_1, reparamVert_one, 0);
-
-  //reparam edges onto face
-  int edgeLoop[4] = {50,48,46,52}; 
-
-  //gmi_add_analytic_cell(model,2,92);
-  int faPer[2] = {0, 0};
-  double faRan[2][2] = {{0,1},{0,1}};
-
-  typedef void (*ParametricFunctionArray) (double const from[2], double to[2], void*);
   ParametricFunctionArray edgeFaceFunction[] = 
     {
       reparamEdge_0,
@@ -524,20 +512,13 @@ void Box::makeBox(gmi_model* model)
       reparamEdge_1,
     };
 
-  gmi_ent* f = gmi_add_analytic(model, 2, 92, face4, faPer, faRan, 0);
-  //gmi_ent* f = gmi_add_analytic(model, 2, 92, regionFunction, faPer, faRan, 0);
-  //gmi_add_analytic_cell(model, 2, 92);
-  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,92)));
-  for(int i=0; i<4;i++)
+  gmi_ent* f = gmi_add_analytic(model, 2, regionID, face4, faPer, faRan, 0);
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,regionID)));
+  for(int i=0; i<edgeMap.size();i++)
   {
-    agm_use regionUse = add_adj(model, b, edgeLoop[i]);
+    agm_use regionUse = add_adj(model, b, edgeMap[i]);
     gmi_add_analytic_reparam(model, regionUse, edgeFaceFunction[i], 0);
-    //gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
   }
-
-  agm_use regionUse = add_adj(model, b, 123);
-  gmi_add_analytic_reparam(model, regionUse, reparam_Circle, 0);
-  //gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
 
   return;
 }
@@ -561,7 +542,6 @@ void sphereFace2D(double const p[2], double x[3], void*)
   x[1] = xyz_offset[1]+sphereRadius*sin(p[0]);
   x[2] = 0.0;
 }
-
 
 void makeSphere(gmi_model* model)
 {
@@ -938,6 +918,11 @@ gmi_model* MeshAdaptPUMIDrvr::createCircleInBox(double* boxDim,double*sphereCent
   //add the box
   Box box;  
   box.makeBox(model);
+
+  //reparamterize circle onto box
+  agm_bdry b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,box.regionID)));
+  agm_use regionUse = add_adj(model, b, circle.faceID);
+  gmi_add_analytic_reparam(model, regionUse, reparam_Circle, 0);
 
   setParameterization2D(model,m); //need to modify
   m->verify();
