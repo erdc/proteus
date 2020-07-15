@@ -73,8 +73,7 @@ class MeshAdaptPUMIDrvr{
   int gradeMesh(double gradationFactor);
 
   //analytic geometry
-  gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
-  gmi_model* createCircleInBox(double* boxDim,double*circleCenter, double radius);
+  void createAnalyticGeometry(int dim, double* boxDim, double*sphereCenter,double radius);
 
   void updateSphereCoordinates(double*sphereCenter);
   void initialAdapt_analytic();

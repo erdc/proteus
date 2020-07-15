@@ -23,17 +23,4 @@ agm_bdry add_bdry(gmi_model* m, gmi_ent* e);
 agm_use add_adj(gmi_model* m, agm_bdry b, int tag);
 agm_use add_adj(gmi_model* m, agm_bdry b, int dim, int tag);
 
-extern int edgeMap[12];
-extern int faceLoop[6];
-extern double boxLength;
-extern double boxWidth;
-extern double boxHeight;
-extern int sphereFaceID;
-extern double sphereRadius;
-extern double xyz_offset[3];
-
-
-void makeBox(gmi_model* model);
-void makeSphere(gmi_model* model);
-
 #endif

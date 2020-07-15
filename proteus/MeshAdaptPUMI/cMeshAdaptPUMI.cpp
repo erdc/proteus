@@ -161,23 +161,13 @@ int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile,double* boxDim,d
   //assume analytic 
   comm_size = PCU_Comm_Peers();
   comm_rank = PCU_Comm_Self();
-  m = apf::loadMdsMesh(".null", meshFile);
+  //m = apf::loadMdsMesh(".null", meshFile);
+  m = apf::loadMdsFromGmsh(gmi_load(".null"), meshFile);
   m->verify();
 
   //create analytic geometry 
-  gmi_model* testModel;
-  if(m->getDimension()==2)
-    testModel = createCircleInBox(boxDim,sphereCenter,radius);
-  else
-    testModel = createSphereInBox(boxDim,sphereCenter,radius);
+  createAnalyticGeometry(m->getDimension(),boxDim,sphereCenter,radius);
   m->verify();
-
-
-/*
-  apf::writeVtkFiles("afterAnalytic",m);
-  std::cout<<"test Model "<<testModel<<" mesh model "<<m->getModel()<<std::endl;
-  std::abort();
-*/
   return 0;
 }
 
