@@ -662,7 +662,8 @@ class PUMI_helper:
               minQual = domain.AdaptManager.PUMIAdapter.getMinimumQuality()
               logEvent('The quality is %f ' % (minQual**(1./3.)))
               #adaptMeshNow=True
-              if(minQual**(1./3.)<0.25):
+              #if(minQual**(1./3.)<0.25):
+              if(minQual**(1./3.)<0.7):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
 

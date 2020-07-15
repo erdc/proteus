@@ -85,6 +85,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr()
   maxAspect = 2.0;//maxAspectRatio;
   hasIBM=hasInterface=hasVMS=hasERM=hasAniso=hasAnalyticSphere=useProteus=useProteusAniso=0;
   isAnalytic=0;
+  useQuality=0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -684,7 +685,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       double t1 = PCU_Time();
       getERMSizeField(total_error);
       double t2 = PCU_Time();
-      if(comm_rank==0 && logging_config == "on"){
+      if(comm_rank==0 && logging_config){
         std::ofstream myfile;
         myfile.open("error_estimator_timing.txt", std::ios::app );
         myfile << t2-t1<<std::endl;
@@ -715,20 +716,14 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     size_scale = m->findField("proteus_sizeScale");
     adapt_type_config = "anisotropic";
   }
-/*
-  if (hasTest)
-    testIsotropicSizeField();
-*/
-/*
-  if(size_field_config == "uniform"){
-      //special situation where I only care about err_reg
-      freeField(errRho_reg); 
-      freeField(errRel_reg); 
+  if(useQuality){
+    //size_iso=samSz::isoSize(m);
+    sizeFieldList.push(samSz::isoSize(m));
   }
-*/
+
   isotropicIntersect();
 
-  if(logging_config=="on"){
+  if(logging_config){
     char namebuffer[50];
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
@@ -788,16 +783,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->shouldRunPostZoltan = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
-/*
-  if(size_field_config == "meshQuality")
-  {
-    in->shouldSnap = true;
-    in->shouldTransferParametric=true;
-  }
-  else
-    in->shouldSnap = false;
-*/
   in->shouldSnap=isAnalytic;
+  in->shouldTransferParametric=isAnalytic;
   //in->goodQuality = 0.16;//0.027;
   //double mass_before = getTotalMass();
   
@@ -810,7 +797,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   //double mass_after = getTotalMass();
   //PCU_Add_Doubles(&mass_before,1);
   //PCU_Add_Doubles(&mass_after,1);
-  if(comm_rank==0 && logging_config=="on"){
+  if(comm_rank==0 && logging_config){
 /*
     std::ios::fmtflags saved(std::cout.flags());
     std::cout<<std::setprecision(15)<<"Mass Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
@@ -830,7 +817,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     if (has_gBC)
       getSimmetrixBC();
   }
-  if(logging_config=="on"){
+  if(logging_config){
     char namebuffer[50];
     sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
@@ -843,8 +830,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
     apf::destroyField(adaptFrame);
   nAdapt++; //counter for number of adapt steps
 
+/*
   if(logging_config=="debugRestart")
     m->writeNative("DEBUG_restart.smb");
+*/
 
   nTriggers=0;
   return 0;
@@ -1007,6 +996,8 @@ int MeshAdaptPUMIDrvr::setAdaptProperties(std::vector<std::string> sizeInputs,bo
             hasVMS=1;
         if(*it == "error_erm")
             hasERM=1;
+        if(*it == "meshQuality")
+            useQuality=1;
     }
     hmin=in_hmin; 
     hmax=in_hmax; 

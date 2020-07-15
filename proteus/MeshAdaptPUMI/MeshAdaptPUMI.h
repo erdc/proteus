@@ -110,13 +110,15 @@ class MeshAdaptPUMIDrvr{
   bool useProteus; 
   bool useProteusAniso;
   bool isAnalytic;
+  bool useQuality;
 
   
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic
   std::string adapt_type_config; //What type of adapt for ERM: isotropic or anisotropic
-  std::string logging_config; // Logging on or off
+  //std::string logging_config; // Logging on or off
+  bool logging_config; // Logging on or off
 
   //Element Residual Method
   void get_local_error(double& total_error);

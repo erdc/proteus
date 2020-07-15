@@ -944,7 +944,7 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
     std::cerr<<"Error density maximum "<<errRho_max<<std::endl;
     std::cerr<<"U_norm_total "<<u_norm_total<<std::endl;
   }
-
+/*
   if(logging_config=="errorOnly"){ //feature to just look at the error fields without adapting the mesh
     if(comm_rank==0)
       std::cout<<"outputting error field\n";
@@ -956,6 +956,7 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
     nEstimate++;
     removeBCData();
   }
+*/
 
   m->end(iter);
   apf::destroyField(visc);
