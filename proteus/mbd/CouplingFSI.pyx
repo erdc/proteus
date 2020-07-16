@@ -110,6 +110,9 @@ cdef class ProtChBody:
         self.boundaryFlags = np.empty(0, 'i')
         self.setName(b'rigidbody')
 
+    def getChronoObject(self):
+        return self.ChBody
+
     def attachShape(self,
                     shape,
                     take_shape_name=True):
@@ -849,13 +852,39 @@ cdef class ProtChBody:
         relative_x = x-np.array([chpos.x, chpos.y, chpos.z])
         return self.sdfIBM(t, relative_x)
 
+    def setPosition(self, np.ndarray pos):
+        chvec = chrono.ChVectorD(pos[0], pos[1], pos[2])
+        self.ChBody.SetPos(chvec)
+
     def getPosition(self):
         chpos = self.ChBody.GetPos()
-        return np.array([chpos.x, chpos.y, chpos.z])
+        return pyvec2array(chpos)
+
+    def setMass(self, double mass):
+        self.ChBody.SetMass(mass)
+
+    def getMass(self):
+        return self.ChBody.GetMass()
+
+    def setInertiaXX(self, np.ndarray inertia):
+        chvec = chrono.ChVectorD(inertia[0], inertia[1], inertia[2])
+        self.ChBody.SetInertiaXX(chvec)
+
+    def setInertiaXY(self, np.ndarray inertia):
+        chvec = chrono.ChVectorD(inertia[0], inertia[1], inertia[2])
+        self.ChBody.SetInertiaXY(chvec)
+
+    def getInertia(self):
+        iner = pymat332array(self.ChBody.GetInertia())
+        return iner
 
     def getVelocity(self):
         chvel = self.ChBody.GetPos_dt()
-        return np.array([chvel.x, chvel.y, chvel.z])
+        return pyvec2array(chvel)
+
+    def setVelocity(self, np.ndarray vel):
+        chvec = chrono.ChVectorD(vel[0], vel[1], vel[2])
+        self.ChBody.SetPos_dt(chvec)
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
@@ -1318,7 +1347,7 @@ cdef class ProtChBody:
         elements = ET.SubElement(topology,
                                  "DataItem",
                                  {"Format": dataItemFormat,
-                                  "DataType": "Int",
+                                  "DataType": "UInt",
                                   "Dimensions": "%i %i" % (Xdmf_NumberOfElements,
                                                            Xdmf_NodesPerElement)})
         elements.text = self.hdfFileName+".h5:/elementsSpatial_Domain"+str(tCount)
@@ -1430,6 +1459,9 @@ cdef class ProtChSystem:
         self.log_chrono_springs = None
         self.log_chrono_residuals = None
 
+    def getChronoObject(self):
+        return self.ChSystem
+
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
         Calculations in Chrono will use this time step within the
@@ -1442,6 +1474,9 @@ cdef class ProtChSystem:
         self.chrono_dt = dt
         self.thisptr.chrono_dt = dt
 
+    def setSampleRate(self, sampleRate):
+        self.sampleRate = sampleRate
+
     def addProtChBody(self, ProtChBody body):
         # self.ChSystemSMC.Add(body.ChBody)
         self.ChSystem.Add(body.ChBody)
@@ -1451,6 +1486,13 @@ cdef class ProtChSystem:
     def addProtChMesh(self, ProtChMesh mesh):
         self.thisptr.addMesh(mesh.mesh)
         mesh.ProtChSystem = self
+
+    def setGravitationalAcceleration(self, g):
+        chvec = chrono.ChVectorD(g[0], g[1], g[2])
+        self.ChSystem.Set_G_acc(chvec)
+
+    def getGravitationalAcceleration(self):
+        return pyvec2array(self.ChSystem.Get_G_acc())
 
     def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
         assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
@@ -2371,6 +2413,9 @@ cdef class ProtChMesh:
         self.mesh = pt_to_shp[0]
         system.addProtChMesh(self)
 
+    def getChronoObject(self):
+        return self.ChMeshh
+
 
 
 # def linkMoorings(System system, Moorings mooringA, int nodeA_ind, Moorings mooringB, int nodeB_ind):
@@ -2624,7 +2669,9 @@ cdef class ProtChMoorings:
         topology = ET.SubElement(arGrid,
                                 "Topology",
                                 {"Type": Xdmf_ElementTopology,
-                                 "NumberOfElements": "{0:d}".format(Xdmf_NumberOfElements)})
+                                 "NumberOfElements": "{0:d}".format(Xdmf_NumberOfElements),
+                                 "NodesPerElement": "{0:d}".format(Xdmf_NodesPerElement),
+                                })
 
         elements = ET.SubElement(topology,
                                  "DataItem",
@@ -2639,8 +2686,7 @@ cdef class ProtChMoorings:
                               {"Format": dataItemFormat,
                                "DataType": "Float",
                                "Precision": "8",
-                               "Dimensions": "{0:d} {0:d}".format(pos.shape[0],
-                                                        pos.shape[1])})
+                               "Dimensions": "{0:d} {1:d}".format(pos.shape[0], pos.shape[1])})
         nodes.text = "{0}.h5:/nodesSpatial_Domain{1:d}".format(str(self.hdfFileName,'utf-8'),tCount)
         all_names = self._record_names+self._record_etas_names
         for name in all_names:
@@ -2655,7 +2701,7 @@ cdef class ProtChMoorings:
                                   "DataType": "Float",
                                   "Precision": "8",
                                   "Dimensions": "{0:d}".format(pos.shape[0])})
-            data.text = "{0}.h5:/{1}{2:d}".format(str(self.hdfFileName,'utf-8'), name, tCount)
+            data.text = "{0}.h5:/{1}_t{2:d}".format(str(self.hdfFileName,'utf-8'), name, tCount)
 
         tree = ET.ElementTree(root)
 

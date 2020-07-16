@@ -1,2 +1,0 @@
--ksp_type bcgsl -pc_type asm -pc_asm_type restrict  -pc_asm_overlap 2 -ksp_atol  1.0e-10 -ksp_rtol 0.0
--log_summary

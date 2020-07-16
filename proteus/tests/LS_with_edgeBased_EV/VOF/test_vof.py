@@ -28,6 +28,7 @@ class TestVOF(object):
 
     def setup_method(self,method):
         """Initialize the test problem. """
+        reload(default_n)
         reload(thelper_vof)
         self.pList = [thelper_vof_p]
         self.nList = [thelper_vof_n]
@@ -47,6 +48,7 @@ class TestVOF(object):
         ########
         thelper_vof.ct.STABILIZATION_TYPE = 0 # SUPG
         thelper_vof.ct.FCT = False
+        reload(default_n)
         reload(thelper_vof_p)
         reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_SUPG"
@@ -73,6 +75,7 @@ class TestVOF(object):
         ##################
         thelper_vof.ct.STABILIZATION_TYPE = 1 # Taylor Galerkin
         thelper_vof.ct.FCT = False
+        reload(default_n)
         reload(thelper_vof_p)
         reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_TaylorGalerkin"
@@ -103,6 +106,7 @@ class TestVOF(object):
         thelper_vof.ct.ENTROPY_TYPE = 1 #polynomial
         thelper_vof.ct.cE = 1.0
         thelper_vof.ct.FCT = True
+        reload(default_n)
         reload(thelper_vof_p)
         reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_EV1"
@@ -128,6 +132,7 @@ class TestVOF(object):
         thelper_vof.ct.ENTROPY_TYPE = 1 #logarithmic
         thelper_vof.ct.cE = 0.1
         thelper_vof.ct.FCT = True
+        reload(default_n)
         reload(thelper_vof_p)
         reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_EV2"
@@ -151,6 +156,7 @@ class TestVOF(object):
     def test_SmoothnessBased(self):
         thelper_vof.ct.STABILIZATION_TYPE = 3 # Smoothness based
         thelper_vof.ct.FCT = True
+        reload(default_n)
         reload(thelper_vof_p)
         reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_SmoothnessBased"
@@ -176,6 +182,7 @@ class TestVOF(object):
     def test_stab4(self):
         thelper_vof.ct.STABILIZATION_TYPE = 4 # Proposed by D.Kuzmin
         thelper_vof.ct.FCT = True
+        reload(default_n)
         reload(thelper_vof_p)
         reload(thelper_vof_n)
         self.so.name = self.pList[0].name+"_stab4"

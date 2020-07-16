@@ -1,8 +1,12 @@
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
-from .ls_consrv_rotation_2d_p import *
-from .rotation2D import *
+try:
+    from .ls_consrv_rotation_2d_p import *
+    from .rotation2D import *
+except:
+    from ls_consrv_rotation_2d_p import *
+    from rotation2D import *
 
 
 timeIntegrator = ForwardIntegrator

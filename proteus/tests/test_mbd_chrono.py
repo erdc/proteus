@@ -45,6 +45,42 @@ class TestCable(unittest.TestCase):
         T_sol = -np.ones(3)*g*rho*(np.pi*d**2/4.*L)
         npt.assert_almost_equal(-T, T_sol)
 
+    def testSetterGetter(self):
+        g = np.array([0.,0.,-9.81])
+        system = fsi.ProtChSystem()
+        system.setGravitationalAcceleration(g)
+        g0 = system.getGravitationalAcceleration()
+        npt.assert_almost_equal(g0, g)
+
+        mesh = fsi.ProtChMesh(system)
+        mesh.getChronoObject()
+
+        body = fsi.ProtChBody(system)
+        # position
+        pos = np.array([1.,2.,3.])
+        body.setPosition(pos)
+        pos0 = body.getPosition()
+        npt.assert_almost_equal(pos0, pos)
+        # inertia
+        inertia = np.array([[1., 4., 5.],
+                            [4., 2., 6.],
+                            [5., 6., 3.]])
+        inertiaXX = np.array([inertia[0, 0], inertia[1, 1], inertia[2, 2]])
+        inertiaXY = np.array([inertia[0, 1], inertia[0, 2], inertia[1, 2]])
+        body.setInertiaXX(inertiaXX)
+        # inertiaXX0 = body.getInertiaXX()
+        body.setInertiaXY(inertiaXY)
+        # inertiaXY0 = body.getInertiaXY()
+        inertia0 = body.getInertia()
+        # npt.assert_almost_equal(inertiaXX0, inertiaXX)
+        # npt.assert_almost_equal(inertiaXY0, inertiaXY)
+        npt.assert_almost_equal(inertia0, inertia)
+        # mass
+        mass = 10.2
+        body.setMass(mass)
+        mass0 = body.getMass()
+        npt.assert_almost_equal(mass0, mass)
+
     # CURRENTLY NOT FULLY WORKING
     # def testHangingCableEuler(self):
     #     g = np.array([0.,0.,-9.81])
@@ -71,5 +107,4 @@ class TestCable(unittest.TestCase):
     #     T = mooring.getTensionBack()
     #     T_sol = -np.ones(3)*g*rho*(np.pi*d**2/4.*L)
     #     npt.assert_almost_equal(T, T_sol)
-
 

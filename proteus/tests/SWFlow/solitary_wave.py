@@ -2,7 +2,7 @@ from __future__ import division
 from builtins import object
 from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
-from proteus.Domain import RectangularDomain
+from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
 from proteus import (Domain, Context, MeshTools as mt)
 from proteus.Profiling import logEvent
@@ -18,50 +18,53 @@ This is a simple benchmark of a solitary wave propagating over a flat bottom.
 # *************************** #
 
 opts = Context.Options([
-    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs, Disperisve SWEs}}"),
     ("final_time", 4.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
-    ("refinement", 4, "Refinement level")
+    ("refinement", 4, "Refinement level"),
+    ("reflecting_BCs", False, "Use reflecting BCs"),
+    ("structured", True, "Structured or unstructured mesh"),
+    ("he", 0.1, "Mesh size for unstructured mesh")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (10.0, 1.0)
-domain = RectangularDomain(L=L, x=[0, 0, 0])
+L = (25.0, 2.0)
+refinement = opts.refinement
+rectangle = RectangularDomain(L=L, x=[0, 0, 0])
 
 # CREATE REFINEMENT #
-refinement = opts.refinement
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 10) + 1
 he = old_div(L[0], float(nnx - 1))
 triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
+if opts.structured:
+    domain = rectangle
+else:
+    rectangle.writePoly("solitary")
+    domain = PlanarStraightLineGraphDomain(fileprefix="solitary")
+    domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
+    nnx = None
+    nny = None
 
-###################################
-# SOLITARY WAVE FUCTIONS AND BATH #
-###################################
+##################################
+# SOLITARY WAVE FUCTION AND BATH #
+##################################
 g = 9.81
-h1 = 0.10
-h2 = 0.11
 
-# initial location of solitary wave
-x0 = 2.0
-
-# solitary wave celerity and width
-c = np.sqrt(g * h2)
-r = np.sqrt(old_div(3.0 * (h2 - h1), 4 * h2 * h1**2))
+# constants for solitary wave
+h0 = 0.5
+alpha = 0.2 * h0
+xs = 5.0
+r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
+c = np.sqrt(g * (h0 + alpha))
 
 def solitary_wave(x, t):
-    phase = x - c * t - x0
-    return h1 + (h2 - h1) * old_div(1.0, np.cosh(r * phase)**2)
-
-
-def u(x, t):
-    h = solitary_wave(x,t)
-    return c * (1.0 - old_div(h1, h))
-
+    sechSqd = (1.0 / np.cosh(r * (x - xs - c * t)))**2
+    return alpha * sechSqd
 
 def bathymetry_function(X):
     x = X[0]
@@ -76,42 +79,44 @@ def bathymetry_function(X):
 
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        return solitary_wave(X[0], 0.0)
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
+        return h
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        h = solitary_wave(X[0], 0.0)
-        return h * u(X[0], 0.0)
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
+        return h * c * old_div(hTilde - h0, hTilde)
 
 
 class y_mom_at_t0(object):
     def uOfXT(self, X, t):
-        return 0.0
-
+        return 0.
 
 """
 heta and hw are needed for the modified green naghdi equations.
+For initial conditions, heta -> h^2 and hw -> h^2div(u).
 Note that the BCs for the heta and hw should be same as h.
 For more details see: 'Robust explicit relaxation techinque for solving
 the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
 JCP 2019
 """
 
-
 class heta_at_t0(object):
     def uOfXT(self, X, t):
-        h = water_height_at_t0().uOfXT(X, 0.0)
+        h = water_height_at_t0().uOfXT(X, t)
         return h**2
 
 
 class hw_at_t0(object):
     def uOfXT(self, X, t):
-        x = X[0]
-        phase = x - c * t - x0
-        sechSqd = old_div(1.0, np.cosh(r * phase)**2)
-        hprime = -2.0 * (h2 - h1) * r * sechSqd * np.tanh(r * phase)
-        hw = -c * h1 * hprime
+        sechSqd = (1.0 / np.cosh(r * (X[0] - xs)))**2.0
+        hTilde = h0 + solitary_wave(X[0], 0)
+        h = max(hTilde - bathymetry_function(X), 0.)
+        hTildePrime = -2.0 * alpha * r * np.tanh(r * (X[0] - xs)) * sechSqd
+        hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
         return hw
 
 ###################################
@@ -124,7 +129,7 @@ class Zero(object):
 
 class water_height_at_tfinal(object):
     def uOfXT(self, X, t):
-        return solitary_wave(X[0], opts.final_time)
+        return h0 + solitary_wave(X[0], opts.final_time)
 
 ###############################
 #     BOUNDARY CONDITIONS     #
@@ -136,7 +141,7 @@ def x_mom_DBC(X, flag):
     if X[0] == X_coords[0] or X[0] == X_coords[1]:
         return lambda x, t: 0.0
 def y_mom_DBC(X, flag):
-    if X[1] == Y_coords[0] or X[1] == X_coords[1]:
+    if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
         return lambda x, t: 0.0
 
 # ********************************** #
@@ -153,7 +158,7 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'h_times_w': hw_at_t0()}
 boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
-                      'y_mom': lambda x, flag: lambda x, t: 0.0,
+                      'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
                       'h_times_w': lambda x, flag: None}
 analytical_Solution = {'h_exact': water_height_at_tfinal(),
@@ -165,7 +170,7 @@ analytical_Solution = {'h_exact': water_height_at_tfinal(),
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
-                                              structured=True,
+                                              structured=opts.structured,
                                               he=he,
                                               nnx=nnx,
                                               nny=nny,
@@ -176,3 +181,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=analytical_Solution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
+# mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1

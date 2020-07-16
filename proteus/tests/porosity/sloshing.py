@@ -188,7 +188,7 @@ twoLayer=opts.twoLayer
 domain.porosityTypes =np.array([1.0,1.0,1.0],'d')
 domain.dragAlphaTypes=np.array([0.0,0.0,0.0],'d')
 domain.dragBetaTypes =np.array([0.0,0.0,0.0],'d')
-domain.epsFact_solid =np.array([0.0,0.0,0.0],'d')
+domain.epsFact_porous =np.array([0.0,0.0,0.0],'d')
 if twoLayer:
     domain.porosityTypes[2] = 0.3
     domain.dragAlphaTypes[2] = 1.0e8
@@ -558,3 +558,4 @@ def my_func(x, t):
 
 m.mcorr.p.coefficients.checkMass=True
 m.mcorr.n.nl_atol_res=1e-10
+m.mcorr.n.tolFac=0.0

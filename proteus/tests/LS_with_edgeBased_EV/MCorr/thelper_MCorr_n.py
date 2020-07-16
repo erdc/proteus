@@ -55,6 +55,6 @@ else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
     
-conservativeFlux = {}
+conservativeFlux = None
 if checkMass:
     auxiliaryVariables = [AuxiliaryVariables.ConservationHistoryMC("vortex2d"+repr(lRefinement)+"p"+repr(pDegree_ls))]

@@ -16,8 +16,20 @@ from builtins import object
 from proteus.iproteus import *
 import os
 import numpy as np
+import pytest
+from petsc4py import PETSc
 from . import poisson_het_2d_p
 from . import poisson_het_2d_c0pk_n
+from . import poisson_het_2d_dgpk_n
+
+femSpaces=['c0p1','c0p2','dgp1','dgp2']
+bcTypes=['weak','strong']
+solverTypes=['direct','iterative']
+cases =[]
+for f in femSpaces:
+    for b in bcTypes:
+        for s in solverTypes:
+            cases.append((f,b,s))
 
 class TestPoisson2D(object):
 
@@ -48,74 +60,63 @@ class TestPoisson2D(object):
             else:
                 pass
             
-    def test_c0p1(self,use_strong_constraints=False):
-        reload(poisson_het_2d_c0pk_n)
+    @pytest.mark.parametrize("femSpace,bcType,solverType", cases)
+    def test_poisson(self,femSpace,bcType,solverType):
+        reload(poisson_het_2d_p)
         pList = [poisson_het_2d_p]
-        nList = [poisson_het_2d_c0pk_n]
+        if femSpace in ['c0p1','c0p2']:
+            reload(poisson_het_2d_c0pk_n)
+            nList = [poisson_het_2d_c0pk_n]
+            if femSpace is 'c0p1':
+                nList[0].femSpaces[0]  = default_n.C0_AffineLinearOnSimplexWithNodalBasis
+            else:
+                nList[0].femSpaces[0]  = default_n.C0_AffineQuadraticOnSimplexWithNodalBasis
+            if bcType is 'strong':
+                nList[0].numericalFluxType = nList[0].Exterior_StrongFlux
+        if femSpace in ['dgp1','dgp2']:
+            reload(poisson_het_2d_dgpk_n)
+            nList = [poisson_het_2d_dgpk_n]
+            if femSpace is 'dgp1':
+                nList[0].femSpaces[0]  = default_n.DG_AffineLinearOnSimplexWithNodalBasis
+            else:
+                nList[0].femSpaces[0]  = default_n.DG_AffineQuadraticOnSimplexWithNodalBasis
+            if bcType is 'strong':
+                nList[0].numericalFluxType.useStrongDirichletConstraints=True
+        nList[0].nnx=nList[0].nny=nList[0].nn=51
         reload(default_so)
         so = default_so
-        so.name = pList[0].name = "poisson_2d_c0p1"+"pe"+repr(comm.size())
+        so.name = pList[0].name = "poisson_2d_{0}_{1}_{2}_pe{3}".format(femSpace, bcType,solverType,repr(comm.size()))
         reload(default_s)
         so.sList=[default_s]
         opts.logLevel=7
         opts.verbose=True
         opts.profile=True
         opts.gatherArchive=True
-        nList[0].femSpaces[0]  = default_n.C0_AffineLinearOnSimplexWithNodalBasis
         nList[0].linearSolver=default_n.KSP_petsc4py
         nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-        nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-        soln_name = 'poisson_2d_c0p1'
-        if use_strong_constraints == True:
-            nList[0].numericalFluxType = nList[0].Exterior_StrongFlux
-            soln_name = 'poisson_2d_c0p1_strong_dirichlet'
-        ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
-        ns.calculateSolution(soln_name)
-        self.aux_names.append(pList[0].name)
-        del ns
-
-    def test_c0p1_strong(self):
-        return self.test_c0p1(use_strong_constraints=True)
-
-    def test_c0p2(self,
-                  use_strong_constraints=False,
-                  test_superlu=False):
-        reload(poisson_het_2d_c0pk_n)
-        pList = [poisson_het_2d_p]
-        nList = [poisson_het_2d_c0pk_n]
-        reload(default_so)
-        so = default_so
-        so.name = pList[0].name = "poisson_2d_c0p2"+"pe"+repr(comm.size())
-        reload(default_s)
-        so.sList=[default_s]
-        opts.logLevel=7
-        opts.verbose=True
-        opts.profile=True
-        opts.gatherArchive=True
-        nList[0].femSpaces[0]  = default_n.C0_AffineQuadraticOnSimplexWithNodalBasis
-        nList[0].linearSolver=default_n.KSP_petsc4py
-        nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-        #set ksp options
-        from petsc4py import PETSc
-        OptDB = PETSc.Options()
-        if test_superlu == True:
+        OptDB = nList[0].OptDB
+        soln_name = so.name
+        if solverType is 'direct':
+            OptDB.clear()
             OptDB.setValue('ksp_type','preonly')
             OptDB.setValue('pc_type','lu')
             OptDB.setValue('pc_factor_mat_solver_package','superlu_dist')
-        nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-        soln_name = 'poisson_2d_c0p2'
-        if use_strong_constraints == True:
-            nList[0].numericalFluxType = nList[0].Exterior_StrongFlux
-            soln_name = 'poisson_2d_c0p2_strong_dirichlet'
-        #nList[0].linearSolver=default_n.LU
-        #nList[0].multilevelLinearSolver=default_n.LU
+        else:
+            OptDB.clear()
+            OptDB.setValue('ksp_type','cg')
+            OptDB.setValue('pc_asm_type','basic')
+            OptDB.setValue('pc_asm_overlap',2)
+            OptDB.setValue('sub_ksp_type','preonly')
+            OptDB.setValue('sub_pc_type','lu')
+            OptDB.setValue('sub_pc_factor_type','superlu')
         ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         ns.calculateSolution(soln_name)
+        np.testing.assert_almost_equal(ns.modelList[0].levelModelList[-1].u[0].dof,
+                                       ns.modelList[0].levelModelList[-1].u_analytical[0][0],
+                                       decimal=4)
         self.aux_names.append(pList[0].name)
         del ns
 
-    def test_c0p2_strong(self):
-        return self.test_c0p2(use_strong_constraints=True)
     def test_2dm(self,use_strong_constraints=False,nLevels=3):
         reload(poisson_het_2d_p)
         reload(poisson_het_2d_c0pk_n)
@@ -150,7 +151,8 @@ class TestPoisson2D(object):
         self.aux_names.append(pList[0].name)
         del ns
 
-def compute_load_vector(use_weak_dirichlet=False):
+@pytest.mark.parametrize("use_weak_dirichlet", [False,True])
+def test_load_vector_use_weak(use_weak_dirichlet):
     from . import poisson_het_2d_p
     reload(poisson_het_2d_p)
     from . import poisson_het_2d_c0pk_n
@@ -172,7 +174,16 @@ def compute_load_vector(use_weak_dirichlet=False):
         nList[0].linearSolver=default_n.KSP_petsc4py
         nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
         nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-
+    OptDB = nList[0].OptDB
+    soln_name = so.name
+    OptDB.clear()
+    OptDB.setValue('ksp_type','bcgsl')
+    OptDB.setValue('pc_type','asm')
+    OptDB.setValue('pc_asm_type','basic')
+    OptDB.setValue('pc_asm_overlap',2)
+    OptDB.setValue('sub_ksp_type','preonly')
+    OptDB.setValue('sub_pc_type','lu')
+    OptDB.setValue('sub_pc_factor_type','superlu')
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_2d_c0p1')
     #test load vector calculation in a crude way
@@ -188,14 +199,7 @@ def compute_load_vector(use_weak_dirichlet=False):
     finest_model.getResidual(utmp,r)
     finest_model.getLoadVector(f)
     del ns
-    return r,f
+    np.testing.assert_almost_equal(r,f)
 
-def notest_load_vector():
-    for name,use_num_flux in zip(['Strong_Dir','Weak_Dir'],[False,True]):
-        r,f = compute_load_vector(use_num_flux)
-        test = npt.assert_almost_equal
-        test.descrption = 'test_load_vector_{}'.format(name)
-        yield test,r,f
-        
 if __name__ == '__main__':
     pass

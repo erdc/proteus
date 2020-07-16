@@ -4,6 +4,7 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include "ArgumentsDict.h"
 
 #include "xtensor-python/pyarray.hpp"
 
@@ -15,7 +16,8 @@ namespace proteus
   {
   public:
     virtual ~cppAddedMass_base(){}
-    virtual void calculateResidual(//element
+    virtual void calculateResidual(arguments_dict& args) = 0;
+    /*virtual void calculateResidual(//element
                                    xt::pyarray<double>& mesh_trial_ref,
                                    xt::pyarray<double>& mesh_grad_trial_ref,
                                    xt::pyarray<double>& mesh_dof,
@@ -52,7 +54,7 @@ namespace proteus
                                    xt::pyarray<double>& Aij,
                                    int added_mass_i,
                                    xt::pyarray<double>& barycenters,
-                                   xt::pyarray<int>& flags_rigidbody)=0;
+                                   xt::pyarray<int>& flags_rigidbody)=0;*/
     virtual void calculateJacobian(//element
                                    xt::pyarray<double>& mesh_trial_ref,
                                    xt::pyarray<double>& mesh_grad_trial_ref,
@@ -225,7 +227,7 @@ namespace proteus
         }
     }
 
-    void calculateResidual(//element
+    /*void calculateResidual(//element
                            xt::pyarray<double>& mesh_trial_ref,
                            xt::pyarray<double>& mesh_grad_trial_ref,
                            xt::pyarray<double>& mesh_dof,
@@ -262,8 +264,46 @@ namespace proteus
                            xt::pyarray<double>& Aij,
                            int added_mass_i,
                            xt::pyarray<double>& barycenters,
-                           xt::pyarray<int>& flags_rigidbody)
+                           xt::pyarray<int>& flags_rigidbody)*/
+    void calculateResidual(arguments_dict& args)
     {
+        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
+        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
+        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
+        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
+        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
+        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
+        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
+        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
+        //element boundary
+        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
+        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
+        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
+        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
+        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
+        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
+        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
+        //physics
+        int nElements_global = args.m_iscalar["nElements_global"];
+        int nElementBoundaries_owned = args.m_iscalar["nElementBoundaries_owned"];
+        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
+        xt::pyarray<double>& u_dof = args.m_darray["u_dof"]; 
+        xt::pyarray<double>& q_rho = args.m_darray["q_rho"];
+        int offset_u = args.m_iscalar["offset_u"];
+        int stride_u = args.m_iscalar["stride_u"];
+        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
+        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<int>& elementBoundaryMaterialTypesArray = args.m_iarray["elementBoundaryMaterialTypesArray"];
+        xt::pyarray<double>& Aij = args.m_darray["Aij"];
+        int added_mass_i = args.m_iscalar["added_mass_i"];
+        xt::pyarray<double>& barycenters = args.m_darray["barycenters"];
+        xt::pyarray<int>& flags_rigidbody = args.m_iarray["flags_rigidbody"];
       for(int eN=0;eN<nElements_global;eN++)
         {
           for  (int k=0;k<nQuadraturePoints_element;k++)

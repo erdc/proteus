@@ -202,7 +202,7 @@ class ShapeRANS(Shape):
         auxvar = kWall
         self._attachAuxiliaryVariable('kWallFunction', auxvar)
 
-    def setAbsorptionZones(self, flags, epsFact_solid, center, orientation,
+    def setAbsorptionZones(self, flags, epsFact_porous, center, orientation,
                            dragAlpha, vert_axis=None,dragBeta=0.,
                            porosity=1.):
         """
@@ -214,7 +214,7 @@ class ShapeRANS(Shape):
             Relaxation zone coefficient.
         flags: array_like, int
             Local flags of the region. Can be an integer or a list.
-        epsFact_solid: float
+        epsFact_porous: float
             Half of absorption zone (region) length (used for blending func).
         center: array_like
             Coordinates of the center of the absorption zone.
@@ -233,7 +233,7 @@ class ShapeRANS(Shape):
         wind_speed = np.array([0., 0., 0.])
         if isinstance(flags, int):
             flags = [flags]
-            epsFact_solid = [epsFact_solid]
+            epsFact_porous = [epsFact_porous]
             center = np.array([center])
             orientation = np.array([orientation])
             dragAlpha = [dragAlpha]
@@ -249,13 +249,13 @@ class ShapeRANS(Shape):
                                                  center=center[i],
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid[i],
+                                                 epsFact_porous=epsFact_porous[i],
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i],
                                                  vert_axis=vert_axis)
 
-    def setGenerationZones(self, flags, epsFact_solid, center, orientation,
+    def setGenerationZones(self, flags, epsFact_porous, center, orientation,
                            waves, dragAlpha,vert_axis=None,
                            wind_speed=(0., 0., 0.), dragBeta=0.,
                            porosity=1., smoothing=0.):
@@ -266,7 +266,7 @@ class ShapeRANS(Shape):
         ----------
         flags: array_like, int
             Local flags of the region. Can be an integer or a list.
-        epsFact_solid: float
+        epsFact_porous: float
             Half of absorption zone (region) length (used for blending func).
         center: array_like
             Coordinates of the center of the absorption zone.
@@ -289,7 +289,7 @@ class ShapeRANS(Shape):
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
             flags = [flags]
-            epsFact_solid = [epsFact_solid]
+            epsFact_porous = [epsFact_porous]
             center = np.array([center])
             orientation = np.array([orientation])
             waves = [waves]
@@ -308,7 +308,7 @@ class ShapeRANS(Shape):
                                                  center=center[i],
                                                  waves=waves[i],
                                                  wind_speed=wind_speed[i],
-                                                 epsFact_solid=epsFact_solid[i],
+                                                 epsFact_porous=epsFact_porous[i],
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i],
@@ -339,14 +339,14 @@ class ShapeRANS(Shape):
             porosity = [porosity]
         for i, flag in enumerate(flags):
             # note for porous zone:
-            # epsFact_solid = q_phi_solid, --> Hs always equal to 1.
+            # epsFact_porous = q_phi_sponge, --> Hs always equal to 1.
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='porous',
                                                  orientation=None,
                                                  center=None,
                                                  waves=None,
                                                  wind_speed=None,
-                                                 epsFact_solid=1.,
+                                                 epsFact_porous=1.,
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i])
@@ -829,7 +829,7 @@ class Tank3D(ShapeRANS):
                 self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
-                epsFact_solid = old_div(self.spongeLayers[key], 2.)
+                epsFact_porous = old_div(self.spongeLayers[key], 2.)
                 center = np.array(self.coords)
                 zeros_to_append = 3 - len(center)
                 if zeros_to_append:
@@ -853,7 +853,7 @@ class Tank3D(ShapeRANS):
                                                      center=center,
                                                      waves=waves,
                                                      wind_speed=wind_speed,
-                                                     epsFact_solid=epsFact_solid,
+                                                     epsFact_porous=epsFact_porous,
                                                      dragAlpha=dragAlpha,
                                                      dragBeta=dragBeta,
                                                      porosity=porosity)
@@ -902,7 +902,7 @@ class Tank3D(ShapeRANS):
                 self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
-                epsFact_solid = old_div(self.spongeLayers[key], 2.)
+                epsFact_porous = old_div(self.spongeLayers[key], 2.)
                 center = np.array(self.coords)
                 zeros_to_append = 3 - len(center)
                 if zeros_to_append:
@@ -938,7 +938,7 @@ class Tank3D(ShapeRANS):
                                                      center=center,
                                                      waves=waves,
                                                      wind_speed=wind_speed,
-                                                     epsFact_solid=epsFact_solid,
+                                                     epsFact_porous=epsFact_porous,
                                                      dragAlpha=dragAlpha,
                                                      dragBeta=dragBeta,
                                                      porosity=porosity,
@@ -1181,7 +1181,7 @@ class Tank2D(ShapeRANS):
                                0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
+            epsFact_porous = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1189,7 +1189,7 @@ class Tank2D(ShapeRANS):
                                                  center=center,
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid,
+                                                 epsFact_porous=epsFact_porous,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
@@ -1199,7 +1199,7 @@ class Tank2D(ShapeRANS):
                                0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
+            epsFact_porous = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1207,7 +1207,7 @@ class Tank2D(ShapeRANS):
                                                  center=center,
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid,
+                                                 epsFact_porous=epsFact_porous,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
@@ -1250,7 +1250,7 @@ class Tank2D(ShapeRANS):
                                0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
+            epsFact_porous = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -1258,7 +1258,7 @@ class Tank2D(ShapeRANS):
                                                  center=center,
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid,
+                                                 epsFact_porous=epsFact_porous,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity,
@@ -1272,7 +1272,7 @@ class Tank2D(ShapeRANS):
                                0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
+            epsFact_porous = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -1280,7 +1280,7 @@ class Tank2D(ShapeRANS):
                                                  center=center,
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid,
+                                                 epsFact_porous=epsFact_porous,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity,
@@ -1923,7 +1923,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
+            epsFact_porous = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1931,7 +1931,7 @@ class TankWithObstacles2D(Tank2D):
                                                  center=center,
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid,
+                                                 epsFact_porous=epsFact_porous,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
@@ -1940,7 +1940,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
+            epsFact_porous = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
@@ -1948,7 +1948,7 @@ class TankWithObstacles2D(Tank2D):
                                                  center=center,
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid,
+                                                 epsFact_porous=epsFact_porous,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
@@ -1995,7 +1995,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            epsFact_solid = old_div(self.spongeLayers['x-'], 2.)
+            epsFact_porous = old_div(self.spongeLayers['x-'], 2.)
             orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -2003,7 +2003,7 @@ class TankWithObstacles2D(Tank2D):
                                                  center=center,
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid,
+                                                 epsFact_porous=epsFact_porous,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity,
@@ -2017,7 +2017,7 @@ class TankWithObstacles2D(Tank2D):
                                sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            epsFact_solid = old_div(self.spongeLayers['x+'], 2.)
+            epsFact_porous = old_div(self.spongeLayers['x+'], 2.)
             orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
@@ -2025,7 +2025,7 @@ class TankWithObstacles2D(Tank2D):
                                                  center=center,
                                                  waves=waves,
                                                  wind_speed=wind_speed,
-                                                 epsFact_solid=epsFact_solid,
+                                                 epsFact_porous=epsFact_porous,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity,
@@ -2131,7 +2131,7 @@ def assembleAuxiliaryVariables(domain):
                 domain.porosityTypes = np.ones(len(domain.regionFlags) + 1)
                 domain.dragAlphaTypes = np.zeros(len(domain.regionFlags) + 1)
                 domain.dragBetaTypes = np.zeros(len(domain.regionFlags) + 1)
-                domain.epsFact_solid = np.zeros(len(domain.regionFlags) + 1)
+                domain.epsFact_porous = np.zeros(len(domain.regionFlags) + 1)
             i0 = start_region + 1
             for flag, zone in list(shape.zones.items()):
                 ind = [i for i, f in enumerate(shape.regionFlags) if f == flag]
@@ -2139,7 +2139,7 @@ def assembleAuxiliaryVariables(domain):
                     domain.porosityTypes[i0 + i1] = zone.porosity
                     domain.dragAlphaTypes[i0 + i1] = zone.dragAlpha
                     domain.dragBetaTypes[i0 + i1] = zone.dragBeta
-                    domain.epsFact_solid[i0 + i1] = zone.epsFact_solid
+                    domain.epsFact_porous[i0 + i1] = zone.epsFact_porous
                 # update dict with global key instead of local key
                 key = flag + start_rflag
                 zones_global[key] = zone
