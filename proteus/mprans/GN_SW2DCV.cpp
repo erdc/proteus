@@ -25,6 +25,7 @@ PYBIND11_MODULE(cGN_SW2DCV, m) {
       .def("convexLimiting", &GN_SW2DCV_base::convexLimiting)
       .def("calculateEdgeBasedCFL", &GN_SW2DCV_base::calculateEdgeBasedCFL,
            return_value_policy::take_ownership)
+      .def("calculateEV", &GN_SW2DCV_base::calculateEV)
       .def("calculateResidual", &GN_SW2DCV_base::calculateResidual)
       .def("calculateMassMatrix", &GN_SW2DCV_base::calculateMassMatrix)
       .def("calculateLumpedMassMatrix",

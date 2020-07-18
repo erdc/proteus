@@ -19,6 +19,7 @@ namespace py = pybind11;
 #define IF_BOTH_GAMMA_BRANCHES 0
 #define LIMITING_ITERATION 2
 
+/* inline functions */
 namespace proteus {
 
 // for mGN stuff "max" wave speeds. See section 4.4 of first mGN paper by
@@ -153,7 +154,7 @@ inline double hStarRFromQuadPhiFromBelow(const double &g, const double &hStarL,
                     4 * phi(g, hStarR, hL, hR, uL, uR) *
                         phiDDiff2(g, hStarL, hStarR, hL, hR, uL, uR))));
 }
-} // namespace proteus
+} // end namespace proteus
 
 namespace proteus {
 class GN_SW2DCV_base {
@@ -163,6 +164,7 @@ public:
   virtual ~GN_SW2DCV_base() {}
   virtual void convexLimiting(arguments_dict &args) = 0;
   virtual double calculateEdgeBasedCFL(arguments_dict &args) = 0;
+  virtual void calculateEV(arguments_dict &args) = 0;
   virtual void calculateResidual(arguments_dict &args) = 0;
   virtual void calculateMassMatrix(arguments_dict &args) = 0;
   virtual void calculateLumpedMassMatrix(arguments_dict &args) = 0;
@@ -232,6 +234,7 @@ public:
       cfly = fabs(v - c) / elementDiameter;
     cfl = sqrt(cflx * cflx + cfly * cfly); // hack, conservative estimate
   }
+
   void convexLimiting(arguments_dict &args) {
     double dt = args.m_dscalar["dt"];
     int NNZ = args.m_iscalar["NNZ"];
@@ -662,23 +665,18 @@ public:
           double hwStarji = hwnj * std::pow(hStarji * one_over_hjReg, 2);
 
           // compute limiter based on water height
-          double Lij = 1.0;
           if (FCT_h[ij] >= 0) {
-            Lij = fmin(Lij, std::min(Rneg[j], Rpos[i]));
             Lij_array[ij] = fmin(Lij_array[ij], std::min(Rneg[j], Rpos[i]));
           } else {
-            Lij = fmin(Lij, std::min(Rneg[i], Rpos[j]));
             Lij_array[ij] = fmin(Lij_array[ij], std::min(Rneg[i], Rpos[j]));
           }
 
           // COMPUTE LIMITER based on heta -EJT
           // Note that we set lij = min(lij_h,lij_heta)
           if (FCT_heta[ij] >= 0) {
-            Lij = fmin(Lij, std::min(Rneg_heta[j], Rpos_heta[i]));
             Lij_array[ij] =
                 fmin(Lij_array[ij], std::min(Rneg_heta[j], Rpos_heta[i]));
           } else {
-            Lij = fmin(Lij, std::min(Rneg_heta[i], Rpos_heta[j]));
             Lij_array[ij] =
                 fmin(Lij_array[ij], std::min(Rneg_heta[i], Rpos_heta[j]));
           }
@@ -727,7 +725,6 @@ public:
           double rj = fabs(fmax(r1, r2));
 
           // COMPUTE LIMITER //
-          Lij = fmin(fmin(ri, Lij), fmin(rj, Lij)); // Lij=Lji
           Lij_array[ij] =
               fmin(fmin(ri, Lij_array[ij]), fmin(rj, Lij_array[ij]));
 
@@ -882,6 +879,204 @@ public:
     }
     return max_edge_based_cfl;
   } // End calculateEdgeBasedCFL
+
+  void calculateEV(arguments_dict &args) {
+    double g = args.m_dscalar["g"];
+    xt::pyarray<double> &h_dof_old = args.m_darray["h_dof_old"];
+    xt::pyarray<double> &hu_dof_old = args.m_darray["hu_dof_old"];
+    xt::pyarray<double> &hv_dof_old = args.m_darray["hv_dof_old"];
+    xt::pyarray<double> &heta_dof_old = args.m_darray["heta_dof_old"];
+    xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
+    xt::pyarray<double> &Cx = args.m_darray["Cx"];
+    xt::pyarray<double> &Cy = args.m_darray["Cy"];
+    xt::pyarray<double> &CTx = args.m_darray["CTx"];
+    xt::pyarray<double> &CTy = args.m_darray["CTy"];
+    int numDOFsPerEqn = args.m_iscalar["numDOFsPerEqn"];
+    xt::pyarray<int> &csrRowIndeces_DofLoops =
+        args.m_iarray["csrRowIndeces_DofLoops"];
+    xt::pyarray<int> &csrColumnOffsets_DofLoops =
+        args.m_iarray["csrColumnOffsets_DofLoops"];
+    xt::pyarray<double> &lumped_mass_matrix =
+        args.m_darray["lumped_mass_matrix"];
+    double eps = args.m_dscalar["eps"];
+    double hEps = args.m_dscalar["hEps"];
+    xt::pyarray<double> &global_entropy_residual =
+        args.m_darray["global_entropy_residual"];
+    double &dij_small = args.m_dscalar["dij_small"];
+
+    //////////////////////////////////////////////
+    // ********** FIRST LOOP ON DOFs ********** //
+    //////////////////////////////////////////////
+
+    // To compute:
+    //     * Entropy at i-th node
+    std::valarray<double> eta(numDOFsPerEqn);
+    for (int i = 0; i < numDOFsPerEqn; i++) {
+      // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
+      double hi = h_dof_old[i];
+      double one_over_hiReg =
+          2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      eta[i] = ENTROPY(g, hi, hu_dof_old[i], hv_dof_old[i], 0., one_over_hiReg);
+    }
+
+    // ********** END OF FIRST LOOP ON DOFs ********** //
+
+    ///////////////////////////////////////////////
+    // ********** SECOND LOOP ON DOFs ********** //
+    ///////////////////////////////////////////////
+    // To compute:
+    //     * global entropy residual
+    //     * dij_small to avoid division by 0
+
+    int ij = 0;
+    std::valarray<double> hyp_flux_h(numDOFsPerEqn), hyp_flux_hu(numDOFsPerEqn),
+        hyp_flux_hv(numDOFsPerEqn), hyp_flux_heta(numDOFsPerEqn),
+        hyp_flux_hw(numDOFsPerEqn), psi(numDOFsPerEqn), etaMax(numDOFsPerEqn),
+        etaMin(numDOFsPerEqn);
+
+    // speed = sqrt(g max(h_0)), I divide by h_epsilon to get max(h_0) -EJT
+    double speed = std::sqrt(g * hEps / eps);
+
+    for (int i = 0; i < numDOFsPerEqn; i++) {
+
+      // solution at time tn for the ith DOF
+      double hi = h_dof_old[i];
+      double hui = hu_dof_old[i];
+      double hvi = hv_dof_old[i];
+      double hetai = heta_dof_old[i];
+      double Zi = b_dof[i];
+      // Define some things using above
+      double one_over_hiReg =
+          2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      double ui = hui * one_over_hiReg;
+      double vi = hvi * one_over_hiReg;
+      double etai = hetai * one_over_hiReg;
+      double mi = lumped_mass_matrix[i];
+      double meshSizei = std::sqrt(mi);
+
+      // For eta min and max
+      etaMax[i] = fabs(eta[i]);
+      etaMin[i] = fabs(eta[i]);
+
+      /* HYPERBOLIC FLUXES */
+      hyp_flux_h[i] = 0;
+      hyp_flux_hu[i] = 0;
+      hyp_flux_hv[i] = 0;
+      hyp_flux_heta[i] = 0;
+
+      // FOR ENTROPY RESIDUAL //
+      double ith_flux_term1 = 0., ith_flux_term2 = 0., ith_flux_term3 = 0.;
+      double ith_flux_term4 = 0., ith_flux_term5 = 0.;
+      double entropy_flux = 0.;
+      double sum_entprime_flux = 0.;
+      // NOTE: FLAT BOTTOM
+      double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0., one_over_hiReg);
+      double eta_prime2 = DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);
+      double eta_prime3 = DENTROPY_DHV(g, hi, hui, hvi, 0., one_over_hiReg);
+
+      // loop in j (sparsity pattern)
+      for (int offset = csrRowIndeces_DofLoops[i];
+           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+
+        int j = csrColumnOffsets_DofLoops[offset];
+
+        // solution at time tn for the jth DOF
+        double hj = h_dof_old[j];
+        double huj = hu_dof_old[j];
+        double hvj = hv_dof_old[j];
+        double hetaj = heta_dof_old[j];
+        double Zj = b_dof[j];
+
+        // Then define some things here using above
+        double one_over_hjReg =
+            2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
+        double uj = huj * one_over_hjReg;
+        double vj = hvj * one_over_hjReg;
+        double etaj = hetaj * one_over_hjReg;
+        double meshSizej =
+            std::sqrt(lumped_mass_matrix[j]); // local mesh size in 2d
+
+        // pTilde at jth node gets defined here
+        double diff_over_h_j = (hetaj - hj * hj) * one_over_hjReg;
+        double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
+                         (hetaj - hj * hj);
+
+        if (IF_BOTH_GAMMA_BRANCHES) {
+          if (hetaj > std::pow(hj, 2.0)) {
+            pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
+                      diff_over_h_j * (etaj * etaj + etaj * hj + hj * hj);
+          }
+        }
+
+        // auxiliary functions to compute fluxes
+        double aux_h =
+            (uj * hj - ui * hi) * Cx[ij] + (vj * hj - vi * hi) * Cy[ij];
+        double aux_hu =
+            (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
+        double aux_hv =
+            (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
+
+        /* HYPERBOLIC FLUX */
+        hyp_flux_h[i] += aux_h;
+        hyp_flux_hu[i] += aux_hu + pTildej * Cx[ij];
+        hyp_flux_hv[i] += aux_hv + pTildej * Cy[ij];
+
+        // flux for entropy
+        ith_flux_term1 += aux_h;
+        ith_flux_term2 +=
+            aux_hu + 0.5 * g * hj * hj *
+                         Cx[ij]; // g * hi * (hj + 0.) * Cx[ij]; // NOTE: Zj=0
+        ith_flux_term3 +=
+            aux_hv + 0.5 * g * hj * hj *
+                         Cy[ij]; // g * hi * (hj + 0.) * Cy[ij]; // NOTE: Zj=0
+
+        // NOTE: WE CONSIDER FLAT BOTTOM
+        entropy_flux +=
+            (Cx[ij] * ENTROPY_FLUX1(g, hj, huj, hvj, 0., one_over_hjReg) +
+             Cy[ij] * ENTROPY_FLUX2(g, hj, huj, hvj, 0., one_over_hjReg));
+
+        // COMPUTE ETA MIN AND ETA MAX //
+        etaMax[i] = fmax(etaMax[i], fabs(eta[j]));
+        etaMin[i] = fmin(etaMin[i], fabs(eta[j]));
+
+        // define dij_small in j loop
+        double x = fabs(Cx[ij]) + fabs(Cy[ij]);
+        dij_small = fmax(dij_small, x * speed);
+
+        // update ij
+        ij += 1;
+      } // end j loop
+
+      // Finally define it here
+      dij_small = 1E-14 * dij_small;
+
+      // Change rescaling to match TAMU code -EJT
+      // small_recale=0.5*g*eps*H_{0,max}^2
+      double small_rescale = g * hEps * hEps / eps;
+      double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
+
+      // new rescale factor = max(|ent_flux_sum| + |-ent'*flux|, 0.0)
+      sum_entprime_flux =
+          -(ith_flux_term1 * eta_prime1 + ith_flux_term2 * eta_prime2 +
+            ith_flux_term3 * eta_prime3);
+      double new_rescale =
+          fmax(fabs(entropy_flux) + fabs(sum_entprime_flux), 1E-30);
+
+      // COMPUTE ENTROPY RESIDUAL //
+      double one_over_entNormFactori = 1.0 / rescale;
+      global_entropy_residual[i] =
+          one_over_entNormFactori *
+          fabs(entropy_flux -
+               (ith_flux_term1 * eta_prime1 + ith_flux_term2 * eta_prime2 +
+                ith_flux_term3 * eta_prime3));
+
+      // COMPUTE SMOOTHNESS INDICATOR //
+      if (hi <= hEps) {
+        global_entropy_residual[i] = 1.0;
+      }
+    }
+    // ********** END OF LOOP IN DOFs ********** //
+  } // end calculateEV
 
   void calculateResidual(arguments_dict &args) {
     xt::pyarray<double> &mesh_trial_ref = args.m_darray["mesh_trial_ref"];
@@ -1038,6 +1233,7 @@ public:
     xt::pyarray<double> &lumped_mass_matrix =
         args.m_darray["lumped_mass_matrix"];
     double cfl_run = args.m_dscalar["cfl_run"];
+    double eps = args.m_dscalar["eps"];
     double hEps = args.m_dscalar["hEps"];
     xt::pyarray<double> &hReg = args.m_darray["hReg"];
     xt::pyarray<double> &hnp1_at_quad_point =
@@ -1083,6 +1279,9 @@ public:
     xt::pyarray<double> &new_SourceTerm_heta =
         args.m_darray["new_SourceTerm_heta"];
     xt::pyarray<double> &new_SourceTerm_hw = args.m_darray["new_SourceTerm_hw"];
+    xt::pyarray<double> &global_entropy_residual =
+        args.m_darray["global_entropy_residual"];
+    double &dij_small = args.m_dscalar["dij_small"];
     // FOR FRICTION//
     double n2 = std::pow(mannings, 2.);
     double gamma = 4. / 3;
@@ -1198,45 +1397,20 @@ public:
 
     if (SECOND_CALL_CALCULATE_RESIDUAL == 0) // This is to save some time
     {
-      //////////////////////////////////////////////
-      // ********** FIRST LOOP ON DOFs ********** //
-      //////////////////////////////////////////////
-
-      // To compute:
-      //     * Entropy at i-th node
-      std::valarray<double> eta(numDOFsPerEqn);
-      for (int i = 0; i < numDOFsPerEqn; i++) {
-        // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
-        double hi = h_dof_old[i];
-        double one_over_hiReg =
-            2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
-        eta[i] =
-            ENTROPY(g, hi, hu_dof_old[i], hv_dof_old[i], 0., one_over_hiReg);
-      }
-
-      // ********** END OF FIRST LOOP ON DOFs ********** //
 
       ///////////////////////////////////////////////
-      // ********** SECOND LOOP ON DOFs ********** //
+      // ********** FIRST LOOP ON DOFs ********** //
       ///////////////////////////////////////////////
       // To compute:
       //     * Hyperbolic part of the flux
       //     * Extended source term (eqn 6.19)
       //     * Smoothness indicator
-      //     * global entropy residual
-      //     * dij_small to avoid division by 0
 
       int ij = 0;
       std::valarray<double> hyp_flux_h(numDOFsPerEqn),
           hyp_flux_hu(numDOFsPerEqn), hyp_flux_hv(numDOFsPerEqn),
           hyp_flux_heta(numDOFsPerEqn), hyp_flux_hw(numDOFsPerEqn),
-          global_entropy_residual(numDOFsPerEqn), psi(numDOFsPerEqn),
-          etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
-
-      // For dij_small
-      double dij_small = 0.0;
-      // speed = sqrt(g max(h_0)), I divide by h_epsilon to get max(h_0) -EJT
-      double speed = std::sqrt(g * hEps / 1E-5);
+          psi(numDOFsPerEqn), etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
 
       for (int i = 0; i < numDOFsPerEqn; i++) {
 
@@ -1255,10 +1429,6 @@ public:
         double etai = hetai * one_over_hiReg;
         double mi = lumped_mass_matrix[i];
         double meshSizei = std::sqrt(mi);
-
-        // For eta min and max
-        etaMax[i] = fabs(eta[i]);
-        etaMin[i] = fabs(eta[i]);
 
         /* COMPUTE EXTENDED SOURCE TERMS:
          * Friction terms
@@ -1293,7 +1463,7 @@ public:
         }
 
         // Define some things for heta and hw sources
-        double ratio_i = (2.0 * hetai) / (etai * etai + hi * hi + hEps);
+        double ratio_i = 1.0; //(2.0 * hetai) / (etai * etai + hi * hi + hEps);
         double diff_over_h_i = (hetai - hi * hi) * one_over_hiReg;
         double hSqd_GammaPi = 6.0 * (hetai - hi * hi);
         if (IF_BOTH_GAMMA_BRANCHES) {
@@ -1322,12 +1492,6 @@ public:
         // FOR ENTROPY RESIDUAL //
         double ith_flux_term1 = 0., ith_flux_term2 = 0., ith_flux_term3 = 0.;
         double ith_flux_term4 = 0., ith_flux_term5 = 0.;
-        double entropy_flux = 0.;
-        double sum_entprime_flux = 0.;
-        // NOTE: FLAT BOTTOM
-        double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0., one_over_hiReg);
-        double eta_prime2 = DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);
-        double eta_prime3 = DENTROPY_DHV(g, hi, hui, hvi, 0., one_over_hiReg);
 
         // FOR SMOOTHNESS INDICATOR //
         double alphai; // smoothness indicator of solution
@@ -1408,55 +1572,18 @@ public:
               aux_hv + 0.5 * g * hj * hj *
                            Cy[ij]; // g * hi * (hj + 0.) * Cy[ij]; // NOTE: Zj=0
 
-          // NOTE: WE CONSIDER FLAT BOTTOM
-          entropy_flux +=
-              (Cx[ij] * ENTROPY_FLUX1(g, hj, huj, hvj, 0., one_over_hjReg) +
-               Cy[ij] * ENTROPY_FLUX2(g, hj, huj, hvj, 0., one_over_hjReg));
-
-          // COMPUTE ETA MIN AND ETA MAX //
-          etaMax[i] = fmax(etaMax[i], fabs(eta[j]));
-          etaMin[i] = fmin(etaMin[i], fabs(eta[j]));
-
           // FOR SMOOTHNESS INDICATOR //
           alpha_numerator += hj - hi;
           alpha_denominator += fabs(hj - hi);
-
-          // define dij_small in j loop
-          double x = fabs(Cx[ij]) + fabs(Cy[ij]);
-          dij_small = fmax(dij_small, x * speed);
 
           // update ij
           ij += 1;
         } // end j loop
 
-        // Finally define it here
-        dij_small = 1E-14 * dij_small;
-
-        // Change rescaling to match TAMU code -EJT
-        // small_recale=0.5*g*eps*H_{0,max}^2
-        double small_rescale = g * hEps * hEps / 1E-5;
-        double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
-
-        // new rescale factor = max(|ent_flux_sum| + |-ent'*flux|, 0.0)
-        sum_entprime_flux =
-            -(ith_flux_term1 * eta_prime1 + ith_flux_term2 * eta_prime2 +
-              ith_flux_term3 * eta_prime3);
-        double new_rescale =
-            fmax(fabs(entropy_flux) + fabs(sum_entprime_flux), 1E-30);
-
-        // COMPUTE ENTROPY RESIDUAL //
-        double one_over_entNormFactori = 1.0 / new_rescale;
-        global_entropy_residual[i] =
-            one_over_entNormFactori *
-            fabs(entropy_flux -
-                 (ith_flux_term1 * eta_prime1 + ith_flux_term2 * eta_prime2 +
-                  ith_flux_term3 * eta_prime3));
-
         // COMPUTE SMOOTHNESS INDICATOR //
         if (hi <= hEps) {
           alphai = 1.0;
           psi[i] = 1.0;
-          global_entropy_residual[i] = 1.0;
         } else {
           // Force alphai=0 in constant states
           if (fabs(alpha_numerator) <= hEps) {
@@ -1672,15 +1799,10 @@ public:
             ///////////////////////
             // ENTROPY VISCOSITY //
             ///////////////////////
-            double dEVij = cE * fmax(global_entropy_residual[i],
-                                     global_entropy_residual[j]);
-            dHij = fmin(dLowij, dEVij);
-            muHij = fmin(muLowij, dEVij);
-            // dHij = dLowij *
-            //        fmax(global_entropy_residual[i],
-            //        global_entropy_residual[j]);
-            // muHij = muLowij * fmax(global_entropy_residual[i],
-            //                        global_entropy_residual[j]);
+            double dEVij =
+                fmax(global_entropy_residual[i], global_entropy_residual[j]);
+            dHij = 0.0 * fmin(dLowij, dEVij);
+            muHij = 0.0 * fmin(muLowij, dEVij);
 
             // This is if we want smoothness indicator based viscosity
             // dHij = fmax(psi[i], psi[j]) * dLij;
@@ -1788,7 +1910,7 @@ public:
         }
       }
       // ********** END OF LOOP IN DOFs ********** //
-    }
+    } // end calculateResidual
 
     // ********** COMPUTE NORMALS ********** //
     if (COMPUTE_NORMALS == 1) {
@@ -1838,7 +1960,7 @@ public:
       }
     }
     // ********** END OF COMPUTING NORMALS ********** //
-  } // namespace proteus
+  } // end calculateResidual
 
   void calculateMassMatrix(arguments_dict &args) {
     xt::pyarray<double> &mesh_trial_ref = args.m_darray["mesh_trial_ref"];
@@ -2467,7 +2589,7 @@ public:
       }   // i
     }     // elements
   }
-}; // GN_SW2DCV
+}; // namespace proteus
 
 inline GN_SW2DCV_base *
 newGN_SW2DCV(int nSpaceIn, int nQuadraturePoints_elementIn,
@@ -2480,6 +2602,6 @@ newGN_SW2DCV(int nSpaceIn, int nQuadraturePoints_elementIn,
       nDOF_trial_elementIn, nDOF_test_elementIn,
       nQuadraturePoints_elementBoundaryIn, CompKernelFlag);
 }
-} // namespace proteus
+} // end namespace proteus
 
 #endif

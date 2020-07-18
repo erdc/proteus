@@ -97,7 +97,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         argsDict["run_cfl"] = self.runCFL
         argsDict["edge_based_cfl"] = self.transport.edge_based_cfl
         argsDict["debug"] = 0
-        adjusted_maxCFL = self.transport.sw2d.calculateEdgeBasedCFL(argsDict)
+        adjusted_maxCFL = self.transport.dsw_2d.calculateEdgeBasedCFL(argsDict)
 
         maxCFL = max(maxCFL, max(adjusted_maxCFL,
                                  globalMax(self.edge_based_cfl.max())))
@@ -138,7 +138,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         # print "within update stage...: ", self.lstage
         if self.timeOrder == 3:
             if self.lstage == 1:
-                logEvent("First stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                 # update u_dof_old
@@ -147,8 +146,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
                 self.transport.heta_dof_old[:] = self.u_dof_lstage[3]
                 self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
+                logEvent("First stage of SSP33 method finished", level=4)
             elif self.lstage == 2:
-                logEvent("Second stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                     self.u_dof_lstage[ci] *= old_div(1., 4.)
@@ -159,8 +158,8 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
                 self.transport.heta_dof_old[:] = self.u_dof_lstage[3]
                 self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
+                logEvent("Second stage of SSP33 method finished", level=4)
             else:
-                logEvent("Third stage of SSP33 method finished", level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                     self.u_dof_lstage[ci][:] *= old_div(2.0, 3.0)
@@ -173,6 +172,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
                 self.transport.heta_dof_old[:] = self.u_dof_last[3]
                 self.transport.hw_dof_old[:] = self.u_dof_last[4]
+                logEvent("Third stage of SSP33 method finished", level=4)
         elif self.timeOrder == 2:
             if self.lstage == 1:
                 logEvent("First stage of SSP22 method finished", level=4)
@@ -799,6 +799,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setupFieldStrides()
 
         # hEps: this is use to regularize the flux and re-define the dry states
+        self.eps = None
         self.hEps = None
         self.hReg = None
         self.ML = None  # lumped mass matrix
@@ -815,6 +816,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.new_SourceTerm_hv = None
         self.new_SourceTerm_heta = None
         self.new_SourceTerm_hw = None
+        # for EV
+        self.dij_small = None
+        self.global_entropy_residual = None
+
         self.dH_minus_dL = None
         self.muH_minus_muL = None
         self.size_of_domain = None # for relaxation of bounds
@@ -928,7 +933,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # else:
         self.elementDiameter = self.mesh.elementDiametersArray
         print(self.nSpace_global, " nSpace_global")
-        self.sw2d = cGN_SW2DCV_base(self.nSpace_global,
+        self.dsw_2d = cGN_SW2DCV_base(self.nSpace_global,
                                     self.nQuadraturePoints_element,
                                     self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                     self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
@@ -936,11 +941,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                     self.nElementBoundaryQuadraturePoints_elementBoundary,
                                     compKernelFlag)
 
-        self.calculateResidual = self.sw2d.calculateResidual
+        self.calculateResidual = self.dsw_2d.calculateResidual
+
+        # define function to compute entropy viscosity residual
+        self.calculateEV = self.dsw_2d.calculateEV
+
         if (self.coefficients.LUMPED_MASS_MATRIX):
-            self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
+            self.calculateJacobian = self.dsw_2d.calculateLumpedMassMatrix
         else:
-            self.calculateJacobian = self.sw2d.calculateMassMatrix
+            self.calculateJacobian = self.dsw_2d.calculateMassMatrix
         #
         self.dofsXCoord = None
         self.dofsYCoord = None
@@ -951,6 +960,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.par_normalx = None
         self.par_normaly = None
         self.par_ML = None
+        # parallel for source terms
+        self.par_extendedSourceTerm_hu = None
+        self.par_extendedSourceTerm_hv = None
+        self.par_extendedSourceTerm_heta = None
+        self.par_extendedSourceTerm_hw = None
+        self.par_new_SourceTerm_hu = None
+        self.par_new_SourceTerm_hv = None
+        self.par_new_SourceTerm_heta = None
+        self.par_new_SourceTerm_hw = None
+        # for parallel entropy residual
+        self.par_global_entropy_residual = None
+
 
     def FCTStep(self):
         # NOTE: this function is meant to be called within the solver
@@ -968,7 +989,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hvnp1 = np.zeros(self.h_dof_old.shape)
         limited_hetanp1 = np.zeros(self.h_dof_old.shape)
         limited_hwnp1 = np.zeros(self.h_dof_old.shape)
-    #     # Do some type of limitation
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["dt"] = self.timeIntegration.dt
         argsDict["NNZ"] = self.nnz
@@ -1013,7 +1033,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["new_SourceTerm_heta"] = self.new_SourceTerm_heta
         argsDict["new_SourceTerm_hw"] = self.new_SourceTerm_hw
         argsDict["size_of_domain"] = self.size_of_domain
-        self.sw2d.convexLimiting(argsDict)
+        self.dsw_2d.convexLimiting(argsDict)
 
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex] = limited_hnp1
@@ -1022,13 +1042,48 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.u[hetaIndex] = limited_hetanp1
         self.timeIntegration.u[hwIndex] = limited_hwnp1
 
+    def computeEV(self):
+        entropy_residual = np.zeros(self.h_dof_old.shape)
+        small = np.float(0.0)
+
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["g"] = self.coefficients.g
+        argsDict["h_dof_old"] = self.h_dof_old
+        argsDict["hu_dof_old"] = self.hu_dof_old
+        argsDict["hv_dof_old"] = self.hv_dof_old
+        argsDict["heta_dof_old"] = self.heta_dof_old
+        argsDict["hw_dof_old"] = self.hw_dof_old
+        argsDict["b_dof"] = self.coefficients.b.dof
+        argsDict["Cx"] = self.Cx
+        argsDict["Cy"] = self.Cy
+        argsDict["CTx"] = self.CTx
+        argsDict["CTy"] = self.CTy
+        argsDict["numDOFsPerEqn"] = self.numDOFsPerEqn
+        argsDict["csrRowIndeces_DofLoops"] = self.rowptr_cMatrix
+        argsDict["csrColumnOffsets_DofLoops"] = self.colind_cMatrix
+        argsDict["lumped_mass_matrix"] = self.ML
+        argsDict["eps"] = self.eps
+        argsDict["hEps"] = self.hEps
+        argsDict["global_entropy_residual"] = entropy_residual
+        argsDict["dij_small"] = small
+
+        # compute entropy residual
+        self.dsw_2d.calculateEV(argsDict)
+
+        # save things
+        self.global_entropy_residual = entropy_residual
+        self.dij_small = small
+        print("dij_small", self.dij_small)
+        quit()
+    #
+
     def getDOFsCoord(self):
         # get x,y coordinates of all DOFs #
         self.dofsXCoord = np.zeros(self.u[0].dof.shape, 'd')
         self.dofsYCoord = np.zeros(self.u[0].dof.shape, 'd')
         self.dofsXCoord[:] = self.mesh.nodeArray[:, 0]
         self.dofsYCoord[:] = self.mesh.nodeArray[:, 1]
-        #
+    #
 
     def getCMatrices(self):
         # since we only need cterm_global to persist, we can drop the other self.'s
@@ -1283,12 +1338,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.heta_dof_old = np.copy(self.u[3].dof)
         self.hw_dof_old = np.copy(self.u[4].dof)
         # hEps
-        eps = 1E-5
-        self.hEps = eps * self.u[0].dof.max()
+        self.eps = 1E-5
+        self.hEps = self.eps * self.u[0].dof.max()
         #---To get hEps for all processors
         comm = Comm.get()
         if comm.size() > 1:
-            self.hEps = eps * comm.globalMax(self.u[0].dof.max())
+            self.hEps = self.eps * comm.globalMax(self.u[0].dof.max())
         # size_of_domain used in relaxation of bounds
         self.size_of_domain = self.mesh.globalMesh.volume
         # normal vectors
@@ -1317,6 +1372,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.new_SourceTerm_hv = np.zeros(self.u[0].dof.shape, 'd')
         self.new_SourceTerm_heta = np.zeros(self.u[0].dof.shape, 'd')
         self.new_SourceTerm_hw = np.zeros(self.u[0].dof.shape, 'd')
+        self.global_entropy_residual = np.zeros(self.u[0].dof.shape, 'd')
+        self.dij_small = 0.0
 
         # PARALLEL VECTORS #
         n=self.u[0].par_dof.dim_proc
@@ -1324,6 +1381,42 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         nghosts = self.u[0].par_dof.nghosts
         subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
         #
+        self.par_extendedSourceTerm_hu = LAT.ParVec_petsc4py(self.extendedSourceTerm_hu,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_extendedSourceTerm_hv = LAT.ParVec_petsc4py(self.extendedSourceTerm_hv,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_extendedSourceTerm_heta = LAT.ParVec_petsc4py(self.extendedSourceTerm_heta,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_extendedSourceTerm_hw = LAT.ParVec_petsc4py(self.extendedSourceTerm_hw,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_new_SourceTerm_hu = LAT.ParVec_petsc4py(self.new_SourceTerm_heta,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_new_SourceTerm_hv = LAT.ParVec_petsc4py(self.new_SourceTerm_hv,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_new_SourceTerm_heta = LAT.ParVec_petsc4py(self.new_SourceTerm_heta,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_new_SourceTerm_hw = LAT.ParVec_petsc4py(self.new_SourceTerm_hw,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_global_entropy_residual = LAT.ParVec_petsc4py(self.global_entropy_residual,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
         self.par_normalx = LAT.ParVec_petsc4py(self.normalx,
                                                 bs=1,
                                                 n=n,N=N,nghosts=nghosts,
@@ -1337,6 +1430,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                             n=n,N=N,nghosts=nghosts,
                                             subdomain2global=subdomain2global)
         self.par_ML.scatter_forward_insert()
+        #
+
         self.dataStructuresInitialized = True
     #
 
@@ -1366,22 +1461,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.updateReflectingBoundaryConditions()
         #
         # INIT BOUNDARY INDEX #
-        # NOTE: this must be done after the first call to getResidual (to have normalx and normaly initialized)
+        # NOTE: this must be done after the first call to getResidual
+        #   (to have normalx and normaly initialized)
         # I do this in preStep if firstStep=True
 
         # CONSTRAINT DOFs #
         if self.coefficients.constrainedDOFs is not None:
             self.updateConstrainedDOFs()
         #
+
         # DIRICHLET BOUNDARY CONDITIONS #
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         #
+
         # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-4 -EJT
         if (self.check_positivity_water_height == True):
-            assert self.u[0].dof.min() >= -1E-4 * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min(), "Max water height: ", self.u[0].dof.max())
+            assert self.u[0].dof.min() >= -self.eps * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min(), "Max water height: ", self.u[0].dof.max())
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
@@ -1499,6 +1597,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_DofLoops"] = self.colind_cMatrix
         argsDict["lumped_mass_matrix"] = self.ML
         argsDict["cfl_run"] = self.timeIntegration.runCFL
+        argsDict["eps"] = self.eps
         argsDict["hEps"] = self.hEps
         argsDict["hReg"] = self.hReg
         argsDict["hnp1_at_quad_point"] = self.q[('u', 0)]
@@ -1533,7 +1632,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["new_SourceTerm_hv"] = self.new_SourceTerm_hv
         argsDict["new_SourceTerm_heta"] = self.new_SourceTerm_heta
         argsDict["new_SourceTerm_hw"] = self.new_SourceTerm_hw
+
+        # lets call calculate EV first and distribute
+        self.computeEV()
+        self.par_global_entropy_residual.scatter_forward_insert()
+        argsDict["global_entropy_residual"] = self.global_entropy_residual
+        argsDict["dij_small"] = self.dij_small
+
+        # call calculate residual
         self.calculateResidual(argsDict)
+
+
+
+        # distribute source terms
+        self.par_extendedSourceTerm_hu.scatter_forward_insert()
+        self.par_extendedSourceTerm_hv.scatter_forward_insert()
+        self.par_extendedSourceTerm_heta.scatter_forward_insert()
+        self.par_extendedSourceTerm_hw.scatter_forward_insert()
+        self.par_new_SourceTerm_hu.scatter_forward_insert()
+        self.par_new_SourceTerm_hv.scatter_forward_insert()
+        self.par_new_SourceTerm_heta.scatter_forward_insert()
+        self.par_new_SourceTerm_hw.scatter_forward_insert()
 
         if self.COMPUTE_NORMALS==1:
             self.par_normalx.scatter_forward_insert()
@@ -1562,6 +1681,50 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual GN_sw: ", level=9, data=r)
         # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
+
+        ####### testing
+        # n=self.u[0].par_dof.dim_proc
+        # N=self.u[0].femSpace.dofMap.nDOF_all_processes
+        # nghosts = self.u[0].par_dof.nghosts
+        # subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
+        # comm = Comm.get()
+        #
+        # comm.beginSequential()
+        # rank = comm.rank()
+        # if (rank==0):
+        #     res_file = open("res_rank0.txt", 'w')
+        #     EV_file = open("EV_res_rank0.txt", 'w')
+        #     counter = 0
+        #     # import pdb; pdb.set_trace()
+        #     for i in range(int(np.size(r)/5)):
+        #         sub = subdomain2global[i % (np.size(subdomain2global))]
+        #         print("glob_node: ", self.mesh.globalMesh.nodeArray[sub], "loc_node: ", self.mesh.nodeArray[i % (np.size(subdomain2global))], "res:  ", self.global_entropy_residual[i], file=EV_file)
+        #     for i in range(np.size(r)):
+        #         k = i % 5
+        #         sub = subdomain2global[counter % (np.size(subdomain2global))]
+        #         # if (counter > 5):
+        #         #     counter = 0
+        #         print("glob_node: ", self.mesh.globalMesh.nodeArray[sub], "loc_node: ", self.mesh.nodeArray[counter % (np.size(subdomain2global))], "res:  ", r[i], file=res_file)
+        #         if (k==4):
+        #             counter = counter + 1
+        #     res_file.close()
+        # #
+        # if (rank==1):
+        #     res_file = open("res_rank1.txt", 'w')
+        #     EV_file = open("EV_res_rank1.txt", 'w')
+        #     counter = 0
+        #     for i in range(np.int(np.size(r)/5)):
+        #         sub = subdomain2global[i % (np.size(subdomain2global))]
+        #         print("glob_node: ", self.mesh.globalMesh.nodeArray[sub], "loc_node: ", self.mesh.nodeArray[i % (np.size(subdomain2global))], "res:  ", self.global_entropy_residual[i], file=EV_file)
+        #     for i in range(np.size(r)):
+        #         k = i % 5
+        #         sub = subdomain2global[counter % (np.size(subdomain2global))]
+        #         print("glob_node: ", self.mesh.globalMesh.nodeArray[sub], "loc_node: ", self.mesh.nodeArray[counter % (np.size(subdomain2global))], "res:  ", r[i], file=res_file)
+        #         if (k==4):
+        #             counter = counter + 1
+        #     res_file.close()
+        # comm.endSequential()
+        #######
 
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
