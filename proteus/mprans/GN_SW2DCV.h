@@ -12,7 +12,7 @@
 namespace py = pybind11;
 
 #define GLOBAL_FCT 0
-#define POWER_SMOOTHNESS_INDICATOR 4
+#define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
 #define REESTIMATE_MAX_EDGE_BASED_CFL 0
 #define LAMBDA_MGN 1
@@ -196,10 +196,13 @@ public:
                                               bool debugging) {
     double lambda1, lambda3;
 
+    // To avoid division by 0
+    double one_over_hL = 2.0 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2.0));
+    double one_over_hR = 2.0 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2.0));
     double hVelL = nx * huL + ny * hvL;
     double hVelR = nx * huR + ny * hvR;
-    double velL = 2.0 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hVelL;
-    double velR = 2.0 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hVelR;
+    double velL = one_over_hL * hVelL;
+    double velR = one_over_hR * hVelR;
     double etaL = 2.0 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hetaL;
     double etaR = 2.0 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hetaR;
     double meshSizeL = sqrt(lumpedL);
@@ -902,7 +905,7 @@ public:
     double hEps = args.m_dscalar["hEps"];
     xt::pyarray<double> &global_entropy_residual =
         args.m_darray["global_entropy_residual"];
-    double &dij_small = args.m_dscalar["dij_small"];
+    double dij_small = args.m_dscalar["dij_small"];
 
     //////////////////////////////////////////////
     // ********** FIRST LOOP ON DOFs ********** //
@@ -929,9 +932,7 @@ public:
     //     * dij_small to avoid division by 0
 
     int ij = 0;
-    std::valarray<double> hyp_flux_h(numDOFsPerEqn), hyp_flux_hu(numDOFsPerEqn),
-        hyp_flux_hv(numDOFsPerEqn), hyp_flux_heta(numDOFsPerEqn),
-        hyp_flux_hw(numDOFsPerEqn), psi(numDOFsPerEqn), etaMax(numDOFsPerEqn),
+    std::valarray<double> psi(numDOFsPerEqn), etaMax(numDOFsPerEqn),
         etaMin(numDOFsPerEqn);
 
     // speed = sqrt(g max(h_0)), I divide by h_epsilon to get max(h_0) -EJT
@@ -957,12 +958,6 @@ public:
       // For eta min and max
       etaMax[i] = fabs(eta[i]);
       etaMin[i] = fabs(eta[i]);
-
-      /* HYPERBOLIC FLUXES */
-      hyp_flux_h[i] = 0;
-      hyp_flux_hu[i] = 0;
-      hyp_flux_hv[i] = 0;
-      hyp_flux_heta[i] = 0;
 
       // FOR ENTROPY RESIDUAL //
       double ith_flux_term1 = 0., ith_flux_term2 = 0., ith_flux_term3 = 0.;
@@ -992,21 +987,6 @@ public:
             2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
         double uj = huj * one_over_hjReg;
         double vj = hvj * one_over_hjReg;
-        double etaj = hetaj * one_over_hjReg;
-        double meshSizej =
-            std::sqrt(lumped_mass_matrix[j]); // local mesh size in 2d
-
-        // pTilde at jth node gets defined here
-        double diff_over_h_j = (hetaj - hj * hj) * one_over_hjReg;
-        double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
-                         (hetaj - hj * hj);
-
-        if (IF_BOTH_GAMMA_BRANCHES) {
-          if (hetaj > std::pow(hj, 2.0)) {
-            pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
-                      diff_over_h_j * (etaj * etaj + etaj * hj + hj * hj);
-          }
-        }
 
         // auxiliary functions to compute fluxes
         double aux_h =
@@ -1015,11 +995,6 @@ public:
             (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
         double aux_hv =
             (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
-
-        /* HYPERBOLIC FLUX */
-        hyp_flux_h[i] += aux_h;
-        hyp_flux_hu[i] += aux_hu + pTildej * Cx[ij];
-        hyp_flux_hv[i] += aux_hv + pTildej * Cy[ij];
 
         // flux for entropy
         ith_flux_term1 += aux_h;
@@ -1489,15 +1464,11 @@ public:
         hyp_flux_heta[i] = 0;
         hyp_flux_hw[i] = 0;
 
-        // FOR ENTROPY RESIDUAL //
-        double ith_flux_term1 = 0., ith_flux_term2 = 0., ith_flux_term3 = 0.;
-        double ith_flux_term4 = 0., ith_flux_term5 = 0.;
-
         // FOR SMOOTHNESS INDICATOR //
         double alphai; // smoothness indicator of solution
         double alpha_numerator = 0;
         double alpha_denominator = 0;
-        double alpha_zero = 0.75; // if only want smoothness
+        double alpha_zero = 0.5; // if only want smoothness
         double alpha_factor = 1.0 / (1.0 - alpha_zero);
 
         // loop in j (sparsity pattern)
@@ -1562,15 +1533,6 @@ public:
               g * (-hi * (Zj - Zi) + 0.5 * std::pow(hj - hi, 2)) * Cx[ij];
           new_SourceTerm_hv[i] +=
               g * (-hi * (Zj - Zi) + 0.5 * std::pow(hj - hi, 2)) * Cy[ij];
-
-          // flux for entropy
-          ith_flux_term1 += aux_h;
-          ith_flux_term2 +=
-              aux_hu + 0.5 * g * hj * hj *
-                           Cx[ij]; // g * hi * (hj + 0.) * Cx[ij]; // NOTE: Zj=0
-          ith_flux_term3 +=
-              aux_hv + 0.5 * g * hj * hj *
-                           Cy[ij]; // g * hi * (hj + 0.) * Cy[ij]; // NOTE: Zj=0
 
           // FOR SMOOTHNESS INDICATOR //
           alpha_numerator += hj - hi;
@@ -1801,8 +1763,8 @@ public:
             ///////////////////////
             double dEVij =
                 fmax(global_entropy_residual[i], global_entropy_residual[j]);
-            dHij = 0.0 * fmin(dLowij, dEVij);
-            muHij = 0.0 * fmin(muLowij, dEVij);
+            dHij = fmin(dLowij, dEVij);
+            muHij = fmin(muLowij, dEVij);
 
             // This is if we want smoothness indicator based viscosity
             // dHij = fmax(psi[i], psi[j]) * dLij;
@@ -1879,11 +1841,11 @@ public:
 
           // clean up potential negative water height due to machine
           // precision
-          // if (globalResidual[offset_h + stride_h * i] >= -hEps &&
-          //     globalResidual[offset_h + stride_h * i] < hEps) {
-          //   globalResidual[offset_h + stride_h * i] = 0.0;
-          //   globalResidual[offset_heta + stride_heta * i] = 0.0;
-          // }
+          if (globalResidual[offset_h + stride_h * i] >= -hEps &&
+              globalResidual[offset_h + stride_h * i] < hEps) {
+            globalResidual[offset_h + stride_h * i] = 0.0;
+            globalResidual[offset_heta + stride_heta * i] = 0.0;
+          }
 
         } else {
           // Distribute residual
@@ -1910,7 +1872,7 @@ public:
         }
       }
       // ********** END OF LOOP IN DOFs ********** //
-    } // end calculateResidual
+    } // end SECOND_CALL_CALCULATE_RESIDUAL
 
     // ********** COMPUTE NORMALS ********** //
     if (COMPUTE_NORMALS == 1) {

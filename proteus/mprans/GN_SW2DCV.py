@@ -76,6 +76,7 @@ class RKEV(proteus.TimeIntegration.SSP):
         rowptr_cMatrix, colind_cMatrix, CTx = self.transport.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.transport.cterm_global_transpose[1].getCSRrepresentation()
         numDOFsPerEqn = self.transport.u[0].dof.size
+
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["g"] = self.transport.coefficients.g
         argsDict["numDOFsPerEqn"] = numDOFsPerEqn
@@ -185,7 +186,6 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.heta_dof_old[:] = self.u_dof_lstage[3]
                 self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
             else:
-                logEvent("Second stage of SSP22 method finished", level=4)
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
                     self.u_dof_lstage[ci][:] *= old_div(1., 2.)
@@ -198,6 +198,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
                 self.transport.heta_dof_old[:] = self.u_dof_last[3]
                 self.transport.hw_dof_old[:] = self.u_dof_last[4]
+                logEvent("Second stage of SSP22 method finished", level=4)
         else:
             assert self.timeOrder == 1
             logEvent("FE method finished", level=4)
@@ -960,7 +961,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.par_normalx = None
         self.par_normaly = None
         self.par_ML = None
-        # parallel for source terms
+        # for source terms
         self.par_extendedSourceTerm_hu = None
         self.par_extendedSourceTerm_hv = None
         self.par_extendedSourceTerm_heta = None
@@ -989,6 +990,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hvnp1 = np.zeros(self.h_dof_old.shape)
         limited_hetanp1 = np.zeros(self.h_dof_old.shape)
         limited_hwnp1 = np.zeros(self.h_dof_old.shape)
+
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["dt"] = self.timeIntegration.dt
         argsDict["NNZ"] = self.nnz
@@ -1073,8 +1075,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # save things
         self.global_entropy_residual = entropy_residual
         self.dij_small = small
-        print("dij_small", self.dij_small)
-        quit()
     #
 
     def getDOFsCoord(self):
@@ -1331,6 +1331,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     #
 
     def initDataStructures(self):
+        comm = Comm.get()
+
         # old vectors
         self.h_dof_old = np.copy(self.u[0].dof)
         self.hu_dof_old = np.copy(self.u[1].dof)
@@ -1339,11 +1341,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hw_dof_old = np.copy(self.u[4].dof)
         # hEps
         self.eps = 1E-5
-        self.hEps = self.eps * self.u[0].dof.max()
-        #---To get hEps for all processors
-        comm = Comm.get()
-        if comm.size() > 1:
-            self.hEps = self.eps * comm.globalMax(self.u[0].dof.max())
+        self.hEps = self.eps * comm.globalMax(self.u[0].dof.max())
+
         # size_of_domain used in relaxation of bounds
         self.size_of_domain = self.mesh.globalMesh.volume
         # normal vectors
@@ -1397,7 +1396,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                 bs=1,
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
-        self.par_new_SourceTerm_hu = LAT.ParVec_petsc4py(self.new_SourceTerm_heta,
+        self.par_new_SourceTerm_hu = LAT.ParVec_petsc4py(self.new_SourceTerm_hu,
                                                 bs=1,
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
@@ -1431,7 +1430,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                             subdomain2global=subdomain2global)
         self.par_ML.scatter_forward_insert()
         #
-
         self.dataStructuresInitialized = True
     #
 
@@ -1480,6 +1478,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-4 -EJT
         if (self.check_positivity_water_height == True):
             assert self.u[0].dof.min() >= -self.eps * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min(), "Max water height: ", self.u[0].dof.max())
+
+        # lets call calculate EV first and distribute
+        self.computeEV()
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
@@ -1632,17 +1633,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["new_SourceTerm_hv"] = self.new_SourceTerm_hv
         argsDict["new_SourceTerm_heta"] = self.new_SourceTerm_heta
         argsDict["new_SourceTerm_hw"] = self.new_SourceTerm_hw
-
-        # lets call calculate EV first and distribute
-        self.computeEV()
-        self.par_global_entropy_residual.scatter_forward_insert()
         argsDict["global_entropy_residual"] = self.global_entropy_residual
         argsDict["dij_small"] = self.dij_small
 
         # call calculate residual
         self.calculateResidual(argsDict)
-
-
 
         # distribute source terms
         self.par_extendedSourceTerm_hu.scatter_forward_insert()
