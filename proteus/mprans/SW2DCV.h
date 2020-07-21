@@ -1459,8 +1459,8 @@ public:
             ///////////////////////
             double dEVij =
                 fmax(global_entropy_residual[i], global_entropy_residual[j]);
-            dHij = fmin(dLowij, dEVij);
-            muHij = fmin(muLowij, dEVij);
+            dHij = dLowij;   // fmin(dLowij, dEVij);
+            muHij = muLowij; // fmin(muLowij, dEVij);
 
             // This is if we want smoothness indicator based viscosity
             // dHij = fmax(psi[i], psi[j]) * dLij;

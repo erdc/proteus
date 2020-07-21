@@ -936,7 +936,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # save things
         self.global_entropy_residual = entropy_residual
-        self.dij_small = small
+        self.dij_small = argsDict.dscalar["dij_small"]
     #
     def getDOFsCoord(self):
         # get x,y coordinates of all DOFs #

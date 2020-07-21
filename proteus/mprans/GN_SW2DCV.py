@@ -1046,7 +1046,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def computeEV(self):
         entropy_residual = np.zeros(self.h_dof_old.shape)
-        small = np.float(0.0)
+        small = 0.0
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["g"] = self.coefficients.g
@@ -1074,7 +1074,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # save things
         self.global_entropy_residual = entropy_residual
-        self.dij_small = small
+        self.dij_small = globalMax(argsDict.dscalar["dij_small"])
+
+        # distribute
+        self.par_global_entropy_residual.scatter_forward_insert()
+
     #
 
     def getDOFsCoord(self):
@@ -1475,7 +1479,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
         #
 
-        # CHECK POSITIVITY OF WATER HEIGHT # changed to 1E-4 -EJT
+        # CHECK POSITIVITY OF WATER HEIGHT
         if (self.check_positivity_water_height == True):
             assert self.u[0].dof.min() >= -self.eps * self.u[0].dof.max(), ("Negative water height: ", self.u[0].dof.min(), "Max water height: ", self.u[0].dof.max())
 

@@ -826,7 +826,6 @@ public:
     /* note that for the CFL condition, we use only the values of dij and
      * don't do the dij = Max(dij,muij) thing */
 
-    std::valarray<double> psi(numDOFsPerEqn);
     double max_edge_based_cfl = 0.;
     int ij = 0;
     for (int i = 0; i < numDOFsPerEqn; i++) {
@@ -905,7 +904,7 @@ public:
     double hEps = args.m_dscalar["hEps"];
     xt::pyarray<double> &global_entropy_residual =
         args.m_darray["global_entropy_residual"];
-    double dij_small = args.m_dscalar["dij_small"];
+    double &dij_small = args.m_dscalar["dij_small"];
 
     //////////////////////////////////////////////
     // ********** FIRST LOOP ON DOFs ********** //
@@ -1256,7 +1255,7 @@ public:
     xt::pyarray<double> &new_SourceTerm_hw = args.m_darray["new_SourceTerm_hw"];
     xt::pyarray<double> &global_entropy_residual =
         args.m_darray["global_entropy_residual"];
-    double &dij_small = args.m_dscalar["dij_small"];
+    double dij_small = args.m_dscalar["dij_small"];
     // FOR FRICTION//
     double n2 = std::pow(mannings, 2.);
     double gamma = 4. / 3;
@@ -1763,8 +1762,8 @@ public:
             ///////////////////////
             double dEVij =
                 fmax(global_entropy_residual[i], global_entropy_residual[j]);
-            dHij = fmin(dLowij, dEVij);
-            muHij = fmin(muLowij, dEVij);
+            dHij = dEVij;  // fmin(dLowij, dEVij);
+            muHij = dEVij; // fmin(muLowij, dEVij);
 
             // This is if we want smoothness indicator based viscosity
             // dHij = fmax(psi[i], psi[j]) * dLij;
@@ -1841,11 +1840,11 @@ public:
 
           // clean up potential negative water height due to machine
           // precision
-          if (globalResidual[offset_h + stride_h * i] >= -hEps &&
-              globalResidual[offset_h + stride_h * i] < hEps) {
-            globalResidual[offset_h + stride_h * i] = 0.0;
-            globalResidual[offset_heta + stride_heta * i] = 0.0;
-          }
+          // if (globalResidual[offset_h + stride_h * i] >= -hEps &&
+          //     globalResidual[offset_h + stride_h * i] < hEps) {
+          //   globalResidual[offset_h + stride_h * i] = 0.0;
+          //   globalResidual[offset_heta + stride_heta * i] = 0.0;
+          // }
 
         } else {
           // Distribute residual
