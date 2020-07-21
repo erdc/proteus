@@ -2126,7 +2126,7 @@ namespace proteus
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
-      double p_dv=0.0,pa_dv=0.0,total_volume=0.0,total_flux=0.0;
+      double p_dv=0.0,pa_dv=0.0,total_volume=0.0,total_surface_area=0.0,total_flux=0.0;
       double mesh_volume_conservation=0.0,
         mesh_volume_conservation_weak=0.0,
         mesh_volume_conservation_err_max=0.0,
@@ -3310,6 +3310,7 @@ namespace proteus
 		      p_dv += p*H_s*H_f*dV;
 		      pa_dv += q_u_0.data()[eN_k]*H_s*H_f*dV;
 		      total_volume+=H_s*H_f*dV;
+		      total_surface_area+=D_s*H_f*dV;
 		      if (phi_solid.data()[eN_k] >= 0.0)
 			{
 			  p_LI = fmax(p_LI, fabs(p_e));
@@ -4653,12 +4654,14 @@ namespace proteus
       
       if (normalize_pressure)
         {
-	  double send[3]={pa_dv,p_dv,total_volume}, recv[3]={0.,0.,0.};
-	  MPI_Allreduce(send, recv,3,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+	  double send[4]={pa_dv,p_dv,total_volume, total_surface_area}, recv[4]={0.,0.,0.,0.};
+	  MPI_Allreduce(send, recv,4,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	  pa_dv = recv[0];
 	  p_dv = recv[1];
 	  total_volume = recv[2];
-	  
+	  total_surface_area = recv[3];
+	  std::cout<<"Domain Volume: "<<total_volume<<std::endl;
+	  std::cout<<"Domain Surface Area: "<<total_surface_area<<std::endl;
 	  //cek hack
 	  // 1. This forces the pressure average to match the average of the analytical solution (or zero of no analytical solution is given)
 	  // 2. I'm manually figuring out how many pressure dof there are
