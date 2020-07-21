@@ -216,12 +216,9 @@ extern "C"
     
     if (det < 0)
       {
-	std::cout<<"Reorient"<<std::endl;
-	std::cout<<nodes[0]<<'\t'<<nodes[1]<<'\t'<<nodes[2]<<'\t'<<nodes[3]<<std::endl;
 	int tmp = n2;
 	n2 = n3;
 	n3 = tmp;
-	std::cout<<nodes[0]<<'\t'<<nodes[1]<<'\t'<<nodes[2]<<'\t'<<nodes[3]<<std::endl;
       }
   }
   
