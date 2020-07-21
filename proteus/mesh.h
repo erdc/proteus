@@ -326,6 +326,7 @@ extern "C"
   int regularHexahedralToTetrahedralMeshElements(const int& nx,const int& ny,const int& nz,Mesh& mesh);
   int regularHexahedralToTetrahedralElementBoundaryMaterials(const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz, Mesh& mesh);
+  int reorientTetrahedralMesh(Mesh& mesh);
   int regularNURBSMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz,Mesh& mesh);
   int globallyRefineHexahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
 
@@ -509,6 +510,7 @@ inline int newTriangle(int eN,int* nodes,int n0,int n1,int n2)
   eN++;
   return eN;
 }
+
 inline int newTetrahedron(int eN,int* nodes,int n0,int n1,int n2,int n3)
 {
   nodes[eN*4+0] = n0;

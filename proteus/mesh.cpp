@@ -194,6 +194,44 @@ extern "C"
     return 0;
   }
   
+  inline void reorientNodes_tet(double* nodeArray, int* nodes)
+  {
+    int &n0(nodes[0]),&n1(nodes[1]),&n2(nodes[2]),&n3(nodes[3]);
+    double t[3][3];
+    t[0][0] = nodeArray[n1*3+0] - nodeArray[n0*3+0];
+    t[0][1] = nodeArray[n1*3+1] - nodeArray[n0*3+1];
+    t[0][2] = nodeArray[n1*3+2] - nodeArray[n0*3+2];
+    
+    t[1][0] = nodeArray[n2*3+0] - nodeArray[n0*3+0];
+    t[1][1] = nodeArray[n2*3+1] - nodeArray[n0*3+1];
+    t[1][2] = nodeArray[n2*3+2] - nodeArray[n0*3+2];
+    
+    t[2][0] = nodeArray[n3*3+0] - nodeArray[n0*3+0];
+    t[2][1] = nodeArray[n3*3+1] - nodeArray[n0*3+1];
+    t[2][2] = nodeArray[n3*3+2] - nodeArray[n0*3+2];
+    
+    register double det = t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   
+      t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +       
+      t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]);
+    
+    if (det < 0)
+      {
+	std::cout<<"Reorient"<<std::endl;
+	std::cout<<nodes[0]<<'\t'<<nodes[1]<<'\t'<<nodes[2]<<'\t'<<nodes[3]<<std::endl;
+	int tmp = n2;
+	n2 = n3;
+	n3 = tmp;
+	std::cout<<nodes[0]<<'\t'<<nodes[1]<<'\t'<<nodes[2]<<'\t'<<nodes[3]<<std::endl;
+      }
+  }
+  
+  int reorientTetrahedralMesh(Mesh& mesh)
+  {
+    for (int eN=0;eN<mesh.nElements_global;eN++)
+      reorientNodes_tet(mesh.nodeArray,&mesh.elementNodesArray[eN*mesh.nNodes_element]);
+    return 0;
+  }
+  
   int regularHexahedralToTetrahedralMeshElements(const int& nx, 
                                                  const int& ny, 
                                                  const int& nz, 

@@ -257,28 +257,64 @@ class NS_base(object):  # (HasTraits):
                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                     parallelPartitioningType=n.parallelPartitioningType)
                     else :
+                        fileprefix = p.domain.polyfile
+                        if fileprefix is None:
+                            fileprefix="regular_{0}x{1}x{2}_grid".format(nnx,nny,nnz)
+                        nbase = 1
                         if p.genMesh:
-                            mlMesh = MeshTools.MultilevelTetrahedralMesh(nnx, nny, nnz,
-                                                                     p.domain.x[0], p.domain.x[1], p.domain.x[2],
-                                                                     p.L[0], p.L[1], p.L[2],
-                                                                     refinementLevels=n.nLevels,
-                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                     parallelPartitioningType=n.parallelPartitioningType)
+                            if opts.generatePartitionedMeshFromFiles:
+                                if comm.isMaster():
+                                    globalMesh = MeshTools.TetrahedralMesh()
+                                    logEvent("Generating tetrahedral mesh from regular grid")
+                                    globalMesh.generateTetrahedralMeshFromRectangularGrid(nnx,nny,nnz,p.domain.L[0],p.domain.L[1],p.domain.L[2])
+                                    logEvent("Writing tetgen files to {0:s}.ele, etc.".format(fileprefix))
+                                    globalMesh.writeTetgenFiles(fileprefix,nbase)
+                                    logEvent("Writing tetgen edge files to {0:s}.edge".format(fileprefix))
+                                    check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
+                                    check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+                                    check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+                                    check_call("mv {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
+                                    check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+                                    check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                                comm.barrier()
+                                logEvent("Generating partitioned mesh from Tetgen files")
+                                mesh=MeshTools.TetrahedralMesh()
+                                mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
+                                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                             parallelPartitioningType=n.parallelPartitioningType)
+                                mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,n.nLevels,
+                                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                              parallelPartitioningType=n.parallelPartitioningType)
+                                
+                                mlMesh.meshList[0].subdomainMesh.nodeArray[:,0] += p.domain.x[0]
+                                mlMesh.meshList[0].subdomainMesh.nodeArray[:,1] += p.domain.x[1]
+                                mlMesh.meshList[0].subdomainMesh.nodeArray[:,2] += p.domain.x[2]
+                            else:
+                                mlMesh = MeshTools.MultilevelTetrahedralMesh(nnx, nny, nnz,
+                                                                             p.domain.x[0], p.domain.x[1], p.domain.x[2],
+                                                                             p.L[0], p.L[1], p.L[2],
+                                                                             refinementLevels=n.nLevels,
+                                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                             parallelPartitioningType=n.parallelPartitioningType)
                         else:
-                            fileprefix = p.domain.polyfile
-                            nbase = 1
                             mesh=MeshTools.TetrahedralMesh()
-                            logEvent("Generating coarse global mesh from Tetgen files")
-                            mesh.generateFromTetgenFiles(fileprefix,nbase,parallel = comm.size() > 1)
-
                             mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
-                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                         nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
-
-                            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
-                            mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                          parallelPartitioningType=n.parallelPartitioningType)
+                            if opts.generatePartitionedMeshFromFiles:
+                                logEvent("Generating partitioned mesh from Tetgen files")
+                                if("f" not in n.triangleOptions or "ee" not in n.triangleOptions):
+                                    sys.exit("ERROR: Remake the mesh with the `f` flag and `ee` flags in triangleOptions.")
+                                mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,n.nLevels,
+                                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                              parallelPartitioningType=n.parallelPartitioningType)
+                            else:
+                                logEvent("Generating coarse global mesh from Tetgen files")
+                                mesh.generateFromTetgenFiles(fileprefix,nbase,parallel = comm.size() > 1)
+                                logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
+                                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                      parallelPartitioningType=n.parallelPartitioningType)
 
 
 

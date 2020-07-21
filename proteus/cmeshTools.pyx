@@ -355,6 +355,7 @@ cpdef void writeTetgenFiles(CMesh cmesh,
                            unicode filebase,
                            int base):
     cdef int failed
+    cppm.reorientTetrahedralMesh(cmesh.mesh);
     failed = cppm.writeTetgenMesh(cmesh.mesh,filebase.encode('utf8'),base);
 
 cpdef void write3dmFiles(CMesh cmesh,

@@ -2298,7 +2298,7 @@ class TetrahedralMesh(Mesh):
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
-        cmeshTools.writeTetgenFiles(self.cmesh,"tetgen",1)
+
     def rectangularToTetrahedral6T(self,grid):
         #copy the nodes from the rectangular mesh
         #I want to be able to renumber later without
