@@ -295,9 +295,10 @@ namespace equivalent_polynomials
       }
     else if(ncount == 1)
       {
-        if (zcount == nN-1)//interface is on an element boundary, integrate this orientation
-	  {
-	    root_node = n_i;
+        if (zcount == nN-1)//interface is on an element boundary, don't integrate this orientation
+          {
+	    //note: see comment below about these two cases
+	    return -1;
 	  }
         else
           {
@@ -306,8 +307,16 @@ namespace equivalent_polynomials
       }
     else if(pcount == 1)
       {
-        if (zcount == nN-1)//interface is on an element boundary, don't integrate this orientation
-          return 1;
+        if (zcount == nN-1)//interface is on an element boundary, integrate this orientation
+	  {
+	    //note: we are marking the element to the positive sdf side as cut,
+	    //which means the other element is fully in the -1 domain
+	    //for single-phase/cut cell methods, that means the fictitious domain
+	    //is excluded. This affects how ghost penalties and inactive nodes are set.
+	    //This choice is more robust.
+	    root_node = p_i;
+	    inside_out = true;
+	  }
         else
           {
             if (nSpace > 1)

@@ -2246,7 +2246,6 @@ velocity_I.append({:21.16e})
 
                 
         logEvent("Jacobian ", level=10, data=jacobian)
-        # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
 

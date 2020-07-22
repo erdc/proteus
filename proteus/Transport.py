@@ -4286,13 +4286,11 @@ class OneLevelTransport(NonlinearEquation):
                     #immersed/embedded
                     try:
                         if self.hasCutCells:
-                            hasNumericalFlux=1#cek hack 0
-                            if self.numericalFlux is not None and self.numericalFlux.hasInterior:
-                                hasNumericalFlux = 1
-                            hasDiffusionInMixedForm = 1#cek hack int(self.numericalFlux is not None and  self.numericalFlux.mixedDiffusion[ci] == True)
-                            needNumericalFluxJacobian_int = 1#cek hack int(needNumericalFluxJacobian)
-                            hasOutflowBoundary = 1#cek hack int(self.fluxBoundaryConditions[ci] == 'outFlow')
-                            needsOutflowJacobian_int = 1#cek hack int(needOutflowJacobian == True)
+                            hasNumericalFlux=1#edge-based ghost penalties are like numerical fluxes
+                            needNumericalFluxJacobian_int = 1
+                            hasDiffusionInMixedForm = 0
+                            hasOutflowBoundary = 0
+                            needsOutflowJacobian_int = 0
                     except:
                         self.hasCutCells=False
                     if not self.hasCutCells:
@@ -4600,6 +4598,7 @@ class OneLevelTransport(NonlinearEquation):
                                                 J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_ebN,jj]
                                                 self.csrColumnOffsets_eb_eNebN[(ci,cj)][ebN,0,0,ebN_eN,ii,jj] = columnOffsetDict[(I,J)]
         self.nNonzerosInJacobian = self.nnz
+        assert(self.nNonzerosInJacobian > 0)
         return self.jacobian
     def viewSolution(self,plotOffSet=None,titleModifier='',dgridnx=50,dgridny=50,dgridp=16.,pause=False):
         #tmp add pause arg for vtk
