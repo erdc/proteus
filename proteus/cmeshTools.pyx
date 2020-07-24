@@ -13,8 +13,11 @@ cdef class CMesh:
         self.mesh = cppm.Mesh()
         cppm.initializeMesh(self.mesh)
 
-    def __del__(self):
+    def deleteCMesh(self):
         cppm.deleteMesh(self.mesh)
+
+    def __dealloc__(self):
+        self.deleteCMesh()
 
     def buildPythonMeshInterface(self):
         cdef int dim1
@@ -282,7 +285,7 @@ cdef class CMultilevelMesh:
                                                self.multilevelMesh,
                                                False);
 
-    def __del__(self):
+    def __dealloc__(self):
         cppm.deleteMultilevelMesh(self.multilevelMesh)
 
     def buildPythonMultilevelMeshInterface(self):
