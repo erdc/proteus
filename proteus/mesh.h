@@ -276,6 +276,7 @@ extern "C"
   {
     for(int i=0;i<multilevelMesh.nLevels;i++)
       {
+        deleteMesh(multilevelMesh.meshArray[i]);
         if(i>0)
           if (multilevelMesh.elementParentsArray[i] != NULL) delete [] multilevelMesh.elementParentsArray[i];
         if(i<multilevelMesh.nLevels-1)
