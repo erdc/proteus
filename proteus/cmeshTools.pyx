@@ -13,6 +13,9 @@ cdef class CMesh:
         self.mesh = cppm.Mesh()
         cppm.initializeMesh(self.mesh)
 
+    def __del__(self):
+        cppm.deleteMesh(self.mesh)
+
     def buildPythonMeshInterface(self):
         cdef int dim1
         self.nElements_global = self.mesh.nElements_global
@@ -85,7 +88,7 @@ cdef class CMesh:
         self.elementBoundaryDiametersArray = np.asarray(<double[:self.mesh.nElementBoundaries_global]> self.mesh.elementBoundaryDiametersArray)
         if self.mesh.elementBarycentersArray:
             self.elementBarycentersArray = np.asarray(<double[:self.mesh.nElements_global, :3]> self.mesh.elementBarycentersArray)
-        if self.mesh.elementBoundaryBarycentersArray: 
+        if self.mesh.elementBoundaryBarycentersArray:
             self.elementBoundaryBarycentersArray = np.asarray(<double[:self.mesh.nElementBoundaries_global, :3]> self.mesh.elementBoundaryBarycentersArray)
         if self.mesh.nodeDiametersArray:
             self.nodeDiametersArray = np.asarray(<double[:self.mesh.nNodes_global]> self.mesh.nodeDiametersArray)
@@ -95,7 +98,7 @@ cdef class CMesh:
         self.hMin = self.mesh.hMin
         self.sigmaMax = self.mesh.sigmaMax
         self.volume = self.mesh.volume
-    
+
     def buildPythonMeshInterfaceNoArrays(self):
         cdef int dim1
         self.nElements_global = self.mesh.nElements_global
@@ -113,7 +116,7 @@ cdef class CMesh:
         self.hMin = self.mesh.hMin
         self.sigmaMax = self.mesh.sigmaMax
         self.volume = self.mesh.volume
-    
+
 def buildPythonMeshInterface(cmesh):
     """
     function to be conform to old module, and to calls from MeshTools
@@ -278,6 +281,9 @@ cdef class CMultilevelMesh:
                                                cmesh.mesh,
                                                self.multilevelMesh,
                                                False);
+
+    def __del__(self):
+        cppm.deleteMultilevelMesh(self.multilevelMesh)
 
     def buildPythonMultilevelMeshInterface(self):
         cdef int dim

@@ -265,6 +265,8 @@ class NS_base(object):  # (HasTraits):
                             if opts.generatePartitionedMeshFromFiles:
                                 if comm.isMaster():
                                     globalMesh = MeshTools.TetrahedralMesh()
+                                    logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution",memSaved=memBase))
+                                    memBeforeMesh=Profiling.memLast
                                     logEvent("Generating tetrahedral mesh from regular grid")
                                     globalMesh.generateTetrahedralMeshFromRectangularGrid(nnx,nny,nnz,p.domain.L[0],p.domain.L[1],p.domain.L[2])
                                     logEvent("Writing tetgen files to {0:s}.ele, etc.".format(fileprefix))
@@ -277,7 +279,14 @@ class NS_base(object):  # (HasTraits):
                                     check_call("mv -f {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
                                     check_call("mv -f {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
                                     check_call("mv -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                                    logEvent(Profiling.memory("After Generating Mesh", className="NumericalSolution", memSaved=memBeforeMesh))
+                                    memAfterMesh=Profiling.memLast
+                                    del globalMesh
+                                    import gc; gc.collect()
+                                    logEvent(Profiling.memory("After deleting mesh", className="NumericalSolution",memSaved=memAfterMesh))
                                 comm.barrier()
+                                logEvent(Profiling.memory("Before partitioning",className="NumericalSolution"))
+                                memBeforePart=Profiling.memLast
                                 logEvent("Generating partitioned mesh from Tetgen files")
                                 mesh=MeshTools.TetrahedralMesh()
                                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
@@ -286,10 +295,11 @@ class NS_base(object):  # (HasTraits):
                                 mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,n.nLevels,
                                                                               nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                               parallelPartitioningType=n.parallelPartitioningType)
-                                
+
                                 mlMesh.meshList[0].subdomainMesh.nodeArray[:,0] += p.domain.x[0]
                                 mlMesh.meshList[0].subdomainMesh.nodeArray[:,1] += p.domain.x[1]
                                 mlMesh.meshList[0].subdomainMesh.nodeArray[:,2] += p.domain.x[2]
+                                logEvent(Profiling.memory("After partitioning", className="NumericalSolution", memSaved=memBeforePart))
                             else:
                                 mlMesh = MeshTools.MultilevelTetrahedralMesh(nnx, nny, nnz,
                                                                              p.domain.x[0], p.domain.x[1], p.domain.x[2],
@@ -1182,7 +1192,7 @@ class NS_base(object):  # (HasTraits):
                                                                             par_rList=model.par_rList)
                                 if Profiling.logLevel > 10:
                                     model.viewJacobian(file_prefix='dump_{0:s}_{1:s}_{2:s}'.format(runName, model.name,repr(self.tSubstep)))
-                                    
+
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
                                     input("Hit any key to continue")
