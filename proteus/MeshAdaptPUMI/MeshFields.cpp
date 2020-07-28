@@ -80,6 +80,10 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
     apf::setComponents(f, v, 0, &tmp[0]); 
   }
   m->end(it);
+  if (!strcmp(name, "coordinates") && isAnalytic) {
+    Reparam::reparameterizeEntities(m->getModel(),m,modelBox,modelSphere);
+  }
+
   return 0;
 }
 

@@ -4,6 +4,7 @@
 #include <apfNumbering.h>
 #include <queue>
 #include "PyEmbeddedFunctions.h"
+#include "createAnalyticGeometry.h"
 
 /**
    \file MeshAdaptPUMI.h
@@ -74,6 +75,8 @@ class MeshAdaptPUMIDrvr{
 
   //analytic geometry
   void createAnalyticGeometry(int dim, double* boxDim, double*sphereCenter,double radius);
+  Enclosure modelBox;
+  Sphere modelSphere;
 
   void updateSphereCoordinates(double*sphereCenter);
   void initialAdapt_analytic();

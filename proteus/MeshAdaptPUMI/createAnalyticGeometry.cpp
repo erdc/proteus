@@ -20,19 +20,18 @@ agm_use add_adj(gmi_model* m, agm_bdry b, int tag)
 
 //anonymous namespace to make all functions local to this file scope
 
+double xyz_offset[3];
+double sphereRadius;
+double boxLength;
+double boxWidth;
+double boxHeight;
+int geomDim;
+Enclosure modelBox;
+Sphere modelSphere;
+
+
 namespace 
 {
-    int edgeMap[12] = {50,48,46,52,11,16,20,6,73,72,71,74};
-    int faceLoop[6] = {80,78,76,82,42,24};
-
-    double sphereRadius;
-    double xyz_offset[3];
-
-    double boxLength;
-    double boxWidth;
-    double boxHeight;
-    int geomDim;
-
     void vert0(double const p[2], double x[3], void*)
     {
       (void)p;
@@ -298,24 +297,6 @@ namespace
 typedef void (*EntityMapArray) (double const p[2], double x[3], void*);
 typedef void (*ParametricFunctionArray) (double const from[2], double to[2], void*);
 
-struct Enclosure{
-    
-    std::vector<int> vertexMap;
-    double vertRan[1][2]={{0.0,0.0}};
-    int vertPer=0;
-
-    std::vector<int> edgeMap;
-    int edgePer = 0;
-    double edgeRan[1][2] = {{0.0,1.0}};
-
-    std::vector<int> faceMap;
-    int faPer[2] = {0, 0};
-    double faRan[2][2] = {{0,1},{0,1}};
-
-    int regionID = 92; // fixed ID
-    void makeBox2D(gmi_model* model); 
-    void makeBox3D(gmi_model* model); 
-};
 
 void Enclosure::makeBox2D(gmi_model* model)
 {
@@ -333,7 +314,7 @@ void Enclosure::makeBox2D(gmi_model* model)
   for(auto i=0; i<vertexMap.size();i++)
     g_vert[i] = gmi_add_analytic(model, 0, vertexMap[i], vertexPoints[i], &vertPer, vertRan, 0); 
 
-  edgeMap = {50,48,46,52};
+  edgeMap = {1,2,3,4};
   gmi_ent* g_edge[edgeMap.size()];
 
   EntityMapArray edgeEntities[] = {
@@ -487,25 +468,6 @@ void Enclosure::makeBox3D(gmi_model* model)
   return;
 }
 
-class Sphere{
-    public:
-    const double pi = apf::pi;
-    int faceID = 123;
-    double radius;
-    double offset[3];
-    int dim; 
-    int faPer[2] = {1, 0};
-    double faRan[2][2] = {{0,6.28318530718},{0.0,apf::pi}};
-
-    Sphere(int x){
-        dim = x;
-        if(dim==2){
-            faRan[1][1] = 0.0; 
-        }
-    }
-    void makeSphere(gmi_model* model);
-   
-};
 
 void Sphere::makeSphere(gmi_model* model)
 { 
@@ -622,6 +584,66 @@ void setParameterization(gmi_model* model,apf::Mesh2* m, Enclosure box, Sphere s
   m->acceptChanges();
 }
 
+void Reparam::reparameterizeEntities(gmi_model*model,apf::Mesh2*m,Enclosure box, Sphere sphere){
+  std::map<int,int> edgeParam;
+  const int numEdges = 4;
+  int edgeScales[numEdges] = {0,1,0,1};
+  double edgeLengths[2] = {boxLength,boxWidth};
+  for(int i=0;i<numEdges;i++)
+  {
+    edgeParam[box.edgeMap[i]] = edgeScales[i];
+  }
+
+  apf::MeshIterator* it = m->begin(0);
+  apf::MeshEntity* ent;
+  while( (ent = m->iterate(it)) )
+  {
+    apf::ModelEntity* g_ent = m->toModel(ent);
+    
+    apf::MeshEntity* ev[2];
+    m->getDownward(ent,0,ev);
+    int modelTag = m->getModelTag(g_ent);
+    int modelType = m->getModelType(g_ent);
+    if(modelType<3 && modelType!=0)
+    {
+      apf::Vector3 pt;
+      apf::Vector3 oldParam;
+      apf::Vector3 newParam(0.0,0.0,0.0);
+      m->getPoint(ent,0,pt);
+      m->getParam(ent,oldParam);
+      if(modelType==1 && modelTag!=sphere.faceID)
+      {
+        int relevantIndex = edgeParam[modelTag];
+        newParam[0]=pt[relevantIndex]/edgeLengths[relevantIndex];
+        //std::cout<<"model tag "<<modelTag<<" newParam "<<newParam<<" old Param "<<oldParam<<" pt "<<pt<<std::endl;
+        m->setParam(ent,newParam);
+      }
+      else if (modelType==1 && modelTag == sphere.faceID) //2D version
+      {
+        //std::cout<<"xyz offset "<<xyz_offset[0]<<" "<<xyz_offset[1]<<std::endl;
+        double argy = (pt[1]-xyz_offset[1]);
+        double argx = (pt[0]-xyz_offset[0]);
+        if(argx == 0 && argy ==0)
+          newParam[0] = 0.0; // not sure if this will happen or if this is right
+        else 
+          newParam[0] = atan2(argy,argx);
+
+        m->setParam(ent,newParam);
+      }
+      else if (modelType==2)
+      {
+        newParam[0] = pt[0]/boxLength;
+        newParam[1] = pt[1]/boxWidth;
+        m->setParam(ent,newParam);
+      }
+
+    } //end if
+  } //end while
+  m->end(it);
+  m->acceptChanges();
+
+}
+
 void setParameterization2D(gmi_model* model,apf::Mesh2* m, Enclosure box, Sphere sphere)
 {
   //Get the classification of each entity in the SimMesh
@@ -649,6 +671,7 @@ void setParameterization2D(gmi_model* model,apf::Mesh2* m, Enclosure box, Sphere
   m->acceptChanges();
 
   //Need to set the parametric coordinates of each of the boundary vertices
+/*
   std::map<int,int> edgeParam;
   const int numEdges = 4;
   int edgeScales[numEdges] = {0,1,0,1};
@@ -704,6 +727,8 @@ void setParameterization2D(gmi_model* model,apf::Mesh2* m, Enclosure box, Sphere
   } //end while
   m->end(it);
   m->acceptChanges();
+*/
+    Reparam::reparameterizeEntities(model,m,box,sphere);
 }
 
 void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
@@ -784,6 +809,11 @@ void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
   xyz_offset[0] = sphereCenter[0];
   xyz_offset[1] = sphereCenter[1];
   xyz_offset[2] = sphereCenter[2];
+
+  char buffer[100];
+  sprintf(buffer,"Checking coordinates at update %f %f %f",xyz_offset[0],xyz_offset[1],xyz_offset[2]);
+  logEvent(buffer,3);
+
 }
 
 void MeshAdaptPUMIDrvr::createAnalyticGeometry(int dim, double* boxDim,double*sphereCenter, double radius)
@@ -822,6 +852,8 @@ void MeshAdaptPUMIDrvr::createAnalyticGeometry(int dim, double* boxDim,double*sp
       setParameterization2D(model,m,box,sphere);
   }
 
+  modelBox = box;
+  modelSphere = sphere;
   isAnalytic = 1;
   m->verify();
 

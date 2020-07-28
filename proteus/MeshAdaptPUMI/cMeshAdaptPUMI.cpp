@@ -783,6 +783,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   in->shouldRunPostZoltan = true;
   in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
+  //in->shouldSnap=0;
+  //in->shouldTransferParametric=0;
   in->shouldSnap=isAnalytic;
   in->shouldTransferParametric=isAnalytic;
   //in->goodQuality = 0.16;//0.027;
@@ -836,6 +838,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
 */
 
   nTriggers=0;
+  //std::exit(1);
   return 0;
 }
 
