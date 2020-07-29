@@ -271,6 +271,8 @@ class NS_base(object):  # (HasTraits):
                                     globalMesh.generateTetrahedralMeshFromRectangularGrid(nnx,nny,nnz,p.domain.L[0],p.domain.L[1],p.domain.L[2])
                                     logEvent("Writing tetgen files to {0:s}.ele, etc.".format(fileprefix))
                                     globalMesh.writeTetgenFiles(fileprefix,nbase)
+                                    del globalMesh
+                                    import gc; gc.collect()
                                     logEvent("Writing tetgen edge files to {0:s}.edge".format(fileprefix))
                                     check_call("rm -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                                     check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
@@ -281,8 +283,6 @@ class NS_base(object):  # (HasTraits):
                                     check_call("mv -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                                     logEvent(Profiling.memory("After Generating Mesh", className="NumericalSolution", memSaved=memBeforeMesh))
                                     memAfterMesh=Profiling.memLast
-                                    del globalMesh
-                                    import gc; gc.collect()
                                     logEvent(Profiling.memory("After deleting mesh", className="NumericalSolution",memSaved=memAfterMesh))
                                 comm.barrier()
                                 logEvent(Profiling.memory("Before partitioning",className="NumericalSolution"))
