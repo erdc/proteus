@@ -2294,8 +2294,11 @@ class TetrahedralMesh(Mesh):
     def generateTetrahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
         from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
+        logEvent("Generating grid and mesh")
         cmeshTools.generateTetrahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz,self.cmesh)
+        logEvent("Allocating geometric info")
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+        logEvent("Computing geometric info")
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
 
