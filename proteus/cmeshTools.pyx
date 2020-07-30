@@ -16,9 +16,6 @@ cdef class CMesh:
     def deleteCMesh(self):
         cppm.deleteMesh(self.mesh)
 
-    def __dealloc__(self):
-        self.deleteCMesh()
-
     def buildPythonMeshInterface(self):
         cdef int dim1
         self.nElements_global = self.mesh.nElements_global

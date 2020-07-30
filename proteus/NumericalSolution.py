@@ -271,6 +271,7 @@ class NS_base(object):  # (HasTraits):
                                     globalMesh.generateTetrahedralMeshFromRectangularGrid(nnx,nny,nnz,p.domain.L[0],p.domain.L[1],p.domain.L[2])
                                     logEvent("Writing tetgen files to {0:s}.ele, etc.".format(fileprefix))
                                     globalMesh.writeTetgenFiles(fileprefix,nbase)
+                                    globalMesh.cmesh.deleteCMesh()
                                     del globalMesh
                                     import gc; gc.collect()
                                     logEvent("Writing tetgen edge files to {0:s}.edge".format(fileprefix))
