@@ -661,7 +661,7 @@ EXTENSIONS_TO_BUILD = [
             "proteus/equivalent_polynomials_utils.h",
             "proteus/equivalent_polynomials_coefficients.h",
             'proteus/equivalent_polynomials_coefficients_quad.h'],
-        include_dirs=get_xtensor_include(),
+        include_dirs=get_xtensor_include() + PROTEUS_MPI_INCLUDE_DIRS,
         extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14'],
         libraries=PROTEUS_MPI_LIBS,
         language='c++'),
