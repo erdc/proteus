@@ -51,8 +51,7 @@ struct Enclosure{
 
 class Sphere{
     public:
-    const double pi = apf::pi;
-    int faceID = 6;//123;
+    int faceID; //values are dictated by spatial tools
     double radius;
     double offset[3];
     int dim; 
@@ -63,7 +62,10 @@ class Sphere{
         dim = x;
         if(dim==2){
             faRan[1][1] = 0.0; 
+            faceID=6;
         }
+        if(dim==3)
+            faceID=9;
     }
     Sphere(){}
     void makeSphere(gmi_model* model);
@@ -71,11 +73,8 @@ class Sphere{
 
 namespace Reparam{
     void reparameterizeEntities(gmi_model*model,apf::Mesh2*m,Enclosure box, Sphere sphere);
+    void reparameterize2D(gmi_model*model,apf::Mesh2*m,Enclosure box, Sphere sphere);
+    void reparameterize3D(gmi_model*model,apf::Mesh2*m,Enclosure box, Sphere sphere);
 }
-
-//namespace MeshAdaptPUMIDrvr{
-//extern Enclosure modelBox;
-//extern Sphere modelSphere;
-//}
 
 #endif

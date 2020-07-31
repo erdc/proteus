@@ -654,13 +654,14 @@ class PUMI_helper:
             #self.nSolveSteps%domain.AdaptManager.PUMIAdapter.numAdaptSteps()==0):
 
             #this needs to update before mesh coordinates are updated for reparameterization
-            if (self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
-                sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
-                logEvent("The sphere coordinates are %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
-                domain.AdaptManager.PUMIAdapter.updateSphereCoordinates(sphereCoords)
-                logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
-            else:
-                sys.exit("Haven't been implemented code yet to cover this behavior.")
+            if self.auxiliaryVariables['rans2p'] != []:
+                if(self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
+                    sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
+                    logEvent("The sphere coordinates are %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
+                    domain.AdaptManager.PUMIAdapter.updateSphereCoordinates(sphereCoords)
+                    logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
+                else:
+                    sys.exit("Haven't been implemented code yet to cover this behavior.")
             
 
 
