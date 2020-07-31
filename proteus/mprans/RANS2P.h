@@ -2232,15 +2232,15 @@ namespace proteus
               for (int ebN_element=0;ebN_element < nDOF_mesh_trial_element; ebN_element++)
                 {
                   const int ebN = elementBoundariesArray.data()[eN*nDOF_mesh_trial_element+ebN_element];
-                  if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned))
-		    ifem_boundaries.insert(ebN);
+                  //if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned))
+		  //  ifem_boundaries.insert(ebN);
+                  ifem_boundaries.insert(ebN);
                 }
             }
           //
           //loop over quadrature points and compute integrands
           //
           double numDiffMax=0.0;
-	  assert(abs(icase) == 1);
           for(int fluid_phase=0;fluid_phase < 2 - abs(icase);fluid_phase++)
             {
               for(int k=0;k<nQuadraturePoints_element;k++)
@@ -4660,8 +4660,8 @@ namespace proteus
 	  p_dv = recv[1];
 	  total_volume = recv[2];
 	  total_surface_area = recv[3];
-	  std::cout<<"Domain Volume: "<<total_volume<<std::endl;
-	  std::cout<<"Domain Surface Area: "<<total_surface_area<<std::endl;
+	  //std::cout<<"Domain Volume: "<<total_volume<<std::endl;
+	  //std::cout<<"Domain Surface Area: "<<total_surface_area<<std::endl;
 	  //cek hack
 	  // 1. This forces the pressure average to match the average of the analytical solution (or zero of no analytical solution is given)
 	  // 2. I'm manually figuring out how many pressure dof there are

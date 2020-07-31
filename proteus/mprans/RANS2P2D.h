@@ -11,6 +11,7 @@
 #include "equivalent_polynomials.h"
 #include "ArgumentsDict.h"
 #include "xtensor-python/pyarray.hpp"
+#include "mpi.h"
 
 namespace py = pybind11;
 
@@ -1661,18 +1662,18 @@ namespace proteus
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
-      double p_dv=0.0,pa_dv=0.0,total_volume=0.0,total_flux=0.0;
+      double p_dv=0.0,pa_dv=0.0,total_volume=0.0,total_surface_area=0.0,total_flux=0.0;
       double mesh_volume_conservation=0.0,
         mesh_volume_conservation_weak=0.0,
         mesh_volume_conservation_err_max=0.0,
         mesh_volume_conservation_err_max_weak=0.0,
         domain_volume=0.0,
-        &p_L1=errors(0,0),&u_L1=errors(0,1),&v_L1=errors(0,2),&velocity_L1=errors(0,4),
-        &p_L2=errors(1,0),&u_L2=errors(1,1),&v_L2=errors(1,2),&velocity_L2=errors(1,4),
-        &p_LI=errors(2,0),&u_LI=errors(2,1),&v_LI=errors(2,2),&velocity_LI=errors(2,4);
-      p_L1=0.0; u_L1=0.0; v_L1=0.0; velocity_L1=0.0;
-      p_L2=0.0; u_L2=0.0; v_L2=0.0; velocity_L2=0.0;
-      p_LI=0.0; u_LI=0.0; v_LI=0.0; velocity_LI=0.0;
+        &p_L1=errors(0,0),&u_L1=errors(0,1),&v_L1=errors(0,2),&w_L1=errors(0,2),&velocity_L1=errors(0,4),
+        &p_L2=errors(1,0),&u_L2=errors(1,1),&v_L2=errors(1,2),&w_L2=errors(1,2),&velocity_L2=errors(1,4),
+        &p_LI=errors(2,0),&u_LI=errors(2,1),&v_LI=errors(2,2),&w_LI=errors(2,2),&velocity_LI=errors(2,4);
+      p_L1=0.0; u_L1=0.0; v_L1=0.0; w_L1=0.0; velocity_L1=0.0;
+      p_L2=0.0; u_L2=0.0; v_L2=0.0; w_L2=0.0; velocity_L2=0.0;
+      p_LI=0.0; u_LI=0.0; v_LI=0.0; w_LI=0.0; velocity_LI=0.0;
       double globalConservationError=0.0;
       /* std::cout<<"Ball Info: center "<<ball_center[0]<<'\t'<<ball_center[1]<<std::endl */
       /*          <<"Ball Info: radius "<<ball_radius[0]<<std::endl */
@@ -1764,6 +1765,8 @@ namespace proteus
               for (int ebN_element=0;ebN_element < nDOF_mesh_trial_element; ebN_element++)
                 {
                   const int ebN = elementBoundariesArray.data()[eN*nDOF_mesh_trial_element+ebN_element];
+                  //if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned))
+		  //  ifem_boundaries.insert(ebN);
                   ifem_boundaries.insert(ebN);
                 }
             }
@@ -2726,27 +2729,31 @@ namespace proteus
                     {
                       assert(H_f == 1);
                     }
-                  domain_volume += H_s*dV*H_f;
-                  p_L1 += fabs(p_e)*H_s*dV*H_f;
-                  u_L1 += fabs(u_e)*H_s*dV*H_f;
-                  v_L1 += fabs(v_e)*H_s*dV*H_f;
-                  velocity_L1 += fabs(velocity_e)*H_s*dV*H_f;
-                  
-                  p_L2 += (p_e*p_e)*H_s*dV*H_f;
-                  u_L2 += (u_e*u_e)*H_s*dV*H_f;
-                  v_L2 += (v_e*v_e)*H_s*dV*H_f;
-                  velocity_L2 += (velocity_e*velocity_e)*H_s*dV*H_f;
-                  p_dv += p*H_s*H_f*dV;
-                  pa_dv += q_u_0.data()[eN_k]*H_s*H_f*dV;
-                  total_volume+=H_s*H_f*dV;
-                  if (phi_solid.data()[eN_k] >= 0.0)
-                    {
-                      p_LI = fmax(p_LI, fabs(p_e));
-                      u_LI = fmax(u_LI, fabs(u_e));
-                      v_LI = fmax(v_LI, fabs(v_e));
-                      velocity_LI = fmax(velocity_LI, fabs(velocity_e));
-                    }
 
+		  if ((eN < nElements_owned) && elementIsActive[eN])
+		    {
+		      domain_volume += H_s*dV*H_f;
+		      p_L1 += fabs(p_e)*H_s*dV*H_f;
+		      u_L1 += fabs(u_e)*H_s*dV*H_f;
+		      v_L1 += fabs(v_e)*H_s*dV*H_f;
+		      velocity_L1 += fabs(velocity_e)*H_s*dV*H_f;
+		      
+		      p_L2 += p_e*p_e*H_s*dV*H_f;
+		      u_L2 += u_e*u_e*H_s*dV*H_f;
+		      v_L2 += v_e*v_e*H_s*dV*H_f;
+		      velocity_L2 += velocity_e*velocity_e*H_s*dV*H_f;
+		      p_dv += p*H_s*H_f*dV;
+		      pa_dv += q_u_0.data()[eN_k]*H_s*H_f*dV;
+		      total_volume+=H_s*H_f*dV;
+		      total_surface_area+=D_s*H_f*dV;
+		      if (phi_solid.data()[eN_k] >= 0.0)
+			{
+			  p_LI = fmax(p_LI, fabs(p_e));
+			  u_LI = fmax(u_LI, fabs(u_e));
+			  v_LI = fmax(v_LI, fabs(v_e));
+			  velocity_LI = fmax(velocity_LI, fabs(velocity_e));
+			}
+		    }
                   for(int i=0;i<nDOF_test_element;i++)
                     {
                       register int i_nSpace=i*nSpace;
@@ -2870,14 +2877,6 @@ namespace proteus
           mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
         }//elements
       //std::cout<<"p,u,v L2 error integrals (shoudl be non-negative) "<<p_L2<<'\t'<<u_L2<<'\t'<<v_L2<<'\t'<<"Flow Domain Volume = "<<domain_volume<<std::endl;
-      assert(p_L2 >= 0.0);
-      assert(u_L2 >= 0.0);
-      assert(v_L2 >= 0.0);
-      assert(velocity_L2 >= 0.0);
-      p_L2 = sqrt(p_L2);
-      u_L2 = sqrt(u_L2);
-      v_L2 = sqrt(v_L2);
-      velocity_L2 = sqrt(velocity_L2);
       for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); )
         {
           if(elementIsActive[elementBoundaryElementsArray[(*it)*2+0]] && elementIsActive[elementBoundaryElementsArray[(*it)*2+1]])
@@ -3883,11 +3882,17 @@ namespace proteus
       
       if (normalize_pressure)
         {
+	  double send[4]={pa_dv,p_dv,total_volume, total_surface_area}, recv[4]={0.,0.,0.,0.};
+	  MPI_Allreduce(send, recv,4,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+	  pa_dv = recv[0];
+	  p_dv = recv[1];
+	  total_volume = recv[2];
+	  total_surface_area = recv[3];
+	  //std::cout<<"Domain Volume: "<<total_volume<<std::endl;
+	  //std::cout<<"Domain Surface Area: "<<total_surface_area<<std::endl;
 	  //cek hack
-	  // 1. This doesn't work in parallel right now. Could be fixed by moving the pressure correction into RANS2P.py or putting and allGather here
-	  // 2. This forces the pressure average to match the average of the analytical solution (or zero of no analytical solution is given)
-	  //
-	  // I'm manually figuring out how many pressure dof there are
+	  // 1. This forces the pressure average to match the average of the analytical solution (or zero of no analytical solution is given)
+	  // 2. I'm manually figuring out how many pressure dof there are
           /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
           /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
           /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
@@ -3906,14 +3911,15 @@ namespace proteus
 		}
 	    }
 	  nDOF_pressure +=1;
+	  assert(p_dof.shape(0) == nDOF_pressure);
           //std::cout<<"nDOF_pressure "<<nDOF_pressure<<std::endl;
           for (int I=0;I<nDOF_pressure;I++)
-            p_dof[I] += (pa_dv - p_dv)/total_volume;
+            p_dof.data()[I] += (pa_dv - p_dv)/total_volume;
           double p_dv_new=0.0, pa_dv_new=0.0;
           p_L1=0.0;
           p_L2=0.0;
           p_LI=0.0;
-          for (int eN=0 ; eN < nElements_global ; ++eN)
+          for (int eN=0 ; eN < nElements_owned ; ++eN)
             {
               double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
               for (int j=0;j<nDOF_mesh_trial_element;j++)
@@ -3953,13 +3959,16 @@ namespace proteus
                                               x,y,z);
                   dV = fabs(jacDet)*dV_ref.data()[k];
                   ck.valFromDOF(p_dof.data(),&p_l2g.data()[eN_nDOF_trial_element],&p_trial_ref.data()[k*nDOF_trial_element],p);
-                  p_dv_new += p*H_s*dV;
-                  pa_dv_new += q_u_0.data()[eN_k]*H_s*dV;
-                  pe = p-q_u_0.data()[eN_k];
-                  p_L1 += fabs(pe)*H_s*dV;
-                  p_L2 += pe*pe*H_s*dV;
-                  if (fabs(pe) > p_LI)
-                    p_LI = fabs(pe);
+		  if (elementIsActive[eN])
+		    {
+		      p_dv_new += p*H_s*dV;
+		      pa_dv_new += q_u_0.data()[eN_k]*H_s*dV;
+		      pe = p-q_u_0.data()[eN_k];
+		      p_L1 += fabs(pe)*H_s*dV;
+		      p_L2 += pe*pe*H_s*dV;
+		      if (fabs(pe) > p_LI)
+			p_LI = fabs(pe);
+		    }
                 }
             }
           p_L2 = sqrt(p_L2);
@@ -3967,6 +3976,17 @@ namespace proteus
           //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
           //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_LI<<std::endl;
         }
+      assert(errors.shape(0)*errors.shape(1) == 15);
+      MPI_Allreduce(MPI_IN_PLACE, errors.data(),(errors.shape(0)-1)*errors.shape(1),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+      MPI_Allreduce(MPI_IN_PLACE, errors.data()+(errors.shape(0)-1)*errors.shape(1),1*errors.shape(1),MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+      assert(p_L2 >= 0.0);
+      assert(u_L2 >= 0.0);
+      assert(v_L2 >= 0.0);
+      assert(velocity_L2 >= 0.0);
+      p_L2 = sqrt(p_L2);
+      u_L2 = sqrt(u_L2);
+      v_L2 = sqrt(v_L2);
+      velocity_L2 = sqrt(velocity_L2);
     }
 
     void calculateJacobian(arguments_dict& args)
@@ -4199,7 +4219,6 @@ namespace proteus
       double particle_penalty_constant = args.m_dscalar["particle_penalty_constant"];
       double ghost_penalty_constant = args.m_dscalar["ghost_penalty_constant"];
       const bool useExact = args.m_iscalar["useExact"];
-      xt::pyarray<double>& isActiveDOF = args.m_darray["isActiveDOF"];
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
       std::valarray<double> particle_surfaceArea_tmp(nParticles), particle_netForces_tmp(nParticles*3*3), particle_netMoments_tmp(nParticles*3);
       gf.useExact = false;//useExact;

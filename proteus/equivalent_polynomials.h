@@ -297,8 +297,15 @@ namespace equivalent_polynomials
       {
         if (zcount == nN-1)//interface is on an element boundary, don't integrate this orientation
           {
-	    //note: see comment below about these two cases
-	    return -1;
+	    if (nSpace > 1)
+	      {
+		//note: see comment below about these two cases
+		return -1;
+	      }
+	    else
+	      {
+		root_node = n_i;
+	      }
 	  }
         else
           {
@@ -314,8 +321,13 @@ namespace equivalent_polynomials
 	    //for single-phase/cut cell methods, that means the fictitious domain
 	    //is excluded. This affects how ghost penalties and inactive nodes are set.
 	    //This choice is more robust.
-	    root_node = p_i;
-	    inside_out = true;
+	    if (nSpace > 1)
+	      {
+		root_node = p_i;
+		inside_out = true;
+	      }
+	    else
+	      return 1;
 	  }
         else
           {

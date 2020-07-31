@@ -282,9 +282,6 @@ cdef class CMultilevelMesh:
                                                self.multilevelMesh,
                                                False);
 
-    def __dealloc__(self):
-        cppm.deleteMultilevelMesh(self.multilevelMesh)
-
     def buildPythonMultilevelMeshInterface(self):
         cdef int dim
         self.cmeshList = [CMesh_FromMesh(self.multilevelMesh.meshArray[0])]

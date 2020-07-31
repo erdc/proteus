@@ -107,6 +107,10 @@ def test_2D():
                             tmp=int_H_exact
                             int_H_exact = int_ImH_exact
                             int_ImH_exact = tmp
+                    elif phi[0] > 0.0 and phi[1] == 0.0 and phi[2] == 0.0:
+                        int_H_exact = area
+                        int_ImH_exact = 0.0
+                        int_D_exact = np.linalg.norm(e[1,:] - e[2,:])
                     elif phi[0] < 0.0:
                         int_H_exact = 0.0
                         int_ImH_exact = area
