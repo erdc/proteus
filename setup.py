@@ -662,7 +662,8 @@ EXTENSIONS_TO_BUILD = [
             "proteus/equivalent_polynomials_coefficients.h",
             'proteus/equivalent_polynomials_coefficients_quad.h'],
         include_dirs=get_xtensor_include(),
-        extra_compile_args=PROTEUS_OPT+['-std=c++14'],
+        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14'],
+        libraries=PROTEUS_MPI_LIBS,
         language='c++'),
     Extension(
         'mprans.cRDLS',
