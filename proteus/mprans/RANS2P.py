@@ -504,6 +504,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.model.q[('u', 0)][eN,k] = self.analyticalSolution[0].uOfXT(self.model.q['x'][eN,k],0.)
                     self.model.q[('u', 1)][eN,k] = self.analyticalSolution[1].uOfXT(self.model.q['x'][eN,k],0.)
                     self.model.q[('u', 2)][eN,k] = self.analyticalSolution[2].uOfXT(self.model.q['x'][eN,k],0.)
+                    if self.nd == 3:
+                        self.model.q[('u', 3)][eN,k] = self.analyticalSolution[3].uOfXT(self.model.q['x'][eN,k],0.)
         self.model.q['phi_solid'] = self.q_phi_solid
         self.model.q['velocity_solid'] = self.q_velocity_solid
         self.model.q['phi_porous'] = self.q_phi_porous
@@ -808,6 +810,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
+        if self.analyticalSolution is not None:
+            for eN in range(self.model.q['x'].shape[0]):
+                for k in range(self.model.q['x'].shape[1]):
+                    self.model.q[('u', 0)][eN,k] = self.analyticalSolution[0].uOfXT(self.model.q['x'][eN,k],t)
+                    self.model.q[('u', 1)][eN,k] = self.analyticalSolution[1].uOfXT(self.model.q['x'][eN,k],t)
+                    self.model.q[('u', 2)][eN,k] = self.analyticalSolution[2].uOfXT(self.model.q['x'][eN,k],t)
+                    if self.nd == 3:
+                        self.model.q[('u', 3)][eN,k] = self.analyticalSolution[3].uOfXT(self.model.q['x'][eN,k],t)
 
         if self.nParticles > 0 and self.use_ball_as_particle == 0:
             self.phi_s[:] = 1e10
@@ -1508,6 +1518,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
+        self.errors = np.zeros((3,5),'d')
         self.velocityErrorNodal = self.u[0].dof.copy()
         logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
 
@@ -1525,7 +1536,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if self.coefficients.force_y:
                     self.q[('force', 1)][eN,k] = self.coefficients.force_y(self.q['x'][eN,k])
                 if self.coefficients.force_z:
-                    self.q[('force', 1)][eN,k] = self.coefficients.force_z(self.q['x'][eN,k])
+                    self.q[('force', 2)][eN,k] = self.coefficients.force_z(self.q['x'][eN,k])
 
     def getResidual(self, u, r):
         """
@@ -1572,9 +1583,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             self.ebqe[('diffusiveFlux_bc_flag', ck, ci)][t[0], t[1]] = 1
         r.fill(0.0)
         try:
-            self.isActiveDOF[:] = 0.0
+            self.isActiveR[:] = 0.0
+            self.isActiveDOF_p[:] = 0.0
+            self.isActiveDOF_vel[:] = 0.0
         except AttributeError:
-            self.isActiveDOF = np.zeros_like(r)
+            self.isActiveR = np.zeros_like(r)
+            self.isActiveDOF_p = np.zeros_like(self.u[0].dof)
+            self.isActiveDOF_vel = np.zeros_like(self.u[1].dof)
         self.Ct_sge = 4.0
         self.Cd_sge = 36.0
         self.coefficients.wettedAreas[:] = 0.0
@@ -1822,9 +1837,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["ebq_global_grad_phi_s"] = self.coefficients.ebq_global_grad_phi_s
         argsDict["ebq_particle_velocity_s"] = self.coefficients.ebq_particle_velocity_s
         argsDict["nParticles"] = self.coefficients.nParticles
-        argsDict["&particle_netForces"] = self.coefficients.particle_netForces
-        argsDict["&particle_netMoments"] = self.coefficients.particle_netMoments
-        argsDict["&particle_surfaceArea"] = self.coefficients.particle_surfaceArea
+        argsDict["particle_netForces"] = self.coefficients.particle_netForces
+        argsDict["particle_netMoments"] = self.coefficients.particle_netMoments
+        argsDict["particle_surfaceArea"] = self.coefficients.particle_surfaceArea
         argsDict["nElements_owned"] = int(self.mesh.nElements_owned)
         argsDict["particle_nitsche"] = self.coefficients.particle_nitsche
         argsDict["particle_epsFact"] = self.coefficients.particle_epsFact
@@ -1835,61 +1850,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["phi_solid_nodes"] = self.coefficients.phi_s
         argsDict["distance_to_solids"] = self.coefficients.phisField
         argsDict["useExact"] = int(self.coefficients.useExact)
-        argsDict["isActiveDOF"] = self.isActiveDOF
-        argsDict["normalize_pressure"] = self.coefficients.normalize_pressure
+        argsDict["isActiveR"] = self.isActiveR
+        argsDict["isActiveDOF_p"] = self.isActiveDOF_p
+        argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
+        argsDict["normalize_pressure"] = int(self.coefficients.normalize_pressure)
+        argsDict["errors"]=self.errors
         self.rans2p.calculateResidual(argsDict)
-        try:
-            #is sensitive to inactive DOF at velocity due to time derivative
-            #self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = 0.0
-            #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = self.coefficients.ball_velocity[0][0]
-            #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = self.coefficients.ball_velocity[0][1]
-            #u[self.isActiveDOF==0.0] = 0.0
-            if self.coefficients.nParticles ==1:
-                self.u[0].dof[:] = np.where(self.isActiveDOF[self.offset[0]:self.offset[0]+self.stride[0]*self.u[0].dof.shape[0]:self.stride[0]]==1.0, self.u[0].dof,0.0)
-                self.u[1].dof[:] = np.where(self.isActiveDOF[self.offset[1]:self.offset[1]+self.stride[1]*self.u[1].dof.shape[0]:self.stride[1]]==1.0, self.u[1].dof,self.coefficients.ball_velocity[0][0])
-                self.u[2].dof[:] = np.where(self.isActiveDOF[self.offset[2]:self.offset[2]+self.stride[2]*self.u[2].dof.shape[0]:self.stride[2]]==1.0, self.u[2].dof,self.coefficients.ball_velocity[0][1])
-            #tmp = u.copy()
-            #check that inactive DOF can be set arbitrarily
-            #u[:] = np.where(self.isActiveDOF==1.0,u,-1000.0)
-            #assert((tmp == u).all())
-            #print("inactive ",u[self.isActiveDOF==0.0])
-            #import pdb
-            #pdb.set_trace()
-            #test that solution doesn't depend on inactive DOF
-            #u[self.isActiveDOF==0.0] = -1000.0
-            #self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = -1000.0
-            #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = -1000.0
-            #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = -1000.0
-            #u[self.isActiveDOF==0.0] = 0.0
-            #self.u[0].dof[self.isActiveDOF[self.offset[0]::self.stride[0]]==0.0] = 0.0
-            #self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]]==0.0] = 0.0
-            #self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]]==0.0] = 0.0
-            #print("ball velocity x at nodes", self.u[1].dof[self.isActiveDOF[self.offset[1]::self.stride[1]] == 0.0])
-            #print("ball velocity y at nodes", self.u[2].dof[self.isActiveDOF[self.offset[2]::self.stride[2]] == 0.0])
-            r*=self.isActiveDOF
-            #print(r[np.argwhere(self.isActiveDOF==0.0)])
-        except:
-            assert((self.isActiveDOF == 1.0).all())
-            pass
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
-        
-        comm.Allreduce(self.coefficients.wettedAreas.copy(),self.coefficients.wettedAreas)
-        comm.Allreduce(self.coefficients.netForces_p.copy(),self.coefficients.netForces_p)
-        comm.Allreduce(self.coefficients.netForces_v.copy(),self.coefficients.netForces_v)
-        comm.Allreduce(self.coefficients.netMoments.copy(),self.coefficients.netMoments)
-        
-        comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
-        comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
-        comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),self.coefficients.particle_surfaceArea)
-        
-        for i in range(self.coefficients.nParticles):
-            logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
-            logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
-            logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
-            logEvent("particle i=" + repr(i)+ " stress force " + repr(self.coefficients.particle_netForces[i+self.coefficients.nParticles]))
-            logEvent("particle i=" + repr(i)+ " pressure force " + repr(self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]))
-
         if self.forceStrongConditions:
             try:
                 for cj in range(len(self.dirichletConditionsForceDOF)):
@@ -1913,15 +1879,69 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                 g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t) 
                             if self.MOVING_DOMAIN == 1.0:
                                 r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
+                        #assert(abs(r[self.offset[cj] + self.stride[cj] * dofN]) < 1.0e-8)
+                        
+        try:
+            #is sensitive to inactive DOF at velocity due to time derivative
+            if self.coefficients.nParticles ==1:
+                self.u[0].dof[:] = np.where(self.isActiveDOF_p==1.0, self.u[0].dof,0.0)
+                self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,self.coefficients.ball_velocity[0][0])
+                self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,self.coefficients.ball_velocity[0][1])
+                if self.nSpace_global == 3:
+                    self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,self.coefficients.ball_velocity[0][2])
+            else:
+                self.u[0].dof[:] = np.where(self.isActiveDOF_p==1.0, self.u[0].dof,0.0)
+                self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,0.0)
+                self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,0.0)
+                if self.nSpace_global == 3:
+                    self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,0.0)
+            r*=self.isActiveR
+        except:
+            assert((self.isActiveR == 1.0).all())
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        
+        comm.Allreduce(self.coefficients.wettedAreas.copy(),self.coefficients.wettedAreas)
+        comm.Allreduce(self.coefficients.netForces_p.copy(),self.coefficients.netForces_p)
+        comm.Allreduce(self.coefficients.netForces_v.copy(),self.coefficients.netForces_v)
+        comm.Allreduce(self.coefficients.netMoments.copy(),self.coefficients.netMoments)
+        
+        comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
+        comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
+        comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),self.coefficients.particle_surfaceArea)
+        
+        for i in range(self.coefficients.nParticles):
+            logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
+            logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
+            logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
+            logEvent("particle i=" + repr(i)+ " stress force " + repr(self.coefficients.particle_netForces[i+self.coefficients.nParticles]))
+            logEvent("particle i=" + repr(i)+ " pressure force " + repr(self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]))
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax), level=2)
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
         logEvent("Global residual", level=9, data=r)
-        # mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-
+        if self.coefficients.analyticalSolution is not None:
+            logEvent("""
+p_1.append({:21.16e})
+u_1.append({:21.16e})
+v_1.append({:21.16e})
+w_1.append({:21.16e})
+velocity_1.append({:21.16e})
+p_2.append({:21.16e})
+u_2.append({:21.16e})
+v_2.append({:21.16e})
+w_2.append({:21.16e})
+velocity_2.append({:21.16e})
+p_I.append({:21.16e})
+u_I.append({:21.16e})
+v_I.append({:21.16e})
+w_I.append({:21.16e})
+velocity_I.append({:21.16e})
+""".format(*self.errors.flatten().tolist()))
+    
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
@@ -2181,7 +2201,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["particle_penalty_constant"] = self.coefficients.particle_penalty_constant
         argsDict["ghost_penalty_constant"] = self.coefficients.ghost_penalty_constant
         argsDict["useExact"] = int(self.coefficients.useExact)
-        argsDict["isActiveDOF"] = self.isActiveDOF
+        argsDict["isActiveR"] = self.isActiveR
+        argsDict["isActiveDOF_p"] = self.isActiveDOF_p
+        argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
         self.rans2p.calculateJacobian(argsDict)
         assert(np.all(np.isfinite(jacobian.getCSRrepresentation()[2])))
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
@@ -2199,7 +2221,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         else:
                             self.nzval[i] = 0.0
                             # print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-        for global_dofN_a in np.argwhere(self.isActiveDOF==0.0):
+        for global_dofN_a in np.argwhere(self.isActiveR==0.0):
             #assert(False)
             global_dofN = global_dofN_a[0]
             #print("inactive ", global_dofN)
@@ -2211,20 +2233,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     self.nzval[i] = 0.0
         #check that inactive DOF have no non-zero coefficients in active rows
-        for global_dofN_a in np.argwhere(self.isActiveDOF==1.0):
-            global_dofN = global_dofN_a[0]
-            for i in range(
-                    self.rowptr[global_dofN],
-                    self.rowptr[global_dofN + 1]):
-                if(self.isActiveDOF[self.colind[i]] == 0.0):
-                    #pass
-                    assert(self.nzval[i] == 0.0), ("row", global_dofN, "column", self.colind[i], "val", self.nzval[i],
-                                                   self.offset[0], self.offset[1], self.offset[2], self.offset[3],
-                                                   self.stride[0], self.stride[1], self.stride[2], self.stride[3])
+        # for global_dofN_a in np.argwhere(self.isActiveR==1.0):
+        #     global_dofN = global_dofN_a[0]
+        #     for i in range(
+        #             self.rowptr[global_dofN],
+        #             self.rowptr[global_dofN + 1]):
+        #         if(self.isActiveR[self.colind[i]] == 0.0):
+        #             #pass
+        #             assert(self.nzval[i] == 0.0), ("row", global_dofN, "column", self.colind[i], "val", self.nzval[i],
+        #                                            self.offset[0], self.offset[1], self.offset[2], self.offset[3],
+        #                                            self.stride[0], self.stride[1], self.stride[2], self.stride[3])
 
                 
         logEvent("Jacobian ", level=10, data=jacobian)
-        # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
 

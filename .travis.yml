@@ -105,6 +105,7 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
+      - pip install gmsh
       - pip install -v -e .
     script:
       - export MPLBACKEND="AGG"
