@@ -649,7 +649,7 @@ void Reparam::reparameterize3D(gmi_model*model,apf::Mesh2*m,Enclosure box, Spher
         int relevantIndex = edgeParam[modelTag];
         newParam[0]=pt[relevantIndex]/edgeLengths[relevantIndex];
         m->setParam(ent,newParam);
-        std::cout<<"modelType? "<<modelType<<" "<<modelTag<<" pt "<<pt<<" "<<newParam<<std::endl;
+        //std::cout<<"modelType? "<<modelType<<" "<<modelTag<<" pt "<<pt<<" "<<newParam<<std::endl;
       }
       else if (modelType==2 && modelTag!=sphere.faceID)
       {
@@ -812,7 +812,7 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
       apf::setScalar(size_iso,ent,0,hmax);
     }
 */
-      apf::setScalar(size_iso,ent,0,0.1);
+      apf::setScalar(size_iso,ent,0,0.25);
   }
   m->end(it);
 
@@ -866,7 +866,7 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
     else
       apf::setScalar(size_iso,ent,0,hmax);
 */
-      apf::setScalar(size_iso,ent,0,1.0);
+      apf::setScalar(size_iso,ent,0,0.25);
   }
   m->end(it);
 
@@ -899,6 +899,7 @@ void MeshAdaptPUMIDrvr::updateSphereCoordinates(double*sphereCenter)
 
 }
 
+int Splitter::partitionFactor;
 void MeshAdaptPUMIDrvr::createAnalyticGeometry(int dim, double* boxDim,double*sphereCenter, double radius)
 {
   boxLength = boxDim[0];
@@ -921,9 +922,9 @@ void MeshAdaptPUMIDrvr::createAnalyticGeometry(int dim, double* boxDim,double*sp
   Enclosure box;
   if(dim==3){
       box.makeBox3D(model);
-      //agm_bdry b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,dim,box.regionID)));
-      //agm_use regionUse = add_adj(model, b, sphere.faceID);
-      //gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
+      agm_bdry b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,dim,box.regionID)));
+      agm_use regionUse = add_adj(model, b, sphere.faceID);
+      gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
       setParameterization(model,m,box,sphere);
   }
   else{
@@ -939,6 +940,20 @@ void MeshAdaptPUMIDrvr::createAnalyticGeometry(int dim, double* boxDim,double*sp
   isAnalytic = 1;
   m->verify();
 
+  //m->writeNative("analyticMesh.smb");
+  apf::Migration* plan = 0;
+  gmi_register_mesh();
+  Splitter::partitionFactor = PCU_Comm_Peers();
+  Splitter::switchToOriginals();
+  bool isOriginal = ((PCU_Comm_Self() % Splitter::partitionFactor) == 0);
+  if (isOriginal) {
+    plan = Splitter::getPlan(m);
+  }
+  Splitter::switchToAll();
+  m = apf::repeatMdsMesh(m, model, plan, Splitter::partitionFactor);
+  Parma_PrintPtnStats(m, "");
+  //m->writeNative("analyticMesh.smb");
+
   //initialAdapt_analytic();
   //initialAdapt_analytic(1.0);
   //initialAdapt_analytic(0.1);
@@ -946,3 +961,50 @@ void MeshAdaptPUMIDrvr::createAnalyticGeometry(int dim, double* boxDim,double*sp
   return;
 
 }
+
+
+void Splitter::freeMesh(apf::Mesh* m)
+{
+    m->destroyNative();
+    apf::destroyMesh(m);
+}
+
+apf::Migration* Splitter::getPlan(apf::Mesh* m)
+{
+/*
+    apf::Splitter* splitter = apf::makeZoltanSplitter(
+        m, apf::GRAPH, apf::PARTITION, false);
+    apf::MeshTag* weights = Parma_WeighByMemory(m);
+    apf::Migration* plan = splitter->split(weights, 1.05, partitionFactor);
+*/
+
+    apf::Splitter* splitter = Parma_MakeRibSplitter(m);
+    apf::MeshTag* weights = Parma_WeighByMemory(m); 
+    apf::Migration* plan = splitter->split(weights, 1.10, partitionFactor);
+
+
+    apf::removeTagFromDimension(m, weights, m->getDimension());
+    m->destroyTag(weights);
+    delete splitter;
+    return plan;
+}
+
+void Splitter::switchToOriginals()
+{
+    int self = PCU_Comm_Self();
+    int groupRank = self / Splitter::partitionFactor;
+    int group = self % Splitter::partitionFactor;
+    MPI_Comm groupComm;
+    MPI_Comm_split(MPI_COMM_WORLD, group, groupRank, &groupComm);
+    PCU_Switch_Comm(groupComm);
+}
+
+void Splitter::switchToAll()
+{
+    MPI_Comm prevComm = PCU_Get_Comm();
+    PCU_Switch_Comm(MPI_COMM_WORLD);
+    MPI_Comm_free(&prevComm);
+    PCU_Barrier();
+}
+
+

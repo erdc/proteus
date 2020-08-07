@@ -77,4 +77,40 @@ namespace Reparam{
     void reparameterize3D(gmi_model*model,apf::Mesh2*m,Enclosure box, Sphere sphere);
 }
 
+#include <parma.h>
+#include <apfZoltan.h>
+#include <pcu_util.h>
+#include <cstdlib>
+
+namespace Splitter{
+
+    extern int partitionFactor;
+    void freeMesh(apf::Mesh* m);
+    apf::Migration* getPlan(apf::Mesh* m);
+    void switchToOriginals();
+    void switchToAll();
+
+}
+/*
+int main(int argc, char** argv)
+{
+  gmi_register_mesh();
+  getConfig(argc,argv);
+  bool isOriginal = ((PCU_Comm_Self() % partitionFactor) == 0);
+  gmi_model* g = 0;
+  g = gmi_load(modelFile);
+  apf::Mesh2* m = 0;
+  apf::Migration* plan = 0;
+  switchToOriginals();
+  if (isOriginal) {
+    m = apf::loadMdsMesh(g, meshFile);
+    plan = getPlan(m);
+  }
+  switchToAll();
+  m = apf::repeatMdsMesh(m, g, plan, partitionFactor);
+  Parma_PrintPtnStats(m, "");
+  m->writeNative(outFile);
+  freeMesh(m);
+*/
+
 #endif
