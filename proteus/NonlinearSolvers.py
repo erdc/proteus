@@ -771,7 +771,7 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         self.computeResidual(u,r,b)
         if par_u is not None:
             par_u.scatter_forward_insert()
-        self.F.check_positivity_water_height=True
+        self.F.check_positivity_water_height = True
 
 
 class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
@@ -804,7 +804,7 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.computeResidual(u,r,b)
         if par_u is not None:
             par_u.scatter_forward_insert()
-        self.F.check_positivity_water_height=True
+        self.F.check_positivity_water_height = True
 
 class ExplicitLumpedMassMatrix(Newton):
     """

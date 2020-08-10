@@ -54,7 +54,7 @@ femSpaces = {0: FESpace['basis'],
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
 multilevelNonlinearSolver = Newton
-fullNewtonFlag = False  # NOTE: False just if the method is explicit
+fullNewtonFlag = False  #NOTE: False just if the method is explicit
 if (LUMPED_MASS_MATRIX == 1):
     levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 else:

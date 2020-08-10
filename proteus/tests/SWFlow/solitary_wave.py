@@ -19,7 +19,7 @@ This is a simple benchmark of a solitary wave propagating over a flat bottom.
 
 opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs, Disperisve SWEs}}"),
-    ("final_time", 4.0, "Final time for simulation"),
+    ("final_time", 5.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
@@ -68,7 +68,7 @@ def solitary_wave(x, t):
 
 def bathymetry_function(X):
     x = X[0]
-    # then return vector of zeros
+    # return vector of zeros
     return x * 0.0
 
 
