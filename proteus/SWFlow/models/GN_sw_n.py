@@ -78,6 +78,7 @@ levelLinearSolver = LU
 comm = Comm.get()
 if comm.size() > 1:
     levelLinearSolver = KSP_petsc4py
+    multilevelLinearSolver = KSP_petsc4py
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 
