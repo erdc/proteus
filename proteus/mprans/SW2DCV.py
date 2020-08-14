@@ -368,6 +368,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.model.boundaryIndex.append(i)
             self.model.boundaryIndex = np.array(self.model.boundaryIndex)
         #
+        import pdb; pdb.set_trace()
         self.model.h_dof_old[:] = self.model.u[0].dof
         self.model.hu_dof_old[:] = self.model.u[1].dof
         self.model.hv_dof_old[:] = self.model.u[2].dof
@@ -442,7 +443,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.mesh = self.u[0].femSpace.mesh
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
-        # explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        # explicit Dirichlet conditions for now, no Dirichlet BC constraints
         self.dirichletNodeSetList = None
         self.coefficients = coefficients
         # cek hack? give coefficients a bathymetriy array
@@ -731,8 +732,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.boundaryIndex = None
         self.reflectingBoundaryConditions = False
 
-        if 'reflecting_BCs' in dir(options) and options.reflecting_BCs == 1:
+        if 'reflecting_BCs' in dir(options) and options.reflecting_BCs == True:
             self.reflectingBoundaryConditions = True
+
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = None
 
@@ -1301,6 +1303,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             self.updateReflectingBoundaryConditions()
         #
+
         # INIT BOUNDARY INDEX #
         # NOTE: this must be done after the first call to getResidual
         #   (to have normalx and normaly initialized)

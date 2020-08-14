@@ -1401,6 +1401,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             self.updateReflectingBoundaryConditions()
         #
+
         # INIT BOUNDARY INDEX #
         # NOTE: this must be done after the first call to getResidual
         #   (to have normalx and normaly initialized)
