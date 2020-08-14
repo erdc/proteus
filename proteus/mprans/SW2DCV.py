@@ -368,7 +368,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     self.model.boundaryIndex.append(i)
             self.model.boundaryIndex = np.array(self.model.boundaryIndex)
         #
-        import pdb; pdb.set_trace()
         self.model.h_dof_old[:] = self.model.u[0].dof
         self.model.hu_dof_old[:] = self.model.u[1].dof
         self.model.hv_dof_old[:] = self.model.u[2].dof
