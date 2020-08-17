@@ -219,7 +219,7 @@ class Shape(object):
         """
         Indicates that this shape is within another shape
         (this function or setChildShape is necessary for gmsh)
-        Sets the shape within 
+        Sets the shape within
 
         Parameters
         ----------
@@ -858,7 +858,7 @@ class Cylinder(Shape):
         vert_bottom = np.array(vert)
         facets += [[[i for i in range(0, len(vert_bottom))]]]
         vert_top = np.array(vert)+h_offset
-        segs_top = np.array(segs)+len(vert) 
+        segs_top = np.array(segs)+len(vert)
         nvb = len(vert_bottom)
         facets += [[[i+nvb for i in range(0, len(vert_top))]]]
         for i in range(len(vert_bottom)-1):
@@ -897,7 +897,7 @@ class Circle(Shape):
 
     count = 0
 
-    def __init__(self, domain, radius, coords, barycenter, nPoints):
+    def __init__(self, domain, radius, coords, barycenter, nPoints, boundaryTag=None):
         super(Circle, self).__init__(domain, nd=2)
         self.__class__.count += 1
         self.name = "Circle" + str(self.__class__.count)
@@ -927,7 +927,7 @@ class Circle(Shape):
         seg_last=[nVertices-1,0]
         segm.append(seg_last,)
         self.segments=np.array(segm)
-        
+
         # facets
         facets=[]
         for kkk in range(nVertices):
@@ -945,23 +945,47 @@ class Circle(Shape):
         self.regions = np.array([[xc, yc]])
 
         # boundary tags
-        self.boundaryTags = bt = {'circle':1}
-        vertFlag=[]
-        segmFlag=[]
-        for kkk in range(nVertices):
-                vertFlag.append(bt['circle'],)
-                segmFlag.append(bt['circle'],)
-        self.vertexFlags = np.array(vertFlag)
-        self.segmentFlags = np.array(segmFlag)
-        self.facetFlags=np.array([1])
-        self.regionFlags = np.array([1])
+        if boundaryTag is None:
+            self.boundaryTags = bt = {'circle':1}
+            vertFlag=[]
+            segmFlag=[]
+            for kkk in range(nVertices):
+                    vertFlag.append(bt['circle'],)
+                    segmFlag.append(bt['circle'],)
+            self.vertexFlags = np.array(vertFlag)
+            self.segmentFlags = np.array(segmFlag)
+            self.facetFlags=np.array([1])
+            self.regionFlags = np.array([1])
 
-        # boundary list
-        self.BC = {'circle': self.BC_class(shape=self, name='circle',
-                                       b_or=self.b_or, b_i=0),
-                  }
-        self.BC_list = [self.BC['circle'],
-                       ]
+            # boundary list
+            self.BC = {'circle': self.BC_class(shape=self, name='circle',
+                                           b_or=self.b_or, b_i=0),
+                      }
+            self.BC_list = [self.BC['circle'],
+                           ]
+        else:
+            self.boundaryTags = boundaryTag
+            bt = boundaryTag
+            # should only be one key
+            for key in boundaryTag:
+                boundaryKey = key
+                boundaryFlag = boundaryTag[key]
+            vertFlag=[]
+            segmFlag=[]
+            for kkk in range(nVertices):
+                    vertFlag.append(boundaryFlag,)
+                    segmFlag.append(boundaryFlag,)
+            self.vertexFlags = np.array(vertFlag)
+            self.segmentFlags = np.array(segmFlag)
+            self.facetFlags=np.array([boundaryFlag])
+            self.regionFlags = np.array([boundaryFlag])
+
+            # boundary list
+            self.BC = {boundaryKey: self.BC_class(shape=self, name=boundaryKey,
+                                           b_or=self.b_or, b_i=0),
+                      }
+            self.BC_list = [self.BC[boundaryKey],
+                           ]
 
         # set the inertia
         self.It = pi*(radius**4)/2.
@@ -1072,7 +1096,7 @@ class ShapeSTL(Shape):
         self.name = 'STL'+str(self.__class__.count)
         self.filename = filename
         self.vertices, self.facets, self.facetnormals,self.vertexFlags,self.facetFlags,self.boundaryTags = getInfoFromSTL(self.filename)
-        
+
 #        self.facetFlags = np.ones(len(self.facets))
 #        self.vertexFlags = np.ones(len(self.vertices))
         self.volumes = [[[i for i in range(len(self.facets))]]]
@@ -1107,7 +1131,7 @@ def getInfoFromSTL(filename):
     facetFlags: array_like
         facet flags according to boundary ownership
     boundaryTags: dictionary
-        Dictionary of boundaries. Has the same number and name as the stl blocks contained 
+        Dictionary of boundaries. Has the same number and name as the stl blocks contained
         in the stl file
     """
     file = open(filename, 'r')
@@ -1132,7 +1156,7 @@ def getInfoFromSTL(filename):
             vertices += [vertex]
             facet += [vFlag]
             vFlag += 1
-            vertexFlags += [bFlag] 
+            vertexFlags += [bFlag]
         if "facet normal" in line:
             word_list = line.split()
             facetnormals += [[word_list[2], word_list[3], word_list[4]]]
@@ -1435,7 +1459,7 @@ def _assembleGeometry(domain, BC_class):
                 shape.facetFlags_global = shape.facetFlags+start_flag
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
-    
+
     # 2D holes (only for gmsh)
     domain.holes_ind = []
     if domain.nd == 2 and shape.facets is not None:
@@ -1471,7 +1495,7 @@ def _assembleGeometry(domain, BC_class):
                                         fn = child_seg[(fac[j-1], fac[j])]
                                         f_to_merge = child.facets[fn][0]
                                         # reverse list
-                                        f_to_merge = f_to_merge[::-1] 
+                                        f_to_merge = f_to_merge[::-1]
                                         # shift lists
                                         f_to_merge = list(deque(f_to_merge).rotate(-f_to_merge.index(fac[j-1])))
                                         fac = list(deque(fac).rotate(-fac.index(fac[j])))
