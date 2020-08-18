@@ -396,6 +396,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 if self.model.normalx[i] != 0 or self.model.normaly[i] != 0:
                     self.model.boundaryIndex.append(i)
             self.model.boundaryIndex = np.array(self.model.boundaryIndex)
+
+            # Init reflectingBoundaryIndex for partial reflecting boundaries
+            self.model.reflectingBoundaryIndex = np.where(np.isin(self.model.mesh.nodeMaterialTypes, 99))[0].tolist()
+            # then redefine as numpy array
+            self.model.reflectingBoundaryIndex = np.array(self.model.reflectingBoundaryIndex)
         #
         self.model.h_dof_old[:] = self.model.u[0].dof
         self.model.hu_dof_old[:] = self.model.u[1].dof
@@ -473,7 +478,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.mesh = self.u[0].femSpace.mesh
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
-        # explicit Dirichlet  conditions for now, no Dirichlet BC constraints
+        # explicit Dirichlet conditions for now, no Dirichlet BC constraints
         self.dirichletNodeSetList = None
         self.coefficients = coefficients
         # cek hack? give coefficients a bathymetriy array
@@ -795,9 +800,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.normaly = None
         self.boundaryIndex = None
         self.reflectingBoundaryConditions = False
+        self.reflectingBoundaryIndex = None
 
-        if 'reflecting_BCs' in dir(options) and options.reflecting_BCs == 1:
+        if 'reflecting_BCs' in dir(options) and options.reflecting_BCs == True:
             self.reflectingBoundaryConditions = True
+
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = None
 
@@ -1225,7 +1232,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.csrColumnOffsets[(0, 0)] // 5,
                                                                       self.cterm_transpose[d],
                                                                       self.cterm_global_transpose[d])
-
         #
         self.rowptr_cMatrix, self.colind_cMatrix, self.Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, self.Cy = self.cterm_global[1].getCSRrepresentation()
@@ -1263,7 +1269,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[4].dof[i] = hw
     #
 
-    def updateReflectingBoundaryConditions(self):
+    def updateAllReflectingBoundaryConditions(self):
         self.forceStrongConditions = False
         for dummy, index in enumerate(self.boundaryIndex):
             vx = self.u[1].dof[index]
@@ -1271,6 +1277,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             vt = vx * self.normaly[index] - vy * self.normalx[index]
             self.u[1].dof[index] = vt * self.normaly[index]
             self.u[2].dof[index] = -vt * self.normalx[index]
+    #
+
+    def updatePartialReflectingBoundaryConditions(self):
+            for dummy, index in enumerate(self.reflectingBoundaryIndex):
+                vx = self.u[1].dof[index]
+                vy = self.u[2].dof[index]
+                vt = vx * self.normaly[index] - vy * self.normalx[index]
+                self.u[1].dof[index] = vt * self.normaly[index]
+                self.u[2].dof[index] = -vt * self.normalx[index]
     #
 
     def initDataStructures(self):
@@ -1397,9 +1412,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # SET TO ZERO RESIDUAL #
         r.fill(0.0)
 
-        # REFLECTING BOUNDARY CONDITIONS #
+        # REFLECTING BOUNDARY CONDITIONS ON ALL BOUNDARIES #
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
-            self.updateReflectingBoundaryConditions()
+            self.updateAllReflectingBoundaryConditions()
+
+        # REFLECTING BOUNDARY CONDITIONS ON PARTIAL BOUNDARIES  #
+        if not self.reflectingBoundaryConditions and self.reflectingBoundaryIndex is not None:
+            self.updatePartialReflectingBoundaryConditions()
         #
 
         # INIT BOUNDARY INDEX #
@@ -1600,8 +1619,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.COMPUTE_NORMALS = 0
         #
 
+        # for reflecting conditions on all boundaries
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             for dummy, index in enumerate(self.boundaryIndex):
+                r[self.offset[1]+self.stride[1]*index]=0.
+                r[self.offset[2]+self.stride[2]*index]=0.
+            #
+        #
+
+        # for reflecting conditions on partial boundaries
+        if not self.reflectingBoundaryConditions and self.reflectingBoundaryIndex is not None:
+            for dummy, index in enumerate(self.reflectingBoundaryIndex):
                 r[self.offset[1]+self.stride[1]*index]=0.
                 r[self.offset[2]+self.stride[2]*index]=0.
             #
@@ -1770,8 +1798,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["dt"] = self.timeIntegration.dt
         self.calculateJacobian(argsDict)
 
+        # for reflecting conditions on ALL boundaries
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             for dummy, index in enumerate(self.boundaryIndex):
+                global_dofN = self.offset[1] + self.stride[1] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+                global_dofN = self.offset[2] + self.stride[2] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+            #
+        #
+
+        # for reflecting conditions partial boundaries
+        if not self.reflectingBoundaryConditions and self.reflectingBoundaryIndex is not None:
+            for dummy, index in enumerate(self.reflectingBoundaryIndex):
                 global_dofN = self.offset[1] + self.stride[1] * index
                 for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
                     if (self.colind[i] == global_dofN):

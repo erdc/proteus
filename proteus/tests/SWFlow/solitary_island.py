@@ -31,7 +31,7 @@ opts = Context.Options([
     ("refinement", 4, "Refinement level"),
     ("structured", True, "Structured or unstructured mesh"),
     ("he", 0.5, "Mesh size for unstructured mesh"),
-    ("reflecting_BCs", False, "Use reflecting BCs"),
+    ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
     ("want_gauges", False, "Output for water height point gauge"),
     ("which_case", 0, "which_case = {0,1} for {case_C, case_B}")
 ])

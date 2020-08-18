@@ -367,6 +367,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 if self.model.normalx[i] != 0 or self.model.normaly[i] != 0:
                     self.model.boundaryIndex.append(i)
             self.model.boundaryIndex = np.array(self.model.boundaryIndex)
+
+            # Init reflectingBoundaryIndex for partial reflecting boundaries
+            self.model.reflectingBoundaryIndex = np.where(np.isin(self.model.mesh.nodeMaterialTypes, 99))[0].tolist()
+            # then redefine as numpy array
+            self.model.reflectingBoundaryIndex = np.array(self.model.reflectingBoundaryIndex)
         #
         self.model.h_dof_old[:] = self.model.u[0].dof
         self.model.hu_dof_old[:] = self.model.u[1].dof
@@ -730,6 +735,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.normaly = None
         self.boundaryIndex = None
         self.reflectingBoundaryConditions = False
+        self.reflectingBoundaryIndex = None
 
         if 'reflecting_BCs' in dir(options) and options.reflecting_BCs == True:
             self.reflectingBoundaryConditions = True
@@ -865,23 +871,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # for parallel entropy residual
         self.par_global_entropy_residual = None
 
-        self.ebqe_nx = None
-        self.ebqe_ny = None
-        self.hasNormalFieldAsFunction = False
-        if ('normalFieldAsFunction') in dir(options):
-            self.normalFieldAsFunction = options.normalFieldAsFunction
-            self.hasNormalFieldAsFunction = True
-        #
-
-    def updateNormalFieldAsFunction(self):
-        self.ebqe_nx = np.zeros(self.ebqe[('x')][:,:,0].shape,'d')
-        self.ebqe_ny = np.zeros(self.ebqe[('x')][:,:,0].shape,'d')
-        ebqe_X = {0:self.ebqe['x'][:,:,0],
-                  1:self.ebqe['x'][:,:,1]}
-        self.ebqe_nx[:] = self.normalFieldAsFunction[0](ebqe_X)
-        self.ebqe_ny[:] = self.normalFieldAsFunction[1](ebqe_X)
-    #
-
     def FCTStep(self):
         # NOTE: this function is meant to be called within the solver
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
@@ -963,6 +952,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # save things
         self.dij_small = globalMax(argsDict.dscalar["dij_small"])
     #
+
     def getDOFsCoord(self):
         # get x,y coordinates of all DOFs #
         self.dofsXCoord = np.zeros(self.u[0].dof.shape, 'd')
@@ -1183,14 +1173,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[2].dof[i] = hv
     #
 
-    def updateReflectingBoundaryConditions(self):
-        self.forceStrongConditions = False
-        for dummy, index in enumerate(self.boundaryIndex):
-            vx = self.u[1].dof[index]
-            vy = self.u[2].dof[index]
-            vt = vx * self.normaly[index] - vy * self.normalx[index]
-            self.u[1].dof[index] = vt * self.normaly[index]
-            self.u[2].dof[index] = -vt * self.normalx[index]
+    def updateAllReflectingBoundaryConditions(self):
+            self.forceStrongConditions = False
+            for dummy, index in enumerate(self.boundaryIndex):
+                print('index ', index)
+                print(self.normalx[index], self.normaly[index])
+                vx = self.u[1].dof[index]
+                vy = self.u[2].dof[index]
+                vt = vx * self.normaly[index] - vy * self.normalx[index]
+                self.u[1].dof[index] = vt * self.normaly[index]
+                self.u[2].dof[index] = -vt * self.normalx[index]
+    #
+
+    def updatePartialReflectingBoundaryConditions(self):
+            for dummy, index in enumerate(self.reflectingBoundaryIndex):
+                vx = self.u[1].dof[index]
+                vy = self.u[2].dof[index]
+                vt = vx * self.normaly[index] - vy * self.normalx[index]
+                self.u[1].dof[index] = vt * self.normaly[index]
+                self.u[2].dof[index] = -vt * self.normalx[index]
     #
 
     def initDataStructures(self):
@@ -1256,17 +1257,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
         self.par_normalx = LAT.ParVec_petsc4py(self.normalx,
-                                                                      bs=1,
-                                                                      n=n,N=N,nghosts=nghosts,
-                                                                      subdomain2global=subdomain2global)
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
         self.par_normaly = LAT.ParVec_petsc4py(self.normaly,
-                                                                      bs=1,
-                                                                      n=n,N=N,nghosts=nghosts,
-                                                                      subdomain2global=subdomain2global)
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
         self.par_ML = LAT.ParVec_petsc4py(self.ML,
-                                                                 bs=1,
-                                                                 n=n,N=N,nghosts=nghosts,
-                                                                 subdomain2global=subdomain2global)
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
         self.par_ML.scatter_forward_insert()
         #
         self.dataStructuresInitialized = True
@@ -1276,11 +1277,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-
-        # Normal Field as function
-        if self.ebqe_nx is None and self.hasNormalFieldAsFunction:
-            self.updateNormalFieldAsFunction()
-        #
 
         # COMPUTE C MATRIX #
         if self.cterm_global is None:
@@ -1298,9 +1294,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # SET TO ZERO RESIDUAL #
         r.fill(0.0)
 
-        # REFLECTING BOUNDARY CONDITIONS #
+        # REFLECTING BOUNDARY CONDITIONS ON ALL BOUNDARIES #
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
-            self.updateReflectingBoundaryConditions()
+            self.updateAllReflectingBoundaryConditions()
+
+        # REFLECTING BOUNDARY CONDITIONS ON PARTIAL BOUNDARIES  #
+        if not self.reflectingBoundaryConditions and self.reflectingBoundaryIndex is not None:
+            self.updatePartialReflectingBoundaryConditions()
         #
 
         # INIT BOUNDARY INDEX #
@@ -1479,8 +1479,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.COMPUTE_NORMALS = 0
         #
 
+        # for reflecting conditions on all boundaries
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             for dummy, index in enumerate(self.boundaryIndex):
+                r[self.offset[1]+self.stride[1]*index]=0.
+                r[self.offset[2]+self.stride[2]*index]=0.
+            #
+        #
+
+        # for reflecting conditions on partial boundaries
+        if not self.reflectingBoundaryConditions and self.reflectingBoundaryIndex is not None:
+            for dummy, index in enumerate(self.reflectingBoundaryIndex):
                 r[self.offset[1]+self.stride[1]*index]=0.
                 r[self.offset[2]+self.stride[2]*index]=0.
             #
@@ -1613,8 +1622,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["dt"] = self.timeIntegration.dt
         self.calculateJacobian(argsDict)
 
+        # for reflecting conditions on ALL boundaries
         if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
             for dummy, index in enumerate(self.boundaryIndex):
+                global_dofN = self.offset[1] + self.stride[1] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+                global_dofN = self.offset[2] + self.stride[2] * index
+                for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
+                    #
+                #
+            #
+        #
+
+        # for reflecting conditions partial boundaries
+        if not self.reflectingBoundaryConditions and self.reflectingBoundaryIndex is not None:
+            for dummy, index in enumerate(self.reflectingBoundaryIndex):
                 global_dofN = self.offset[1] + self.stride[1] * index
                 for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
                     if (self.colind[i] == global_dofN):
@@ -1649,7 +1681,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.constrainedDOFsIndices is not None:
             for index in self.constrainedDOFsIndices:
                 for cj in range(self.nc):
-                    # if self.constrain_cjComponent[cj] == 1:
                         global_dofN = self.offset[cj] + self.stride[cj] * index
                         for i in range(self.rowptr[global_dofN], self.rowptr[global_dofN + 1]):
                             if (self.colind[i] == global_dofN):

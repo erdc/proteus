@@ -119,6 +119,10 @@ class Shape(object):
         checkFlag = min(flagSet)
         assert checkFlag == 1, 'Minimum boundary/region tag/flag must be 1'
         for flag in flagSet:
+            # hack for SWFlow BCs
+            if (flag==99):
+                checkFlag += 1
+                return
             assert flag == checkFlag, 'Boundary/region tags/flags must be'
             'defined as a suite of numbers with no gap!'
             checkFlag += 1
@@ -1067,6 +1071,9 @@ class CustomShape(Shape):
         self.b_or = b_or
         for tag, flag in boundaryTags.items():
             b_i = flag-1  # start at index 0
+            # hack for SWFlow BCs
+            if (b_i==98):
+                b_i=len(boundaryTags)-1
             if boundaryOrientations is not None:
                 b_or[b_i] = boundaryOrientations[tag]
             self.BC[tag] = self.BC_class(shape=self, name=tag, b_or=b_or, b_i=b_i)
