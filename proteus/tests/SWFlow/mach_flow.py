@@ -35,7 +35,7 @@ opts = Context.Options([
 ###################
 domain = Domain.PlanarStraightLineGraphDomain()
 
-my_vertices = [[0.0,0.0],[3.0,0.0],[10.0,4.0],[10.0,10.0],[0.0,10.0]]
+my_vertices = [[0.0,0.0],[3.0,0.0],[10.0,3.2],[10.0,10.0],[0.0,10.0]]
 my_segments = [[0,1],[1,2],[2,3],[3,4],[4,0]]
 
 # boundary tags dictionary
@@ -129,6 +129,10 @@ def x_mom_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: q_inflow
 
+def y_mom_DBC(X, flag):
+    if X[0] == X_coords[0]:
+        return lambda x, t: 0.0
+
 def heta_DBC(X, flag):
     if X[0] == X_coords[0]:
         return lambda x, t: h_inflow**2
@@ -151,7 +155,7 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'h_times_w': hw_at_t0()}
 boundaryConditions = {'water_height': h_DBC,
                       'x_mom': x_mom_DBC,
-                      'y_mom': lambda x, flag: None,
+                      'y_mom': y_mom_DBC,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
 
@@ -165,6 +169,7 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
+                                              reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = opts.mannings
