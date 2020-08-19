@@ -3037,6 +3037,8 @@ namespace proteus
             ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
             eN_nDOF_trial_element = eN*nDOF_trial_element,
             eN_nDOF_v_trial_element = eN*nDOF_v_trial_element;
+	  if (boundaryFlags[ebN] < 1)
+	    continue;
           register double elementResidual_mesh[nDOF_test_element],
             elementResidual_p[nDOF_test_element],
             elementResidual_u[nDOF_v_test_element],
@@ -3798,7 +3800,6 @@ namespace proteus
               //
               //update residuals
               //
-              //if(true)//boundaryFlags[ebN] > 0)
               const double H_s = gf_s.H(particle_eps, ebqe_phi_s.data()[ebNE_kb]);
               if (elementIsActive[eN])
                 { //if boundary flag positive, then include flux contributions on interpart boundaries
@@ -5596,6 +5597,8 @@ namespace proteus
             eN_nDOF_trial_element = eN*nDOF_trial_element,
             eN_nDOF_v_trial_element = eN*nDOF_v_trial_element,
             ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0];
+	  if (boundaryFlags[ebN] < 1)
+	    continue;
           register double eps_rho,eps_mu;
           double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
           for (int j=0;j<nDOF_mesh_trial_element;j++)
