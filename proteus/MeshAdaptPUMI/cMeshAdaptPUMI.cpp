@@ -167,8 +167,13 @@ int MeshAdaptPUMIDrvr::loadMeshForAnalytic(const char* meshFile,double* boxDim,d
   m->verify();
 
   //create analytic geometry 
-  createAnalyticGeometry(m->getDimension(),boxDim,sphereCenter,radius);
+//  createAnalyticGeometry(m->getDimension(),boxDim,sphereCenter,radius);
+  createAnalyticGeometryCylinder(m->getDimension(),boxDim,sphereCenter,radius);
+  //m->writeNative("analyticMesh.smb");
+  //initialAdapt_analytic();
+  //std::exit(1);
   m->verify();
+
   return 0;
 }
 
@@ -718,7 +723,26 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   }
   if(useQuality){
     //size_iso=samSz::isoSize(m);
-    sizeFieldList.push(samSz::isoSize(m));
+    apf::MeshIterator* it = m->begin(0);
+    apf::MeshEntity* ent;
+
+    //sizeFieldList.push(samSz::isoSize(m));
+    apf::Field * test = m->findField("proteus_init");
+    freeField(test);
+    apf::Field* size_init = apf::createLagrangeField(m,"proteus_init",apf::SCALAR,1);
+    while( (ent = m->iterate(it)) )
+    {
+      apf::ModelEntity* g_ent = m->toModel(ent);
+      int modelTag = m->getModelTag(g_ent);
+      int modelType = m->getModelType(g_ent);
+      if(modelTag == modelPiercingCylinder.faceID && modelType==2 || modelType==1 && (modelTag == modelCircle1.faceID || modelTag == modelCircle2.faceID))
+          apf::setScalar(size_init,ent,0,0.05);
+          //apf::setScalar(size_init,ent,0,0.2);
+      else
+          apf::setScalar(size_init,ent,0,0.2);
+    }
+    m->end(it);
+    sizeFieldList.push(size_init);
   }
 
   isotropicIntersect();
@@ -792,7 +816,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   
   double t1 = PCU_Time();
   //ma::adapt(in);
-  ma::adaptVerbose(in);
+  in->debugFolder="./debug_fine";
+  ma::adaptVerbose(in,true);
   double t2 = PCU_Time();
 
   m->verify();
@@ -1017,3 +1042,5 @@ int MeshAdaptPUMIDrvr::setAdaptProperties(std::vector<std::string> sizeInputs,bo
    
     return 0;
 }
+
+

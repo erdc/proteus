@@ -75,8 +75,12 @@ class MeshAdaptPUMIDrvr{
 
   //analytic geometry
   void createAnalyticGeometry(int dim, double* boxDim, double*sphereCenter,double radius);
+  void createAnalyticGeometryCylinder(int dim, double* boxDim, double*sphereCenter,double radius);
   Enclosure modelBox;
   Sphere modelSphere;
+  Sphere modelCircle1;
+  Sphere modelCircle2;
+  PiercingCylinder modelPiercingCylinder;
 
   void updateSphereCoordinates(double*sphereCenter);
   void initialAdapt_analytic();

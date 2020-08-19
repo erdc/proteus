@@ -28,7 +28,9 @@ double boxHeight;
 int geomDim;
 Enclosure modelBox;
 Sphere modelSphere;
-
+Sphere modelCircle1;
+Sphere modelCircle2;
+PiercingCylinder modelPiercingCylinder;
 
 namespace 
 {
@@ -295,6 +297,48 @@ namespace
         to[0] = x/boxLength;
         to[1] = y/boxWidth;
     }
+    void reparam_Circle0(double const from[2], double to[2], void*){
+
+        //given theta, need to get y and x in parameterized form
+        double x = sphereRadius*cos(from[0])+xyz_offset[0];
+        double y = sphereRadius*sin(from[0])+xyz_offset[1];
+        to[0] = x/boxLength;
+        to[1] = y/boxWidth;
+        to[2] = 0.0;
+    }
+    void reparam_Circle1(double const from[2], double to[2], void*){
+
+        //given theta, need to get y and x in parameterized form
+        double x = sphereRadius*cos(from[0])+xyz_offset[0];
+        double y = sphereRadius*sin(from[0])+xyz_offset[1];
+        to[0] = x/boxLength;
+        to[1] = y/boxWidth;
+        to[2] = boxHeight;
+    }
+
+    void reparam_CircleCylinder0(double const from[2], double to[2], void*){
+
+        //given theta, need to get y and x in parameterized form
+        //double x = sphereRadius*cos(from[0])+xyz_offset[0];
+        //double y = sphereRadius*sin(from[0])+xyz_offset[1];
+        //to[0] = x/boxLength;
+        //to[1] = y/boxWidth;
+        to[0] = from[0];
+        to[1] = 0.0;//from[1];
+        //to[2] = 0;
+    }
+    void reparam_CircleCylinder1(double const from[2], double to[2], void*){
+
+        //given theta, need to get y and x in parameterized form
+        //double x = sphereRadius*cos(from[0])+xyz_offset[0];
+        //double y = sphereRadius*sin(from[0])+xyz_offset[1];
+        //to[0] = x/boxLength;
+        //to[1] = y/boxWidth;
+        to[0] = from[0];
+        to[1] = 1.0;//from[1];
+        //to[2] = 1.0;//boxHeight;
+    }
+
 
 //need to set these functions separately from a member because the function signatures are otherwise modified.
 //Likewise the internals need to use static variables to still connect them with other objects
@@ -312,6 +356,74 @@ namespace
         x[2] = xyz_offset[2]+sphereRadius*cos(p[1]);
       }
     }
+    void circleFace0(double const p[2], double x[3], void*)
+    {
+        x[0] = xyz_offset[0]+sphereRadius*cos(p[0]);
+        x[1] = xyz_offset[1]+sphereRadius*sin(p[0]);
+        x[2] = 0.0;
+    }
+
+    void circleFace1(double const p[2], double x[3], void*)
+    {
+        x[0] = xyz_offset[0]+sphereRadius*cos(p[0]);
+        x[1] = xyz_offset[1]+sphereRadius*sin(p[0]);
+        x[2] = boxHeight;
+    }
+
+    void cylinderFace(double const p[2], double x[3], void*)
+    {
+        x[0] = xyz_offset[0]+sphereRadius*cos(p[0]);
+        //x[1] = xyz_offset[1]+sphereRadius*sin(p[0]) * sin(p[1]);
+        x[1] = xyz_offset[1]+sphereRadius*sin(p[0]);
+        x[2] = boxHeight*p[1]; //need to double check this
+    }
+
+
+}
+
+void checkEntities(apf::Mesh* m){
+  apf::MeshEntity* ent;
+  apf::MeshIterator* it;
+/*
+  for(int i =0;i<4;i++)
+  {
+    apf::MeshIterator* it = m->begin(i);
+    while( (ent = m->iterate(it)))
+    {
+      apf::ModelEntity* g_ent = m->toModel(ent);
+      int modelTag = m->getModelTag(g_ent);
+      int modelType = m->getModelType(g_ent);
+      std::cout<<"model Tag, type "<<modelTag<<" "<<modelType<<std::endl;
+    }
+    m->end(it);
+  }
+*/
+  if(m->findField("modelTags"))
+    apf::destroyField(m->findField("modelTags"));
+  if(m->findField("modelType"))
+    apf::destroyField(m->findField("modelType"));
+
+  apf::Field* modelTagge = apf::createLagrangeField(m,"modelTags",apf::SCALAR,1);
+  it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+      apf::ModelEntity* g_ent = m->toModel(ent);
+      int modelTag = m->getModelTag(g_ent);
+      int modelType = m->getModelType(g_ent);
+      apf::setScalar(modelTagge,ent,0,modelTag);
+  }
+  m->end(it);
+  
+  apf::Field* modelTyper = apf::createLagrangeField(m,"modelType",apf::SCALAR,1);
+  it = m->begin(0);
+  while( (ent = m->iterate(it)) )
+  {
+      apf::ModelEntity* g_ent = m->toModel(ent);
+      int modelTag = m->getModelTag(g_ent);
+      int modelType = m->getModelType(g_ent);
+      apf::setScalar(modelTyper,ent,0,modelType);
+  }
+  m->end(it);
 
 
 }
@@ -571,12 +683,64 @@ void Enclosure::makeBox3D(gmi_model* model)
   return;
 }
 
+void PiercingCylinder::makePiercingCylinder(gmi_model* model)
+{ 
+
+  sphereRadius = radius;
+  gmi_add_analytic(model, dim-1, faceID, cylinderFace, faPer, faRan, 0);
+}
+
 
 void Sphere::makeSphere(gmi_model* model)
 { 
 
   sphereRadius = radius;
   gmi_add_analytic(model, dim-1, faceID, sphereFace, faPer, faRan, 0);
+}
+
+
+void setParameterizationCylinder(gmi_model* model,apf::Mesh2* m, Enclosure box, PiercingCylinder cylinder,Sphere circle1, Sphere circle2 )
+{
+  //Get the classification of each entity in the SimMesh
+  apf::MeshEntity* ent;
+  for(int i =0;i<4;i++)
+  {
+    apf::MeshIterator* it = m->begin(i);
+    while( (ent = m->iterate(it)))
+    {
+      apf::ModelEntity* g_ent = m->toModel(ent);
+      int modelTag = m->getModelTag(g_ent);
+      int modelType = m->getModelType(g_ent);
+      if(modelTag > 139 && modelTag< 148)
+      {
+        m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,cylinder.faceID));
+      }
+      else if(modelTag >= 200){
+        //std::cout<<circle1.faceID<<" "<<circle2.faceID<<" "<<modelTag<<std::endl;
+        if(modelTag > 200 && modelTag <= 204)
+            m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,circle1.faceID));
+        else if(modelTag >= 209 && modelTag <= 212)
+            m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,circle2.faceID));
+      }
+      else{
+        //std::cout<<"belongs nowhere? "<<modelType<<" "<<modelTag<<std::endl;
+        m->setModelEntity(ent,(apf::ModelEntity*)gmi_find(model,modelType,modelTag));
+      }
+
+    }
+    m->end(it);
+  }
+  checkEntities(m);
+  apf::writeVtkFiles("beforeAccept",m);
+
+  m->setModel(model);
+  m->acceptChanges();
+  checkEntities(m);
+  apf::writeVtkFiles("afterAccept",m);
+
+
+  Reparam::reparameterizeEntities(model,m,box,cylinder,circle1,circle2);
+ 
 }
 
 //model tags are based off gmsh default outputs...
@@ -700,6 +864,93 @@ void Reparam::reparameterizeEntities(gmi_model*model,apf::Mesh2*m,Enclosure box,
     else
         reparameterize3D(model,m,box, sphere);
 }
+void Reparam::reparameterizeEntities(gmi_model*model,apf::Mesh2*m,Enclosure box, PiercingCylinder cylinder, Sphere circle1, Sphere circle2){
+    //reparameterizeCylinder(model,m,box, cylinder,circle1,circle2);
+
+    //Need to set the parametric coordinates of each of the boundary vertices
+    std::map<int,int> edgeParam;
+    int edgeScales[12] = {0,1,0,1,0,1,0,1,2,2,2,2};
+    double edgeLengths[3] = {boxLength,boxWidth,boxHeight};
+    for(int i=0;i<12;i++)
+    {
+        edgeParam[box.edgeMap[i]] = edgeScales[i];
+    }
+
+    std::map<int,int(*)[2]> faceParam;
+    int faceScales[6][2] = {{0,2},{1,2},{0,2},{1,2},{0,1},{0,1}};
+    for(int i = 0; i<6;i++)
+    {
+        faceParam[box.faceMap[i]] = &(faceScales[i]); 
+    }
+  
+    apf::MeshIterator* it = m->begin(0);
+    apf::MeshEntity* ent;
+    while( (ent = m->iterate(it)) )
+    {
+        apf::ModelEntity* g_ent = m->toModel(ent);
+    
+        apf::MeshEntity* ev[2];
+        m->getDownward(ent,0,ev);
+        int modelTag = m->getModelTag(g_ent);
+        int modelType = m->getModelType(g_ent);
+        if(modelType<3 && modelType!=0)
+        {
+            apf::Vector3 pt;
+            apf::Vector3 newParam;
+            m->getPoint(ent,0,pt);
+            if(modelType==1)
+            {
+                if(modelTag == circle1.faceID){
+                    double argy = (pt[1]-xyz_offset[1]);
+                    double argx = (pt[0]-xyz_offset[0]);
+                    if(argx == 0 && argy ==0)
+                        newParam[0] = 0.0; // not sure if this will happen or if this is right
+                    else 
+                        newParam[0] = atan2(argy,argx);
+                    m->setParam(ent,newParam);
+                }
+                else if(modelTag == circle2.faceID){
+                    double argy = (pt[1]-xyz_offset[1]);
+                    double argx = (pt[0]-xyz_offset[0]);
+                    if(argx == 0 && argy ==0)
+                        newParam[0] = 0.0; // not sure if this will happen or if this is right
+                    else 
+                        newParam[0] = atan2(argy,argx);
+                    m->setParam(ent,newParam);
+                }
+                else{
+                    int relevantIndex = edgeParam[modelTag];
+                    newParam[0]=pt[relevantIndex]/edgeLengths[relevantIndex];
+                    m->setParam(ent,newParam);
+                }
+            }
+            else if (modelType==2 && modelTag!=cylinder.faceID)
+            { 
+                int* relevantIndex = faceParam[modelTag][0]; //size is 2
+                newParam[0] = pt[relevantIndex[0]]/edgeLengths[relevantIndex[0]];
+                newParam[1] = pt[relevantIndex[1]]/edgeLengths[relevantIndex[1]];
+                m->setParam(ent,newParam);
+            }
+            else if (modelType==2 && modelTag == cylinder.faceID)
+            {
+                double argy = (pt[1]-xyz_offset[1]);
+                double argx = (pt[0]-xyz_offset[0]);
+                if(argx == 0 && argy ==0)
+                    newParam[0] = 0.0; // not sure if this will happen or if this is right
+                else 
+                    newParam[0] = atan2(argy,argx);
+                newParam[1] = pt[2]/boxHeight;
+
+                m->setParam(ent,newParam);
+            }
+
+        } //end if
+  } //end while
+  m->end(it);
+  m->acceptChanges();
+
+}
+
 
 void Reparam::reparameterize2D(gmi_model*model,apf::Mesh2*m,Enclosure box, Sphere sphere){
   std::map<int,int> edgeParam;
@@ -795,9 +1046,12 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   //at this point, hmin and hmax haven't been set yet
   //apf::Field* size_initial = apf::createLagrangeField(m,"size_initial",apf::SCALAR,1);
   lion_set_verbosity(1);
-  size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
+  apf::Field* size_init = apf::createLagrangeField(m,"proteus_init",apf::SCALAR,1);
+  sizeFieldList.push(size_init);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* ent;
+  hmin = 0.0125;
+  hmax = 0.2;
   while( (ent = m->iterate(it)) )
   {
     apf::Vector3 pt;
@@ -812,36 +1066,26 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
       apf::setScalar(size_iso,ent,0,hmax);
     }
 */
-      apf::setScalar(size_iso,ent,0,0.25);
+      //apf::setScalar(size_iso,ent,0,0.2);
+      apf::ModelEntity* g_ent = m->toModel(ent);
+      int modelTag = m->getModelTag(g_ent);
+      int modelType = m->getModelType(g_ent);
+      if(modelTag == modelPiercingCylinder.faceID && modelType==2 || modelType==1 && (modelTag == modelCircle1.faceID || modelTag == modelCircle2.faceID))
+          apf::setScalar(size_init,ent,0,0.0125);
+      else
+          apf::setScalar(size_init,ent,0,0.1025);
   }
   m->end(it);
 
+  apf::writeVtkFiles("pregradeProteus",m);
+  std::cout<<"grade mesh intiial\n";
   //gradeMesh(1.5);
-   
-  apf::Field* modelTagge = apf::createLagrangeField(m,"modelTags",apf::SCALAR,1);
-  it = m->begin(0);
-  while( (ent = m->iterate(it)) )
-  {
-      apf::ModelEntity* g_ent = m->toModel(ent);
-      int modelTag = m->getModelTag(g_ent);
-      int modelType = m->getModelType(g_ent);
-      apf::setScalar(modelTagge,ent,0,modelTag);
-  }
-  m->end(it);
+  isotropicIntersect();
+  std::cout<<"grade mesh post\n";
   
-  apf::Field* modelTyper = apf::createLagrangeField(m,"modelType",apf::SCALAR,1);
-  it = m->begin(0);
-  while( (ent = m->iterate(it)) )
-  {
-      apf::ModelEntity* g_ent = m->toModel(ent);
-      int modelTag = m->getModelTag(g_ent);
-      int modelType = m->getModelType(g_ent);
-      apf::setScalar(modelTyper,ent,0,modelType);
-  }
-  m->end(it);
-
+  checkEntities(m);
   apf::writeVtkFiles("initialProteus",m);
-  ma::Input* in = ma::configure(m,size_iso);
+  ma::Input* in = ma::configure(m,size_init);
   in->maximumIterations = 10;
   in->shouldSnap = true;
   in->shouldTransferParametric = true;
@@ -852,9 +1096,10 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
   apf::writeVtkFiles("middleProteus",m);
   
   //apf::writeVtkFiles("initialAdapt",m);
-  freeField(size_iso);
+  freeField(size_init);
 
-  size_iso = apf::createLagrangeField(m,"proteus_size",apf::SCALAR,1);
+  size_init = apf::createLagrangeField(m,"proteus_initial",apf::SCALAR,1);
+  sizeFieldList.push(size_init);
   it = m->begin(0);
   while( (ent = m->iterate(it)) )
   {
@@ -866,24 +1111,32 @@ void MeshAdaptPUMIDrvr::initialAdapt_analytic(){
     else
       apf::setScalar(size_iso,ent,0,hmax);
 */
-      apf::setScalar(size_iso,ent,0,0.25);
+      //apf::setScalar(size_iso,ent,0,0.05);
+      apf::ModelEntity* g_ent = m->toModel(ent);
+      int modelTag = m->getModelTag(g_ent);
+      int modelType = m->getModelType(g_ent);
+      if(modelTag == modelPiercingCylinder.faceID && modelType==2 || modelType==1 && (modelTag == modelCircle1.faceID || modelTag == modelCircle2.faceID))
+          apf::setScalar(size_init,ent,0,0.0125);
+      else
+          apf::setScalar(size_init,ent,0,0.1025);
+    
   }
   m->end(it);
 
   //gradeMesh(1.5);
    
-  in = ma::configure(m,size_iso);
+  in = ma::configure(m,size_init);
   in->maximumIterations = 10;
   in->shouldSnap = true;
   in->shouldTransferParametric = true;
   in->shouldFixShape = true;
-  in->debugFolder="./debug_fine";
-  ma::adaptVerbose(in,false);
+  in->debugFolder="./debug_fine2";
+  ma::adaptVerbose(in,true);
   m->verify();
   
   apf::writeVtkFiles("finalProteus",m);
   //apf::writeVtkFiles("initialAdapt2",m);
-  freeField(size_iso);
+  freeField(size_init);
 }
 
 
@@ -957,6 +1210,95 @@ void MeshAdaptPUMIDrvr::createAnalyticGeometry(int dim, double* boxDim,double*sp
   //initialAdapt_analytic();
   //initialAdapt_analytic(1.0);
   //initialAdapt_analytic(0.1);
+
+  return;
+
+}
+
+
+void MeshAdaptPUMIDrvr::createAnalyticGeometryCylinder(int dim, double* boxDim,double*sphereCenter, double radius)
+{
+  boxLength = boxDim[0];
+  boxWidth = boxDim[1];
+  boxHeight = boxDim[2];
+  updateSphereCoordinates(sphereCenter);
+
+  //create analytic model
+  gmi_model* model = gmi_make_analytic();
+  
+  //add sphere
+
+  PiercingCylinder cylinder = PiercingCylinder();
+  cylinder.radius = radius;
+
+  cylinder.makePiercingCylinder(model);
+  //int edgeID[2] = {200,201};
+  int edgeID[2] = {9,10};
+  Sphere circle1 = Sphere(2);
+  circle1.faceID = edgeID[0];
+  circle1.radius = radius;
+  //can't use makeSphere because of paramterization function is not general
+  gmi_add_analytic(model, 1, circle1.faceID, circleFace0, circle1.faPer, circle1.faRan, 0);
+
+  Sphere circle2 = Sphere(2);
+  circle2.faceID = edgeID[1];
+  circle2.radius = radius;
+  //circle2.makeSphere(model);
+  gmi_add_analytic(model, 1, circle2.faceID, circleFace1, circle2.faPer, circle2.faRan, 0);
+
+  //add the box
+  geomDim = dim;
+  Enclosure box;
+  
+  //add special flag to makeBox to include circles? 
+  //need to classify vertices on these circles independently from the cylindrical face
+  
+  box.makeBox3D(model);
+  //create 2 circles, parameterize it as part of the two faces 1 and 6, faces 4+5
+
+  //face ids come from faceMap
+  agm_bdry b;
+  agm_use regionUse;
+
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,1)));
+  regionUse = add_adj(model, b, circle1.faceID);
+  gmi_add_analytic_reparam(model, regionUse, reparam_Circle0, 0);
+
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,6)));
+  regionUse = add_adj(model, b, circle2.faceID);
+  gmi_add_analytic_reparam(model, regionUse, reparam_Circle1, 0);
+
+  //parameterize the cylinder to the region
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,dim,box.regionID)));
+  regionUse = add_adj(model, b, cylinder.faceID);
+  gmi_add_analytic_reparam(model, regionUse, regionFunction, 0);
+
+  b = agm_add_bdry(gmi_analytic_topo(model), agm_from_gmi(gmi_find(model,2,cylinder.faceID)));
+  regionUse = add_adj(model, b, circle1.faceID);
+  gmi_add_analytic_reparam(model, regionUse, reparam_CircleCylinder0, 0);
+  regionUse = add_adj(model, b, circle2.faceID);
+  gmi_add_analytic_reparam(model, regionUse, reparam_CircleCylinder1, 0);
+
+  setParameterizationCylinder(model,m,box,cylinder,circle1,circle2);
+
+  modelBox = box;
+  modelCircle1 = circle1;
+  modelCircle2 = circle2;
+  modelPiercingCylinder = cylinder;
+  isAnalytic = 1;
+  m->verify();
+
+  apf::Migration* plan = 0;
+  gmi_register_mesh();
+  Splitter::partitionFactor = PCU_Comm_Peers();
+  Splitter::switchToOriginals();
+  bool isOriginal = ((PCU_Comm_Self() % Splitter::partitionFactor) == 0);
+  if (isOriginal) {
+    plan = Splitter::getPlan(m);
+  }
+  Splitter::switchToAll();
+  m = apf::repeatMdsMesh(m, model, plan, Splitter::partitionFactor);
+  Parma_PrintPtnStats(m, "");
 
   return;
 
