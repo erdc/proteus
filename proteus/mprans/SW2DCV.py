@@ -1176,8 +1176,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def updateAllReflectingBoundaryConditions(self):
             self.forceStrongConditions = False
             for dummy, index in enumerate(self.boundaryIndex):
-                print('index ', index)
-                print(self.normalx[index], self.normaly[index])
                 vx = self.u[1].dof[index]
                 vy = self.u[2].dof[index]
                 vt = vx * self.normaly[index] - vy * self.normalx[index]
