@@ -8,6 +8,7 @@ from proteus import (Domain, Context, MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 from proteus.mprans import SpatialTools as st
+import os
 
 
 """
@@ -73,6 +74,10 @@ st.assembleDomain(domain)
 domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
 nnx = None
 nny = None
+
+# hack for using same mesh for tests, don't remove
+if opts.he==4.0:
+    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"for_testMeshes/obstacle"
 
 ##########################################
 # DEFINE INITIAL CONSTANTS AND FUNCTIONS #
