@@ -51,9 +51,9 @@ femSpaces = {0: FESpace['basis'],
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
-multilevelNonlinearSolver  = Newton
-fullNewtonFlag = False #NOTE: False just if the method is explicit
-if (LUMPED_MASS_MATRIX==1):
+multilevelNonlinearSolver = Newton
+fullNewtonFlag = False  #NOTE: False just if the method is explicit
+if (LUMPED_MASS_MATRIX == 1):
     levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 else:
     levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
@@ -76,6 +76,7 @@ levelLinearSolver = LU
 comm = Comm.get()
 if comm.size() > 1:
     levelLinearSolver = KSP_petsc4py
+    multilevelLinearSolver = KSP_petsc4py
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 
@@ -87,4 +88,4 @@ nl_rtol_res = 0.0
 l_atol_res = 1.0e-7
 l_rtol_res = 0.0
 tolFac = 0.0
-maxLineSearches=0
+maxLineSearches = 0

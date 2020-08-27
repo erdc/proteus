@@ -95,11 +95,11 @@ class SWFlowProblem:
     def assert_boundaryConditions(self, sw_model, boundaryConditions):
         # check dirichlet BCs
         assert 'water_height' in boundaryConditions, 'Provide water_height in BCs'
-        assert 'x_mom' in boundaryConditions, 'Provide y_mom in BCs'
-        assert 'y_mom' in boundaryConditions, 'Provide x_mom in BCs'
+        assert 'x_mom' in boundaryConditions, 'Provide x_mom in BCs'
+        assert 'y_mom' in boundaryConditions, 'Provide y_mom in BCs'
         if sw_model == 1:  # dispersive SWEs
-            assert 'h_times_eta' in boundaryConditions, 'Provide auxiliary function h*eta in BCs'
-            assert 'h_times_w' in boundaryConditions, 'Provide auxiliary function h*w in BCs'
+            assert 'h_times_eta' in boundaryConditions, 'Provide auxiliary variable h_eta in BCs'
+            assert 'h_times_w' in boundaryConditions, 'Provide auxiliary variable h_w in BCs'
 
 
 class OutputStepping:

@@ -17,6 +17,7 @@ namespace py = pybind11;
 #define REESTIMATE_MAX_EDGE_BASED_CFL 0
 #define LIMITING_ITERATION 2
 
+/* inline functions */
 namespace proteus {
 // FOR CELL BASED ENTROPY VISCOSITY
 inline double ENTROPY(const double &g, const double &h, const double &hu,
@@ -125,7 +126,7 @@ inline double hStarRFromQuadPhiFromBelow(const double &g, const double &hStarL,
                     4 * phi(g, hStarR, hL, hR, uL, uR) *
                         phiDDiff2(g, hStarL, hStarR, hL, hR, uL, uR))));
 }
-} // namespace proteus
+} // end namespace proteus
 
 namespace proteus {
 class SW2DCV_base {
@@ -134,6 +135,7 @@ public:
   virtual ~SW2DCV_base() {}
   virtual void convexLimiting(arguments_dict &args) = 0;
   virtual double calculateEdgeBasedCFL(arguments_dict &args) = 0;
+  virtual void calculateEV(arguments_dict &args) = 0;
   virtual void calculateResidual(arguments_dict &args) = 0;
   virtual void calculateMassMatrix(arguments_dict &args) = 0;
   virtual void calculateLumpedMassMatrix(arguments_dict &args) = 0;
@@ -211,175 +213,6 @@ public:
     lambda3 = nu3(g, hStar, hR, velR, one_over_hR);
     return fmax(fabs(lambda1), fabs(lambda3));
   }
-
-  // inline double maxWaveSpeedIterativeProcess(double g, double nx, double ny,
-  //                                            double hL, double huL, double
-  //                                            hvL, double hR, double huR,
-  //                                            double hvR, double hEpsL, double
-  //                                            hEpsR, bool verbose) {
-  //   double tol = 1E-15;
-  //   // 1-eigenvalue: uL-sqrt(g*hL)
-  //   // 3-eigenvalue: uR+sqrt(g*hR)
-  //
-  //   double hVelL = nx * huL + ny * hvL;
-  //   double hVelR = nx * huR + ny * hvR;
-  //   double velL = 2 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hVelL;
-  //   double velR = 2 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hVelR;
-  //
-  //   double lambda1, lambda3;
-  //
-  //   // CHECK IF BOTH STATES ARE DRY:
-  //   if (hL == 0 && hR == 0) {
-  //     lambda1 = 0.;
-  //     lambda3 = 0.;
-  //     return 0.;
-  //   } else if (hL == 0) // left dry state
-  //   {
-  //     lambda1 = velR - 2 * sqrt(g * hR);
-  //     lambda3 = velR + sqrt(g * hR);
-  //     return fmax(fabs(lambda1), fabs(lambda3));
-  //   } else if (hR == 0) // right dry state
-  //   {
-  //     lambda1 = velL - sqrt(g * hL);
-  //     lambda3 = velL + 2 * sqrt(g * hL);
-  //     return fmax(fabs(lambda1), fabs(lambda3));
-  //   } else {
-  //     ////////////////////
-  //     // ESTIMATE hStar //
-  //     ////////////////////
-  //     // Initial estimate of hStar0 from above.
-  //     // This is computed via phiR(h) >= phi(h) ---> hStar0 >= hStar
-  //     double hStar0 = 1;
-  //     double hStar = hStar0;
-  //
-  //     /////////////////////////////////
-  //     // ALGORITHM 1: Initialization //
-  //     /////////////////////////////////
-  //     // Requires: tol
-  //     // Ensures: hStarL, hStarR
-  //     double hStarL, hStarR;
-  //     double hMin = fmin(hL, hR);
-  //     double hMax = fmin(hL, hR);
-  //     double phiMin = phi(g, hMin, hL, hR, velL, velR);
-  //     double phiMax = phi(g, hMax, hL, hR, velL, velR);
-  //     if (0 <= phiMin) {
-  //       // This is a 1- and 3-rarefactions situation. We know the solution in
-  //       // this case
-  //       lambda1 = velL - sqrt(g * hL);
-  //       lambda3 = velR + sqrt(g * hR);
-  //
-  //       std::cout << "lambda Min, lambda Max: " << lambda1 << ", " << lambda3
-  //                 << std::endl;
-  //
-  //       return fmax(fabs(lambda1), fabs(lambda3));
-  //     }
-  //     if (phiMax == 0) // if hMax "hits" hStar (very unlikely)
-  //     {
-  //       hStar = hMax;
-  //       lambda1 = nu1(g, hStar, hL, velL);
-  //       lambda3 = nu3(g, hStar, hR, velR);
-  //       return fmax(fabs(lambda1), fabs(lambda3));
-  //     }
-  //     double hStarTwoRarefactions =
-  //         std::pow(velL - velR + 2 * sqrt(g) * (sqrt(hL) + sqrt(hR)), 2) / 16
-  //         / g;
-  //     if (phiMax < 0) // This is a 1- and 3-shock situation
-  //     {
-  //       hStarL = hMax;
-  //       hStarR = hStarTwoRarefactions;
-  //     } else // Here we have one shock and one rarefaction
-  //     {
-  //       hStarL = hMin;
-  //       hStarR = fmin(hMax, hStarTwoRarefactions);
-  //     }
-  //
-  //     // improve estimate from below via one newton step (not required)
-  //     hStarL = fmax(hStarL, hStarR - phi(g, hStarR, hL, hR, velL, velR) /
-  //                                        phip(g, hStarR, hL, hR));
-  //     // COMPUTE lambdaMin0 and lambdaMax0
-  //     double nu11 = nu1(g, hStarR, hL, velL);
-  //     double nu12 = nu1(g, hStarL, hL, velL);
-  //     double nu31 = nu3(g, hStarL, hR, velR);
-  //     double nu32 = nu3(g, hStarR, hR, velR);
-  //
-  //     double lambdaMin = fmax(fmax(nu31, 0), fmax(-nu12, 0));
-  //     double lambdaMax = fmax(fmax(nu32, 0), fmax(-nu11, 0));
-  //
-  //     if (verbose) {
-  //       std::cout << "hStarL, hStarR: " << hStarL << ", " << hStarR << "\t"
-  //                 << "lambda Min, lambda Max: " << lambdaMin << ", "
-  //                 << lambdaMax << std::endl;
-  //     }
-  //     // CHECK IF TOL IS SATISFIED. O.W. GOT TO ALGORITHM 2 //
-  //     if (lambdaMin > 0 && lambdaMax / lambdaMin - 1 <= tol)
-  //       return lambdaMax;
-  //     else // Proceed to algorithm 2
-  //     {
-  //       ///////////////////////////////////////////
-  //       // ALGORITHM 2: ESTIMATION OF LAMBDA MAX //
-  //       ///////////////////////////////////////////
-  //       // Requires: hStarL, hStarR
-  //       // Ensures: lambdaMax
-  //       int aux_counter = 0;
-  //       while (true) {
-  //         aux_counter++;
-  //         // Start having lambdaMin and lambdaMax
-  //         // Check if current lambdaMin and lambdaMax satisfy the tolerance
-  //         if (verbose) {
-  //           std::cout << lambdaMin << ", " << lambdaMax << std::endl;
-  //         }
-  //         if (lambdaMin > 0 && lambdaMax / lambdaMin - 1 <= tol)
-  //           return lambdaMax;
-  //         // Check for round off error
-  //         if (phi(g, hStarL, hL, hR, velL, velR) > 0 ||
-  //             phi(g, hStarR, hL, hR, velL, velR) < 0)
-  //           return lambdaMax;
-  //
-  //         // Save old estimates of hStar
-  //         double hStarL_old = hStarL;
-  //         double hStarR_old = hStarR;
-  //         // Compute new estimates on hStarL and hStarR
-  //         // NOTE (MQL): hStarL and hStarR must be computed using the old
-  //         // values
-  //         hStarL = hStarLFromQuadPhiFromAbove(g, hStarL_old, hStarR_old, hL,
-  //         hR,
-  //                                             velL, velR);
-  //         hStarR = hStarRFromQuadPhiFromBelow(g, hStarL_old, hStarR_old, hL,
-  //         hR,
-  //                                             velL, velR);
-  //
-  //         // Compute lambdaMax and lambdaMin
-  //         nu11 = nu1(g, hStarR, hL, velL);
-  //         nu12 = nu1(g, hStarL, hL, velL);
-  //         nu31 = nu3(g, hStarL, hR, velR);
-  //         nu32 = nu3(g, hStarR, hR, velR);
-  //
-  //         lambdaMin = fmax(fmax(nu31, 0), fmax(-nu12, 0));
-  //         lambdaMax = fmax(fmax(nu32, 0), fmax(-nu11, 0));
-  //
-  //         if (aux_counter > 1000) // TMP
-  //         {
-  //           std::cout << "**** AUX COUNTER > 1000... aborting!" << std::endl;
-  //           std::cout << "**** Initial guess hStar: " << hStar0 << std::endl;
-  //
-  //           hStar = hStar0;
-  //           lambda1 = nu1(g, hStar, hL, velL);
-  //           lambda3 = nu3(g, hStar, hR, velR);
-  //           std::cout << "**** Initial estimate of max wave speed: "
-  //                     << fmax(fabs(lambda1), fabs(lambda3)) << std::endl;
-  //
-  //           abort();
-  //         }
-  //         // else
-  //         //{
-  //         //  std::cout << "*****... AUX COUNTER: " << aux_counter <<
-  //         //  std::endl;
-  //         //  //TMP
-  //         //}
-  //       }
-  //     }
-  //   }
-  // }
 
   inline void calculateCFL(const double &elementDiameter, const double &g,
                            const double &h, const double &hu, const double &hv,
@@ -724,8 +557,7 @@ public:
           double one_over_hjReg =
               2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
 
-          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
-          // hwStar
+          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar
           double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
           double huStarij = huni * hStarij * one_over_hiReg;
           double hvStarij = hvni * hStarij * one_over_hiReg;
@@ -735,12 +567,9 @@ public:
           double hvStarji = hvnj * hStarji * one_over_hjReg;
 
           // compute limiter based on water height
-          double Lij = 1.0;
           if (FCT_h[ij] >= 0) {
-            Lij = fmin(Lij, std::min(Rneg[j], Rpos[i]));
             Lij_array[ij] = fmin(Lij_array[ij], std::min(Rneg[j], Rpos[i]));
           } else {
-            Lij = fmin(Lij, std::min(Rneg[i], Rpos[j]));
             Lij_array[ij] = fmin(Lij_array[ij], std::min(Rneg[i], Rpos[j]));
           }
 
@@ -788,7 +617,6 @@ public:
           double rj = fabs(fmax(r1, r2));
 
           // COMPUTE LIMITER //
-          Lij = fmin(fmin(ri, Lij), fmin(rj, Lij)); // Lij=Lji
           Lij_array[ij] =
               fmin(fmin(ri, Lij_array[ij]), fmin(rj, Lij_array[ij]));
 
@@ -848,9 +676,9 @@ public:
     int numDOFsPerEqn = args.m_iscalar["numDOFsPerEqn"];
     xt::pyarray<double> &lumped_mass_matrix =
         args.m_darray["lumped_mass_matrix"];
-    xt::pyarray<double> &h_dof_old = args.m_darray["h_old"];
-    xt::pyarray<double> &hu_dof_old = args.m_darray["hu_old"];
-    xt::pyarray<double> &hv_dof_old = args.m_darray["hv_old"];
+    xt::pyarray<double> &h_dof_old = args.m_darray["h_dof_old"];
+    xt::pyarray<double> &hu_dof_old = args.m_darray["hu_dof_old"];
+    xt::pyarray<double> &hv_dof_old = args.m_darray["hv_dof_old"];
     xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
     xt::pyarray<int> &csrRowIndeces_DofLoops =
         args.m_iarray["csrRowIndeces_DofLoops"];
@@ -866,7 +694,7 @@ public:
     double run_cfl = args.m_dscalar["run_cfl"];
     xt::pyarray<double> &edge_based_cfl = args.m_darray["edge_based_cfl"];
     int debug = args.m_iscalar["debug"];
-    std::valarray<double> psi(numDOFsPerEqn);
+
     double max_edge_based_cfl = 0.;
     int ij = 0;
     for (int i = 0; i < numDOFsPerEqn; i++) {
@@ -878,9 +706,9 @@ public:
 
       for (int offset = csrRowIndeces_DofLoops[i];
            offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
-
         // loop in j (sparsity pattern)
         int j = csrColumnOffsets_DofLoops[offset];
+
         // solution at time tn for the jth DOF
         double hj = h_dof_old[j];
         double huj = hu_dof_old[j];
@@ -916,6 +744,168 @@ public:
     }
     return max_edge_based_cfl;
   } // End calculateEdgeBasedCFL
+
+  void calculateEV(arguments_dict &args) {
+    double g = args.m_dscalar["g"];
+    xt::pyarray<double> &h_dof_old = args.m_darray["h_dof_old"];
+    xt::pyarray<double> &hu_dof_old = args.m_darray["hu_dof_old"];
+    xt::pyarray<double> &hv_dof_old = args.m_darray["hv_dof_old"];
+    xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
+    xt::pyarray<double> &Cx = args.m_darray["Cx"];
+    xt::pyarray<double> &Cy = args.m_darray["Cy"];
+    xt::pyarray<double> &CTx = args.m_darray["CTx"];
+    xt::pyarray<double> &CTy = args.m_darray["CTy"];
+    int numDOFsPerEqn = args.m_iscalar["numDOFsPerEqn"];
+    xt::pyarray<int> &csrRowIndeces_DofLoops =
+        args.m_iarray["csrRowIndeces_DofLoops"];
+    xt::pyarray<int> &csrColumnOffsets_DofLoops =
+        args.m_iarray["csrColumnOffsets_DofLoops"];
+    xt::pyarray<double> &lumped_mass_matrix =
+        args.m_darray["lumped_mass_matrix"];
+    double eps = args.m_dscalar["eps"];
+    double hEps = args.m_dscalar["hEps"];
+    xt::pyarray<double> &global_entropy_residual =
+        args.m_darray["global_entropy_residual"];
+    double &dij_small = args.m_dscalar["dij_small"];
+
+    //////////////////////////////////////////////
+    // ********** FIRST LOOP ON DOFs ********** //
+    //////////////////////////////////////////////
+
+    // To compute:
+    //     * Entropy at i-th node
+    std::valarray<double> eta(numDOFsPerEqn);
+    for (int i = 0; i < numDOFsPerEqn; i++) {
+      // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
+      double hi = h_dof_old[i];
+      double one_over_hiReg =
+          2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      eta[i] = ENTROPY(g, hi, hu_dof_old[i], hv_dof_old[i], 0., one_over_hiReg);
+    }
+
+    // ********** END OF FIRST LOOP ON DOFs ********** //
+
+    ///////////////////////////////////////////////
+    // ********** SECOND LOOP ON DOFs ********** //
+    ///////////////////////////////////////////////
+    // To compute:
+    //     * global entropy residual
+    //     * dij_small to avoid division by 0
+
+    int ij = 0;
+    std::valarray<double> etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
+
+    // speed = sqrt(g max(h_0)), I divide by h_epsilon to get max(h_0) -EJT
+    double speed = std::sqrt(g * hEps / eps);
+
+    for (int i = 0; i < numDOFsPerEqn; i++) {
+
+      // solution at time tn for the ith DOF
+      double hi = h_dof_old[i];
+      double hui = hu_dof_old[i];
+      double hvi = hv_dof_old[i];
+      double Zi = b_dof[i];
+
+      // Define some things using above
+      double one_over_hiReg =
+          2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      double ui = hui * one_over_hiReg;
+      double vi = hvi * one_over_hiReg;
+      double mi = lumped_mass_matrix[i];
+      double meshSizei = std::sqrt(mi);
+
+      // initialize etaMax and etaMin
+      etaMax[i] = fabs(eta[i]);
+      etaMin[i] = fabs(eta[i]);
+
+      // FOR ENTROPY RESIDUAL, NOTE: FLAT BOTTOM //
+      double ith_flux_term1 = 0., ith_flux_term2 = 0., ith_flux_term3 = 0.;
+      double entropy_flux = 0.;
+      double sum_entprime_flux = 0.;
+      double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0., one_over_hiReg);
+      double eta_prime2 = DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);
+      double eta_prime3 = DENTROPY_DHV(g, hi, hui, hvi, 0., one_over_hiReg);
+
+      // loop in j (sparsity pattern)
+      for (int offset = csrRowIndeces_DofLoops[i];
+           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+
+        int j = csrColumnOffsets_DofLoops[offset];
+
+        // solution at time tn for the jth DOF
+        double hj = h_dof_old[j];
+        double huj = hu_dof_old[j];
+        double hvj = hv_dof_old[j];
+        double Zj = b_dof[j];
+
+        // Then define some things here using above
+        double one_over_hjReg =
+            2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
+        double uj = huj * one_over_hjReg;
+        double vj = hvj * one_over_hjReg;
+
+        // auxiliary functions to compute fluxes
+        double aux_h =
+            (uj * hj - ui * hi) * Cx[ij] + (vj * hj - vi * hi) * Cy[ij];
+        double aux_hu =
+            (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
+        double aux_hv =
+            (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
+
+        // flux for entropy
+        ith_flux_term1 += aux_h;
+        ith_flux_term2 +=
+            aux_hu + 0.5 * g * hj * hj *
+                         Cx[ij]; // g * hi * (hj + 0.) * Cx[ij]; // NOTE: Zj=0
+        ith_flux_term3 +=
+            aux_hv + 0.5 * g * hj * hj *
+                         Cy[ij]; // g * hi * (hj + 0.) * Cy[ij]; // NOTE: Zj=0
+
+        // NOTE: WE CONSIDER FLAT BOTTOM
+        entropy_flux +=
+            (Cx[ij] * ENTROPY_FLUX1(g, hj, huj, hvj, 0., one_over_hjReg) +
+             Cy[ij] * ENTROPY_FLUX2(g, hj, huj, hvj, 0., one_over_hjReg));
+
+        // COMPUTE ETA MIN AND ETA MAX //
+        etaMax[i] = fmax(etaMax[i], fabs(eta[j]));
+        etaMin[i] = fmin(etaMin[i], fabs(eta[j]));
+
+        // define dij_small in j loop
+        double x = fabs(Cx[ij]) + fabs(Cy[ij]);
+        dij_small = fmax(dij_small, x * speed);
+
+        // update ij
+        ij += 1;
+      } // end j loop
+
+      // Finally dij_small here
+      dij_small = 1E-14 * dij_small;
+
+      // define sum of entprime*flux
+      sum_entprime_flux =
+          (ith_flux_term1 * eta_prime1 + ith_flux_term2 * eta_prime2 +
+           ith_flux_term3 * eta_prime3);
+
+      // define rescale for normalization
+      double small_rescale = g * hEps * hEps / eps;
+      double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
+
+      // define alternative rescale factor
+      double new_rescale =
+          fmax(fabs(entropy_flux) + fabs(-sum_entprime_flux), 1E-30);
+
+      // COMPUTE ENTROPY RESIDUAL //
+      double one_over_entNormFactori = 1.0 / rescale;
+      global_entropy_residual[i] =
+          one_over_entNormFactori * fabs(entropy_flux - sum_entprime_flux);
+
+      // COMPUTE SMOOTHNESS INDICATOR //
+      if (hi <= hEps) {
+        global_entropy_residual[i] = 1.0;
+      }
+    }
+    // ********** END OF LOOP IN DOFs ********** //
+  } // end calculateEV
 
   void calculateResidual(arguments_dict &args) {
     xt::pyarray<double> &mesh_trial_ref = args.m_darray["mesh_trial_ref"];
@@ -1061,6 +1051,7 @@ public:
     xt::pyarray<double> &lumped_mass_matrix =
         args.m_darray["lumped_mass_matrix"];
     double cfl_run = args.m_dscalar["cfl_run"];
+    double eps = args.m_dscalar["eps"];
     double hEps = args.m_dscalar["hEps"];
     xt::pyarray<double> &hReg = args.m_darray["hReg"];
     xt::pyarray<double> &hnp1_at_quad_point =
@@ -1093,6 +1084,9 @@ public:
     int lstage = args.m_iscalar["lstage"];
     xt::pyarray<double> &new_SourceTerm_hu = args.m_darray["new_SourceTerm_hu"];
     xt::pyarray<double> &new_SourceTerm_hv = args.m_darray["new_SourceTerm_hv"];
+    xt::pyarray<double> &global_entropy_residual =
+        args.m_darray["global_entropy_residual"];
+    double dij_small = args.m_dscalar["dij_small"];
     // FOR FRICTION//
     double n2 = std::pow(mannings, 2.);
     double gamma = 4. / 3;
@@ -1175,56 +1169,34 @@ public:
       // distribute
       for (int i = 0; i < nDOF_test_element; i++) {
         register int eN_i = eN * nDOF_test_element + i;
-        int h_gi = h_l2g[eN_i];     // global i-th index for h
-        int vel_gi = vel_l2g[eN_i]; // global i-th index for velocities
+
+        // global i-th index for h (this is same for vel_l2g)
+        int h_gi = h_l2g[eN_i];
 
         // distribute time derivative to global residual
         globalResidual[offset_h + stride_h * h_gi] += elementResidual_h[i];
-        globalResidual[offset_hu + stride_hu * vel_gi] += elementResidual_hu[i];
-        globalResidual[offset_hv + stride_hv * vel_gi] += elementResidual_hv[i];
+        globalResidual[offset_hu + stride_hu * h_gi] += elementResidual_hu[i];
+        globalResidual[offset_hv + stride_hv * h_gi] += elementResidual_hv[i];
       }
     }
     // ********** END OF CELL LOOPS ********** //
 
     if (SECOND_CALL_CALCULATE_RESIDUAL == 0) // This is to save some time
     {
-      //////////////////////////////////////////////
-      // ********** FIRST LOOP ON DOFs ********** //
-      //////////////////////////////////////////////
-      // To compute:
-      //     * Entropy at i-th node
-      std::valarray<double> eta(numDOFsPerEqn);
-      for (int i = 0; i < numDOFsPerEqn; i++) {
-        // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
-        double hi = h_dof_old[i];
-        double one_over_hiReg =
-            2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
-        eta[i] =
-            ENTROPY(g, hi, hu_dof_old[i], hv_dof_old[i], 0., one_over_hiReg);
-      }
-
-      // ********** END OF FIRST LOOP ON DOFs ********** //
 
       ///////////////////////////////////////////////
-      // ********** SECOND LOOP ON DOFs ********** //
+      // ********** FIRST LOOP ON DOFs ********** //
       ///////////////////////////////////////////////
       // To compute:
       //     * Hyperbolic part of the flux
       //     * Extended source term (eqn 6.19)
       //     * Smoothness indicator
-      //     * global entropy residual
-      //     * dij_small to avoid division by 0
 
       int ij = 0;
       std::valarray<double> hyp_flux_h(numDOFsPerEqn),
           hyp_flux_hu(numDOFsPerEqn), hyp_flux_hv(numDOFsPerEqn),
-          global_entropy_residual(numDOFsPerEqn), psi(numDOFsPerEqn),
-          etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
+          psi(numDOFsPerEqn), etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
 
-      // For dij_small
-      double dij_small = 0.0;
-      // speed = sqrt(g max(h_0)), I divide by epsilon to get max(h_0) -EJT
-      double speed = std::sqrt(g * hEps / 1E-7);
       for (int i = 0; i < numDOFsPerEqn; i++) {
 
         // solution at time tn for the ith DOF
@@ -1238,10 +1210,6 @@ public:
         double ui = hui * one_over_hiReg;
         double vi = hvi * one_over_hiReg;
         double mi = lumped_mass_matrix[i];
-
-        // For eta min and max
-        etaMax[i] = fabs(eta[i]);
-        etaMin[i] = fabs(eta[i]);
 
         /* COMPUTE EXTENDED SOURCE TERMS:
          * Friction terms
@@ -1278,20 +1246,11 @@ public:
         hyp_flux_hu[i] = 0;
         hyp_flux_hv[i] = 0;
 
-        // FOR ENTROPY RESIDUAL //
-        double ith_flux_term1 = 0., ith_flux_term2 = 0., ith_flux_term3 = 0.;
-        double entropy_flux = 0.;
-        double sum_entprime_flux = 0.;
-        // NOTE: FLAT BOTTOM
-        double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0., one_over_hiReg);
-        double eta_prime2 = DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);
-        double eta_prime3 = DENTROPY_DHV(g, hi, hui, hvi, 0., one_over_hiReg);
-
         // FOR SMOOTHNESS INDICATOR //
         double alphai; // smoothness indicator of solution
         double alpha_numerator = 0;
         double alpha_denominator = 0;
-        double alpha_zero = 0.5;
+        double alpha_zero = 0.5; // if only want smoothness
         double alpha_factor = 1.0 / (1.0 - alpha_zero);
 
         // loop in j (sparsity pattern)
@@ -1333,66 +1292,18 @@ public:
           new_SourceTerm_hv[i] +=
               g * (-hi * (Zj - Zi) + 0.5 * std::pow(hj - hi, 2)) * Cy[ij];
 
-          // flux for entropy
-          ith_flux_term1 += aux_h;
-          ith_flux_term2 +=
-              aux_hu +
-              0.5 * g * hj * hj *
-                  Cx[ij]; // g * hi * (hj + 0.) * Cx[ij]; // NOTE: Zj = 0
-          ith_flux_term3 +=
-              aux_hv +
-              0.5 * g * hj * hj *
-                  Cy[ij]; // g * hi * (hj + 0.) * Cy[ij]; // NOTE:Zj = 0
-
-          // NOTE: WE CONSIDER FLAT BOTTOM
-          entropy_flux +=
-              (Cx[ij] * ENTROPY_FLUX1(g, hj, huj, hvj, 0., one_over_hjReg) +
-               Cy[ij] * ENTROPY_FLUX2(g, hj, huj, hvj, 0., one_over_hjReg));
-
-          // COMPUTE ETA MIN AND ETA MAX //
-          etaMax[i] = fmax(etaMax[i], fabs(eta[j]));
-          etaMin[i] = fmin(etaMin[i], fabs(eta[j]));
-
           // FOR SMOOTHNESS INDICATOR //
           alpha_numerator += hj - hi;
           alpha_denominator += fabs(hj - hi);
-
-          // define dij_small in j loop
-          double x = fabs(Cx[ij]) + fabs(Cy[ij]);
-          dij_small = fmax(dij_small, x * speed);
 
           // update ij
           ij += 1;
         } // end j loop
 
-        // Finally dij_small here
-        dij_small = 1E-14 * dij_small;
-
-        // Change rescaling to match TAMU code -EJT
-        // small_recale=0.5*g*eps*H_{0,max}^2
-        double small_rescale = g * hEps * hEps / std::pow(1E-7, 2);
-        double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
-
-        // new rescale factor = max(|ent_flux_sum| + |-ent'*flux|, 0.0)
-        sum_entprime_flux =
-            -(ith_flux_term1 * eta_prime1 + ith_flux_term2 * eta_prime2 +
-              ith_flux_term3 * eta_prime3);
-        double new_rescale =
-            fmax(fabs(entropy_flux) + fabs(sum_entprime_flux), 1E-30);
-
-        // COMPUTE ENTROPY RESIDUAL //
-        double one_over_entNormFactori = 1.0 / new_rescale;
-        global_entropy_residual[i] =
-            one_over_entNormFactori *
-            fabs(entropy_flux -
-                 (ith_flux_term1 * eta_prime1 + ith_flux_term2 * eta_prime2 +
-                  ith_flux_term3 * eta_prime3));
-
         // COMPUTE SMOOTHNESS INDICATOR //
         if (hi <= hEps) {
           alphai = 1.0;
           psi[i] = 1.0;
-          global_entropy_residual[i] = 1.0;
         } else {
           // Force alphai=0 in constant states
           if (fabs(alpha_numerator) <= hEps) {
@@ -1413,18 +1324,21 @@ public:
       // ********** END OF 2nd LOOP ON DOFS ********** //
 
       /////////////////////////////////////////////
-      // ********** MAIN LOOP ON DOFs ********** // to compute flux and
+      // ********** MAIN LOOP ON DOFs **********
       // To compute:
       //      * dissipative terms
       //      * bar states
       /////////////////////////////////////////////
+
       ij = 0;
       for (int i = 0; i < numDOFsPerEqn; i++) {
+
         double hi = h_dof_old[i];
         double hui = hu_dof_old[i];
         double hvi = hv_dof_old[i];
         double Zi = b_dof[i];
         double mi = lumped_mass_matrix[i];
+
         double one_over_hiReg =
             2.0 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2));
         double ui = hui * one_over_hiReg;
@@ -1489,16 +1403,16 @@ public:
                                                 hui, hvi, hEps, hEps, false) *
                       cji_norm);
             }
-            dLij = dLowij; //*fmax(psi[i],psi[j]); // enhance the order to 2nd
-                           // order. No EV
+            // this is standard low-order dij, can you use dLij =
+            // dLowij*fmax(psi[i],psi[j]) if want smoothness based as low order
+            dLij = dLowij;
 
             ///////////////////////////////////////
             // WELL BALANCING DISSIPATIVE MATRIX //
             ///////////////////////////////////////
             muLowij = fmax(fmax(0., -(ui * Cx[ij] + vi * Cy[ij])),
                            fmax(0., (uj * Cx[ij] + vj * Cy[ij])));
-            muLij = muLowij; //*fmax(psi[i],psi[j]); // enhance the order to 2nd
-            // order.
+            muLij = muLowij;
 
             // Define dLij as low order dijs
             muLij = muLowij;
@@ -1536,6 +1450,7 @@ public:
             hvTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
                          ((hvStarji - hvj) - (hvStarij - hvi));
 
+            // Here we define uBar + uTilde
             hBT[ij] = hBar_ij + hTilde_ij;
             huBT[ij] = huBar_ij + huTilde_ij;
             hvBT[ij] = hvBar_ij + hvTilde_ij;
@@ -1543,19 +1458,10 @@ public:
             ///////////////////////
             // ENTROPY VISCOSITY //
             ///////////////////////
-            double dEVij = cE * fmax(global_entropy_residual[i],
-                                     global_entropy_residual[j]);
+            double dEVij =
+                fmax(global_entropy_residual[i], global_entropy_residual[j]);
             dHij = fmin(dLowij, dEVij);
             muHij = fmin(muLowij, dEVij);
-            // dHij = dLowij *
-            //        fmax(global_entropy_residual[i],
-            //        global_entropy_residual[j]);
-            // muHij = muLowij * fmax(global_entropy_residual[i],
-            //                        global_entropy_residual[j]);
-
-            // This is if we want smoothness indicator based viscosity
-            // dHij = fmax(psi[i], psi[j]) * dLij;
-            // muHij = fmax(psi[i], psi[j]) * muLij;
 
             // compute dij_minus_muij times star solution terms
             // see: eqn (6.13)
@@ -1588,6 +1494,8 @@ public:
           // update ij
           ij += 1;
         } // j loop ends here
+
+        /* Define global residual */
         if (LUMPED_MASS_MATRIX == 1) {
           globalResidual[offset_h + stride_h * i] =
               hi - dt / mi *
@@ -1604,9 +1512,9 @@ public:
                          ith_dHij_minus_muHij_times_hvStarStates -
                          ith_muHij_times_hvStates);
           // clean up potential negative water height due to machine precision
-          if (globalResidual[offset_h + stride_h * i] >= -hEps &&
-              globalResidual[offset_h + stride_h * i] < hEps)
-            globalResidual[offset_h + stride_h * i] = 0;
+          // if (globalResidual[offset_h + stride_h * i] >= -hEps &&
+          //     globalResidual[offset_h + stride_h * i] < hEps)
+          //   globalResidual[offset_h + stride_h * i] = 0;
         } else {
           // Distribute residual
           // NOTE: MASS MATRIX IS CONSISTENT
@@ -1624,7 +1532,7 @@ public:
         }
       }
       // ********** END OF LOOP IN DOFs ********** //
-    }
+    } // end SECOND_CALL_CALCULATE_RESIDUAL
 
     // ********** COMPUTE NORMALS ********** //
     if (COMPUTE_NORMALS == 1) {
@@ -1674,7 +1582,7 @@ public:
       }
     }
     // ********** END OF COMPUTING NORMALS ********** //
-  } // namespace proteus
+  } // end calculateResidual
 
   void calculateMassMatrix(arguments_dict &args) {
     xt::pyarray<double> &mesh_trial_ref = args.m_darray["mesh_trial_ref"];
@@ -2147,7 +2055,7 @@ public:
       }   // i
     }     // elements
   }
-}; // SW2DCV
+}; // namespace proteus
 
 inline SW2DCV_base *newSW2DCV(int nSpaceIn, int nQuadraturePoints_elementIn,
                               int nDOF_mesh_trial_elementIn,
@@ -2160,6 +2068,6 @@ inline SW2DCV_base *newSW2DCV(int nSpaceIn, int nQuadraturePoints_elementIn,
       nDOF_trial_elementIn, nDOF_test_elementIn,
       nQuadraturePoints_elementBoundaryIn, CompKernelFlag);
 }
-} // namespace proteus
+} // end namespace proteus
 
 #endif

@@ -7,10 +7,11 @@ import numpy as np
 from proteus import (Domain, Context, MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
+from proteus.mprans import SpatialTools as st
 
 
 """
-This is a simple benchmark of a solitary wave propagating over a flat bottom.
+This is a mach reflection test.
 """
 
 # *************************** #
@@ -19,53 +20,53 @@ This is a simple benchmark of a solitary wave propagating over a flat bottom.
 
 opts = Context.Options([
     ('sw_model', 0, "sw_model = {0,1} for {SWEs, Disperisve SWEs}}"),
-    ("final_time", 40.0, "Final time for simulation"),
+    ("final_time", 5.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
-    ("structured", True, "Structured or unstructured mesh"),
-    ("he", 0.1, "Mesh size for unstructured mesh")
+    ("reflecting_BCs", False, "Use reflecting BCs"),
+    ("structured", False, "Structured or unstructured mesh"),
+    ("he", 0.3, "Mesh size for unstructured mesh"),
+    ("mannings", 0.0, "Mannings roughness coefficient")
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (25.0, 1.0)
-refinement = opts.refinement
-rectangle = RectangularDomain(L=L, x=[0, 0, 0])
+domain = Domain.PlanarStraightLineGraphDomain()
 
-# CREATE REFINEMENT #
-nnx0 = 6
-nnx = (nnx0 - 1) * (2**refinement) + 1
-nny = old_div((nnx - 1), 10) + 1
-he = old_div(L[0], float(nnx - 1))
-triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
-if opts.structured:
-    domain = rectangle
-else:
-    rectangle.writePoly("bump")
-    domain = PlanarStraightLineGraphDomain(fileprefix="bump")
-    domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
-    nnx = None
-    nny = None
+my_vertices = [[0.0,0.0],[3.0,0.0],[10.0,3.2],[10.0,10.0],[0.0,10.0]]
+my_segments = [[0,1],[1,2],[2,3],[3,4],[4,0]]
+
+# boundary tags dictionary
+bt = {'inflow': 1, 'reflecting': 99}
+my_vertexFlags = [bt['inflow'], bt['reflecting'], bt['reflecting'], bt['reflecting'],
+                  bt['reflecting']]
+my_segmentFlags = [bt['reflecting'], bt['reflecting'], bt['reflecting'], bt['reflecting'],
+                  bt['inflow']]
+my_customShape = st.CustomShape(domain, boundaryTags=bt,
+                           vertices=my_vertices, vertexFlags=my_vertexFlags,
+                           segments=my_segments, segmentFlags=my_segmentFlags)
+
+st.assembleDomain(domain)
+domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
+nnx = None
+nny = None
+
 
 ##########################################
 # DEFINE INITIAL CONSTANTS AND FUNCTIONS #
 ##########################################
 g = 9.81
 
-# constants for transcritical bump
-hL = 0.28205279813802181
-q_in = 0.18
+# constants
+h_initial = 0.1
+h_inflow = 3.0 / 2.0 * h_initial
+q_inflow = h_inflow * 2.0 / 3.0
 
 def bathymetry_function(X):
     x = X[0]
-    #  define conditionals for bathymetry
-    conds = [(8.0 < x) & (x <= 12.)]
-    #  define the functions
-    bath = [lambda x: 0.2/64.0 * (x - 8.0)**3 * (12.0 - x)**3]
-    return np.piecewise(x, conds, bath)
+    return 0.0 * x
 
 
 ##############################
@@ -75,13 +76,14 @@ def bathymetry_function(X):
 
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        h = max(hL - bathymetry_function(X), 0.)
-        return h
+        x = X[0]
+        h = h_initial - bathymetry_function(X)
+        return max(h, 0.)
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        return q_in
+        return 0.0
 
 
 class y_mom_at_t0(object):
@@ -115,23 +117,28 @@ class Zero(object):
 ###############################
 #     BOUNDARY CONDITIONS     #
 ###############################
+L = (10.0, 10.0)
 X_coords = (0.0, L[0])
 Y_coords = (0.0, L[1])
 
 def h_DBC(X, flag):
-    if X[0] == X_coords[1]:
-        return lambda x, t: hL
+    if X[0] == X_coords[0]:
+        return lambda x, t: h_inflow
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0]:
-        return lambda x, t: q_in
+        return lambda x, t: q_inflow
+
+def y_mom_DBC(X, flag):
+    if X[0] == X_coords[0]:
+        return lambda x, t: 0.0
 
 def heta_DBC(X, flag):
-    if X[0] == X_coords[1]:
-        return lambda x, t: hL**2
+    if X[0] == X_coords[0]:
+        return lambda x, t: h_inflow**2
 
 def hw_DBC(X, flag):
-    if X[0] == X_coords[1]:
+    if X[0] == X_coords[0]:
         return lambda x, t: 0.0
 
 # ********************************** #
@@ -148,7 +155,7 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'h_times_w': hw_at_t0()}
 boundaryConditions = {'water_height': h_DBC,
                       'x_mom': x_mom_DBC,
-                      'y_mom': lambda x, flag: lambda x, t: 0.0,
+                      'y_mom': y_mom_DBC,
                       'h_times_eta': heta_DBC,
                       'h_times_w': hw_DBC}
 
@@ -156,12 +163,13 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
                                               structured=opts.structured,
-                                              he=he,
+                                              he=opts.he,
                                               nnx=nnx,
                                               nny=nny,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
+                                              reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
-mySWFlowProblem.physical_parameters['mannings'] = 0.0
+mySWFlowProblem.physical_parameters['mannings'] = opts.mannings
