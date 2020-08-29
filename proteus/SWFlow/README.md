@@ -14,8 +14,7 @@ propagate solitary waves, etc. -->
 
 ## Getting Started
 
-These instructions will help you run these tests on your local machine and help
-you set up new tests for your specific needs.
+These instructions will help you run and create new SWFlow tests on your local machine.
 
 ### Prerequisites
 
@@ -60,6 +59,17 @@ runSWEs.py -l1 -v -f dam3Bumps.py
 
 which will execute the solver with the above default context options. The `-l1` flag controls the amount of output during the execution; you can choose any number between 1 and 10. The `-v` flag stands for verbose. (See the `proteus/parun.py` or `proteus/runSWEs.py` files for more details on the different flag options for `parun` and `runSWEs.py`.)
 
+To use more than one processor, execute the following commands:
+
+```
+mpiexec -np 4 parun --SWEs -l1 -v dam3Bumps.py
+```
+or
+```
+mpiexec -np 4 runSWEs.py -l1 -v -f dam3Bumps.py
+```
+which runs the `dam3Bumps.py` problem on 4 processors.
+
 To use options other than the default options, one can add these in the run command as follows:
 
 ```
@@ -73,7 +83,7 @@ which switches the model to the dispersive model and increases the final time to
 Creating a new test is as simple as copying one of the existing files,
 and modifying appropriately to fit your needs.
 
-Currently, most of the tests are set up to use a rectangular domain with triangle elements created by a function in `proteus/SpatialTool.py`. To see an examples with slightly more complicated domains, take a look at `mach_flow.py` and `obstacle_flow.py`. The SWFlow API can be used with meshes created by Triangle and Gmsh. The "real world" tests such as the Malpesset problem use meshes created by the software SMS (https://www.aquaveo.com/software/sms-surface-water-modeling-system-introduction) in the ADH format. If you would like to use your own mesh, but aren't sure how to use it, please contact us and we can gladly help.
+Currently, most of the tests are set up to use a rectangular domain with triangle elements created by a function in `proteus/SpatialTool.py`. To see examples with slightly more complicated domains, take a look at `mach_flow.py` and `obstacle_flow.py`. The SWFlow API can be used with meshes created by Triangle and Gmsh. The "real world" tests such as the Malpesset problem use meshes created by the software SMS (https://www.aquaveo.com/software/sms-surface-water-modeling-system-introduction) in the ADH format. If you would like to use your own mesh, but aren't sure how to use it, please contact us and we can gladly help.
 
 <!-- ## Break down into end to end tests
 
