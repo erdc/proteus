@@ -84,12 +84,13 @@ class SWFlowProblem:
         self.GN_swe_parameters = default_GN_swe_parameters
 
     def assert_initialConditions(self, sw_model, initialConditions):
-        assert 'water_height' in initialConditions, 'Provide water_height in ICs'
-        assert 'x_mom' in initialConditions, 'Provide y_mom in ICs'
-        assert 'y_mom' in initialConditions, 'Provide x_mom in ICs'
+        assert 'water_height' in initialConditions, 'Provide water_height in initialConditions'
+        assert 'x_mom' in initialConditions, 'Provide y_mom in initialConditions'
+        assert 'y_mom' in initialConditions, 'Provide x_mom in initialConditions'
         if sw_model == 1:  # dispersive SWEs
-            assert 'h_times_eta' in initialConditions, 'Provide auxiliary function h*eta in ICs'
-            assert 'h_times_w' in initialConditions, 'Provide auxiliary function h*w in ICs'
+            assert 'h_times_eta' in initialConditions, 'Provide auxiliary function h_eta in initialConditions'
+            assert 'h_times_w' in initialConditions, 'Provide auxiliary function h_w in initialConditions'
+            assert 'h_times_beta' in initialConditions, 'Provide auxiliary function h_beta in initialConditions'
     #
 
     def assert_boundaryConditions(self, sw_model, boundaryConditions):
@@ -100,6 +101,7 @@ class SWFlowProblem:
         if sw_model == 1:  # dispersive SWEs
             assert 'h_times_eta' in boundaryConditions, 'Provide auxiliary variable h_eta in BCs'
             assert 'h_times_w' in boundaryConditions, 'Provide auxiliary variable h_w in BCs'
+            assert 'h_times_beta' in boundaryConditions, 'Provide auxiliary variable h_beta in BCs'
 
 
 class OutputStepping:
@@ -151,6 +153,12 @@ class FESpace:
         return {'basis': basis,
                 'elementQuadrature': elementQuadrature,
                 'elementBoundaryQuadrature': elementBoundaryQuadrature}
+
+# This is to make life easier on the user. Initializing the variable h_beta
+# (which is an ansatz for momentum_vec dot grad(Z)) is not really necessary
+class Zero(object):
+    def uOfXT(self, X, t):
+        return 0.
 
 
 # ***************************************** #
