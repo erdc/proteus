@@ -143,6 +143,8 @@ def x_mom_DBC(X, flag):
 def y_mom_DBC(X, flag):
     if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
         return lambda x, t: 0.0
+def hbeta_DBC(X, flag):
+        return lambda x, t: 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -155,17 +157,20 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': hw_at_t0()}
+                     'h_times_w': hw_at_t0(),
+                     'h_times_beta': Zero()}
 boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
-                      'h_times_w': lambda x, flag: None}
+                      'h_times_w': lambda x, flag: None,
+                      'h_times_beta': hbeta_DBC}
 analytical_Solution = {'h_exact': water_height_at_tfinal(),
                        'hu_exact': Zero(),
                        'hv_exact': Zero(),
                        'heta_exact': Zero(),
-                       'hw_exact': Zero()}
+                       'hw_exact': Zero(),
+                       'hbeta_exact': Zero()}
 
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,

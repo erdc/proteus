@@ -116,12 +116,14 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': Zero(),
                      'y_mom': Zero(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': Zero()}
+                     'h_times_w': Zero(),
+                     'h_times_beta': Zero()}
 boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
-                      'h_times_w': lambda x, flag: None}
+                      'h_times_w': lambda x, flag: None,
+                      'h_times_beta': x_mom_DBC}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,

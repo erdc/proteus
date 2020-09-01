@@ -163,6 +163,9 @@ class hw_at_t0(object):
         hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
         return hw
 
+class Zero(object):
+    def uOfXT(self, X, t):
+        return 0.
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
@@ -190,12 +193,14 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': hw_at_t0()}
+                     'h_times_w': hw_at_t0(),
+                     'h_times_beta': Zero()}
 boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
-                      'h_times_w': lambda x, flag: None}
+                      'h_times_w': lambda x, flag: None,
+                      'h_times_beta': x_mom_DBC}
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
