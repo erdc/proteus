@@ -653,6 +653,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('dV_u', 1)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('dV_u', 2)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['dV'] = self.q[('dV_u',0)]
         self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 2)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
