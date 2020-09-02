@@ -1859,8 +1859,8 @@ public:
             ///////////////////////
             // ENTROPY VISCOSITY //
             ///////////////////////
-            double dEVij =
-                fmax(global_entropy_residual[i], global_entropy_residual[j]);
+            double dEVij = cE * fmax(global_entropy_residual[i],
+                                     global_entropy_residual[j]);
             dHij = fmin(dLowij, dEVij);
             muHij = fmin(muLowij, dEVij);
 

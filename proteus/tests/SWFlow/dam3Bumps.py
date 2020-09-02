@@ -138,3 +138,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               bathymetry=bathymetry_function)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = opts.mannings
+mySWFlowProblem.physical_parameters['cE'] = 2.0

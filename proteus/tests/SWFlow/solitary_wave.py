@@ -79,16 +79,14 @@ def bathymetry_function(X):
 
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        hTilde = h0 + solitary_wave(X[0], 0)
-        h = max(hTilde - bathymetry_function(X), 0.)
+        h = h0 + solitary_wave(X[0], 0)
         return h
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        hTilde = h0 + solitary_wave(X[0], 0)
-        h = max(hTilde - bathymetry_function(X), 0.)
-        return h * c * old_div(hTilde - h0, hTilde)
+        h = h0 + solitary_wave(X[0], 0)
+        return h * c * old_div(h - h0, h)
 
 
 class y_mom_at_t0(object):
@@ -113,10 +111,9 @@ class heta_at_t0(object):
 class hw_at_t0(object):
     def uOfXT(self, X, t):
         sechSqd = (1.0 / np.cosh(r * (X[0] - xs)))**2.0
-        hTilde = h0 + solitary_wave(X[0], 0)
-        h = max(hTilde - bathymetry_function(X), 0.)
-        hTildePrime = -2.0 * alpha * r * np.tanh(r * (X[0] - xs)) * sechSqd
-        hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
+        h = h0 + solitary_wave(X[0], 0)
+        hPrime = -2.0 * alpha * r * np.tanh(r * (X[0] - xs)) * sechSqd
+        hw = -h**2 * old_div(c * h0 * hPrime, h**2)
         return hw
 
 ###################################
@@ -186,4 +183,3 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=analytical_Solution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
-# mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1
