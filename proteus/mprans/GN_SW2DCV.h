@@ -950,6 +950,7 @@ public:
     // To compute:
     //     * Entropy at i-th node
     std::valarray<double> eta(numDOFsPerEqn);
+
     for (int i = 0; i < numDOFsPerEqn; i++) {
       // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
       double hi = h_dof_old[i];
@@ -1067,10 +1068,6 @@ public:
       // define rescale for normalization
       double small_rescale = g * hEps * hEps / eps;
       double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
-
-      // define alternative rescale factor
-      double new_rescale =
-          fmax(fabs(entropy_flux) + fabs(-sum_entprime_flux), 1E-30);
 
       // COMPUTE ENTROPY RESIDUAL //
       double one_over_entNormFactori = 1.0 / rescale;
@@ -1545,7 +1542,6 @@ public:
           double hwj = hw_dof_old[j];
           double hbetaj = hbeta_dof_old[j];
           double Zj = b_dof[j];
-
           // Then define some things here using above
           double one_over_hjReg =
               2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
