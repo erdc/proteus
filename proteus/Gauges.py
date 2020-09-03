@@ -28,7 +28,7 @@ from proteus import Profiling
 
 
 def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
-    """Create a set of point gauges that will automatically be serialized 
+    """Create a set of point gauges that will automatically be serialized
     as CSV data to the requested file.
 
     :param gauges: An iterable of "gauges".  Each gauge is specified
@@ -323,7 +323,7 @@ class Gauges(AV_base):
         else:
             if self.adapted:
               if(Profiling.logDir not in self.fileName):
-                self.fileName = os.path.join(Profiling.logDir, self.fileName)                
+                self.fileName = os.path.join(Profiling.logDir, self.fileName)
               self.file = open(self.fileName, 'a')
             else:
               self.fileName = os.path.join(Profiling.logDir, self.fileName)
@@ -674,7 +674,7 @@ class Gauges(AV_base):
             lineSegments = self.getMeshIntersections(line)
             self.addLineGaugePoints(line, lineSegments)
             linesSegments.append(lineSegments)
-  
+
         self.identifyMeasuredQuantities()
 
         self.buildGaugeComm()
@@ -687,6 +687,7 @@ class Gauges(AV_base):
               pass
             else:
               self.outputHeader()
+
         return self
 
     def get_time(self):
@@ -757,7 +758,7 @@ class Gauges(AV_base):
             return
 
         time = self.get_time()
-        logEvent("Calculate called at time %g" % time)
+        logEvent("Gauges calculate called at time %g" % time, 4)
         # check that gauge is in its active time region
         if self.activeTime is not None and (self.activeTime[0] > time or self.activeTime[1] < time):
             return
@@ -767,7 +768,13 @@ class Gauges(AV_base):
             return
 
         for m, dofsVec, gaugesVec in zip(self.pointGaugeMats, self.dofsVecs, self.pointGaugeVecs):
+            #---Test
+            bath_dofs = self.model.levelModelList[-1].coefficients.b.dof
+            bath_dofsVec = PETSc.Vec().createWithArray(bath_dofs, comm=PETSc.COMM_SELF)
+            dofsVec += bath_dofsVec
             m.mult(dofsVec, gaugesVec)
+            dofsVec -= bath_dofsVec
+            #---
 
         # this could be optimized out... but why?
         self.lineIntegralGaugesVec.zeroEntries()
