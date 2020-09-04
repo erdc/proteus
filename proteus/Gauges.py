@@ -770,19 +770,19 @@ class Gauges(AV_base):
         import numpy
         for m, dofsVec, gaugesVec in zip(self.pointGaugeMats, self.dofsVecs, self.pointGaugeVecs):
             #---Test
-            bath_dofs = self.model.levelModelList[-1].coefficients.b.dof
-            bath_dofsVec = PETSc.Vec().createWithArray(bath_dofs, comm=PETSc.COMM_SELF)
-            dofsVec += bath_dofsVec
-            m.mult(dofsVec, gaugesVec)
-            dofsVec -= bath_dofsVec
-            # h_dofs = self.u[0].dof
-            # htiny = self.model.levelModelList[-1].hEps
-            # hMax = numpy.maximum(h_dofs, htiny)
-            # oneOverH_dofs = 2.0 * h_dofs / (h_dofs * h_dofs + hMax * hMax)
-            # oneOverH_dofsVec = PETSc.Vec().createWithArray(oneOverH_dofs, comm=PETSc.COMM_SELF)
-            # dofsVec *= oneOverH_dofsVec
+            # bath_dofs = self.model.levelModelList[-1].coefficients.b.dof
+            # bath_dofsVec = PETSc.Vec().createWithArray(bath_dofs, comm=PETSc.COMM_SELF)
+            # dofsVec += bath_dofsVec
             # m.mult(dofsVec, gaugesVec)
-            # dofsVec *= 1/oneOverH_dofsVec
+            # dofsVec -= bath_dofsVec
+            h_dofs = self.u[0].dof
+            htiny = self.model.levelModelList[-1].hEps
+            hMax = numpy.maximum(h_dofs, htiny)
+            oneOverH_dofs = 2.0 * h_dofs / (h_dofs * h_dofs + hMax * hMax)
+            oneOverH_dofsVec = PETSc.Vec().createWithArray(oneOverH_dofs, comm=PETSc.COMM_SELF)
+            dofsVec *= oneOverH_dofsVec
+            m.mult(dofsVec, gaugesVec)
+            dofsVec *= 1/oneOverH_dofsVec
             #---
 
         # this could be optimized out... but why?
