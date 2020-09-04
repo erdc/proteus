@@ -780,9 +780,7 @@ class Gauges(AV_base):
             hMax = numpy.maximum(h_dofs, htiny)
             oneOverH_dofs = 2.0 * h_dofs / (h_dofs * h_dofs + hMax * hMax)
             oneOverH_dofsVec = PETSc.Vec().createWithArray(oneOverH_dofs, comm=PETSc.COMM_SELF)
-            dofsVec *= oneOverH_dofsVec
-            m.mult(dofsVec, gaugesVec)
-            dofsVec *= 1/oneOverH_dofsVec
+            m.mult(dofsVec * oneOverH_dofsVec, gaugesVec)
             #---
 
         # this could be optimized out... but why?

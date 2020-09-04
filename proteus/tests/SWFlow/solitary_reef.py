@@ -219,7 +219,7 @@ reef_VelGauges = PointGauges(gauges=((('h_u', 'h_v'), ((13.0, 0.0,  0),
                                                  (21.0, 0.0, 0),
                                                  (21.0, -5.0, 0))),),
                                 activeTime=(0.01, opts.final_time),
-                                fileName='reef_vel_gauges.csv')
+                                fileName='vel_gauges.csv')
 
 # ********************************************* #
 # ********** Create my SWFlowProblem ********** #
