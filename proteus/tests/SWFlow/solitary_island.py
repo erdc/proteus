@@ -25,7 +25,7 @@ islands. There are two cases defined here, Case B and Case C.
 # *************************** #
 opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
-    ("final_time", 12.0, "Final time for simulation"),
+    ("final_time", 10.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
@@ -67,7 +67,7 @@ h0 = 0.32
 alpha = 0.181 * h0
 xs = 7.56023
 if opts.which_case==1:
-    alpha = 0.091
+    alpha = 0.091 * h0
     xs = 6.81474
 
 r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
@@ -120,7 +120,6 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
-
 class heta_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
@@ -136,6 +135,9 @@ class hw_at_t0(object):
         hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
         return hw
 
+class Zero(object):
+    def uOfXT(self, X, t):
+        return 0.
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
@@ -163,12 +165,14 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': hw_at_t0()}
+                     'h_times_w': hw_at_t0(),
+                     'h_times_beta': Zero()}
 boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
-                      'h_times_w': lambda x, flag: None}
+                      'h_times_w': lambda x, flag: None,
+                      'h_times_beta': x_mom_DBC}
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
