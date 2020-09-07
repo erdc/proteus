@@ -143,11 +143,6 @@ class x_mom_at_t0(object):
         return h * c * old_div(hTilde - h0, hTilde)
 
 
-class y_mom_at_t0(object):
-    def uOfXT(self, X, t):
-        return 0.
-
-
 class heta_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
@@ -191,7 +186,7 @@ outputStepping = SWFlowProblem.OutputStepping(
     opts.final_time, dt_output=opts.dt_output)
 initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
-                     'y_mom': y_mom_at_t0(),
+                     'y_mom': Zero(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0(),
                      'h_times_beta': Zero()}
@@ -204,22 +199,21 @@ boundaryConditions = {'water_height': lambda x, flag: None,
 # **************************** #
 # ********** GAUGES ********** #
 # **************************** #
-# heightPointGauges = PointGauges(gauges=((('h'), ((7.5, 0.0,  0),
-#                                                  (13.0, 0.0, 0),
-#                                                  (21.0, 0.0, 0),
-#                                                  (7.5, 5.0, 0),
-#                                                  (13.0, 5.0, 0),
-#                                                  (21.0, 5.0, 0),
-#                                                  (25.0, 0.0, 0),
-#                                                  (25.0, 5.0, 0),
-#                                                  (25.0, 10.0, 0))),),
-#                                 activeTime=(0.01, opts.final_time),
-#                                 fileName='reef_wave_gauges.csv')
-reef_VelGauges = PointGauges(gauges=((('h_u', 'h_v'), ((13.0, 0.0,  0),
+reefPointGauges = PointGauges(gauges=((('h'), ((7.5, 0.0,  0),
+                                                 (13.0, 0.0, 0),
+                                                 (21.0, 0.0, 0),
+                                                 (7.5, 5.0, 0),
+                                                 (13.0, 5.0, 0),
+                                                 (21.0, 5.0, 0),
+                                                 (25.0, 0.0, 0),
+                                                 (25.0, 5.0, 0),
+                                                 (25.0, 10.0, 0))),
+                                        (('h_u', 'h_v'),
+                                                 ((13.0, 0.0,  0),
                                                  (21.0, 0.0, 0),
                                                  (21.0, -5.0, 0))),),
                                 activeTime=(0.01, opts.final_time),
-                                fileName='vel_gauges.csv')
+                                fileName='reef_gauges.csv')
 
 # ********************************************* #
 # ********** Create my SWFlowProblem ********** #
@@ -240,4 +234,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
 if opts.want_gauges:
-    mySWFlowProblem.auxiliaryVariables = [reef_VelGauges]
+    mySWFlowProblem.auxiliaryVariables = [reefPointGauges]
