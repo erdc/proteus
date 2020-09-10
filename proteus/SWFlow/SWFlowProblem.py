@@ -154,12 +154,6 @@ class FESpace:
                 'elementQuadrature': elementQuadrature,
                 'elementBoundaryQuadrature': elementBoundaryQuadrature}
 
-# This is to make life easier on the user. Initializing the variable h_beta
-# (which is an ansatz for momentum_vec dot grad(Z)) is not really necessary
-class Zero(object):
-    def uOfXT(self, X, t):
-        return 0.
-
 
 # ***************************************** #
 # ********** PHYSICAL PARAMETERS ********** #
