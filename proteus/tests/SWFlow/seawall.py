@@ -103,7 +103,7 @@ class x_mom_at_t0(object):
         return x_mom
 
 
-class y_mom_at_t0(object):
+class Zero(object):
     def uOfXT(self, X, t):
         return 0.
 
@@ -148,14 +148,16 @@ outputStepping = SWFlowProblem.OutputStepping(
     opts.final_time, dt_output=opts.dt_output)
 initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
-                     'y_mom': y_mom_at_t0(),
+                     'y_mom': Zero(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': hw_at_t0()}
+                     'h_times_w': hw_at_t0(),
+                     'h_times_beta': Zero()}
 boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
                       'h_times_eta': lambda x, flag: None,
-                      'h_times_w': lambda x, flag: None}
+                      'h_times_w': lambda x, flag: None,
+                      'h_times_beta': x_mom_DBC}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
