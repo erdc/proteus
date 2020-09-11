@@ -87,16 +87,14 @@ def bathymetry_function(X):
 
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
-        hTilde = h0 + solitary_wave(X[0], 0)
-        h = max(hTilde - bathymetry_function(X), 0.)
+        h = h0 + solitary_wave(X[0], 0)
         return h
 
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        hTilde = h0 + solitary_wave(X[0], 0)
-        h = max(hTilde - bathymetry_function(X), 0.)
-        return h * c * old_div(hTilde - h0, hTilde)
+        h = h0 + solitary_wave(X[0], 0)
+        return h * c * old_div(h - h0, h)
 
 
 class y_mom_at_t0(object):
@@ -121,10 +119,9 @@ class heta_at_t0(object):
 class hw_at_t0(object):
     def uOfXT(self, X, t):
         sechSqd = (1.0 / np.cosh(r * (X[0] - xs)))**2.0
-        hTilde = h0 + solitary_wave(X[0], 0)
-        h = max(hTilde - bathymetry_function(X), 0.)
-        hTildePrime = -2.0 * alpha * r * np.tanh(r * (X[0] - xs)) * sechSqd
-        hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
+        h = h0 + solitary_wave(X[0], 0)
+        hPrime = -2.0 * alpha * r * np.tanh(r * (X[0] - xs)) * sechSqd
+        hw = -h**2 * old_div(c * h0 * hPrime, h**2)
         return hw
 
 ###################################
@@ -151,6 +148,8 @@ def x_mom_DBC(X, flag):
 def y_mom_DBC(X, flag):
     if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
         return lambda x, t: 0.0
+def hbeta_DBC(X, flag):
+        return lambda x, t: 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -163,17 +162,20 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': hw_at_t0()}
+                     'h_times_w': hw_at_t0(),
+                     'h_times_beta': Zero()}
 boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
-                      'h_times_w': lambda x, flag: None}
+                      'h_times_w': lambda x, flag: None,
+                      'h_times_beta': hbeta_DBC}
 analytical_Solution = {'h_exact': water_height_at_tfinal(),
                        'hu_exact': Zero(),
                        'hv_exact': Zero(),
                        'heta_exact': Zero(),
-                       'hw_exact': Zero()}
+                       'hw_exact': Zero(),
+                       'hbeta_exact': Zero()}
 
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
@@ -189,4 +191,3 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               analyticalSolution=analytical_Solution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
-# mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1

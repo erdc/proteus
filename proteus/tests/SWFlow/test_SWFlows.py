@@ -31,7 +31,7 @@ class TestSWFlow(object):
         actual = tables.open_file(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_h_t2.csv'
         #write comparison file
-        write_path = './' + 'comparison_' + name + '_h_t2.csv'
+        # write_path = './' + 'comparison_' + name + '_h_t2.csv'
         # np.array(actual.root.h_t2).tofile(os.path.join(self._scriptdir, write_path),sep=",")
         #
         np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t2).flatten(),decimal=7)
@@ -55,25 +55,25 @@ class TestSWFlow(object):
                   "-l1 -v dam3Bumps.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("dam3Bumps")
 
-    def test_GN_steady(self):
+    def test_dSWEs_steady_state(self):
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v GN_steady.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
-        self.compare_vs_saved_files("GN_steady")
+                  "-l1 -v dSWEs_steady_state.py  -C 'refinement=3 final_time=0.1 dt_output=0.1'")
+        self.compare_vs_saved_files("dSWEs_steady_state")
 
-    def test_solitary_reef(self):
+    def test_reef_island_runup(self):
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v solitary_reef.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
-        self.compare_vs_saved_files("solitary_reef")
+                  "-l1 -v reef_island_runup.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
+        self.compare_vs_saved_files("reef_island_runup")
 
     def test_seawall(self):
         os.system("parun --SWEs --path " + self.path + " "
                   "-l1 -v seawall.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("seawall")
 
-    def test_island(self):
+    def test_conical_island(self):
         os.system("parun --SWEs --path " + self.path + " "
-                  "-l1 -v solitary_island.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
-        self.compare_vs_saved_files("solitary_island")
+                  "-l1 -v  conical_island.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
+        self.compare_vs_saved_files("conical_island")
 
     def test_transcritical_bump(self):
         os.system("parun --SWEs --path " + self.path + " "

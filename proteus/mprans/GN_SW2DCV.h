@@ -162,7 +162,7 @@ namespace proteus {
 class GN_SW2DCV_base {
 public:
   std::valarray<double> Rneg, Rpos, Rneg_heta, Rpos_heta, hLow, huLow, hvLow,
-      hetaLow, hwLow, Kmax;
+      hetaLow, hwLow, hbetaLow, Kmax;
   virtual ~GN_SW2DCV_base() {}
   virtual void convexLimiting(arguments_dict &args) = 0;
   virtual double calculateEdgeBasedCFL(arguments_dict &args) = 0;
@@ -249,6 +249,7 @@ public:
     xt::pyarray<double> &hv_old = args.m_darray["hv_old"];
     xt::pyarray<double> &heta_old = args.m_darray["heta_old"];
     xt::pyarray<double> &hw_old = args.m_darray["hw_old"];
+    xt::pyarray<double> &hbeta_old = args.m_darray["hbeta_old"];
     xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
     xt::pyarray<double> &high_order_hnp1 = args.m_darray["high_order_hnp1"];
     xt::pyarray<double> &high_order_hunp1 = args.m_darray["high_order_hunp1"];
@@ -256,6 +257,8 @@ public:
     xt::pyarray<double> &high_order_hetanp1 =
         args.m_darray["high_order_hetanp1"];
     xt::pyarray<double> &high_order_hwnp1 = args.m_darray["high_order_hwnp1"];
+    xt::pyarray<double> &high_order_hbetanp1 =
+        args.m_darray["high_order_hbetanp1"];
     xt::pyarray<double> &extendedSourceTerm_hu =
         args.m_darray["extendedSourceTerm_hu"];
     xt::pyarray<double> &extendedSourceTerm_hv =
@@ -264,11 +267,14 @@ public:
         args.m_darray["extendedSourceTerm_heta"];
     xt::pyarray<double> &extendedSourceTerm_hw =
         args.m_darray["extendedSourceTerm_hw"];
+    xt::pyarray<double> &extendedSourceTerm_hbeta =
+        args.m_darray["extendedSourceTerm_hbeta"];
     xt::pyarray<double> &limited_hnp1 = args.m_darray["limited_hnp1"];
     xt::pyarray<double> &limited_hunp1 = args.m_darray["limited_hunp1"];
     xt::pyarray<double> &limited_hvnp1 = args.m_darray["limited_hvnp1"];
     xt::pyarray<double> &limited_hetanp1 = args.m_darray["limited_hetanp1"];
     xt::pyarray<double> &limited_hwnp1 = args.m_darray["limited_hwnp1"];
+    xt::pyarray<double> &limited_hbetanp1 = args.m_darray["limited_hbetanp1"];
     xt::pyarray<int> &csrRowIndeces_DofLoops =
         args.m_iarray["csrRowIndeces_DofLoops"];
     xt::pyarray<int> &csrColumnOffsets_DofLoops =
@@ -285,6 +291,7 @@ public:
     xt::pyarray<double> &hvBT = args.m_darray["hvBT"];
     xt::pyarray<double> &hetaBT = args.m_darray["hetaBT"];
     xt::pyarray<double> &hwBT = args.m_darray["hwBT"];
+    xt::pyarray<double> &hbetaBT = args.m_darray["hbetaBT"];
     xt::pyarray<double> &new_SourceTerm_hu = args.m_darray["new_SourceTerm_hu"];
     xt::pyarray<double> &new_SourceTerm_hv = args.m_darray["new_SourceTerm_hv"];
     xt::pyarray<double> &new_SourceTerm_heta =
@@ -300,6 +307,7 @@ public:
     hvLow.resize(numDOFs, 0.0);
     hetaLow.resize(numDOFs, 0.0);
     hwLow.resize(numDOFs, 0.0);
+    hbetaLow.resize(numDOFs, 0.0);
     Kmax.resize(numDOFs, 0.0);
 
     // for relaxation of bounds
@@ -331,6 +339,7 @@ public:
     std::valarray<double> FCT_hv(0.0, dH_minus_dL.size());
     std::valarray<double> FCT_heta(0.0, dH_minus_dL.size());
     std::valarray<double> FCT_hw(0.0, dH_minus_dL.size());
+    std::valarray<double> FCT_hbeta(0.0, dH_minus_dL.size());
 
     // Define kinetic energy, kin = 1/2 q^2 / h
     max_of_h_and_hEps = xt::where(h_old > hEps, h_old, hEps);
@@ -401,6 +410,7 @@ public:
       hvLow[i] = hv_old[i];
       hetaLow[i] = heta_old[i];
       hwLow[i] = hw_old[i];
+      hbetaLow[i] = hbeta_old[i];
       Kmax[i] = kin[i];
 
       /* LOOP OVER THE SPARSITY PATTERN (j-LOOP) */
@@ -449,6 +459,8 @@ public:
                         dt / mi * (2 * dLow[ij] * hetaBT[ij]);
           hwLow[i] += hw_old[i] * (-dt / mi * 2 * dLow[ij]) +
                       dt / mi * (2 * dLow[ij] * hwBT[ij]);
+          hbetaLow[i] += hbeta_old[i] * (-dt / mi * 2 * dLow[ij]) +
+                         dt / mi * (2 * dLow[ij] * hbetaBT[ij]);
         }
         // UPDATE ij //
         ij += 1;
@@ -470,11 +482,13 @@ public:
       double high_order_hvnp1i = high_order_hvnp1[i];
       double high_order_hetanp1i = high_order_hetanp1[i];
       double high_order_hwnp1i = high_order_hwnp1[i];
+      double high_order_hbetanp1i = high_order_hbetanp1[i];
       double hi = h_old[i];
       double huni = hu_old[i];
       double hvni = hv_old[i];
       double hetani = heta_old[i];
       double hwni = hw_old[i];
+      double hbetani = hbeta_old[i];
       double Zi = b_dof[i];
       double mi = lumped_mass_matrix[i];
       double one_over_hiReg =
@@ -492,23 +506,26 @@ public:
         double hvnj = hv_old[j];
         double hetanj = heta_old[j];
         double hwnj = hw_old[j];
+        double hbetanj = hbeta_old[j];
         double Zj = b_dof[j];
         double one_over_hjReg =
             2. * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
 
         // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
-        // hwStar
+        // hwStar, hbetaStar
         double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
         double huStarij = huni * hStarij * one_over_hiReg;
         double hvStarij = hvni * hStarij * one_over_hiReg;
         double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg, 2);
-        double hwStarij = hwni * std::pow(hStarij * one_over_hiReg, 2);
+        double hwStarij = hwni * hStarij * one_over_hiReg;
+        double hbetaStarij = hbetani * hStarij * one_over_hiReg;
 
         double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
         double huStarji = hunj * hStarji * one_over_hjReg;
         double hvStarji = hvnj * hStarji * one_over_hjReg;
         double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
-        double hwStarji = hwnj * std::pow(hStarji * one_over_hjReg, 2);
+        double hwStarji = hwnj * hStarji * one_over_hjReg;
+        double hbetaStarji = hbetanj * hStarji * one_over_hjReg;
 
         // i-th row of flux correction matrix
         double ML_minus_MC = (LUMPED_MASS_MATRIX == 1
@@ -543,6 +560,12 @@ public:
                 (high_order_hwnp1[j] - hwnj - (high_order_hwnp1i - hwni)) +
             dt * (dH_minus_dL[ij] - muH_minus_muL[ij]) * (hwStarji - hwStarij) +
             dt * muH_minus_muL[ij] * (hwnj - hwni);
+
+        FCT_hbeta[ij] = ML_minus_MC * (high_order_hbetanp1[j] - hbetanj -
+                                       (high_order_hbetanp1i - hbetani)) +
+                        dt * (dH_minus_dL[ij] - muH_minus_muL[ij]) *
+                            (hbetaStarji - hbetaStarij) +
+                        dt * muH_minus_muL[ij] * (hbetanj - hbetani);
         // UPDATE ij //
         ij += 1;
       } // j loop ends here
@@ -619,11 +642,13 @@ public:
         double high_order_hvnp1i = high_order_hvnp1[i];
         double high_order_hetanp1i = high_order_hetanp1[i];
         double high_order_hwnp1i = high_order_hwnp1[i];
+        double high_order_hbetanp1i = high_order_hbetanp1[i];
         double hi = h_old[i];
         double huni = hu_old[i];
         double hvni = hv_old[i];
         double hetani = heta_old[i];
         double hwni = hw_old[i];
+        double hbetani = hbeta_old[i];
         double Zi = b_dof[i];
         double mi = lumped_mass_matrix[i];
         double one_over_hiReg =
@@ -634,6 +659,7 @@ public:
         double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
         double ith_Limiter_times_FluxCorrectionMatrix4 = 0.;
         double ith_Limiter_times_FluxCorrectionMatrix5 = 0.;
+        double ith_Limiter_times_FluxCorrectionMatrix6 = 0.;
 
         double ci =
             Kmax[i] * hLow[i] -
@@ -649,23 +675,26 @@ public:
           double hvnj = hv_old[j];
           double hetanj = heta_old[j];
           double hwnj = hw_old[j];
+          double hbetanj = hbeta_old[j];
           double Zj = b_dof[j];
           double one_over_hjReg =
               2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
 
           // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
-          // hwStar
+          // hwStar, hbetaStar
           double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
           double huStarij = huni * hStarij * one_over_hiReg;
           double hvStarij = hvni * hStarij * one_over_hiReg;
           double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg, 2);
-          double hwStarij = hwni * std::pow(hStarij * one_over_hiReg, 2);
+          double hwStarij = hwni * hStarij * one_over_hiReg;
+          double hbetaStarij = hbetani * hStarij * one_over_hiReg;
 
           double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
           double huStarji = hunj * hStarji * one_over_hjReg;
           double hvStarji = hvnj * hStarji * one_over_hjReg;
           double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
-          double hwStarji = hwnj * std::pow(hStarji * one_over_hjReg, 2);
+          double hwStarji = hwnj * hStarji * one_over_hjReg;
+          double hbetaStarji = hbetanj * hStarji * one_over_hjReg;
 
           // compute limiter based on water height
           if (FCT_h[ij] >= 0) {
@@ -674,8 +703,8 @@ public:
             Lij_array[ij] = fmin(Lij_array[ij], std::min(Rneg[i], Rpos[j]));
           }
 
-          // COMPUTE LIMITER based on heta -EJT
-          // Note that we set lij = min(lij_h,lij_heta)
+          // COMPUTE LIMITER based on heta, note that we set lij =
+          // min(lij_h,lij_heta)
           if (FCT_heta[ij] >= 0) {
             Lij_array[ij] =
                 fmin(Lij_array[ij], std::min(Rneg_heta[j], Rpos_heta[i]));
@@ -738,6 +767,8 @@ public:
           ith_Limiter_times_FluxCorrectionMatrix4 +=
               Lij_array[ij] * FCT_heta[ij];
           ith_Limiter_times_FluxCorrectionMatrix5 += Lij_array[ij] * FCT_hw[ij];
+          ith_Limiter_times_FluxCorrectionMatrix6 +=
+              Lij_array[ij] * FCT_hbeta[ij];
 
           // update ij
           ij += 1;
@@ -750,6 +781,7 @@ public:
         hvLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix3;
         hetaLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix4;
         hwLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix5;
+        hbetaLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix6;
       } // end i loop for computing limiter and sum_j(lij * Aij)
 
       // update final limted solution, need to change to vector form
@@ -762,6 +794,8 @@ public:
             hetaLow[i] - dt * one_over_mi * extendedSourceTerm_heta[i];
         limited_hwnp1[i] =
             hwLow[i] - dt * one_over_mi * extendedSourceTerm_hw[i];
+        limited_hbetanp1[i] =
+            hbetaLow[i] - dt * one_over_mi * extendedSourceTerm_hbeta[i];
 
         if (limited_hnp1[i] < -hEps && dt < 1.0) {
           std::cout << "Limited water height is negative: \n "
@@ -787,6 +821,9 @@ public:
           limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
                               (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
                                std::pow(aux, VEL_FIX_POWER));
+          limited_hbetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                                 (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                                  std::pow(aux, VEL_FIX_POWER));
         }
       }
 
@@ -796,6 +833,7 @@ public:
       FCT_hv = (1.0 - Lij_array) * FCT_hv;
       FCT_heta = (1.0 - Lij_array) * FCT_heta;
       FCT_hw = (1.0 - Lij_array) * FCT_hw;
+      FCT_hbeta = (1.0 - Lij_array) * FCT_hbeta;
     } // end loop for limiting iteration
   }   // end convex limiting function
 
@@ -910,6 +948,7 @@ public:
     // To compute:
     //     * Entropy at i-th node
     std::valarray<double> eta(numDOFsPerEqn);
+
     for (int i = 0; i < numDOFsPerEqn; i++) {
       // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
       double hi = h_dof_old[i];
@@ -930,7 +969,7 @@ public:
     int ij = 0;
     std::valarray<double> etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
 
-    // speed = sqrt(g max(h_0)), I divide by h_epsilon to get max(h_0) -EJT
+    // speed = sqrt(g max(h_0)), I divide by h_epsilon to get max(h_0)
     double speed = std::sqrt(g * hEps / eps);
 
     for (int i = 0; i < numDOFsPerEqn; i++) {
@@ -1028,10 +1067,6 @@ public:
       double small_rescale = g * hEps * hEps / eps;
       double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
 
-      // define alternative rescale factor
-      double new_rescale =
-          fmax(fabs(entropy_flux) + fabs(-sum_entprime_flux), 1E-30);
-
       // COMPUTE ENTROPY RESIDUAL //
       double one_over_entNormFactori = 1.0 / rescale;
       global_entropy_residual[i] =
@@ -1098,17 +1133,20 @@ public:
     xt::pyarray<double> &hv_dof_old = args.m_darray["hv_dof_old"];
     xt::pyarray<double> &heta_dof_old = args.m_darray["heta_dof_old"];
     xt::pyarray<double> &hw_dof_old = args.m_darray["hw_dof_old"];
+    xt::pyarray<double> &hbeta_dof_old = args.m_darray["hbeta_dof_old"];
     xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
     xt::pyarray<double> &h_dof = args.m_darray["h_dof"];
     xt::pyarray<double> &hu_dof = args.m_darray["hu_dof"];
     xt::pyarray<double> &hv_dof = args.m_darray["hv_dof"];
     xt::pyarray<double> &heta_dof = args.m_darray["heta_dof"];
     xt::pyarray<double> &hw_dof = args.m_darray["hw_dof"];
+    xt::pyarray<double> &hbeta_dof = args.m_darray["hbeta_dof"];
     xt::pyarray<double> &h_dof_sge = args.m_darray["h_dof_sge"];
     xt::pyarray<double> &hu_dof_sge = args.m_darray["hu_dof_sge"];
     xt::pyarray<double> &hv_dof_sge = args.m_darray["hv_dof_sge"];
     xt::pyarray<double> &heta_dof_sge = args.m_darray["heta_dof_sge"];
     xt::pyarray<double> &hw_dof_sge = args.m_darray["hw_dof_sge"];
+    xt::pyarray<double> &hbeta_dof_sge = args.m_darray["hbeta_dof_sge"];
     xt::pyarray<double> &q_mass_acc = args.m_darray["q_mass_acc"];
     xt::pyarray<double> &q_mom_hu_acc = args.m_darray["q_mom_hu_acc"];
     xt::pyarray<double> &q_mom_hv_acc = args.m_darray["q_mom_hv_acc"];
@@ -1141,11 +1179,13 @@ public:
     int offset_hv = args.m_iscalar["offset_hv"];
     int offset_heta = args.m_iscalar["offset_heta"];
     int offset_hw = args.m_iscalar["offset_hw"];
+    int offset_hbeta = args.m_iscalar["offset_hbeta"];
     int stride_h = args.m_iscalar["stride_h"];
     int stride_hu = args.m_iscalar["stride_hu"];
     int stride_hv = args.m_iscalar["stride_hv"];
     int stride_heta = args.m_iscalar["stride_heta"];
     int stride_hw = args.m_iscalar["stride_hw"];
+    int stride_hbeta = args.m_iscalar["stride_hbeta"];
     xt::pyarray<double> &globalResidual = args.m_darray["globalResidual"];
     int nExteriorElementBoundaries_global =
         args.m_iscalar["nExteriorElementBoundaries_global"];
@@ -1213,6 +1253,8 @@ public:
         args.m_darray["hetanp1_at_quad_point"];
     xt::pyarray<double> &hwnp1_at_quad_point =
         args.m_darray["hwnp1_at_quad_point"];
+    xt::pyarray<double> &hbetanp1_at_quad_point =
+        args.m_darray["hbetanp1_at_quad_point"];
     xt::pyarray<double> &extendedSourceTerm_hu =
         args.m_darray["extendedSourceTerm_hu"];
     xt::pyarray<double> &extendedSourceTerm_hv =
@@ -1221,6 +1263,8 @@ public:
         args.m_darray["extendedSourceTerm_heta"];
     xt::pyarray<double> &extendedSourceTerm_hw =
         args.m_darray["extendedSourceTerm_hw"];
+    xt::pyarray<double> &extendedSourceTerm_hbeta =
+        args.m_darray["extendedSourceTerm_hbeta"];
     xt::pyarray<double> &dH_minus_dL = args.m_darray["dH_minus_dL"];
     xt::pyarray<double> &muH_minus_muL = args.m_darray["muH_minus_muL"];
     double cE = args.m_dscalar["cE"];
@@ -1240,6 +1284,7 @@ public:
     xt::pyarray<double> &hvBT = args.m_darray["hvBT"];
     xt::pyarray<double> &hetaBT = args.m_darray["hetaBT"];
     xt::pyarray<double> &hwBT = args.m_darray["hwBT"];
+    xt::pyarray<double> &hbetaBT = args.m_darray["hbetaBT"];
     int lstage = args.m_iscalar["lstage"];
     xt::pyarray<double> &new_SourceTerm_hu = args.m_darray["new_SourceTerm_hu"];
     xt::pyarray<double> &new_SourceTerm_hv = args.m_darray["new_SourceTerm_hv"];
@@ -1267,7 +1312,8 @@ public:
           elementResidual_hu[nDOF_test_element],
           elementResidual_hv[nDOF_test_element],
           elementResidual_heta[nDOF_test_element],
-          elementResidual_hw[nDOF_test_element];
+          elementResidual_hw[nDOF_test_element],
+          elementResidual_hbeta[nDOF_test_element];
 
       for (int i = 0; i < nDOF_test_element; i++) {
         elementResidual_h[i] = 0.0;
@@ -1275,6 +1321,7 @@ public:
         elementResidual_hv[i] = 0.0;
         elementResidual_heta[i] = 0.0;
         elementResidual_hw[i] = 0.0;
+        elementResidual_hbeta[i] = 0.0;
       }
       //
       // loop over quadrature points and compute integrands
@@ -1284,10 +1331,10 @@ public:
         register int eN_k = eN * nQuadraturePoints_element + k,
                      eN_k_nSpace = eN_k * nSpace,
                      eN_nDOF_trial_element = eN * nDOF_trial_element;
-        register double h = 0.0, hu = 0.0, hv = 0.0, heta = 0.0,
-                        hw = 0.0, // solution at current time
+        register double h = 0.0, hu = 0.0, hv = 0.0, heta = 0.0, hw = 0.0,
+                        hbeta = 0.0, // solution at current time
             h_old = 0.0, hu_old = 0.0, hv_old = 0.0, heta_old = 0.0,
-                        hw_old = 0.0, // solution at lstage
+                        hw_old = 0.0, hbeta_old = 0.0, // solution at lstage
             jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
                         h_test_dV[nDOF_trial_element], dV, x, y, xt, yt;
         // get jacobian, etc for mapping reference element
@@ -1307,6 +1354,8 @@ public:
                       &vel_trial_ref[k * nDOF_trial_element], heta);
         ck.valFromDOF(hw_dof.data(), &vel_l2g[eN_nDOF_trial_element],
                       &vel_trial_ref[k * nDOF_trial_element], hw);
+        ck.valFromDOF(hbeta_dof.data(), &vel_l2g[eN_nDOF_trial_element],
+                      &vel_trial_ref[k * nDOF_trial_element], hbeta);
         // get the solution at the lstage
         ck.valFromDOF(h_dof_old.data(), &h_l2g[eN_nDOF_trial_element],
                       &h_trial_ref[k * nDOF_trial_element], h_old);
@@ -1318,6 +1367,8 @@ public:
                       &vel_trial_ref[k * nDOF_trial_element], heta_old);
         ck.valFromDOF(hw_dof_old.data(), &vel_l2g[eN_nDOF_trial_element],
                       &vel_trial_ref[k * nDOF_trial_element], hw_old);
+        ck.valFromDOF(hbeta_dof_old.data(), &vel_l2g[eN_nDOF_trial_element],
+                      &vel_trial_ref[k * nDOF_trial_element], hbeta_old);
         // calculate cell based CFL to keep a reference
         calculateCFL(elementDiameter[eN], g, h_old, hu_old, hv_old, hEps,
                      q_cfl[eN_k]);
@@ -1335,6 +1386,7 @@ public:
         hvnp1_at_quad_point[eN_k] = hv;
         hetanp1_at_quad_point[eN_k] = heta;
         hwnp1_at_quad_point[eN_k] = hw;
+        hbetanp1_at_quad_point[eN_k] = hbeta;
 
         for (int i = 0; i < nDOF_test_element; i++) {
           // compute time derivative part of global residual. NOTE: no lumping
@@ -1343,6 +1395,7 @@ public:
           elementResidual_hv[i] += (hv - hv_old) * h_test_dV[i];
           elementResidual_heta[i] += (heta - heta_old) * h_test_dV[i];
           elementResidual_hw[i] += (hw - hw_old) * h_test_dV[i];
+          elementResidual_hbeta[i] += (hbeta - hbeta_old) * h_test_dV[i];
         }
       }
       // distribute
@@ -1359,6 +1412,8 @@ public:
         globalResidual[offset_heta + stride_heta * h_gi] +=
             elementResidual_heta[i];
         globalResidual[offset_hw + stride_hw * h_gi] += elementResidual_hw[i];
+        globalResidual[offset_hbeta + stride_hbeta * h_gi] +=
+            elementResidual_hbeta[i];
       }
     }
     // ********** END OF CELL LOOPS ********** //
@@ -1371,14 +1426,15 @@ public:
       ///////////////////////////////////////////////
       // To compute:
       //     * Hyperbolic part of the flux
-      //     * Extended source term (eqn 6.19)
+      //     * Extended source terms
       //     * Smoothness indicator
 
       int ij = 0;
       std::valarray<double> hyp_flux_h(numDOFsPerEqn),
           hyp_flux_hu(numDOFsPerEqn), hyp_flux_hv(numDOFsPerEqn),
           hyp_flux_heta(numDOFsPerEqn), hyp_flux_hw(numDOFsPerEqn),
-          psi(numDOFsPerEqn), etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
+          hyp_flux_hbeta(numDOFsPerEqn), psi(numDOFsPerEqn),
+          etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
 
       // For dij_small
       double dij_small = 0.0;
@@ -1393,6 +1449,7 @@ public:
         double hvi = hv_dof_old[i];
         double hetai = heta_dof_old[i];
         double hwi = hw_dof_old[i];
+        double hbetai = hbeta_dof_old[i];
         double Zi = b_dof[i];
         // Define some things using above
         double one_over_hiReg =
@@ -1403,19 +1460,17 @@ public:
         double mi = lumped_mass_matrix[i];
         double meshSizei = std::sqrt(mi);
 
-        /* COMPUTE EXTENDED SOURCE TERMS:
+        /* COMPUTE EXTENDED SOURCE TERMS for all equations:
          * Friction terms
-         * Potentially other sources as well
-         * Source for heta equation
-         * Source for hw equation
-         * NOTE: Be careful with sign of source terms.
+         * NOTE: Be careful with sign of source terms. Extended sources are on
+         * left side of equations. "new_SourceTerm" variables are on right
          */
 
         // FRICTION
         if (LINEAR_FRICTION == 1) {
           extendedSourceTerm_hu[i] = mannings * hui * mi;
           extendedSourceTerm_hv[i] = mannings * hvi * mi;
-          // For use in the convex limiting function -EJT
+          // For use in the convex limiting function
           // actually didn't need to do this but it helps with signs
           new_SourceTerm_hu[i] = -mannings * hui * mi;
           new_SourceTerm_hv[i] = -mannings * hvi * mi;
@@ -1430,22 +1485,28 @@ public:
                       fmax(hi_to_the_gamma, xi * g * n2 * dt * veli_norm)));
           extendedSourceTerm_hu[i] = friction_aux * hui;
           extendedSourceTerm_hv[i] = friction_aux * hvi;
-          // For use in the convex limiting function -EJT
+          // For use in the convex limiting functionT
           new_SourceTerm_hu[i] = -friction_aux * hui;
           new_SourceTerm_hv[i] = -friction_aux * hvi;
         }
 
-        // Define some things for heta and hw sources
+        // Define some things for heta, hw and hbeta sources
         double ratio_i = 1.0; //(2.0 * hetai) / (etai * etai + hi * hi + hEps);
         double diff_over_h_i = (hetai - hi * hi) * one_over_hiReg;
         double hSqd_GammaPi = 6.0 * (hetai - hi * hi);
+        double s_i = LAMBDA_MGN * g / meshSizei * hSqd_GammaPi;
+        double mu_bar_i = LAMBDA_MGN * std::sqrt(g * hEps / eps) / meshSizei;
+        double grad_Z_x_i = 0.0;
+        double grad_Z_y_i = 0.0;
+        double q_dot_gradZ = 0.0;
+
         if (IF_BOTH_GAMMA_BRANCHES) {
           if (hetai > std::pow(hi, 2.0)) {
             hSqd_GammaPi = 6.0 * etai * diff_over_h_i;
           }
         }
 
-        // heta source
+        // heta source first part
         extendedSourceTerm_heta[i] = -hwi * mi * ratio_i;
         new_SourceTerm_heta[i] = hwi * mi * ratio_i;
 
@@ -1461,6 +1522,7 @@ public:
         hyp_flux_hv[i] = 0;
         hyp_flux_heta[i] = 0;
         hyp_flux_hw[i] = 0;
+        hyp_flux_hbeta[i] = 0;
 
         // FOR SMOOTHNESS INDICATOR //
         double alphai; // smoothness indicator of solution
@@ -1481,8 +1543,8 @@ public:
           double hvj = hv_dof_old[j];
           double hetaj = heta_dof_old[j];
           double hwj = hw_dof_old[j];
+          double hbetaj = hbeta_dof_old[j];
           double Zj = b_dof[j];
-
           // Then define some things here using above
           double one_over_hjReg =
               2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
@@ -1515,6 +1577,12 @@ public:
                             (vj * hetaj - vi * hetai) * Cy[ij];
           double aux_hw =
               (uj * hwj - ui * hwi) * Cx[ij] + (vj * hwj - vi * hwi) * Cy[ij];
+          double aux_hbeta = (uj * hbetaj - ui * hbetai) * Cx[ij] +
+                             (vj * hbetaj - vi * hbetai) * Cy[ij];
+
+          // Define grad_Z_x and grad_Z_y
+          grad_Z_x_i += Zj * Cx[ij];
+          grad_Z_y_i += Zj * Cy[ij];
 
           /* HYPERBOLIC FLUX */
           hyp_flux_h[i] += aux_h;
@@ -1522,6 +1590,7 @@ public:
           hyp_flux_hv[i] += aux_hv + pTildej * Cy[ij];
           hyp_flux_heta[i] += aux_heta;
           hyp_flux_hw[i] += aux_hw;
+          hyp_flux_hbeta[i] += aux_hbeta;
 
           // EXTENDED SOURCE, USING 6.13 //
           extendedSourceTerm_hu[i] += g * hi * (hj + Zj) * Cx[ij];
@@ -1543,6 +1612,21 @@ public:
           // update ij
           ij += 1;
         } // end j loop
+
+        // update sources with gradZ contribution
+        q_dot_gradZ = hui * grad_Z_x_i + hvi * grad_Z_y_i;
+        double Spi = mu_bar_i * (q_dot_gradZ / mi - hbetai);
+        double r_i = -s_i / 2.0 + Spi / 4.0;
+        // q1
+        extendedSourceTerm_heta[i] += 1.5 * q_dot_gradZ;
+        new_SourceTerm_heta -= 1.5 * q_dot_gradZ;
+        // q3
+        extendedSourceTerm_hbeta[i] = -mi * Spi;
+        // momentum equations
+        extendedSourceTerm_hu[i] -= -r_i * grad_Z_x_i;
+        new_SourceTerm_hu[i] += -r_i * grad_Z_x_i;
+        extendedSourceTerm_hv[i] -= -r_i * grad_Z_y_i;
+        new_SourceTerm_hv[i] += -r_i * grad_Z_y_i;
 
         // COMPUTE SMOOTHNESS INDICATOR //
         if (hi <= hEps) {
@@ -1581,6 +1665,7 @@ public:
         double hvi = hv_dof_old[i];
         double hetai = heta_dof_old[i];
         double hwi = hw_dof_old[i];
+        double hbetai = hbeta_dof_old[i];
         double Zi = b_dof[i];
         double mi = lumped_mass_matrix[i];
 
@@ -1612,9 +1697,10 @@ public:
                ith_dHij_minus_muHij_times_hvStarStates = 0.,
                ith_dHij_minus_muHij_times_hetaStarStates = 0.,
                ith_dHij_minus_muHij_times_hwStarStates = 0.,
+               ith_dHij_minus_muHij_times_hbetaStarStates = 0.,
                ith_muHij_times_hStates = 0., ith_muHij_times_huStates = 0.,
                ith_muHij_times_hvStates = 0., ith_muHij_times_hetaStates = 0.,
-               ith_muHij_times_hwStates = 0.;
+               ith_muHij_times_hwStates = 0., ith_muHij_times_hbetaStates = 0.;
 
         // loop over the sparsity pattern of the i-th DOF
         for (int offset = csrRowIndeces_DofLoops[i];
@@ -1627,6 +1713,7 @@ public:
           double hvj = hv_dof_old[j];
           double hetaj = heta_dof_old[j];
           double hwj = hw_dof_old[j];
+          double hbetaj = hbeta_dof_old[j];
           double Zj = b_dof[j];
 
           double one_over_hjReg =
@@ -1652,18 +1739,21 @@ public:
           // define pressure at jth node
           double pressure_j = 0.5 * g * hj * hj + pTildej;
 
-          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, hwStar
+          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, hwStar,
+          // hbetaStar
           double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
           double huStarij = hui * hStarij * one_over_hiReg;
           double hvStarij = hvi * hStarij * one_over_hiReg;
           double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg, 2);
-          double hwStarij = hwi * std::pow(hStarij * one_over_hiReg, 2);
+          double hwStarij = hwi * hStarij * one_over_hiReg;
+          double hbetaStarij = hbetai * hStarij * one_over_hiReg;
 
           double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
           double huStarji = huj * hStarji * one_over_hjReg;
           double hvStarji = hvj * hStarji * one_over_hjReg;
           double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg, 2);
-          double hwStarji = hwj * std::pow(hStarji * one_over_hjReg, 2);
+          double hwStarji = hwj * hStarji * one_over_hjReg;
+          double hbetaStarji = hbetaj * hStarji * one_over_hjReg;
 
           // Dissipative well balancing term
           double muLowij = 0., muLij = 0., muHij = 0.;
@@ -1713,7 +1803,8 @@ public:
             ////////////////////////
             double hBar_ij = 0, hTilde_ij = 0, huBar_ij = 0, huTilde_ij = 0,
                    hvBar_ij = 0, hvTilde_ij = 0, hetaBar_ij = 0,
-                   hetaTilde_ij = 0, hwBar_ij = 0, hwTilde_ij = 0;
+                   hetaTilde_ij = 0, hwBar_ij = 0, hwTilde_ij = 0,
+                   hbetaBar_ij = 0, hbetaTilde_ij = 0;
 
             // h component
             hBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
@@ -1752,6 +1843,13 @@ public:
                        0.5 * (hwj + hwi);
             hwTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
                          ((hwStarji - hwj) - (hwStarij - hwi));
+            // hbeta component
+            hbetaBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
+                              ((uj * hbetaj - ui * hbetai) * Cx[ij] +
+                               (vj * hbetaj - vi * hbetai) * Cy[ij]) +
+                          0.5 * (hbetaj + hbetai);
+            hbetaTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
+                            ((hbetaStarji - hbetaj) - (hbetaStarij - hbetai));
 
             // Here we define uBar + uTilde
             hBT[ij] = hBar_ij + hTilde_ij;
@@ -1759,12 +1857,13 @@ public:
             hvBT[ij] = hvBar_ij + hvTilde_ij;
             hetaBT[ij] = hetaBar_ij + hetaTilde_ij;
             hwBT[ij] = hwBar_ij + hwTilde_ij;
+            hbetaBT[ij] = hbetaBar_ij + hbetaTilde_ij;
 
             ///////////////////////
             // ENTROPY VISCOSITY //
             ///////////////////////
-            double dEVij =
-                fmax(global_entropy_residual[i], global_entropy_residual[j]);
+            double dEVij = cE * fmax(global_entropy_residual[i],
+                                     global_entropy_residual[j]);
             dHij = fmin(dLowij, dEVij);
             muHij = fmin(muLowij, dEVij);
             // dHij = dLowij *
@@ -1785,6 +1884,8 @@ public:
                 (dHij - muHij) * (hetaStarji - hetaStarij);
             ith_dHij_minus_muHij_times_hwStarStates +=
                 (dHij - muHij) * (hwStarji - hwStarij);
+            ith_dHij_minus_muHij_times_hbetaStarStates +=
+                (dHij - muHij) * (hbetaStarji - hbetaStarij);
 
             // compute muij times solution terms
             ith_muHij_times_hStates += muHij * (hj - hi);
@@ -1792,6 +1893,7 @@ public:
             ith_muHij_times_hvStates += muHij * (hvj - hvi);
             ith_muHij_times_hetaStates += muHij * (hetaj - hetai);
             ith_muHij_times_hwStates += muHij * (hwj - hwi);
+            ith_muHij_times_hbetaStates += muHij * (hbetaj - hbetai);
 
             // compute dH_minus_dL
             dH_minus_dL[ij] = dHij - dLij;
@@ -1808,6 +1910,7 @@ public:
             hvBT[ij] = hvi;
             hetaBT[ij] = hetai;
             hwBT[ij] = hwi;
+            hbetaBT[ij] = hbetai;
           }
 
           // update ij
@@ -1840,6 +1943,11 @@ public:
                         ((hyp_flux_hw[i] + extendedSourceTerm_hw[i]) -
                          ith_dHij_minus_muHij_times_hwStarStates -
                          ith_muHij_times_hwStates);
+          globalResidual[offset_hbeta + stride_hbeta * i] =
+              hbetai - dt / mi *
+                           ((hyp_flux_hbeta[i] + extendedSourceTerm_hbeta[i]) -
+                            ith_dHij_minus_muHij_times_hbetaStarStates -
+                            ith_muHij_times_hbetaStates);
 
           // clean up potential negative water height due to machine
           // precision
@@ -1871,6 +1979,10 @@ public:
               dt * (hyp_flux_hw[i] + extendedSourceTerm_hw[i] -
                     ith_dHij_minus_muHij_times_hwStarStates -
                     ith_muHij_times_hwStates);
+          globalResidual[offset_hbeta + stride_hbeta * i] +=
+              dt * (hyp_flux_hbeta[i] + extendedSourceTerm_hbeta[i] -
+                    ith_dHij_minus_muHij_times_hbetaStarStates -
+                    ith_muHij_times_hbetaStates);
         }
       }
       // ********** END OF LOOP IN DOFs ********** //
@@ -1980,11 +2092,13 @@ public:
     xt::pyarray<double> &hv_dof = args.m_darray["hv_dof"];
     xt::pyarray<double> &heta_dof = args.m_darray["heta_dof"];
     xt::pyarray<double> &hw_dof = args.m_darray["hw_dof"];
+    xt::pyarray<double> &hbeta_dof = args.m_darray["hbeta_dof"];
     xt::pyarray<double> &h_dof_sge = args.m_darray["h_dof_sge"];
     xt::pyarray<double> &hu_dof_sge = args.m_darray["hu_dof_sge"];
     xt::pyarray<double> &hv_dof_sge = args.m_darray["hv_dof_sge"];
     xt::pyarray<double> &heta_dof_sge = args.m_darray["heta_dof_sge"];
     xt::pyarray<double> &hw_dof_sge = args.m_darray["hw_dof_sge"];
+    xt::pyarray<double> &hbeta_dof_sge = args.m_darray["hbeta_dof_sge"];
     xt::pyarray<double> &q_mass_acc_beta_bdf =
         args.m_darray["q_mass_acc_beta_bdf"];
     xt::pyarray<double> &q_mom_hu_acc_beta_bdf =
@@ -2024,6 +2138,10 @@ public:
     xt::pyarray<int> &csrRowIndeces_h_hw = args.m_iarray["csrRowIndeces_h_hw"];
     xt::pyarray<int> &csrColumnOffsets_h_hw =
         args.m_iarray["csrColumnOffsets_h_hw"];
+    xt::pyarray<int> &csrRowIndeces_h_hbeta =
+        args.m_iarray["csrRowIndeces_h_hbeta"];
+    xt::pyarray<int> &csrColumnOffsets_h_hbeta =
+        args.m_iarray["csrColumnOffsets_h_hbeta"];
     xt::pyarray<int> &csrRowIndeces_hu_h = args.m_iarray["csrRowIndeces_hu_h"];
     xt::pyarray<int> &csrColumnOffsets_hu_h =
         args.m_iarray["csrColumnOffsets_hu_h"];
@@ -2043,6 +2161,10 @@ public:
         args.m_iarray["csrRowIndeces_hu_hw"];
     xt::pyarray<int> &csrColumnOffsets_hu_hw =
         args.m_iarray["csrColumnOffsets_hu_hw"];
+    xt::pyarray<int> &csrRowIndeces_hu_hbeta =
+        args.m_iarray["csrRowIndeces_hu_hbeta"];
+    xt::pyarray<int> &csrColumnOffsets_hu_hbeta =
+        args.m_iarray["csrColumnOffsets_hu_hbeta"];
     xt::pyarray<int> &csrRowIndeces_hv_h = args.m_iarray["csrRowIndeces_hv_h"];
     xt::pyarray<int> &csrColumnOffsets_hv_h =
         args.m_iarray["csrColumnOffsets_hv_h"];
@@ -2062,6 +2184,10 @@ public:
         args.m_iarray["csrRowIndeces_hv_hw"];
     xt::pyarray<int> &csrColumnOffsets_hv_hw =
         args.m_iarray["csrColumnOffsets_hv_hw"];
+    xt::pyarray<int> &csrRowIndeces_hv_hbeta =
+        args.m_iarray["csrRowIndeces_hv_hbeta"];
+    xt::pyarray<int> &csrColumnOffsets_hv_hbeta =
+        args.m_iarray["csrColumnOffsets_hv_hbeta"];
     xt::pyarray<int> &csrRowIndeces_heta_h =
         args.m_iarray["csrRowIndeces_heta_h"];
     xt::pyarray<int> &csrColumnOffsets_heta_h =
@@ -2082,6 +2208,10 @@ public:
         args.m_iarray["csrRowIndeces_heta_hw"];
     xt::pyarray<int> &csrColumnOffsets_heta_hw =
         args.m_iarray["csrColumnOffsets_heta_hw"];
+    xt::pyarray<int> &csrRowIndeces_heta_hbeta =
+        args.m_iarray["csrRowIndeces_heta_hbeta"];
+    xt::pyarray<int> &csrColumnOffsets_heta_hbeta =
+        args.m_iarray["csrColumnOffsets_heta_hbeta"];
     xt::pyarray<int> &csrRowIndeces_hw_h = args.m_iarray["csrRowIndeces_hw_h"];
     xt::pyarray<int> &csrColumnOffsets_hw_h =
         args.m_iarray["csrColumnOffsets_hw_h"];
@@ -2101,6 +2231,35 @@ public:
         args.m_iarray["csrRowIndeces_hw_hw"];
     xt::pyarray<int> &csrColumnOffsets_hw_hw =
         args.m_iarray["csrColumnOffsets_hw_hw"];
+    xt::pyarray<int> &csrRowIndeces_hw_hbeta =
+        args.m_iarray["csrRowIndeces_hw_hbeta"];
+    xt::pyarray<int> &csrColumnOffsets_hw_hbeta =
+        args.m_iarray["csrColumnOffsets_hw_hbeta"];
+    //
+    xt::pyarray<int> &csrRowIndeces_hbeta_h =
+        args.m_iarray["csrRowIndeces_hbeta_h"];
+    xt::pyarray<int> &csrColumnOffsets_hbeta_h =
+        args.m_iarray["csrColumnOffsets_hbeta_h"];
+    xt::pyarray<int> &csrRowIndeces_hbeta_hu =
+        args.m_iarray["csrRowIndeces_hbeta_hu"];
+    xt::pyarray<int> &csrColumnOffsets_hbeta_hu =
+        args.m_iarray["csrColumnOffsets_hbeta_hu"];
+    xt::pyarray<int> &csrRowIndeces_hbeta_hv =
+        args.m_iarray["csrRowIndeces_hbeta_hv"];
+    xt::pyarray<int> &csrColumnOffsets_hbeta_hv =
+        args.m_iarray["csrColumnOffsets_hbeta_hv"];
+    xt::pyarray<int> &csrRowIndeces_hbeta_heta =
+        args.m_iarray["csrRowIndeces_hbeta_heta"];
+    xt::pyarray<int> &csrColumnOffsets_hbeta_heta =
+        args.m_iarray["csrColumnOffsets_hbeta_heta"];
+    xt::pyarray<int> &csrRowIndeces_hbeta_hw =
+        args.m_iarray["csrRowIndeces_hbeta_hw"];
+    xt::pyarray<int> &csrColumnOffsets_hbeta_hw =
+        args.m_iarray["csrColumnOffsets_hbeta_hw"];
+    xt::pyarray<int> &csrRowIndeces_hbeta_hbeta =
+        args.m_iarray["csrRowIndeces_hbeta_hbeta"];
+    xt::pyarray<int> &csrColumnOffsets_hbeta_hbeta =
+        args.m_iarray["csrColumnOffsets_hbeta_hbeta"];
     xt::pyarray<double> &globalJacobian = args.m_darray["globalJacobian"];
     int nExteriorElementBoundaries_global =
         args.m_iscalar["nExteriorElementBoundaries_global"];
@@ -2166,7 +2325,8 @@ public:
           elementJacobian_hu_hu[nDOF_test_element][nDOF_trial_element],
           elementJacobian_hv_hv[nDOF_test_element][nDOF_trial_element],
           elementJacobian_heta_heta[nDOF_test_element][nDOF_trial_element],
-          elementJacobian_hw_hw[nDOF_test_element][nDOF_trial_element];
+          elementJacobian_hw_hw[nDOF_test_element][nDOF_trial_element],
+          elementJacobian_hbeta_hbeta[nDOF_test_element][nDOF_trial_element];
       for (int i = 0; i < nDOF_test_element; i++)
         for (int j = 0; j < nDOF_trial_element; j++) {
           elementJacobian_h_h[i][j] = 0.0;
@@ -2174,6 +2334,7 @@ public:
           elementJacobian_hv_hv[i][j] = 0.0;
           elementJacobian_heta_heta[i][j] = 0.0;
           elementJacobian_hw_hw[i][j] = 0.0;
+          elementJacobian_hbeta_hbeta[i][j] = 0.0;
         }
       for (int k = 0; k < nQuadraturePoints_element; k++) {
         int eN_k = eN * nQuadraturePoints_element +
@@ -2212,6 +2373,8 @@ public:
                 vel_trial_ref[k * nDOF_trial_element + j] * vel_test_dV[i];
             elementJacobian_hw_hw[i][j] +=
                 vel_trial_ref[k * nDOF_trial_element + j] * vel_test_dV[i];
+            elementJacobian_hbeta_hbeta[i][j] +=
+                vel_trial_ref[k * nDOF_trial_element + j] * vel_test_dV[i];
           } // j
         }   // i
       }     // k
@@ -2237,6 +2400,9 @@ public:
           globalJacobian[csrRowIndeces_hw_hw[eN_i] +
                          csrColumnOffsets_hw_hw[eN_i_j]] +=
               elementJacobian_hw_hw[i][j];
+          globalJacobian[csrRowIndeces_hbeta_hbeta[eN_i] +
+                         csrColumnOffsets_hbeta_hbeta[eN_i_j]] +=
+              elementJacobian_hbeta_hbeta[i][j];
         } // j
       }   // i
     }     // elements
@@ -2320,6 +2486,7 @@ public:
         args.m_iarray["sdInfo_hv_hu_rowptr"];
     xt::pyarray<int> &sdInfo_hv_hu_colind =
         args.m_iarray["sdInfo_hv_hu_colind"];
+    // h
     xt::pyarray<int> &csrRowIndeces_h_h = args.m_iarray["csrRowIndeces_h_h"];
     xt::pyarray<int> &csrColumnOffsets_h_h =
         args.m_iarray["csrColumnOffsets_h_h"];
@@ -2336,6 +2503,7 @@ public:
     xt::pyarray<int> &csrRowIndeces_h_hw = args.m_iarray["csrRowIndeces_h_hw"];
     xt::pyarray<int> &csrColumnOffsets_h_hw =
         args.m_iarray["csrColumnOffsets_h_hw"];
+    // hu
     xt::pyarray<int> &csrRowIndeces_hu_h = args.m_iarray["csrRowIndeces_hu_h"];
     xt::pyarray<int> &csrColumnOffsets_hu_h =
         args.m_iarray["csrColumnOffsets_hu_h"];
@@ -2355,6 +2523,7 @@ public:
         args.m_iarray["csrRowIndeces_hu_hw"];
     xt::pyarray<int> &csrColumnOffsets_hu_hw =
         args.m_iarray["csrColumnOffsets_hu_hw"];
+    // hv
     xt::pyarray<int> &csrRowIndeces_hv_h = args.m_iarray["csrRowIndeces_hv_h"];
     xt::pyarray<int> &csrColumnOffsets_hv_h =
         args.m_iarray["csrColumnOffsets_hv_h"];
@@ -2374,6 +2543,7 @@ public:
         args.m_iarray["csrRowIndeces_hv_hw"];
     xt::pyarray<int> &csrColumnOffsets_hv_hw =
         args.m_iarray["csrColumnOffsets_hv_hw"];
+    // heta
     xt::pyarray<int> &csrRowIndeces_heta_h =
         args.m_iarray["csrRowIndeces_heta_h"];
     xt::pyarray<int> &csrColumnOffsets_heta_h =
@@ -2394,6 +2564,7 @@ public:
         args.m_iarray["csrRowIndeces_heta_hw"];
     xt::pyarray<int> &csrColumnOffsets_heta_hw =
         args.m_iarray["csrColumnOffsets_heta_hw"];
+    // hw
     xt::pyarray<int> &csrRowIndeces_hw_h = args.m_iarray["csrRowIndeces_hw_h"];
     xt::pyarray<int> &csrColumnOffsets_hw_h =
         args.m_iarray["csrColumnOffsets_hw_h"];
@@ -2413,6 +2584,10 @@ public:
         args.m_iarray["csrRowIndeces_hw_hw"];
     xt::pyarray<int> &csrColumnOffsets_hw_hw =
         args.m_iarray["csrColumnOffsets_hw_hw"];
+    xt::pyarray<int> &csrRowIndeces_hbeta_hbeta =
+        args.m_iarray["csrRowIndeces_hbeta_hbeta"];
+    xt::pyarray<int> &csrColumnOffsets_hbeta_hbeta =
+        args.m_iarray["csrColumnOffsets_hbeta_hbeta"];
     xt::pyarray<double> &globalJacobian = args.m_darray["globalJacobian"];
     int nExteriorElementBoundaries_global =
         args.m_iscalar["nExteriorElementBoundaries_global"];
@@ -2478,14 +2653,16 @@ public:
           elementJacobian_hu_hu[nDOF_test_element][nDOF_trial_element],
           elementJacobian_hv_hv[nDOF_test_element][nDOF_trial_element],
           elementJacobian_heta_heta[nDOF_test_element][nDOF_trial_element],
-          elementJacobian_hw_hw[nDOF_test_element][nDOF_trial_element];
+          elementJacobian_hw_hw[nDOF_test_element][nDOF_trial_element],
+          elementJacobian_hbeta_hbeta[nDOF_test_element][nDOF_trial_element];
       for (int i = 0; i < nDOF_test_element; i++)
         for (int j = 0; j < nDOF_trial_element; j++) {
           elementJacobian_h_h[i][j] = 0.0;
           elementJacobian_hu_hu[i][j] = 0.0;
           elementJacobian_hv_hv[i][j] = 0.0;
           elementJacobian_heta_heta[i][j] = 0.0;
-          elementJacobian_heta_heta[i][j] = 0.0;
+          elementJacobian_hw_hw[i][j] = 0.0;
+          elementJacobian_hbeta_hbeta[i][j] = 0.0;
         }
       for (int k = 0; k < nQuadraturePoints_element; k++) {
         int eN_k = eN * nQuadraturePoints_element +
@@ -2524,6 +2701,8 @@ public:
                 (i == j ? 1.0 : 0.0) * vel_test_dV[i];
             elementJacobian_hw_hw[i][j] +=
                 (i == j ? 1.0 : 0.0) * vel_test_dV[i];
+            elementJacobian_hbeta_hbeta[i][j] +=
+                (i == j ? 1.0 : 0.0) * vel_test_dV[i];
           } // j
         }   // i
       }     // k
@@ -2549,6 +2728,9 @@ public:
           globalJacobian[csrRowIndeces_hw_hw[eN_i] +
                          csrColumnOffsets_hw_hw[eN_i_j]] +=
               elementJacobian_hw_hw[i][j];
+          globalJacobian[csrRowIndeces_hbeta_hbeta[eN_i] +
+                         csrColumnOffsets_hbeta_hbeta[eN_i_j]] +=
+              elementJacobian_hbeta_hbeta[i][j];
         } // j
       }   // i
     }     // elements

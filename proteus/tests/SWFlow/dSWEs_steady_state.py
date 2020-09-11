@@ -8,16 +8,16 @@ from proteus import (Domain, Context,
                      MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
-from proteus import WaveTools as wt
 
 """
-This is the problem of steady state solutions to the green-naghdi equations.
+This is the steady state problem for to the dispersive Serre--Saint-Venant
+equations (or dispersive shallow water equations).
 We use the Bernoulli relation to derive the bathymetry profile where
 we assume the water height is given by h = h0 + a h0 sech(r*(x-x0))^2.
-The variables are defined below. See 'Robust Explicit Relaxtion Technique
-For Solving The Green-Naghdi Equations' by Guermond, Kees, Popov, Tovar.
-Note that this is a fake 1D problem, ie
-we are doing simulation in 2d but only consider x direction velocity
+The variables are defined below. See 'Hyperbolic Relaxation Technique
+For Solving The Dispersive Serre--Saint-Venant Equations With Topography'
+by Guermond, Kees, Popov, Tovar for more details. Note that this is a fake
+1D problem, ie we are doing simulation in 2d but only consider x dominated flow.
 """
 
 # *************************** #
@@ -49,12 +49,10 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 #  CONSTANTS NEEDED FOR SETUP #
 ###############################
 g = 9.81
-q = 1  # this is flow rate
+h0 = 1.0  # this is still water depth
 a = 0.2  # this is amplitude
-r = 1  # this is solitary wave width
-# we define the reference height in terms of r
-h0 = np.sqrt(old_div(3 * a, (4 * r**2*(1+a))))
-cBer = h0 + q**2 / (2 * g * h0**2)  # this is Bernoulli constant
+q = np.sqrt(g * h0**3 * (1.0 + a) / 2)  # this is flow rate
+r = 1.0/h0 * np.sqrt(3.0 * a / (1.0 + a))  # this is solitary wave width
 x0 = 0  # wave is centered at x = 0
 
 ###############################
@@ -67,10 +65,9 @@ def solitary_wave(x, t):
 
 def bathymetry_function(X):
     x = X[0]
-    num = -3. * np.sqrt(3.) * a**(3/2) * g + 8 * q**2 * r**2 * np.sqrt((1+a)*r**2)
-    denom = 6 * g * np.sqrt((1+a)*r**2)
     sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
-    z = old_div(num, denom) * sechSqd
+    waterh = h0 * (1.0 + a * sechSqd)
+    z = -1.0/2.0 * (waterh - h0)
     return z
 
 ##############################
@@ -83,7 +80,7 @@ class water_height_at_t0(object):
 
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
-        return 0.95 * q
+        return q
 
 class x_mom_exact(object):
     def uOfXT(self, X, t):
@@ -94,9 +91,11 @@ class y_mom_at_t0(object):
         return 0.
 
 """
-heta and hw are needed for the dispersive modified green naghdi equations
-source is 'ROBUST EXPLICIT RELAXATION TECHNIQUE FOR SOLVING
-THE GREEN NAGHDI EQUATIONS' by Guermond, Kees, Popov, Tovar
+heta and hw are needed for the modified green naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+Note that the BCs for the heta and hw should be same as h.
+For more details see: '' by Guermond, Popov, Tovar, Kees.
+JCP 2020.
 """
 class heta_at_t0(object):
     def uOfXT(self, X, t):
@@ -108,8 +107,17 @@ class hw_at_t0(object):
     def uOfXT(self, X, t):
         x = X[0]
         sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
-        hw = -2.0 * a * h0 * r * sechSqd * np.tanh(r*(x-x0))
+        hw = -a * h0 * q * r * (2.0 + 3.0*(-0.50)) * sechSqd * np.tanh(r * x)
         return hw
+
+
+class hbeta_at_t0(object):
+    def uOfXT(self, X, t):
+        x = X[0]
+        sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
+        hbeta = -2.0 * a * h0 * r * q * (-1.0/2.0) * sechSqd * np.tanh(r * x)
+        return hbeta
+
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
@@ -132,18 +140,16 @@ def x_mom_DBC(X, flag):
         return lambda X, t: x_mom_exact().uOfXT(X, 0.0)
 
 def heta_DBC(X, flag):
-    if X[0] == X_coords[0]:
-        return lambda x, t: heta_at_t0().uOfXT(X, 0.0)
-    elif X[0]==X_coords[1]:
+    if X[0] == X_coords[0] or X[0]==X_coords[1]:
         return lambda x,t: heta_at_t0().uOfXT(X, 0.0)
 
-
 def hw_DBC(X, flag):
-    if X[0] == X_coords[0]:
+    if X[0] == X_coords[0] or X[0]==X_coords[1]:
         return lambda x, t: hw_at_t0().uOfXT(X, 0.0)
-    elif X[0]==X_coords[1]:
-        return lambda x,t: hw_at_t0().uOfXT(X, 0.0)
 
+def hbeta_DBC(X, flag):
+    if X[0] == X_coords[0]:
+        return lambda X, t: hbeta_at_t0().uOfXT(X, 0.0)
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -153,12 +159,14 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': hw_at_t0()}
+                     'h_times_w': hw_at_t0(),
+                     'h_times_beta': hbeta_at_t0()}
 boundaryConditions = {'water_height': water_height_DBC,
                       'x_mom': x_mom_DBC,
                       'y_mom': lambda x, flag: lambda x, t: 0.0,
                       'h_times_eta': heta_DBC,
-                      'h_times_w': hw_DBC}
+                      'h_times_w': hw_DBC,
+                      'h_times_beta': hbeta_DBC}
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,

@@ -59,7 +59,8 @@ initialConditions = {0: initialConditions['water_height'],
                      1: initialConditions['x_mom'],
                      2: initialConditions['y_mom'],
                      3: initialConditions['h_times_eta'],
-                     4: initialConditions['h_times_w']}
+                     4: initialConditions['h_times_w'],
+                     5: initialConditions['h_times_beta']}
 
 # ***************************************** #
 # ********** BOUNDARY CONDITIONS ********** #
@@ -68,28 +69,33 @@ dirichletConditions = {0: boundaryConditions['water_height'],
                        1: boundaryConditions['x_mom'],
                        2: boundaryConditions['y_mom'],
                        3: boundaryConditions['h_times_eta'],
-                       4: boundaryConditions['h_times_w']}
+                       4: boundaryConditions['h_times_w'],
+                       5: boundaryConditions['h_times_beta']}
 fluxBoundaryConditions = {0: 'outFlow',
                           1: 'outFlow',
                           2: 'outFlow',
                           3: 'outFlow',
-                          4: 'outFlow'}
+                          4: 'outFlow',
+                          5: 'outFlow'}
 advectiveFluxBoundaryConditions = {0: lambda x, flag: None,
                                    1: lambda x, flag: None,
                                    2: lambda x, flag: None,
                                    3: lambda x, flag: None,
-                                   4: lambda x, flag: None}
+                                   4: lambda x, flag: None,
+                                   5: lambda x, flag: None}
 diffusiveFluxBoundaryConditions = {0: {},
                                    1: {1: lambda x, flag: None},
                                    2: {2: lambda x, flag: None},
                                    3: {3: lambda x, flag: None},
-                                   4: {4: lambda x, flag: None}}
+                                   4: {4: lambda x, flag: None},
+                                   5: {5: lambda x, flag: None}}
 # **************************************** #
 # ********** ANALYTICAL SOLUTION ********* #
 # **************************************** #
-if (mySWFlowProblem.analyticalSolution != None):
+if (mySWFlowProblem.analyticalSolution is not None):
     analyticalSolution = {0: analyticalSolution['h_exact'],
                           1: analyticalSolution['hu_exact'],
                           2: analyticalSolution['hv_exact'],
-                          3: analyticalSolution['hw_exact'],
-                          4: analyticalSolution['hv_exact']}
+                          3: analyticalSolution['heta_exact'],
+                          4: analyticalSolution['hw_exact'],
+                          5: analyticalSolution['hbeta_exact']}
