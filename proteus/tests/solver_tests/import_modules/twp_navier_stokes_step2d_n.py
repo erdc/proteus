@@ -1,16 +1,18 @@
 from __future__ import absolute_import
 from importlib import reload
 from proteus import *
+from proteus.default_n import *
+from proteus import defaults
+defaults.reset_default_n()
 try:
     from . import step2d
 except:
     import step2d
-    
+reload(step2d)    
 try:
     from .step2d import *
 except:
     from step2d import *
-from proteus.default_n import *
 try:
     from . import twp_navier_stokes_step2d_p
 except:
@@ -107,6 +109,7 @@ if usePETSc:
         OptDB.setValue(prefix+'ksp_gmres_restart', 300)
         OptDB.setValue(prefix+'ksp_gmres_modifiedgramschmidt', 1)
         OptDB.setValue(prefix+'ksp_pc_side','right')
+        OptDB.setValue(prefix+'pc_type', 'fieldsplit')
         OptDB.setValue(prefix+'pc_fieldsplit_type', 'schur')
         OptDB.setValue(prefix+'pc_fieldsplit_schur_fact_type', 'upper')
         OptDB.setValue(prefix+'pc_fieldsplit_schur_precondition', 'user')
@@ -173,3 +176,4 @@ nl_atol_res = ns_nl_atol_res
 maxNonlinearIts = 100
 maxLineSearches =0
 
+conservativeFlux=None

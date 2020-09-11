@@ -2,6 +2,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
+from proteus import defaults
+defaults.reset_default_n()
 try:
     from .stokesDrivenCavity_2d_p import *
 except:
@@ -132,3 +134,15 @@ l_atol_res = 1.0e-10
 #linearSmoother=SimpleNavierStokes3D
 #linearSmoother=NavierStokes3D_Qp
 linearSmoother = petsc_LU
+from petsc4py import PETSc
+OptDB=PETSc.Options()
+OptDB.clear()
+OptDB.setValue("ksp_type","fgmres")
+OptDB.setValue("ksp_atol",1e-20)
+OptDB.setValue("ksp_atol",1e-12)
+OptDB.setValue("pc_type","fieldsplit")
+OptDB.setValue("pc_fieldsplit_type","schur")
+OptDB.setValue("pc_fieldsplit_schur_fact_type","upper")
+OptDB.setValue("fieldsplit_velocity_ksp_type","preonly")
+OptDB.setValue("fieldsplit_velocity_pc_type","lu")
+OptDB.setValue("fieldsplit_pressure_ksp_type","preonly")

@@ -175,7 +175,7 @@ class ParametersModelBase(FreezableClass):
         # self.n.linearSmoother = None
         # NUMERICAL FLUX
         # self.n.massLumping = False
-        # self.n.conservativeFlux = None
+        self.n.conservativeFlux = None
         # TOLERANCES
         self.n.nl_atol_res = None
         self.n.l_atol_res = None
@@ -1539,7 +1539,7 @@ class ParametersModelRDLS(ParametersModelBase):
         # TOLERANCES
         mesh = self._Problem.Parameters.mesh
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he)
+            self.n.nl_atol_res = max(minTol, 0.1*mesh.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 

@@ -6,6 +6,9 @@ import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus.default_so import *
+from proteus import defaults
+defaults.reset_default_n()
+defaults.reset_default_so()
 from proteus import Context
 
 opts=Context.Options([

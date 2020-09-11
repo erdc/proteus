@@ -5,7 +5,7 @@ from builtins import range
 import os
 import pytest
 from proteus.iproteus import opts, default_s
-from proteus import Profiling, NumericalSolution
+from proteus import Profiling, NumericalSolution, Comm
 import unittest
 import numpy as np
 import numpy.testing as npt
@@ -15,6 +15,7 @@ import importlib
 import pytest
 
 modulepath = os.path.dirname(os.path.abspath(__file__))
+comm = Comm.init()
 
 class TestIBM(unittest.TestCase):
 
@@ -43,7 +44,7 @@ class TestIBM(unittest.TestCase):
                     'addedmass3D_so.log'
                     ]
         for file in FileList:
-            if os.path.isfile(file):
+            if os.path.isfile(file) and comm.isMaster():
                 os.remove(file)
             else:
                 pass

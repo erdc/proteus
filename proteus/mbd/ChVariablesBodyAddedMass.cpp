@@ -140,7 +140,7 @@ void ChVariablesBodyAddedMass::MultiplyAndAdd(ChVectorRef result,
 // the size of the total variables&constraints in the system; the procedure
 // will use the ChVariable offset (that must be already updated) as index.
 void ChVariablesBodyAddedMass::DiagonalAdd(ChVectorRef result, const double c_a) const {
-    assert(result.size() == this->offset + Get_ndof());
+    assert(result.size() >= this->offset + Get_ndof());
     for (int i = 0; i < Get_ndof(); i++) {
         result(this->offset + i) += c_a * Mfullmass(i, i);
     }

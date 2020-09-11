@@ -23,7 +23,7 @@ opts = Context.Options([
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs", False, "Use reflecting BCs"),
+    ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
     ("structured", True, "Structured or unstructured mesh"),
     ("he", 0.1, "Mesh size for unstructured mesh")
 ])
@@ -88,10 +88,11 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
+
 """
 heta and hw are needed for the modified green naghdi equations.
-For initial conditions, heta -> h^2 and hw -> h^2div(u).
-Note that the BCs for the heta and hw should be same as h.
+For initial conditions, heta -> h^2 and hw -> h^2*div(u).
+Note that the BC flags for the heta and hw should be same as h.
 For more details see: 'Robust explicit relaxation techinque for solving
 the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
 JCP 2019

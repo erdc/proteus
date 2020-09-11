@@ -155,6 +155,7 @@ cdef extern from "mesh.h":
                                                                     const double& Ly,
                                                                     const double& Lz,
                                                                     Mesh& mesh)
+    cdef int reorientTetrahedralMesh(Mesh& mesh)
     cdef int regularHexahedralMeshElements(const int& nx,
                                            const int& ny,
                                            const int& nz,

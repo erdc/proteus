@@ -2,8 +2,8 @@ from builtins import range
 from builtins import object
 from proteus import *
 from proteus.default_p import *
-from importlib import reload
-reload(default_p)
+from proteus import defaults
+defaults.reset_default_p()
 """
 Heterogeneous Poisson's equations for one component (uncoupled) in 2D
 """
@@ -98,16 +98,18 @@ class u5Ex(object):
     def duOfXT(self,X,T):
         return self.duOfX(X)
 
+eps=1.0e-8
 def getDBC5(x,flag):
-    if x[0] in [0.0] or x[1] in [0.0,1.0]:
+    if x[0] < eps or x[1] < eps or x[1] > 1.0-eps:
         return lambda x,t: u5Ex().uOfXT(x,t)
 def getAdvFluxBC5(x,flag):
    pass
 def getDiffFluxBC5(x,flag):
-    if x[0] == 1.0:
+    if x[0] > 1.0-eps:
         n = numpy.zeros((nd,),'d'); n[0]=1.0
         return lambda x,t: numpy.dot(velEx(u5Ex(),a5).uOfXT(x,t),n)
-
+    if flag == 0:
+        return lambda x,t: 0.0
 
 #def getAdvFluxBC5(x,flag):
 #    pass

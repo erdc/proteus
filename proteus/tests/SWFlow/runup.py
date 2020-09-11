@@ -26,7 +26,7 @@ opts = Context.Options([
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs", False, "Use reflecting BCs"),
+    ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
     ("structured", True, "Structured or unstructured mesh"),
     ("he", 0.5, "Mesh size for unstructured mesh"),
     ("mannings", 0.016, "Mannings roughness coefficient")

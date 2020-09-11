@@ -761,7 +761,7 @@ class Advection_DiagonalUpwind_Diffusion_SIPG(Advection_DiagonalUpwind_Diffusion
         Advection_DiagonalUpwind_Diffusion_IIPG.__init__(self,vt,getPointwiseBoundaryConditions,
                                                          getAdvectiveFluxBoundaryConditions,
                                                          getDiffusiveFluxBoundaryConditions)
-        self.penalty_constant = 10.0
+        self.penalty_constant = 100.0
         self.includeBoundaryAdjoint=True
         self.boundaryAdjoint_sigma=1.0
 
@@ -1237,7 +1237,7 @@ class Advection_DiagonalUpwind_Diffusion_SIPG_exterior(Advection_DiagonalUpwind_
                                                                   getPointwiseBoundaryConditions,
                                                                   getAdvectiveFluxBoundaryConditions,
                                                                   getDiffusiveFluxBoundaryConditions)
-        self.penalty_constant = 10.0
+        self.penalty_constant = 100.0
         self.includeBoundaryAdjoint=True
         self.boundaryAdjoint_sigma=1.0
 

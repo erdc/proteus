@@ -271,7 +271,7 @@ docs:
 	@echo "make install"
 	@echo "************************************"
 
-	-${PROTEUS_ENV} pip install sphinx sphinx_rtd_theme breathe exhale
+	-${PROTEUS_ENV} pip3 install sphinx sphinx_rtd_theme breathe exhale
 	cd docs && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 
 	@echo "**********************************"
@@ -290,11 +290,11 @@ test: air-water-vv check
 	@echo "**************************************************************************"
 	@echo "Running basic test suite"
 ifeq (${PROTEUS_ARCH},darwin)
-	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --cov=proteus
+	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore=proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
 else
-	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
 	@echo "Running air-water-vv test set 1"
