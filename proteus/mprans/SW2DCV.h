@@ -694,6 +694,7 @@ public:
     double run_cfl = args.m_dscalar["run_cfl"];
     xt::pyarray<double> &edge_based_cfl = args.m_darray["edge_based_cfl"];
     int debug = args.m_iscalar["debug"];
+
     double max_edge_based_cfl = 0.;
     int ij = 0;
     for (int i = 0; i < numDOFsPerEqn; i++) {
@@ -1295,10 +1296,6 @@ public:
           alpha_numerator += hj - hi;
           alpha_denominator += fabs(hj - hi);
 
-          // define dij_small in j loop
-          double x = fabs(Cx[ij]) + fabs(Cy[ij]);
-          dij_small = fmax(dij_small, x * speed);
-
           // update ij
           ij += 1;
         } // end j loop
@@ -1465,15 +1462,6 @@ public:
                 fmax(global_entropy_residual[i], global_entropy_residual[j]);
             dHij = fmin(dLowij, dEVij);
             muHij = fmin(muLowij, dEVij);
-            // dHij = dLowij *
-            //        fmax(global_entropy_residual[i],
-            //        global_entropy_residual[j]);
-            // muHij = muLowij * fmax(global_entropy_residual[i],
-            //                        global_entropy_residual[j]);
-
-            // This is if we want smoothness indicator based viscosity
-            // dHij = fmax(psi[i], psi[j]) * dLij;
-            // muHij = fmax(psi[i], psi[j]) * muLij;
 
             // compute dij_minus_muij times star solution terms
             // see: eqn (6.13)
