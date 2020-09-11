@@ -146,6 +146,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
                 self.transport.heta_dof_old[:] = self.u_dof_lstage[3]
                 self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
+                self.transport.hbeta_dof_old[:] = self.u_dof_lstage[5]
                 logEvent("First stage of SSP33 method finished", level=4)
             elif self.lstage == 2:
                 for ci in range(self.nc):
@@ -158,6 +159,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
                 self.transport.heta_dof_old[:] = self.u_dof_lstage[3]
                 self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
+                self.transport.hbeta_dof_old[:] = self.u_dof_lstage[5]
                 logEvent("Second stage of SSP33 method finished", level=4)
             else:
                 for ci in range(self.nc):
@@ -172,6 +174,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
                 self.transport.heta_dof_old[:] = self.u_dof_last[3]
                 self.transport.hw_dof_old[:] = self.u_dof_last[4]
+                self.transport.hbeta_dof_old[:] = self.u_dof_lstage[5]
                 logEvent("Third stage of SSP33 method finished", level=4)
         elif self.timeOrder == 2:
             if self.lstage == 1:
@@ -184,6 +187,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_lstage[2]
                 self.transport.heta_dof_old[:] = self.u_dof_lstage[3]
                 self.transport.hw_dof_old[:] = self.u_dof_lstage[4]
+                self.transport.hbeta_dof_old[:] = self.u_dof_lstage[5]
             else:
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
@@ -197,6 +201,7 @@ class RKEV(proteus.TimeIntegration.SSP):
                 self.transport.hv_dof_old[:] = self.u_dof_last[2]
                 self.transport.heta_dof_old[:] = self.u_dof_last[3]
                 self.transport.hw_dof_old[:] = self.u_dof_last[4]
+                self.transport.hbeta_dof_old[:] = self.u_dof_lstage[5]
                 logEvent("Second stage of SSP22 method finished", level=4)
         else:
             assert self.timeOrder == 1
@@ -301,37 +306,49 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         reaction = {}
         hamiltonian = {}
         if nd == 2:
-            variableNames = ['h', 'h_u', 'h_v', 'h_eta', 'h_w']
+            variableNames = ['h', 'h_u', 'h_v', 'h_eta', 'h_w', 'h_beta']
             mass = {0: {0: 'linear'},
                     1: {0: 'linear', 1: 'linear'},
                     2: {0: 'linear', 2: 'linear'},
                     3: {0: 'linear', 3: 'linear'},
-                    4: {0: 'linear', 4: 'linear'}}
+                    4: {0: 'linear', 4: 'linear'},
+                    5: {0: 'linear', 5: 'linear'}}
             advection = {0: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear',
                              3: 'nonlinear',
-                             4: 'nonlinear'},
+                             4: 'nonlinear',
+                             5: 'nonlinear'},
                          1: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear',
                              3: 'nonlinear',
-                             4: 'nonlinear'},
+                             4: 'nonlinear',
+                             5: 'nonlinear'},
                          2: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear',
                              3: 'nonlinear',
-                             4: 'nonlinear'},
+                             4: 'nonlinear',
+                             5: 'nonlinear'},
                          3: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear',
                              3: 'nonlinear',
-                             4: 'nonlinear'},
+                             4: 'nonlinear',
+                             5: 'nonlinear'},
                          4: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear',
                              3: 'nonlinear',
-                             4: 'nonlinear'}}
+                             4: 'nonlinear',
+                             5: 'nonlinear'},
+                         5: {0: 'nonlinear',
+                             1: 'nonlinear',
+                             2: 'nonlinear',
+                             3: 'nonlinear',
+                             4: 'nonlinear',
+                             5: 'nonlinear'}}
             diffusion = {1: {1: {1: 'constant'}, 2: {2: 'constant'}},
                          2: {2: {2: 'constant'}, 1: {1: 'constant'}}}
             sdInfo = {(1, 1): (np.array([0, 1, 2], dtype='i'),
@@ -347,7 +364,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             reaction = {1: {0: 'linear'},
                         2: {0: 'linear'}}
             TC_base.__init__(self,
-                             5,  # Number of components
+                             6,  # Number of components
                              mass,
                              advection,
                              diffusion,
@@ -407,6 +424,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.hv_dof_old[:] = self.model.u[2].dof
         self.model.heta_dof_old[:] = self.model.u[3].dof
         self.model.hw_dof_old[:] = self.model.u[4].dof
+        self.model.hbeta_dof_old[:] = self.model.u[5].dof
 
     def postStep(self, t, firstStep=False):
         pass
@@ -606,6 +624,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hvBT = None
         self.hetaBT = None
         self.hwBT = None
+        self.hbetaBT = None
         # Old DOFs
         # NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
         # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual).
@@ -615,6 +634,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hv_dof_old = None
         self.heta_dof_old = None
         self.hw_dof_old = None
+        self.hbeta_dof_old = None
 
         # Vector for mass matrix
         self.check_positivity_water_height = True
@@ -624,6 +644,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hv_dof_sge = self.u[2].dof.copy()
         self.heta_dof_sge = self.u[3].dof.copy()
         self.hw_dof_sge = self.u[4].dof.copy()
+        self.hbeta_dof_sge = self.u[5].dof.copy()
         self.q['x'] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
         self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary, 3), 'd')
         self.ebq_global[('totalFlux', 0)] = np.zeros((self.mesh.nElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
@@ -632,16 +653,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('dV_u', 1)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('dV_u', 2)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['dV'] = self.q[('dV_u',0)]
         self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 2)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 3)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 4)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('u', 5)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m', 0)] = self.q[('u', 0)]
         self.q[('m', 1)] = self.q[('u', 1)]
         self.q[('m', 2)] = self.q[('u', 2)]
         self.q[('m', 3)] = self.q[('u', 3)]
         self.q[('m', 4)] = self.q[('u', 4)]
+        self.q[('m', 5)] = self.q[('u', 5)]
         self.q[('m_last', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 1)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 2)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -656,14 +680,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('u', 2)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('u', 3)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('u', 4)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
-        self.ebqe[('advectiveFlux_bc_flag', 0)] = np.zeros(
-            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
-        self.ebqe[('advectiveFlux_bc_flag', 1)] = np.zeros(
-            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
-        self.ebqe[('advectiveFlux_bc_flag', 2)] = np.zeros(
-            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
+        self.ebqe[('u', 5)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('advectiveFlux_bc_flag', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
+        self.ebqe[('advectiveFlux_bc_flag', 1)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
+        self.ebqe[('advectiveFlux_bc_flag', 2)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('advectiveFlux_bc_flag', 3)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('advectiveFlux_bc_flag', 4)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
+        self.ebqe[('advectiveFlux_bc_flag', 5)] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('diffusiveFlux_bc_flag', 1, 1)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('diffusiveFlux_bc_flag', 2, 2)] = np.zeros(
@@ -671,6 +694,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('diffusiveFlux_bc_flag', 3, 3)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('diffusiveFlux_bc_flag', 4, 4)] = np.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
+        self.ebqe[('diffusiveFlux_bc_flag', 5, 5)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'i')
         self.ebqe[('advectiveFlux_bc', 0)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
@@ -682,6 +707,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('advectiveFlux_bc', 4)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('advectiveFlux_bc', 5)] = np.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('diffusiveFlux_bc', 1, 1)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('penalty')] = np.zeros((self.mesh.nExteriorElementBoundaries_global,
@@ -691,6 +718,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('diffusiveFlux_bc', 3, 3)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('diffusiveFlux_bc', 4, 4)] = np.zeros(
+            (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
+        self.ebqe[('diffusiveFlux_bc', 5, 5)] = np.zeros(
             (self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebqe[('velocity', 0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,
                                                   self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
@@ -783,6 +812,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.extendedSourceTerm_hv = None
         self.extendedSourceTerm_heta = None
         self.extendedSourceTerm_hw = None
+        self.extendedSourceTerm_hbeta = None
         self.new_SourceTerm_hu = None
         self.new_SourceTerm_hv = None
         self.new_SourceTerm_heta = None
@@ -933,6 +963,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.par_extendedSourceTerm_hv = None
         self.par_extendedSourceTerm_heta = None
         self.par_extendedSourceTerm_hw = None
+        self.par_extendedSourceTerm_hbeta = None
         self.par_new_SourceTerm_hu = None
         self.par_new_SourceTerm_hv = None
         self.par_new_SourceTerm_heta = None
@@ -946,17 +977,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         # Extract hnp1 from global solution u
         index = list(range(0, len(self.timeIntegration.u)))
-        hIndex = index[0::5]
-        huIndex = index[1::5]
-        hvIndex = index[2::5]
-        hetaIndex = index[3::5]
-        hwIndex = index[4::5]
+        hIndex = index[0::6]
+        huIndex = index[1::6]
+        hvIndex = index[2::6]
+        hetaIndex = index[3::6]
+        hwIndex = index[4::6]
+        hbetaIndex = index[5::6]
         # create limited solution
         limited_hnp1 = np.zeros(self.h_dof_old.shape)
         limited_hunp1 = np.zeros(self.h_dof_old.shape)
         limited_hvnp1 = np.zeros(self.h_dof_old.shape)
         limited_hetanp1 = np.zeros(self.h_dof_old.shape)
         limited_hwnp1 = np.zeros(self.h_dof_old.shape)
+        limited_hbetanp1 = np.zeros(self.h_dof_old.shape)
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["dt"] = self.timeIntegration.dt
@@ -968,21 +1001,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["hv_old"] = self.hv_dof_old
         argsDict["heta_old"] = self.heta_dof_old
         argsDict["hw_old"] = self.hw_dof_old
+        argsDict["hbeta_old"] = self.hbeta_dof_old
         argsDict["b_dof"] = self.coefficients.b.dof
         argsDict["high_order_hnp1"] = self.timeIntegration.u[hIndex]
         argsDict["high_order_hunp1"] = self.timeIntegration.u[huIndex]
         argsDict["high_order_hvnp1"] = self.timeIntegration.u[hvIndex]
         argsDict["high_order_hetanp1"] = self.timeIntegration.u[hetaIndex]
         argsDict["high_order_hwnp1"] = self.timeIntegration.u[hwIndex]
+        argsDict["high_order_hbetanp1"] = self.timeIntegration.u[hbetaIndex]
         argsDict["extendedSourceTerm_hu"] = self.extendedSourceTerm_hu
         argsDict["extendedSourceTerm_hv"] = self.extendedSourceTerm_hv
         argsDict["extendedSourceTerm_heta"] = self.extendedSourceTerm_heta
         argsDict["extendedSourceTerm_hw"] = self.extendedSourceTerm_hw
+        argsDict["extendedSourceTerm_hbeta"] = self.extendedSourceTerm_hbeta
         argsDict["limited_hnp1"] = limited_hnp1
         argsDict["limited_hunp1"] = limited_hunp1
         argsDict["limited_hvnp1"] = limited_hvnp1
         argsDict["limited_hetanp1"] = limited_hetanp1
         argsDict["limited_hwnp1"] = limited_hwnp1
+        argsDict["limited_hbetanp1"] = limited_hbetanp1
         argsDict["csrRowIndeces_DofLoops"] = rowptr
         argsDict["csrColumnOffsets_DofLoops"] = colind
         argsDict["MassMatrix"] = MassMatrix
@@ -997,6 +1034,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["hvBT"] = self.hvBT
         argsDict["hetaBT"] = self.hetaBT
         argsDict["hwBT"] = self.hwBT
+        argsDict["hbetaBT"] = self.hbetaBT
         argsDict["new_SourceTerm_hu"] = self.new_SourceTerm_hu
         argsDict["new_SourceTerm_hv"] = self.new_SourceTerm_hv
         argsDict["new_SourceTerm_heta"] = self.new_SourceTerm_heta
@@ -1010,6 +1048,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.u[hvIndex] = limited_hvnp1
         self.timeIntegration.u[hetaIndex] = limited_hetanp1
         self.timeIntegration.u[hwIndex] = limited_hwnp1
+        self.timeIntegration.u[hbetaIndex] = limited_hbetanp1
 
     def computeEV(self):
         entropy_residual = np.zeros(self.u[0].dof.shape)
@@ -1067,23 +1106,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         ##### SPARSITY PATTERN FOR C MATRICES #####
         ###########################################
         # construct nnz_cMatrix, czval_cMatrix, rowptr_cMatrix, colind_cMatrix C matrix
-        nnz_cMatrix = nnz // 5 // 5  # This is always true for the modified Green-Naghdi in 2D
+        nnz_cMatrix = nnz // 6 // 6  # This is always true for the relaxed dSSV model in 2D
         nzval_cMatrix = np.zeros(nnz_cMatrix)
         rowptr_cMatrix = np.zeros(self.u[0].dof.size + 1, 'i')
         colind_cMatrix = np.zeros(nnz_cMatrix, 'i')
         # fill vector rowptr_cMatrix
         for i in range(1, rowptr_cMatrix.size):
-            rowptr_cMatrix[i] = rowptr_cMatrix[i - 1] + old_div((rowptr[5 * (i - 1) + 1] - rowptr[5 * (i - 1)]), 5)
+            rowptr_cMatrix[i] = rowptr_cMatrix[i - 1] + old_div((rowptr[6 * (i - 1) + 1] - rowptr[6 * (i - 1)]), 6)
 
         # fill vector colind_cMatrix
         i_cMatrix = 0  # ith row of cMatrix
         # 0 to total num of DOFs (i.e. num of rows of jacobian)
         for i in range(rowptr.size - 1):
-            if (i % 5 == 0):  # Just consider the rows related to the h variable
+            if (i % 6 == 0):  # Just consider the rows related to the h variable
                 for j, offset in enumerate(range(rowptr[i], rowptr[i + 1])):
                     offset_cMatrix = list(range(rowptr_cMatrix[i_cMatrix], rowptr_cMatrix[i_cMatrix + 1]))
-                    if (j % 5 == 0):
-                        colind_cMatrix[offset_cMatrix[old_div(j, 5)]] = old_div(colind[offset], 5)
+                    if (j % 6 == 0):
+                        colind_cMatrix[offset_cMatrix[old_div(j, 6)]] = old_div(colind[offset], 6)
                 i_cMatrix += 1
         # END OF SPARSITY PATTERN FOR C MATRICES
 
@@ -1163,8 +1202,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                   self.l2g[0]['freeLocal'],
                                                                   self.l2g[0]['nFreeDOF'],
                                                                   self.l2g[0]['freeLocal'],
-                                                                  self.csrRowIndeces[(0, 0)] // 5 // 5,
-                                                                  self.csrColumnOffsets[(0, 0)] // 5,
+                                                                  self.csrRowIndeces[(0, 0)] // 6 // 6,
+                                                                  self.csrColumnOffsets[(0, 0)] // 6,
                                                                   elementMassMatrix,
                                                                   self.MC_global)
 
@@ -1200,8 +1239,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
-                                                                      self.csrRowIndeces[(0, 0)] // 5 // 5,
-                                                                      self.csrColumnOffsets[(0, 0)] // 5,
+                                                                      self.csrRowIndeces[(0, 0)] // 6 // 6,
+                                                                      self.csrColumnOffsets[(0, 0)] // 6,
                                                                       self.cterm[d],
                                                                       self.cterm_global[d])
 
@@ -1228,8 +1267,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.l2g[0]['freeLocal'],
                                                                       self.l2g[0]['nFreeDOF'],
                                                                       self.l2g[0]['freeLocal'],
-                                                                      self.csrRowIndeces[(0, 0)] // 5 // 5,
-                                                                      self.csrColumnOffsets[(0, 0)] // 5,
+                                                                      self.csrRowIndeces[(0, 0)] // 6 // 6,
+                                                                      self.csrColumnOffsets[(0, 0)] // 6,
                                                                       self.cterm_transpose[d],
                                                                       self.cterm_global_transpose[d])
         #
@@ -1251,12 +1290,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         for i in self.constrainedDOFsIndices:
             x = self.dofsXCoord[i]
             y = self.dofsYCoord[i]
-            (h, hu, hv, heta, hw) = self.coefficients.constrainedDOFs[1](x, y, self.timeIntegration.t,
+            (h, hu, hv, heta, hw, hbeta) = self.coefficients.constrainedDOFs[1](x, y, self.timeIntegration.t,
                                                                          self.u[0].dof[i],
                                                                          self.u[1].dof[i],
                                                                          self.u[2].dof[i],
                                                                          self.u[3].dof[i],
-                                                                         self.u[4].dof[i])
+                                                                         self.u[4].dof[i],
+                                                                         self.u[5].dof[i])
             if h is not None:
                 self.u[0].dof[i] = h
             if hu is not None:
@@ -1267,6 +1307,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[3].dof[i] = heta
             if hw is not None:
                 self.u[4].dof[i] = hw
+            if hbeta is not None:
+                self.u[5].dof[i] = hbeta
     #
 
     def updateAllReflectingBoundaryConditions(self):
@@ -1297,6 +1339,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hv_dof_old = np.copy(self.u[2].dof)
         self.heta_dof_old = np.copy(self.u[3].dof)
         self.hw_dof_old = np.copy(self.u[4].dof)
+        self.hbeta_dof_old = np.copy(self.u[5].dof)
+
         # hEps
         self.eps = 1E-5
         self.hEps = self.eps * comm.globalMax(self.u[0].dof.max())
@@ -1316,6 +1360,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hvBT = np.zeros(self.Cx.shape, 'd')
         self.hetaBT = np.zeros(self.Cx.shape, 'd')
         self.hwBT = np.zeros(self.Cx.shape, 'd')
+        self.hbetaBT = np.zeros(self.Cx.shape, 'd')
         # get coordinates of DOFs
         self.getDOFsCoord()
         # some vectors for convex limiting
@@ -1325,6 +1370,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.extendedSourceTerm_hv = np.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_heta = np.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_hw = np.zeros(self.u[0].dof.shape, 'd')
+        self.extendedSourceTerm_hbeta = np.zeros(self.u[0].dof.shape, 'd')
         self.new_SourceTerm_hu = np.zeros(self.u[0].dof.shape, 'd')
         self.new_SourceTerm_hv = np.zeros(self.u[0].dof.shape, 'd')
         self.new_SourceTerm_heta = np.zeros(self.u[0].dof.shape, 'd')
@@ -1351,6 +1397,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
         self.par_extendedSourceTerm_hw = LAT.ParVec_petsc4py(self.extendedSourceTerm_hw,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_extendedSourceTerm_hbeta = LAT.ParVec_petsc4py(self.extendedSourceTerm_hbeta,
                                                 bs=1,
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
@@ -1488,17 +1538,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["hv_dof_old"] = self.hv_dof_old
         argsDict["heta_dof_old"] = self.heta_dof_old
         argsDict["hw_dof_old"] = self.hw_dof_old
+        argsDict["hbeta_dof_old"] = self.hbeta_dof_old
         argsDict["b_dof"] = self.coefficients.b.dof
         argsDict["h_dof"] = self.u[0].dof
         argsDict["hu_dof"] = self.u[1].dof
         argsDict["hv_dof"] = self.u[2].dof
         argsDict["heta_dof"] = self.u[3].dof
         argsDict["hw_dof"] = self.u[4].dof
+        argsDict["hbeta_dof"] = self.u[5].dof
         argsDict["h_dof_sge"] = self.h_dof_sge
         argsDict["hu_dof_sge"] = self.hu_dof_sge
         argsDict["hv_dof_sge"] = self.hv_dof_sge
         argsDict["heta_dof_sge"] = self.heta_dof_sge
         argsDict["hw_dof_sge"] = self.hw_dof_sge
+        argsDict["hbeta_dof_sge"] = self.hbeta_dof_sge
         argsDict["q_mass_acc"] = self.timeIntegration.m_tmp[0]
         argsDict["q_mom_hu_acc"] = self.timeIntegration.m_tmp[1]
         argsDict["q_mom_hv_acc"] = self.timeIntegration.m_tmp[2]
@@ -1520,11 +1573,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["offset_hv"] = self.offset[2]
         argsDict["offset_heta"] = self.offset[3]
         argsDict["offset_hw"] = self.offset[4]
+        argsDict["offset_hbeta"] = self.offset[5]
         argsDict["stride_h"] = self.stride[0]
         argsDict["stride_hu"] = self.stride[1]
         argsDict["stride_hv"] = self.stride[2]
         argsDict["stride_heta"] = self.stride[3]
         argsDict["stride_hw"] = self.stride[4]
+        argsDict["stride_hbeta"] = self.stride[5]
         argsDict["globalResidual"] = r
         argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
         argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
@@ -1569,10 +1624,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["hvnp1_at_quad_point"] = self.q[('u', 2)]
         argsDict["hetanp1_at_quad_point"] = self.q[('u', 3)]
         argsDict["hwnp1_at_quad_point"] = self.q[('u', 4)]
+        argsDict["hbetanp1_at_quad_point"] = self.q[('u', 5)]
         argsDict["extendedSourceTerm_hu"] = self.extendedSourceTerm_hu
         argsDict["extendedSourceTerm_hv"] = self.extendedSourceTerm_hv
         argsDict["extendedSourceTerm_heta"] = self.extendedSourceTerm_heta
         argsDict["extendedSourceTerm_hw"] = self.extendedSourceTerm_hw
+        argsDict["extendedSourceTerm_hbeta"] = self.extendedSourceTerm_hbeta
         argsDict["dH_minus_dL"] = self.dH_minus_dL
         argsDict["muH_minus_muL"] = self.muH_minus_muL
         argsDict["cE"] = float(self.coefficients.cE)
@@ -1591,6 +1648,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["hvBT"] = self.hvBT
         argsDict["hetaBT"] = self.hetaBT
         argsDict["hwBT"] = self.hwBT
+        argsDict["hbetaBT"] = self.hbetaBT
         argsDict["lstage"] = self.timeIntegration.lstage
         argsDict["new_SourceTerm_hu"] = self.new_SourceTerm_hu
         argsDict["new_SourceTerm_hv"] = self.new_SourceTerm_hv
@@ -1608,6 +1666,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.par_extendedSourceTerm_hv.scatter_forward_insert()
         self.par_extendedSourceTerm_heta.scatter_forward_insert()
         self.par_extendedSourceTerm_hw.scatter_forward_insert()
+        self.par_extendedSourceTerm_hbeta.scatter_forward_insert()
         self.par_new_SourceTerm_hu.scatter_forward_insert()
         self.par_new_SourceTerm_hv.scatter_forward_insert()
         self.par_new_SourceTerm_heta.scatter_forward_insert()
@@ -1697,11 +1756,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["hv_dof"] = self.u[2].dof
         argsDict["heta_dof"] = self.u[3].dof
         argsDict["hw_dof"] = self.u[4].dof
+        argsDict["hbeta_dof"] = self.u[5].dof
         argsDict["h_dof_sge"] = self.h_dof_sge
         argsDict["hu_dof_sge"] = self.hu_dof_sge
         argsDict["hv_dof_sge"] = self.hv_dof_sge
         argsDict["heta_dof_sge"] = self.heta_dof_sge
         argsDict["hw_dof_sge"] = self.hw_dof_sge
+        argsDict["hbeta_dof_sge"] = self.hbeta_dof_sge
         argsDict["q_mass_acc_beta_bdf"] = self.timeIntegration.beta_bdf[0]
         argsDict["q_mom_hu_acc_beta_bdf"] = self.timeIntegration.beta_bdf[1]
         argsDict["q_mom_hv_acc_beta_bdf"] = self.timeIntegration.beta_bdf[2]
@@ -1724,6 +1785,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_h_heta"] = self.csrColumnOffsets[(0, 3)]
         argsDict["csrRowIndeces_h_hw"] = self.csrRowIndeces[(0, 4)]
         argsDict["csrColumnOffsets_h_hw"] = self.csrColumnOffsets[(0, 4)]
+        argsDict["csrRowIndeces_h_hbeta"] = self.csrRowIndeces[(0, 5)]
+        argsDict["csrColumnOffsets_h_hbeta"] = self.csrColumnOffsets[(0, 5)]
         argsDict["csrRowIndeces_hu_h"] = self.csrRowIndeces[(1, 0)]
         argsDict["csrColumnOffsets_hu_h"] = self.csrColumnOffsets[(1, 0)]
         argsDict["csrRowIndeces_hu_hu"] = self.csrRowIndeces[(1, 1)]
@@ -1734,6 +1797,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_hu_heta"] = self.csrColumnOffsets[(1, 3)]
         argsDict["csrRowIndeces_hu_hw"] = self.csrRowIndeces[(1, 4)]
         argsDict["csrColumnOffsets_hu_hw"] = self.csrColumnOffsets[(1, 4)]
+        argsDict["csrRowIndeces_hu_hbeta"] = self.csrRowIndeces[(1, 5)]
+        argsDict["csrColumnOffsets_hu_hbeta"] = self.csrColumnOffsets[(1, 5)]
         argsDict["csrRowIndeces_hv_h"] = self.csrRowIndeces[(2, 0)]
         argsDict["csrColumnOffsets_hv_h"] = self.csrColumnOffsets[(2, 0)]
         argsDict["csrRowIndeces_hv_hu"] = self.csrRowIndeces[(2, 1)]
@@ -1744,6 +1809,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_hv_heta"] = self.csrColumnOffsets[(2, 3)]
         argsDict["csrRowIndeces_hv_hw"] = self.csrRowIndeces[(2, 4)]
         argsDict["csrColumnOffsets_hv_hw"] = self.csrColumnOffsets[(2, 4)]
+        argsDict["csrRowIndeces_hv_hbeta"] = self.csrRowIndeces[(2, 5)]
+        argsDict["csrColumnOffsets_hv_hbeta"] = self.csrColumnOffsets[(2, 5)]
         argsDict["csrRowIndeces_heta_h"] = self.csrRowIndeces[(3, 0)]
         argsDict["csrColumnOffsets_heta_h"] = self.csrColumnOffsets[(3, 0)]
         argsDict["csrRowIndeces_heta_hu"] = self.csrRowIndeces[(3, 1)]
@@ -1754,6 +1821,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_heta_heta"] = self.csrColumnOffsets[(3, 3)]
         argsDict["csrRowIndeces_heta_hw"] = self.csrRowIndeces[(3, 4)]
         argsDict["csrColumnOffsets_heta_hw"] = self.csrColumnOffsets[(3, 4)]
+        argsDict["csrRowIndeces_heta_hbeta"] = self.csrRowIndeces[(3, 5)]
+        argsDict["csrColumnOffsets_heta_hbeta"] = self.csrColumnOffsets[(3, 5)]
         argsDict["csrRowIndeces_hw_h"] = self.csrRowIndeces[(4, 0)]
         argsDict["csrColumnOffsets_hw_h"] = self.csrColumnOffsets[(4, 0)]
         argsDict["csrRowIndeces_hw_hu"] = self.csrRowIndeces[(4, 1)]
@@ -1764,6 +1833,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_hw_heta"] = self.csrColumnOffsets[(4, 3)]
         argsDict["csrRowIndeces_hw_hw"] = self.csrRowIndeces[(4, 4)]
         argsDict["csrColumnOffsets_hw_hw"] = self.csrColumnOffsets[(4, 4)]
+        argsDict["csrRowIndeces_hw_hbeta"] = self.csrRowIndeces[(4, 5)]
+        argsDict["csrColumnOffsets_hw_hbeta"] = self.csrColumnOffsets[(4, 5)]
+        argsDict["csrRowIndeces_hbeta_h"] = self.csrRowIndeces[(5, 0)]
+        argsDict["csrColumnOffsets_hbeta_h"] = self.csrColumnOffsets[(5, 0)]
+        argsDict["csrRowIndeces_hbeta_hu"] = self.csrRowIndeces[(5, 1)]
+        argsDict["csrColumnOffsets_hbeta_hu"] = self.csrColumnOffsets[(5, 1)]
+        argsDict["csrRowIndeces_hbeta_hv"] = self.csrRowIndeces[(5, 2)]
+        argsDict["csrColumnOffsets_hbeta_hv"] = self.csrColumnOffsets[(5, 2)]
+        argsDict["csrRowIndeces_hbeta_heta"] = self.csrRowIndeces[(5, 3)]
+        argsDict["csrColumnOffsets_hbeta_heta"] = self.csrColumnOffsets[(5, 3)]
+        argsDict["csrRowIndeces_hbeta_hw"] = self.csrRowIndeces[(5, 4)]
+        argsDict["csrColumnOffsets_hbeta_hw"] = self.csrColumnOffsets[(5, 4)]
+        argsDict["csrRowIndeces_hbeta_hbeta"] = self.csrRowIndeces[(5, 5)]
+        argsDict["csrColumnOffsets_hbeta_hbeta"] = self.csrColumnOffsets[(5, 5)]
         argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
         argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
         argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
@@ -1939,6 +2022,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hv_dof_sge[:] = self.u[2].dof
         self.heta_dof_sge[:] = self.u[3].dof
         self.hw_dof_sge[:] = self.u[4].dof
+        self.hbeta_dof_sge[:] = self.u[5].dof
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
 
     def getForce(self, cg, forceExtractionFaces, force, moment):

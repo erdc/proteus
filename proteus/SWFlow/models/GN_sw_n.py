@@ -48,7 +48,8 @@ femSpaces = {0: FESpace['basis'],
              1: FESpace['basis'],
              2: FESpace['basis'],
              3: FESpace['basis'],
-             4: FESpace['basis']}
+             4: FESpace['basis'],
+             5: FESpace['basis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
