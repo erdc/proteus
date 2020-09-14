@@ -790,11 +790,8 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.secondCallCalculateResidual = 0
         logEvent(" Entropy viscosity solution with consistent mass matrix", level=1)
         Newton.solve(self,u,r,b,par_u,par_r,linear=True)
-<<<<<<< HEAD
-=======
         if par_u is not None:
             par_u.scatter_forward_insert()
->>>>>>> upstream/master
 
         ############################
         # FCT STEP ON WATER HEIGHT #
