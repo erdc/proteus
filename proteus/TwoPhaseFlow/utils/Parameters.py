@@ -310,7 +310,6 @@ class ParametersModelRANS2P(ParametersModelBase):
         self._freeze()
 
         #Initial Conditions
-
         self.setInitialConditionStructure()
 
     def _initializePhysics(self):
@@ -542,6 +541,9 @@ class ParametersModelRANS3PF(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
+
     def _initializePhysics(self):
         pparams = self._Problem.Parameters.physical # physical parameters
         domain = self._Problem.domain
@@ -589,12 +591,6 @@ class ParametersModelRANS3PF(ParametersModelBase):
         coeffs.Closure_1_model = DISS_model
         coeffs.movingDomain = self.p.movingDomain
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['vel_u'],
-                                    1: IC['vel_v']}
-        if nd == 3:
-            self.p.initialConditions[2] = IC['vel_w']
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
@@ -682,6 +678,8 @@ class ParametersModelPressure(ParametersModelBase):
         self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
+        #Initial Conditions
+        self.setInitialConditionStructure()
 
     def _initializePhysics(self):
         domain = self._Problem.domain
@@ -697,9 +695,6 @@ class ParametersModelPressure(ParametersModelBase):
         coeffs.fluidModelIndex = V_model
         coeffs.pressureIncrementModelIndex = PINC_model
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure']}
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -752,6 +747,9 @@ class ParametersModelPressureInitial(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
+
     def _initializePhysics(self):
         domain = self._Problem.domain
         nd = domain.nd
@@ -767,9 +765,6 @@ class ParametersModelPressureInitial(ParametersModelBase):
         coeffs.fluidModelIndex = V_model
         coeffs.pressureModelIndex = PRESSURE_model
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure']}
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -832,6 +827,9 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
+
     def _initializePhysics(self):
         domain = self._Problem.domain
         nd = domain.nd
@@ -848,9 +846,6 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         coeffs.modelIndex = PINC_model
         coeffs.fluidModelIndex = V_model
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure_increment']}
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -928,6 +923,9 @@ class ParametersModelKappa(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
+
     def _initializePhysics(self):
         idxDict = self._Problem.modelIdxDict
         pparams = self._Problem.Parameters.physical # physical parameters
@@ -970,9 +968,6 @@ class ParametersModelKappa(ParametersModelBase):
         coeffs.g = np.array(pparams.gravity)
         coeffs.nd = nd
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['k']}
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
@@ -1063,6 +1058,9 @@ class ParametersModelDissipation(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
+
     def _initializePhysics(self):
         idxDict = self._Problem.modelIdxDict
         pparams = self._Problem.Parameters.physical  # physical parameters
@@ -1109,9 +1107,6 @@ class ParametersModelDissipation(ParametersModelBase):
         # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
         coeffs.dissipation_model_flag = pparams.useRANS
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['dissipation']}
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
@@ -1187,9 +1182,8 @@ class ParametersModelCLSVOF(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
-        self.p.initialConditions = FreezableClass()
-        self.p.initialConditions.clsvof = InitialConditions.InitialCondition()
-        self.p.initialConditions._freeze()
+        #Initial Conditions
+        self.setInitialConditionStructure()
 
     def _initializePhysics(self):
         domain = self._Problem.domain
@@ -1207,11 +1201,8 @@ class ParametersModelCLSVOF(ParametersModelBase):
         coeffs.flowModelIndex = V_model
         coeffs.modelIndex = CLSVOF_model
         coeffs.movingDomain = self.p.movingDomain
-        import pdb; pdb.set_trace()
         coeffs.variableNames = ['phi']
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        self.p.LevelModelType.var2idxDict = {coeffs.variableNames[i]: i for i,_ in enumerate(coeffs.variableNames) } 
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -1277,10 +1268,9 @@ class ParametersModelVOF(ParametersModelBase):
         self.n.tolFac = 0.
         # freeze attributes
         self._freeze()
-        self.p.initialConditions = FreezableClass()
-        self.p.initialConditions.vof = InitialConditions.InitialCondition()
-        self.p.initialConditions._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
 
     def _initializePhysics(self):
         domain = self._Problem.domain
@@ -1304,8 +1294,6 @@ class ParametersModelVOF(ParametersModelBase):
         coeffs.modelIndex = ME_model
         coeffs.movingDomain = self.p.movingDomain
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        self.p.LevelModelType.var2idxDict={'vof':0}
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -1700,6 +1688,9 @@ class ParametersModelAddedMass(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
+
     def _initializePhysics(self):
         domain = self._Problem.domain
         nd = domain.nd
@@ -1717,12 +1708,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         coeffs.barycenters = domain.barycenters
         coeffs.nd = nd
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        class dp_IC:
-            def uOfXT(self, x, t):
-                return 0.0
-        self.p.initialConditions = {0: dp_IC()}
+
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].pAddedMass_dirichlet.uOfXT}
@@ -1795,6 +1781,9 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
+
     def _initializePhysics(self):
         domain = self._Problem.domain
         nd = domain.nd
@@ -1812,8 +1801,6 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         coeffs.ME_MODEL = ME_MODEL
         coeffs.nd = nd
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        self.p.initialConditions = None
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -1876,6 +1863,9 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        #Initial Conditions
+        self.setInitialConditionStructure()
+
     def _initializePhysics(self):
         domain = self._Problem.domain
         nd = domain.nd
@@ -1903,8 +1893,6 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         coeffs.modelParams_block = smTypes
         coeffs.nd = nd
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        self.p.initialConditions = None
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions

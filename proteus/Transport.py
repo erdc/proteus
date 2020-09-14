@@ -1651,7 +1651,7 @@ class OneLevelTransport(NonlinearEquation):
                 self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
     #what about setting initial conditions directly from dofs calculated elsewhere?
 
-    def setInitialConditions2(self,getInitialConditionsDict,idxDict,T=0.0):
+    def setInitialConditionsTPF(self,getInitialConditionsDict,idxDict,T=0.0):
         self.timeIntegration.t = T
         #
         #set the initial conditions for the DOF based on the generalized interpolation conditions
