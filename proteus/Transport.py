@@ -1659,6 +1659,8 @@ class OneLevelTransport(NonlinearEquation):
         #for key in getInitialConditionsDict.keys():
         for key in idxDict.keys():
             entry = getInitialConditionsDict[key]
+            if(entry is None):
+                continue
             idx = idxDict[key]
             interpolationValues = numpy.zeros((self.mesh.nElements_global,
                                                  self.u[idx].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints),
@@ -6751,9 +6753,10 @@ class MultilevelTransport(object):
         logEvent("Setting initial conditions on model "+self.name)
         self.t=T
         for m,u in zip(self.levelModelList,self.uList):
-            if(m.name=='rans2p0'):
-                m.setInitialConditions2(getInitialConditionsDict.__dict__,m.var2idxDict,T)
-            else:
+            #separate functions to maintain backwards compatibility
+            try:    
+                m.setInitialConditionsTPF(getInitialConditionsDict.__dict__,m.var2idxDict,T)
+            except:
                 m.setInitialConditions(getInitialConditionsDict,T)
 
             m.setFreeDOF(u)

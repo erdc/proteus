@@ -259,6 +259,14 @@ class ParametersModelBase(FreezableClass):
         except:
             return None
 
+    def setInitialConditionStructure(self):
+        self.p.initialConditions = FreezableClass()
+        for name in self.p.coefficients.variableNames:
+            #setattr(self.p.initialConditions,name,InitialConditions.InitialCondition())
+            setattr(self.p.initialConditions,name,None)
+        self.p.initialConditions._freeze()
+        self.p.LevelModelType.var2idxDict = {self.p.coefficients.variableNames[i]: i for i,_ in enumerate(self.p.coefficients.variableNames) } 
+
 class ParametersModelRANS2P(ParametersModelBase):
     """
     """
@@ -271,7 +279,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             epsFact=epsFact,
             eb_penalty_constant=100.,
             particle_epsFact = 3.,
-            useExact=Problem.useExact
+            useExact=False#Problem.useExact
         )
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
@@ -303,12 +311,7 @@ class ParametersModelRANS2P(ParametersModelBase):
 
         #Initial Conditions
 
-        self.p.initialConditions = FreezableClass()
-        self.p.initialConditions.p = InitialConditions.InitialCondition()
-        self.p.initialConditions.u = InitialConditions.InitialCondition()
-        self.p.initialConditions.v = InitialConditions.InitialCondition()
-        self.p.initialConditions.w = InitialConditions.InitialCondition()
-        self.p.initialConditions._freeze()
+        self.setInitialConditionStructure()
 
     def _initializePhysics(self):
         pparams = self._Problem.Parameters.physical # physical parameters
@@ -358,13 +361,6 @@ class ParametersModelRANS2P(ParametersModelBase):
         if coeffs.barycenters is None:
             coeffs.barycenters = domain.barycenters
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['pressure'],
-                                    1: IC['vel_u'],
-                                    2: IC['vel_v']}
-        if nd == 3:
-            self.p.initialConditions[3] = IC['vel_w']
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.boundaryConditions
@@ -1191,6 +1187,10 @@ class ParametersModelCLSVOF(ParametersModelBase):
         # freeze attributes
         self._freeze()
 
+        self.p.initialConditions = FreezableClass()
+        self.p.initialConditions.clsvof = InitialConditions.InitialCondition()
+        self.p.initialConditions._freeze()
+
     def _initializePhysics(self):
         domain = self._Problem.domain
         nd = domain.nd
@@ -1207,11 +1207,11 @@ class ParametersModelCLSVOF(ParametersModelBase):
         coeffs.flowModelIndex = V_model
         coeffs.modelIndex = CLSVOF_model
         coeffs.movingDomain = self.p.movingDomain
+        import pdb; pdb.set_trace()
         coeffs.variableNames = ['phi']
         coeffs.initialize()
         # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['clsvof']}
+        self.p.LevelModelType.var2idxDict = {coeffs.variableNames[i]: i for i,_ in enumerate(coeffs.variableNames) } 
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -1244,9 +1244,8 @@ class ParametersModelCLSVOF(ParametersModelBase):
 class ParametersModelVOF(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelVOF, self).__init__(name='vof', index=None,
-                                                 Problem=Problem)
+    def __init__(self):
+        super(ParametersModelVOF, self).__init__(name='vof')
         self.p.coefficients = VOF.Coefficients(
             initialize=False,
             useMetrics=1.,
@@ -1278,6 +1277,10 @@ class ParametersModelVOF(ParametersModelBase):
         self.n.tolFac = 0.
         # freeze attributes
         self._freeze()
+        self.p.initialConditions = FreezableClass()
+        self.p.initialConditions.vof = InitialConditions.InitialCondition()
+        self.p.initialConditions._freeze()
+
 
     def _initializePhysics(self):
         domain = self._Problem.domain
@@ -1302,8 +1305,7 @@ class ParametersModelVOF(ParametersModelBase):
         coeffs.movingDomain = self.p.movingDomain
         coeffs.initialize()
         # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['vof']}
+        self.p.LevelModelType.var2idxDict={'vof':0}
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -1392,6 +1394,7 @@ class ParametersModelNCLS(ParametersModelBase):
         self.n.tolFac = 0.
         # freeze attributes
         self._freeze()
+        self.setInitialConditionStructure()
 
     def _initializePhysics(self):
         domain = self._Problem.domain
@@ -1404,18 +1407,15 @@ class ParametersModelNCLS(ParametersModelBase):
         elif ('rans3p' in idxDict):
             V_model = self.fetchIndex(idxDict, 'rans3p')
         else:
-
-        assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
-        RD_model = mparams.rdls.index
+            assert mparams.rans2p.index is not None or mparams.rans3p.index is not None, 'RANS2P or RANS3PF must be used with VOF'
+        #RD_model = mparams.rdls.index
+        RD_model=self.fetchIndex(idxDict,'rdls')
         coeffs = self.p.coefficients
         coeffs.flowModelIndex = V_model
         coeffs.RD_modelIndex = RD_model
         coeffs.modelIndex = ME_model
         coeffs.movingDomain = self.p.movingDomain
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['ncls']}
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.boundaryConditions
@@ -1470,9 +1470,8 @@ class ParametersModelNCLS(ParametersModelBase):
 class ParametersModelRDLS(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelRDLS, self).__init__(name='rdls', index=None,
-                                                  Problem=Problem)
+    def __init__(self):
+        super(ParametersModelRDLS, self).__init__(name='rdls')
         self.p.coefficients = RDLS.Coefficients(
             initialize=False,
             useMetrics=1.,
@@ -1507,6 +1506,7 @@ class ParametersModelRDLS(ParametersModelBase):
         self.n.maxLineSearches = 0
         # freeze attributes
         self._freeze()
+        self.setInitialConditionStructure() 
 
     def _initializePhysics(self):
         # MODEL INDEXING
@@ -1520,9 +1520,6 @@ class ParametersModelRDLS(ParametersModelBase):
         coeffs.nModelId = nModelId
         coeffs.rdModelId = rdModelId
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        IC = self._Problem.initialConditions
-        self.p.initialConditions = {0: IC['rdls']}
         
         # BOUNDARY CONDITIONS
         self.p.dirichletConditions = {0: lambda x, flag: None}
@@ -1574,9 +1571,8 @@ class ParametersModelRDLS(ParametersModelBase):
 class ParametersModelMCorr(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelMCorr, self).__init__(name='mcorr', index=None,
-                                                   Problem=Problem)
+    def __init__(self):
+        super(ParametersModelMCorr, self).__init__(name='mcorr')
         self.p.coefficients = MCorr.Coefficients(
             initialize=False,
             useMetrics=1.,
@@ -1610,6 +1606,7 @@ class ParametersModelMCorr(ParametersModelBase):
         self.n.useEisenstatWalker = True
         # freeze attributes
         self._freeze()
+        self.setInitialConditionStructure()
 
     def _initializePhysics(self):
         domain = self._Problem.domain
@@ -1636,15 +1633,7 @@ class ParametersModelMCorr(ParametersModelBase):
         coeffs.levelSetModelIndex = LS_model
         coeffs.nd = nd
         coeffs.initialize()
-        # INITIAL CONDITIONS
-        class zero_phi:
-            def __init__(self):
-                pass
-            def uOfX(self,X):
-                return 0.0
-            def uOfXT(self,X,t):
-                return 0.0
-        self.p.initialConditions  = {0:zero_phi()}
+
         # BOUNDARY CONDITIONS
         # N/A
 

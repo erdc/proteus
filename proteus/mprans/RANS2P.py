@@ -358,6 +358,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.linearDragFactor = 1.0
         self.nonlinearDragFactor = 1.0
         self.nullSpace = nullSpace
+
+        self.variableNames= ['p', 'u', 'v','w']
         if initialize:
             self.initialize()
 
@@ -1537,12 +1539,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.q[('force', 1)][eN,k] = self.coefficients.force_y(self.q['x'][eN,k])
                 if self.coefficients.force_z:
                     self.q[('force', 2)][eN,k] = self.coefficients.force_z(self.q['x'][eN,k])
-
-        self.var2idxDict={}
-        if self.nSpace_global == 2:
-            self.var2idxDict={'p':0,'u':1,'v':2}
-        else:
-            self.var2idxDict={'p':0,'u':1,'v':2,'w':3}
 
     def getResidual(self, u, r):
         """

@@ -8,6 +8,7 @@ from proteus.Profiling import logEvent
 from builtins import object
 from proteus.TwoPhaseFlow.utils import Parameters
 from proteus.defaults import System_base
+import sys
 
 class TwoPhaseFlowProblem:
     """ TwoPhaseFlowProblem """
@@ -82,12 +83,8 @@ class TwoPhaseFlowProblem:
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
-        # ***** CREATE FINITE ELEMENT  ***** #
-        self.FESpace = FESpace(self.nd)
-
         # ***** CREATE FINITE ELEMENT SPACES ***** #
-        self.FESpace = FESpace(self.ns_model, self.nd)
-        self.FESpace.setFESpace(useExact)
+        self.FESpace = FESpace(self,self.nd)
 
         # ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
         self.physical_parameters = default_physical_parameters
@@ -287,17 +284,32 @@ class FESpace:
     """
     Create FE Spaces.
     """
-    def __init__(self,nd):
+    def __init__(self,Problem,nd):
         assert nd in [2,3], 'number of dimensions must be 2 or 3'
         self.nd=nd
         self.velSpaceOrder=None
         self.pSpaceOrder=None
+        self.Problem = Problem
 
     def __getitem__(self, key):
         return self.__dict__[key]
 
     def setFESpace(self,useExact=False):
-
+        for key,value in self.Problem.modelDict.items():
+            
+            if(isinstance(value,Parameters.ParametersModelRANS2P)):
+                self.velSpaceOrder=1
+                self.pSpaceOrder=1
+            elif(isinstance(value,Parameters.ParametersModelRANS3PF)):
+                self.velSpaceOrder=2
+                self.pSpaceOrder=1
+        assert self.velSpaceOrder is not None
+        #if ns_model == 0 or ns_model is None: # rans2p or None
+        #    self.velSpaceOrder=1
+        #    self.pSpaceOrder=1
+        #else: #rans3p
+        #    self.velSpaceOrder=2
+        #    self.pSpaceOrder=1
         ##################
         # VELOCITY SPACE #
         ##################
