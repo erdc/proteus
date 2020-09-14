@@ -8,7 +8,6 @@ from proteus.MeshTools import MeshOptions
 from proteus.defaults import (Physics_base,
                               Numerics_base,
                               System_base)
-from proteus import InitialConditions
 from proteus import Comm
 comm=Comm.get()
 if comm.size() > 1:
