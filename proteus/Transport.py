@@ -1650,6 +1650,36 @@ class OneLevelTransport(NonlinearEquation):
             for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.items():
                 self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
     #what about setting initial conditions directly from dofs calculated elsewhere?
+
+    def setInitialConditionsTPF(self,getInitialConditionsDict,idxDict,T=0.0):
+        self.timeIntegration.t = T
+        #
+        #set the initial conditions for the DOF based on the generalized interpolation conditions
+        #
+        #for key in getInitialConditionsDict.keys():
+        for key in idxDict.keys():
+            entry = getInitialConditionsDict[key]
+            if(entry is None):
+                continue
+            idx = idxDict[key]
+            interpolationValues = numpy.zeros((self.mesh.nElements_global,
+                                                 self.u[idx].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints),
+                                                'd')
+            try:
+                for eN in range(self.mesh.nElements_global):
+                    materialFlag = self.mesh.elementMaterialTypes[eN]
+                    for k in range(self.u[idx].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                        interpolationValues[eN,k] = getInitialConditionsDict[key].uOfXT(self.u[idx].femSpace.interpolationPoints[eN,k],T,materialFlag)
+            except TypeError:
+                for eN in range(self.mesh.nElements_global):
+                    for k in range(self.u[idx].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                        interpolationValues[eN,k] = getInitialConditionsDict[key].uOfXT(self.u[idx].femSpace.interpolationPoints[eN,k],T)
+            self.u[idx].projectFromInterpolationConditions(interpolationValues)
+        #Load the Dirichlet conditions
+        for cj in range(self.nc):
+            for dofN,g in self.dirichletConditions[idx].DOFBoundaryConditionsDict.items():
+                self.u[idx].dof[dofN] = g(self.dirichletConditions[idx].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+
     def archiveAnalyticalSolutions(self,archive,analyticalSolutionsDict,T=0.0,tCount=0):
         import copy
         #
@@ -6723,7 +6753,12 @@ class MultilevelTransport(object):
         logEvent("Setting initial conditions on model "+self.name)
         self.t=T
         for m,u in zip(self.levelModelList,self.uList):
-            m.setInitialConditions(getInitialConditionsDict,T)
+            #separate functions to maintain backwards compatibility
+            try:    
+                m.setInitialConditionsTPF(getInitialConditionsDict.__dict__,m.var2idxDict,T)
+            except:
+                m.setInitialConditions(getInitialConditionsDict,T)
+
             m.setFreeDOF(u)
     def setInitialConditionsFromDofs(self,T):
         self.t=T
