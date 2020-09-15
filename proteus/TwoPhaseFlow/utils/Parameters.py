@@ -58,7 +58,6 @@ class ParametersHolder:
         # default options
         self.model_list = []
         self.physical = ParametersPhysical()
-        self.mesh = self._Problem.domain.MeshOptions
 
     def initializeParameters(self):
         logEvent('----------')
