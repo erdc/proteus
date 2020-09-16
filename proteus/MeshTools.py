@@ -6576,6 +6576,7 @@ class MeshOptions(object):
                             'geo': False}
         self.restrictFineSolutionToAllMeshes = False
         self.parallelPartitioningType = MeshParallelPartitioningTypes.node
+        self.generatePartitionedMeshFromFiles=False
         self.nLayersOfOverlapForParallel = 1
         self.triangleOptions = None # defined when setTriangleOptions called
         self.nLevels = 1
@@ -6864,7 +6865,67 @@ def generateMesh(domain):
         mlMesh.generateFromExistingCoarseMesh(mesh,domain.MeshOptions.nLevels,
                                               nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
                                               parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+    elif isinstance(domain,Domain.PiecewiseLinearComplexDomain):
+        import sys
+        if domain.use_gmsh is True:
+            fileprefix = domain.geofile
+        else:
+            fileprefix = domain.polyfile
+        if comm.rank() == 0 and (not (os.path.exists(fileprefix+".ele") and
+                                                   os.path.exists(fileprefix+".node") and
+                                                   os.path.exists(fileprefix+".face"))):
+            if domain.MeshOptions.use_gmsh is True:
+                if not os.path.exists(fileprefix+".msh"):
+                    logEvent("Running gmsh to generate 3D mesh for "+name,level=1)
+                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh2".format(fileprefix+'.geo', domain.geofile+'.msh')
+                    logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                    check_call(gmsh_cmd, shell=True)
+                    logEvent("Done running gmsh; converting to tetgen")
+                else:
+                    logEvent("Using "+domain.geofile+".msh to convert to tetgen")
+                MeshTools.msh2simplex(fileprefix=fileprefix, nd=3)
+                check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
+            else:
+                logEvent("Running tetgen to generate 3D mesh for "+name, level=1)
+                tetcmd = "tetgen -{0} {1}.poly".format(domain.MeshOptions.triangleOptions, fileprefix)
+                logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
+                check_call(tetcmd, shell=True)
+                logEvent("Done running tetgen")
+            check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+            check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+            check_call("mv {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
+            try:
+                check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+            except:
+                logEvent("Warning: couldn't move {0:s}.1.neigh".format(fileprefix))
+                pass
+            try:
+                check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+            except:
+                logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
+                pass
+        comm.barrier()
+        logEvent("Initializing mesh and MultilevelMesh")
+        nbase = 1
+        mesh=TetrahedralMesh()
+        mlMesh = MultilevelTetrahedralMesh(0,0,0,skipInit=True,
+                                                     nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
+                                                     parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+        if domain.MeshOptions.generatePartitionedMeshFromFiles:
+            logEvent("Generating partitioned mesh from Tetgen files")
+            if("f" not in domain.MeshOptions.triangleOptions or "ee" not in domain.MeshOptions.triangleOptions):
+                sys.exit("ERROR: Remake the mesh with the `f` flag and `ee` flags in triangleOptions.")
+            mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,domain.MeshOptions.nLevels,
+                                                          nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+        else:
+            logEvent("Generating coarse global mesh from Tetgen files")
+            mesh.generateFromTetgenFiles(fileprefix,nbase,parallel = comm.size() > 1)
+            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (domain.MeshOptions.nLevels,))
+            mlMesh.generateFromExistingCoarseMesh(mesh,domain.MeshOptions.nLevels,
+                                                  nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
+                                                  parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
 
-        domain.MeshOptions.genMesh=False
-        return mlMesh
+    domain.MeshOptions.genMesh=False
+    return mlMesh
 

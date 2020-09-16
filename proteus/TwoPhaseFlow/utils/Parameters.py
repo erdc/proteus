@@ -260,7 +260,6 @@ class ParametersModelBase(FreezableClass):
     def setInitialConditionStructure(self):
         self.p.initialConditions = FreezableClass()
         for name in self.p.coefficients.variableNames:
-            #setattr(self.p.initialConditions,name,InitialConditions.InitialCondition())
             setattr(self.p.initialConditions,name,None)
         self.p.initialConditions._freeze()
         self.p.LevelModelType.var2idxDict = {self.p.coefficients.variableNames[i]: i for i,_ in enumerate(self.p.coefficients.variableNames) } 
@@ -684,9 +683,9 @@ class ParametersModelPressure(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
         idxDict = self._Problem.modelIdxDict
-        PRESSURE_model = self.fetch(idxDict,'pressure')
-        V_model = self.fetch(idxDict,'rans3p')
-        PINC_model = self.fetch(idxDict,'pressureIncrement')
+        PRESSURE_model = self.fetchIndex(idxDict,'pressure')
+        V_model = self.fetchIndex(idxDict,'rans3p')
+        PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.modelIndex = PRESSURE_model
@@ -753,9 +752,9 @@ class ParametersModelPressureInitial(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
         idxDict = self._Problem.modelIdxDict
-        PRESSURE_model = self.fetch(idxDict,'pressure')
-        V_model = self.fetch(idxDict,'rans3p')
-        PINIT_model = self.fetch(idxDict,'pressureInitial')
+        PRESSURE_model = self.fetchIndex(idxDict,'pressure')
+        V_model = self.fetchIndex(idxDict,'rans3p')
+        PINIT_model = self.fetchIndex(idxDict,'pressureInitial')
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.nd = nd
@@ -798,9 +797,8 @@ class ParametersModelPressureInitial(ParametersModelBase):
 class ParametersModelPressureIncrement(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement', index=None,
-                                                               Problem=Problem)
+    def __init__(self):
+        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement')
         self.p.coefficients = PresInc.Coefficients(
             initialize=False,
         )
@@ -834,8 +832,8 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         pparams = self._Problem.Parameters.physical
         # MODEL INDEXING
         idxDict = self._Problem.modelIdxDict
-        V_model = self.fetch(idxDict,'rans3p')
-        PINC_model = self.fetch(idxDict,'pressureIncrement')
+        V_model = self.fetchIndex(idxDict,'rans3p')
+        PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.rho_f_min = (1.0-1.0e-8)*pparams.densityB
@@ -930,23 +928,23 @@ class ParametersModelKappa(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        VOF_model=self.fetch(idxDict,'vof')
-        LS_model=self.fetch(idxDict,'ncls')
-        RD_model=self.fetch(idxDict,'rdls')
-        MCORR_model=self.fetch(idxDict,'mcorr')
+        VOF_model=self.fetchIndex(idxDict,'vof')
+        LS_model=self.fetchIndex(idxDict,'ncls')
+        RD_model=self.fetchIndex(idxDict,'rdls')
+        MCORR_model=self.fetchIndex(idxDict,'mcorr')
         SED_model=None
         VOS_model=None
-        CLSVOF_model = self.fetch(idxDict,'clsvof')
-        if(self.fetch(idxDict,'rans3p') is not None):
-            V_model = self.fetch(idxDict,'rans3p')
-        elif(self.fetch(idxDict,'rans2p') is not None):
-            V_model = self.fetch(idxDict,'rans2p')
+        CLSVOF_model = self.fetchIndex(idxDict,'clsvof')
+        if(self.fetchIndex(idxDict,'rans3p') is not None):
+            V_model = self.fetchIndex(idxDict,'rans3p')
+        elif(self.fetchIndex(idxDict,'rans2p') is not None):
+            V_model = self.fetchIndex(idxDict,'rans2p')
         else:
             raise ValueError("Kappa model: RANS2P or RANS3P model has not been defined. Please define either one (but not both)")
-        PINC_model = self.fetch(idxDict,'pressureIncrement')
-        PRESSURE_model = self.fetch(idxDict,'pressure')
-        K_model = self.fetch(idxDict,'kappa')
-        DISS_model = self.fetch(idxDict,'dissipation')
+        PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
+        PRESSURE_model = self.fetchIndex(idxDict,'pressure')
+        K_model = self.fetchIndex(idxDict,'kappa')
+        DISS_model = self.fetchIndex(idxDict,'dissipation')
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.VOS_model = VOS_model
@@ -1065,23 +1063,23 @@ class ParametersModelDissipation(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        VOF_model = self.fetch(idxDict,'vof')
-        LS_model = self.fetch(idxDict,'ncls')
-        RD_model = self.fetch(idxDict,'rdls')
-        MCORR_model = self.fetch(idxDict,'mcorr')
+        VOF_model = self.fetchIndex(idxDict,'vof')
+        LS_model = self.fetchIndex(idxDict,'ncls')
+        RD_model = self.fetchIndex(idxDict,'rdls')
+        MCORR_model = self.fetchIndex(idxDict,'mcorr')
         SED_model = None
         VOS_model = None
-        CLSVOF_model = self.fetch(idxDict,'clsvof')
-        if(self.fetch(idxDict,'rans3p') is not None):
-            V_model = self.fetch(idxDict,'rans3p')
-        elif(self.fetch(idxDict,'rans2p') is not None):
-            V_model = self.fetch(idxDict,'rans2p')
+        CLSVOF_model = self.fetchIndex(idxDict,'clsvof')
+        if(self.fetchIndex(idxDict,'rans3p') is not None):
+            V_model = self.fetchIndex(idxDict,'rans3p')
+        elif(self.fetchIndex(idxDict,'rans2p') is not None):
+            V_model = self.fetchIndex(idxDict,'rans2p')
         else:
             raise ValueError("Dissipation model: RANS2P or RANS3P model has not been defined. Please define either one (but not both)")
-        PINC_model = self.fetch(idxDict,'pressureIncrement')
-        PRESSURE_model = self.fetch(idxDict,'pressure')
-        K_model = self.fetch(idxDict,'kappa')
-        DISS_model = self.fetch(idxDict,'dissipation')
+        PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
+        PRESSURE_model = self.fetchIndex(idxDict,'pressure')
+        K_model = self.fetchIndex(idxDict,'kappa')
+        DISS_model = self.fetchIndex(idxDict,'dissipation')
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.VOS_modelIndex = VOS_model
@@ -1148,9 +1146,8 @@ class ParametersModelDissipation(ParametersModelBase):
 
 
 class ParametersModelCLSVOF(ParametersModelBase):
-    def __init__(self, Problem):
-        super(ParametersModelCLSVOF, self).__init__(name='clsvof', index=None,
-                                                    Problem=Problem)
+    def __init__(self):
+        super(ParametersModelCLSVOF, self).__init__(name='clsvof')
         self.p.coefficients = CLSVOF.Coefficients(
             initialize=False,
             useMetrics=1,
@@ -1189,11 +1186,11 @@ class ParametersModelCLSVOF(ParametersModelBase):
         # MODEL INDEXING
 
         idxDict = self._Problem.modelIdxDict
-        CLSVOF_model = self.fetch(idxDict,'clsvof')
-        V_model = self.fetch(idxDict,'rans2p')
+        CLSVOF_model = self.fetchIndex(idxDict,'clsvof')
+        V_model = self.fetchIndex(idxDict,'rans2p')
 
         if V_model is None:
-            V_model = self.fetch(idxDict,'rans3p')
+            V_model = self.fetchIndex(idxDict,'rans3p')
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.flowModelIndex = V_model
@@ -1694,12 +1691,12 @@ class ParametersModelAddedMass(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
         idxDict = self._Problem.modelIdxDict
-        if self.fetch(idxDict,'rans2p') is not None:
-            V_model = self.fetch(idxDict,'rans2p')
-        elif self.fetch(idxDict,'rans3p') is not None:
-            V_model = self.fetch(idxDict,'rans3p')
+        if self.fetchIndex(idxDict,'rans2p') is not None:
+            V_model = self.fetchIndex(idxDict,'rans2p')
+        elif self.fetchIndex(idxDict,'rans3p') is not None:
+            V_model = self.fetchIndex(idxDict,'rans3p')
         else:
-            assert self.fetch(idxDict,'rans2p') is not None or self.fetch(idxDict,'rans3p') is not None, 'RANS2P or RANS3PF must be used with addedMass'
+            assert self.fetchIndex(idxDict,'rans2p') is not None or self.fetchIndex(idxDict,'rans3p') is not None, 'RANS2P or RANS3PF must be used with addedMass'
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.flowModelIndex = V_model
@@ -1875,14 +1872,14 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         smTypes[:, 1] = 0.3
         # MODEL INDEXING
         idxDict = self._Problem.modelIdxDict
-        ME_model = self.fetch(idxDict,'moveMeshElastic')
+        ME_model = self.fetchIndex(idxDict,'moveMeshElastic')
         assert ME_model is not None, 'vof model index was not set!'
-        if self.fetch(idxDict,'rans2p') is not None:
-            V_model = self.fetch(idxDict,'rans2p')
-        elif self.fetch(idxDict,'rans3p') is not None:
-            V_model = self.fetch(idxDict,'rans3p')
+        if self.fetchIndex(idxDict,'rans2p') is not None:
+            V_model = self.fetchIndex(idxDict,'rans2p')
+        elif self.fetchIndex(idxDict,'rans3p') is not None:
+            V_model = self.fetchIndex(idxDict,'rans3p')
         else:
-            assert self.fetch(idxDict,'rans2p') is not None or self.fetch(idxDict,'rans3p') is not None, 'RANS2P or RANS3PF must be used with VOF'
+            assert self.fetchIndex(idxDict,'rans2p') is not None or self.fetchIndex(idxDict,'rans3p') is not None, 'RANS2P or RANS3PF must be used with VOF'
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.flowModelIndex = V_model
