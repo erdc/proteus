@@ -79,6 +79,7 @@ class TestSWFlow(object):
         os.system("parun --SWEs --path " + self.path + " "
                   "-l1 -v transcritical_bump.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("transcritical_bump")
+
     def test_obstacle_flow(self):
         os.system("parun --SWEs --path " + self.path + " "
                   "-l1 -v obstacle_flow.py -C 'he=4.0 final_time=0.1 dt_output=0.1'")

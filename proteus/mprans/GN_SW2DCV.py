@@ -1437,6 +1437,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                             n=n,N=N,nghosts=nghosts,
                                             subdomain2global=subdomain2global)
         self.par_ML.scatter_forward_insert()
+        #
         self.dataStructuresInitialized = True
     #
 

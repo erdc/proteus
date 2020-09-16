@@ -19,19 +19,11 @@ This is a simple benchmark of a solitary wave propagating over a flat bottom.
 
 opts = Context.Options([
     ('sw_model', 1, "sw_model = {0,1} for {SWEs, Disperisve SWEs}}"),
-<<<<<<< HEAD
-    ("final_time", 4.0, "Final time for simulation"),
-    ("dt_output", 0.1, "Time interval to output solution"),
-    ("cfl", 0.25, "Desired CFL restriction"),
-    ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs", False, "Use reflecting BCs"),
-=======
     ("final_time", 5.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
     ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
->>>>>>> upstream/master
     ("structured", True, "Structured or unstructured mesh"),
     ("he", 0.1, "Mesh size for unstructured mesh")
 ])

@@ -238,6 +238,7 @@ public:
       cfly = fabs(v - c) / elementDiameter;
     cfl = sqrt(cflx * cflx + cfly * cfly); // hack, conservative estimate
   }
+
   void convexLimiting(arguments_dict &args) {
     double dt = args.m_dscalar["dt"];
     int NNZ = args.m_iscalar["NNZ"];
@@ -861,6 +862,7 @@ public:
     double run_cfl = args.m_dscalar["run_cfl"];
     xt::pyarray<double> &edge_based_cfl = args.m_darray["edge_based_cfl"];
     int debug = args.m_iscalar["debug"];
+
     double max_edge_based_cfl = 0.;
     int ij = 0;
     for (int i = 0; i < numDOFsPerEqn; i++) {
@@ -1436,11 +1438,6 @@ public:
           hyp_flux_hbeta(numDOFsPerEqn), psi(numDOFsPerEqn),
           etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
 
-      // For dij_small
-      double dij_small = 0.0;
-      // speed = sqrt(g max(h_0)), I divide by h_epsilon to get max(h_0) -EJT
-      double speed = std::sqrt(g * hEps / 1E-5);
-
       for (int i = 0; i < numDOFsPerEqn; i++) {
 
         // solution at time tn for the ith DOF
@@ -1604,10 +1601,6 @@ public:
           // FOR SMOOTHNESS INDICATOR //
           alpha_numerator += hj - hi;
           alpha_denominator += fabs(hj - hi);
-
-          // define dij_small in j loop
-          double x = fabs(Cx[ij]) + fabs(Cy[ij]);
-          dij_small = fmax(dij_small, x * speed);
 
           // update ij
           ij += 1;
@@ -1866,11 +1859,6 @@ public:
                                      global_entropy_residual[j]);
             dHij = fmin(dLowij, dEVij);
             muHij = fmin(muLowij, dEVij);
-            // dHij = dLowij *
-            //        fmax(global_entropy_residual[i],
-            //        global_entropy_residual[j]);
-            // muHij = muLowij * fmax(global_entropy_residual[i],
-            //                        global_entropy_residual[j]);
 
             // compute dij_minus_muij times star solution terms
             // see: eqn (6.13)
