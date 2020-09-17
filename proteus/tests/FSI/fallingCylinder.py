@@ -36,10 +36,10 @@ context_options += [
 context_options += [
     ("T", 1., "Simulation time in s"),
     ("dt_init", 0.001 ,"Value of initial time step"),
-    ("dt_fixed", 0.5, "Value of maximum time step"),
+    ("dt_fixed", 0.005, "Value of maximum time step"),
     ("archiveAllSteps", False, "archive every steps"),
-    ("dt_output", 1., "number of saves per second"),
-    ("cfl", 0.9 , "Target CFL value"),
+    ("dt_output", 0.005, "number of saves per second"),
+    ("cfl", 0.1 , "Target CFL value"),
     ]
 # mesh options
 context_options += [
@@ -220,6 +220,7 @@ myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(
     initialConditions=initialConditions,
     boundaryConditions=None, # set with SpatialTools,
     useSuperlu=True,
+    useExact=True
 )
 
 # line below needed for relaxation zones
@@ -256,6 +257,7 @@ m.rans2p.auxiliaryVariables += [system]
 # m.rans2p.p.coefficients.particle_epsFact = 1.5
 m.rans2p.p.coefficients.use_ball_as_particle = opts.use_ball_as_particle
 m.rans2p.p.coefficients.nParticles = 1
+m.rans2p.n.conservativeFlux=None
 #m.rans2p.p.coefficients.particle_alpha = 1000.
 #m.rans2p.p.coefficients.particle_beta = 1000.
 #m.rans2p.p.coefficients.particle_penalty_constant = 100.

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from GN_sw_p import *
+from proteus.Transport import Comm
 
 # *********************************************** #
 # ********** Read from mySWFlowProblem ********** #
@@ -47,13 +48,14 @@ femSpaces = {0: FESpace['basis'],
              1: FESpace['basis'],
              2: FESpace['basis'],
              3: FESpace['basis'],
-             4: FESpace['basis']}
+             4: FESpace['basis'],
+             5: FESpace['basis']}
 
 # ************************************** #
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
 multilevelNonlinearSolver = Newton
-fullNewtonFlag = False  # NOTE: False just if the method is explicit
+fullNewtonFlag = False  #NOTE: False just if the method is explicit
 if (LUMPED_MASS_MATRIX == 1):
     levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 else:
@@ -72,7 +74,12 @@ numericalFluxType = GN_SW2DCV.NumericalFlux
 # ************************************ #
 matrix = SparseMatrix
 multilevelLinearSolver = LU
-levelLinearSolver =  LU  #KSP_petsc4py
+levelLinearSolver = LU
+# change solver for parallel runs
+comm = Comm.get()
+if comm.size() > 1:
+    levelLinearSolver = KSP_petsc4py
+    multilevelLinearSolver = KSP_petsc4py
 levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r-true'
 

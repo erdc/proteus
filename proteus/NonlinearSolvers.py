@@ -472,7 +472,7 @@ class Newton(NonlinearSolver):
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None,linear=False):
-        r""" Solves the non-linear system :math:`F(u) = b`.
+        """ Solves the non-linear system :math:`F(u) = b`.
 
         Parameters
         ----------
@@ -761,19 +761,18 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         ############################
         logEvent("   FCT Step/Convex Limiting", level=1)
         self.F.FCTStep()
+        if par_u is not None:
+            par_u.scatter_forward_insert()
 
         #############################################
         # UPDATE SOLUTION THROUGH calculateResidual #
         #############################################
         self.F.secondCallCalculateResidual = 1
         self.computeResidual(u,r,b)
+        if par_u is not None:
+            par_u.scatter_forward_insert()
+        self.F.check_positivity_water_height = True
 
-        self.F.check_positivity_water_height=True
-
-        # Compute infinity norm of vel-x. This is for 1D well balancing test
-        #exact_hu = 2 + 0.*self.F.u[1].dof
-        #error = numpy.abs(exact_hu - self.F.u[1].dof).max()
-        #self.F.inf_norm_hu.append(error)
 
 class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
     """
@@ -789,6 +788,9 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.secondCallCalculateResidual = 0
         logEvent(" Entropy viscosity solution with consistent mass matrix", level=1)
         Newton.solve(self,u,r,b,par_u,par_r,linear=True)
+        if par_u is not None:
+            par_u.scatter_forward_insert()
+
         ############################
         # FCT STEP ON WATER HEIGHT #
         ############################
@@ -800,7 +802,9 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         # DISTRIBUTE SOLUTION FROM u to u[ci].dof
         self.F.secondCallCalculateResidual = 1
         self.computeResidual(u,r,b)
-        self.F.check_positivity_water_height=True
+        if par_u is not None:
+            par_u.scatter_forward_insert()
+        self.F.check_positivity_water_height = True
 
 class ExplicitLumpedMassMatrix(Newton):
     """

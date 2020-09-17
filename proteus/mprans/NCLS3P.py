@@ -20,6 +20,7 @@ from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 from . import cNCLS3P
+from . import cArgumentsDict
 
 
 class SubgridError(proteus.SubgridError.SGE_base):
@@ -841,72 +842,70 @@ class LevelModel(OneLevelTransport):
             self.uTilde_dof[:] = self.u[0].dof
             self.auxTaylorGalerkinFlag=0
 
-        self.ncls3p.calculateResidual(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.nodeVelocityArray,
-            self.MOVING_DOMAIN,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.timeIntegration.alpha_bdf,  # mwf was self.timeIntegration.dt,
-            self.shockCapturing.lag,
-            self.shockCapturing.shockCapturingFactor,
-            self.coefficients.sc_uref,
-            self.coefficients.sc_beta,
-            self.u[0].femSpace.dofMap.l2g,
-            self.mesh.elementDiametersArray,
-            self.u[0].dof,
-            self.u_dof_old,
-            self.coefficients.q_v,
-            self.timeIntegration.m_tmp[0],
-            self.q[('u', 0)],
-            self.q[('grad(u)', 0)],
-            self.q[('dH_sge', 0, 0)],
-            # mwf was self.timeIntegration.m_last[0],
-            self.timeIntegration.beta_bdf[0],
-            self.q['dV'],
-            self.q['dV_last'],
-            self.q[('cfl', 0)],
-            self.shockCapturing.numDiff[0],
-            self.shockCapturing.numDiff_last[0],
-            self.offset[0], self.stride[0],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.coefficients.ebqe_v,
-            self.numericalFlux.isDOFBoundary[0],
-            #self.coefficients.rdModel.ebqe[('u', 0)],
-            self.coefficients.rdModel_ebqe,
-            self.numericalFlux.ebqe[('u', 0)],
-            self.ebqe[('u', 0)],
-            self.cell_interface_locator,
-            self.interface_locator,            
-            self.coefficients.EXPLICIT_METHOD,
-            self.u[0].femSpace.order,
-            self.stage,
-            self.uTilde_dof,
-            self.timeIntegration.dt,
-            self.coefficients.PURE_BDF)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+        argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
+        argsDict["lag_shockCapturing"] = self.shockCapturing.lag
+        argsDict["shockCapturingDiffusion"] = self.shockCapturing.shockCapturingFactor
+        argsDict["sc_uref"] = self.coefficients.sc_uref
+        argsDict["sc_alpha"] = self.coefficients.sc_beta
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.mesh.elementDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["u_dof_old"] = self.u_dof_old
+        argsDict["velocity"] = self.coefficients.q_v
+        argsDict["q_m"] = self.timeIntegration.m_tmp[0]
+        argsDict["q_u"] = self.q[('u', 0)]
+        argsDict["q_n"] = self.q[('grad(u)', 0)]
+        argsDict["q_dH"] = self.q[('dH_sge', 0, 0)]
+        argsDict["q_m_betaBDF"] = self.timeIntegration.beta_bdf[0]
+        argsDict["q_dV"] = self.q['dV']
+        argsDict["q_dV_last"] = self.q['dV_last']
+        argsDict["cfl"] = self.q[('cfl', 0)]
+        argsDict["q_numDiff_u"] = self.shockCapturing.numDiff[0]
+        argsDict["q_numDiff_u_last"] = self.shockCapturing.numDiff_last[0]
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["ebqe_velocity_ext"] = self.coefficients.ebqe_v
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["ebqe_rd_u_ext"] = self.coefficients.rdModel_ebqe
+        argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u', 0)]
+        argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+        argsDict["cell_interface_locator"] = self.cell_interface_locator
+        argsDict["interface_locator"] = self.interface_locator
+        argsDict["EXPLICIT_METHOD"] = self.coefficients.EXPLICIT_METHOD
+        argsDict["degree_polynomial"] = float(self.u[0].femSpace.order)
+        argsDict["stage"] = self.stage
+        argsDict["uTilde_dof"] = self.uTilde_dof
+        argsDict["dt"] = self.timeIntegration.dt
+        argsDict["PURE_BDF"] = self.coefficients.PURE_BDF
+        self.ncls3p.calculateResidual(argsDict)
 
         #if self.coefficients.EXPLICIT_METHOD:
         #    self.taylorGalerkinStage = 2
@@ -940,55 +939,54 @@ class LevelModel(OneLevelTransport):
         # cNCLS3P.calculateJacobian(self.mesh.nElements_global,
 
         (rowptr, colind, globalJacobian) = jacobian.getCSRrepresentation()
-        self.ncls3p.calculateJacobian(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.nodeVelocityArray,
-            self.MOVING_DOMAIN,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.timeIntegration.alpha_bdf,  # mwf was dt
-            self.shockCapturing.lag,
-            self.shockCapturing.shockCapturingFactor,
-            self.u[0].femSpace.dofMap.l2g,
-            self.mesh.elementDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_v,
-            # mwf was self.timeIntegration.m_last[0],
-            self.timeIntegration.beta_bdf[0],
-            self.q[('cfl', 0)],
-            self.shockCapturing.numDiff_last[0],
-            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
-            globalJacobian,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.coefficients.ebqe_v,
-            self.numericalFlux.isDOFBoundary[0],
-            #self.coefficients.rdModel.ebqe[('u', 0)],
-            self.coefficients.rdModel_ebqe,
-            self.numericalFlux.ebqe[('u', 0)],
-            self.csrColumnOffsets_eb[(0, 0)],
-            self.coefficients.EXPLICIT_METHOD,
-            self.coefficients.PURE_BDF)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+        argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["useMetrics"] = self.coefficients.useMetrics
+        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
+        argsDict["lag_shockCapturing"] = self.shockCapturing.lag
+        argsDict["shockCapturingDiffusion"] = self.shockCapturing.shockCapturingFactor
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["elementDiameter"] = self.mesh.elementDiametersArray
+        argsDict["u_dof"] = self.u[0].dof
+        argsDict["velocity"] = self.coefficients.q_v
+        argsDict["q_m_betaBDF"] = self.timeIntegration.beta_bdf[0]
+        argsDict["cfl"] = self.q[('cfl', 0)]
+        argsDict["q_numDiff_u_last"] = self.shockCapturing.numDiff_last[0]
+        argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0, 0)]
+        argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0, 0)]
+        argsDict["globalJacobian"] = globalJacobian
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["ebqe_velocity_ext"] = self.coefficients.ebqe_v
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["ebqe_rd_u_ext"] = self.coefficients.rdModel_ebqe
+        argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u', 0)]
+        argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0, 0)]
+        argsDict["EXPLICIT_METHOD"] = self.coefficients.EXPLICIT_METHOD
+        argsDict["PURE_BDF"] = self.coefficients.PURE_BDF
+        self.ncls3p.calculateJacobian(argsDict)
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
@@ -1088,62 +1086,61 @@ class LevelModel(OneLevelTransport):
             self.waterline_npoints = np.zeros((1,), 'i')
             self.waterline_data = np.zeros(
                 (self.mesh.nExteriorElementBoundaries_global, self.nSpace_global), 'd')
-            self.ncls3p.calculateWaterline(  # element
-                self.waterline_npoints,
-                self.waterline_data,
-                self.u[0].femSpace.elementMaps.psi,
-                self.u[0].femSpace.elementMaps.grad_psi,
-                self.mesh.nodeArray,
-                self.mesh.nodeVelocityArray,
-                self.MOVING_DOMAIN,
-                self.mesh.elementNodesArray,
-                self.elementQuadratureWeights[('u', 0)],
-                self.u[0].femSpace.psi,
-                self.u[0].femSpace.grad_psi,
-                self.u[0].femSpace.psi,
-                self.u[0].femSpace.grad_psi,
-                # element boundary
-                self.u[0].femSpace.elementMaps.psi_trace,
-                self.u[0].femSpace.elementMaps.grad_psi_trace,
-                self.elementBoundaryQuadratureWeights[('u', 0)],
-                self.u[0].femSpace.psi_trace,
-                self.u[0].femSpace.grad_psi_trace,
-                self.u[0].femSpace.psi_trace,
-                self.u[0].femSpace.grad_psi_trace,
-                self.u[0].femSpace.elementMaps.boundaryNormals,
-                self.u[0].femSpace.elementMaps.boundaryJacobians,
-                # physics
-                self.mesh.nElements_global,
-                self.coefficients.useMetrics,
-                self.timeIntegration.alpha_bdf,  # mwf was self.timeIntegration.dt,
-                self.shockCapturing.lag,
-                self.shockCapturing.shockCapturingFactor,
-                self.coefficients.sc_uref,
-                self.coefficients.sc_beta,
-                self.u[0].femSpace.dofMap.l2g,
-                self.mesh.elementDiametersArray,
-                self.u[0].dof,
-                self.u_dof_old,
-                self.coefficients.q_v,
-                self.timeIntegration.m_tmp[0],
-                self.q[('u', 0)],
-                self.q[('grad(u)', 0)],
-                self.q[('dH_sge', 0, 0)],
-                # mwf was self.timeIntegration.m_last[0],
-                self.timeIntegration.beta_bdf[0],
-                self.q[('cfl', 0)],
-                self.shockCapturing.numDiff[0],
-                self.shockCapturing.numDiff_last[0],
-                self.offset[0], self.stride[0],
-                self.mesh.nExteriorElementBoundaries_global,
-                self.mesh.exteriorElementBoundariesArray,
-                self.mesh.elementBoundaryElementsArray,
-                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                self.mesh.elementBoundaryMaterialTypes,
-                self.coefficients.ebqe_v,
-                self.numericalFlux.isDOFBoundary[0],
-                self.numericalFlux.ebqe[('u', 0)],
-                self.ebqe[('u', 0)])
+            argsDict = cArgumentsDict.ArgumentsDict()
+            argsDict["wlc"] = self.waterline_npoints
+            argsDict["waterline"] = self.waterline_data
+            argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+            argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+            argsDict["mesh_dof"] = self.mesh.nodeArray
+            argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+            argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+            argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+            argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
+            argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+            argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+            argsDict["u_test_ref"] = self.u[0].femSpace.psi
+            argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+            argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+            argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+            argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
+            argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+            argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+            argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+            argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+            argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+            argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+            argsDict["nElements_global"] = self.mesh.nElements_global
+            argsDict["useMetrics"] = self.coefficients.useMetrics
+            argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
+            argsDict["lag_shockCapturing"] = self.shockCapturing.lag
+            argsDict["shockCapturingDiffusion"] = self.shockCapturing.shockCapturingFactor
+            argsDict["sc_uref"] = self.coefficients.sc_uref
+            argsDict["sc_alpha"] = self.coefficients.sc_beta
+            argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+            argsDict["elementDiameter"] = self.mesh.elementDiametersArray
+            argsDict["u_dof"] = self.u[0].dof
+            argsDict["u_dof_old"] = self.u_dof_old
+            argsDict["velocity"] = self.coefficients.q_v
+            argsDict["q_m"] = self.timeIntegration.m_tmp[0]
+            argsDict["q_u"] = self.q[('u', 0)]
+            argsDict["q_n"] = self.q[('grad(u)', 0)]
+            argsDict["q_dH"] = self.q[('dH_sge', 0, 0)]
+            argsDict["q_m_betaBDF"] = self.timeIntegration.beta_bdf[0]
+            argsDict["cfl"] = self.q[('cfl', 0)]
+            argsDict["q_numDiff_u"] = self.shockCapturing.numDiff[0]
+            argsDict["q_numDiff_u_last"] = self.shockCapturing.numDiff_last[0]
+            argsDict["offset_u"] = self.offset[0]
+            argsDict["stride_u"] = self.stride[0]
+            argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+            argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+            argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+            argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+            argsDict["elementBoundaryMaterialTypes"] = self.mesh.elementBoundaryMaterialTypes
+            argsDict["ebqe_velocity_ext"] = self.coefficients.ebqe_v
+            argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[0]
+            argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u', 0)]
+            argsDict["ebqe_u"] = self.ebqe[('u', 0)]
+            self.ncls3p.calculateWaterline(argsDict)
             from proteus import Comm
             comm = Comm.get()
             filename = os.path.join(self.coefficients.opts.dataDir,

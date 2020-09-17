@@ -2,10 +2,9 @@ from __future__ import division
 from builtins import object
 from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
-from proteus.Domain import RectangularDomain
+from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
-from proteus import (Domain, Context,
-                     MeshTools as mt)
+from proteus import (Domain, Context, MeshTools as mt)
 from proteus.Profiling import logEvent
 from proteus.Gauges import PointGauges
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
@@ -23,7 +22,9 @@ opts = Context.Options([
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.33, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs",False,"Use reflecting BCs")
+    ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
+    ("structured", True, "Structured or unstructured mesh"),
+    ("he", 0.1, "Mesh size for unstructured mesh")
 ])
 
 ###################
@@ -31,7 +32,7 @@ opts = Context.Options([
 ###################
 L = (30.0, 25.0)  # this is length in x direction and y direction
 refinement = opts.refinement
-domain = RectangularDomain(L=L)
+rectangle = RectangularDomain(L=L)
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -39,6 +40,14 @@ nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 2) + 1
 he = old_div(L[0], float(nnx - 1))
 triangleOptions = "pAq30Dena%f"  % (0.5 * he**2,)
+if opts.structured:
+    domain = rectangle
+else:
+    rectangle.writePoly("well_balancing")
+    domain = PlanarStraightLineGraphDomain(fileprefix="well_balancing")
+    domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
+    nnx = None
+    nny = None
 
 ###############################
 #  CONSTANTS NEEDED FOR SETUP #
@@ -102,12 +111,12 @@ Y_coords = (0.0, 25.0)  # this is y domain, used in BCs
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0] or X[0] == X_coords[1]:
-        return lambda X, t: 0.0
+        return lambda x, t: 0.0
 
 
 def y_mom_DBC(X, flag):
     if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
-        return lambda X, t: 0.0
+        return lambda x, t: 0.0
 
 
 # ********************************** #
@@ -125,7 +134,7 @@ boundaryConditions = {'water_height': lambda x, flag: None,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
                       'h_times_w': lambda x, flag: None}
-analyticalSolutions = {'h_exact': water_height_at_t0(),
+analytical_Solution = {'h_exact': water_height_at_t0(),
                      'hu_exact': x_mom_at_t0(),
                      'hv_exact': y_mom_at_t0(),
                      'heta_exact': heta_at_t0(),
@@ -136,7 +145,7 @@ analyticalSolutions = {'h_exact': water_height_at_t0(),
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
                                               outputStepping=outputStepping,
-                                              structured=True,
+                                              structured=opts.structured,
                                               he=he,
                                               nnx=nnx,
                                               nny=nny,
@@ -145,6 +154,6 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               boundaryConditions=boundaryConditions,
                                               reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function,
-                                              analyticalSolution=analyticalSolutions)
+                                              analyticalSolution=analytical_Solution)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0

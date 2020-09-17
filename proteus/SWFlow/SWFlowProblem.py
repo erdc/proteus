@@ -84,22 +84,24 @@ class SWFlowProblem:
         self.GN_swe_parameters = default_GN_swe_parameters
 
     def assert_initialConditions(self, sw_model, initialConditions):
-        assert 'water_height' in initialConditions, 'Provide water_height in ICs'
-        assert 'x_mom' in initialConditions, 'Provide y_mom in ICs'
-        assert 'y_mom' in initialConditions, 'Provide x_mom in ICs'
+        assert 'water_height' in initialConditions, 'Provide water_height in initialConditions'
+        assert 'x_mom' in initialConditions, 'Provide y_mom in initialConditions'
+        assert 'y_mom' in initialConditions, 'Provide x_mom in initialConditions'
         if sw_model == 1:  # dispersive SWEs
-            assert 'h_times_eta' in initialConditions, 'Provide auxiliary function h*eta in ICs'
-            assert 'h_times_w' in initialConditions, 'Provide auxiliary function h*w in ICs'
+            assert 'h_times_eta' in initialConditions, 'Provide auxiliary function h_eta in initialConditions'
+            assert 'h_times_w' in initialConditions, 'Provide auxiliary function h_w in initialConditions'
+            assert 'h_times_beta' in initialConditions, 'Provide auxiliary function h_beta in initialConditions'
     #
 
     def assert_boundaryConditions(self, sw_model, boundaryConditions):
         # check dirichlet BCs
         assert 'water_height' in boundaryConditions, 'Provide water_height in BCs'
-        assert 'x_mom' in boundaryConditions, 'Provide y_mom in BCs'
-        assert 'y_mom' in boundaryConditions, 'Provide x_mom in BCs'
+        assert 'x_mom' in boundaryConditions, 'Provide x_mom in BCs'
+        assert 'y_mom' in boundaryConditions, 'Provide y_mom in BCs'
         if sw_model == 1:  # dispersive SWEs
-            assert 'h_times_eta' in boundaryConditions, 'Provide auxiliary function h*eta in BCs'
-            assert 'h_times_w' in boundaryConditions, 'Provide auxiliary function h*w in BCs'
+            assert 'h_times_eta' in boundaryConditions, 'Provide auxiliary variable h_eta in BCs'
+            assert 'h_times_w' in boundaryConditions, 'Provide auxiliary variable h_w in BCs'
+            assert 'h_times_beta' in boundaryConditions, 'Provide auxiliary variable h_beta in BCs'
 
 
 class OutputStepping:

@@ -761,7 +761,7 @@ class Advection_DiagonalUpwind_Diffusion_SIPG(Advection_DiagonalUpwind_Diffusion
         Advection_DiagonalUpwind_Diffusion_IIPG.__init__(self,vt,getPointwiseBoundaryConditions,
                                                          getAdvectiveFluxBoundaryConditions,
                                                          getDiffusiveFluxBoundaryConditions)
-        self.penalty_constant = 10.0
+        self.penalty_constant = 100.0
         self.includeBoundaryAdjoint=True
         self.boundaryAdjoint_sigma=1.0
 
@@ -807,7 +807,11 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
             for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
                                     list(self.DOFBoundaryConditionsDictList[ci].values()),
                                     list(self.DOFBoundaryPointDictList[ci].values())):
-                self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+                try:
+                    self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t, numpy.array(self.vt.ebqe['n'][ebNE,k]))
+                except:
+                    self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+
         for ci in range(self.nc):
             for bci in list(self.periodicBoundaryConditionsDictList[ci].values()):
                 self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
@@ -1233,7 +1237,7 @@ class Advection_DiagonalUpwind_Diffusion_SIPG_exterior(Advection_DiagonalUpwind_
                                                                   getPointwiseBoundaryConditions,
                                                                   getAdvectiveFluxBoundaryConditions,
                                                                   getDiffusiveFluxBoundaryConditions)
-        self.penalty_constant = 10.0
+        self.penalty_constant = 100.0
         self.includeBoundaryAdjoint=True
         self.boundaryAdjoint_sigma=1.0
 
@@ -1803,15 +1807,8 @@ class NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                 for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
                                         list(self.DOFBoundaryConditionsDictList[ci].values()),
                                         list(self.DOFBoundaryPointDictList[ci].values())):
-                    self.ebqe[('u',ci)][ebNE,k]=g(x, self.vt.timeIntegration.t, self.vt.ebqe['n'][ebNE,k])
-                    #print("used normal ",self.vt.ebqe['n'][ebNE,k])
+                    self.ebqe[('u',ci)][ebNE,k]=g(x, self.vt.timeIntegration.t, numpy.array(self.vt.ebqe['n'][ebNE,k]))
             except:
-                #Exception as inst:
-                #print(type(inst))    # the exception instance
-                #print(inst.args)     # arguments stored in .args
-                #print(inst)
-                #import pdb
-                #pdb.set_trace()
                 self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
                 for (ebNE,k),g,x in zip(list(self.DOFBoundaryConditionsDictList[ci].keys()),
                                         list(self.DOFBoundaryConditionsDictList[ci].values()),

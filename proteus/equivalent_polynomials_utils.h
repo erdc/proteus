@@ -60,6 +60,61 @@ namespace equivalent_polynomials
         level_set_normal[I] =0.0;
   }
 
+  inline void _calculate_normal_quad(double* phys_nodes_cut_quad_01,
+				     double* phys_nodes_cut_quad_02,
+				     double* phys_nodes_cut_quad_31,
+				     double* phys_nodes_cut_quad_32,
+				     double* level_set_normal)
+  {
+    const unsigned int nSpace(3);
+    double level_set_tangent_a[3], level_set_tangent_b[3],level_set_normal_2[3];
+    for(unsigned int I=0; I < nSpace; I++)
+      {
+        level_set_tangent_a[I] = phys_nodes_cut_quad_02[I] - phys_nodes_cut_quad_01[I];
+        level_set_tangent_b[I] = phys_nodes_cut_quad_32[I] - phys_nodes_cut_quad_01[I];
+      }
+    level_set_normal[0] =   level_set_tangent_a[1]*level_set_tangent_b[2]
+      - level_set_tangent_a[2]*level_set_tangent_b[1];
+    level_set_normal[1] = - level_set_tangent_a[0]*level_set_tangent_b[2]
+      + level_set_tangent_a[2]*level_set_tangent_b[0];
+    level_set_normal[2] =   level_set_tangent_a[0]*level_set_tangent_b[1]
+      - level_set_tangent_a[1]*level_set_tangent_b[0];
+    double norm = std::sqrt(level_set_normal[0]*level_set_normal[0] +
+                            level_set_normal[1]*level_set_normal[1] +
+                            level_set_normal[2]*level_set_normal[2]);
+    if (norm > 0.0)
+      for(unsigned int I=0; I < nSpace; I++)
+        level_set_normal[I] /=  norm;
+    else
+      for(unsigned int I=0; I < nSpace; I++)
+        level_set_normal[I] =0.0;
+    for(unsigned int I=0; I < nSpace; I++)
+      {
+        level_set_tangent_a[I] = phys_nodes_cut_quad_32[I] - phys_nodes_cut_quad_01[I];
+        level_set_tangent_b[I] = phys_nodes_cut_quad_31[I] - phys_nodes_cut_quad_01[I];
+      }
+    level_set_normal_2[0] =   level_set_tangent_a[1]*level_set_tangent_b[2]
+      - level_set_tangent_a[2]*level_set_tangent_b[1];
+    level_set_normal_2[1] = - level_set_tangent_a[0]*level_set_tangent_b[2]
+      + level_set_tangent_a[2]*level_set_tangent_b[0];
+    level_set_normal_2[2] =   level_set_tangent_a[0]*level_set_tangent_b[1]
+      - level_set_tangent_a[1]*level_set_tangent_b[0];
+    norm = std::sqrt(level_set_normal_2[0]*level_set_normal_2[0] +
+		     level_set_normal_2[1]*level_set_normal_2[1] +
+		     level_set_normal_2[2]*level_set_normal_2[2]);
+    if (norm > 0.0)
+      {
+	for(unsigned int I=0; I < nSpace; I++)
+	  level_set_normal_2[I] /=  norm;
+	double coplanarity_error=1.0;
+	for(unsigned int I=0; I < nSpace; I++)
+	  coplanarity_error -= level_set_normal[I]*level_set_normal_2[I];
+	assert(coplanarity_error < 1.0e-12);
+	for(unsigned int I=0; I < nSpace; I++)
+	  level_set_normal[I] = 0.5*(level_set_normal[I]+level_set_normal_2[I]);
+      }
+  }
+
   template<int nP>
   inline void _calculate_polynomial_1D(double* xi, double* C_H, double* C_ImH, double* C_D, double& _H, double& _ImH, double& _D)
   {

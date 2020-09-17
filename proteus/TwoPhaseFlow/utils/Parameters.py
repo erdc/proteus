@@ -224,7 +224,7 @@ class ParametersModelBase(FreezableClass):
         # self.n.linearSmoother = None
         # NUMERICAL FLUX
         # self.n.massLumping = False
-        # self.n.conservativeFlux = None
+        self.n.conservativeFlux = None
         # TOLERANCES
         self.n.nl_atol_res = None
         self.n.l_atol_res = None
@@ -315,6 +315,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             epsFact=epsFact,
             eb_penalty_constant=100.,
             particle_epsFact = 3.,
+            useExact=Problem.useExact
         )
         scopts = self.n.ShockCapturingOptions
         scopts.shockCapturingFactor = shockCapturingFactor
@@ -340,7 +341,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         # TOLERANCES
         self.n.linTolFac = 0.01
         self.n.tolFac = 0.
-        self.n.maxNonlinearIts = 50
+        self.n.maxNonlinearIts = 100
         self.n.maxLineSearches = 0
         self._freeze()
 
@@ -362,12 +363,13 @@ class ParametersModelRANS2P(ParametersModelBase):
             porosityTypes = domain.porosityTypes
             dragAlphaTypes = domain.dragAlphaTypes
             dragBetaTypes = domain.dragBetaTypes
-            epsFact_solid = domain.epsFact_solid
+            epsFact_porous = domain.epsFact_porous
         else:
             porosityTypes = None
             dragAlphaTypes = None
             dragBetaTypes = None
             epsFact_solid = None
+            epsFact_porous = None
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.movingDomain = self.p.movingDomain
@@ -912,7 +914,7 @@ class ParametersModelKappa(ParametersModelBase):
         super(ParametersModelKappa, self).__init__(name='kappa', index=None,
                                                     Problem=Problem)
 
-        self.timeOrder = 2
+        self.timeOrder = 1
         self.timeDiscretization = 'be'
         self.p.coefficients = Kappa.Coefficients(
             initialize=False,
@@ -977,12 +979,12 @@ class ParametersModelKappa(ParametersModelBase):
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.VOS_model = VOS_model
-        coeffs.V_model = V_model
-        coeffs.LS_model = LS_model
-        coeffs.RD_model = RD_model
-        coeffs.dissipation_model = K_model
-        coeffs.ME_model = ME_model
-        coeffs.SED_model = SED_model
+        coeffs.flowModelIndex = V_model
+        coeffs.LS_modelIndex = LS_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.dissipation_modelIndex = DISS_model
+        coeffs.modelIndex = K_model
+        coeffs.SED_modelIndex = SED_model
         coeffs.dissipation_model_flag = pparams.useRANS
         coeffs.c_mu = pparams.c_mu
         coeffs.sigma_k = pparams.sigma_k
@@ -1015,14 +1017,9 @@ class ParametersModelKappa(ParametersModelBase):
     def _initializeNumerics(self):
         nd = self._Problem.domain.nd
         # TIME
-        if self.timeDiscretization=='vbdf':
-            self.n.timeIntegration = TimeIntegration.VBDF
-            self.n.timeOrder = 2
-        elif self.timeDiscretization: #backward euler
-            self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
-        else:
-            raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(scheme=self.timeDiscretization))
-        self.n.stepController = StepControl.Min_dt_cfl_controller
+        self.n.timeOrder = 1
+        self.n.timeIntegration = TimeIntegration.VBDF#BackwardEuler
+        self.n.stepController = StepControl.Min_dt_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
@@ -1116,13 +1113,13 @@ class ParametersModelDissipation(ParametersModelBase):
         DISS_model = mparams.dissipation.index
         # COEFFICIENTS
         coeffs = self.p.coefficients
-        coeffs.VOS_model = VOS_model
-        coeffs.V_model = V_model
-        coeffs.LS_model = LS_model
-        coeffs.RD_model = RD_model
-        coeffs.K_model = K_model
-        coeffs.DISS_model = DISS_model
-        coeffs.SED_model = SED_model
+        coeffs.VOS_modelIndex = VOS_model
+        coeffs.flowModelIndex = V_model
+        coeffs.LS_modelIndex = LS_model
+        coeffs.RD_modelIndex = RD_model
+        coeffs.kappa_modelIndex = K_model
+        coeffs.modelIndex = DISS_model
+        coeffs.SED_modelIndex = SED_model
         coeffs.c_mu = pparams.c_mu
         coeffs.c_1 = pparams.c_1
         coeffs.c_2 = pparams.c_2
@@ -1158,15 +1155,9 @@ class ParametersModelDissipation(ParametersModelBase):
     def _initializeNumerics(self):
         nd = self._Problem.domain.nd
         # TIME
-        if self.timeDiscretization == 'vbdf':
-            self.n.timeIntegration = TimeIntegration.VBDF
-            self.n.timeOrder = 2
-        elif self.timeDiscretization:  # backward euler
-            self.n.timeIntegration = TimeIntegration.BackwardEuler_cfl
-        else:
-            raise ValueError("{scheme} scheme is not valid. Accepted schemes values are 'be' and 'vbdf'".format(
-                scheme=self.timeDiscretization))
-        self.n.stepController = StepControl.Min_dt_cfl_controller
+        self.n.timeOrder = 1
+        self.n.timeIntegration = TimeIntegration.BackwardEuler
+        self.n.stepController = StepControl.Min_dt_controller
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
@@ -1442,8 +1433,8 @@ class ParametersModelNCLS(ParametersModelBase):
         BC = self._Problem.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
-                if 'phi_DBC' in BC:
-                    self.p.dirichletConditions = {0: BC['phi_DBC']}
+                if 'ncls_DBC' in BC:
+                    self.p.dirichletConditions = {0: BC['ncls_DBC']}
                 else:
                     self.p.dirichletCondtions = {0: lambda x,t: None}
             else:
@@ -1518,8 +1509,11 @@ class ParametersModelRDLS(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'rdls_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.tolFac = 0.
+        #self.n.maxNonlinearIts = 1
         self.n.maxNonlinearIts = 50
         self.n.maxLineSearches = 0
         # freeze attributes
@@ -1614,6 +1608,8 @@ class ParametersModelMCorr(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'mcorr_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.
@@ -1671,7 +1667,7 @@ class ParametersModelMCorr(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
-
+        
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
         if self._Problem.useSuperlu:
@@ -1710,6 +1706,8 @@ class ParametersModelAddedMass(ParametersModelBase):
         self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
         self.n.linear_solver_options_prefix = 'am_'
         self.n.linearSolverConvergenceTest = 'r-true'
+        #self.n.nonlinearSolverConvergenceTest = 'rits'
+        #self.n.levelNonlinearSolverConvergenceTest = 'rits'
         # TOLERANCES
         self.n.linTolFac = 0.
         self.n.tolFac = 0.
@@ -1770,8 +1768,7 @@ class ParametersModelAddedMass(ParametersModelBase):
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
         else:
             self.OptDB.setValue(prefix+'ksp_type', 'cg')
-            self.OptDB.setValue(prefix+'pc_type', 'hypre')
-            self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+            self.OptDB.setValue(prefix+'pc_type', 'gamg')
             self.OptDB.setValue(prefix+'ksp_max_it', 2000)
 
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
@@ -1851,14 +1848,9 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
-            self.OptDB.setValue(prefix+'ksp_type', 'preonly')
-            self.OptDB.setValue(prefix+'pc_type', 'lu')
-            self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
-        else:
-            self.OptDB.setValue(prefix+'ksp_type', 'cg')
-            self.OptDB.setValue(prefix+'pc_type', 'hypre')
-            self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
+        self.OptDB.setValue(prefix+'ksp_type', 'cg')
+        self.OptDB.setValue(prefix+'pc_type', 'hypre')
+        self.OptDB.setValue(prefix+'pc_hypre_type', 'boomeramg')
         # self.OptDB.setValue(prefix+'ksp_constant_null_space', 1)
         # self.OptDB.setValue(prefix+'pc_factor_shift_type', 'NONZERO')
         # self.OptDB.setValue(prefix+'pc_factor_shift_amount', 1e-10)
@@ -1891,6 +1883,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         self.n.linearSolverConvergenceTest = 'r-true'
         # TOLERANCES
         self.n.tolFac = 0.
+        self.n.linTolFac = 0.
         self.n.maxNonlinearIts = 4
         self.n.maxLineSearches = 0
         # freeze attributes
@@ -1968,7 +1961,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         if self.n.nl_atol_res is None:
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
-            self.n.l_atol_res = 0.001*self.n.nl_atol_res
+            self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
@@ -2000,7 +1993,7 @@ class ParametersPhysical(FreezableClass):
         self.gravity = [0., -9.81, 0.]
         # Turbulence
         self.useRANS = 0
-        self.cm_u = 0.09
+        self.c_mu = 0.09
         self.c_1 = 0.126
         self.c_2 = 1.92
         self.c_e = 0.07

@@ -2294,11 +2294,14 @@ class TetrahedralMesh(Mesh):
     def generateTetrahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
         from . import cmeshTools
         self.cmesh = cmeshTools.CMesh()
+        logEvent("Generating grid and mesh")
         cmeshTools.generateTetrahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz,self.cmesh)
+        logEvent("Allocating geometric info")
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+        logEvent("Computing geometric info")
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
-        cmeshTools.writeTetgenFiles(self.cmesh,"tetgen",1)
+
     def rectangularToTetrahedral6T(self,grid):
         #copy the nodes from the rectangular mesh
         #I want to be able to renumber later without
@@ -6212,8 +6215,8 @@ def triangleVerticesToNormals(elementVertices):
                          (1., 0., 0.),
                          (0., 0., 0.)))
 
-    for set, out in zip(sets, outs):
-        vertices = elementVertices[[set]]
+    for seti, out in zip(sets, outs):
+        vertices = elementVertices[np.array(seti,'i')]
         ab = vertices[1] - vertices[0]
         v_out = vertices[0] - elementVertices[out]
         normal = rotate.dot(ab)
@@ -6235,8 +6238,8 @@ def tetrahedronVerticesToNormals(elementVertices):
 
     faces = []
 
-    for set, out in zip(sets, outs):
-        vertices = elementVertices[[set]]
+    for seti, out in zip(sets, outs):
+        vertices = elementVertices[np.array(seti,'i')]
         ab = vertices[1] - vertices[0]
         ac = vertices[2] - vertices[0]
         normal = np.cross(ab, ac)

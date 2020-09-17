@@ -2,15 +2,17 @@ from __future__ import absolute_import
 from builtins import range
 from proteus import *
 from proteus.default_n import *
+from proteus import defaults
+defaults.reset_default_n()
 try:
     from .poisson_het_2d_p import *
 except:
     from poisson_het_2d_p import *
 
-parallel = False
-numerical_flux_flag = 'SIPG'
+parallel = True
+direct=False
 polynomial_order = 2
-
+numerical_flux_flag = 'SIPG'
 
 timeIntegration = NoIntegration
 nDTout = 1
@@ -20,10 +22,10 @@ if polynomial_order == 2:
 else:
     femSpaces = dict((i,DG_AffineLinearOnSimplexWithNodalBasis) for i in range(nc))
 
-elementQuadrature = SimplexGaussQuadrature(nd,3)
-elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
+elementQuadrature = SimplexGaussQuadrature(nd,4)
+elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
-nn = 11
+nn = 81
 nLevels = 1
 if parallel:
     nLevels = 1
@@ -44,42 +46,46 @@ else:
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_NIPG
 
 multilevelNonlinearSolver  = NLNI
-
 levelNonlinearSolver = Newton
+maxNonlinearIts = 1
 
 fullNewtonFlag = True
 
 tolFac = 0.0
-
 nl_atol_res = 1.0e-8
+linTolFac = 0.0
+l_atol_res = 1.0e-9
 
 matrix = SparseMatrix
 
 if parallel:
     multilevelLinearSolver = KSP_petsc4py
-    #for petsc do things lie
-    #"-ksp_type cg -pc_type asm -pc_asm_type basic -ksp_atol  1.0e-10 -ksp_rtol 1.0e-10" or
-    #-pc_type lu -pc_factor_mat_solver_package
-    #can also set -pc_asm_overlap 2 with default asm type (restrict)
     levelLinearSolver = KSP_petsc4py
     #pick number of layers to use in overlap and type of partition
     if numerical_flux_flag == 'LDG':
         nLayersOfOverlapForParallel = 2
     else:
         nLayersOfOverlapForParallel = 1
+    #type of partition
     parallelPartitioningType = MeshParallelPartitioningTypes.element
-    
-    #to allow multiple models to set different ksp options
-    #linear_solver_options_prefix = 'poisson_'
+    linearSolverConvergenceTest= 'r-true'
+    from petsc4py import PETSc
+    OptDB = PETSc.Options()
+    OptDB.clear()
+    if direct:
+        OptDB.setValue('ksp_type','preonly')
+        OptDB.setValue('pc_type','lu')
+        OptDB.setValue('pc_factor_type','superlu_dist')
+    else:
+        OptDB.setValue('ksp_type','cg')
+        OptDB.setValue('pc_asm_type','basic')
+        OptDB.setValue('pc_asm_overlap',2)
+        OptDB.setValue('sub_ksp_type','preonly')
+        OptDB.setValue('sub_pc_type','lu')
+        OptDB.setValue('sub_pc_factor_type','superlu')
 else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
     linearSolverConvergenceTest= 'r'
-    #matrix = np.array
-linTolFac = 0.0
 
-if polynomial_order == 2:
-   cfluxtag  = 'dg-point-eval' #'dg-point-eval','dg'
-else:
-   cfluxtag  = 'dg'
-conservativeFlux = dict((i,cfluxtag) for i in range(nc))
+conservativeFlux = None

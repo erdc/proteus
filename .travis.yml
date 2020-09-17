@@ -51,12 +51,13 @@ jobs:
       - export PATHSAVE=$PATH
       - export PATH=$PWD/linux/bin:$PATH
       - export LD_LIBRARY_PATH=$PWD/linux/lib:$LD_LIBRARY_PATH
-      - PROTEUS_OPT="-w -O2 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=1
+      - PROTEUS_OPT="-w -g0 -O2 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
       - export SSL_CERT_DIR=/etc/ssl/certs
-      - #./linux/bin/pip3 install matplotlib
     script:
-      - export MPLBACKEND="AGG"
-      - PATH=./linux/bin:$PATH py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD -k 'not test_damBreak_solver_options' --cov=proteus
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI
   - stage: test
     name: "conda linux"
     os: linux
@@ -79,7 +80,10 @@ jobs:
       - make develop-conda N=1
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
+      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
+      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
+      - MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
@@ -101,11 +105,10 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
+      - pip install gmsh
       - pip install -v -e .
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
       - git lfs pull
-      - cd proteus/tests/ci
-      - parun poisson_3d_tetgen_p.py poisson_3d_tetgen_c0p1_n.py -l 5 -v
-#      - py.test -n 1 --dist=no --forked -v proteus/tests --ignore proteus/tests/POD  --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d --cov=proteus

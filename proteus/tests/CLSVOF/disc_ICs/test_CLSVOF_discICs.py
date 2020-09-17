@@ -19,10 +19,11 @@ from . import (parameters,
                clsvof_p,
                clsvof_n)
 
-class TestSWEs(object):
+class TestCLSVOF(object):
 
     @classmethod
     def setup_class(cls):
+        default_n.conservativeFlux=None
         pass
 
     @classmethod
@@ -34,7 +35,7 @@ class TestSWEs(object):
         reload(clsvof)
         reload(clsvof_p)
         reload(clsvof_n)
-                        
+
     def setup_method(self,method):
         self._scriptdir = os.path.dirname(__file__)
 
@@ -89,9 +90,9 @@ class TestSWEs(object):
 
     def test_case_2(self):
         parameters.ct.test_case=2
-        self.reload_modules()        
+        self.reload_modules()
         name = "test_case_2"
         # run problem
         self.run_test(clsvof_p,clsvof_n,name)
         # compare output files
-        self.compare_files('comparison_files',name)        
+        self.compare_files('comparison_files',name)

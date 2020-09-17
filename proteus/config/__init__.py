@@ -3,8 +3,10 @@ import os
 
 if 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('garnet'):
     from .garnet import *
-elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('topaz'):
-    from .topaz import *
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('jim'):
+    from .jim import *
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('mustang'):
+    from .mustang import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('thunder'):
     from .thunder import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('onyx'):
