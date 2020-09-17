@@ -31,7 +31,7 @@ class TestSWFlow(object):
         actual = tables.open_file(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_h_t2.csv'
         #write comparison file
-        # write_path = './' + 'comparison_' + name + '_h_t2.csv'
+        # write_path = './comparison_files/' + 'comparison_' + name + '_h_t2.csv'
         # np.array(actual.root.h_t2).tofile(os.path.join(self._scriptdir, write_path),sep=",")
         #
         np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t2).flatten(),decimal=7)
@@ -84,3 +84,8 @@ class TestSWFlow(object):
         os.system("parun --SWEs --path " + self.path + " "
                   "-l1 -v obstacle_flow.py -C 'he=4.0 final_time=0.1 dt_output=0.1'")
         self.compare_vs_saved_files("obstacle_flow")
+
+    def test_santos_step(self):
+        os.system("parun --SWEs --path " + self.path + " "
+                  "-l1 -v santos_step.py -C 'refinement=3 final_time=0.1 dt_output=0.1'")
+        self.compare_vs_saved_files("santos_step")
