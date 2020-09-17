@@ -10,7 +10,9 @@ import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 
 
 """
-This is a simple benchmark of a solitary wave propagating over a flat bottom.
+This is the set up of a solitary wave propagating over a step. Reference is:
+'Numerical and experimental study of the transformation of a solitary wave
+over a shelf or isolated obstacle'
 """
 
 # *************************** #
@@ -44,8 +46,8 @@ triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 if opts.structured:
     domain = rectangle
 else:
-    rectangle.writePoly("solitary")
-    domain = PlanarStraightLineGraphDomain(fileprefix="solitary")
+    rectangle.writePoly("step")
+    domain = PlanarStraightLineGraphDomain(fileprefix="step")
     domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
     nnx = None
     nny = None
@@ -96,12 +98,11 @@ class y_mom_at_t0(object):
         return 0.
 
 """
-heta and hw are needed for the modified green naghdi equations.
-For initial conditions, heta -> h^2 and hw -> h^2div(u).
-Note that the BCs for the heta and hw should be same as h.
-For more details see: 'Robust explicit relaxation techinque for solving
-the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
-JCP 2019
+heta, hw and hbeta are needed for the dispersive Serre--Saint-Venant equations
+(ie shallow water equations). For initial conditions, heta -> h^2, hw -> h^2*div(u),
+hbeta->hu * grad(Z) (hbeta can just be 0 for simplicity).
+For boundary conditions, heta and hw should have same flags as h and hbeta
+same flags as hu.
 """
 
 class heta_at_t0(object):
@@ -182,8 +183,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              bathymetry=bathymetry_function,
-                                              analyticalSolution=analytical_Solution)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
-mySWFlowProblem.physical_parameters['mannings'] = 0.0
-# mySWFlowProblem.swe_parameters['LUMPED_MASS_MATRIX'] = 1
+                                              bathymetry=bathymetry_function)
