@@ -34,7 +34,7 @@ class TestSWFlow(object):
         # write_path = './comparison_files/' + 'comparison_' + name + '_h_t2.csv'
         # np.array(actual.root.h_t2).tofile(os.path.join(self._scriptdir, write_path),sep=",")
         #
-        # np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t2).flatten(),decimal=7)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.h_t2).flatten(),decimal=7)
         actual.close()
 
     def test_solitary_wave(self):
