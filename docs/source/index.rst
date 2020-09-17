@@ -177,13 +177,14 @@ These are not hard and fast rules, and there is no time table for releases.
 References
 ==========
 
+* `An Unstructured Finite Element Model for Incompressible Two-Phase
+  Flow Based on a Monolithic Conservative Level Set Method
+  <https://doi.org/10.1002/fld.4817>`_
+  (2020) M. Quezada de Luna, J. H. Collins, and C.E. Kees,
+  *International Journal for Numerical Methods in Fluids*.
 * `Robust explicit relaxation technique for solving the Green-Naghdi equations
   <https://doi.org/10.1016/j.jcp.2019.108917>`_ (2019) J.-L. Guermond,
   B. Popov, E. Tovar, C.E. Kees, *Journal of Computational Physics*
-* `An Unstructured Finite Element Model for Incompressible Two-Phase
-  Flow Based on a Monolithic Conservative Level Set Method
-  <https://arxiv.org/abs/1903.06919>`_
-  (2019) M. Quezada de Luna, J. H. Collins, and C.E. Kees.
 * Preconditioners for Two-Phase Incompressible Navier-Stokes
   Flow (2019) N. Bootland, C.E. Kees, A. Wathen,
   A. Bentley *SIAM Journal on Scientific Computing*, In Press.
@@ -309,9 +310,7 @@ Source Code Documentation
    :caption: Tools
    :name: sec-tools
 
-   tools/boundary_conditions
    tools/spatial_tools
-   tools/two_phase_flow
    tools/wave_tools
 
 .. toctree::
@@ -319,9 +318,7 @@ Source Code Documentation
    :caption: Models
    :name: sec-models
 
-   models/body_dynamics
-   models/free_surface
-   models/mesh_adaptivity
-   models/mesh_motion
    models/navier_stokes
-   models/SWFlows
+   models/SWFlow
+   models/free_surface
+   models/body_dynamics

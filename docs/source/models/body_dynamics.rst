@@ -1,7 +1,7 @@
 .. _body_dynamics:
 
-Body Dynamics
-*************
+Multi-Body Solid Dynamics
+*************************
 
 Implementation
 ==============
