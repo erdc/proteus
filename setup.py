@@ -81,7 +81,7 @@ class get_numpy_include(object):
 
 EXTENSIONS_TO_BUILD = [
     Extension("MeshAdaptPUMI.MeshAdapt",
-               sources = ['proteus/MeshAdaptPUMI/Adapter.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
+               sources = ['proteus/MeshAdaptPUMI/MeshAdapt.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
                           'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
                           'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
                           'proteus/MeshAdaptPUMI/DumpMesh.cpp',
@@ -750,7 +750,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.4.dev0',
+          version='1.7.5',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',

@@ -1,7 +1,7 @@
 .. _navier_stokes:
 
-Navier-Stokes
-*************
+Multiphase Navier-Stokes
+************************
 
 
 Description
