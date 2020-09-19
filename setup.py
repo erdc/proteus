@@ -750,7 +750,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.5',
+          version='1.7.5dev',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
