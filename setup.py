@@ -750,7 +750,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.5',
+          version='1.7.5dev',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
@@ -948,10 +948,11 @@ def setup_extensions_in_sequential():
 
 def setup_extensions_in_parallel():
     import multiprocessing, logging
-    logger = multiprocessing.log_to_stderr()
+    mp = multiprocessing.get_context('fork')
+    logger = mp.log_to_stderr()
     logger.setLevel(logging.INFO)
-    multiprocessing.log_to_stderr()
-    pool = multiprocessing.Pool(processes=int(os.getenv('N')))
+    mp.log_to_stderr()
+    pool = mp.Pool(processes=int(os.getenv('N')))
     EXTENSIONS=[[e] for e in EXTENSIONS_TO_BUILD]
     pool.imap(setup_given_extensions, EXTENSIONS)
     pool.close()

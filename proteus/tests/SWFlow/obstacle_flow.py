@@ -201,6 +201,7 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
                                               reflectingBCs=opts.reflecting_BCs,
-                                              bathymetry=bathymetry_function)
+                                              bathymetry=bathymetry_function,
+                                              genMesh=False)
 mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = opts.mannings

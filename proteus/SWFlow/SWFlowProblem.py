@@ -31,7 +31,8 @@ class SWFlowProblem:
                  useSuperlu=None,
                  analyticalSolution=None,
                  # AUXILIARY VARIABLES #
-                 auxiliaryVariables=None):
+                 auxiliaryVariables=None,
+                 genMesh=True):
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         assert sw_model in [
@@ -57,6 +58,7 @@ class SWFlowProblem:
         self.assert_boundaryConditions(sw_model, boundaryConditions)
 
         # ***** SAVE PARAMETERS ***** #
+        self.genMesh=genMesh
         self.sw_model = sw_model
         self.cfl = cfl
         self.outputStepping = outputStepping.getOutputStepping()

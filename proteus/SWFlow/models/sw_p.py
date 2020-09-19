@@ -13,6 +13,7 @@ from proteus import Context
 # *********************************************** #
 ct = Context.get()
 mySWFlowProblem = ct.mySWFlowProblem
+genMesh=mySWFlowProblem.genMesh
 physical_parameters = mySWFlowProblem.physical_parameters
 numerical_parameters = mySWFlowProblem.swe_parameters
 initialConditions = mySWFlowProblem.initialConditions
