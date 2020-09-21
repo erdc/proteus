@@ -58,8 +58,8 @@ class TwoPhaseFlowProblem:
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
-        # ***** CREATE FINITE ELEMENT SPACES ***** #
-        self.FESpace = FESpace(self,self.nd)
+        self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
+        self.FESpace = None
 
         ## ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
         #self.physical_parameters = default_physical_parameters
@@ -179,8 +179,15 @@ class TwoPhaseFlowProblem:
 
     def initializeAll(self):
 
+        # ***** CREATE FINITE ELEMENT SPACES ***** #
+        if(self.FESpace is None):
+            self.FESpace = FESpace(self,self.nd)
+
+        # ***** SET FINITE ELEMENT  ***** #
+        self.FESpace.setFESpace(self.modelIdxDict)
+
         self.outputStepping.setOutputStepping()
-        self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
+        #self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
         
         #preparing to extricate the mesh generation process from the workflow
         self.Parameters.mesh = self.domain.MeshOptions
@@ -194,9 +201,6 @@ class TwoPhaseFlowProblem:
         self.assert_initialConditions()
         # boundary conditions
         self.assert_boundaryConditions()
-
-        # ***** SET FINITE ELEMENT  ***** #
-        self.FESpace.setFESpace(self.modelIdxDict)
 
         # parameters
         self.Parameters.initializeParameters()

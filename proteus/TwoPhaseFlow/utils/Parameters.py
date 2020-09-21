@@ -307,7 +307,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         self._freeze()
 
         #Initial Conditions
-        self.setInitialConditionStructure()
+        self.setInitialConditionStructure() 
 
     def _initializePhysics(self):
         pparams = self._Problem.Parameters.physical # physical parameters
@@ -491,9 +491,8 @@ class ParametersModelRANS2P(ParametersModelBase):
 class ParametersModelRANS3PF(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelRANS3PF, self).__init__(name='rans3p', index=None,
-                                                    Problem=Problem)
+    def __init__(self):
+        super(ParametersModelRANS3PF, self).__init__(name='rans3p')
         self.p.coefficients = RANS3PF.Coefficients(
             initialize=False,
             useMetrics=1.,
@@ -652,9 +651,8 @@ class ParametersModelRANS3PF(ParametersModelBase):
 class ParametersModelPressure(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelPressure, self).__init__(name='pressure', index=None,
-                                                      Problem=Problem)
+    def __init__(self):
+        super(ParametersModelPressure, self).__init__(name='pressure')
         self.p.coefficients = Pres.Coefficients(
             initialize=False,
         )
@@ -720,9 +718,8 @@ class ParametersModelPressure(ParametersModelBase):
 class ParametersModelPressureInitial(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelPressureInitial, self).__init__(name='pressureInitial', index=None,
-                                                             Problem=Problem)
+    def __init__(self):
+        super(ParametersModelPressureInitial, self).__init__(name='pressureInitial')
         self.p.coefficients = PresInit.Coefficients(
             initialize=False,
         )

@@ -1477,7 +1477,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
         else:
             self.elementDiameter = self.mesh.elementDiametersArray
-        import pdb; pdb.set_trace()
         if self.nSpace_global == 2:
             import copy
             self.u[3] = self.u[2].copy()
