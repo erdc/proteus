@@ -234,42 +234,42 @@ public:
   }
 
   void convexLimiting(arguments_dict &args) {
-    double dt = args.m_dscalar["dt"];
-    int NNZ = args.m_iscalar["NNZ"];
-    int numDOFs = args.m_iscalar["numDOFs"];
+    double dt = args.scalar<double>("dt");
+    int NNZ = args.scalar<int>("NNZ");
+    int numDOFs = args.scalar<int>("numDOFs");
     xt::pyarray<double> &lumped_mass_matrix =
-        args.m_darray["lumped_mass_matrix"];
-    xt::pyarray<double> &h_old = args.m_darray["h_old"];
-    xt::pyarray<double> &hu_old = args.m_darray["hu_old"];
-    xt::pyarray<double> &hv_old = args.m_darray["hv_old"];
-    xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
-    xt::pyarray<double> &high_order_hnp1 = args.m_darray["high_order_hnp1"];
-    xt::pyarray<double> &high_order_hunp1 = args.m_darray["high_order_hunp1"];
-    xt::pyarray<double> &high_order_hvnp1 = args.m_darray["high_order_hvnp1"];
+        args.array<double>("lumped_mass_matrix");
+    xt::pyarray<double> &h_old = args.array<double>("h_old");
+    xt::pyarray<double> &hu_old = args.array<double>("hu_old");
+    xt::pyarray<double> &hv_old = args.array<double>("hv_old");
+    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
+    xt::pyarray<double> &high_order_hnp1 = args.array<double>("high_order_hnp1");
+    xt::pyarray<double> &high_order_hunp1 = args.array<double>("high_order_hunp1");
+    xt::pyarray<double> &high_order_hvnp1 = args.array<double>("high_order_hvnp1");
     xt::pyarray<double> &extendedSourceTerm_hu =
-        args.m_darray["extendedSourceTerm_hu"];
+        args.array<double>("extendedSourceTerm_hu");
     xt::pyarray<double> &extendedSourceTerm_hv =
-        args.m_darray["extendedSourceTerm_hv"];
-    xt::pyarray<double> &limited_hnp1 = args.m_darray["limited_hnp1"];
-    xt::pyarray<double> &limited_hunp1 = args.m_darray["limited_hunp1"];
-    xt::pyarray<double> &limited_hvnp1 = args.m_darray["limited_hvnp1"];
+        args.array<double>("extendedSourceTerm_hv");
+    xt::pyarray<double> &limited_hnp1 = args.array<double>("limited_hnp1");
+    xt::pyarray<double> &limited_hunp1 = args.array<double>("limited_hunp1");
+    xt::pyarray<double> &limited_hvnp1 = args.array<double>("limited_hvnp1");
     xt::pyarray<int> &csrRowIndeces_DofLoops =
-        args.m_iarray["csrRowIndeces_DofLoops"];
+        args.array<int>("csrRowIndeces_DofLoops");
     xt::pyarray<int> &csrColumnOffsets_DofLoops =
-        args.m_iarray["csrColumnOffsets_DofLoops"];
-    xt::pyarray<double> &MassMatrix = args.m_darray["MassMatrix"];
-    xt::pyarray<double> &dH_minus_dL = args.m_darray["dH_minus_dL"];
-    xt::pyarray<double> &muH_minus_muL = args.m_darray["muH_minus_muL"];
-    double hEps = args.m_dscalar["hEps"];
-    xt::pyarray<double> &hReg = args.m_darray["hReg"];
-    int LUMPED_MASS_MATRIX = args.m_iscalar["LUMPED_MASS_MATRIX"];
-    xt::pyarray<double> &dLow = args.m_darray["dLow"];
-    xt::pyarray<double> &hBT = args.m_darray["hBT"];
-    xt::pyarray<double> &huBT = args.m_darray["huBT"];
-    xt::pyarray<double> &hvBT = args.m_darray["hvBT"];
-    xt::pyarray<double> &new_SourceTerm_hu = args.m_darray["new_SourceTerm_hu"];
-    xt::pyarray<double> &new_SourceTerm_hv = args.m_darray["new_SourceTerm_hv"];
-    double size_of_domain = args.m_dscalar["size_of_domain"];
+        args.array<int>("csrColumnOffsets_DofLoops");
+    xt::pyarray<double> &MassMatrix = args.array<double>("MassMatrix");
+    xt::pyarray<double> &dH_minus_dL = args.array<double>("dH_minus_dL");
+    xt::pyarray<double> &muH_minus_muL = args.array<double>("muH_minus_muL");
+    double hEps = args.scalar<double>("hEps");
+    xt::pyarray<double> &hReg = args.array<double>("hReg");
+    int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
+    xt::pyarray<double> &dLow = args.array<double>("dLow");
+    xt::pyarray<double> &hBT = args.array<double>("hBT");
+    xt::pyarray<double> &huBT = args.array<double>("huBT");
+    xt::pyarray<double> &hvBT = args.array<double>("hvBT");
+    xt::pyarray<double> &new_SourceTerm_hu = args.array<double>("new_SourceTerm_hu");
+    xt::pyarray<double> &new_SourceTerm_hv = args.array<double>("new_SourceTerm_hv");
+    double size_of_domain = args.scalar<double>("size_of_domain");
     Rneg.resize(numDOFs, 0.0);
     Rpos.resize(numDOFs, 0.0);
     hLow.resize(numDOFs, 0.0);
@@ -672,28 +672,28 @@ public:
   }   // end convex limiting function
 
   double calculateEdgeBasedCFL(arguments_dict &args) {
-    double g = args.m_dscalar["g"];
-    int numDOFsPerEqn = args.m_iscalar["numDOFsPerEqn"];
+    double g = args.scalar<double>("g");
+    int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
     xt::pyarray<double> &lumped_mass_matrix =
-        args.m_darray["lumped_mass_matrix"];
-    xt::pyarray<double> &h_dof_old = args.m_darray["h_dof_old"];
-    xt::pyarray<double> &hu_dof_old = args.m_darray["hu_dof_old"];
-    xt::pyarray<double> &hv_dof_old = args.m_darray["hv_dof_old"];
-    xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
+        args.array<double>("lumped_mass_matrix");
+    xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
+    xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
+    xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
+    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
     xt::pyarray<int> &csrRowIndeces_DofLoops =
-        args.m_iarray["csrRowIndeces_DofLoops"];
+        args.array<int>("csrRowIndeces_DofLoops");
     xt::pyarray<int> &csrColumnOffsets_DofLoops =
-        args.m_iarray["csrColumnOffsets_DofLoops"];
-    double hEps = args.m_dscalar["hEps"];
-    xt::pyarray<double> &hReg = args.m_darray["hReg"];
-    xt::pyarray<double> &Cx = args.m_darray["Cx"];
-    xt::pyarray<double> &Cy = args.m_darray["Cy"];
-    xt::pyarray<double> &CTx = args.m_darray["CTx"];
-    xt::pyarray<double> &CTy = args.m_darray["CTy"];
-    xt::pyarray<double> &dLow = args.m_darray["dLow"];
-    double run_cfl = args.m_dscalar["run_cfl"];
-    xt::pyarray<double> &edge_based_cfl = args.m_darray["edge_based_cfl"];
-    int debug = args.m_iscalar["debug"];
+        args.array<int>("csrColumnOffsets_DofLoops");
+    double hEps = args.scalar<double>("hEps");
+    xt::pyarray<double> &hReg = args.array<double>("hReg");
+    xt::pyarray<double> &Cx = args.array<double>("Cx");
+    xt::pyarray<double> &Cy = args.array<double>("Cy");
+    xt::pyarray<double> &CTx = args.array<double>("CTx");
+    xt::pyarray<double> &CTy = args.array<double>("CTy");
+    xt::pyarray<double> &dLow = args.array<double>("dLow");
+    double run_cfl = args.scalar<double>("run_cfl");
+    xt::pyarray<double> &edge_based_cfl = args.array<double>("edge_based_cfl");
+    int debug = args.scalar<int>("debug");
 
     double max_edge_based_cfl = 0.;
     int ij = 0;
@@ -746,27 +746,27 @@ public:
   } // End calculateEdgeBasedCFL
 
   void calculateEV(arguments_dict &args) {
-    double g = args.m_dscalar["g"];
-    xt::pyarray<double> &h_dof_old = args.m_darray["h_dof_old"];
-    xt::pyarray<double> &hu_dof_old = args.m_darray["hu_dof_old"];
-    xt::pyarray<double> &hv_dof_old = args.m_darray["hv_dof_old"];
-    xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
-    xt::pyarray<double> &Cx = args.m_darray["Cx"];
-    xt::pyarray<double> &Cy = args.m_darray["Cy"];
-    xt::pyarray<double> &CTx = args.m_darray["CTx"];
-    xt::pyarray<double> &CTy = args.m_darray["CTy"];
-    int numDOFsPerEqn = args.m_iscalar["numDOFsPerEqn"];
+    double g = args.scalar<double>("g");
+    xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
+    xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
+    xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
+    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
+    xt::pyarray<double> &Cx = args.array<double>("Cx");
+    xt::pyarray<double> &Cy = args.array<double>("Cy");
+    xt::pyarray<double> &CTx = args.array<double>("CTx");
+    xt::pyarray<double> &CTy = args.array<double>("CTy");
+    int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
     xt::pyarray<int> &csrRowIndeces_DofLoops =
-        args.m_iarray["csrRowIndeces_DofLoops"];
+        args.array<int>("csrRowIndeces_DofLoops");
     xt::pyarray<int> &csrColumnOffsets_DofLoops =
-        args.m_iarray["csrColumnOffsets_DofLoops"];
+        args.array<int>("csrColumnOffsets_DofLoops");
     xt::pyarray<double> &lumped_mass_matrix =
-        args.m_darray["lumped_mass_matrix"];
-    double eps = args.m_dscalar["eps"];
-    double hEps = args.m_dscalar["hEps"];
+        args.array<double>("lumped_mass_matrix");
+    double eps = args.scalar<double>("eps");
+    double hEps = args.scalar<double>("hEps");
     xt::pyarray<double> &global_entropy_residual =
-        args.m_darray["global_entropy_residual"];
-    double &dij_small = args.m_dscalar["dij_small"];
+        args.array<double>("global_entropy_residual");
+    double &dij_small = args.scalar<double>("dij_small");
 
     //////////////////////////////////////////////
     // ********** FIRST LOOP ON DOFs ********** //
@@ -908,185 +908,185 @@ public:
   } // end calculateEV
 
   void calculateResidual(arguments_dict &args) {
-    xt::pyarray<double> &mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+    xt::pyarray<double> &mesh_trial_ref = args.array<double>("mesh_trial_ref");
     xt::pyarray<double> &mesh_grad_trial_ref =
-        args.m_darray["mesh_grad_trial_ref"];
-    xt::pyarray<double> &mesh_dof = args.m_darray["mesh_dof"];
-    xt::pyarray<double> &mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
-    double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
-    xt::pyarray<int> &mesh_l2g = args.m_iarray["mesh_l2g"];
-    xt::pyarray<double> &dV_ref = args.m_darray["dV_ref"];
-    xt::pyarray<double> &h_trial_ref = args.m_darray["h_trial_ref"];
-    xt::pyarray<double> &h_grad_trial_ref = args.m_darray["h_grad_trial_ref"];
-    xt::pyarray<double> &h_test_ref = args.m_darray["h_test_ref"];
-    xt::pyarray<double> &h_grad_test_ref = args.m_darray["h_grad_test_ref"];
-    xt::pyarray<double> &vel_trial_ref = args.m_darray["vel_trial_ref"];
+        args.array<double>("mesh_grad_trial_ref");
+    xt::pyarray<double> &mesh_dof = args.array<double>("mesh_dof");
+    xt::pyarray<double> &mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
+    double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
+    xt::pyarray<int> &mesh_l2g = args.array<int>("mesh_l2g");
+    xt::pyarray<double> &dV_ref = args.array<double>("dV_ref");
+    xt::pyarray<double> &h_trial_ref = args.array<double>("h_trial_ref");
+    xt::pyarray<double> &h_grad_trial_ref = args.array<double>("h_grad_trial_ref");
+    xt::pyarray<double> &h_test_ref = args.array<double>("h_test_ref");
+    xt::pyarray<double> &h_grad_test_ref = args.array<double>("h_grad_test_ref");
+    xt::pyarray<double> &vel_trial_ref = args.array<double>("vel_trial_ref");
     xt::pyarray<double> &vel_grad_trial_ref =
-        args.m_darray["vel_grad_trial_ref"];
-    xt::pyarray<double> &vel_test_ref = args.m_darray["vel_test_ref"];
-    xt::pyarray<double> &vel_grad_test_ref = args.m_darray["vel_grad_test_ref"];
+        args.array<double>("vel_grad_trial_ref");
+    xt::pyarray<double> &vel_test_ref = args.array<double>("vel_test_ref");
+    xt::pyarray<double> &vel_grad_test_ref = args.array<double>("vel_grad_test_ref");
     xt::pyarray<double> &mesh_trial_trace_ref =
-        args.m_darray["mesh_trial_trace_ref"];
+        args.array<double>("mesh_trial_trace_ref");
     xt::pyarray<double> &mesh_grad_trial_trace_ref =
-        args.m_darray["mesh_grad_trial_trace_ref"];
-    xt::pyarray<double> &dS_ref = args.m_darray["dS_ref"];
-    xt::pyarray<double> &h_trial_trace_ref = args.m_darray["h_trial_trace_ref"];
+        args.array<double>("mesh_grad_trial_trace_ref");
+    xt::pyarray<double> &dS_ref = args.array<double>("dS_ref");
+    xt::pyarray<double> &h_trial_trace_ref = args.array<double>("h_trial_trace_ref");
     xt::pyarray<double> &h_grad_trial_trace_ref =
-        args.m_darray["h_grad_trial_trace_ref"];
-    xt::pyarray<double> &h_test_trace_ref = args.m_darray["h_test_trace_ref"];
+        args.array<double>("h_grad_trial_trace_ref");
+    xt::pyarray<double> &h_test_trace_ref = args.array<double>("h_test_trace_ref");
     xt::pyarray<double> &h_grad_test_trace_ref =
-        args.m_darray["h_grad_test_trace_ref"];
+        args.array<double>("h_grad_test_trace_ref");
     xt::pyarray<double> &vel_trial_trace_ref =
-        args.m_darray["vel_trial_trace_ref"];
+        args.array<double>("vel_trial_trace_ref");
     xt::pyarray<double> &vel_grad_trial_trace_ref =
-        args.m_darray["vel_grad_trial_trace_ref"];
+        args.array<double>("vel_grad_trial_trace_ref");
     xt::pyarray<double> &vel_test_trace_ref =
-        args.m_darray["vel_test_trace_ref"];
+        args.array<double>("vel_test_trace_ref");
     xt::pyarray<double> &vel_grad_test_trace_ref =
-        args.m_darray["vel_grad_test_trace_ref"];
-    xt::pyarray<double> &normal_ref = args.m_darray["normal_ref"];
-    xt::pyarray<double> &boundaryJac_ref = args.m_darray["boundaryJac_ref"];
-    xt::pyarray<double> &elementDiameter = args.m_darray["elementDiameter"];
-    int nElements_global = args.m_iscalar["nElements_global"];
-    double useRBLES = args.m_dscalar["useRBLES"];
-    double useMetrics = args.m_dscalar["useMetrics"];
-    double alphaBDF = args.m_dscalar["alphaBDF"];
-    double nu = args.m_dscalar["nu"];
-    double g = args.m_dscalar["g"];
-    xt::pyarray<int> &h_l2g = args.m_iarray["h_l2g"];
-    xt::pyarray<int> &vel_l2g = args.m_iarray["vel_l2g"];
-    xt::pyarray<double> &h_dof_old = args.m_darray["h_dof_old"];
-    xt::pyarray<double> &hu_dof_old = args.m_darray["hu_dof_old"];
-    xt::pyarray<double> &hv_dof_old = args.m_darray["hv_dof_old"];
-    xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
-    xt::pyarray<double> &h_dof = args.m_darray["h_dof"];
-    xt::pyarray<double> &hu_dof = args.m_darray["hu_dof"];
-    xt::pyarray<double> &hv_dof = args.m_darray["hv_dof"];
-    xt::pyarray<double> &h_dof_sge = args.m_darray["h_dof_sge"];
-    xt::pyarray<double> &hu_dof_sge = args.m_darray["hu_dof_sge"];
-    xt::pyarray<double> &hv_dof_sge = args.m_darray["hv_dof_sge"];
-    xt::pyarray<double> &q_mass_acc = args.m_darray["q_mass_acc"];
-    xt::pyarray<double> &q_mom_hu_acc = args.m_darray["q_mom_hu_acc"];
-    xt::pyarray<double> &q_mom_hv_acc = args.m_darray["q_mom_hv_acc"];
-    xt::pyarray<double> &q_mass_adv = args.m_darray["q_mass_adv"];
+        args.array<double>("vel_grad_test_trace_ref");
+    xt::pyarray<double> &normal_ref = args.array<double>("normal_ref");
+    xt::pyarray<double> &boundaryJac_ref = args.array<double>("boundaryJac_ref");
+    xt::pyarray<double> &elementDiameter = args.array<double>("elementDiameter");
+    int nElements_global = args.scalar<int>("nElements_global");
+    double useRBLES = args.scalar<double>("useRBLES");
+    double useMetrics = args.scalar<double>("useMetrics");
+    double alphaBDF = args.scalar<double>("alphaBDF");
+    double nu = args.scalar<double>("nu");
+    double g = args.scalar<double>("g");
+    xt::pyarray<int> &h_l2g = args.array<int>("h_l2g");
+    xt::pyarray<int> &vel_l2g = args.array<int>("vel_l2g");
+    xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
+    xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
+    xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
+    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
+    xt::pyarray<double> &h_dof = args.array<double>("h_dof");
+    xt::pyarray<double> &hu_dof = args.array<double>("hu_dof");
+    xt::pyarray<double> &hv_dof = args.array<double>("hv_dof");
+    xt::pyarray<double> &h_dof_sge = args.array<double>("h_dof_sge");
+    xt::pyarray<double> &hu_dof_sge = args.array<double>("hu_dof_sge");
+    xt::pyarray<double> &hv_dof_sge = args.array<double>("hv_dof_sge");
+    xt::pyarray<double> &q_mass_acc = args.array<double>("q_mass_acc");
+    xt::pyarray<double> &q_mom_hu_acc = args.array<double>("q_mom_hu_acc");
+    xt::pyarray<double> &q_mom_hv_acc = args.array<double>("q_mom_hv_acc");
+    xt::pyarray<double> &q_mass_adv = args.array<double>("q_mass_adv");
     xt::pyarray<double> &q_mass_acc_beta_bdf =
-        args.m_darray["q_mass_acc_beta_bdf"];
+        args.array<double>("q_mass_acc_beta_bdf");
     xt::pyarray<double> &q_mom_hu_acc_beta_bdf =
-        args.m_darray["q_mom_hu_acc_beta_bdf"];
+        args.array<double>("q_mom_hu_acc_beta_bdf");
     xt::pyarray<double> &q_mom_hv_acc_beta_bdf =
-        args.m_darray["q_mom_hv_acc_beta_bdf"];
-    xt::pyarray<double> &q_cfl = args.m_darray["q_cfl"];
+        args.array<double>("q_mom_hv_acc_beta_bdf");
+    xt::pyarray<double> &q_cfl = args.array<double>("q_cfl");
     xt::pyarray<int> &sdInfo_hu_hu_rowptr =
-        args.m_iarray["sdInfo_hu_hu_rowptr"];
+        args.array<int>("sdInfo_hu_hu_rowptr");
     xt::pyarray<int> &sdInfo_hu_hu_colind =
-        args.m_iarray["sdInfo_hu_hu_colind"];
+        args.array<int>("sdInfo_hu_hu_colind");
     xt::pyarray<int> &sdInfo_hu_hv_rowptr =
-        args.m_iarray["sdInfo_hu_hv_rowptr"];
+        args.array<int>("sdInfo_hu_hv_rowptr");
     xt::pyarray<int> &sdInfo_hu_hv_colind =
-        args.m_iarray["sdInfo_hu_hv_colind"];
+        args.array<int>("sdInfo_hu_hv_colind");
     xt::pyarray<int> &sdInfo_hv_hv_rowptr =
-        args.m_iarray["sdInfo_hv_hv_rowptr"];
+        args.array<int>("sdInfo_hv_hv_rowptr");
     xt::pyarray<int> &sdInfo_hv_hv_colind =
-        args.m_iarray["sdInfo_hv_hv_colind"];
+        args.array<int>("sdInfo_hv_hv_colind");
     xt::pyarray<int> &sdInfo_hv_hu_rowptr =
-        args.m_iarray["sdInfo_hv_hu_rowptr"];
+        args.array<int>("sdInfo_hv_hu_rowptr");
     xt::pyarray<int> &sdInfo_hv_hu_colind =
-        args.m_iarray["sdInfo_hv_hu_colind"];
-    int offset_h = args.m_iscalar["offset_h"];
-    int offset_hu = args.m_iscalar["offset_hu"];
-    int offset_hv = args.m_iscalar["offset_hv"];
-    int stride_h = args.m_iscalar["stride_h"];
-    int stride_hu = args.m_iscalar["stride_hu"];
-    int stride_hv = args.m_iscalar["stride_hv"];
-    xt::pyarray<double> &globalResidual = args.m_darray["globalResidual"];
+        args.array<int>("sdInfo_hv_hu_colind");
+    int offset_h = args.scalar<int>("offset_h");
+    int offset_hu = args.scalar<int>("offset_hu");
+    int offset_hv = args.scalar<int>("offset_hv");
+    int stride_h = args.scalar<int>("stride_h");
+    int stride_hu = args.scalar<int>("stride_hu");
+    int stride_hv = args.scalar<int>("stride_hv");
+    xt::pyarray<double> &globalResidual = args.array<double>("globalResidual");
     int nExteriorElementBoundaries_global =
-        args.m_iscalar["nExteriorElementBoundaries_global"];
+        args.scalar<int>("nExteriorElementBoundaries_global");
     xt::pyarray<int> &exteriorElementBoundariesArray =
-        args.m_iarray["exteriorElementBoundariesArray"];
+        args.array<int>("exteriorElementBoundariesArray");
     xt::pyarray<int> &elementBoundaryElementsArray =
-        args.m_iarray["elementBoundaryElementsArray"];
+        args.array<int>("elementBoundaryElementsArray");
     xt::pyarray<int> &elementBoundaryLocalElementBoundariesArray =
-        args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
-    xt::pyarray<int> &isDOFBoundary_h = args.m_iarray["isDOFBoundary_h"];
-    xt::pyarray<int> &isDOFBoundary_hu = args.m_iarray["isDOFBoundary_hu"];
-    xt::pyarray<int> &isDOFBoundary_hv = args.m_iarray["isDOFBoundary_hv"];
+        args.array<int>("elementBoundaryLocalElementBoundariesArray");
+    xt::pyarray<int> &isDOFBoundary_h = args.array<int>("isDOFBoundary_h");
+    xt::pyarray<int> &isDOFBoundary_hu = args.array<int>("isDOFBoundary_hu");
+    xt::pyarray<int> &isDOFBoundary_hv = args.array<int>("isDOFBoundary_hv");
     xt::pyarray<int> &isAdvectiveFluxBoundary_h =
-        args.m_iarray["isAdvectiveFluxBoundary_h"];
+        args.array<int>("isAdvectiveFluxBoundary_h");
     xt::pyarray<int> &isAdvectiveFluxBoundary_hu =
-        args.m_iarray["isAdvectiveFluxBoundary_hu"];
+        args.array<int>("isAdvectiveFluxBoundary_hu");
     xt::pyarray<int> &isAdvectiveFluxBoundary_hv =
-        args.m_iarray["isAdvectiveFluxBoundary_hv"];
+        args.array<int>("isAdvectiveFluxBoundary_hv");
     xt::pyarray<int> &isDiffusiveFluxBoundary_hu =
-        args.m_iarray["isDiffusiveFluxBoundary_hu"];
+        args.array<int>("isDiffusiveFluxBoundary_hu");
     xt::pyarray<int> &isDiffusiveFluxBoundary_hv =
-        args.m_iarray["isDiffusiveFluxBoundary_hv"];
-    xt::pyarray<double> &ebqe_bc_h_ext = args.m_darray["ebqe_bc_h_ext"];
+        args.array<int>("isDiffusiveFluxBoundary_hv");
+    xt::pyarray<double> &ebqe_bc_h_ext = args.array<double>("ebqe_bc_h_ext");
     xt::pyarray<double> &ebqe_bc_flux_mass_ext =
-        args.m_darray["ebqe_bc_flux_mass_ext"];
+        args.array<double>("ebqe_bc_flux_mass_ext");
     xt::pyarray<double> &ebqe_bc_flux_mom_hu_adv_ext =
-        args.m_darray["ebqe_bc_flux_mom_hu_adv_ext"];
+        args.array<double>("ebqe_bc_flux_mom_hu_adv_ext");
     xt::pyarray<double> &ebqe_bc_flux_mom_hv_adv_ext =
-        args.m_darray["ebqe_bc_flux_mom_hv_adv_ext"];
-    xt::pyarray<double> &ebqe_bc_hu_ext = args.m_darray["ebqe_bc_hu_ext"];
+        args.array<double>("ebqe_bc_flux_mom_hv_adv_ext");
+    xt::pyarray<double> &ebqe_bc_hu_ext = args.array<double>("ebqe_bc_hu_ext");
     xt::pyarray<double> &ebqe_bc_flux_hu_diff_ext =
-        args.m_darray["ebqe_bc_flux_hu_diff_ext"];
-    xt::pyarray<double> &ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
-    xt::pyarray<double> &ebqe_bc_hv_ext = args.m_darray["ebqe_bc_hv_ext"];
+        args.array<double>("ebqe_bc_flux_hu_diff_ext");
+    xt::pyarray<double> &ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
+    xt::pyarray<double> &ebqe_bc_hv_ext = args.array<double>("ebqe_bc_hv_ext");
     xt::pyarray<double> &ebqe_bc_flux_hv_diff_ext =
-        args.m_darray["ebqe_bc_flux_hv_diff_ext"];
-    xt::pyarray<double> &q_velocity = args.m_darray["q_velocity"];
-    xt::pyarray<double> &ebqe_velocity = args.m_darray["ebqe_velocity"];
-    xt::pyarray<double> &flux = args.m_darray["flux"];
-    xt::pyarray<double> &elementResidual_h = args.m_darray["elementResidual_h"];
-    xt::pyarray<double> &Cx = args.m_darray["Cx"];
-    xt::pyarray<double> &Cy = args.m_darray["Cy"];
-    xt::pyarray<double> &CTx = args.m_darray["CTx"];
-    xt::pyarray<double> &CTy = args.m_darray["CTy"];
-    int numDOFsPerEqn = args.m_iscalar["numDOFsPerEqn"];
-    int NNZ = args.m_iscalar["NNZ"];
+        args.array<double>("ebqe_bc_flux_hv_diff_ext");
+    xt::pyarray<double> &q_velocity = args.array<double>("q_velocity");
+    xt::pyarray<double> &ebqe_velocity = args.array<double>("ebqe_velocity");
+    xt::pyarray<double> &flux = args.array<double>("flux");
+    xt::pyarray<double> &elementResidual_h = args.array<double>("elementResidual_h");
+    xt::pyarray<double> &Cx = args.array<double>("Cx");
+    xt::pyarray<double> &Cy = args.array<double>("Cy");
+    xt::pyarray<double> &CTx = args.array<double>("CTx");
+    xt::pyarray<double> &CTy = args.array<double>("CTy");
+    int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
+    int NNZ = args.scalar<int>("NNZ");
     xt::pyarray<int> &csrRowIndeces_DofLoops =
-        args.m_iarray["csrRowIndeces_DofLoops"];
+        args.array<int>("csrRowIndeces_DofLoops");
     xt::pyarray<int> &csrColumnOffsets_DofLoops =
-        args.m_iarray["csrColumnOffsets_DofLoops"];
+        args.array<int>("csrColumnOffsets_DofLoops");
     xt::pyarray<double> &lumped_mass_matrix =
-        args.m_darray["lumped_mass_matrix"];
-    double cfl_run = args.m_dscalar["cfl_run"];
-    double eps = args.m_dscalar["eps"];
-    double hEps = args.m_dscalar["hEps"];
-    xt::pyarray<double> &hReg = args.m_darray["hReg"];
+        args.array<double>("lumped_mass_matrix");
+    double cfl_run = args.scalar<double>("cfl_run");
+    double eps = args.scalar<double>("eps");
+    double hEps = args.scalar<double>("hEps");
+    xt::pyarray<double> &hReg = args.array<double>("hReg");
     xt::pyarray<double> &hnp1_at_quad_point =
-        args.m_darray["hnp1_at_quad_point"];
+        args.array<double>("hnp1_at_quad_point");
     xt::pyarray<double> &hunp1_at_quad_point =
-        args.m_darray["hunp1_at_quad_point"];
+        args.array<double>("hunp1_at_quad_point");
     xt::pyarray<double> &hvnp1_at_quad_point =
-        args.m_darray["hvnp1_at_quad_point"];
+        args.array<double>("hvnp1_at_quad_point");
     xt::pyarray<double> &extendedSourceTerm_hu =
-        args.m_darray["extendedSourceTerm_hu"];
+        args.array<double>("extendedSourceTerm_hu");
     xt::pyarray<double> &extendedSourceTerm_hv =
-        args.m_darray["extendedSourceTerm_hv"];
-    xt::pyarray<double> &dH_minus_dL = args.m_darray["dH_minus_dL"];
-    xt::pyarray<double> &muH_minus_muL = args.m_darray["muH_minus_muL"];
-    double cE = args.m_dscalar["cE"];
-    int LUMPED_MASS_MATRIX = args.m_iscalar["LUMPED_MASS_MATRIX"];
-    double dt = args.m_dscalar["dt"];
-    int LINEAR_FRICTION = args.m_iscalar["LINEAR_FRICTION"];
-    double mannings = args.m_dscalar["mannings"];
-    xt::pyarray<double> &quantDOFs = args.m_darray["quantDOFs"];
+        args.array<double>("extendedSourceTerm_hv");
+    xt::pyarray<double> &dH_minus_dL = args.array<double>("dH_minus_dL");
+    xt::pyarray<double> &muH_minus_muL = args.array<double>("muH_minus_muL");
+    double cE = args.scalar<double>("cE");
+    int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
+    double dt = args.scalar<double>("dt");
+    int LINEAR_FRICTION = args.scalar<int>("LINEAR_FRICTION");
+    double mannings = args.scalar<double>("mannings");
+    xt::pyarray<double> &quantDOFs = args.array<double>("quantDOFs");
     int SECOND_CALL_CALCULATE_RESIDUAL =
-        args.m_iscalar["SECOND_CALL_CALCULATE_RESIDUAL"];
-    int COMPUTE_NORMALS = args.m_iscalar["COMPUTE_NORMALS"];
-    xt::pyarray<double> &normalx = args.m_darray["normalx"];
-    xt::pyarray<double> &normaly = args.m_darray["normaly"];
-    xt::pyarray<double> &dLow = args.m_darray["dLow"];
-    xt::pyarray<double> &hBT = args.m_darray["hBT"];
-    xt::pyarray<double> &huBT = args.m_darray["huBT"];
-    xt::pyarray<double> &hvBT = args.m_darray["hvBT"];
-    int lstage = args.m_iscalar["lstage"];
-    xt::pyarray<double> &new_SourceTerm_hu = args.m_darray["new_SourceTerm_hu"];
-    xt::pyarray<double> &new_SourceTerm_hv = args.m_darray["new_SourceTerm_hv"];
+        args.scalar<int>("SECOND_CALL_CALCULATE_RESIDUAL");
+    int COMPUTE_NORMALS = args.scalar<int>("COMPUTE_NORMALS");
+    xt::pyarray<double> &normalx = args.array<double>("normalx");
+    xt::pyarray<double> &normaly = args.array<double>("normaly");
+    xt::pyarray<double> &dLow = args.array<double>("dLow");
+    xt::pyarray<double> &hBT = args.array<double>("hBT");
+    xt::pyarray<double> &huBT = args.array<double>("huBT");
+    xt::pyarray<double> &hvBT = args.array<double>("hvBT");
+    int lstage = args.scalar<int>("lstage");
+    xt::pyarray<double> &new_SourceTerm_hu = args.array<double>("new_SourceTerm_hu");
+    xt::pyarray<double> &new_SourceTerm_hv = args.array<double>("new_SourceTerm_hv");
     xt::pyarray<double> &global_entropy_residual =
-        args.m_darray["global_entropy_residual"];
-    double dij_small = args.m_dscalar["dij_small"];
+        args.array<double>("global_entropy_residual");
+    double dij_small = args.scalar<double>("dij_small");
     // FOR FRICTION//
     double n2 = std::pow(mannings, 2.);
     double gamma = 4. / 3;
@@ -1585,169 +1585,169 @@ public:
   } // end calculateResidual
 
   void calculateMassMatrix(arguments_dict &args) {
-    xt::pyarray<double> &mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+    xt::pyarray<double> &mesh_trial_ref = args.array<double>("mesh_trial_ref");
     xt::pyarray<double> &mesh_grad_trial_ref =
-        args.m_darray["mesh_grad_trial_ref"];
-    xt::pyarray<double> &mesh_dof = args.m_darray["mesh_dof"];
-    xt::pyarray<double> &mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
-    double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
-    xt::pyarray<int> &mesh_l2g = args.m_iarray["mesh_l2g"];
-    xt::pyarray<double> &dV_ref = args.m_darray["dV_ref"];
-    xt::pyarray<double> &h_trial_ref = args.m_darray["h_trial_ref"];
-    xt::pyarray<double> &h_grad_trial_ref = args.m_darray["h_grad_trial_ref"];
-    xt::pyarray<double> &h_test_ref = args.m_darray["h_test_ref"];
-    xt::pyarray<double> &h_grad_test_ref = args.m_darray["h_grad_test_ref"];
-    xt::pyarray<double> &vel_trial_ref = args.m_darray["vel_trial_ref"];
+        args.array<double>("mesh_grad_trial_ref");
+    xt::pyarray<double> &mesh_dof = args.array<double>("mesh_dof");
+    xt::pyarray<double> &mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
+    double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
+    xt::pyarray<int> &mesh_l2g = args.array<int>("mesh_l2g");
+    xt::pyarray<double> &dV_ref = args.array<double>("dV_ref");
+    xt::pyarray<double> &h_trial_ref = args.array<double>("h_trial_ref");
+    xt::pyarray<double> &h_grad_trial_ref = args.array<double>("h_grad_trial_ref");
+    xt::pyarray<double> &h_test_ref = args.array<double>("h_test_ref");
+    xt::pyarray<double> &h_grad_test_ref = args.array<double>("h_grad_test_ref");
+    xt::pyarray<double> &vel_trial_ref = args.array<double>("vel_trial_ref");
     xt::pyarray<double> &vel_grad_trial_ref =
-        args.m_darray["vel_grad_trial_ref"];
-    xt::pyarray<double> &vel_test_ref = args.m_darray["vel_test_ref"];
-    xt::pyarray<double> &vel_grad_test_ref = args.m_darray["vel_grad_test_ref"];
+        args.array<double>("vel_grad_trial_ref");
+    xt::pyarray<double> &vel_test_ref = args.array<double>("vel_test_ref");
+    xt::pyarray<double> &vel_grad_test_ref = args.array<double>("vel_grad_test_ref");
     xt::pyarray<double> &mesh_trial_trace_ref =
-        args.m_darray["mesh_trial_trace_ref"];
+        args.array<double>("mesh_trial_trace_ref");
     xt::pyarray<double> &mesh_grad_trial_trace_ref =
-        args.m_darray["mesh_grad_trial_trace_ref"];
-    xt::pyarray<double> &dS_ref = args.m_darray["dS_ref"];
-    xt::pyarray<double> &h_trial_trace_ref = args.m_darray["h_trial_trace_ref"];
+        args.array<double>("mesh_grad_trial_trace_ref");
+    xt::pyarray<double> &dS_ref = args.array<double>("dS_ref");
+    xt::pyarray<double> &h_trial_trace_ref = args.array<double>("h_trial_trace_ref");
     xt::pyarray<double> &h_grad_trial_trace_ref =
-        args.m_darray["h_grad_trial_trace_ref"];
-    xt::pyarray<double> &h_test_trace_ref = args.m_darray["h_test_trace_ref"];
+        args.array<double>("h_grad_trial_trace_ref");
+    xt::pyarray<double> &h_test_trace_ref = args.array<double>("h_test_trace_ref");
     xt::pyarray<double> &h_grad_test_trace_ref =
-        args.m_darray["h_grad_test_trace_ref"];
+        args.array<double>("h_grad_test_trace_ref");
     xt::pyarray<double> &vel_trial_trace_ref =
-        args.m_darray["vel_trial_trace_ref"];
+        args.array<double>("vel_trial_trace_ref");
     xt::pyarray<double> &vel_grad_trial_trace_ref =
-        args.m_darray["vel_grad_trial_trace_ref"];
+        args.array<double>("vel_grad_trial_trace_ref");
     xt::pyarray<double> &vel_test_trace_ref =
-        args.m_darray["vel_test_trace_ref"];
+        args.array<double>("vel_test_trace_ref");
     xt::pyarray<double> &vel_grad_test_trace_ref =
-        args.m_darray["vel_grad_test_trace_ref"];
-    xt::pyarray<double> &normal_ref = args.m_darray["normal_ref"];
-    xt::pyarray<double> &boundaryJac_ref = args.m_darray["boundaryJac_ref"];
-    xt::pyarray<double> &elementDiameter = args.m_darray["elementDiameter"];
-    int nElements_global = args.m_iscalar["nElements_global"];
-    double useRBLES = args.m_dscalar["useRBLES"];
-    double useMetrics = args.m_dscalar["useMetrics"];
-    double alphaBDF = args.m_dscalar["alphaBDF"];
-    double nu = args.m_dscalar["nu"];
-    double g = args.m_dscalar["g"];
-    xt::pyarray<int> &h_l2g = args.m_iarray["h_l2g"];
-    xt::pyarray<int> &vel_l2g = args.m_iarray["vel_l2g"];
-    xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
-    xt::pyarray<double> &h_dof = args.m_darray["h_dof"];
-    xt::pyarray<double> &hu_dof = args.m_darray["hu_dof"];
-    xt::pyarray<double> &hv_dof = args.m_darray["hv_dof"];
-    xt::pyarray<double> &h_dof_sge = args.m_darray["h_dof_sge"];
-    xt::pyarray<double> &hu_dof_sge = args.m_darray["hu_dof_sge"];
-    xt::pyarray<double> &hv_dof_sge = args.m_darray["hv_dof_sge"];
+        args.array<double>("vel_grad_test_trace_ref");
+    xt::pyarray<double> &normal_ref = args.array<double>("normal_ref");
+    xt::pyarray<double> &boundaryJac_ref = args.array<double>("boundaryJac_ref");
+    xt::pyarray<double> &elementDiameter = args.array<double>("elementDiameter");
+    int nElements_global = args.scalar<int>("nElements_global");
+    double useRBLES = args.scalar<double>("useRBLES");
+    double useMetrics = args.scalar<double>("useMetrics");
+    double alphaBDF = args.scalar<double>("alphaBDF");
+    double nu = args.scalar<double>("nu");
+    double g = args.scalar<double>("g");
+    xt::pyarray<int> &h_l2g = args.array<int>("h_l2g");
+    xt::pyarray<int> &vel_l2g = args.array<int>("vel_l2g");
+    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
+    xt::pyarray<double> &h_dof = args.array<double>("h_dof");
+    xt::pyarray<double> &hu_dof = args.array<double>("hu_dof");
+    xt::pyarray<double> &hv_dof = args.array<double>("hv_dof");
+    xt::pyarray<double> &h_dof_sge = args.array<double>("h_dof_sge");
+    xt::pyarray<double> &hu_dof_sge = args.array<double>("hu_dof_sge");
+    xt::pyarray<double> &hv_dof_sge = args.array<double>("hv_dof_sge");
     xt::pyarray<double> &q_mass_acc_beta_bdf =
-        args.m_darray["q_mass_acc_beta_bdf"];
+        args.array<double>("q_mass_acc_beta_bdf");
     xt::pyarray<double> &q_mom_hu_acc_beta_bdf =
-        args.m_darray["q_mom_hu_acc_beta_bdf"];
+        args.array<double>("q_mom_hu_acc_beta_bdf");
     xt::pyarray<double> &q_mom_hv_acc_beta_bdf =
-        args.m_darray["q_mom_hv_acc_beta_bdf"];
-    xt::pyarray<double> &q_cfl = args.m_darray["q_cfl"];
+        args.array<double>("q_mom_hv_acc_beta_bdf");
+    xt::pyarray<double> &q_cfl = args.array<double>("q_cfl");
     xt::pyarray<int> &sdInfo_hu_hu_rowptr =
-        args.m_iarray["sdInfo_hu_hu_rowptr"];
+        args.array<int>("sdInfo_hu_hu_rowptr");
     xt::pyarray<int> &sdInfo_hu_hu_colind =
-        args.m_iarray["sdInfo_hu_hu_colind"];
+        args.array<int>("sdInfo_hu_hu_colind");
     xt::pyarray<int> &sdInfo_hu_hv_rowptr =
-        args.m_iarray["sdInfo_hu_hv_rowptr"];
+        args.array<int>("sdInfo_hu_hv_rowptr");
     xt::pyarray<int> &sdInfo_hu_hv_colind =
-        args.m_iarray["sdInfo_hu_hv_colind"];
+        args.array<int>("sdInfo_hu_hv_colind");
     xt::pyarray<int> &sdInfo_hv_hv_rowptr =
-        args.m_iarray["sdInfo_hv_hv_rowptr"];
+        args.array<int>("sdInfo_hv_hv_rowptr");
     xt::pyarray<int> &sdInfo_hv_hv_colind =
-        args.m_iarray["sdInfo_hv_hv_colind"];
+        args.array<int>("sdInfo_hv_hv_colind");
     xt::pyarray<int> &sdInfo_hv_hu_rowptr =
-        args.m_iarray["sdInfo_hv_hu_rowptr"];
+        args.array<int>("sdInfo_hv_hu_rowptr");
     xt::pyarray<int> &sdInfo_hv_hu_colind =
-        args.m_iarray["sdInfo_hv_hu_colind"];
-    xt::pyarray<int> &csrRowIndeces_h_h = args.m_iarray["csrRowIndeces_h_h"];
+        args.array<int>("sdInfo_hv_hu_colind");
+    xt::pyarray<int> &csrRowIndeces_h_h = args.array<int>("csrRowIndeces_h_h");
     xt::pyarray<int> &csrColumnOffsets_h_h =
-        args.m_iarray["csrColumnOffsets_h_h"];
-    xt::pyarray<int> &csrRowIndeces_h_hu = args.m_iarray["csrRowIndeces_h_hu"];
+        args.array<int>("csrColumnOffsets_h_h");
+    xt::pyarray<int> &csrRowIndeces_h_hu = args.array<int>("csrRowIndeces_h_hu");
     xt::pyarray<int> &csrColumnOffsets_h_hu =
-        args.m_iarray["csrColumnOffsets_h_hu"];
-    xt::pyarray<int> &csrRowIndeces_h_hv = args.m_iarray["csrRowIndeces_h_hv"];
+        args.array<int>("csrColumnOffsets_h_hu");
+    xt::pyarray<int> &csrRowIndeces_h_hv = args.array<int>("csrRowIndeces_h_hv");
     xt::pyarray<int> &csrColumnOffsets_h_hv =
-        args.m_iarray["csrColumnOffsets_h_hv"];
-    xt::pyarray<int> &csrRowIndeces_hu_h = args.m_iarray["csrRowIndeces_hu_h"];
+        args.array<int>("csrColumnOffsets_h_hv");
+    xt::pyarray<int> &csrRowIndeces_hu_h = args.array<int>("csrRowIndeces_hu_h");
     xt::pyarray<int> &csrColumnOffsets_hu_h =
-        args.m_iarray["csrColumnOffsets_hu_h"];
+        args.array<int>("csrColumnOffsets_hu_h");
     xt::pyarray<int> &csrRowIndeces_hu_hu =
-        args.m_iarray["csrRowIndeces_hu_hu"];
+        args.array<int>("csrRowIndeces_hu_hu");
     xt::pyarray<int> &csrColumnOffsets_hu_hu =
-        args.m_iarray["csrColumnOffsets_hu_hu"];
+        args.array<int>("csrColumnOffsets_hu_hu");
     xt::pyarray<int> &csrRowIndeces_hu_hv =
-        args.m_iarray["csrRowIndeces_hu_hv"];
+        args.array<int>("csrRowIndeces_hu_hv");
     xt::pyarray<int> &csrColumnOffsets_hu_hv =
-        args.m_iarray["csrColumnOffsets_hu_hv"];
-    xt::pyarray<int> &csrRowIndeces_hv_h = args.m_iarray["csrRowIndeces_hv_h"];
+        args.array<int>("csrColumnOffsets_hu_hv");
+    xt::pyarray<int> &csrRowIndeces_hv_h = args.array<int>("csrRowIndeces_hv_h");
     xt::pyarray<int> &csrColumnOffsets_hv_h =
-        args.m_iarray["csrColumnOffsets_hv_h"];
+        args.array<int>("csrColumnOffsets_hv_h");
     xt::pyarray<int> &csrRowIndeces_hv_hu =
-        args.m_iarray["csrRowIndeces_hv_hu"];
+        args.array<int>("csrRowIndeces_hv_hu");
     xt::pyarray<int> &csrColumnOffsets_hv_hu =
-        args.m_iarray["csrColumnOffsets_hv_hu"];
+        args.array<int>("csrColumnOffsets_hv_hu");
     xt::pyarray<int> &csrRowIndeces_hv_hv =
-        args.m_iarray["csrRowIndeces_hv_hv"];
+        args.array<int>("csrRowIndeces_hv_hv");
     xt::pyarray<int> &csrColumnOffsets_hv_hv =
-        args.m_iarray["csrColumnOffsets_hv_hv"];
-    xt::pyarray<double> &globalJacobian = args.m_darray["globalJacobian"];
+        args.array<int>("csrColumnOffsets_hv_hv");
+    xt::pyarray<double> &globalJacobian = args.array<double>("globalJacobian");
     int nExteriorElementBoundaries_global =
-        args.m_iscalar["nExteriorElementBoundaries_global"];
+        args.scalar<int>("nExteriorElementBoundaries_global");
     xt::pyarray<int> &exteriorElementBoundariesArray =
-        args.m_iarray["exteriorElementBoundariesArray"];
+        args.array<int>("exteriorElementBoundariesArray");
     xt::pyarray<int> &elementBoundaryElementsArray =
-        args.m_iarray["elementBoundaryElementsArray"];
+        args.array<int>("elementBoundaryElementsArray");
     xt::pyarray<int> &elementBoundaryLocalElementBoundariesArray =
-        args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
-    xt::pyarray<int> &isDOFBoundary_h = args.m_iarray["isDOFBoundary_h"];
-    xt::pyarray<int> &isDOFBoundary_hu = args.m_iarray["isDOFBoundary_hu"];
-    xt::pyarray<int> &isDOFBoundary_hv = args.m_iarray["isDOFBoundary_hv"];
+        args.array<int>("elementBoundaryLocalElementBoundariesArray");
+    xt::pyarray<int> &isDOFBoundary_h = args.array<int>("isDOFBoundary_h");
+    xt::pyarray<int> &isDOFBoundary_hu = args.array<int>("isDOFBoundary_hu");
+    xt::pyarray<int> &isDOFBoundary_hv = args.array<int>("isDOFBoundary_hv");
     xt::pyarray<int> &isAdvectiveFluxBoundary_h =
-        args.m_iarray["isAdvectiveFluxBoundary_h"];
+        args.array<int>("isAdvectiveFluxBoundary_h");
     xt::pyarray<int> &isAdvectiveFluxBoundary_hu =
-        args.m_iarray["isAdvectiveFluxBoundary_hu"];
+        args.array<int>("isAdvectiveFluxBoundary_hu");
     xt::pyarray<int> &isAdvectiveFluxBoundary_hv =
-        args.m_iarray["isAdvectiveFluxBoundary_hv"];
+        args.array<int>("isAdvectiveFluxBoundary_hv");
     xt::pyarray<int> &isDiffusiveFluxBoundary_hu =
-        args.m_iarray["isDiffusiveFluxBoundary_hu"];
+        args.array<int>("isDiffusiveFluxBoundary_hu");
     xt::pyarray<int> &isDiffusiveFluxBoundary_hv =
-        args.m_iarray["isDiffusiveFluxBoundary_hv"];
-    xt::pyarray<double> &ebqe_bc_h_ext = args.m_darray["ebqe_bc_h_ext"];
+        args.array<int>("isDiffusiveFluxBoundary_hv");
+    xt::pyarray<double> &ebqe_bc_h_ext = args.array<double>("ebqe_bc_h_ext");
     xt::pyarray<double> &ebqe_bc_flux_mass_ext =
-        args.m_darray["ebqe_bc_flux_mass_ext"];
+        args.array<double>("ebqe_bc_flux_mass_ext");
     xt::pyarray<double> &ebqe_bc_flux_mom_hu_adv_ext =
-        args.m_darray["ebqe_bc_flux_mom_hu_adv_ext"];
+        args.array<double>("ebqe_bc_flux_mom_hu_adv_ext");
     xt::pyarray<double> &ebqe_bc_flux_mom_hv_adv_ext =
-        args.m_darray["ebqe_bc_flux_mom_hv_adv_ext"];
-    xt::pyarray<double> &ebqe_bc_hu_ext = args.m_darray["ebqe_bc_hu_ext"];
+        args.array<double>("ebqe_bc_flux_mom_hv_adv_ext");
+    xt::pyarray<double> &ebqe_bc_hu_ext = args.array<double>("ebqe_bc_hu_ext");
     xt::pyarray<double> &ebqe_bc_flux_hu_diff_ext =
-        args.m_darray["ebqe_bc_flux_hu_diff_ext"];
-    xt::pyarray<double> &ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
-    xt::pyarray<double> &ebqe_bc_hv_ext = args.m_darray["ebqe_bc_hv_ext"];
+        args.array<double>("ebqe_bc_flux_hu_diff_ext");
+    xt::pyarray<double> &ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
+    xt::pyarray<double> &ebqe_bc_hv_ext = args.array<double>("ebqe_bc_hv_ext");
     xt::pyarray<double> &ebqe_bc_flux_hv_diff_ext =
-        args.m_darray["ebqe_bc_flux_hv_diff_ext"];
+        args.array<double>("ebqe_bc_flux_hv_diff_ext");
     xt::pyarray<int> &csrColumnOffsets_eb_h_h =
-        args.m_iarray["csrColumnOffsets_eb_h_h"];
+        args.array<int>("csrColumnOffsets_eb_h_h");
     xt::pyarray<int> &csrColumnOffsets_eb_h_hu =
-        args.m_iarray["csrColumnOffsets_eb_h_hu"];
+        args.array<int>("csrColumnOffsets_eb_h_hu");
     xt::pyarray<int> &csrColumnOffsets_eb_h_hv =
-        args.m_iarray["csrColumnOffsets_eb_h_hv"];
+        args.array<int>("csrColumnOffsets_eb_h_hv");
     xt::pyarray<int> &csrColumnOffsets_eb_hu_h =
-        args.m_iarray["csrColumnOffsets_eb_hu_h"];
+        args.array<int>("csrColumnOffsets_eb_hu_h");
     xt::pyarray<int> &csrColumnOffsets_eb_hu_hu =
-        args.m_iarray["csrColumnOffsets_eb_hu_hu"];
+        args.array<int>("csrColumnOffsets_eb_hu_hu");
     xt::pyarray<int> &csrColumnOffsets_eb_hu_hv =
-        args.m_iarray["csrColumnOffsets_eb_hu_hv"];
+        args.array<int>("csrColumnOffsets_eb_hu_hv");
     xt::pyarray<int> &csrColumnOffsets_eb_hv_h =
-        args.m_iarray["csrColumnOffsets_eb_hv_h"];
+        args.array<int>("csrColumnOffsets_eb_hv_h");
     xt::pyarray<int> &csrColumnOffsets_eb_hv_hu =
-        args.m_iarray["csrColumnOffsets_eb_hv_hu"];
+        args.array<int>("csrColumnOffsets_eb_hv_hu");
     xt::pyarray<int> &csrColumnOffsets_eb_hv_hv =
-        args.m_iarray["csrColumnOffsets_eb_hv_hv"];
-    double dt = args.m_dscalar["dt"];
+        args.array<int>("csrColumnOffsets_eb_hv_hv");
+    double dt = args.scalar<double>("dt");
     //
     // loop over elements to compute volume integrals and load them into the
     // element Jacobians and global Jacobian
@@ -1821,169 +1821,169 @@ public:
   }
 
   void calculateLumpedMassMatrix(arguments_dict &args) {
-    xt::pyarray<double> &mesh_trial_ref = args.m_darray["mesh_trial_ref"];
+    xt::pyarray<double> &mesh_trial_ref = args.array<double>("mesh_trial_ref");
     xt::pyarray<double> &mesh_grad_trial_ref =
-        args.m_darray["mesh_grad_trial_ref"];
-    xt::pyarray<double> &mesh_dof = args.m_darray["mesh_dof"];
-    xt::pyarray<double> &mesh_velocity_dof = args.m_darray["mesh_velocity_dof"];
-    double MOVING_DOMAIN = args.m_dscalar["MOVING_DOMAIN"];
-    xt::pyarray<int> &mesh_l2g = args.m_iarray["mesh_l2g"];
-    xt::pyarray<double> &dV_ref = args.m_darray["dV_ref"];
-    xt::pyarray<double> &h_trial_ref = args.m_darray["h_trial_ref"];
-    xt::pyarray<double> &h_grad_trial_ref = args.m_darray["h_grad_trial_ref"];
-    xt::pyarray<double> &h_test_ref = args.m_darray["h_test_ref"];
-    xt::pyarray<double> &h_grad_test_ref = args.m_darray["h_grad_test_ref"];
-    xt::pyarray<double> &vel_trial_ref = args.m_darray["vel_trial_ref"];
+        args.array<double>("mesh_grad_trial_ref");
+    xt::pyarray<double> &mesh_dof = args.array<double>("mesh_dof");
+    xt::pyarray<double> &mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
+    double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
+    xt::pyarray<int> &mesh_l2g = args.array<int>("mesh_l2g");
+    xt::pyarray<double> &dV_ref = args.array<double>("dV_ref");
+    xt::pyarray<double> &h_trial_ref = args.array<double>("h_trial_ref");
+    xt::pyarray<double> &h_grad_trial_ref = args.array<double>("h_grad_trial_ref");
+    xt::pyarray<double> &h_test_ref = args.array<double>("h_test_ref");
+    xt::pyarray<double> &h_grad_test_ref = args.array<double>("h_grad_test_ref");
+    xt::pyarray<double> &vel_trial_ref = args.array<double>("vel_trial_ref");
     xt::pyarray<double> &vel_grad_trial_ref =
-        args.m_darray["vel_grad_trial_ref"];
-    xt::pyarray<double> &vel_test_ref = args.m_darray["vel_test_ref"];
-    xt::pyarray<double> &vel_grad_test_ref = args.m_darray["vel_grad_test_ref"];
+        args.array<double>("vel_grad_trial_ref");
+    xt::pyarray<double> &vel_test_ref = args.array<double>("vel_test_ref");
+    xt::pyarray<double> &vel_grad_test_ref = args.array<double>("vel_grad_test_ref");
     xt::pyarray<double> &mesh_trial_trace_ref =
-        args.m_darray["mesh_trial_trace_ref"];
+        args.array<double>("mesh_trial_trace_ref");
     xt::pyarray<double> &mesh_grad_trial_trace_ref =
-        args.m_darray["mesh_grad_trial_trace_ref"];
-    xt::pyarray<double> &dS_ref = args.m_darray["dS_ref"];
-    xt::pyarray<double> &h_trial_trace_ref = args.m_darray["h_trial_trace_ref"];
+        args.array<double>("mesh_grad_trial_trace_ref");
+    xt::pyarray<double> &dS_ref = args.array<double>("dS_ref");
+    xt::pyarray<double> &h_trial_trace_ref = args.array<double>("h_trial_trace_ref");
     xt::pyarray<double> &h_grad_trial_trace_ref =
-        args.m_darray["h_grad_trial_trace_ref"];
-    xt::pyarray<double> &h_test_trace_ref = args.m_darray["h_test_trace_ref"];
+        args.array<double>("h_grad_trial_trace_ref");
+    xt::pyarray<double> &h_test_trace_ref = args.array<double>("h_test_trace_ref");
     xt::pyarray<double> &h_grad_test_trace_ref =
-        args.m_darray["h_grad_test_trace_ref"];
+        args.array<double>("h_grad_test_trace_ref");
     xt::pyarray<double> &vel_trial_trace_ref =
-        args.m_darray["vel_trial_trace_ref"];
+        args.array<double>("vel_trial_trace_ref");
     xt::pyarray<double> &vel_grad_trial_trace_ref =
-        args.m_darray["vel_grad_trial_trace_ref"];
+        args.array<double>("vel_grad_trial_trace_ref");
     xt::pyarray<double> &vel_test_trace_ref =
-        args.m_darray["vel_test_trace_ref"];
+        args.array<double>("vel_test_trace_ref");
     xt::pyarray<double> &vel_grad_test_trace_ref =
-        args.m_darray["vel_grad_test_trace_ref"];
-    xt::pyarray<double> &normal_ref = args.m_darray["normal_ref"];
-    xt::pyarray<double> &boundaryJac_ref = args.m_darray["boundaryJac_ref"];
-    xt::pyarray<double> &elementDiameter = args.m_darray["elementDiameter"];
-    int nElements_global = args.m_iscalar["nElements_global"];
-    double useRBLES = args.m_dscalar["useRBLES"];
-    double useMetrics = args.m_dscalar["useMetrics"];
-    double alphaBDF = args.m_dscalar["alphaBDF"];
-    double nu = args.m_dscalar["nu"];
-    double g = args.m_dscalar["g"];
-    xt::pyarray<int> &h_l2g = args.m_iarray["h_l2g"];
-    xt::pyarray<int> &vel_l2g = args.m_iarray["vel_l2g"];
-    xt::pyarray<double> &b_dof = args.m_darray["b_dof"];
-    xt::pyarray<double> &h_dof = args.m_darray["h_dof"];
-    xt::pyarray<double> &hu_dof = args.m_darray["hu_dof"];
-    xt::pyarray<double> &hv_dof = args.m_darray["hv_dof"];
-    xt::pyarray<double> &h_dof_sge = args.m_darray["h_dof_sge"];
-    xt::pyarray<double> &hu_dof_sge = args.m_darray["hu_dof_sge"];
-    xt::pyarray<double> &hv_dof_sge = args.m_darray["hv_dof_sge"];
+        args.array<double>("vel_grad_test_trace_ref");
+    xt::pyarray<double> &normal_ref = args.array<double>("normal_ref");
+    xt::pyarray<double> &boundaryJac_ref = args.array<double>("boundaryJac_ref");
+    xt::pyarray<double> &elementDiameter = args.array<double>("elementDiameter");
+    int nElements_global = args.scalar<int>("nElements_global");
+    double useRBLES = args.scalar<double>("useRBLES");
+    double useMetrics = args.scalar<double>("useMetrics");
+    double alphaBDF = args.scalar<double>("alphaBDF");
+    double nu = args.scalar<double>("nu");
+    double g = args.scalar<double>("g");
+    xt::pyarray<int> &h_l2g = args.array<int>("h_l2g");
+    xt::pyarray<int> &vel_l2g = args.array<int>("vel_l2g");
+    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
+    xt::pyarray<double> &h_dof = args.array<double>("h_dof");
+    xt::pyarray<double> &hu_dof = args.array<double>("hu_dof");
+    xt::pyarray<double> &hv_dof = args.array<double>("hv_dof");
+    xt::pyarray<double> &h_dof_sge = args.array<double>("h_dof_sge");
+    xt::pyarray<double> &hu_dof_sge = args.array<double>("hu_dof_sge");
+    xt::pyarray<double> &hv_dof_sge = args.array<double>("hv_dof_sge");
     xt::pyarray<double> &q_mass_acc_beta_bdf =
-        args.m_darray["q_mass_acc_beta_bdf"];
+        args.array<double>("q_mass_acc_beta_bdf");
     xt::pyarray<double> &q_mom_hu_acc_beta_bdf =
-        args.m_darray["q_mom_hu_acc_beta_bdf"];
+        args.array<double>("q_mom_hu_acc_beta_bdf");
     xt::pyarray<double> &q_mom_hv_acc_beta_bdf =
-        args.m_darray["q_mom_hv_acc_beta_bdf"];
-    xt::pyarray<double> &q_cfl = args.m_darray["q_cfl"];
+        args.array<double>("q_mom_hv_acc_beta_bdf");
+    xt::pyarray<double> &q_cfl = args.array<double>("q_cfl");
     xt::pyarray<int> &sdInfo_hu_hu_rowptr =
-        args.m_iarray["sdInfo_hu_hu_rowptr"];
+        args.array<int>("sdInfo_hu_hu_rowptr");
     xt::pyarray<int> &sdInfo_hu_hu_colind =
-        args.m_iarray["sdInfo_hu_hu_colind"];
+        args.array<int>("sdInfo_hu_hu_colind");
     xt::pyarray<int> &sdInfo_hu_hv_rowptr =
-        args.m_iarray["sdInfo_hu_hv_rowptr"];
+        args.array<int>("sdInfo_hu_hv_rowptr");
     xt::pyarray<int> &sdInfo_hu_hv_colind =
-        args.m_iarray["sdInfo_hu_hv_colind"];
+        args.array<int>("sdInfo_hu_hv_colind");
     xt::pyarray<int> &sdInfo_hv_hv_rowptr =
-        args.m_iarray["sdInfo_hv_hv_rowptr"];
+        args.array<int>("sdInfo_hv_hv_rowptr");
     xt::pyarray<int> &sdInfo_hv_hv_colind =
-        args.m_iarray["sdInfo_hv_hv_colind"];
+        args.array<int>("sdInfo_hv_hv_colind");
     xt::pyarray<int> &sdInfo_hv_hu_rowptr =
-        args.m_iarray["sdInfo_hv_hu_rowptr"];
+        args.array<int>("sdInfo_hv_hu_rowptr");
     xt::pyarray<int> &sdInfo_hv_hu_colind =
-        args.m_iarray["sdInfo_hv_hu_colind"];
-    xt::pyarray<int> &csrRowIndeces_h_h = args.m_iarray["csrRowIndeces_h_h"];
+        args.array<int>("sdInfo_hv_hu_colind");
+    xt::pyarray<int> &csrRowIndeces_h_h = args.array<int>("csrRowIndeces_h_h");
     xt::pyarray<int> &csrColumnOffsets_h_h =
-        args.m_iarray["csrColumnOffsets_h_h"];
-    xt::pyarray<int> &csrRowIndeces_h_hu = args.m_iarray["csrRowIndeces_h_hu"];
+        args.array<int>("csrColumnOffsets_h_h");
+    xt::pyarray<int> &csrRowIndeces_h_hu = args.array<int>("csrRowIndeces_h_hu");
     xt::pyarray<int> &csrColumnOffsets_h_hu =
-        args.m_iarray["csrColumnOffsets_h_hu"];
-    xt::pyarray<int> &csrRowIndeces_h_hv = args.m_iarray["csrRowIndeces_h_hv"];
+        args.array<int>("csrColumnOffsets_h_hu");
+    xt::pyarray<int> &csrRowIndeces_h_hv = args.array<int>("csrRowIndeces_h_hv");
     xt::pyarray<int> &csrColumnOffsets_h_hv =
-        args.m_iarray["csrColumnOffsets_h_hv"];
-    xt::pyarray<int> &csrRowIndeces_hu_h = args.m_iarray["csrRowIndeces_hu_h"];
+        args.array<int>("csrColumnOffsets_h_hv");
+    xt::pyarray<int> &csrRowIndeces_hu_h = args.array<int>("csrRowIndeces_hu_h");
     xt::pyarray<int> &csrColumnOffsets_hu_h =
-        args.m_iarray["csrColumnOffsets_hu_h"];
+        args.array<int>("csrColumnOffsets_hu_h");
     xt::pyarray<int> &csrRowIndeces_hu_hu =
-        args.m_iarray["csrRowIndeces_hu_hu"];
+        args.array<int>("csrRowIndeces_hu_hu");
     xt::pyarray<int> &csrColumnOffsets_hu_hu =
-        args.m_iarray["csrColumnOffsets_hu_hu"];
+        args.array<int>("csrColumnOffsets_hu_hu");
     xt::pyarray<int> &csrRowIndeces_hu_hv =
-        args.m_iarray["csrRowIndeces_hu_hv"];
+        args.array<int>("csrRowIndeces_hu_hv");
     xt::pyarray<int> &csrColumnOffsets_hu_hv =
-        args.m_iarray["csrColumnOffsets_hu_hv"];
-    xt::pyarray<int> &csrRowIndeces_hv_h = args.m_iarray["csrRowIndeces_hv_h"];
+        args.array<int>("csrColumnOffsets_hu_hv");
+    xt::pyarray<int> &csrRowIndeces_hv_h = args.array<int>("csrRowIndeces_hv_h");
     xt::pyarray<int> &csrColumnOffsets_hv_h =
-        args.m_iarray["csrColumnOffsets_hv_h"];
+        args.array<int>("csrColumnOffsets_hv_h");
     xt::pyarray<int> &csrRowIndeces_hv_hu =
-        args.m_iarray["csrRowIndeces_hv_hu"];
+        args.array<int>("csrRowIndeces_hv_hu");
     xt::pyarray<int> &csrColumnOffsets_hv_hu =
-        args.m_iarray["csrColumnOffsets_hv_hu"];
+        args.array<int>("csrColumnOffsets_hv_hu");
     xt::pyarray<int> &csrRowIndeces_hv_hv =
-        args.m_iarray["csrRowIndeces_hv_hv"];
+        args.array<int>("csrRowIndeces_hv_hv");
     xt::pyarray<int> &csrColumnOffsets_hv_hv =
-        args.m_iarray["csrColumnOffsets_hv_hv"];
-    xt::pyarray<double> &globalJacobian = args.m_darray["globalJacobian"];
+        args.array<int>("csrColumnOffsets_hv_hv");
+    xt::pyarray<double> &globalJacobian = args.array<double>("globalJacobian");
     int nExteriorElementBoundaries_global =
-        args.m_iscalar["nExteriorElementBoundaries_global"];
+        args.scalar<int>("nExteriorElementBoundaries_global");
     xt::pyarray<int> &exteriorElementBoundariesArray =
-        args.m_iarray["exteriorElementBoundariesArray"];
+        args.array<int>("exteriorElementBoundariesArray");
     xt::pyarray<int> &elementBoundaryElementsArray =
-        args.m_iarray["elementBoundaryElementsArray"];
+        args.array<int>("elementBoundaryElementsArray");
     xt::pyarray<int> &elementBoundaryLocalElementBoundariesArray =
-        args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
-    xt::pyarray<int> &isDOFBoundary_h = args.m_iarray["isDOFBoundary_h"];
-    xt::pyarray<int> &isDOFBoundary_hu = args.m_iarray["isDOFBoundary_hu"];
-    xt::pyarray<int> &isDOFBoundary_hv = args.m_iarray["isDOFBoundary_hv"];
+        args.array<int>("elementBoundaryLocalElementBoundariesArray");
+    xt::pyarray<int> &isDOFBoundary_h = args.array<int>("isDOFBoundary_h");
+    xt::pyarray<int> &isDOFBoundary_hu = args.array<int>("isDOFBoundary_hu");
+    xt::pyarray<int> &isDOFBoundary_hv = args.array<int>("isDOFBoundary_hv");
     xt::pyarray<int> &isAdvectiveFluxBoundary_h =
-        args.m_iarray["isAdvectiveFluxBoundary_h"];
+        args.array<int>("isAdvectiveFluxBoundary_h");
     xt::pyarray<int> &isAdvectiveFluxBoundary_hu =
-        args.m_iarray["isAdvectiveFluxBoundary_hu"];
+        args.array<int>("isAdvectiveFluxBoundary_hu");
     xt::pyarray<int> &isAdvectiveFluxBoundary_hv =
-        args.m_iarray["isAdvectiveFluxBoundary_hv"];
+        args.array<int>("isAdvectiveFluxBoundary_hv");
     xt::pyarray<int> &isDiffusiveFluxBoundary_hu =
-        args.m_iarray["isDiffusiveFluxBoundary_hu"];
+        args.array<int>("isDiffusiveFluxBoundary_hu");
     xt::pyarray<int> &isDiffusiveFluxBoundary_hv =
-        args.m_iarray["isDiffusiveFluxBoundary_hv"];
-    xt::pyarray<double> &ebqe_bc_h_ext = args.m_darray["ebqe_bc_h_ext"];
+        args.array<int>("isDiffusiveFluxBoundary_hv");
+    xt::pyarray<double> &ebqe_bc_h_ext = args.array<double>("ebqe_bc_h_ext");
     xt::pyarray<double> &ebqe_bc_flux_mass_ext =
-        args.m_darray["ebqe_bc_flux_mass_ext"];
+        args.array<double>("ebqe_bc_flux_mass_ext");
     xt::pyarray<double> &ebqe_bc_flux_mom_hu_adv_ext =
-        args.m_darray["ebqe_bc_flux_mom_hu_adv_ext"];
+        args.array<double>("ebqe_bc_flux_mom_hu_adv_ext");
     xt::pyarray<double> &ebqe_bc_flux_mom_hv_adv_ext =
-        args.m_darray["ebqe_bc_flux_mom_hv_adv_ext"];
-    xt::pyarray<double> &ebqe_bc_hu_ext = args.m_darray["ebqe_bc_hu_ext"];
+        args.array<double>("ebqe_bc_flux_mom_hv_adv_ext");
+    xt::pyarray<double> &ebqe_bc_hu_ext = args.array<double>("ebqe_bc_hu_ext");
     xt::pyarray<double> &ebqe_bc_flux_hu_diff_ext =
-        args.m_darray["ebqe_bc_flux_hu_diff_ext"];
-    xt::pyarray<double> &ebqe_penalty_ext = args.m_darray["ebqe_penalty_ext"];
-    xt::pyarray<double> &ebqe_bc_hv_ext = args.m_darray["ebqe_bc_hv_ext"];
+        args.array<double>("ebqe_bc_flux_hu_diff_ext");
+    xt::pyarray<double> &ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
+    xt::pyarray<double> &ebqe_bc_hv_ext = args.array<double>("ebqe_bc_hv_ext");
     xt::pyarray<double> &ebqe_bc_flux_hv_diff_ext =
-        args.m_darray["ebqe_bc_flux_hv_diff_ext"];
+        args.array<double>("ebqe_bc_flux_hv_diff_ext");
     xt::pyarray<int> &csrColumnOffsets_eb_h_h =
-        args.m_iarray["csrColumnOffsets_eb_h_h"];
+        args.array<int>("csrColumnOffsets_eb_h_h");
     xt::pyarray<int> &csrColumnOffsets_eb_h_hu =
-        args.m_iarray["csrColumnOffsets_eb_h_hu"];
+        args.array<int>("csrColumnOffsets_eb_h_hu");
     xt::pyarray<int> &csrColumnOffsets_eb_h_hv =
-        args.m_iarray["csrColumnOffsets_eb_h_hv"];
+        args.array<int>("csrColumnOffsets_eb_h_hv");
     xt::pyarray<int> &csrColumnOffsets_eb_hu_h =
-        args.m_iarray["csrColumnOffsets_eb_hu_h"];
+        args.array<int>("csrColumnOffsets_eb_hu_h");
     xt::pyarray<int> &csrColumnOffsets_eb_hu_hu =
-        args.m_iarray["csrColumnOffsets_eb_hu_hu"];
+        args.array<int>("csrColumnOffsets_eb_hu_hu");
     xt::pyarray<int> &csrColumnOffsets_eb_hu_hv =
-        args.m_iarray["csrColumnOffsets_eb_hu_hv"];
+        args.array<int>("csrColumnOffsets_eb_hu_hv");
     xt::pyarray<int> &csrColumnOffsets_eb_hv_h =
-        args.m_iarray["csrColumnOffsets_eb_hv_h"];
+        args.array<int>("csrColumnOffsets_eb_hv_h");
     xt::pyarray<int> &csrColumnOffsets_eb_hv_hu =
-        args.m_iarray["csrColumnOffsets_eb_hv_hu"];
+        args.array<int>("csrColumnOffsets_eb_hv_hu");
     xt::pyarray<int> &csrColumnOffsets_eb_hv_hv =
-        args.m_iarray["csrColumnOffsets_eb_hv_hv"];
-    double dt = args.m_dscalar["dt"];
+        args.array<int>("csrColumnOffsets_eb_hv_hv");
+    double dt = args.scalar<double>("dt");
     //
     // loop over elements to compute volume integrals and load them into the
     // element Jacobians and global Jacobian
