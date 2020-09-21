@@ -200,11 +200,11 @@ namespace proteus
         auto it = d.find(key);
         if (it == d.cend())
         {
-            return " in any of the pyarray dicts";
+            return " in any of the internal dicts";
         }
         else
         {
-            return " in " + asked_type + " but found in " + tried_type;
+            return " in dict of " + asked_type + " but found in dict of " + tried_type;
         }
     }
 }
