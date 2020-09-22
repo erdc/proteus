@@ -395,6 +395,11 @@ class NS_base(object):  # (HasTraits):
                         check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
                     else:
                         logEvent("Running tetgen to generate 3D mesh for "+p.name, level=1)
+                        check_call("rm -f {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+                        check_call("rm -f {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+                        check_call("rm -f {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
+                        check_call("rm -f {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+                        check_call("rm -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                         tetcmd = "tetgen -{0} {1}.poly".format(n.triangleOptions, fileprefix)
                         logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
                         check_call(tetcmd, shell=True)
@@ -545,6 +550,12 @@ class NS_base(object):  # (HasTraits):
                         p.domain.permute_dims[2]+1)
 
                     check_call(gmsh2tetgen_cmd, shell=True)
+                    fileprefix="mesh"
+                    check_call("rm -f {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+                    check_call("rm -f {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+                    check_call("rm -f {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
+                    check_call("rm -f {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+                    check_call("rm -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                     check_call("tetgen -Vfeen %s.ele" % ("mesh",), shell=True)
                     check_call("mv %s.1.ele %s.ele" % ("mesh","mesh"), shell=True)
                     check_call("mv %s.1.node %s.node" % ("mesh","mesh"), shell=True)
