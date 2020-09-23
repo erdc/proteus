@@ -1759,6 +1759,9 @@ class ParametersModelAddedMass(ParametersModelBase):
             self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
+        #override LU selection, even in serial
+        self.n.multilevelLinearSolver = LinearSolvers.KSP_petsc4py
+        self.n.levelLinearSolver = LinearSolvers.KSP_petsc4py
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
