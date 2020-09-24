@@ -24,6 +24,18 @@ const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume cha
 const double inertial_term=1.0;
 namespace proteus
 {
+    
+    namespace detail
+    {
+        template <size_t N, class T>
+        inline std::array<T, N> make_array(const T& t)
+        {
+            std::array<T, N> res;
+            std::fill_n(res.begin(), N, t);
+            return res;
+        }
+    }
+
   template<int nSpace, int nP, int nQ, int nEBQ>
   using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
@@ -1682,35 +1694,22 @@ namespace proteus
       for(int eN=0;eN<nElements_global;eN++)
         {
           //declare local storage for element residual and initialize
-          register double elementResidual_p[nDOF_test_element],elementResidual_p_check[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
-            elementResidual_u[nDOF_v_test_element],
-            elementResidual_v[nDOF_v_test_element],
-            pelementResidual_u[nDOF_v_test_element],
-            pelementResidual_v[nDOF_v_test_element],
-            velocityErrorElement[nDOF_v_test_element],
-            eps_rho,eps_mu;
+
+          auto elementResidual_p       = detail::make_array<nDOF_test_element>(0.0);
+          auto elementResidual_p_check = detail::make_array<nDOF_test_element>(0.0);
+          auto elementResidual_mesh    = detail::make_array<nDOF_test_element>(0.0);
+          auto elementResidual_u       = detail::make_array<nDOF_v_test_element>(0.0);
+          auto elementResidual_v       = detail::make_array<nDOF_v_test_element>(0.0);
+          auto pelementResidual_u      = detail::make_array<nDOF_v_test_element>(0.0);
+          auto pelementResidual_v      = detail::make_array<nDOF_v_test_element>(0.0);
+          auto velocityErrorElement    = detail::make_array<nDOF_v_test_element>(0.0);
+          double eps_rho,eps_mu;
           bool element_active=false;
           elementIsActive[eN]=false;
           const double* elementResidual_w(NULL);
           double mesh_volume_conservation_element=0.0,
             mesh_volume_conservation_element_weak=0.0;
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-              int eN_i = eN*nDOF_test_element+i;
-              elementResidual_p_save.data()[eN_i]=0.0;
-              elementResidual_mesh[i]=0.0;
-              elementResidual_p[i]=0.0;
-              elementResidual_p_check[i]=0.0;
-            }
-          for (int i=0;i<nDOF_v_test_element;i++)
-            {
-              elementResidual_u[i]=0.0;
-              elementResidual_v[i]=0.0;
-              pelementResidual_u[i]=0.0;
-              pelementResidual_v[i]=0.0;
-              velocityErrorElement[i]=0.0;
-            }//i
-          //Use for plotting result
+          std::fill_n(elementResidual_p_save.data() + eN*nDOF_test_element, nDOF_test_element, 0.0);
           if(use_ball_as_particle==1 && nParticles > 0)
             {
               for (int I=0;I<nDOF_mesh_trial_element;I++)
@@ -1925,6 +1924,7 @@ namespace proteus
                     dmass_ham_u_s=0.0,
                     dmass_ham_v_s=0.0,
                     dmass_ham_w_s=0.0;
+
                   //get jacobian, etc for mapping reference element
                   gf_s.set_quad(k);
                   gf.set_quad(k);
@@ -1965,6 +1965,7 @@ namespace proteus
                   //get the trial function gradients
                   ck.gradTrialFromRef(&p_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
                   ck_v.gradTrialFromRef(&vel_grad_trial_ref.data()[k*nDOF_v_trial_element*nSpace],jacInv,vel_grad_trial);
+
                   for (int i=0; i < nDOF_trial_element; i++)
                     {
                       p_trial[i] = p_trial_ref.data()[k*nDOF_trial_element + i];
@@ -1977,6 +1978,7 @@ namespace proteus
                       vel_grad_trial_ib[i*nSpace + 0] = vel_grad_trial[i*nSpace+0];
                       vel_grad_trial_ib[i*nSpace + 1] = vel_grad_trial[i*nSpace+1];
                     }
+
                   if (icase == 0)
                     {
 #ifdef IFEMBASIS
