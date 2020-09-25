@@ -101,7 +101,10 @@ clean:
 
 distclean: clean
 	-rm -f stack.done
+ifdef CONDA_PREFIX
+else
 	-rm -rf ${PROTEUS_PREFIX}
+endif
 	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a proteus/MeshAdaptPUMI/*.so
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 	-rm -rf build proteus/richards/*.pyc proteus/richards/*.so proteus/richards/*.a

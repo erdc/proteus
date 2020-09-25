@@ -3164,8 +3164,6 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                       connectionList = connectivityListList[l],
                                                       linearSolverLocalBlockSize = linearSolverLocalBlockSize,
                                                       preconditionerOptions = linearSmootherOptions))
-            #if solverConvergenceTest == 'r-true' and par_duList is not None:
-            #    levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == Jacobi:
         if relaxationFactor is None:
