@@ -37,43 +37,18 @@ class TwoPhaseFlowProblem:
                  useSuperlu=True,
                  fastArchive=False,
                  useExact=False):
-        # ***** SET OF ASSERTS ***** #
-        assert nd in [2,3], "nd={2,3}"
-        assert cfl <= 1, "Choose cfl <= 1"
-        assert isinstance (outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
-        assert type(he)==float , "Provide (float) he (characteristic mesh size)"
-        assert domain is not None, "Provide a domain"
-        if structured:
-            assert type(nnx)==int and type(nny)==int, "Provide (int) nnx and nny"
-            if nd==3:
-                assert type(nnz)==int, "Provide (int) nnz"
-        else:
-            assert domain.MeshOptions.triangleOptions != 'q30DenA', "Set domain.MeshOptions.triangleOptions"
-        assert triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
-        if initialConditions is not None:
-            assert type(initialConditions)==dict, "Provide dict of initial conditions"
-            # assertion now done in TwoPhaseFlow_so.py
-        if boundaryConditions is not None:
-            assert type(boundaryConditions)==dict, "Provide dict of boundary conditions"
 
         # ***** SAVE PARAMETERS ***** #
         self.useExact=useExact
         self.domain=domain
-        self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
+        self.mesh = None
         self.modelList=[] #list used for internal tracking of models
         self.modelDict={} #dict used to allow user access to models
         self.modelIdxDict = {} #dict used for internal tracking of model indices
         self.nd=nd
         self.cfl=cfl
         self.outputStepping=outputStepping
-        self.outputStepping.setOutputStepping()
         self.so = System_base()
-        self.Parameters.mesh.he = he
-        self.Parameters.mesh.nnx = nnx
-        self.Parameters.mesh.nny = nny
-        self.Parameters.mesh.nnz = nnz
-        self.Parameters.mesh.triangleFlag = triangleFlag
-        self.Parameters.mesh.setTriangleOptions()
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
         self.useSuperlu = useSuperlu
@@ -83,19 +58,47 @@ class TwoPhaseFlowProblem:
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
-        # ***** CREATE FINITE ELEMENT SPACES ***** #
-        self.FESpace = FESpace(self,self.nd)
+        self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
+        self.FESpace = None
 
-        # ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
-        self.physical_parameters = default_physical_parameters
-        self.rans2p_parameters = default_rans2p_parameters
-        self.rans3p_parameters = default_rans3p_parameters
-        self.clsvof_parameters = default_clsvof_parameters
+        ## ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
+        #self.physical_parameters = default_physical_parameters
+        #self.rans2p_parameters = default_rans2p_parameters
+        #self.rans3p_parameters = default_rans3p_parameters
+        #self.clsvof_parameters = default_clsvof_parameters
 
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
-        self.general = default_general
+        #self.general = default_general
         self.fastArchive = fastArchive
         self.usePETScOptionsFileExternal = False
+
+        # temp 
+        #self.he = he
+        #self.nnx = nnx
+        #self.nny = nny
+        #self.nnz = nnz
+        #self.triangleFlag = triangleFlag
+        #self.structured = structured
+
+    def checkProblem(self):
+        # ***** SET OF ASSERTS ***** #
+        assert self.nd in [2,3], "nd={2,3}"
+        assert self.cfl <= 1, "Choose cfl <= 1"
+        assert isinstance (self.outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
+        #assert type(self.he)==float , "Provide (float) he (characteristic mesh size)"
+        assert self.domain is not None, "Provide a domain"
+        #if self.structured:
+        #    assert type(self.nnx)==int and type(self.nny)==int, "Provide (int) nnx and nny"
+        #    if self.nd==3:
+        #        assert type(self.nnz)==int, "Provide (int) nnz"
+        #else:
+        #    assert self.domain.MeshOptions.triangleOptions != 'q30DenA', "Set domain.MeshOptions.triangleOptions"
+        #assert self.triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
+        if self.initialConditions is not None:
+            assert type(initialConditions)==dict, "Provide dict of initial conditions"
+            # assertion now done in TwoPhaseFlow_so.py
+        if self.boundaryConditions is not None:
+            assert type(self.boundaryConditions)==dict, "Provide dict of boundary conditions"
 
     def addModel(self,modelObject,name):
         self.modelList.append(modelObject)
@@ -176,17 +179,28 @@ class TwoPhaseFlowProblem:
 
     def initializeAll(self):
 
+        # ***** CREATE FINITE ELEMENT SPACES ***** #
+        if(self.FESpace is None):
+            self.FESpace = FESpace(self,self.nd)
+
+        # ***** SET FINITE ELEMENT  ***** #
+        self.FESpace.setFESpace(self.modelIdxDict)
+
+        self.outputStepping.setOutputStepping()
+        #self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
+        
+        #preparing to extricate the mesh generation process from the workflow
+        self.Parameters.mesh = self.domain.MeshOptions
+
         #model organization
         self.attachModels()
         self.Parameters.model_list=self.modelList
-
+        
+        self.checkProblem()
         # initial conditions
         self.assert_initialConditions()
         # boundary conditions
         self.assert_boundaryConditions()
-
-        # ***** SET FINITE ELEMENT  ***** #
-        self.FESpace.setFESpace(self.modelIdxDict)
 
         # parameters
         self.Parameters.initializeParameters()

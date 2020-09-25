@@ -57,6 +57,7 @@ class Coefficients(TC_base):
         self.fluidModelIndex = fluidModelIndex
         self.pressureModelIndex = pressureModelIndex
         self.useRotationalForm = useRotationalForm
+        self.variableNames=['pInit']
         self.initialize()
 
     def initialize(self):
