@@ -17,11 +17,9 @@ class TwoPhaseFlowProblem:
                  models=None, #list of models
                  # TIME STEPPING #
                  cfl=0.33,
-                 outputStepping=None,
                  # DOMAIN AND MESH #
-                 structured=False,
                  domain=None,
-                 triangleFlag=0,
+                 mesh=None,
                  # INITIAL CONDITIONS #
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
@@ -34,12 +32,12 @@ class TwoPhaseFlowProblem:
         # ***** SAVE PARAMETERS ***** #
         self.useExact=useExact
         self.domain=domain
-        self.mesh = None
+        self.mesh = mesh
         self.modelList=[] #list used for internal tracking of models
         self.modelDict={} #dict used to allow user access to models
         self.modelIdxDict = {} #dict used for internal tracking of model indices
         self.cfl=cfl
-        self.outputStepping=outputStepping
+        self.outputStepping=OutputStepping()
         self.so = System_base()
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
@@ -249,24 +247,19 @@ class OutputStepping:
     """
     OutputStepping handles how often the solution is outputted.
     """
-    def __init__(self,
-                 final_time,
-                 dt_init=0.001,
-                 dt_output=None,
-                 nDTout=None,
-                 dt_fixed=None):
-        self.final_time=final_time
-        self.dt_init=dt_init
-        assert not (dt_output is None and nDTout is None), "Provide dt_output or nDTout"
-        self.dt_output=dt_output
-        self.nDTout = nDTout
-        self.dt_fixed = dt_fixed
+    def __init__(self):
+        self.final_time=None 
+        self.dt_init=0.001
+        self.dt_output=None
+        self.nDTout = None
+        self.dt_fixed = None
         self.systemStepExact = False
 
     def __getitem__(self, key):
         return self.__dict__[key]
 
     def setOutputStepping(self):
+        assert not (self.dt_output is None and nDTout is None), "Provide dt_output or nDTout"
         # COMPUTE dt_init #
         self.dt_init = min(self.dt_output, self.dt_init)
         if self.nDTout is None:
