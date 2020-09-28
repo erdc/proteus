@@ -15,7 +15,6 @@ class TwoPhaseFlowProblem:
 
     def __init__(self,
                  models=None, #list of models
-                 nd=2,
                  # TIME STEPPING #
                  cfl=0.33,
                  outputStepping=None,
@@ -39,7 +38,6 @@ class TwoPhaseFlowProblem:
         self.modelList=[] #list used for internal tracking of models
         self.modelDict={} #dict used to allow user access to models
         self.modelIdxDict = {} #dict used for internal tracking of model indices
-        self.nd=nd
         self.cfl=cfl
         self.outputStepping=outputStepping
         self.so = System_base()
@@ -52,11 +50,13 @@ class TwoPhaseFlowProblem:
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
-        #object to handle system level physics
+        # ***** CREATE SYSTEM PHYSICS OBJECT ***** #
         self.SystemPhysics = SystemPhysics(ProblemInstance=self)
 
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
-        self.FESpace = None
+
+        # ***** CREATE FINITE ELEMENT SPACES ***** #
+        self.FESpace = FESpace(ProblemInstance=self)
 
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
         self.fastArchive = fastArchive
@@ -64,7 +64,7 @@ class TwoPhaseFlowProblem:
 
     def checkProblem(self):
         # ***** SET OF ASSERTS ***** #
-        assert self.nd in [2,3], "nd={2,3}"
+        assert self.domain.nd in [2,3], "nd={2,3}"
         assert self.cfl <= 1, "Choose cfl <= 1"
         assert isinstance (self.outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
         #assert type(self.he)==float , "Provide (float) he (characteristic mesh size)"
@@ -95,7 +95,7 @@ class TwoPhaseFlowProblem:
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
-        nd = self.nd
+        nd = self.domain.nd
         #ns_model = self.ns_model
         #ls_model = self.ls_model
         #if ns_model is not None:
@@ -114,7 +114,7 @@ class TwoPhaseFlowProblem:
     #
     def assert_boundaryConditions(self):
         boundaryConditions = self.boundaryConditions
-        nd = self.nd
+        nd = self.domain.nd
         #ns_model = self.ns_model
         #ls_model = self.ls_model
         #if boundaryConditions is not None:
@@ -161,12 +161,11 @@ class TwoPhaseFlowProblem:
 
     def initializeAll(self):
 
-        # ***** CREATE FINITE ELEMENT SPACES ***** #
-        if(self.FESpace is None):
-            self.FESpace = FESpace(self,self.nd)
+        #Set dimension
+        assert self.domain is not None, "Need to define domain before proceeding"
 
         # ***** SET FINITE ELEMENT  ***** #
-        self.FESpace.setFESpace(self.modelIdxDict)
+        self.FESpace.setFESpace()
 
         self.outputStepping.setOutputStepping()
         #self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
@@ -280,17 +279,18 @@ class FESpace:
     """
     Create FE Spaces.
     """
-    def __init__(self,Problem,nd):
-        assert nd in [2,3], 'number of dimensions must be 2 or 3'
-        self.nd=nd
+    def __init__(self,ProblemInstance):
         self.velSpaceOrder=None
         self.pSpaceOrder=None
-        self.Problem = Problem
+        self.Problem = ProblemInstance
 
     def __getitem__(self, key):
         return self.__dict__[key]
 
-    def setFESpace(self,useExact=False):
+    def setFESpace(self):
+        nd = self.Problem.domain.nd
+        useExact = self.Problem.useExact
+        assert nd in [2,3], 'number of dimensions must be 2 or 3'
         for key,value in self.Problem.modelDict.items():
             
             if(isinstance(value,Parameters.ParametersModelRANS2P)):
@@ -300,12 +300,7 @@ class FESpace:
                 self.velSpaceOrder=2
                 self.pSpaceOrder=1
         assert self.velSpaceOrder is not None
-        #if ns_model == 0 or ns_model is None: # rans2p or None
-        #    self.velSpaceOrder=1
-        #    self.pSpaceOrder=1
-        #else: #rans3p
-        #    self.velSpaceOrder=2
-        #    self.pSpaceOrder=1
+
         ##################
         # VELOCITY SPACE #
         ##################
@@ -334,15 +329,15 @@ class FESpace:
                 quadOrder=6
             else:
                 quadOrder=3
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
+            self.elementQuadrature = ft.SimplexGaussQuadrature(nd, quadOrder)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(nd - 1, quadOrder)
         else:
             if useExact:
                 quadOrder=6
             else:
                 quadOrder=5
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
+            self.elementQuadrature = ft.SimplexGaussQuadrature(nd, quadOrder)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(nd - 1, quadOrder)
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
@@ -416,7 +411,7 @@ class SystemPhysics(Parameters.FreezableClass):
         self.nu_0 = 1.004e-6
         self.rho_1 = 1.205
         self.nu_1 = 1.500e-5
-        dim = self._Problem.nd
+        dim = self._Problem.domain.nd
         self.surf_tension_coeff = 72.8E-3
         if(dim==2):
             self.gravity =  [0.0, -9.81, 0.0]

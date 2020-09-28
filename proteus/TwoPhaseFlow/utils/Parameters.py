@@ -186,7 +186,7 @@ class ParametersModelBase(FreezableClass):
 
     def initializePhysics(self):
         self.p.domain = self._Problem.domain
-        self.p.nd = self._Problem.nd
+        self.p.nd = self._Problem.domain.nd
         self.p.movingDomain = self._Problem.movingDomain
         self.p.genMesh = self._Problem.Parameters.mesh.genMesh
         # initialize extra parameters
