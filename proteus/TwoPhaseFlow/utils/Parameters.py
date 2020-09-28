@@ -355,7 +355,6 @@ class ParametersModelRANS2P(ParametersModelBase):
         coeffs.LS_model = LS_model
         coeffs.Closure_0_model = K_model
         coeffs.Closure_1_model = DISS_model
-        coeffs.turbulenceClosureModel = pparams.useRANS
         coeffs.porosityTypes = porosityTypes
         coeffs.dragAlphaTypes = dragAlphaTypes
         coeffs.dragBetaTypes = dragBetaTypes

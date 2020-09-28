@@ -53,7 +53,7 @@ class TwoPhaseFlowProblem:
         self.useBoundaryConditionsModule = True
 
         #object to handle system level physics
-        self.SystemPhysics = SystemPhysics()
+        self.SystemPhysics = SystemPhysics(ProblemInstance=self)
 
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
         self.FESpace = None
@@ -395,8 +395,10 @@ default_general = {'nLevels': 1,
                    'nLayersOfOverlapForParallel': 0}
 
 class SystemPhysics(Parameters.FreezableClass):
-    def __init__(self):
+    def __init__(self,ProblemInstance):
         super(SystemPhysics, self).__init__(name='SystemPhysics')
+
+        self._Problem = ProblemInstance
         self.gravity = None 
         
         #phase 0
@@ -409,17 +411,55 @@ class SystemPhysics(Parameters.FreezableClass):
         
         self.surf_tension_coeff = None
 
-    def set_defaults(self,dim=2):
+    def setDefaults(self):
         self.rho_0 = 998.2
         self.nu_0 = 1.004e-6
         self.rho_1 = 1.205
         self.nu_1 = 1.500e-5
+        dim = self._Problem.nd
         self.surf_tension_coeff = 72.8E-3
         if(dim==2):
             self.gravity =  [0.0, -9.81, 0.0]
         elif(dim==3):
             self.gravity =  [0.0, 0.0, -9.81]
 
+       #need to freeze after setup
         # freeze attributes
-        self._freeze()
+       # self._freeze()
        
+    def useDefaultModels(self,flowModel=0,interfaceModel=0):
+        """
+        this provides the same functionality as the previous ns_model, ls_model flags
+        but using the addModels API
+        """
+
+        modelNames = {
+            'RANS2P': 'flow',
+            'RANS3PF': 'flow',
+            'VOF': 'vof',
+            'LS': 'ls',
+            'RDLS': 'rd',
+            'MCorr': 'mcorr',
+            'CLSVOF': 'clsvof',
+            'PressureIncrement': 'pressureInc',
+            'Pressure': 'pressure',
+            'PressureInitial': 'pressureInit'
+        }
+ 
+        assert flowModel in [0,1] and interfaceModel in [0,1], "flowModel and interfaceModel must either be 0 or 1"
+        if(flowModel == 0):
+            self._Problem.addModel(Parameters.ParametersModelRANS2P(),modelNames['RANS2P'])
+        elif(flowModel == 1 and interfaceModel==0):
+            self._Problem.addModel(Parameters.ParametersModelRANS3PF(),modelNames['RANS3PF'])
+        if(interfaceModel==0):
+            self._Problem.addModel(Parameters.ParametersModelVOF(),modelNames['VOF'])
+            self._Problem.addModel(Parameters.ParametersModelNCLS(),modelNames['LS'])
+            self._Problem.addModel(Parameters.ParametersModelRDLS(),modelNames['RDLS'])
+            self._Problem.addModel(Parameters.ParametersModelMCorr(),modelNames['MCorr']) 
+        else:
+            self._Problem.addModel(Parameters.ParametersModelCLSVOF(),modelNames['CLSVOF'])
+            self._Problem.addModel(Parameters.ParametersModelRANS3PF(),modelNames['RANS3PF'])
+            self._Problem.addModel(Parameters.ParametersModelPressureIncrement(),modelNames['PressureIncrement'])
+            self._Problem.addModel(Parameters.ParametersModelPressure(),modelNames['Pressure'])
+            self._Problem.addModel(Parameters.ParametersModelPressureInitial(),modelNames['PressureInitial'])
+
