@@ -187,7 +187,7 @@ class ParametersModelBase(FreezableClass):
     def initializePhysics(self):
         self.p.domain = self._Problem.domain
         self.p.nd = self._Problem.domain.nd
-        self.p.movingDomain = self._Problem.movingDomain
+        self.p.movingDomain = self._Problem.SystemPhysics.movingDomain
         self.p.genMesh = self._Problem.Parameters.mesh.genMesh
         # initialize extra parameters
         self._initializePhysics()
@@ -209,7 +209,7 @@ class ParametersModelBase(FreezableClass):
        
 
     def initializeNumerics(self):
-        self.n.runCFL = self._Problem.cfl
+        self.n.runCFL = self._Problem.SystemNumerics.cfl
         # MESH
         mesh = self._Problem.Parameters.mesh
         self.n.triangleFlag = mesh.triangleFlag
@@ -221,13 +221,13 @@ class ParametersModelBase(FreezableClass):
         self.n.nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
         self.n.restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
         # TIME INTEGRATION
-        self.n.runCFL = self._Problem.cfl
+        self.n.runCFL = self._Problem.SystemNumerics.cfl
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.elementQuadrature = FESpace['elementQuadrature']
         self.n.elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
         # SUPERLU
-        if self._Problem.useSuperlu and not parallel:
+        if self._Problem.SystemNumerics.useSuperlu and not parallel:
             self.n.multilevelLinearSolver = LinearSolvers.LU
             self.n.levelLinearSolver = LinearSolvers.LU
         # AUXILIARY VARIABLES
@@ -241,7 +241,7 @@ class ParametersModelBase(FreezableClass):
         pass
 
     def initializePETScOptions(self):
-        if not self._Problem.usePETScOptionsFileExternal:
+        if not self._Problem.SystemNumerics.usePETScOptionsFileExternal:
             # use default options if no file
             self._initializePETScOptions()
         else:
@@ -431,7 +431,7 @@ class ParametersModelRANS2P(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -781,7 +781,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['pBasis']}
         # LINEAR ALGEBRA
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.n.linearSmoother = None
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
@@ -862,7 +862,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['pBasis']}
         # LINEAR ALGEBRA
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.n.linearSmoother = None
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
@@ -1315,7 +1315,7 @@ class ParametersModelVOF(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1427,7 +1427,7 @@ class ParametersModelNCLS(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1524,7 +1524,7 @@ class ParametersModelRDLS(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1625,7 +1625,7 @@ class ParametersModelMCorr(ParametersModelBase):
         
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1716,7 +1716,7 @@ class ParametersModelAddedMass(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1925,7 +1925,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')

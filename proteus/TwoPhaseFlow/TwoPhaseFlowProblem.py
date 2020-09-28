@@ -14,9 +14,6 @@ class TwoPhaseFlowProblem:
     """ TwoPhaseFlowProblem """
 
     def __init__(self,
-                 models=None, #list of models
-                 # TIME STEPPING #
-                 cfl=0.33,
                  # DOMAIN AND MESH #
                  domain=None,
                  mesh=None,
@@ -24,26 +21,13 @@ class TwoPhaseFlowProblem:
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
-                 # OTHERS #
-                 useSuperlu=True,
-                 fastArchive=False,
-                 useExact=False):
+                 ):
 
-        # ***** SAVE PARAMETERS ***** #
-        self.useExact=useExact
         self.domain=domain
         self.mesh = mesh
-        self.modelList=[] #list used for internal tracking of models
-        self.modelDict={} #dict used to allow user access to models
-        self.modelIdxDict = {} #dict used for internal tracking of model indices
-        self.cfl=cfl
-        self.outputStepping=OutputStepping()
-        self.so = System_base()
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
-        self.useSuperlu = useSuperlu
-        self.movingDomain = False
-        self.archiveAllSteps = False
+
         # to use proteus.mprans.BoundaryConditions
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
@@ -51,21 +35,29 @@ class TwoPhaseFlowProblem:
         # ***** CREATE SYSTEM PHYSICS OBJECT ***** #
         self.SystemPhysics = SystemPhysics(ProblemInstance=self)
 
+        # ***** CREATE SYSTEM NUMERICS OBJECT ***** #
+        self.SystemNumerics = SystemNumerics(ProblemInstance=self)
+
+        # ***** CREATE MODEL PARAMETERS OBJECT ***** #
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
+
+        #Model tracking objects
+        self.modelList=[] #list used for internal tracking of models
+        self.modelDict={} #dict used to allow user access to models
+        self.modelIdxDict = {} #dict used for internal tracking of model indices
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace(ProblemInstance=self)
 
-        # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
-        self.fastArchive = fastArchive
-        self.usePETScOptionsFileExternal = False
+        # ***** CREATING OUTPUT MANAGEMENT OBJECTS ***** #
+        self.so = System_base()
+        self.outputStepping=OutputStepping()
 
     def checkProblem(self):
         # ***** SET OF ASSERTS ***** #
         assert self.domain.nd in [2,3], "nd={2,3}"
-        assert self.cfl <= 1, "Choose cfl <= 1"
-        assert isinstance (self.outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
-        #assert type(self.he)==float , "Provide (float) he (characteristic mesh size)"
+        assert self.SystemNumerics.cfl <= 1, "Choose cfl <= 1"
+        assert type(self.domain.MeshOptions.he)==float , "Provide (float) he (characteristic mesh size)"
         assert self.domain is not None, "Provide a domain"
         #if self.structured:
         #    assert type(self.nnx)==int and type(self.nny)==int, "Provide (int) nnx and nny"
@@ -223,7 +215,6 @@ class TwoPhaseFlowProblem:
         so.needEBQ_GLOBAL = False
         so.needEBQ = False
         so.measureSpeedOfCode = False
-        so.fastArchive = self.fastArchive
         # archiving time
         outputStepping = self.outputStepping
         tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
@@ -239,7 +230,7 @@ class TwoPhaseFlowProblem:
                 tnList = [0., outputStepping['dt_init'], outputStepping['final_time']]
         so.tnList = tnList
         so.archiveFlag = ArchiveFlags.EVERY_USER_STEP
-        if self.archiveAllSteps is True:
+        if outputStepping.archiveAllSteps is True:
             so.archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
         so.systemStepExact = outputStepping.systemStepExact
 
@@ -254,6 +245,7 @@ class OutputStepping:
         self.nDTout = None
         self.dt_fixed = None
         self.systemStepExact = False
+        self.archiveAllSteps = False
 
     def __getitem__(self, key):
         return self.__dict__[key]
@@ -282,7 +274,7 @@ class FESpace:
 
     def setFESpace(self):
         nd = self.Problem.domain.nd
-        useExact = self.Problem.useExact
+        useExact = self.Problem.SystemNumerics.useExact
         assert nd in [2,3], 'number of dimensions must be 2 or 3'
         for key,value in self.Problem.modelDict.items():
             
@@ -398,6 +390,7 @@ class SystemPhysics(Parameters.FreezableClass):
         self.rho_1 = None
         
         self.surf_tension_coeff = None
+        self.movingDomain = False
 
     def setDefaults(self):
         self.rho_0 = 998.2
@@ -451,3 +444,14 @@ class SystemPhysics(Parameters.FreezableClass):
             self._Problem.addModel(Parameters.ParametersModelPressure(),modelNames['Pressure'])
             self._Problem.addModel(Parameters.ParametersModelPressureInitial(),modelNames['PressureInitial'])
 
+class SystemNumerics(Parameters.FreezableClass):
+    def __init__(self,ProblemInstance):
+        super(SystemNumerics, self).__init__(name='SystemNumerics')
+
+        self._Problem = ProblemInstance
+        self.useSuperlu = True
+        self.cfl = 0.33
+        self.useExact = False
+     
+        # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
+        self.usePETScOptionsFileExternal = False
