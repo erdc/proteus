@@ -21,18 +21,12 @@ class TwoPhaseFlowProblem:
                  outputStepping=None,
                  # DOMAIN AND MESH #
                  structured=False,
-                 he=None,
-                 nnx=None,
-                 nny=None,
-                 nnz=None,
                  domain=None,
                  triangleFlag=0,
                  # INITIAL CONDITIONS #
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
-                 # AUXILIARY VARIABLES #
-                 auxVariables=None,
                  # OTHERS #
                  useSuperlu=True,
                  fastArchive=False,
@@ -58,27 +52,15 @@ class TwoPhaseFlowProblem:
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
+        #object to handle system level physics
+        self.SystemPhysics = SystemPhysics()
+
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
         self.FESpace = None
 
-        ## ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
-        #self.physical_parameters = default_physical_parameters
-        #self.rans2p_parameters = default_rans2p_parameters
-        #self.rans3p_parameters = default_rans3p_parameters
-        #self.clsvof_parameters = default_clsvof_parameters
-
         # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
-        #self.general = default_general
         self.fastArchive = fastArchive
         self.usePETScOptionsFileExternal = False
-
-        # temp 
-        #self.he = he
-        #self.nnx = nnx
-        #self.nny = nny
-        #self.nnz = nnz
-        #self.triangleFlag = triangleFlag
-        #self.structured = structured
 
     def checkProblem(self):
         # ***** SET OF ASSERTS ***** #
@@ -362,16 +344,6 @@ class FESpace:
             self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
             self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
 
-# ***************************************** #
-# ********** PHYSICAL PARAMETERS ********** #
-# ***************************************** #
-default_physical_parameters ={'densityA': 998.2,
-                              'kinematicViscosityA': 1.004e-6,
-                              'densityB': 1.205,
-                              'kinematicViscosityB': 1.500e-5,
-                              'surf_tension_coeff': 72.8E-3,
-                              'gravity': [0.0, -9.8, 0.0]}
-
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
 # ****************************************** #
@@ -421,3 +393,33 @@ default_clsvof_parameters = {'useMetrics': 1.0,
                              'disc_ICs': False}
 default_general = {'nLevels': 1,
                    'nLayersOfOverlapForParallel': 0}
+
+class SystemPhysics(Parameters.FreezableClass):
+    def __init__(self):
+        super(SystemPhysics, self).__init__(name='SystemPhysics')
+        self.gravity = None 
+        
+        #phase 0
+        self.nu_0 = None
+        self.rho_0 = None
+
+        #phase 1
+        self.nu_1 = None
+        self.rho_1 = None
+        
+        self.surf_tension_coeff = None
+
+    def set_defaults(self,dim=2):
+        self.rho_0 = 998.2
+        self.nu_0 = 1.004e-6
+        self.rho_1 = 1.205
+        self.nu_1 = 1.500e-5
+        self.surf_tension_coeff = 72.8E-3
+        if(dim==2):
+            self.gravity =  [0.0, -9.81, 0.0]
+        elif(dim==3):
+            self.gravity =  [0.0, 0.0, -9.81]
+
+        # freeze attributes
+        self._freeze()
+       
