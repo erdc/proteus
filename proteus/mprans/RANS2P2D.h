@@ -1966,18 +1966,10 @@ namespace proteus
                   ck.gradTrialFromRef(&p_grad_trial_ref(k, 0, 0),jacInv,p_grad_trial);
                   ck_v.gradTrialFromRef(&vel_grad_trial_ref(k, 0, 0),jacInv,vel_grad_trial);
 
-                  for (int i=0; i < nDOF_trial_element; i++)
-                    {
-                      p_trial[i] = p_trial_ref(k, i);
-                      p_grad_trial_ib[i*nSpace + 0] = p_grad_trial[i*nSpace+0];
-                      p_grad_trial_ib[i*nSpace + 1] = p_grad_trial[i*nSpace+1];
-                    }
-                  for (int i=0; i < nDOF_v_trial_element; i++)
-                    {
-                      vel_trial[i] = vel_trial_ref(k, i);
-                      vel_grad_trial_ib[i*nSpace + 0] = vel_grad_trial[i*nSpace+0];
-                      vel_grad_trial_ib[i*nSpace + 1] = vel_grad_trial[i*nSpace+1];
-                    }
+                  std::copy_n(p_trial_ref.data() + k*nDOF_trial_element, nDOF_trial_element, p_trial);
+                  std::copy(std::begin(p_grad_trial), std::end(p_grad_trial), std::begin(p_grad_trial_ib));
+                  std::copy_n(vel_trial_ref.data() + k*nDOF_v_trial_element, nDOF_v_trial_element, vel_trial);
+                  std::copy(std::begin(vel_grad_trial), std::end(vel_grad_trial), std::begin(vel_grad_trial_ib));
 
                   if (icase == 0)
                     {
@@ -2836,7 +2828,6 @@ namespace proteus
           //
           for(int i=0;i<nDOF_test_element;i++)
             {
-              register int eN_i=eN*nDOF_test_element+i;
               elementResidual_p_save(eN, i) +=  elementResidual_p[i];
               mesh_volume_conservation_element_weak += elementResidual_mesh[i];
               if (!elementIsActive[eN])
@@ -2852,7 +2843,6 @@ namespace proteus
 	    }
           for(int i=0;i<nDOF_v_test_element;i++)
             {
-              register int eN_i=eN*nDOF_v_test_element+i;
               if (!elementIsActive[eN])
                 {
                   assert(elementResidual_u[i]==0.0);
@@ -3036,22 +3026,13 @@ namespace proteus
             eN_nDOF_v_trial_element = eN*nDOF_v_trial_element;
 	  if (boundaryFlags[ebN] < 1)
 	    continue;
-          register double elementResidual_mesh[nDOF_test_element],
-            elementResidual_p[nDOF_test_element],
-            elementResidual_u[nDOF_v_test_element],
-            elementResidual_v[nDOF_v_test_element],
-            eps_rho,eps_mu;
+
+          auto elementResidual_mesh = detail::make_array<nDOF_test_element>(0.0);
+          auto elementResidual_p = detail::make_array<nDOF_test_element>(0.0);
+          auto elementResidual_u = detail::make_array<nDOF_v_test_element>(0.0);
+          auto elementResidual_v = detail::make_array<nDOF_v_test_element>(0.0);
+          register double eps_rho,eps_mu;
           const double* elementResidual_w(NULL);
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-              elementResidual_mesh[i]=0.0;
-              elementResidual_p[i]=0.0;
-            }
-          for (int i=0;i<nDOF_v_test_element;i++)
-            {
-              elementResidual_u[i]=0.0;
-              elementResidual_v[i]=0.0;
-            }
           double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
           for (int j=0;j<nDOF_mesh_trial_element;j++)
             {
