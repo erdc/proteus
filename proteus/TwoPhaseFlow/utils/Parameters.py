@@ -327,7 +327,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         ME_model = self.fetchIndex(idxDict,self.name)
         assert ME_model is not None, 'rans2p model index was not set!'
         CLSVOF_model = self.fetchIndex(idxDict, 'clsvof')
@@ -365,7 +365,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        boundaryConditions = self._Problem.boundaryConditions
+        boundaryConditions = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: boundaryConditions['pressure_DBC'],
                                           1: boundaryConditions['vel_u_DBC'],
@@ -553,7 +553,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEX
 
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         nModelId = self.fetchIndex(idxDict, 'ncls')
 
         VOF_model=self.fetchIndex(idxDict,'vof')
@@ -590,7 +590,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        boundaryConditions = self._Problem.boundaryConditions
+        boundaryConditions = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: boundaryConditions['vel_u_DBC'],
                                           1: boundaryConditions['vel_v_DBC']}
@@ -681,7 +681,7 @@ class ParametersModelPressure(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         PRESSURE_model = self.fetchIndex(idxDict,'pressure')
         V_model = self.fetchIndex(idxDict,'rans3p')
         PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
@@ -693,7 +693,7 @@ class ParametersModelPressure(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
+        BC = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['pressure_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_AFBC']}
@@ -749,7 +749,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         PRESSURE_model = self.fetchIndex(idxDict,'pressure')
         V_model = self.fetchIndex(idxDict,'rans3p')
         PINIT_model = self.fetchIndex(idxDict,'pressureInitial')
@@ -762,7 +762,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
+        BC = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['pressure_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_AFBC']}
@@ -829,7 +829,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         nd = domain.nd
         pparams = self._Problem.Parameters.physical
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         V_model = self.fetchIndex(idxDict,'rans3p')
         PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
         # COEFFICIENTS
@@ -843,7 +843,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
+        BC = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['pressure_increment_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_increment_AFBC']}
@@ -922,7 +922,7 @@ class ParametersModelKappa(ParametersModelBase):
         self.setInitialConditionStructure()
 
     def _initializePhysics(self):
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         pparams = self._Problem.Parameters.physical # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
@@ -961,7 +961,7 @@ class ParametersModelKappa(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        boundaryConditions = self._Problem.boundaryConditions
+        boundaryConditions = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: boundaryConditions['k_DBC']}
 
@@ -1053,7 +1053,7 @@ class ParametersModelDissipation(ParametersModelBase):
         self.setInitialConditionStructure()
 
     def _initializePhysics(self):
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         pparams = self._Problem.Parameters.physical  # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
@@ -1096,7 +1096,7 @@ class ParametersModelDissipation(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        boundaryConditions = self._Problem.boundaryConditions
+        boundaryConditions = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: boundaryConditions['dissipation_DBC']}
 
@@ -1176,7 +1176,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
 
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         CLSVOF_model = self.fetchIndex(idxDict,'clsvof')
         V_model = self.fetchIndex(idxDict,'rans2p')
 
@@ -1191,8 +1191,8 @@ class ParametersModelCLSVOF(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        BC = self._Problem.SystemPhysics.boundaryConditions
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['clsvof_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['clsvof_AFBC']}
             self.p.diffusiveFluxBoundaryConditions = {0:{0: BC['clsvof_DFBC']}}
@@ -1262,7 +1262,7 @@ class ParametersModelVOF(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         ME_model = self.fetchIndex(idxDict,self.name)
         assert ME_model is not None, 'vof model index was not set!'
         if('rans2p' in idxDict):
@@ -1282,7 +1282,7 @@ class ParametersModelVOF(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
+        BC = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['vof_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['vof_AFBC']}
@@ -1373,7 +1373,7 @@ class ParametersModelNCLS(ParametersModelBase):
     def _initializePhysics(self):
         domain = self._Problem.domain
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         ME_model = self.fetchIndex(idxDict, self.name)
         assert ME_model is not None, 'ls model index was not set!'
         if('rans2p' in idxDict):
@@ -1392,7 +1392,7 @@ class ParametersModelNCLS(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
+        BC = self._Problem.SystemPhysics.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
             if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
                 if 'ncls_DBC' in BC:
@@ -1484,7 +1484,7 @@ class ParametersModelRDLS(ParametersModelBase):
 
     def _initializePhysics(self):
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         nModelId = self.fetchIndex(idxDict, 'ncls')
         assert nModelId is not None, 'ncls model index was not set!'
         rdModelId = self.fetchIndex(idxDict, self.name)
@@ -1586,7 +1586,7 @@ class ParametersModelMCorr(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         ME_model = self.fetchIndex(idxDict, self.name)
         assert ME_model is not None, 'mcorr model index was not set!'
         LS_model = self.fetchIndex(idxDict, 'ncls')
@@ -1682,7 +1682,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         if self.fetchIndex(idxDict,'rans2p') is not None:
             V_model = self.fetchIndex(idxDict,'rans2p')
         elif self.fetchIndex(idxDict,'rans3p') is not None:
@@ -1697,7 +1697,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
+        BC = self._Problem.SystemPhysics.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: domain.BCbyFlag[flag].pAddedMass_dirichlet.uOfXT}
         self.p.advectiveFluxBoundaryConditions = {}
         def getFlux_am(x, flag):
@@ -1775,7 +1775,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         ME_MODEL = self.index
         assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
         if self.p.coefficients.useLS is True:
@@ -1790,7 +1790,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
+        BC = self._Problem.SystemPhysics.boundaryConditions
         self.p.dirichletConditions = {0: lambda x, flag: None}
         # self.p.advectiveFluxBoundaryConditions = {}
         self.p.diffusiveFluxBoundaryConditions = {0: {0: lambda x, flag: lambda x, t: 0.}}
@@ -1863,7 +1863,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         smTypes[:, 0] = 1.
         smTypes[:, 1] = 0.3
         # MODEL INDEXING
-        idxDict = self._Problem.modelIdxDict
+        idxDict = self._Problem.SystemPhysics.modelIdxDict
         ME_model = self.fetchIndex(idxDict,'moveMeshElastic')
         assert ME_model is not None, 'vof model index was not set!'
         if self.fetchIndex(idxDict,'rans2p') is not None:
@@ -1882,7 +1882,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
-        BC = self._Problem.boundaryConditions
+        BC = self._Problem.SystemPhysics.boundaryConditions
         if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['hx'],
                                           1: BC['hy']}
