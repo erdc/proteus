@@ -358,8 +358,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.linearDragFactor = 1.0
         self.nonlinearDragFactor = 1.0
         self.nullSpace = nullSpace
-
-        self.variableNames= ['p', 'u', 'v','w']
+        if(nd == 2):
+            self.variableNames=['p','u','v']
+        else:
+            self.variableNames= ['p', 'u', 'v','w']
         if initialize:
             self.initialize()
 

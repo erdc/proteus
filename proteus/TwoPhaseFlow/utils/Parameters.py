@@ -147,11 +147,11 @@ class ParametersModelBase(FreezableClass):
     """
     """
     def __init__(self,
-                 name=None):
+                 name=None,Problem=None):
         super(ParametersModelBase, self).__init__(name=name)
         self.index = None
         self.auxiliaryVariables = []
-        self._Problem = None
+        self._Problem = Problem
         self.OptDB = PETSc.Options()
         self.p = Physics_base()
         self.p.name = name
@@ -278,10 +278,12 @@ class ParametersModelBase(FreezableClass):
 class ParametersModelRANS2P(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelRANS2P, self).__init__(name='rans2p')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelRANS2P, self).__init__(name='rans2p',Problem=ProblemInstance)
+
         self.timeDiscretization = 'be'
         self.p.coefficients = RANS2P.Coefficients(
+            nd = self._Problem.domain.nd,
             initialize=False,
             useMetrics=1.,
             epsFact=epsFact,
@@ -495,9 +497,10 @@ class ParametersModelRANS2P(ParametersModelBase):
 class ParametersModelRANS3PF(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelRANS3PF, self).__init__(name='rans3p')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelRANS3PF, self).__init__(name='rans3p',Problem=ProblemInstance)
         self.p.coefficients = RANS3PF.Coefficients(
+            nd = self._Problem.domain.nd,
             initialize=False,
             useMetrics=1.,
             epsFact_density=epsFact,
@@ -584,7 +587,6 @@ class ParametersModelRANS3PF(ParametersModelBase):
         coeffs.PRESSURE_model = PRESSURE_model
         coeffs.Closure_0_model = K_model
         coeffs.Closure_1_model = DISS_model
-        coeffs.movingDomain = self.p.movingDomain
         coeffs.initialize()
 
         # BOUNDARY CONDITIONS
@@ -650,8 +652,8 @@ class ParametersModelRANS3PF(ParametersModelBase):
 class ParametersModelPressure(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelPressure, self).__init__(name='pressure')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelPressure, self).__init__(name='pressure',Problem=ProblemInstance)
         self.p.coefficients = Pres.Coefficients(
             initialize=False,
         )
@@ -717,8 +719,8 @@ class ParametersModelPressure(ParametersModelBase):
 class ParametersModelPressureInitial(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelPressureInitial, self).__init__(name='pressureInitial')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelPressureInitial, self).__init__(name='pressureInitial',Problem=ProblemInstance)
         self.p.coefficients = PresInit.Coefficients(
             initialize=False,
         )
@@ -793,8 +795,8 @@ class ParametersModelPressureInitial(ParametersModelBase):
 class ParametersModelPressureIncrement(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelPressureIncrement, self).__init__(name='pressureIncrement',Problem=ProblemInstance)
         self.p.coefficients = PresInc.Coefficients(
             initialize=False,
         )
@@ -874,8 +876,8 @@ class ParametersModelPressureIncrement(ParametersModelBase):
 class ParametersModelKappa(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelKappa, self).__init__(name='kappa')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelKappa, self).__init__(name='kappa',Problem=ProblemInstance)
 
         self.timeOrder = 1
         self.timeDiscretization = 'be'
@@ -1005,7 +1007,7 @@ class ParametersModelDissipation(ParametersModelBase):
     """
 
     def __init__(self):
-        super(ParametersModelDissipation, self).__init__(name='dissipation')
+        super(ParametersModelDissipation, self).__init__(name='dissipation',Problem=ProblemInstance)
 
         self.p.coefficients = Dissipation.Coefficients(
             initialize=False,
@@ -1135,8 +1137,8 @@ class ParametersModelDissipation(ParametersModelBase):
 
 
 class ParametersModelCLSVOF(ParametersModelBase):
-    def __init__(self):
-        super(ParametersModelCLSVOF, self).__init__(name='clsvof')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelCLSVOF, self).__init__(name='clsvof',Problem=ProblemInstance)
         self.p.coefficients = CLSVOF.Coefficients(
             initialize=False,
             useMetrics=1,
@@ -1219,8 +1221,8 @@ class ParametersModelCLSVOF(ParametersModelBase):
 class ParametersModelVOF(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelVOF, self).__init__(name='vof')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelVOF, self).__init__(name='vof',Problem=ProblemInstance)
         self.p.coefficients = VOF.Coefficients(
             initialize=False,
             useMetrics=1.,
@@ -1331,8 +1333,8 @@ class ParametersModelVOF(ParametersModelBase):
 class ParametersModelNCLS(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelNCLS, self).__init__(name='ncls')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelNCLS, self).__init__(name='ncls',Problem=ProblemInstance)
         # PHYSICS
         self.p.coefficients = NCLS.Coefficients(
             initialize=False,
@@ -1442,8 +1444,8 @@ class ParametersModelNCLS(ParametersModelBase):
 class ParametersModelRDLS(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelRDLS, self).__init__(name='rdls')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelRDLS, self).__init__(name='rdls',Problem=ProblemInstance)
         self.p.coefficients = RDLS.Coefficients(
             initialize=False,
             useMetrics=1.,
@@ -1543,8 +1545,8 @@ class ParametersModelRDLS(ParametersModelBase):
 class ParametersModelMCorr(ParametersModelBase):
     """
     """
-    def __init__(self):
-        super(ParametersModelMCorr, self).__init__(name='mcorr')
+    def __init__(self,ProblemInstance):
+        super(ParametersModelMCorr, self).__init__(name='mcorr',Problem=ProblemInstance)
         self.p.coefficients = MCorr.Coefficients(
             initialize=False,
             useMetrics=1.,
@@ -1638,9 +1640,10 @@ class ParametersModelMCorr(ParametersModelBase):
 class ParametersModelAddedMass(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
+    def __init__(self, ProblemInstance):
         super(ParametersModelAddedMass, self).__init__(name='addedMass', index=None,
-                                                       Problem=Problem)
+                                                       Problem=ProblemInstance)
+
         self.p.coefficients = AddedMass.Coefficients(
             initialize=False,
         )

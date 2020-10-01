@@ -73,8 +73,10 @@ class TwoPhaseFlowProblem:
             assert type(self.boundaryConditions)==dict, "Provide dict of boundary conditions"
 
     def addModel(self,modelObject,name):
-        self.modelList.append(modelObject)
-        self.modelDict[name] = modelObject
+        #attach problem to model
+        modelInitialized = modelObject(ProblemInstance=self) 
+        self.modelList.append(modelInitialized)
+        self.modelDict[name] = modelInitialized
 
     def attachModels(self):
         #attach problem object to each model, identify index, and then form dictionary
@@ -86,22 +88,14 @@ class TwoPhaseFlowProblem:
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
         nd = self.domain.nd
-        #ns_model = self.ns_model
-        #ls_model = self.ls_model
-        #if ns_model is not None:
-        #    assert 'pressure' in initialConditions, 'Provide pressure in ICs'
-        #    assert 'vel_u' in initialConditions, 'Provide vel_u in ICs'
-        #    assert 'vel_v' in initialConditions, 'Provide vel_v in ICs'
-        #    if nd==3:
-        #        assert 'vel_w' in initialConditions, 'Provide vel_w in ICs'
-        #    if self.ns_model == 1: #rans3p
-        #        assert 'pressure_increment' in initialConditions, 'Provide pressure_increment in ICs'
-        #if ls_model == 0:
-        #    assert 'vof' in initialConditions, 'Provide vof in ICs'
-        #    assert 'ncls' in initialConditions, 'Provide ncls in ICs'
-        #elif self.ls_model == 1:
-        #    assert 'clsvof' in initialConditions or ('ncls' in initialConditions and 'vof' in initialConditions), 'Provide clsvof or ncls and vof in ICs'
-    #
+        for model in self.modelList:
+            #if(proteus.TwoPhaseFlow.utils.Parameters.ParametersModelCLSVOF)
+            #assert model.p.initialConditions
+            for key in model.p.initialConditions.__dict__.keys():
+                if(key == 'name'):
+                    continue
+                assert model.p.initialConditions[key] is not None, 'Need to provide initial conditions for variable '+key+' in model '+model.name
+
     def assert_boundaryConditions(self):
         boundaryConditions = self.boundaryConditions
         nd = self.domain.nd
@@ -429,20 +423,20 @@ class SystemPhysics(Parameters.FreezableClass):
  
         assert flowModel in [0,1] and interfaceModel in [0,1], "flowModel and interfaceModel must either be 0 or 1"
         if(flowModel == 0):
-            self._Problem.addModel(Parameters.ParametersModelRANS2P(),modelNames['RANS2P'])
+            self._Problem.addModel(Parameters.ParametersModelRANS2P,modelNames['RANS2P'])
         elif(flowModel == 1 and interfaceModel==0):
-            self._Problem.addModel(Parameters.ParametersModelRANS3PF(),modelNames['RANS3PF'])
+            self._Problem.addModel(Parameters.ParametersModelRANS3PF,modelNames['RANS3PF'])
         if(interfaceModel==0):
-            self._Problem.addModel(Parameters.ParametersModelVOF(),modelNames['VOF'])
-            self._Problem.addModel(Parameters.ParametersModelNCLS(),modelNames['LS'])
-            self._Problem.addModel(Parameters.ParametersModelRDLS(),modelNames['RDLS'])
-            self._Problem.addModel(Parameters.ParametersModelMCorr(),modelNames['MCorr']) 
+            self._Problem.addModel(Parameters.ParametersModelVOF,modelNames['VOF'])
+            self._Problem.addModel(Parameters.ParametersModelNCLS,modelNames['LS'])
+            self._Problem.addModel(Parameters.ParametersModelRDLS,modelNames['RDLS'])
+            self._Problem.addModel(Parameters.ParametersModelMCorr,modelNames['MCorr']) 
         else:
-            self._Problem.addModel(Parameters.ParametersModelCLSVOF(),modelNames['CLSVOF'])
-            self._Problem.addModel(Parameters.ParametersModelRANS3PF(),modelNames['RANS3PF'])
-            self._Problem.addModel(Parameters.ParametersModelPressureIncrement(),modelNames['PressureIncrement'])
-            self._Problem.addModel(Parameters.ParametersModelPressure(),modelNames['Pressure'])
-            self._Problem.addModel(Parameters.ParametersModelPressureInitial(),modelNames['PressureInitial'])
+            self._Problem.addModel(Parameters.ParametersModelCLSVOF,modelNames['CLSVOF'])
+            self._Problem.addModel(Parameters.ParametersModelRANS3PF,modelNames['RANS3PF'])
+            self._Problem.addModel(Parameters.ParametersModelPressureIncrement,modelNames['PressureIncrement'])
+            self._Problem.addModel(Parameters.ParametersModelPressure,modelNames['Pressure'])
+            self._Problem.addModel(Parameters.ParametersModelPressureInitial,modelNames['PressureInitial'])
 
 class SystemNumerics(Parameters.FreezableClass):
     def __init__(self,ProblemInstance):
