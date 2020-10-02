@@ -97,9 +97,9 @@ EXTENSIONS_TO_BUILD = [
                language='c++',
                include_dirs=[numpy.get_include(),'include',
                              'proteus','proteus/MeshAdaptPUMI']+
-               PROTEUS_SCOREC_INCLUDE_DIRS,
-               library_dirs=PROTEUS_SCOREC_LIB_DIRS,
-               libraries=PROTEUS_SCOREC_LIBS,
+               PROTEUS_SCOREC_INCLUDE_DIRS+PROTEUS_MPI_INCLUDE_DIRS,
+               library_dirs=PROTEUS_SCOREC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS,
+               libraries=PROTEUS_SCOREC_LIBS+PROTEUS_MPI_LIBS,
                extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
                extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
     Extension(
