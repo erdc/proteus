@@ -188,7 +188,7 @@ class ParametersModelBase(FreezableClass):
         self.p.domain = self._Problem.domain
         self.p.nd = self._Problem.domain.nd
         self.p.movingDomain = self._Problem.SystemPhysics.movingDomain
-        self.p.genMesh = self._Problem.Parameters.mesh.genMesh
+        self.p.genMesh = self._Problem.domain.MeshOptions.genMesh
         # initialize extra parameters
         self._initializePhysics()
         self.p._unfreeze()
@@ -211,15 +211,15 @@ class ParametersModelBase(FreezableClass):
     def initializeNumerics(self):
         self.n.runCFL = self._Problem.SystemNumerics.cfl
         # MESH
-        mesh = self._Problem.Parameters.mesh
-        self.n.triangleFlag = mesh.triangleFlag
-        self.n.nnx = mesh.nnx
-        self.n.nny = mesh.nny
-        self.n.nnz = mesh.nnz
-        self.n.triangleOptions = mesh.triangleOptions
-        self.n.parallelPartitioningType = mesh.parallelPartitioningType
-        self.n.nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
-        self.n.restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
+        meshOptions = self._Problem.domain.MeshOptions
+        self.n.triangleFlag = meshOptions.triangleFlag
+        self.n.nnx = meshOptions.nnx
+        self.n.nny = meshOptions.nny
+        self.n.nnz = meshOptions.nnz
+        self.n.triangleOptions = meshOptions.triangleOptions
+        self.n.parallelPartitioningType = meshOptions.parallelPartitioningType
+        self.n.nLayersOfOverlapForParallel = meshOptions.nLayersOfOverlapForParallel
+        self.n.restrictFineSolutionToAllMeshes = meshOptions.restrictFineSolutionToAllMeshes
         # TIME INTEGRATION
         self.n.runCFL = self._Problem.SystemNumerics.cfl
         # FINITE ELEMENT SPACES
@@ -425,9 +425,9 @@ class ParametersModelRANS2P(ParametersModelBase):
                                                       shockCapturingFactor=scopts.shockCapturingFactor,
                                                       lag=scopts.lag)
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.001*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.01*self.n.nl_atol_res
 
@@ -642,9 +642,9 @@ class ParametersModelRANS3PF(ParametersModelBase):
                                                       shockCapturingFactor=scopts.shockCapturingFactor,
                                                       lag=scopts.lag)
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -710,9 +710,9 @@ class ParametersModelPressure(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['pBasis']}
         # TOLERANCE
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -786,9 +786,9 @@ class ParametersModelPressureInitial(ParametersModelBase):
         if self._Problem.SystemNumerics.useSuperlu:
             self.n.linearSmoother = None
         # TOLERANCE
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -867,9 +867,9 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         if self._Problem.SystemNumerics.useSuperlu:
             self.n.linearSmoother = None
         # TOLERANCE
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.01*self.n.nl_atol_res
 
@@ -995,9 +995,9 @@ class ParametersModelKappa(ParametersModelBase):
                                                       shockCapturingFactor=scopts.shockCapturingFactor,
                                                       lag=scopts.lag)
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -1129,9 +1129,9 @@ class ParametersModelDissipation(ParametersModelBase):
                                                      shockCapturingFactor=scopts.shockCapturingFactor,
                                                      lag=scopts.lag)
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01 * mesh.he ** 2)
+            self.n.nl_atol_res = max(minTol, 0.01 * meshOptions.he ** 2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1 * self.n.nl_atol_res
 
@@ -1211,9 +1211,9 @@ class ParametersModelCLSVOF(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
         # TOLERANCE
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.01*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.01*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
@@ -1309,9 +1309,9 @@ class ParametersModelVOF(ParametersModelBase):
                                                    shockCapturingFactor=scopts.shockCapturingFactor,
                                                    lag=scopts.lag)
         # TOLERANCE
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.001*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
@@ -1421,9 +1421,9 @@ class ParametersModelNCLS(ParametersModelBase):
                                                     shockCapturingFactor=scopts.shockCapturingFactor,
                                                     lag=scopts.lag)
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.001*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.001*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
@@ -1518,9 +1518,9 @@ class ParametersModelRDLS(ParametersModelBase):
                                                     shockCapturingFactor=scopts.shockCapturingFactor,
                                                     lag=scopts.lag)
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.1*mesh.he)
+            self.n.nl_atol_res = max(minTol, 0.1*meshOptions.he)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
@@ -1619,9 +1619,9 @@ class ParametersModelMCorr(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.0001*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
         
@@ -1711,9 +1711,9 @@ class ParametersModelAddedMass(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.0001*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
@@ -1800,9 +1800,9 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['lsBasis']}
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.0001*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.001*self.n.nl_atol_res
 
@@ -1920,9 +1920,9 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         if nd == 3:
             self.n.femSpaces[2] = FESpace['velBasis']
         # TOLERANCES
-        mesh = self._Problem.Parameters.mesh
+        meshOptions = self._Problem.domain.MeshOptions
         if self.n.nl_atol_res is None:
-            self.n.nl_atol_res = max(minTol, 0.0001*mesh.he**2)
+            self.n.nl_atol_res = max(minTol, 0.0001*meshOptions.he**2)
         if self.n.l_atol_res is None:
             self.n.l_atol_res = 0.1*self.n.nl_atol_res
 
