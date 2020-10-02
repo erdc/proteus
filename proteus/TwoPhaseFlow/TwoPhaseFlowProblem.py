@@ -55,13 +55,13 @@ class TwoPhaseFlowProblem:
         assert self.SystemNumerics.cfl <= 1, "Choose cfl <= 1"
         assert type(self.domain.MeshOptions.he)==float , "Provide (float) he (characteristic mesh size)"
         assert self.domain is not None, "Provide a domain"
-        #if self.structured:
-        #    assert type(self.nnx)==int and type(self.nny)==int, "Provide (int) nnx and nny"
-        #    if self.nd==3:
-        #        assert type(self.nnz)==int, "Provide (int) nnz"
-        #else:
-        #    assert self.domain.MeshOptions.triangleOptions != 'q30DenA', "Set domain.MeshOptions.triangleOptions"
-        #assert self.triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
+        if self.domain.MeshOptions.structured:
+            assert type(self.domain.MeshOptions.nnx)==int and type(self.domain.MeshOptions.nny)==int, "Provide (int) nnx and nny"
+            if self.domain.nd==3:
+                assert type(self.domain.MeshOptions.nnz)==int, "Provide (int) nnz"
+        else:
+            assert self.domain.MeshOptions.triangleOptions != 'q30DenA', "Set domain.MeshOptions.triangleOptions"
+        assert self.domain.MeshOptions.triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
         if self.SystemPhysics.initialConditions is not None:
             assert type(self.SystemPhysics.initialConditions)==dict, "Provide dict of initial conditions"
             # assertion now done in TwoPhaseFlow_so.py
@@ -152,18 +152,6 @@ class TwoPhaseFlowProblem:
 
         # parameters
         self.Parameters.initializeParameters()
-        # mesh
-        # if self.Parameters.mesh.outputFiles['poly'] is True:
-        #     self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
-        # if self.Parameters.mesh.outputFiles['ply'] is True:
-        #     self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
-        # if self.Parameters.mesh.outputFiles['asymptote'] is True:
-        #     self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
-        # if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
-        #     self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
-        #     self.domain.use_gmsh = True
-        # split operator
-
         self.initializeSO()
 
     def initializeSO(self):
