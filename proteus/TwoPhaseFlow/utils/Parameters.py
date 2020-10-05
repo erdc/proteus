@@ -366,7 +366,7 @@ class ParametersModelRANS2P(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: boundaryConditions['pressure_DBC'],
                                           1: boundaryConditions['vel_u_DBC'],
                                           2: boundaryConditions['vel_v_DBC']}
@@ -591,7 +591,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: boundaryConditions['vel_u_DBC'],
                                           1: boundaryConditions['vel_v_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: boundaryConditions['vel_u_AFBC'],
@@ -694,7 +694,7 @@ class ParametersModelPressure(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['pressure_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_AFBC']}
         else:
@@ -763,7 +763,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['pressure_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_AFBC']}
             self.p.diffusiveFluxBoundaryConditions = {0:{0: BC['pressure_increment_DFBC']}}
@@ -844,7 +844,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['pressure_increment_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['pressure_increment_AFBC']}
             self.p.diffusiveFluxBoundaryConditions = {0:{0: BC['pressure_increment_DFBC']}}
@@ -962,7 +962,7 @@ class ParametersModelKappa(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: boundaryConditions['k_DBC']}
 
             self.p.advectiveFluxBoundaryConditions = {0: boundaryConditions['k_AFBC']}
@@ -1097,7 +1097,7 @@ class ParametersModelDissipation(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         boundaryConditions = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: boundaryConditions['dissipation_DBC']}
 
             self.p.advectiveFluxBoundaryConditions = {0: boundaryConditions['dissipation_AFBC']}
@@ -1283,7 +1283,7 @@ class ParametersModelVOF(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['vof_DBC']}
             self.p.advectiveFluxBoundaryConditions = {0: BC['vof_AFBC']}
         else:
@@ -1394,7 +1394,7 @@ class ParametersModelNCLS(ParametersModelBase):
         # BOUNDARY CONDITIONS
         BC = self._Problem.SystemPhysics.boundaryConditions
         if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
-            if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+            if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
                 if 'ncls_DBC' in BC:
                     self.p.dirichletConditions = {0: BC['ncls_DBC']}
                 else:
@@ -1883,7 +1883,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.SystemPhysics.boundaryConditions
-        if domain.useSpatialTools is False or self._Problem.useBoundaryConditionsModule is False:
+        if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
             self.p.dirichletConditions = {0: BC['hx'],
                                           1: BC['hy']}
             self.p.stressFluxBoundaryConditions = {0: BC['u_stress'],
