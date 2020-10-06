@@ -289,56 +289,6 @@ class FESpace:
             self.elementQuadrature = ft.SimplexGaussQuadrature(nd, quadOrder)
             self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(nd - 1, quadOrder)
 
-# ****************************************** #
-# ********** NUMERICAL PARAMETERS ********** #
-# ****************************************** #
-default_rans2p_parameters = {'useMetrics': 1.0,
-                             'epsFact_viscosity': 1.5,
-                             'epsFact_density': 1.5,
-                             'ns_forceStrongDirichlet': False,
-                             'weak_bc_penalty_constant': 1.0E6,
-                             'useRBLES': 0.0,
-                             'ns_closure': 0,
-                             'useVF': 0.0,
-                             'ns_shockCapturingFactor': 0.25,
-                             'ns_lag_shockCapturing': True,
-                             'ns_lag_subgridError': True,
-                             'timeDiscretization': 'vbdf',
-                             'timeOrder': 2}
-default_rans3p_parameters = {'useMetrics': 1.0,
-                             'epsFact_viscosity': 1.5,
-                             'epsFact_density': 1.5,
-                             'ns_forceStrongDirichlet': False,
-                             'ns_sed_forceStrongDirichlet': False,
-                             'weak_bc_penalty_constant': 1.0E6,
-                             'useRBLES': 0.0,
-                             'useRANS': 0.0,
-                             'ns_closure': 0,
-                             'useVF': 0.0,
-                             'ns_shockCapturingFactor': 0.5,
-                             'ns_lag_shockCapturing': True,
-                             'ns_lag_subgridError': True,
-                             'timeDiscretization': 'vbdf',
-                             'timeOrder': 2,
-                             'PSTAB': 0,
-                             'USE_SUPG': False,
-                             'ARTIFICIAL_VISCOSITY': 3, #edge based with smoothness indicator
-                             'INT_BY_PARTS_PRESSURE': 1,
-                             'cE': 1.0,
-                             'cMax': 1.0}
-default_clsvof_parameters = {'useMetrics': 1.0,
-                             'epsFactHeaviside': 1.5,
-                             'epsFactDirac': 1.5,
-                             'epsFactRedist': 0.33,
-                             'lambdaFact': 10.0,
-                             'outputQuantDOFs': True,
-                             'computeMetrics': 1,
-                             'computeMetricsForBubble': False,
-                             'eps_tolerance_clsvof': False,
-                             'disc_ICs': False}
-default_general = {'nLevels': 1,
-                   'nLayersOfOverlapForParallel': 0}
-
 class SystemPhysics(Parameters.FreezableClass):
     def __init__(self,ProblemInstance):
         super(SystemPhysics, self).__init__(name='SystemPhysics')
