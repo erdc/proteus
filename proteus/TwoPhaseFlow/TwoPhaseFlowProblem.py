@@ -82,49 +82,60 @@ class TwoPhaseFlowProblem:
     def assert_boundaryConditions(self):
         boundaryConditions = self.SystemPhysics.boundaryConditions
         nd = self.domain.nd
-        #ns_model = self.ns_model
-        #ls_model = self.ls_model
-        #if boundaryConditions is not None:
-        #    # check dirichlet BCs
-        #    if ns_model is not None:
-        #        assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
-        #        assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
-        #        assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
-        #        if nd==3:
-        #            assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
-        #    if ls_model == 0:
-        #        assert 'vof_DBC' in boundaryConditions, "Provide vof_DBC"
-        #        assert 'ncls_DBC' in boundaryConditions, "Provide ncls_DBC"
-        #    elif ls_model == 1:
-        #        assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
-        #    # check advective flux BCs
-        #    if ns_model is not None:
-        #        assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
-        #        assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
-        #        assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
-        #        if nd==3:
-        #            assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
-        #    if ls_model == 1:
-        #        assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
-        #    if ls_model == 0:
-        #        assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
-        #    # check diffusive flux BCs
-        #    if ns_model is not None:
-        #        assert 'vel_u_DFBC' in boundaryConditions, "provide vel_u_DFBC"
-        #        assert 'vel_v_DFBC' in boundaryConditions, "provide vel_v_DFBC"
-        #        if nd==3:
-        #            assert 'vel_w_DFBC' in boundaryConditions, "provide vel_w_DFBC"
-        #    if ls_model == 1:
-        #        assert 'clsvof_DFBC' in boundaryConditions, "provide clsvof_DFBC"
-        #    if ns_model==1: #rans3p
-        #        # check dirichlet BCs
-        #        assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
-        #        # check advective flux BCs
-        #        assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
-        #        # check diffusive flux BCs
-        #        assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
-        #else:
-        #    assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
+        ns_model = None
+        ls_model = None
+
+        for model in self.SystemPhysics.modelList:
+            if(isinstance(model,Parameters.ParametersModelRANS3PF)):                 
+                ns_model = 'rans3p'
+            elif(isinstance(model,Parameters.ParametersModelRANS2P)):
+                ns_model = 'rans2p'
+            elif isinstance(model,Parameters.ParametersModelCLSVOF):
+                ls_model = 'clsvof'
+            elif isinstance(model,Parameters.ParametersModelVOF):
+                ls_model = 'vof'
+
+        if boundaryConditions is not None:
+            # check dirichlet BCs
+            if ns_model is not None:
+                assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
+                assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
+                assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
+                if nd==3:
+                    assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
+            if ls_model == 'vof':
+                assert 'vof_DBC' in boundaryConditions, "Provide vof_DBC"
+                assert 'ncls_DBC' in boundaryConditions, "Provide ncls_DBC"
+            elif ls_model == 'clsvof':
+                assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
+            # check advective flux BCs
+            if ns_model is not None:
+                assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
+                assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
+                assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
+                if nd==3:
+                    assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
+            if ls_model == 'vof':
+                assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
+            if ls_model == 'clsvof':
+                assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
+            # check diffusive flux BCs
+            if ns_model is not None:
+                assert 'vel_u_DFBC' in boundaryConditions, "provide vel_u_DFBC"
+                assert 'vel_v_DFBC' in boundaryConditions, "provide vel_v_DFBC"
+                if nd==3:
+                    assert 'vel_w_DFBC' in boundaryConditions, "provide vel_w_DFBC"
+            if ls_model == 'clsvof':
+                assert 'clsvof_DFBC' in boundaryConditions, "provide clsvof_DFBC"
+            if ns_model=='rans3p':
+                # check dirichlet BCs
+                assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
+                # check advective flux BCs
+                assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
+                # check diffusive flux BCs
+                assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
+        else:
+            assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
 
     def initializeAll(self):
 
@@ -313,8 +324,6 @@ class SystemPhysics(Parameters.FreezableClass):
         # to use proteus.mprans.BoundaryConditions
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
-
-
 
     def setDefaults(self):
         self.rho_0 = 998.2
