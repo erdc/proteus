@@ -14,78 +14,50 @@ class TwoPhaseFlowProblem:
     """ TwoPhaseFlowProblem """
 
     def __init__(self,
-                 models=None, #list of models
-                 nd=2,
-                 # TIME STEPPING #
-                 cfl=0.33,
-                 outputStepping=None,
                  # DOMAIN AND MESH #
-                 structured=False,
-                 he=None,
-                 nnx=None,
-                 nny=None,
-                 nnz=None,
                  domain=None,
-                 triangleFlag=0,
+                 mesh=None,
                  # INITIAL CONDITIONS #
                  initialConditions=None,
                  # BOUNDARY CONDITIONS #
                  boundaryConditions=None,
-                 # AUXILIARY VARIABLES #
-                 auxVariables=None,
-                 # OTHERS #
-                 useSuperlu=True,
-                 fastArchive=False,
-                 useExact=False):
+                 ):
 
-        # ***** SAVE PARAMETERS ***** #
-        self.useExact=useExact
         self.domain=domain
-        self.mesh = None
-        self.modelList=[] #list used for internal tracking of models
-        self.modelDict={} #dict used to allow user access to models
-        self.modelIdxDict = {} #dict used for internal tracking of model indices
-        self.nd=nd
-        self.cfl=cfl
-        self.outputStepping=outputStepping
-        self.so = System_base()
+        self.mesh = mesh
         self.initialConditions=initialConditions
         self.boundaryConditions=boundaryConditions
-        self.useSuperlu = useSuperlu
-        self.movingDomain = False
-        self.archiveAllSteps = False
+
         # to use proteus.mprans.BoundaryConditions
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
+        # ***** CREATE SYSTEM PHYSICS OBJECT ***** #
+        self.SystemPhysics = SystemPhysics(ProblemInstance=self)
+
+        # ***** CREATE SYSTEM NUMERICS OBJECT ***** #
+        self.SystemNumerics = SystemNumerics(ProblemInstance=self)
+
+        # ***** CREATE MODEL PARAMETERS OBJECT ***** #
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
-        self.FESpace = None
 
-        ## ***** DEFINE PHYSICAL AND NUMERICAL PARAMETERS ***** #
-        #self.physical_parameters = default_physical_parameters
-        #self.rans2p_parameters = default_rans2p_parameters
-        #self.rans3p_parameters = default_rans3p_parameters
-        #self.clsvof_parameters = default_clsvof_parameters
+        #Model tracking objects
+        self.modelList=[] #list used for internal tracking of models
+        self.modelDict={} #dict used to allow user access to models
+        self.modelIdxDict = {} #dict used for internal tracking of model indices
 
-        # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
-        #self.general = default_general
-        self.fastArchive = fastArchive
-        self.usePETScOptionsFileExternal = False
+        # ***** CREATE FINITE ELEMENT SPACES ***** #
+        self.FESpace = FESpace(ProblemInstance=self)
 
-        # temp 
-        #self.he = he
-        #self.nnx = nnx
-        #self.nny = nny
-        #self.nnz = nnz
-        #self.triangleFlag = triangleFlag
-        #self.structured = structured
+        # ***** CREATING OUTPUT MANAGEMENT OBJECTS ***** #
+        self.so = System_base()
+        self.outputStepping=OutputStepping()
 
     def checkProblem(self):
         # ***** SET OF ASSERTS ***** #
-        assert self.nd in [2,3], "nd={2,3}"
-        assert self.cfl <= 1, "Choose cfl <= 1"
-        assert isinstance (self.outputStepping,OutputStepping), "Provide an object from the OutputStepping class"
-        #assert type(self.he)==float , "Provide (float) he (characteristic mesh size)"
+        assert self.domain.nd in [2,3], "nd={2,3}"
+        assert self.SystemNumerics.cfl <= 1, "Choose cfl <= 1"
+        assert type(self.domain.MeshOptions.he)==float , "Provide (float) he (characteristic mesh size)"
         assert self.domain is not None, "Provide a domain"
         #if self.structured:
         #    assert type(self.nnx)==int and type(self.nny)==int, "Provide (int) nnx and nny"
@@ -113,7 +85,7 @@ class TwoPhaseFlowProblem:
 
     def assert_initialConditions(self):
         initialConditions = self.initialConditions
-        nd = self.nd
+        nd = self.domain.nd
         #ns_model = self.ns_model
         #ls_model = self.ls_model
         #if ns_model is not None:
@@ -132,7 +104,7 @@ class TwoPhaseFlowProblem:
     #
     def assert_boundaryConditions(self):
         boundaryConditions = self.boundaryConditions
-        nd = self.nd
+        nd = self.domain.nd
         #ns_model = self.ns_model
         #ls_model = self.ls_model
         #if boundaryConditions is not None:
@@ -179,12 +151,11 @@ class TwoPhaseFlowProblem:
 
     def initializeAll(self):
 
-        # ***** CREATE FINITE ELEMENT SPACES ***** #
-        if(self.FESpace is None):
-            self.FESpace = FESpace(self,self.nd)
+        #Set dimension
+        assert self.domain is not None, "Need to define domain before proceeding"
 
         # ***** SET FINITE ELEMENT  ***** #
-        self.FESpace.setFESpace(self.modelIdxDict)
+        self.FESpace.setFESpace()
 
         self.outputStepping.setOutputStepping()
         #self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
@@ -244,7 +215,6 @@ class TwoPhaseFlowProblem:
         so.needEBQ_GLOBAL = False
         so.needEBQ = False
         so.measureSpeedOfCode = False
-        so.fastArchive = self.fastArchive
         # archiving time
         outputStepping = self.outputStepping
         tnList=[0.,outputStepping['dt_init']]+[float(k)*outputStepping['final_time']/float(outputStepping['nDTout']) for k in range(1,outputStepping['nDTout']+1)]
@@ -260,7 +230,7 @@ class TwoPhaseFlowProblem:
                 tnList = [0., outputStepping['dt_init'], outputStepping['final_time']]
         so.tnList = tnList
         so.archiveFlag = ArchiveFlags.EVERY_USER_STEP
-        if self.archiveAllSteps is True:
+        if outputStepping.archiveAllSteps is True:
             so.archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
         so.systemStepExact = outputStepping.systemStepExact
 
@@ -268,24 +238,20 @@ class OutputStepping:
     """
     OutputStepping handles how often the solution is outputted.
     """
-    def __init__(self,
-                 final_time,
-                 dt_init=0.001,
-                 dt_output=None,
-                 nDTout=None,
-                 dt_fixed=None):
-        self.final_time=final_time
-        self.dt_init=dt_init
-        assert not (dt_output is None and nDTout is None), "Provide dt_output or nDTout"
-        self.dt_output=dt_output
-        self.nDTout = nDTout
-        self.dt_fixed = dt_fixed
+    def __init__(self):
+        self.final_time=None 
+        self.dt_init=0.001
+        self.dt_output=None
+        self.nDTout = None
+        self.dt_fixed = None
         self.systemStepExact = False
+        self.archiveAllSteps = False
 
     def __getitem__(self, key):
         return self.__dict__[key]
 
     def setOutputStepping(self):
+        assert not (self.dt_output is None and nDTout is None), "Provide dt_output or nDTout"
         # COMPUTE dt_init #
         self.dt_init = min(self.dt_output, self.dt_init)
         if self.nDTout is None:
@@ -298,17 +264,18 @@ class FESpace:
     """
     Create FE Spaces.
     """
-    def __init__(self,Problem,nd):
-        assert nd in [2,3], 'number of dimensions must be 2 or 3'
-        self.nd=nd
+    def __init__(self,ProblemInstance):
         self.velSpaceOrder=None
         self.pSpaceOrder=None
-        self.Problem = Problem
+        self.Problem = ProblemInstance
 
     def __getitem__(self, key):
         return self.__dict__[key]
 
-    def setFESpace(self,useExact=False):
+    def setFESpace(self):
+        nd = self.Problem.domain.nd
+        useExact = self.Problem.SystemNumerics.useExact
+        assert nd in [2,3], 'number of dimensions must be 2 or 3'
         for key,value in self.Problem.modelDict.items():
             
             if(isinstance(value,Parameters.ParametersModelRANS2P)):
@@ -318,12 +285,7 @@ class FESpace:
                 self.velSpaceOrder=2
                 self.pSpaceOrder=1
         assert self.velSpaceOrder is not None
-        #if ns_model == 0 or ns_model is None: # rans2p or None
-        #    self.velSpaceOrder=1
-        #    self.pSpaceOrder=1
-        #else: #rans3p
-        #    self.velSpaceOrder=2
-        #    self.pSpaceOrder=1
+
         ##################
         # VELOCITY SPACE #
         ##################
@@ -352,25 +314,15 @@ class FESpace:
                 quadOrder=6
             else:
                 quadOrder=3
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
+            self.elementQuadrature = ft.SimplexGaussQuadrature(nd, quadOrder)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(nd - 1, quadOrder)
         else:
             if useExact:
                 quadOrder=6
             else:
                 quadOrder=5
-            self.elementQuadrature = ft.SimplexGaussQuadrature(self.nd, quadOrder)
-            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(self.nd - 1, quadOrder)
-
-# ***************************************** #
-# ********** PHYSICAL PARAMETERS ********** #
-# ***************************************** #
-default_physical_parameters ={'densityA': 998.2,
-                              'kinematicViscosityA': 1.004e-6,
-                              'densityB': 1.205,
-                              'kinematicViscosityB': 1.500e-5,
-                              'surf_tension_coeff': 72.8E-3,
-                              'gravity': [0.0, -9.8, 0.0]}
+            self.elementQuadrature = ft.SimplexGaussQuadrature(nd, quadOrder)
+            self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(nd - 1, quadOrder)
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
@@ -421,3 +373,85 @@ default_clsvof_parameters = {'useMetrics': 1.0,
                              'disc_ICs': False}
 default_general = {'nLevels': 1,
                    'nLayersOfOverlapForParallel': 0}
+
+class SystemPhysics(Parameters.FreezableClass):
+    def __init__(self,ProblemInstance):
+        super(SystemPhysics, self).__init__(name='SystemPhysics')
+
+        self._Problem = ProblemInstance
+        self.gravity = None 
+        
+        #phase 0
+        self.nu_0 = None
+        self.rho_0 = None
+
+        #phase 1
+        self.nu_1 = None
+        self.rho_1 = None
+        
+        self.surf_tension_coeff = None
+        self.movingDomain = False
+
+    def setDefaults(self):
+        self.rho_0 = 998.2
+        self.nu_0 = 1.004e-6
+        self.rho_1 = 1.205
+        self.nu_1 = 1.500e-5
+        dim = self._Problem.domain.nd
+        self.surf_tension_coeff = 72.8E-3
+        if(dim==2):
+            self.gravity =  [0.0, -9.81, 0.0]
+        elif(dim==3):
+            self.gravity =  [0.0, 0.0, -9.81]
+
+       #need to freeze after setup
+        # freeze attributes
+       # self._freeze()
+       
+    def useDefaultModels(self,flowModel=0,interfaceModel=0):
+        """
+        this provides the same functionality as the previous ns_model, ls_model flags
+        but using the addModels API
+        """
+
+        modelNames = {
+            'RANS2P': 'flow',
+            'RANS3PF': 'flow',
+            'VOF': 'vof',
+            'LS': 'ls',
+            'RDLS': 'rd',
+            'MCorr': 'mcorr',
+            'CLSVOF': 'clsvof',
+            'PressureIncrement': 'pressureInc',
+            'Pressure': 'pressure',
+            'PressureInitial': 'pressureInit'
+        }
+ 
+        assert flowModel in [0,1] and interfaceModel in [0,1], "flowModel and interfaceModel must either be 0 or 1"
+        if(flowModel == 0):
+            self._Problem.addModel(Parameters.ParametersModelRANS2P(),modelNames['RANS2P'])
+        elif(flowModel == 1 and interfaceModel==0):
+            self._Problem.addModel(Parameters.ParametersModelRANS3PF(),modelNames['RANS3PF'])
+        if(interfaceModel==0):
+            self._Problem.addModel(Parameters.ParametersModelVOF(),modelNames['VOF'])
+            self._Problem.addModel(Parameters.ParametersModelNCLS(),modelNames['LS'])
+            self._Problem.addModel(Parameters.ParametersModelRDLS(),modelNames['RDLS'])
+            self._Problem.addModel(Parameters.ParametersModelMCorr(),modelNames['MCorr']) 
+        else:
+            self._Problem.addModel(Parameters.ParametersModelCLSVOF(),modelNames['CLSVOF'])
+            self._Problem.addModel(Parameters.ParametersModelRANS3PF(),modelNames['RANS3PF'])
+            self._Problem.addModel(Parameters.ParametersModelPressureIncrement(),modelNames['PressureIncrement'])
+            self._Problem.addModel(Parameters.ParametersModelPressure(),modelNames['Pressure'])
+            self._Problem.addModel(Parameters.ParametersModelPressureInitial(),modelNames['PressureInitial'])
+
+class SystemNumerics(Parameters.FreezableClass):
+    def __init__(self,ProblemInstance):
+        super(SystemNumerics, self).__init__(name='SystemNumerics')
+
+        self._Problem = ProblemInstance
+        self.useSuperlu = True
+        self.cfl = 0.33
+        self.useExact = False
+     
+        # ***** DEFINE OTHER GENERAL NEEDED STUFF ***** #
+        self.usePETScOptionsFileExternal = False

@@ -57,7 +57,7 @@ class ParametersHolder:
         self._Problem = ProblemInstance
         # default options
         self.model_list = []
-        self.physical = ParametersPhysical()
+        self.physical = self._Problem.SystemPhysics
 
     def initializeParameters(self):
         logEvent('----------')
@@ -186,8 +186,8 @@ class ParametersModelBase(FreezableClass):
 
     def initializePhysics(self):
         self.p.domain = self._Problem.domain
-        self.p.nd = self._Problem.nd
-        self.p.movingDomain = self._Problem.movingDomain
+        self.p.nd = self._Problem.domain.nd
+        self.p.movingDomain = self._Problem.SystemPhysics.movingDomain
         self.p.genMesh = self._Problem.Parameters.mesh.genMesh
         # initialize extra parameters
         self._initializePhysics()
@@ -196,9 +196,20 @@ class ParametersModelBase(FreezableClass):
     def _initializePhysics(self):
         # to overwrite for each models
         pass
+    def _setPhysicsValues(self):
+        coeffs = self.p.coefficients
+        coeffs.movingDomain = self.p.movingDomain
+        pparams = self._Problem.Parameters.physical
+        coeffs.sigma = pparams.surf_tension_coeff
+        coeffs.rho_0 = pparams.rho_0
+        coeffs.rho_1 = pparams.rho_1
+        coeffs.nu_0 = pparams.nu_0
+        coeffs.nu_1 = pparams.nu_1
+        coeffs.g = np.array(pparams.gravity)
+       
 
     def initializeNumerics(self):
-        self.n.runCFL = self._Problem.cfl
+        self.n.runCFL = self._Problem.SystemNumerics.cfl
         # MESH
         mesh = self._Problem.Parameters.mesh
         self.n.triangleFlag = mesh.triangleFlag
@@ -210,13 +221,13 @@ class ParametersModelBase(FreezableClass):
         self.n.nLayersOfOverlapForParallel = mesh.nLayersOfOverlapForParallel
         self.n.restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
         # TIME INTEGRATION
-        self.n.runCFL = self._Problem.cfl
+        self.n.runCFL = self._Problem.SystemNumerics.cfl
         # FINITE ELEMENT SPACES
         FESpace = self._Problem.FESpace
         self.n.elementQuadrature = FESpace['elementQuadrature']
         self.n.elementBoundaryQuadrature = FESpace['elementBoundaryQuadrature']
         # SUPERLU
-        if self._Problem.useSuperlu and not parallel:
+        if self._Problem.SystemNumerics.useSuperlu and not parallel:
             self.n.multilevelLinearSolver = LinearSolvers.LU
             self.n.levelLinearSolver = LinearSolvers.LU
         # AUXILIARY VARIABLES
@@ -230,7 +241,7 @@ class ParametersModelBase(FreezableClass):
         pass
 
     def initializePETScOptions(self):
-        if not self._Problem.usePETScOptionsFileExternal:
+        if not self._Problem.SystemNumerics.usePETScOptionsFileExternal:
             # use default options if no file
             self._initializePETScOptions()
         else:
@@ -336,13 +347,7 @@ class ParametersModelRANS2P(ParametersModelBase):
             epsFact_porous = None
         # COEFFICIENTS
         coeffs = self.p.coefficients
-        coeffs.movingDomain = self.p.movingDomain
-        coeffs.sigma = pparams.surf_tension_coeff
-        coeffs.rho_0 = pparams.densityA
-        coeffs.rho_1 = pparams.densityB
-        coeffs.nu_0 = pparams.kinematicViscosityA
-        coeffs.nu_1 = pparams.kinematicViscosityB
-        coeffs.g = np.array(pparams.gravity)
+        self._setPhysicsValues()
         coeffs.nd = nd
         coeffs.ME_model = ME_model
         coeffs.CLSVOF_model = CLSVOF_model
@@ -350,7 +355,6 @@ class ParametersModelRANS2P(ParametersModelBase):
         coeffs.LS_model = LS_model
         coeffs.Closure_0_model = K_model
         coeffs.Closure_1_model = DISS_model
-        coeffs.turbulenceClosureModel = pparams.useRANS
         coeffs.porosityTypes = porosityTypes
         coeffs.dragAlphaTypes = dragAlphaTypes
         coeffs.dragBetaTypes = dragBetaTypes
@@ -427,7 +431,7 @@ class ParametersModelRANS2P(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -569,12 +573,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
             self.p.forceTerms = coeffs.forceTerms
             coeffs.MULTIPLY_EXTERNAL_FORCE_BY_DENSITY = 1
         coeffs.nd = nd
-        coeffs.sigma = pparams.surf_tension_coeff
-        coeffs.rho_0 = pparams.densityA
-        coeffs.rho_1 = pparams.densityB
-        coeffs.nu_0 = pparams.kinematicViscosityA
-        coeffs.nu_1 = pparams.kinematicViscosityB
-        coeffs.g = np.array(pparams.gravity)
+        self._setPhysicsValues()
         coeffs.nd = nd
         coeffs.ME_model = V_model
         coeffs.VOF_model = VOF_model
@@ -782,7 +781,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['pBasis']}
         # LINEAR ALGEBRA
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.n.linearSmoother = None
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
@@ -833,8 +832,9 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
         # COEFFICIENTS
         coeffs = self.p.coefficients
-        coeffs.rho_f_min = (1.0-1.0e-8)*pparams.densityB
-        coeffs.rho_s_min = (1.0-1.0e-8)*pparams.densityA
+        self._setPhysicsValues()
+        coeffs.rho_f_min = (1.0-1.0e-8)*coeffs.rho_1
+        coeffs.rho_s_min = (1.0-1.0e-8)*coeffs.rho_0
         coeffs.nd = nd
         coeffs.modelIndex = PINC_model
         coeffs.fluidModelIndex = V_model
@@ -862,7 +862,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         FESpace = self._Problem.FESpace
         self.n.femSpaces = {0: FESpace['pBasis']}
         # LINEAR ALGEBRA
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.n.linearSmoother = None
         # TOLERANCE
         mesh = self._Problem.Parameters.mesh
@@ -954,11 +954,7 @@ class ParametersModelKappa(ParametersModelBase):
         coeffs.dissipation_model_flag = pparams.useRANS
         coeffs.c_mu = pparams.c_mu
         coeffs.sigma_k = pparams.sigma_k
-        coeffs.rho_0 = pparams.densityA
-        coeffs.nu_0 = pparams.kinematicViscosityA
-        coeffs.rho_1 = pparams.densityB
-        coeffs.nu_1 = pparams.kinematicViscosityB
-        coeffs.g = np.array(pparams.gravity)
+        self._setPhysicsValues()
         coeffs.nd = nd
         coeffs.initialize()
 
@@ -1091,11 +1087,7 @@ class ParametersModelDissipation(ParametersModelBase):
         coeffs.c_2 = pparams.c_2
         coeffs.c_e = pparams.c_e
         coeffs.sigma_e = pparams.sigma_e
-        coeffs.rho_0 = pparams.densityA
-        coeffs.nu_0 = pparams.kinematicViscosityA
-        coeffs.rho_1 = pparams.densityB
-        coeffs.nu_1 = pparams.kinematicViscosityB
-        coeffs.g = np.array(pparams.gravity)
+        self._setPhysicsValues()
         coeffs.nd = nd
         # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988
         coeffs.dissipation_model_flag = pparams.useRANS
@@ -1323,7 +1315,7 @@ class ParametersModelVOF(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1435,7 +1427,7 @@ class ParametersModelNCLS(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1532,7 +1524,7 @@ class ParametersModelRDLS(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1633,7 +1625,7 @@ class ParametersModelMCorr(ParametersModelBase):
         
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1724,7 +1716,7 @@ class ParametersModelAddedMass(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1933,7 +1925,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
 
     def _initializePETScOptions(self):
         prefix = self.n.linear_solver_options_prefix
-        if self._Problem.useSuperlu:
+        if self._Problem.SystemNumerics.useSuperlu:
             self.OptDB.setValue(prefix+'ksp_type', 'preonly')
             self.OptDB.setValue(prefix+'pc_type', 'lu')
             self.OptDB.setValue(prefix+'pc_factor_mat_solver_type', 'superlu_dist')
@@ -1946,26 +1938,3 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
             self.OptDB.setValue(prefix+'sub_pc_factor_mat_solver_type', 'superlu')
             self.OptDB.setValue(prefix+'ksp_knoll', 1)
             self.OptDB.setValue(prefix+'sub_pc_type', 'lu')
-
-
-class ParametersPhysical(FreezableClass):
-    """
-    """
-    def __init__(self):
-        super(ParametersPhysical, self).__init__(name='physical')
-        self.densityA = 998.2
-        self.densityB = 1.205
-        self.kinematicViscosityA = 1.004e-6
-        self.kinematicViscosityB = 1.500e-5
-        self.surf_tension_coeff = 72.8e-3
-        self.gravity = [0., -9.81, 0.]
-        # Turbulence
-        self.useRANS = 0
-        self.c_mu = 0.09
-        self.c_1 = 0.126
-        self.c_2 = 1.92
-        self.c_e = 0.07
-        self.sigma_k = 1.0
-        self.sigma_e = 1.29
-        # freeze attributes
-        self._freeze()
