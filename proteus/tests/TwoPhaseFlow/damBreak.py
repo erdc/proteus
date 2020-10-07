@@ -104,8 +104,6 @@ class clsvof_init_cond(object):
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
-outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
-outputStepping.systemStepExact = True
 initialConditions = {'pressure': zero(),
                      'pressure_increment': zero(),
                      'vel_u': zero(),
@@ -133,30 +131,32 @@ boundaryConditions = {
     'vel_w_DFBC': lambda x, flag: domain.bc[flag].w_diffusive.init_cython(),
     'clsvof_DFBC': lambda x, flag: None}
 
-myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=1,
-                                             ls_model=1,
-                                             nd=2,
-                                             cfl=opts.cfl,
-                                             outputStepping=outputStepping,
-                                             structured=structured,
-                                             he=he,
-                                             nnx=nnx,
-                                             nny=nny,
-                                             nnz=None,
-                                             domain=domain,
-                                             initialConditions=initialConditions,
-                                             boundaryConditions=boundaryConditions,
-                                             useSuperlu=True)
-myTpFlowProblem.Parameters.physical['gravity'] = np.array([0.0,-9.8,0.0])
-myTpFlowProblem.useBoundaryConditionsModule = False
-m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.coefficients.disc_ICs = True
-m.clsvof.auxiliaryVariables = [height_gauges1, height_gauges2]
-m.pressure.auxiliaryVariables = [pressure_gauges]
-m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
-m.rans3p.p.coefficients.useVF=1.0
-m.rans3p.p.coefficients.eb_penalty_constant = 1e6
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem()
+myTpFlowProblem.domain=domain
 
-myTpFlowProblem.Parameters.mesh.he = he
-myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
-myTpFlowProblem.Parameters.mesh.genMesh=False
+myTpFlowProblem.outputStepping.final_time = opts.final_time
+myTpFlowProblem.outputStepping.dt_output = opts.dt_output
+myTpFlowProblem.SystemPhysics.setDefaults()
+myTpFlowProblem.SystemPhysics.useDefaultModels(flowModel=1,interfaceModel=1)
+myTpFlowProblem.SystemNumerics.cfl=opts.cfl
+myTpFlowProblem.SystemNumerics.useSuperlu=True
+
+myTpFlowProblem.modelDict['flow'].p.initialConditions['u']=zero()
+myTpFlowProblem.modelDict['flow'].p.initialConditions['v']=zero()
+myTpFlowProblem.modelDict['clsvof'].p.initialConditions['clsvof'] = clsvof_init_cond()
+myTpFlowProblem.modelDict['pressure'].p.initialConditions['p'] = zero()
+myTpFlowProblem.modelDict['pressureInc'].p.initialConditions['pInc'] = zero()
+myTpFlowProblem.modelDict['pressureInit'].p.initialConditions['pInit'] = zero()
+
+myTpFlowProblem.boundaryConditions=boundaryConditions
+#myTpFlowProblem.useBoundaryConditionsModule = False
+
+m = myTpFlowProblem.modelDict
+m['clsvof'].p.coefficients.disc_ICs = True
+m['clsvof'].auxiliaryVariables = [height_gauges1, height_gauges2]
+m['pressure'].auxiliaryVariables = [pressure_gauges]
+m['flow'].n.ShockCapturingOptions.shockCapturingFactor = 0.5
+m['flow'].p.coefficients.useVF=1.0
+m['flow'].p.coefficients.eb_penalty_constant = 1e6
+
+
