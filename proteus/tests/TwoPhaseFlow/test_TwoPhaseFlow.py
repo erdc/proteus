@@ -63,6 +63,12 @@ class TestTwoPhaseFlow(object):
                   "damBreak.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1'")
         self.compare_vs_saved_files("damBreak")
 
+    def test_damBreak_hotstart(self):
+        os.system("parun --TwoPhaseFlow --path " + self.path + " "
+                  "damBreak.py -l5 -v -H -C 'final_time=0.1 dt_output=0.1 he=0.1 hotstart=True'")
+        self.compare_vs_saved_files("damBreak_hotstart")
+
+
     @pytest.mark.skip(reason="numerics are very sensitive, hashdist build doesn't pass but conda does")
     def test_damBreak_solver_options(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
