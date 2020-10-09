@@ -870,6 +870,7 @@ class NS_base(object):  # (HasTraits):
                 #the number of nodes in an adapted mesh is not necessarily going to be the same as that of the solution field when archived...but it's not important because things should be bookkept correctly later on
                 #if not isinstance(p.domain,Domain.PUMIDomain):
 
+                m.stepController.t_model_last=time
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc):
 
