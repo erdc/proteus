@@ -8,6 +8,7 @@ from proteus.Profiling import logEvent
 from builtins import object
 from proteus.TwoPhaseFlow.utils import Parameters
 from proteus.defaults import System_base
+import collections
 import sys
 
 class TwoPhaseFlowProblem:
@@ -32,9 +33,8 @@ class TwoPhaseFlowProblem:
         self.SystemPhysics.boundaryConditions= boundaryConditions
 
         #Model tracking objects
-        self.SystemPhysics.modelList=[] #list used for internal tracking of models
-        self.SystemPhysics.modelDict={} #dict used to allow user access to models
-        self.SystemPhysics.modelIdxDict = {} #dict used for internal tracking of model indices
+        self.SystemPhysics._modelIdxDict = {}           
+        self.SystemPhysics.modelDict = collections.OrderedDict()           
 
         # ***** CREATE SYSTEM NUMERICS OBJECT ***** #
         self.SystemNumerics = SystemNumerics(ProblemInstance=self)
@@ -71,7 +71,7 @@ class TwoPhaseFlowProblem:
     def assert_initialConditions(self):
         initialConditions = self.SystemPhysics.initialConditions
         nd = self.domain.nd
-        for model in self.SystemPhysics.modelList:
+        for model in self.SystemPhysics.modelDict.values():
             #if(proteus.TwoPhaseFlow.utils.Parameters.ParametersModelCLSVOF)
             #assert model.p.initialConditions
             for key in model.p.initialConditions.__dict__.keys():
@@ -85,7 +85,7 @@ class TwoPhaseFlowProblem:
         ns_model = None
         ls_model = None
 
-        for model in self.SystemPhysics.modelList:
+        for model in self.SystemPhysics.modelDict.values():
             if(isinstance(model,Parameters.ParametersModelRANS3PF)):                 
                 ns_model = 'rans3p'
             elif(isinstance(model,Parameters.ParametersModelRANS2P)):
@@ -153,7 +153,7 @@ class TwoPhaseFlowProblem:
 
         #model organization
         self.SystemPhysics.attachModels()
-        self.Parameters.model_list=self.SystemPhysics.modelList
+        self.Parameters.model_list=self.SystemPhysics.modelDict.values()
         
         self.checkProblem()
         # initial conditions
@@ -176,8 +176,8 @@ class TwoPhaseFlowProblem:
         if self.outputStepping.dt_fixed:
             so.dt_system_fixed = self.outputStepping.dt_fixed
         # rans3p specific options
-        if 'rans3p' in self.SystemPhysics.modelIdxDict:
-            PINIT_model = self.SystemPhysics.modelIdxDict['pressureInitial'] 
+        if 'rans3p' in self.SystemPhysics._modelIdxDict:
+            PINIT_model = self.SystemPhysics._modelIdxDict['pressureInitial'] 
             assert PINIT_model is not None, 'must set pressureInitial model index when using rans3p'
             so.modelSpinUpList = [PINIT_model]
             from proteus.default_so import defaultSystem
@@ -363,8 +363,12 @@ class SystemPhysics(Parameters.FreezableClass):
         assert flowModel in [0,1] and interfaceModel in [0,1], "flowModel and interfaceModel must either be 0 or 1"
         if(flowModel == 0):
             self.addModel(Parameters.ParametersModelRANS2P,modelNames['RANS2P'])
-        elif(flowModel == 1 and interfaceModel==0):
+        elif(flowModel == 1):
             self.addModel(Parameters.ParametersModelRANS3PF,modelNames['RANS3PF'])
+            self.addModel(Parameters.ParametersModelPressureIncrement,modelNames['PressureIncrement'])
+            self.addModel(Parameters.ParametersModelPressure,modelNames['Pressure'])
+            self.addModel(Parameters.ParametersModelPressureInitial,modelNames['PressureInitial'])
+
         if(interfaceModel==0):
             self.addModel(Parameters.ParametersModelVOF,modelNames['VOF'])
             self.addModel(Parameters.ParametersModelNCLS,modelNames['LS'])
@@ -372,24 +376,22 @@ class SystemPhysics(Parameters.FreezableClass):
             self.addModel(Parameters.ParametersModelMCorr,modelNames['MCorr']) 
         else:
             self.addModel(Parameters.ParametersModelCLSVOF,modelNames['CLSVOF'])
-            self.addModel(Parameters.ParametersModelRANS3PF,modelNames['RANS3PF'])
-            self.addModel(Parameters.ParametersModelPressureIncrement,modelNames['PressureIncrement'])
-            self.addModel(Parameters.ParametersModelPressure,modelNames['Pressure'])
-            self.addModel(Parameters.ParametersModelPressureInitial,modelNames['PressureInitial'])
+            if(flowModel == 1):
+                self.modelDict.move_to_end(modelNames['CLSVOF'],last=False)
 
     def addModel(self,modelObject,name):
         #attach problem to model
+
         modelInitialized = modelObject(ProblemInstance=self._Problem) 
-        self.modelList.append(modelInitialized)
         self.modelDict[name] = modelInitialized
 
     def attachModels(self):
         #attach problem object to each model, identify index, and then form dictionary
-        for (idx,model) in enumerate(self.modelList):
+        for (idx,model) in enumerate(self.modelDict.values()):
             #model._Problem = self
             model.index = idx
             #model._Problem.modelIdxDict[model.name]=idx
-            self.modelIdxDict[model.name]=idx
+            self._modelIdxDict[model.name]=idx
 
 
 class SystemNumerics(Parameters.FreezableClass):

@@ -327,7 +327,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         ME_model = self.fetchIndex(idxDict,self.name)
         assert ME_model is not None, 'rans2p model index was not set!'
         CLSVOF_model = self.fetchIndex(idxDict, 'clsvof')
@@ -553,7 +553,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEX
 
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         nModelId = self.fetchIndex(idxDict, 'ncls')
 
         VOF_model=self.fetchIndex(idxDict,'vof')
@@ -681,7 +681,7 @@ class ParametersModelPressure(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         PRESSURE_model = self.fetchIndex(idxDict,'pressure')
         V_model = self.fetchIndex(idxDict,'rans3p')
         PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
@@ -749,7 +749,7 @@ class ParametersModelPressureInitial(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         PRESSURE_model = self.fetchIndex(idxDict,'pressure')
         V_model = self.fetchIndex(idxDict,'rans3p')
         PINIT_model = self.fetchIndex(idxDict,'pressureInitial')
@@ -829,7 +829,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
         nd = domain.nd
         pparams = self._Problem.Parameters.physical
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         V_model = self.fetchIndex(idxDict,'rans3p')
         PINC_model = self.fetchIndex(idxDict,'pressureIncrement')
         # COEFFICIENTS
@@ -922,7 +922,7 @@ class ParametersModelKappa(ParametersModelBase):
         self.setInitialConditionStructure()
 
     def _initializePhysics(self):
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         pparams = self._Problem.Parameters.physical # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
@@ -1053,7 +1053,7 @@ class ParametersModelDissipation(ParametersModelBase):
         self.setInitialConditionStructure()
 
     def _initializePhysics(self):
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         pparams = self._Problem.Parameters.physical  # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
@@ -1176,7 +1176,7 @@ class ParametersModelCLSVOF(ParametersModelBase):
         nd = domain.nd
         # MODEL INDEXING
 
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         CLSVOF_model = self.fetchIndex(idxDict,'clsvof')
         V_model = self.fetchIndex(idxDict,'rans2p')
 
@@ -1262,7 +1262,7 @@ class ParametersModelVOF(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         ME_model = self.fetchIndex(idxDict,self.name)
         assert ME_model is not None, 'vof model index was not set!'
         if('rans2p' in idxDict):
@@ -1373,7 +1373,7 @@ class ParametersModelNCLS(ParametersModelBase):
     def _initializePhysics(self):
         domain = self._Problem.domain
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         ME_model = self.fetchIndex(idxDict, self.name)
         assert ME_model is not None, 'ls model index was not set!'
         if('rans2p' in idxDict):
@@ -1484,7 +1484,7 @@ class ParametersModelRDLS(ParametersModelBase):
 
     def _initializePhysics(self):
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         nModelId = self.fetchIndex(idxDict, 'ncls')
         assert nModelId is not None, 'ncls model index was not set!'
         rdModelId = self.fetchIndex(idxDict, self.name)
@@ -1586,7 +1586,7 @@ class ParametersModelMCorr(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         ME_model = self.fetchIndex(idxDict, self.name)
         assert ME_model is not None, 'mcorr model index was not set!'
         LS_model = self.fetchIndex(idxDict, 'ncls')
@@ -1682,7 +1682,7 @@ class ParametersModelAddedMass(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         if self.fetchIndex(idxDict,'rans2p') is not None:
             V_model = self.fetchIndex(idxDict,'rans2p')
         elif self.fetchIndex(idxDict,'rans3p') is not None:
@@ -1775,7 +1775,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         ME_MODEL = self.index
         assert ME_MODEL is not None, 'moveMeshMonitor model index was not set!'
         if self.p.coefficients.useLS is True:
@@ -1863,7 +1863,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
         smTypes[:, 0] = 1.
         smTypes[:, 1] = 0.3
         # MODEL INDEXING
-        idxDict = self._Problem.SystemPhysics.modelIdxDict
+        idxDict = self._Problem.SystemPhysics._modelIdxDict
         ME_model = self.fetchIndex(idxDict,'moveMeshElastic')
         assert ME_model is not None, 'vof model index was not set!'
         if self.fetchIndex(idxDict,'rans2p') is not None:
