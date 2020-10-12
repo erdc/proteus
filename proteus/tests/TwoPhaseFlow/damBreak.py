@@ -81,6 +81,8 @@ domain.MeshOptions.he = he
 st.assembleDomain(domain)
 domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshDambreak"
+domain.MeshOptions.triangleFlag=0
+domain.MeshOptions.genMesh=False
 #domain.writePoly("meshDambreak")
 
 # ****************************** #
@@ -104,11 +106,6 @@ class clsvof_init_cond(object):
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
-initialConditions = {'pressure': zero(),
-                     'pressure_increment': zero(),
-                     'vel_u': zero(),
-                     'vel_v': zero(),
-                     'clsvof': clsvof_init_cond()}
 boundaryConditions = {
     # DIRICHLET BCs #
     'pressure_DBC': lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
@@ -136,22 +133,24 @@ myTpFlowProblem.domain=domain
 
 myTpFlowProblem.outputStepping.final_time = opts.final_time
 myTpFlowProblem.outputStepping.dt_output = opts.dt_output
+myTpFlowProblem.outputStepping.systemStepExact = True
+
 myTpFlowProblem.SystemPhysics.setDefaults()
 myTpFlowProblem.SystemPhysics.useDefaultModels(flowModel=1,interfaceModel=1)
 myTpFlowProblem.SystemNumerics.cfl=opts.cfl
 myTpFlowProblem.SystemNumerics.useSuperlu=True
 
-myTpFlowProblem.modelDict['flow'].p.initialConditions['u']=zero()
-myTpFlowProblem.modelDict['flow'].p.initialConditions['v']=zero()
-myTpFlowProblem.modelDict['clsvof'].p.initialConditions['clsvof'] = clsvof_init_cond()
-myTpFlowProblem.modelDict['pressure'].p.initialConditions['p'] = zero()
-myTpFlowProblem.modelDict['pressureInc'].p.initialConditions['pInc'] = zero()
-myTpFlowProblem.modelDict['pressureInit'].p.initialConditions['pInit'] = zero()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['u']=zero()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['v']=zero()
+myTpFlowProblem.SystemPhysics.modelDict['clsvof'].p.initialConditions['clsvof'] = clsvof_init_cond()
+myTpFlowProblem.SystemPhysics.modelDict['pressure'].p.initialConditions['p'] = zero()
+myTpFlowProblem.SystemPhysics.modelDict['pressureInc'].p.initialConditions['pInc'] = zero()
+myTpFlowProblem.SystemPhysics.modelDict['pressureInit'].p.initialConditions['pInit'] = zero()
 
-myTpFlowProblem.boundaryConditions=boundaryConditions
-#myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.SystemPhysics.boundaryConditions=boundaryConditions
+myTpFlowProblem.SystemPhysics.gravity = np.array([0.0,-9.8,0.0])
 
-m = myTpFlowProblem.modelDict
+m = myTpFlowProblem.SystemPhysics.modelDict
 m['clsvof'].p.coefficients.disc_ICs = True
 m['clsvof'].auxiliaryVariables = [height_gauges1, height_gauges2]
 m['pressure'].auxiliaryVariables = [pressure_gauges]
