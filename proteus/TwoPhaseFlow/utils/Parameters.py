@@ -1641,8 +1641,7 @@ class ParametersModelAddedMass(ParametersModelBase):
     """
     """
     def __init__(self, ProblemInstance):
-        super(ParametersModelAddedMass, self).__init__(name='addedMass', index=None,
-                                                       Problem=ProblemInstance)
+        super(ParametersModelAddedMass, self).__init__(name='addedMass', Problem=ProblemInstance)
 
         self.p.coefficients = AddedMass.Coefficients(
             initialize=False,
@@ -1732,8 +1731,7 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
     """
     """
     def __init__(self, Problem):
-        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor', index=None,
-                                                             Problem=Problem)
+        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor',                                                             Problem=Problem)
         self.p.coefficients = MoveMeshMonitor.Coefficients(
             initialize=False,
             ME_MODEL=None,
@@ -1821,8 +1819,7 @@ class ParametersModelMoveMeshElastic(ParametersModelBase):
     """
     """
     def __init__(self, Problem):
-        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic', index=None,
-                                                             Problem=Problem)
+        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic',                                                              Problem=Problem)
         self.p.coefficients = MoveMesh.Coefficients(
             initialize=False,
             modelType_block=None,

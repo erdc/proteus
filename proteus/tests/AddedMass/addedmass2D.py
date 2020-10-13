@@ -6,6 +6,7 @@ from proteus import Domain
 from proteus.mprans import SpatialTools as st
 from proteus.mbd import CouplingFSI as fsi
 from proteus.TwoPhaseFlow import TwoPhaseFlowProblem as tpf
+from proteus.TwoPhaseFlow.utils import Parameters
 import pychrono as chrono
 import os
 
@@ -53,6 +54,8 @@ body.ChBody.SetBodyFixed(True)  # fixing body
 # OTHER PARAMS
 st.assembleDomain(domain)
 domain.polyfile=domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh2D"
+domain.MeshOptions.he = he
+domain.MeshOptions.genMesh=False
 #domain.writePoly("mesh2D")
 
 #  ___       _ _   _       _    ____                _ _ _   _
@@ -76,13 +79,6 @@ class AtRest:
     def uOfXT(self,x,t):
         return 0.0
 
-
-# instanciating the classes for *_p.py files
-initialConditions = {'pressure': PerturbedSurface_p(),
-                     'vel_u': AtRest(),
-                     'vel_v': AtRest()}
-
-
 #  _   _                           _
 # | \ | |_   _ _ __ ___   ___ _ __(_) ___ ___
 # |  \| | | | | '_ ` _ \ / _ \ '__| |/ __/ __|
@@ -90,52 +86,46 @@ initialConditions = {'pressure': PerturbedSurface_p(),
 # |_| \_|\__,_|_| |_| |_|\___|_|  |_|\___|___/
 # Numerics
 
+myTpFlowProblem = tpf.TwoPhaseFlowProblem()
+myTpFlowProblem.domain = domain
 
-outputStepping = tpf.OutputStepping(
-    final_time=0.002,
-    dt_init=0.001,
-    dt_output=0.001,
-    nDTout=None,
-    dt_fixed=0.001,
-)
+myTpFlowProblem.outputStepping.final_time = 0.002
+myTpFlowProblem.outputStepping.dt_init = 0.001
+myTpFlowProblem.outputStepping.dt_output = 0.001
+myTpFlowProblem.outputStepping.dt_fixed = 0.001
 
-myTpFlowProblem = tpf.TwoPhaseFlowProblem(
-    ns_model=None,
-    ls_model=None,
-    nd=domain.nd,
-    cfl=0.4,
-    outputStepping=outputStepping,
-    structured=False,
-    he=he,
-    nnx=None,
-    nny=None,
-    nnz=None,
-    domain=domain,
-    initialConditions=initialConditions,
-    boundaryConditions=None, # set with SpatialTools,
-    useSuperlu=False,
-)
+myTpFlowProblem.SystemPhysics.setDefaults()
+
+myTpFlowProblem.SystemNumerics.cfl = 0.4
+myTpFlowProblem.useSuperlu=False
+
 myTpFlowProblem.movingDomain = False
 
-params = myTpFlowProblem.Parameters
+params = myTpFlowProblem.SystemPhysics
 
 # PHYSICAL PARAMETERS
-params.physical.densityA = rho_0  # water
-params.physical.densityB = rho_1  # air
-params.physical.kinematicViscosityA = nu_0  # water
-params.physical.kinematicViscosityB = nu_1  # air
-params.physical.surf_tension_coeff = sigma_01
+params.rho_0 = rho_0  # water
+params.rho_1 = rho_1  # air
+params.nu_0 = nu_0  # water
+params.nu_1 = nu_1  # air
+params.surf_tension_coeff = sigma_01
 
 # MODEL PARAMETERS
-m = params.Models
-m.rans2p.index = 0
-m.rans2p.p.coefficients.NONCONSERVATIVE_FORM=0.0
-m.rans2p.p.coefficients.useVF=1.0
-m.addedMass.index = 1
+m = params.modelDict
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelRANS2P,'flow')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelAddedMass,'addedMass')
+
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['p']=PerturbedSurface_p()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['u']=AtRest()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['v']=AtRest()
+myTpFlowProblem.SystemPhysics.modelDict['addedMass'].p.initialConditions['addedMass']=AtRest()
+
+m['flow'].p.coefficients.NONCONSERVATIVE_FORM=0.0
+m['flow'].p.coefficients.useVF=1.0
 
 # auxiliary variables
-m.rans2p.auxiliaryVariables += [system]
-m.addedMass.auxiliaryVariables += [system.ProtChAddedMass]
+m['flow'].auxiliaryVariables += [system]
+m['addedMass'].auxiliaryVariables += [system.ProtChAddedMass]
 
 flags_rigidbody = np.zeros(20)
 for key in rect.boundaryTags_global:
@@ -150,5 +140,4 @@ for s in system.subcomponents:
     if type(s) is fsi.ProtChBody:
         for flag in body.boundaryFlags:
             flags_rigidbody[flag] = 1
-m.addedMass.p.coefficients.flags_rigidbody = flags_rigidbody
-myTpFlowProblem.Parameters.mesh.genMesh=False
+m['addedMass'].p.coefficients.flags_rigidbody = flags_rigidbody
