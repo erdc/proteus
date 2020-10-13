@@ -20,7 +20,8 @@ opts= Context.Options([
     ("dt_output",0.01,"Time interval to output solution"),
     ("cfl",0.25,"Desired CFL restriction"),
     ("he",0.01,"he relative to Length of domain in x"),
-    ("refinement",3,"level of refinement")
+    ("refinement",3,"level of refinement"),
+    ("hotstart",False,"will be hotstartting?"),
     ])
 
 # ****************** #
@@ -105,7 +106,12 @@ class clsvof_init_cond(object):
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
 outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
-outputStepping.systemStepExact = True
+
+if opts.hotstart:
+    outputStepping.systemStepExact = False
+else:
+    outputStepping.systemStepExact = True
+
 initialConditions = {'pressure': zero(),
                      'pressure_increment': zero(),
                      'vel_u': zero(),
