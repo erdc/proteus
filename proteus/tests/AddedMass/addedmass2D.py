@@ -97,9 +97,9 @@ myTpFlowProblem.outputStepping.dt_fixed = 0.001
 myTpFlowProblem.SystemPhysics.setDefaults()
 
 myTpFlowProblem.SystemNumerics.cfl = 0.4
-myTpFlowProblem.useSuperlu=False
+myTpFlowProblem.SystemNumerics.useSuperlu=False
 
-myTpFlowProblem.movingDomain = False
+myTpFlowProblem.SystemPhysics.movingDomain = False
 
 params = myTpFlowProblem.SystemPhysics
 

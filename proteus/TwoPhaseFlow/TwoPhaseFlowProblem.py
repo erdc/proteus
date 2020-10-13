@@ -11,7 +11,7 @@ from proteus.defaults import System_base
 import collections
 import sys
 
-class TwoPhaseFlowProblem:
+class TwoPhaseFlowProblem(Parameters.FreezableClass):
     """ TwoPhaseFlowProblem """
 
     def __init__(self,
@@ -48,6 +48,8 @@ class TwoPhaseFlowProblem:
         # ***** CREATING OUTPUT MANAGEMENT OBJECTS ***** #
         self.so = System_base()
         self.outputStepping=OutputStepping()
+
+        self._freeze()
 
     def checkProblem(self):
         # ***** SET OF ASSERTS ***** #
