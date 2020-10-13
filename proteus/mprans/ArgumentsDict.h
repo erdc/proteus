@@ -10,6 +10,9 @@
 namespace proteus
 {
 
+    /****************
+     * throwing_map *
+     ****************/
 
     // Special map that behaves like a standard map except for
     // - operator[] which throws instead of inserting a default
@@ -52,7 +55,11 @@ namespace proteus
         std::pair<iterator, bool> insert(value_type&&);
         std::pair<iterator, bool> insert_or_assign(key_type&& k, mapped_type&& v);
     };
-    
+
+    /******************
+     * arguments_dict *
+     ******************/
+
     template <class K, class T>
     using pyarray_dict = throwing_map<K, xt::pyarray<T>>;
 
@@ -65,6 +72,27 @@ namespace proteus
         pyarray_dict<std::string, int> m_iarray;
         scalar_dict<std::string, double> m_dscalar;
         scalar_dict<std::string, int> m_iscalar;
+
+        template <class T>
+        xt::pyarray<T>& array(const std::string& key);
+
+        template <class T>
+        T& scalar(const std::string& key);
+
+    private:
+
+        template <class D1, class D2>
+        typename D1::mapped_type& find_element(const std::string& key,
+                                               D1& expected_dict,
+                                               const D2& other_dict,
+                                               const std::string& expected_type,
+                                               const std::string& other_type);
+
+        template <class D>
+        std::string get_additional_error_msg(const std::string& key,
+                                             const D& d,
+                                             const std::string& asked_type,
+                                             const std::string& tried_type) const;
     };
 
     /*******************************
@@ -114,6 +142,69 @@ namespace proteus
         {
             it->second = std::move(v);
             return std::make_pair(it, false);
+        }
+    }
+
+    /*********************************
+     * arguments_dict implementation *
+     *********************************/
+
+    template <>
+    inline xt::pyarray<double>& arguments_dict::array<double>(const std::string& key)
+    {
+        return find_element(key, m_darray, m_iarray, "pyarray<double>", "pyarray<int>");
+    }
+
+    template <>
+    inline xt::pyarray<int>& arguments_dict::array<int>(const std::string& key)
+    {
+        return find_element(key, m_iarray, m_darray, "pyarray<int>", "pyarray<double>");
+    }
+
+    template <>
+    inline double& arguments_dict::scalar<double>(const std::string& key)
+    {
+        return find_element(key, m_dscalar, m_iscalar, "double scalar", "int scalar");
+    }
+
+    template <>
+    inline int& arguments_dict::scalar<int>(const std::string& key)
+    {
+        return find_element(key, m_iscalar, m_dscalar, "int scalar", "double scalar");
+    }
+
+    template <class D1, class D2>
+    typename D1::mapped_type& arguments_dict::find_element(const std::string& key,
+                                                           D1& expected_dict,
+                                                           const D2& other_dict,
+                                                           const std::string& expected_type,
+                                                           const std::string& other_type)
+    {
+        try
+        {
+            return expected_dict[key];
+        }
+        catch(std::runtime_error& e)
+        {
+            throw std::runtime_error(e.what()
+                    + get_additional_error_msg(key, other_dict, expected_type, other_type));
+        }
+    }
+
+    template <class D>
+    std::string arguments_dict::get_additional_error_msg(const std::string& key,
+                                                         const D& d,
+                                                         const std::string& asked_type,
+                                                         const std::string& tried_type) const
+    {
+        auto it = d.find(key);
+        if (it == d.cend())
+        {
+            return " in any of the internal dicts";
+        }
+        else
+        {
+            return " in dict of " + asked_type + " but found in dict of " + tried_type;
         }
     }
 }
