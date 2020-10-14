@@ -125,6 +125,9 @@ class FreezableClass(object):
         self.name = name
 
     def __getitem__(self, key):
+        if key not in self.__dict__:
+            raise AttributeError("{key} is not an option for class {name}".format(key=key, name=self.__class__.__name__))
+
         return self.__dict__[key]
 
     def __setitem__(self, key, val):
@@ -1730,8 +1733,8 @@ class ParametersModelAddedMass(ParametersModelBase):
 class ParametersModelMoveMeshMonitor(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor',                                                             Problem=Problem)
+    def __init__(self, ProblemInstance):
+        super(ParametersModelMoveMeshMonitor, self).__init__(name='moveMeshMonitor',                                                             Problem=ProblemInstance)
         self.p.coefficients = MoveMeshMonitor.Coefficients(
             initialize=False,
             ME_MODEL=None,
@@ -1818,9 +1821,10 @@ class ParametersModelMoveMeshMonitor(ParametersModelBase):
 class ParametersModelMoveMeshElastic(ParametersModelBase):
     """
     """
-    def __init__(self, Problem):
-        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic',                                                              Problem=Problem)
+    def __init__(self, ProblemInstance):
+        super(ParametersModelMoveMeshElastic, self).__init__(name='moveMeshElastic',                                                              Problem=ProblemInstance)
         self.p.coefficients = MoveMesh.Coefficients(
+            nd = self._Problem.domain.nd,
             initialize=False,
             modelType_block=None,
             modelParams_block=None,

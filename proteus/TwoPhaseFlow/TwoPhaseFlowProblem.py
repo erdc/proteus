@@ -74,8 +74,6 @@ class TwoPhaseFlowProblem(Parameters.FreezableClass):
         initialConditions = self.SystemPhysics.initialConditions
         nd = self.domain.nd
         for model in self.SystemPhysics.modelDict.values():
-            #if(proteus.TwoPhaseFlow.utils.Parameters.ParametersModelCLSVOF)
-            #assert model.p.initialConditions
             for key in model.p.initialConditions.__dict__.keys():
                 if(key == 'name'):
                     continue
@@ -353,8 +351,8 @@ class SystemPhysics(Parameters.FreezableClass):
             'RANS2P': 'flow',
             'RANS3PF': 'flow',
             'VOF': 'vof',
-            'LS': 'ls',
-            'RDLS': 'rd',
+            'LS': 'ncls',
+            'RDLS': 'rdls',
             'MCorr': 'mcorr',
             'CLSVOF': 'clsvof',
             'PressureIncrement': 'pressureInc',

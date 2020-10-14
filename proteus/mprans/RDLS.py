@@ -181,7 +181,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.useExact=useExact
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
-        variableNames = ['phid']
+        self.variableNames = ['phid']
         nc = 1
         mass = {0: {0: 'linear'}}
         hamiltonian = {0: {0: 'nonlinear'}}
@@ -197,7 +197,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          potential,
                          reaction,
                          hamiltonian,
-                         variableNames)
+                         self.variableNames)
         self.nModelId = nModelId
         self.rdModelId = rdModelId
         self.epsFact = epsFact
