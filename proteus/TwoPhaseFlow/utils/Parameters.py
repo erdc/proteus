@@ -202,7 +202,7 @@ class ParametersModelBase(FreezableClass):
     def _setPhysicsValues(self):
         coeffs = self.p.coefficients
         coeffs.movingDomain = self.p.movingDomain
-        pparams = self._Problem.Parameters.physical
+        pparams = self._Problem.SystemPhysics
         coeffs.sigma = pparams.surf_tension_coeff
         coeffs.rho_0 = pparams.rho_0
         coeffs.rho_1 = pparams.rho_1
@@ -326,7 +326,7 @@ class ParametersModelRANS2P(ParametersModelBase):
         self.setInitialConditionStructure() 
 
     def _initializePhysics(self):
-        pparams = self._Problem.Parameters.physical # physical parameters
+        pparams = self._Problem.SystemPhysics # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
@@ -551,7 +551,7 @@ class ParametersModelRANS3PF(ParametersModelBase):
         self.setInitialConditionStructure()
 
     def _initializePhysics(self):
-        pparams = self._Problem.Parameters.physical # physical parameters
+        pparams = self._Problem.SystemPhysics # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
@@ -830,7 +830,7 @@ class ParametersModelPressureIncrement(ParametersModelBase):
     def _initializePhysics(self):
         domain = self._Problem.domain
         nd = domain.nd
-        pparams = self._Problem.Parameters.physical
+        pparams = self._Problem.SystemPhysics
         # MODEL INDEXING
         idxDict = self._Problem.SystemPhysics._modelIdxDict
         V_model = self.fetchIndex(idxDict,'rans3p')
@@ -926,7 +926,7 @@ class ParametersModelKappa(ParametersModelBase):
 
     def _initializePhysics(self):
         idxDict = self._Problem.SystemPhysics._modelIdxDict
-        pparams = self._Problem.Parameters.physical # physical parameters
+        pparams = self._Problem.SystemPhysics # physical parameters
         domain = self._Problem.domain
         nd = domain.nd
         # MODEL INDEX
@@ -957,8 +957,8 @@ class ParametersModelKappa(ParametersModelBase):
         coeffs.modelIndex = K_model
         coeffs.SED_modelIndex = SED_model
         coeffs.dissipation_model_flag = pparams.useRANS
-        coeffs.c_mu = pparams.c_mu
-        coeffs.sigma_k = pparams.sigma_k
+        #coeffs.c_mu = pparams.c_mu
+        #coeffs.sigma_k = pparams.sigma_k
         self._setPhysicsValues()
         coeffs.nd = nd
         coeffs.initialize()
@@ -1009,7 +1009,7 @@ class ParametersModelDissipation(ParametersModelBase):
     """
     """
 
-    def __init__(self):
+    def __init__(self,ProblemInstance):
         super(ParametersModelDissipation, self).__init__(name='dissipation',Problem=ProblemInstance)
 
         self.p.coefficients = Dissipation.Coefficients(
@@ -1087,11 +1087,11 @@ class ParametersModelDissipation(ParametersModelBase):
         coeffs.kappa_modelIndex = K_model
         coeffs.modelIndex = DISS_model
         coeffs.SED_modelIndex = SED_model
-        coeffs.c_mu = pparams.c_mu
-        coeffs.c_1 = pparams.c_1
-        coeffs.c_2 = pparams.c_2
-        coeffs.c_e = pparams.c_e
-        coeffs.sigma_e = pparams.sigma_e
+        #coeffs.c_mu = pparams.c_mu
+        #coeffs.c_1 = pparams.c_1
+        #coeffs.c_2 = pparams.c_2
+        #coeffs.c_e = pparams.c_e
+        #coeffs.sigma_e = pparams.sigma_e
         self._setPhysicsValues()
         coeffs.nd = nd
         # default K-Epsilon, 2 --> K-Omega, 1998, 3 --> K-Omega 1988

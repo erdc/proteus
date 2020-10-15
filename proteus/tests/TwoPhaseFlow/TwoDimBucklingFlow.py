@@ -242,7 +242,7 @@ myTpFlowProblem.SystemPhysics.nu_1 = 2.0E-5/myTpFlowProblem.SystemPhysics.rho_1
 myTpFlowProblem.SystemPhysics.surf_tension_coeff = 0.
 myTpFlowProblem.SystemPhysics.gravity = np.array([0., -9.8, 0.])
 
-myTpFlowProblem.useBoundaryConditionsModule = False
+myTpFlowProblem.SystemPhysics.useBoundaryConditionsModule = False
 m = myTpFlowProblem.SystemPhysics.modelDict
 m['clsvof'].p.coefficients.disc_ICs = False
 m['flow'].p.coefficients.useVF=1.0

@@ -325,6 +325,8 @@ class SystemPhysics(Parameters.FreezableClass):
         # but only if SpatialTools was used to make the domain
         self.useBoundaryConditionsModule = True
 
+        self.useRANS=False
+
     def setDefaults(self):
         self.rho_0 = 998.2
         self.nu_0 = 1.004e-6
@@ -337,10 +339,6 @@ class SystemPhysics(Parameters.FreezableClass):
         elif(dim==3):
             self.gravity =  [0.0, 0.0, -9.81]
 
-       #need to freeze after setup
-        # freeze attributes
-       # self._freeze()
-       
     def useDefaultModels(self,flowModel=0,interfaceModel=0):
         """
         this provides the same functionality as the previous ns_model, ls_model flags
