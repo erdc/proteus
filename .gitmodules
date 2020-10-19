@@ -8,3 +8,4 @@
 [submodule "proteus/tests/proteus_tutorial"]
 	path = proteus/tests/proteus_tutorial
 	url = git://github.com/erdc/proteus_tutorial
+    branch = zhanga_updateTests
