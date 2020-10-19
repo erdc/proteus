@@ -76,9 +76,6 @@ predefined names, e.g. for a `Rectangle` shape instance named `my_rectangle`,
 segment, ``'x+'`` for the right, ``'y+'`` for the top, and ``'y-'`` for the
 bottom.
 
-Refer to :doc:`BoundaryConditions <./boundary_conditions>` documentation for
-more information about the BoundaryConditions module.
-
 .. note::
 
    The boundary conditions associated with the geometry do not have to be

@@ -81,7 +81,7 @@ class get_numpy_include(object):
 
 EXTENSIONS_TO_BUILD = [
     Extension("MeshAdaptPUMI.MeshAdapt",
-               sources = ['proteus/MeshAdaptPUMI/Adapter.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
+               sources = ['proteus/MeshAdaptPUMI/MeshAdapt.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
                           'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
                           'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
                           'proteus/MeshAdaptPUMI/DumpMesh.cpp',
@@ -97,9 +97,9 @@ EXTENSIONS_TO_BUILD = [
                language='c++',
                include_dirs=[numpy.get_include(),'include',
                              'proteus','proteus/MeshAdaptPUMI']+
-               PROTEUS_SCOREC_INCLUDE_DIRS,
-               library_dirs=PROTEUS_SCOREC_LIB_DIRS,
-               libraries=PROTEUS_SCOREC_LIBS,
+               PROTEUS_SCOREC_INCLUDE_DIRS+PROTEUS_MPI_INCLUDE_DIRS,
+               library_dirs=PROTEUS_SCOREC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS,
+               libraries=PROTEUS_SCOREC_LIBS+PROTEUS_MPI_LIBS,
                extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
                extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
     Extension(
@@ -750,7 +750,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.4.dev0',
+          version='1.7.5dev',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',
@@ -948,10 +948,11 @@ def setup_extensions_in_sequential():
 
 def setup_extensions_in_parallel():
     import multiprocessing, logging
-    logger = multiprocessing.log_to_stderr()
+    mp = multiprocessing.get_context('fork')
+    logger = mp.log_to_stderr()
     logger.setLevel(logging.INFO)
-    multiprocessing.log_to_stderr()
-    pool = multiprocessing.Pool(processes=int(os.getenv('N')))
+    mp.log_to_stderr()
+    pool = mp.Pool(processes=int(os.getenv('N')))
     EXTENSIONS=[[e] for e in EXTENSIONS_TO_BUILD]
     pool.imap(setup_given_extensions, EXTENSIONS)
     pool.close()

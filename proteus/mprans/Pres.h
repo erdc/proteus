@@ -164,42 +164,42 @@ namespace proteus
     }
     void calculateResidual(arguments_dict& args)
     {
-        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
-        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
-        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
-        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
-        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
-        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
-        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
-        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
-        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
-        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
-        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
-        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
-        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
-        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
-        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
-        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
-        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
-        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
-        int nElements_global = args.m_iscalar["nElements_global"];
-        xt::pyarray<int>& u_l2g = args.m_iarray["u_l2g"];
-        xt::pyarray<double>& u_dof = args.m_darray["u_dof"];
-        xt::pyarray<double>& q_u = args.m_darray["q_u"];
-        xt::pyarray<double>& q_grad_u = args.m_darray["q_grad_u"];
-        xt::pyarray<double>& q_p_last = args.m_darray["q_p_last"];
-        xt::pyarray<double>& q_p_inc = args.m_darray["q_p_inc"];
-        xt::pyarray<double>& q_massFlux = args.m_darray["q_massFlux"];
-        xt::pyarray<double>& ebqe_massFlux = args.m_darray["ebqe_massFlux"];
-        xt::pyarray<double>& ebqe_u = args.m_darray["ebqe_u"];
-        xt::pyarray<double>& ebqe_grad_u = args.m_darray["ebqe_grad_u"];
-        int offset_u = args.m_iscalar["offset_u"];
-        int stride_u = args.m_iscalar["stride_u"];
-        xt::pyarray<double>& globalResidual = args.m_darray["globalResidual"];
-        int nExteriorElementBoundaries_global = args.m_iscalar["nExteriorElementBoundaries_global"];
-        xt::pyarray<int>& exteriorElementBoundariesArray = args.m_iarray["exteriorElementBoundariesArray"];
-        xt::pyarray<int>& elementBoundaryElementsArray = args.m_iarray["elementBoundaryElementsArray"];
-        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.m_iarray["elementBoundaryLocalElementBoundariesArray"];
+        xt::pyarray<double>& mesh_trial_ref = args.array<double>("mesh_trial_ref");
+        xt::pyarray<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
+        xt::pyarray<double>& mesh_dof = args.array<double>("mesh_dof");
+        xt::pyarray<int>& mesh_l2g = args.array<int>("mesh_l2g");
+        xt::pyarray<double>& dV_ref = args.array<double>("dV_ref");
+        xt::pyarray<double>& u_trial_ref = args.array<double>("u_trial_ref");
+        xt::pyarray<double>& u_grad_trial_ref = args.array<double>("u_grad_trial_ref");
+        xt::pyarray<double>& u_test_ref = args.array<double>("u_test_ref");
+        xt::pyarray<double>& u_grad_test_ref = args.array<double>("u_grad_test_ref");
+        xt::pyarray<double>& mesh_trial_trace_ref = args.array<double>("mesh_trial_trace_ref");
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.array<double>("mesh_grad_trial_trace_ref");
+        xt::pyarray<double>& dS_ref = args.array<double>("dS_ref");
+        xt::pyarray<double>& u_trial_trace_ref = args.array<double>("u_trial_trace_ref");
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.array<double>("u_grad_trial_trace_ref");
+        xt::pyarray<double>& u_test_trace_ref = args.array<double>("u_test_trace_ref");
+        xt::pyarray<double>& u_grad_test_trace_ref = args.array<double>("u_grad_test_trace_ref");
+        xt::pyarray<double>& normal_ref = args.array<double>("normal_ref");
+        xt::pyarray<double>& boundaryJac_ref = args.array<double>("boundaryJac_ref");
+        int nElements_global = args.scalar<int>("nElements_global");
+        xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
+        xt::pyarray<double>& u_dof = args.array<double>("u_dof");
+        xt::pyarray<double>& q_u = args.array<double>("q_u");
+        xt::pyarray<double>& q_grad_u = args.array<double>("q_grad_u");
+        xt::pyarray<double>& q_p_last = args.array<double>("q_p_last");
+        xt::pyarray<double>& q_p_inc = args.array<double>("q_p_inc");
+        xt::pyarray<double>& q_massFlux = args.array<double>("q_massFlux");
+        xt::pyarray<double>& ebqe_massFlux = args.array<double>("ebqe_massFlux");
+        xt::pyarray<double>& ebqe_u = args.array<double>("ebqe_u");
+        xt::pyarray<double>& ebqe_grad_u = args.array<double>("ebqe_grad_u");
+        int offset_u = args.scalar<int>("offset_u");
+        int stride_u = args.scalar<int>("stride_u");
+        xt::pyarray<double>& globalResidual = args.array<double>("globalResidual");
+        int nExteriorElementBoundaries_global = args.scalar<int>("nExteriorElementBoundaries_global");
+        xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
+        xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -440,28 +440,28 @@ namespace proteus
     }
     void calculateJacobian(arguments_dict& args)
     {
-        xt::pyarray<double>& mesh_trial_ref = args.m_darray["mesh_trial_ref"];
-        xt::pyarray<double>& mesh_grad_trial_ref = args.m_darray["mesh_grad_trial_ref"];
-        xt::pyarray<double>& mesh_dof = args.m_darray["mesh_dof"];
-        xt::pyarray<int>& mesh_l2g = args.m_iarray["mesh_l2g"];
-        xt::pyarray<double>& dV_ref = args.m_darray["dV_ref"];
-        xt::pyarray<double>& u_trial_ref = args.m_darray["u_trial_ref"];
-        xt::pyarray<double>& u_grad_trial_ref = args.m_darray["u_grad_trial_ref"];
-        xt::pyarray<double>& u_test_ref = args.m_darray["u_test_ref"];
-        xt::pyarray<double>& u_grad_test_ref = args.m_darray["u_grad_test_ref"];
-        xt::pyarray<double>& mesh_trial_trace_ref = args.m_darray["mesh_trial_trace_ref"];
-        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.m_darray["mesh_grad_trial_trace_ref"];
-        xt::pyarray<double>& dS_ref = args.m_darray["dS_ref"];
-        xt::pyarray<double>& u_trial_trace_ref = args.m_darray["u_trial_trace_ref"];
-        xt::pyarray<double>& u_grad_trial_trace_ref = args.m_darray["u_grad_trial_trace_ref"];
-        xt::pyarray<double>& u_test_trace_ref = args.m_darray["u_test_trace_ref"];
-        xt::pyarray<double>& u_grad_test_trace_ref = args.m_darray["u_grad_test_trace_ref"];
-        xt::pyarray<double>& normal_ref = args.m_darray["normal_ref"];
-        xt::pyarray<double>& boundaryJac_ref = args.m_darray["boundaryJac_ref"];
-        int nElements_global = args.m_iscalar["nElements_global"];
-        xt::pyarray<int>& csrRowIndeces_u_u = args.m_iarray["csrRowIndeces_u_u"];
-        xt::pyarray<int>& csrColumnOffsets_u_u = args.m_iarray["csrColumnOffsets_u_u"];
-        xt::pyarray<double>& globalJacobian = args.m_darray["globalJacobian"];
+        xt::pyarray<double>& mesh_trial_ref = args.array<double>("mesh_trial_ref");
+        xt::pyarray<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
+        xt::pyarray<double>& mesh_dof = args.array<double>("mesh_dof");
+        xt::pyarray<int>& mesh_l2g = args.array<int>("mesh_l2g");
+        xt::pyarray<double>& dV_ref = args.array<double>("dV_ref");
+        xt::pyarray<double>& u_trial_ref = args.array<double>("u_trial_ref");
+        xt::pyarray<double>& u_grad_trial_ref = args.array<double>("u_grad_trial_ref");
+        xt::pyarray<double>& u_test_ref = args.array<double>("u_test_ref");
+        xt::pyarray<double>& u_grad_test_ref = args.array<double>("u_grad_test_ref");
+        xt::pyarray<double>& mesh_trial_trace_ref = args.array<double>("mesh_trial_trace_ref");
+        xt::pyarray<double>& mesh_grad_trial_trace_ref = args.array<double>("mesh_grad_trial_trace_ref");
+        xt::pyarray<double>& dS_ref = args.array<double>("dS_ref");
+        xt::pyarray<double>& u_trial_trace_ref = args.array<double>("u_trial_trace_ref");
+        xt::pyarray<double>& u_grad_trial_trace_ref = args.array<double>("u_grad_trial_trace_ref");
+        xt::pyarray<double>& u_test_trace_ref = args.array<double>("u_test_trace_ref");
+        xt::pyarray<double>& u_grad_test_trace_ref = args.array<double>("u_grad_test_trace_ref");
+        xt::pyarray<double>& normal_ref = args.array<double>("normal_ref");
+        xt::pyarray<double>& boundaryJac_ref = args.array<double>("boundaryJac_ref");
+        int nElements_global = args.scalar<int>("nElements_global");
+        xt::pyarray<int>& csrRowIndeces_u_u = args.array<int>("csrRowIndeces_u_u");
+        xt::pyarray<int>& csrColumnOffsets_u_u = args.array<int>("csrColumnOffsets_u_u");
+        xt::pyarray<double>& globalJacobian = args.array<double>("globalJacobian");
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
