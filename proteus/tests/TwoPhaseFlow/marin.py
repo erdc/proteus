@@ -12,6 +12,7 @@ from proteus.mprans.SpatialTools import Tank3D
 from proteus.mprans import SpatialTools as st
 from proteus.Profiling import logEvent
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import proteus.TwoPhaseFlow.utils.Parameters as Parameters
 import math
 import os
 
@@ -314,8 +315,13 @@ myTpFlowProblem.outputStepping.dt_output = opts.dt_output
 myTpFlowProblem.outputStepping.systemStepExact = True
 
 myTpFlowProblem.SystemPhysics.setDefaults()
-myTpFlowProblem.SystemPhysics.useDefaultModels(flowModel=opts.ns_model,interfaceModel=1)
-
+#myTpFlowProblem.SystemPhysics.useDefaultModels(flowModel=opts.ns_model,interfaceModel=1)
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelCLSVOF,'clsvof')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelRANS3PF,'flow')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressureIncrement,'pressureInc')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressure,'pressure')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressureInitial,'pressureInit')
+m
 myTpFlowProblem.SystemPhysics.gravity = np.array([0.0,0.0,-9.8])
 
 myTpFlowProblem.SystemPhysics.boundaryConditions=boundaryConditions

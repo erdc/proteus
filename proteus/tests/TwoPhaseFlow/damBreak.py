@@ -9,6 +9,7 @@ from proteus.Profiling import logEvent
 from proteus.mprans.SpatialTools import Tank2D
 from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import proteus.TwoPhaseFlow.utils.Parameters as Parameters
 from proteus.Gauges import PointGauges, LineIntegralGauges, LineGauges
 import os
 
@@ -136,7 +137,11 @@ myTpFlowProblem.outputStepping.dt_output = opts.dt_output
 myTpFlowProblem.outputStepping.systemStepExact = True
 
 myTpFlowProblem.SystemPhysics.setDefaults()
-myTpFlowProblem.SystemPhysics.useDefaultModels(flowModel=1,interfaceModel=1)
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelCLSVOF,'clsvof')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelRANS3PF,'flow')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressureIncrement,'pressureInc')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressure,'pressure')
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressureInitial,'pressureInit')
 myTpFlowProblem.SystemNumerics.cfl=opts.cfl
 myTpFlowProblem.SystemNumerics.useSuperlu=True
 
