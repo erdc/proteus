@@ -321,7 +321,6 @@ myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelRANS3PF,'flow')
 myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressureIncrement,'pressureInc')
 myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressure,'pressure')
 myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelPressureInitial,'pressureInit')
-m
 myTpFlowProblem.SystemPhysics.gravity = np.array([0.0,0.0,-9.8])
 
 myTpFlowProblem.SystemPhysics.boundaryConditions=boundaryConditions
