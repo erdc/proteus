@@ -335,8 +335,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ball_velocity = ball_velocity
         self.ball_angular_velocity = ball_angular_velocity
         self.forceTerms = None
+        if(nd == 2):
+            self.variableNames=['u','v']
+        else:
+            self.variableNames= ['u', 'v','w']
 
-        self.variableNames = ['u', 'v','w']
         if initialize:
             self.initialize()
 

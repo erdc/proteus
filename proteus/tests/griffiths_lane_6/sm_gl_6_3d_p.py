@@ -15,7 +15,6 @@ try:
     from .griffiths_lane_6 import *
 except:
     from griffiths_lane_6 import *
-genMesh=False#True
 he = 4.0
 #he*=0.5
 #he*=0.5
@@ -27,6 +26,7 @@ boundaryFlags = domain.boundaryFlags
 #domain.regionConstraints = [old_div((he**3),6.0)]
 domain.regionConstraints = [128.0]
 domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"gl_6_3d"
+domain.MeshOptions.genMesh=False#True
 #domain.writePoly("gl_6_3d")
 #domain.writePLY("gl_6_3d")
 triangleOptions="VApfeen"

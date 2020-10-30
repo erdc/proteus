@@ -161,7 +161,7 @@ if structured is False:
     #domain.writePLY('cavity2D')
     #domain.writePoly('cavity2D')
     domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/../"+"cavity2D"
-    genMesh=False
+    domain.MeshOptions.genMesh=False
 
 
 ns_forceStrongDirichlet = True

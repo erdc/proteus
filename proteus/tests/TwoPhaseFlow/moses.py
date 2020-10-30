@@ -137,7 +137,9 @@ domain.boundaryTags = boundaryTags
 domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshMarin"
 #domain.writePoly("meshMoses")
 domain.MeshOptions.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
-
+domain.MeshOptions.triangleFlag = 0
+domain.MeshOptions.he = opts.he
+domain.MeshOptions.genMesh=False
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
 # ****************************** #
@@ -268,14 +270,6 @@ forceTerms = {0:forcex,
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
-outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
-outputStepping.systemStepExact = True
-initialConditions = {'pressure': zero(),
-                     'pressure_increment': zero(),
-                     'vel_u': zero(),
-                     'vel_v': zero(),
-                     'vel_w': zero(),
-                     'clsvof': clsvof_init_cond()}
 boundaryConditions = {
     # DIRICHLET BCs #
     'pressure_DBC': pressure_DBC,
@@ -297,30 +291,38 @@ boundaryConditions = {
     'vel_v_DFBC': vel_v_DFBC,
     'vel_w_DFBC': vel_w_DFBC,
     'clsvof_DFBC': lambda x, flag: None}
-myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
-                                             ls_model=1,
-                                             nd=3,
-                                             cfl=opts.cfl,
-                                             outputStepping=outputStepping,
-                                             structured=False,
-                                             he=he,
-                                             nnx=None,
-                                             nny=None,
-                                             nnz=None,
-                                             domain=domain,
-                                             initialConditions=initialConditions,
-                                             boundaryConditions=boundaryConditions,
-                                             useSuperlu=True)
-myTpFlowProblem.useBoundaryConditionsModule = False
-myTpFlowProblem.Parameters.physical['gravity'] = [0.0,0.0,-9.8]
-m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.coefficients['disc_ICs']=True
-m.rans3p.p.coefficients['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
-m.rans3p.p.coefficients.forceTerms = forceTerms
-m.rans3p.p.coefficients.useVF = 1.0
-m.rans3p.p.coefficients.eb_penalty_constant = 1e6
-m.rans3p.n.ShockCapturingOptions.shockCapturingFactor = 0.5
 
-myTpFlowProblem.Parameters.mesh.setParallelPartitioningType('node')
-myTpFlowProblem.Parameters.mesh.triangleOptions = triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
-myTpFlowProblem.Parameters.mesh.genMesh=False
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem()
+myTpFlowProblem.domain=domain
+
+myTpFlowProblem.outputStepping.final_time = opts.final_time
+myTpFlowProblem.outputStepping.dt_output = opts.dt_output
+myTpFlowProblem.outputStepping.systemStepExact = True
+
+myTpFlowProblem.SystemPhysics.setDefaults()
+myTpFlowProblem.SystemPhysics.useDefaultModels(flowModel=opts.ns_model,interfaceModel=1)
+myTpFlowProblem.SystemNumerics.cfl=opts.cfl
+myTpFlowProblem.SystemNumerics.useSuperlu=True
+
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['u']=zero()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['v']=zero()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['w']=zero()
+myTpFlowProblem.SystemPhysics.modelDict['clsvof'].p.initialConditions['clsvof'] = clsvof_init_cond()
+myTpFlowProblem.SystemPhysics.modelDict['pressure'].p.initialConditions['p'] = zero()
+myTpFlowProblem.SystemPhysics.modelDict['pressureInc'].p.initialConditions['pInc'] = zero()
+myTpFlowProblem.SystemPhysics.modelDict['pressureInit'].p.initialConditions['pInit'] = zero()
+
+myTpFlowProblem.SystemPhysics.boundaryConditions = boundaryConditions
+myTpFlowProblem.SystemPhysics.useBoundaryConditionsModule = False
+
+myTpFlowProblem.SystemPhysics.gravity = [0.0,0.0,-9.8]
+
+m = myTpFlowProblem.SystemPhysics.modelDict
+m['clsvof'].p.coefficients['disc_ICs']=True
+m['flow'].p.coefficients['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+m['flow'].p.coefficients.forceTerms = forceTerms
+m['flow'].p.coefficients.useVF = 1.0
+m['flow'].p.coefficients.eb_penalty_constant = 1e6
+m['flow'].n.ShockCapturingOptions.shockCapturingFactor = 0.5
+
+

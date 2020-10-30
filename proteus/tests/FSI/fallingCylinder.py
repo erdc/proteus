@@ -74,6 +74,10 @@ tank_y = tank_dim[1]
 water_level=tank_y*2
 tank = st.Tank2D(domain, [tank_x, tank_y])
 
+# MESH PARAMETERS
+domain.MeshOptions.genMesh = False
+domain.MeshOptions.he = he
+
 #  ____                        _                   ____                _ _ _   _
 # | __ )  ___  _   _ _ __   __| | __ _ _ __ _   _ / ___|___  _ __   __| (_) |_(_) ___  _ __  ___
 # |  _ \ / _ \| | | | '_ \ / _` |/ _` | '__| | | | |   / _ \| '_ \ / _` | | __| |/ _ \| '_ \/ __|
@@ -163,11 +167,6 @@ class V_IC:
 class W_IC:
     def uOfXT(self, x, t):
         return 0.0
-# instanciating the classes for *_p.py files
-initialConditions = {'pressure': P_IC(),
-                     'vel_u': U_IC(),
-                     'vel_v': V_IC(),
-                     'vel_w': W_IC()}
 
 #  __  __           _        ___        _   _
 # |  \/  | ___  ___| |__    / _ \ _ __ | |_(_) ___  _ __  ___
@@ -197,79 +196,52 @@ domain.BCbyFlag[0].v_diffusive.uOfXT = lambda x, t: 0.
 # |_| \_|\__,_|_| |_| |_|\___|_|  |_|\___|___/
 # Numerics
 
-outputStepping = TpFlow.OutputStepping(
-    final_time=opts.T,
-    dt_init=opts.dt_init,
-    dt_output=opts.dt_output,
-    nDTout=None,
-    dt_fixed=opts.dt_fixed,
-)
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem()
+myTpFlowProblem.outputStepping.final_time = opts.T
+myTpFlowProblem.outputStepping.dt_init = opts.dt_init
+myTpFlowProblem.outputStepping.dt_output = opts.dt_output
+myTpFlowProblem.outputStepping.dt_fixed = opts.dt_fixed
+myTpFlowProblem.outputStepping.archiveAllSteps = opts.archiveAllSteps
 
-myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(
-    ns_model=None,
-    ls_model=None,
-    nd=domain.nd,
-    cfl=opts.cfl,
-    outputStepping=outputStepping,
-    structured=False,
-    he=he,
-    nnx=None,
-    nny=None,
-    nnz=None,
-    domain=domain,
-    initialConditions=initialConditions,
-    boundaryConditions=None, # set with SpatialTools,
-    useSuperlu=True,
-    useExact=True
-)
+myTpFlowProblem.domain = domain
+
+myTpFlowProblem.SystemNumerics.useSuperlu=True
+myTpFlowProblem.SystemNumerics.useExact=True
+myTpFlowProblem.SystemNumerics.cfl=opts.cfl
 
 # line below needed for relaxation zones
 # (!) hack
-m = myTpFlowProblem.Parameters.Models
-m.rans2p.auxiliaryVariables += domain.auxiliaryVariables['twp']
-myTpFlowProblem.archiveAllSteps = opts.archiveAllSteps
 
-myTpFlowProblem.movingDomain = False
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelRANS2P,'flow')
+if addedMass is True:
+    myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelAddedMass,'addedMass')
 
-params = myTpFlowProblem.Parameters
+m = myTpFlowProblem.SystemPhysics.modelDict
+m['flow'].auxiliaryVariables += domain.auxiliaryVariables['twp']
 
-# MESH PARAMETERS
-params.mesh.genMesh = False
-params.mesh.he = he
+myTpFlowProblem.SystemPhysics.movingDomain = False
+
+params = myTpFlowProblem.SystemPhysics
+
+#initialConditions
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['p']=P_IC()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['u']=U_IC()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['v']=V_IC()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['w']=W_IC()
+myTpFlowProblem.SystemPhysics.modelDict['addedMass'].p.initialConditions['addedMass']=AtRest()
+
 
 # PHYSICAL PARAMETERS
 
-params.physical.densityA = opts.densityA  # water
-params.physical.densityB = opts.densityB  # air
-params.physical.kinematicViscosityA = opts.kinematicViscosityA  # water
-params.physical.kinematicViscosityB = opts.kinematicViscosityB  # air
-params.physical.gravity = np.array(opts.gravity)
-params.physical.surf_tension_coeff = 0.
+params['rho_0'] = opts.densityA  # water
+params['rho_1'] = opts.densityB  # air
+params['nu_0'] = opts.kinematicViscosityA  # water
+params['nu_1'] = opts.kinematicViscosityB  # air
+params['gravity'] = np.array(opts.gravity)
+params['surf_tension_coeff'] = 0.
 
-# MODEL PARAMETERS
-ind = -1
-m.rans2p.index = ind+1
-ind += 1
-if addedMass is True:
-    m.addedMass.index = ind+1
-    ind += 1
-m.rans2p.auxiliaryVariables += [system]
-# m.rans2p.p.coefficients.particle_epsFact = 1.5
-m.rans2p.p.coefficients.use_ball_as_particle = opts.use_ball_as_particle
-m.rans2p.p.coefficients.nParticles = 1
-m.rans2p.n.conservativeFlux=None
-#m.rans2p.p.coefficients.particle_alpha = 1000.
-#m.rans2p.p.coefficients.particle_beta = 1000.
-#m.rans2p.p.coefficients.particle_penalty_constant = 100.
-#m.rans2p.p.coefficients.particle_sdfList = [lambda t, x: body.getDynamicSDF(t, x)]
-#m.rans2p.p.coefficients.particle_velocityList = [lambda t, x: body.getVelocity()]
-# m.rans2p.p.coefficients.useExact = False
-# m.rans2p.p.coefficients.ghost_penalty_constant = 0.1
-#m.rans2p.p.coefficients.ball_radius = np.array([radius], 'd')
-#m.rans2p.p.coefficients.ball_velocity = np.zeros((1, 3), 'd')
-#m.rans2p.p.coefficients.ball_angular_velocity = np.zeros((1, 3), 'd')
-#m.rans2p.p.coefficients.ball_center = np.array([[pos.x, pos.y, pos.z]], 'd')
+m['flow'].auxiliaryVariables += [system]
+m['flow'].p.coefficients.use_ball_as_particle = opts.use_ball_as_particle
+m['flow'].p.coefficients.nParticles = 1
+m['flow'].n.conservativeFlux=None
 
-# m.rans2p.p.coefficients.MOMENTUM_SGE = 1.
-# m.rans2p.p.coefficients.PRESSURE_SGE = 1.
-# m.rans2p.p.coefficients.VELOCITY_SGE = 1.

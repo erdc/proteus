@@ -77,6 +77,8 @@ else:
     he = opts.he
     domain.MeshOptions.he = he
     domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+    domain.MeshOptions.genMesh=False
+
 
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #
@@ -208,13 +210,6 @@ clsvof_DFBC = lambda x,flag: None
 ############################################
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
-outputStepping = TpFlow.OutputStepping(opts.final_time,dt_output=opts.dt_output)
-outputStepping.systemStepExact = True
-initialConditions = {'pressure': zero(),
-                     'pressure_increment': zero(),
-                     'vel_u': zero(),
-                     'vel_v': zero(),
-                     'clsvof': clsvof_init_cond()}
 boundaryConditions = {
     # DIRICHLET BCs #
     'pressure_DBC': pressure_DBC,
@@ -233,26 +228,18 @@ boundaryConditions = {
     'vel_u_DFBC': vel_u_DFBC,
     'vel_v_DFBC': vel_v_DFBC,
     'clsvof_DFBC': clsvof_DFBC}
-myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(ns_model=opts.ns_model,
-                                             ls_model=1,
-                                             nd=2,
-                                             cfl=opts.cfl,
-                                             outputStepping=outputStepping,
-                                             structured=structured,
-                                             he=he,
-                                             nnx=nnx,
-                                             nny=nny,
-                                             nnz=None,
-                                             domain=domain,
-                                             initialConditions=initialConditions,
-                                             boundaryConditions=boundaryConditions,
-                                             useSuperlu=True)
-m = myTpFlowProblem.Parameters.Models
-m.clsvof.p.coefficients['disc_ICs']=False if IC_type==0 else True
-m.rans3p.p.coefficients['forceStrongDirichlet']=True
-m.rans3p.p.coefficients['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+
+
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem()
+myTpFlowProblem.domain=domain
+myTpFlowProblem.outputStepping.final_time = opts.final_time
+myTpFlowProblem.outputStepping.dt_output = opts.dt_output
+myTpFlowProblem.outputStepping.systemStepExact = True
+
+myTpFlowProblem.SystemPhysics.setDefaults()
+myTpFlowProblem.SystemPhysics.useDefaultModels(flowModel=1,interfaceModel=1)
 if opts.test_case==1:
-    physical_parameters=myTpFlowProblem.Parameters.physical
+    physical_parameters=myTpFlowProblem.SystemPhysics
     physical_parameters['densityA'] = 1000.0
     physical_parameters['kinematicViscosityA'] = 1.0/physical_parameters['densityA']
     physical_parameters['densityB'] = 1.0
@@ -260,5 +247,23 @@ if opts.test_case==1:
     physical_parameters['surf_tension_coeff'] = 0.
     physical_parameters['gravity'] = [0.0, -1.0, 0.0]
 
-myTpFlowProblem.Parameters.mesh.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
-myTpFlowProblem.Parameters.mesh.genMesh=False
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['u']=zero()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['v']=zero()
+myTpFlowProblem.SystemPhysics.modelDict['clsvof'].p.initialConditions['clsvof'] = clsvof_init_cond()
+myTpFlowProblem.SystemPhysics.modelDict['pressure'].p.initialConditions['p'] = zero()
+myTpFlowProblem.SystemPhysics.modelDict['pressureInc'].p.initialConditions['pInc'] = zero()
+myTpFlowProblem.SystemPhysics.modelDict['pressureInit'].p.initialConditions['pInit'] = zero()
+
+myTpFlowProblem.SystemPhysics.boundaryConditions=boundaryConditions
+myTpFlowProblem.SystemPhysics.useBoundaryConditionsModule = False
+
+m = myTpFlowProblem.SystemPhysics.modelDict
+m['clsvof'].p.coefficients.disc_ICs = False if IC_type==0 else True
+
+m['flow'].p.coefficients['forceStrongDirichlet']=True
+m['flow'].p.coefficients['ARTIFICIAL_VISCOSITY']=opts.ARTIFICIAL_VISCOSITY
+
+myTpFlowProblem.SystemNumerics.cfl=opts.cfl
+myTpFlowProblem.SystemNumerics.useSuperlu=True
+
+

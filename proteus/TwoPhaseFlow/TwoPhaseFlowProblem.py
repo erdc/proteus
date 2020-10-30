@@ -8,9 +8,10 @@ from proteus.Profiling import logEvent
 from builtins import object
 from proteus.TwoPhaseFlow.utils import Parameters
 from proteus.defaults import System_base
+import collections
 import sys
 
-class TwoPhaseFlowProblem:
+class TwoPhaseFlowProblem(Parameters.FreezableClass):
     """ TwoPhaseFlowProblem """
 
     def __init__(self,
@@ -25,26 +26,21 @@ class TwoPhaseFlowProblem:
 
         self.domain=domain
         self.mesh = mesh
-        self.initialConditions=initialConditions
-        self.boundaryConditions=boundaryConditions
-
-        # to use proteus.mprans.BoundaryConditions
-        # but only if SpatialTools was used to make the domain
-        self.useBoundaryConditionsModule = True
 
         # ***** CREATE SYSTEM PHYSICS OBJECT ***** #
         self.SystemPhysics = SystemPhysics(ProblemInstance=self)
+        self.SystemPhysics.initialConditions = initialConditions
+        self.SystemPhysics.boundaryConditions= boundaryConditions
+
+        #Model tracking objects
+        self.SystemPhysics._modelIdxDict = {}           
+        self.SystemPhysics.modelDict = collections.OrderedDict()           
 
         # ***** CREATE SYSTEM NUMERICS OBJECT ***** #
         self.SystemNumerics = SystemNumerics(ProblemInstance=self)
 
         # ***** CREATE MODEL PARAMETERS OBJECT ***** #
         self.Parameters = Parameters.ParametersHolder(ProblemInstance=self)
-
-        #Model tracking objects
-        self.modelList=[] #list used for internal tracking of models
-        self.modelDict={} #dict used to allow user access to models
-        self.modelIdxDict = {} #dict used for internal tracking of model indices
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace(ProblemInstance=self)
@@ -53,101 +49,93 @@ class TwoPhaseFlowProblem:
         self.so = System_base()
         self.outputStepping=OutputStepping()
 
+        self._freeze()
+
     def checkProblem(self):
         # ***** SET OF ASSERTS ***** #
         assert self.domain.nd in [2,3], "nd={2,3}"
         assert self.SystemNumerics.cfl <= 1, "Choose cfl <= 1"
         assert type(self.domain.MeshOptions.he)==float , "Provide (float) he (characteristic mesh size)"
         assert self.domain is not None, "Provide a domain"
-        #if self.structured:
-        #    assert type(self.nnx)==int and type(self.nny)==int, "Provide (int) nnx and nny"
-        #    if self.nd==3:
-        #        assert type(self.nnz)==int, "Provide (int) nnz"
-        #else:
-        #    assert self.domain.MeshOptions.triangleOptions != 'q30DenA', "Set domain.MeshOptions.triangleOptions"
-        #assert self.triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
-        if self.initialConditions is not None:
-            assert type(initialConditions)==dict, "Provide dict of initial conditions"
+        if self.domain.MeshOptions.structured:
+            assert type(self.domain.MeshOptions.nnx)==int and type(self.domain.MeshOptions.nny)==int, "Provide (int) nnx and nny"
+            if self.domain.nd==3:
+                assert type(self.domain.MeshOptions.nnz)==int, "Provide (int) nnz"
+        else:
+            assert self.domain.MeshOptions.triangleOptions != 'q30DenA', "Set domain.MeshOptions.triangleOptions"
+        assert self.domain.MeshOptions.triangleFlag in [0,1,2], "triangleFlag must be 1, 2 or 3"
+        if self.SystemPhysics.initialConditions is not None:
+            assert type(self.SystemPhysics.initialConditions)==dict, "Provide dict of initial conditions"
             # assertion now done in TwoPhaseFlow_so.py
-        if self.boundaryConditions is not None:
-            assert type(self.boundaryConditions)==dict, "Provide dict of boundary conditions"
-
-    def addModel(self,modelObject,name):
-        self.modelList.append(modelObject)
-        self.modelDict[name] = modelObject
-
-    def attachModels(self):
-        #attach problem object to each model, identify index, and then form dictionary
-        for (idx,model) in enumerate(self.modelList):
-            model._Problem = self
-            model.index = idx
-            model._Problem.modelIdxDict[model.name]=idx
+        if self.SystemPhysics.boundaryConditions is not None:
+            assert type(self.SystemPhysics.boundaryConditions)==dict, "Provide dict of boundary conditions"
 
     def assert_initialConditions(self):
-        initialConditions = self.initialConditions
+        initialConditions = self.SystemPhysics.initialConditions
         nd = self.domain.nd
-        #ns_model = self.ns_model
-        #ls_model = self.ls_model
-        #if ns_model is not None:
-        #    assert 'pressure' in initialConditions, 'Provide pressure in ICs'
-        #    assert 'vel_u' in initialConditions, 'Provide vel_u in ICs'
-        #    assert 'vel_v' in initialConditions, 'Provide vel_v in ICs'
-        #    if nd==3:
-        #        assert 'vel_w' in initialConditions, 'Provide vel_w in ICs'
-        #    if self.ns_model == 1: #rans3p
-        #        assert 'pressure_increment' in initialConditions, 'Provide pressure_increment in ICs'
-        #if ls_model == 0:
-        #    assert 'vof' in initialConditions, 'Provide vof in ICs'
-        #    assert 'ncls' in initialConditions, 'Provide ncls in ICs'
-        #elif self.ls_model == 1:
-        #    assert 'clsvof' in initialConditions or ('ncls' in initialConditions and 'vof' in initialConditions), 'Provide clsvof or ncls and vof in ICs'
-    #
+        for model in self.SystemPhysics.modelDict.values():
+            for key in model.p.initialConditions.__dict__.keys():
+                if(key == 'name'):
+                    continue
+                assert model.p.initialConditions[key] is not None, 'Need to provide initial conditions for variable '+key+' in model '+model.name
+
     def assert_boundaryConditions(self):
-        boundaryConditions = self.boundaryConditions
+        boundaryConditions = self.SystemPhysics.boundaryConditions
         nd = self.domain.nd
-        #ns_model = self.ns_model
-        #ls_model = self.ls_model
-        #if boundaryConditions is not None:
-        #    # check dirichlet BCs
-        #    if ns_model is not None:
-        #        assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
-        #        assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
-        #        assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
-        #        if nd==3:
-        #            assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
-        #    if ls_model == 0:
-        #        assert 'vof_DBC' in boundaryConditions, "Provide vof_DBC"
-        #        assert 'ncls_DBC' in boundaryConditions, "Provide ncls_DBC"
-        #    elif ls_model == 1:
-        #        assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
-        #    # check advective flux BCs
-        #    if ns_model is not None:
-        #        assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
-        #        assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
-        #        assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
-        #        if nd==3:
-        #            assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
-        #    if ls_model == 1:
-        #        assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
-        #    if ls_model == 0:
-        #        assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
-        #    # check diffusive flux BCs
-        #    if ns_model is not None:
-        #        assert 'vel_u_DFBC' in boundaryConditions, "provide vel_u_DFBC"
-        #        assert 'vel_v_DFBC' in boundaryConditions, "provide vel_v_DFBC"
-        #        if nd==3:
-        #            assert 'vel_w_DFBC' in boundaryConditions, "provide vel_w_DFBC"
-        #    if ls_model == 1:
-        #        assert 'clsvof_DFBC' in boundaryConditions, "provide clsvof_DFBC"
-        #    if ns_model==1: #rans3p
-        #        # check dirichlet BCs
-        #        assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
-        #        # check advective flux BCs
-        #        assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
-        #        # check diffusive flux BCs
-        #        assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
-        #else:
-        #    assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
+        ns_model = None
+        ls_model = None
+
+        for model in self.SystemPhysics.modelDict.values():
+            if(isinstance(model,Parameters.ParametersModelRANS3PF)):                 
+                ns_model = 'rans3p'
+            elif(isinstance(model,Parameters.ParametersModelRANS2P)):
+                ns_model = 'rans2p'
+            elif isinstance(model,Parameters.ParametersModelCLSVOF):
+                ls_model = 'clsvof'
+            elif isinstance(model,Parameters.ParametersModelVOF):
+                ls_model = 'vof'
+
+        if boundaryConditions is not None:
+            # check dirichlet BCs
+            if ns_model is not None:
+                assert 'pressure_DBC' in boundaryConditions, "Provide pressure_DBC"
+                assert 'vel_u_DBC' in boundaryConditions, "Provide vel_u_DBC"
+                assert 'vel_v_DBC' in boundaryConditions, "Provide vel_v_DBC"
+                if nd==3:
+                    assert 'vel_w_DBC' in boundaryConditions, "Provide vel_w_DBC"
+            if ls_model == 'vof':
+                assert 'vof_DBC' in boundaryConditions, "Provide vof_DBC"
+                assert 'ncls_DBC' in boundaryConditions, "Provide ncls_DBC"
+            elif ls_model == 'clsvof':
+                assert 'clsvof_DBC' in boundaryConditions, "Provide clsvof_DBC"
+            # check advective flux BCs
+            if ns_model is not None:
+                assert 'pressure_AFBC' in boundaryConditions, "Provide pressure_AFBC"
+                assert 'vel_u_AFBC' in boundaryConditions, "Provide vel_u_AFBC"
+                assert 'vel_v_AFBC' in boundaryConditions, "Provide vel_v_AFBC"
+                if nd==3:
+                    assert 'vel_w_AFBC' in boundaryConditions, "Provide vel_w_AFBC"
+            if ls_model == 'vof':
+                assert 'vof_AFBC' in boundaryConditions, "Provide vof_AFBC"
+            if ls_model == 'clsvof':
+                assert 'clsvof_AFBC' in boundaryConditions, "Provide clsvof_AFBC"
+            # check diffusive flux BCs
+            if ns_model is not None:
+                assert 'vel_u_DFBC' in boundaryConditions, "provide vel_u_DFBC"
+                assert 'vel_v_DFBC' in boundaryConditions, "provide vel_v_DFBC"
+                if nd==3:
+                    assert 'vel_w_DFBC' in boundaryConditions, "provide vel_w_DFBC"
+            if ls_model == 'clsvof':
+                assert 'clsvof_DFBC' in boundaryConditions, "provide clsvof_DFBC"
+            if ns_model=='rans3p':
+                # check dirichlet BCs
+                assert 'pressure_increment_DBC' in boundaryConditions, "Provide pressure_increment_DBC"
+                # check advective flux BCs
+                assert 'pressure_increment_AFBC' in boundaryConditions,"Provide pressure_increment_AFBC"
+                # check diffusive flux BCs
+                assert 'pressure_increment_DFBC' in boundaryConditions,"Provide pressure_increment_DFBC"
+        else:
+            assert self.domain.useSpatialTools is True, 'Either define boundaryConditions dict or use proteus.mprans.SpatialTools to set Boundary Conditions and run function assembleDomain'
 
     def initializeAll(self):
 
@@ -164,8 +152,8 @@ class TwoPhaseFlowProblem:
         self.Parameters.mesh = self.domain.MeshOptions
 
         #model organization
-        self.attachModels()
-        self.Parameters.model_list=self.modelList
+        self.SystemPhysics.attachModels()
+        self.Parameters.model_list=self.SystemPhysics.modelDict.values()
         
         self.checkProblem()
         # initial conditions
@@ -175,18 +163,6 @@ class TwoPhaseFlowProblem:
 
         # parameters
         self.Parameters.initializeParameters()
-        # mesh
-        # if self.Parameters.mesh.outputFiles['poly'] is True:
-        #     self.domain.writePoly(self.Parameters.mesh.outputFiles_name)
-        # if self.Parameters.mesh.outputFiles['ply'] is True:
-        #     self.domain.writePLY(self.Parameters.mesh.outputFiles_name)
-        # if self.Parameters.mesh.outputFiles['asymptote'] is True:
-        #     self.domain.writeAsymptote(self.Parameters.mesh.outputFiles_name)
-        # if self.Parameters.mesh.outputFiles['geo'] is True or self.Parameters.mesh.use_gmsh is True:
-        #     self.domain.writeGeo(self.Parameters.mesh.outputFiles_name)
-        #     self.domain.use_gmsh = True
-        # split operator
-
         self.initializeSO()
 
     def initializeSO(self):
@@ -200,8 +176,8 @@ class TwoPhaseFlowProblem:
         if self.outputStepping.dt_fixed:
             so.dt_system_fixed = self.outputStepping.dt_fixed
         # rans3p specific options
-        if 'rans3p' in self.modelIdxDict:
-            PINIT_model = self.modelIdxDict['pressureInitial'] 
+        if 'rans3p' in self.SystemPhysics._modelIdxDict:
+            PINIT_model = self.SystemPhysics._modelIdxDict['pressureInitial'] 
             assert PINIT_model is not None, 'must set pressureInitial model index when using rans3p'
             so.modelSpinUpList = [PINIT_model]
             from proteus.default_so import defaultSystem
@@ -276,7 +252,7 @@ class FESpace:
         nd = self.Problem.domain.nd
         useExact = self.Problem.SystemNumerics.useExact
         assert nd in [2,3], 'number of dimensions must be 2 or 3'
-        for key,value in self.Problem.modelDict.items():
+        for key,value in self.Problem.SystemPhysics.modelDict.items():
             
             if(isinstance(value,Parameters.ParametersModelRANS2P)):
                 self.velSpaceOrder=1
@@ -324,56 +300,6 @@ class FESpace:
             self.elementQuadrature = ft.SimplexGaussQuadrature(nd, quadOrder)
             self.elementBoundaryQuadrature = ft.SimplexGaussQuadrature(nd - 1, quadOrder)
 
-# ****************************************** #
-# ********** NUMERICAL PARAMETERS ********** #
-# ****************************************** #
-default_rans2p_parameters = {'useMetrics': 1.0,
-                             'epsFact_viscosity': 1.5,
-                             'epsFact_density': 1.5,
-                             'ns_forceStrongDirichlet': False,
-                             'weak_bc_penalty_constant': 1.0E6,
-                             'useRBLES': 0.0,
-                             'ns_closure': 0,
-                             'useVF': 0.0,
-                             'ns_shockCapturingFactor': 0.25,
-                             'ns_lag_shockCapturing': True,
-                             'ns_lag_subgridError': True,
-                             'timeDiscretization': 'vbdf',
-                             'timeOrder': 2}
-default_rans3p_parameters = {'useMetrics': 1.0,
-                             'epsFact_viscosity': 1.5,
-                             'epsFact_density': 1.5,
-                             'ns_forceStrongDirichlet': False,
-                             'ns_sed_forceStrongDirichlet': False,
-                             'weak_bc_penalty_constant': 1.0E6,
-                             'useRBLES': 0.0,
-                             'useRANS': 0.0,
-                             'ns_closure': 0,
-                             'useVF': 0.0,
-                             'ns_shockCapturingFactor': 0.5,
-                             'ns_lag_shockCapturing': True,
-                             'ns_lag_subgridError': True,
-                             'timeDiscretization': 'vbdf',
-                             'timeOrder': 2,
-                             'PSTAB': 0,
-                             'USE_SUPG': False,
-                             'ARTIFICIAL_VISCOSITY': 3, #edge based with smoothness indicator
-                             'INT_BY_PARTS_PRESSURE': 1,
-                             'cE': 1.0,
-                             'cMax': 1.0}
-default_clsvof_parameters = {'useMetrics': 1.0,
-                             'epsFactHeaviside': 1.5,
-                             'epsFactDirac': 1.5,
-                             'epsFactRedist': 0.33,
-                             'lambdaFact': 10.0,
-                             'outputQuantDOFs': True,
-                             'computeMetrics': 1,
-                             'computeMetricsForBubble': False,
-                             'eps_tolerance_clsvof': False,
-                             'disc_ICs': False}
-default_general = {'nLevels': 1,
-                   'nLayersOfOverlapForParallel': 0}
-
 class SystemPhysics(Parameters.FreezableClass):
     def __init__(self,ProblemInstance):
         super(SystemPhysics, self).__init__(name='SystemPhysics')
@@ -392,6 +318,15 @@ class SystemPhysics(Parameters.FreezableClass):
         self.surf_tension_coeff = None
         self.movingDomain = False
 
+        self.initialConditions = None
+        self.boundaryConditions=None
+
+        # to use proteus.mprans.BoundaryConditions
+        # but only if SpatialTools was used to make the domain
+        self.useBoundaryConditionsModule = True
+
+        self.useRANS=False
+
     def setDefaults(self):
         self.rho_0 = 998.2
         self.nu_0 = 1.004e-6
@@ -404,10 +339,6 @@ class SystemPhysics(Parameters.FreezableClass):
         elif(dim==3):
             self.gravity =  [0.0, 0.0, -9.81]
 
-       #need to freeze after setup
-        # freeze attributes
-       # self._freeze()
-       
     def useDefaultModels(self,flowModel=0,interfaceModel=0):
         """
         this provides the same functionality as the previous ns_model, ls_model flags
@@ -418,8 +349,8 @@ class SystemPhysics(Parameters.FreezableClass):
             'RANS2P': 'flow',
             'RANS3PF': 'flow',
             'VOF': 'vof',
-            'LS': 'ls',
-            'RDLS': 'rd',
+            'LS': 'ncls',
+            'RDLS': 'rdls',
             'MCorr': 'mcorr',
             'CLSVOF': 'clsvof',
             'PressureIncrement': 'pressureInc',
@@ -429,20 +360,37 @@ class SystemPhysics(Parameters.FreezableClass):
  
         assert flowModel in [0,1] and interfaceModel in [0,1], "flowModel and interfaceModel must either be 0 or 1"
         if(flowModel == 0):
-            self._Problem.addModel(Parameters.ParametersModelRANS2P(),modelNames['RANS2P'])
-        elif(flowModel == 1 and interfaceModel==0):
-            self._Problem.addModel(Parameters.ParametersModelRANS3PF(),modelNames['RANS3PF'])
+            self.addModel(Parameters.ParametersModelRANS2P,modelNames['RANS2P'])
+        elif(flowModel == 1):
+            self.addModel(Parameters.ParametersModelRANS3PF,modelNames['RANS3PF'])
+            self.addModel(Parameters.ParametersModelPressureIncrement,modelNames['PressureIncrement'])
+            self.addModel(Parameters.ParametersModelPressure,modelNames['Pressure'])
+            self.addModel(Parameters.ParametersModelPressureInitial,modelNames['PressureInitial'])
+
         if(interfaceModel==0):
-            self._Problem.addModel(Parameters.ParametersModelVOF(),modelNames['VOF'])
-            self._Problem.addModel(Parameters.ParametersModelNCLS(),modelNames['LS'])
-            self._Problem.addModel(Parameters.ParametersModelRDLS(),modelNames['RDLS'])
-            self._Problem.addModel(Parameters.ParametersModelMCorr(),modelNames['MCorr']) 
+            self.addModel(Parameters.ParametersModelVOF,modelNames['VOF'])
+            self.addModel(Parameters.ParametersModelNCLS,modelNames['LS'])
+            self.addModel(Parameters.ParametersModelRDLS,modelNames['RDLS'])
+            self.addModel(Parameters.ParametersModelMCorr,modelNames['MCorr']) 
         else:
-            self._Problem.addModel(Parameters.ParametersModelCLSVOF(),modelNames['CLSVOF'])
-            self._Problem.addModel(Parameters.ParametersModelRANS3PF(),modelNames['RANS3PF'])
-            self._Problem.addModel(Parameters.ParametersModelPressureIncrement(),modelNames['PressureIncrement'])
-            self._Problem.addModel(Parameters.ParametersModelPressure(),modelNames['Pressure'])
-            self._Problem.addModel(Parameters.ParametersModelPressureInitial(),modelNames['PressureInitial'])
+            self.addModel(Parameters.ParametersModelCLSVOF,modelNames['CLSVOF'])
+            if(flowModel == 1):
+                self.modelDict.move_to_end(modelNames['CLSVOF'],last=False)
+
+    def addModel(self,modelObject,name):
+        #attach problem to model
+
+        modelInitialized = modelObject(ProblemInstance=self._Problem) 
+        self.modelDict[name] = modelInitialized
+
+    def attachModels(self):
+        #attach problem object to each model, identify index, and then form dictionary
+        for (idx,model) in enumerate(self.modelDict.values()):
+            #model._Problem = self
+            model.index = idx
+            #model._Problem.modelIdxDict[model.name]=idx
+            self._modelIdxDict[model.name]=idx
+
 
 class SystemNumerics(Parameters.FreezableClass):
     def __init__(self,ProblemInstance):

@@ -6580,6 +6580,7 @@ class MeshOptions(object):
         self.nLayersOfOverlapForParallel = 1
         self.triangleOptions = None # defined when setTriangleOptions called
         self.nLevels = 1
+        self.structured = False
         self.nnx = None
         self.nny = None
         self.nnz = None
