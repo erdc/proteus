@@ -109,11 +109,6 @@ class clsvof_init_cond(object):
 # ***** Create myTwoPhaseFlowProblem ***** #
 ############################################
 
-if opts.hotstart:
-    outputStepping.systemStepExact = False
-else:
-    outputStepping.systemStepExact = True
-
 boundaryConditions = {
     # DIRICHLET BCs #
     'pressure_DBC': lambda x, flag: domain.bc[flag].p_dirichlet.init_cython(),
@@ -142,6 +137,13 @@ myTpFlowProblem.domain=domain
 myTpFlowProblem.outputStepping.final_time = opts.final_time
 myTpFlowProblem.outputStepping.dt_output = opts.dt_output
 myTpFlowProblem.outputStepping.systemStepExact = True
+
+if opts.hotstart:
+    myTpFlowProblem.outputStepping.systemStepExact = False
+else:
+    myTpFlowProblem.outputStepping.systemStepExact = True
+
+
 
 myTpFlowProblem.SystemPhysics.setDefaults()
 myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelCLSVOF,'clsvof')
