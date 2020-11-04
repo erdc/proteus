@@ -34,6 +34,7 @@ from .Profiling import logEvent
 # Global to control whether the kernel starting is active.
 embed_ok = True
 
+
 class NS_base(object):  # (HasTraits):
     r"""
     The base class for managing the numerical solution of  PDE's.
@@ -141,6 +142,13 @@ class NS_base(object):  # (HasTraits):
         #
         logEvent("Setting up MultilevelMesh")
         mlMesh_nList = []
+
+        #specifically added to allow for separate domain and mesh TPF workflow, exception used to preserve backwards compatibility
+        try:
+            p.genMesh = p.domain.MeshOptions.genMesh
+        except:
+            pass
+
         if so.useOneMesh:
             logEvent("Building one multilevel mesh for all models")
             nListForMeshGeneration=[nList[0]]

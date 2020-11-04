@@ -78,4 +78,4 @@ if __name__=='__main__':
     domain.writePLY("gl_6_3d")
     print(domain.boundaryFlags)
     #os.system("asy -V gl_6_3d")
-    os.system("tetgen -KVApfen gl_6_3d.poly")
+    #os.system("tetgen -KVApfen gl_6_3d.poly")

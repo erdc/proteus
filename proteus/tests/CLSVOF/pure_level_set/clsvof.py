@@ -111,7 +111,7 @@ else:
     meshname = os.path.dirname(os.path.abspath(__file__))+"/"+"mesh_"+str(ct.test_case)
     #domain.writePoly(meshname)
     domain.polyfile = meshname
-    genMesh=False
+    domain.MeshOptions.genMesh=False
 
 soname="clsvof_level_"+repr(refinement)
 

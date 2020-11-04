@@ -29,6 +29,8 @@ modelSpinUpList = []
 
 useOneArchive=True#False
 
+fastArchive = False
+
 sList = []
 
 from .Archiver import ArchiveFlags

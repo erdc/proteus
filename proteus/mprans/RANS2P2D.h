@@ -2729,7 +2729,6 @@ namespace proteus
                     {
                       assert(H_f == 1);
                     }
-
 		  if ((eN < nElements_owned) && elementIsActive[eN])
 		    {
 		      domain_volume += H_s*dV*H_f;
@@ -3880,7 +3879,6 @@ namespace proteus
               globalResidual.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]]+=elementResidual_v[i];
             }//i
         }//ebNE
-      
       if (normalize_pressure)
         {
 	  double send[4]={pa_dv,p_dv,total_volume, total_surface_area}, recv[4]={0.,0.,0.,0.};

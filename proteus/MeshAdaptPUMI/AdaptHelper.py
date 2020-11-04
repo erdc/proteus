@@ -23,23 +23,13 @@ class PUMI_helper:
         return getattr(self.solver, attr)
 
      def setProperties(self):
-        if self.TwoPhaseFlow:
-            p0 = self.pList[0]
-            self.domain = p0.myTpFlowProblem.domain
-            self.rho_0 = p0.myTpFlowProblem.physical_parameters['densityA']
-            self.nu_0 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityA']
-            self.rho_1 = p0.myTpFlowProblem.physical_parameters['densityB']
-            self.nu_1 = p0.myTpFlowProblem.physical_parameters['kinematicViscosityB']
-            self.g = p0.myTpFlowProblem.physical_parameters['gravity']
-            self.epsFact_density = p0.myTpFlowProblem.clsvof_parameters['epsFactHeaviside']
-        else:
-            self.domain = self.pList[0].domain
-            self.rho_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_0
-            self.rho_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_1
-            self.nu_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_0
-            self.nu_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_1
-            self.g = self.modelList[self.flowIdx].levelModelList[0].coefficients.g
-            self.epsFact_density = self.modelList[self.flowIdx].levelModelList[0].coefficients.epsFact_density
+        self.domain = self.pList[0].domain
+        self.rho_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_0
+        self.rho_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.rho_1
+        self.nu_0 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_0
+        self.nu_1 = self.modelList[self.flowIdx].levelModelList[0].coefficients.nu_1
+        self.g = self.modelList[self.flowIdx].levelModelList[0].coefficients.g
+        self.epsFact_density = self.modelList[self.flowIdx].levelModelList[0].coefficients.epsFact_density
 
         self.domain.AdaptManager.PUMIAdapter.setAdaptProperties(self.domain.AdaptManager)
 
@@ -99,17 +89,11 @@ class PUMI_helper:
         p0 = self.pList[0]
         n0 = self.nList[0]
 
-        if self.TwoPhaseFlow:
-            nLevels = p0.myTpFlowProblem.general['nLevels']
-            nLayersOfOverlapForParallel = p0.myTpFlowProblem.general['nLayersOfOverlapForParallel']
-            parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
-            domain = p0.myTpFlowProblem.domain
-            domain.MeshOptions.setParallelPartitioningType('element')
-        else:
-            nLevels = n0.nLevels
-            nLayersOfOverlapForParallel = n0.nLayersOfOverlapForParallel
-            parallelPartitioningType = n0.parallelPartitioningType
-            domain = p0.domain
+        nLevels = n0.nLevels
+        nLayersOfOverlapForParallel = n0.nLayersOfOverlapForParallel
+        parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
+        domain = p0.domain
+        domain.MeshOptions.setParallelPartitioningType('element')
 
         logEvent("Generating %i-level mesh from PUMI mesh" % (nLevels,))
         if domain.nd == 3:

@@ -4675,6 +4675,7 @@ namespace proteus
           /*          <<"Total Boundary Flux "<<total_flux<<std::endl; */
           int nDOF_pressure=0;
           for(int eN=0;eN<nElements_global;eN++)
+
             {
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
@@ -7774,6 +7775,7 @@ namespace proteus
     {
       // This should be split off into a seperate function
       double H_rho, ImH_rho, H_mu, ImH_mu, rho, nu, mu;
+
 
       H_rho = (1.0-useVF)*gf.H(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
       ImH_rho = (1.0-useVF)*gf.ImH(eps_rho,phi) + useVF*(1.0-fmin(1.0,fmax(0.0,vf)));

@@ -38,6 +38,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.dt_last_last = None
         self.solidsList = []
         self.nullSpace = nullSpace
+        if self.nd == 2:
+            self.variableNames = ['hx', 'hy']
+        else:
+            self.variableNames = ['hx', 'hy', 'hz']
+
         if initialize:
             self.initialize()
 

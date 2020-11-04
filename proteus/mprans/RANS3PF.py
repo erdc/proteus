@@ -335,6 +335,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ball_velocity = ball_velocity
         self.ball_angular_velocity = ball_angular_velocity
         self.forceTerms = None
+        if(nd == 2):
+            self.variableNames=['u','v']
+        else:
+            self.variableNames= ['u', 'v','w']
+
         if initialize:
             self.initialize()
 
@@ -2549,6 +2554,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["colind_1D"] = self.colind_1D
         argsDict["isBoundary_1D"] = self.isBoundary_1D
         argsDict["INT_BY_PARTS_PRESSURE"] = self.coefficients.INT_BY_PARTS_PRESSURE
+
         self.rans3pf.calculateResidual(
             argsDict,
             self.coefficients.useExact)

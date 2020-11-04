@@ -69,6 +69,7 @@ class Coefficients(TC_base):
         self.flowModelIndex=V_model
         self.barycenters = barycenters
         self.flags_rigidbody = flags_rigidbody
+        self.variableNames=['addedMass']
         if initialize:
             self.initialize()
 
