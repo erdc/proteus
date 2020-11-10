@@ -267,6 +267,9 @@ else:
             
         logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
+domain.MeshOptions.nnx = nnx 
+domain.MeshOptions.nny = nny
+domain.MeshOptions.nnz = nnz
 # Numerical parameters
 ns_forceStrongDirichlet = False
 ns_sed_forceStrongDirichlet = False
