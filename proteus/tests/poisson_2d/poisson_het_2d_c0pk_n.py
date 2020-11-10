@@ -82,3 +82,6 @@ else:
     linearSolverConvergenceTest= 'r'
 
 conservativeFlux = None
+
+hex=False
+quad = False

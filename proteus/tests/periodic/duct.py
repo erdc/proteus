@@ -526,12 +526,18 @@ n.nny=(n.nnx-1)//4
 if p.nd == 3:
     n.nnz=n.nny
 
+p.domain.MeshOptions.nnx = n.nnx
+p.domain.MeshOptions.nny = n.nny
+p.domain.MeshOptions.nnz = n.nnz
+#p.domain.MeshOptions.hex = n.hex
+p.domain.MeshOptions.quad = n.quad
+
 he = p.L[0]/float(n.nnx-1)
 if p.nd == 3:
-    n.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
+    p.domain.MeshOptions.triangleOptions="VApq1.25q12feena%e" % ((he**3)/6.0,)
 else:
-    n.triangleFlag = 0#if regular triangulatio then alternate diagonals
-    n.triangleOptions="pAq30.0Dena%f" % ((he**2)/4.0,)
+    p.domain.MeshOptions.triangleFlag = 0#if regular triangulatio then alternate diagonals
+    p.domain.MeshOptions.triangleOptions="pAq30.0Dena%f" % ((he**2)/4.0,)
 
 n.numericalFluxType = RANS2P.NumericalFlux
 
@@ -609,7 +615,7 @@ tnList = p.tnList
 pnList=[(p,n)]
 if opts.periodic:
     mesh_name = "pg"
-    p.genMesh=False
+    p.domain.MeshOptions.genMesh=False
     p.domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"tetgen"
 else:
     if opts.grid:

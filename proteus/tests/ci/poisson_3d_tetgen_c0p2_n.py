@@ -20,7 +20,7 @@ elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
 logEvent("""Mesh generated using: tetgen -%s %s"""  % (triangleOptions,domain.polyfile+".poly"))
-triangleOptions="VApq1.35q12feena%e" % (old_div((he**3),6.0),)
+domain.MeshOptions.triangleOptions="VApq1.35q12feena%e" % (old_div((he**3),6.0),)
 
 #number of levels in mesh
 nLevels = 1

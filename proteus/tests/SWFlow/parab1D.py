@@ -37,6 +37,9 @@ nny = old_div((nnx-1),10)+1
 he = old_div(L[0],float(nnx-1))
 triangleOptions="pAq30Dena%f"  % (0.5*he**2,)
 
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
+
 ######################
 ##### BATHYMETRY #####
 ######################

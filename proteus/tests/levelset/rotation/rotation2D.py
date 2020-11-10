@@ -63,10 +63,17 @@ if unstructured:
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
     domain.boundaryTags = box.boundaryTags
     bt = domain.boundaryTags
-    triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
+    domain.MeshOptions.triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
     domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"box"
 else:
     domain = box
+domain.MeshOptions.nn = nn
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
+domain.MeshOptions.nnz = nnz
+domain.MeshOptions.triangleFlag=0
+domain.MeshOptions.genMesh=genMesh
+
 #end time of simulation, full problem is T=8.0
 T = 1.0#8.0#
 #number of output time steps

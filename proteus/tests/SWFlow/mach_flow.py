@@ -52,7 +52,8 @@ st.assembleDomain(domain)
 domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
 nnx = None
 nny = None
-
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
 
 ##########################################
 # DEFINE INITIAL CONSTANTS AND FUNCTIONS #

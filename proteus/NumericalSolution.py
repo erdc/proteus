@@ -143,12 +143,6 @@ class NS_base(object):  # (HasTraits):
         logEvent("Setting up MultilevelMesh")
         mlMesh_nList = []
 
-        #specifically added to allow for separate domain and mesh TPF workflow, exception used to preserve backwards compatibility
-        try:
-            p.genMesh = p.domain.MeshOptions.genMesh
-        except:
-            pass
-
         if so.useOneMesh:
             logEvent("Building one multilevel mesh for all models")
             nListForMeshGeneration=[nList[0]]
@@ -190,6 +184,15 @@ class NS_base(object):  # (HasTraits):
                 else:
                     raise RuntimeError("No support for domains in more than three dimensions")
 
+                #Ensuring backwards compatibility with isolated mesh generation routines
+                p.domain.MeshOptions.nnx, p.domain.MeshOptions.nny,p.domain.MeshOptions.nnz= n.nnx,n.nny,n.nnz
+                p.domain.MeshOptions.nn = n.nn 
+                p.domain.MeshOptions.nLevels = n.nLevels
+                p.domain.MeshOptions.hex = n.hex
+                p.domain.MeshOptions.quad = n.quad
+                p.domain.MeshOptions.triangleFlag=n.triangleFlag
+                p.domain.MeshOptions.triangleOptions=n.triangleOptions
+    
         try:
             mlMesh = self.pList[0].domain.mesh
         except:
@@ -200,12 +203,12 @@ class NS_base(object):  # (HasTraits):
         theDomain = self.pList[0].domain
 
         if(hasattr(theDomain,'AdaptManager')):
+            # attach the checkpointer
+            self.PUMIcheckpointer = Checkpoint.Checkpointer(self, theDomain.checkpointFrequency)
             self.AdaptHelper = AdaptHelper.PUMI_helper(self)
             self.AdaptHelper.reconstructMesh(theDomain,theMesh)
             self.AdaptHelper.getModels(theDomain.AdaptManager.modelDict)
 
-        if so.useOneMesh:
-            for p in pList[1:]: mlMesh_nList.append(mlMesh)
 
         #TODO: this needs to be isolated MeshAdaptPUMI
         if so.useOneMesh:
@@ -219,6 +222,9 @@ class NS_base(object):  # (HasTraits):
                 pass
         #
         mlMesh_nList.append(mlMesh)
+        if so.useOneMesh:
+            for p in pList[1:]: mlMesh_nList.append(mlMesh)
+
         if opts.viewMesh:
             logEvent("Attempting to visualize mesh")
             try:

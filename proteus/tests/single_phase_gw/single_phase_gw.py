@@ -108,7 +108,7 @@ initialConditions_flow = {0:ConstantIC(head_outflow)}
 # numerics
 parallel = False
 
-nnx = nny = int(old_div(L[0],he))
+domain.MeshOptions.nnx = domain.MeshOptions.nny = int(old_div(L[0],he))
 nLevels = 1
 if parallel:
     nLevels = 1

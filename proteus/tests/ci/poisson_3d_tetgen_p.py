@@ -227,6 +227,7 @@ else:
     else:
         domain.polyfile=polyfile
 
+domain.MeshOptions.genMesh=genMesh
 restrictFineSolutionToAllMeshes=False
 parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 0

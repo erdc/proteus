@@ -241,7 +241,8 @@ else:
         #domain.writePoly("mesh")
         domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/../ibm_method/"+"mesh"
         #triangleOptions = "VApq30ena%8.8f" % ((he ** 2) / 2.0,)
-        triangleOptions = "VApq30Dena"
+        domain.MeshOptions.triangleOptions = "VApq30Dena"
+        domain.MeshOptions.genMesh = genMesh
 
 logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time stepping

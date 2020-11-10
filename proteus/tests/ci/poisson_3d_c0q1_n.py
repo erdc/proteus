@@ -23,7 +23,6 @@ nny = 11
 nnz = 11
 #if unstructured would need triangleOptions flag to be set
 
-
 hex=True
 NURBS=False
 px=1
