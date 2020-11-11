@@ -43,7 +43,12 @@ if ct.unstructured:
 else:
     domain = box
     domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"box"    
-    
+
+domain.MeshOptions.nn = domain.MeshOptions.nnx = domain.MeshOptions.nny = domain.MeshOptions.nnz = nn    
+ 
+#the initial test uses triangleFlag=0 from defaults
+domain.MeshOptions.triangleFlag=0
+
 nc = 1
 ##################
 # EXACT SOLUTION #

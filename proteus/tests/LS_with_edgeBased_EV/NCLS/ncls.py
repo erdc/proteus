@@ -89,6 +89,12 @@ if unstructured:
 else:
     domain = box
 
+domain.MeshOptions.nn = nn
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
+domain.MeshOptions.nnz = nnz
+domain.MeshOptions.triangleFlag=0
+
 soname="ncls_level_"+repr(ct.refinement)
 
 class MyCoefficients(NCLS.Coefficients):

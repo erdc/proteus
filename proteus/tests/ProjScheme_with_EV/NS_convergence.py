@@ -143,6 +143,13 @@ else:
         domain.writeAsymptote("mesh")
         triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
+domain.MeshOptions.nn = nn
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
+domain.MeshOptions.nnz = nnz
+domain.MeshOptions.triangleFlag=0
+domain.MeshOptions.triangleOptions=triangleOptions
+
 # Time stepping
 T=1.0
 dt_fixed = 0.1

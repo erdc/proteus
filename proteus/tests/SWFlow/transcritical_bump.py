@@ -50,6 +50,10 @@ else:
     nnx = None
     nny = None
 
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
+
+
 ##########################################
 # DEFINE INITIAL CONSTANTS AND FUNCTIONS #
 ##########################################

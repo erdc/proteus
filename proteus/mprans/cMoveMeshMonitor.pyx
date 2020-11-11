@@ -754,9 +754,6 @@ cdef class cCoefficients:
                     nPending_disp_total = comm.allreduce(nPending_disp)
 
         comm.barrier()
-        if comm.rank == 0:
-            print('HERE2')
-        comm.barrier()
         # SEND NODES POSITION SOLUTION BACK TO ORIGINAL PROCESSORS
         if sendBack is True:
             coords_2doArray = coords_2rank[my_rank]

@@ -14,8 +14,8 @@ parallel = False
 timeIntegration = NoIntegration
 quad_order=2*ct.pDegree+1
 if ct.useHex:
-    hex=True
-    quad=True
+    domain.MeshOptions.hex=True
+    domain.MeshOptions.quad=True
     if ct.pDegree==1:
         femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis}
     elif ct.pDegree==2:
@@ -28,8 +28,10 @@ if ct.useHex:
     elementQuadrature = CubeGaussQuadrature(nd,quad_order)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,quad_order)
 else:
-    hex=False
-    quad=False
+    domain.MeshOptions.hex=False
+    domain.MeshOptions.quad=False
+    hex = False
+    quad = False
     if ct.pDegree == 1:
         femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
     elif ct.pDegree == 2:

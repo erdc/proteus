@@ -69,6 +69,9 @@ if unstructured:
 else:
     domain = box
 
+domain.MeshOptions.nn = domain.MeshOptions.nnx = domain.MeshOptions.nny = nn
+domain.MeshOptions.nnz = nnz
+
 soname="clsvof_level_"+repr(refinement)
 
 class MyCoefficients(CLSVOF.Coefficients):
