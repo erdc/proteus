@@ -276,7 +276,7 @@ else:
         domain.writePoly("mesh")
         domain.writePLY("mesh")
         domain.writeAsymptote("mesh")
-        triangleOptions = "VApq30ena%8.8f" % ((he ** 2) / 2.0,)
+        domain.MeshOptions.triangleOptions = "VApq30ena%8.8f" % ((he ** 2) / 2.0,)
 
 #logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
