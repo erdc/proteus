@@ -204,7 +204,8 @@ class NS_base(object):  # (HasTraits):
 
         if(hasattr(theDomain,'AdaptManager')):
             # attach the checkpointer
-            self.PUMIcheckpointer = Checkpoint.Checkpointer(self, theDomain.checkpointFrequency)
+            if isinstance(theDomain,Domain.PUMIDomain):
+                self.PUMIcheckpointer = Checkpoint.Checkpointer(self, theDomain.checkpointFrequency)
             self.AdaptHelper = AdaptHelper.PUMI_helper(self)
             self.AdaptHelper.reconstructMesh(theDomain,theMesh)
             self.AdaptHelper.getModels(theDomain.AdaptManager.modelDict)
