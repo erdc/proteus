@@ -2990,7 +2990,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
     8. Build subdomain meshes in new numbering
   ***********************************************************************/
   //
-  //0. Set up tetgen files. Note, tetgen should have been run with -feen to get alll the faces and elements
+  //0. Set up triangle files. Note, tetgen should have been run with -feen to get alll the faces and elements
   //
   bool failed = false;
   const int simplexDim = 3;
@@ -2998,7 +2998,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   using namespace IOutils;
   std::string vertexFileName  = std::string(filebase) + ".node" ;
   std::string elementFileName = std::string(filebase) + ".ele" ;
-  std::string elementBoundaryFileName  = std::string(filebase) + ".face" ;
+  std::string elementBoundaryFileName  = std::string(filebase) + ".edge" ;
   std::string edgeFileName  = std::string(filebase) + ".edge" ;
 
   //
@@ -3021,11 +3021,11 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
       failed = true;
       return failed;
     }
-  int hasVertexMarkers(0),hasVertexAttributes(0),nSpace(3),nNodes_global;
+  int hasVertexMarkers(0),hasVertexAttributes(0),nSpace(2),nNodes_global;
   //read number of vertices and whether node flags are provided
   vertexFile >> eatcomments >> nNodes_global >> nSpace >> hasVertexAttributes >> hasVertexMarkers >> eatline ;
   assert(nNodes_global > 0);
-  assert(nSpace == 3);
+  assert(nSpace == 2);
   newMesh.nNodes_global = nNodes_global;
   newMesh.nNodes_element = simplexDim;
   newMesh.nNodes_elementBoundary = simplexDim-1;
@@ -3157,6 +3157,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
       for (int k=nodeNeighborsOffsets_subdomain[nN];k<nodeNeighborsOffsets_subdomain[nN+1];k++)
         weights_subdomain[k] = weight;
     }
+  std::cout<<"Ended stage 2\n";
   //
   //3. Generate new nodal partition using PETSc interface
   //
@@ -3329,6 +3330,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   int receive_element_mask_event;
   PetscLogEventRegister("Recv. ele mask",0,&receive_element_mask_event);
   PetscLogEventBegin(receive_element_mask_event,0,0,0,0);
+  std::cout<<"Ended stage 3\n";
   //
   //4. To build subdomain meshes, go through and collect elements containing
   //   the locally owned nodes. Assign processor ownership of elements
@@ -3363,7 +3365,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   vector<set<int> > nodeStarNew(nNodes_subdomain_new[rank]);
   map<int,vector<int> > elementNodesArrayMap;
   map<int,long int> elementMaterialTypesMap;
-  map<NodeTuple<3>,ElementNeighbors> elementBoundaryElementsMap;
+  map<NodeTuple<2>,ElementNeighbors> elementBoundaryElementsMap;
   map<NodeTuple<2>,set<pair<int,int> > > edgeElementsMap;
   //note any element index containers are in the old element numbering
   for (int ie = 0; ie < nElements_global; ie++)
@@ -3382,7 +3384,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
           element_nodes_new[iv] = nodeNumbering_global_old2new[nv];
           element_nodes_new_array[iv] = element_nodes_new[iv];
         }
-      NodeTuple<4> nodeTuple(element_nodes_new_array);
+      NodeTuple<simplexDim> nodeTuple(element_nodes_new_array);
       for (int iv = 0; iv < simplexDim; iv++)
         {
           int nN_star_new = element_nodes_new[iv];
@@ -3391,12 +3393,11 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
             {
               inSubdomain = true;
               //add all the element boundaries of this element
-              for (int ebN=0;ebN < 4 ; ebN++)
+              for (int ebN=0;ebN < simplexDim ; ebN++)
                 {
-                  int nodes[3] = { element_nodes_new[(ebN+1) % 4],
-                                   element_nodes_new[(ebN+2) % 4],
-                                   element_nodes_new[(ebN+3) % 4]};
-                  NodeTuple<3> nodeTuple(nodes);
+                  int nodes[simplexDim-1] = { element_nodes_new[(ebN+1) % simplexDim],
+                                   element_nodes_new[(ebN+2) % simplexDim]};
+                  NodeTuple<simplexDim-1> nodeTuple(nodes);
                   if(elementBoundaryElementsMap.find(nodeTuple) != elementBoundaryElementsMap.end())
                     {
                       if (elementBoundaryElementsMap[nodeTuple].right == -1 && ne != elementBoundaryElementsMap[nodeTuple].left)
@@ -3411,8 +3412,8 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
                     }
                 }
               //add all the edges of this element
-              for (int nNL=0,edN=0;nNL < 4 ; nNL++)
-                for(int nNR=nNL+1;nNR < 4;nNR++,edN++)
+              for (int nNL=0,edN=0;nNL < simplexDim ; nNL++)
+                for(int nNR=nNL+1;nNR < simplexDim;nNR++,edN++)
                   {
                     int nodes[2] = { element_nodes_new[nNL],
                                      element_nodes_new[nNR]};
@@ -3493,6 +3494,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   int build_subdomains_global_numbering_elements_event;
   PetscLogEventRegister("Global ele nmbr",0,&build_subdomains_global_numbering_elements_event);
   PetscLogEventBegin(build_subdomains_global_numbering_elements_event,0,0,0,0);
+  std::cout<<"Ended stage 4\n";
   //
   //5. Generate global element numbering corresponding to new subdomain ownership
   //
@@ -3538,12 +3540,17 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   int build_subdomains_faces_event;
   PetscLogEventRegister("Subd faces",0,&build_subdomains_faces_event);
   PetscLogEventBegin(build_subdomains_faces_event,0,0,0,0);
+  std::cout<<"Ended stage 5 sort of\n";
   //
   //4b,5b. repeat process to build global face (elementBoundary) numbering
   //
   //first read element boundaries to create nodeElementBoundariesArray
   //for all element boundaries on this subdomain, which we'll use to
   //grab element boundaries from the bit array
+
+
+  //In 2D, the element boundaries are edges and not faces.
+  //nodeElementBoundariesArray maps an element
 
   std::ifstream elementBoundaryFile(elementBoundaryFileName.c_str());
 
@@ -3558,7 +3565,8 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   bool hasElementBoundaryMarkers = false;
   int nElementBoundaries_global;
   int ihasElementBoundaryMarkers(0);
-  elementBoundaryFile >> eatcomments >> nElementBoundaries_global >> ihasElementBoundaryMarkers >> eatline ;
+
+  elementBoundaryFile >> eatcomments >> nElementBoundaries_global >>ihasElementBoundaryMarkers >> eatline ;
   assert(nElementBoundaries_global > 0);
   if (ihasElementBoundaryMarkers > 0)
     {
@@ -3573,14 +3581,13 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   set<int> supportedElementBoundaries;
   for (int ieb = 0; ieb < nElementBoundaries_global; ieb++)
     {
-      int neb,nn0,nn1,nn2; int ebId(0);
-      elementBoundaryFile >> eatcomments >> neb >> nn0 >> nn1 >> nn2;
+      int neb,nn0,nn1; int ebId(0);
+      elementBoundaryFile >> eatcomments >> neb >> nn0 >> nn1;
       if (ihasElementBoundaryMarkers > 0)
         elementBoundaryFile >> ebId;
       neb -= indexBase;
       nn0 -= indexBase;
       nn1 -= indexBase;
-      nn2 -= indexBase;
       assert(0 <= neb && neb < nElementBoundaries_global && elementBoundaryFile.good());
       //grab the element boundaries for the node if the node is owned by the subdomain
       //this will miss the element boundaries on the "outside boundary" of the star, which will grab later
@@ -3596,14 +3603,8 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
           nodeElementBoundariesStar[nn1_new-nodeOffsets_new[rank]].insert(neb);
           supportedElementBoundaries.insert(neb);
         }
-      int nn2_new = nodeNumbering_global_old2new[nn2];
-      if (nn2_new >= nodeOffsets_new[rank] && nn2_new < nodeOffsets_new[rank+1])
-        {
-          nodeElementBoundariesStar[nn2_new-nodeOffsets_new[rank]].insert(neb);
-          supportedElementBoundaries.insert(neb);
-        }
-      int nodes[3] = {nn0_new,nn1_new,nn2_new};
-      NodeTuple<3> nodeTuple(nodes);
+      int nodes[2] = {nn0_new,nn1_new};
+      NodeTuple<2> nodeTuple(nodes);
       elementBoundaryFile >> eatline;
       if (elementBoundaryElementsMap.find(nodeTuple) != elementBoundaryElementsMap.end())//this element boundary is on an element in the subdomain
         {
@@ -3656,14 +3657,14 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
        elementBoundariesp++)
     {
       //loop over the nodes of this element for the owned nodes
-      for (int iv=0;iv<4;iv++)
+      for (int iv=0;iv<simplexDim;iv++)
         {
           //the elementNodesArrayMap is in the old element numbering while the elementBoundariesMap is in the new element numbering
           int nN_global = elementNodesArrayMap[elementNumbering_global_new2old[elementBoundariesp->first]][iv];
           if (nN_global >= nodeOffsets_new[rank] && nN_global < nodeOffsets_new[rank+1])
             {
               //add all the faces to this node star
-              for(int eb=0;eb<4;eb++)
+              for(int eb=0;eb<simplexDim;eb++)
                 {
                   nodeElementBoundariesStar[nN_global-nodeOffsets_new[rank]].insert(elementBoundariesp->second[eb]);
                 }
@@ -3752,6 +3753,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
     {
       hasEdgeMarkers = true;
     }
+
   newMesh.nEdges_global = nEdges_global;
   set<int> edges_subdomain_owned;
   vector<set<int> > nodeEdgesStar(nNodes_subdomain_new[rank]);
@@ -3827,7 +3829,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
        edgesp++)
     {
       //loop over the nodes of this element for the owned nodes
-      for (int iv=0;iv<4;iv++)
+      for (int iv=0;iv<simplexDim;iv++)
         {
           //the elementNodesArrayMap is in the old elemetn numbering while the elementEdgesMap is in the new element numbering
           int nN_global = elementNodesArrayMap[elementNumbering_global_new2old[edgesp->first]][iv];
@@ -3900,6 +3902,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   ISDestroy(&edgeNumberingIS_subdomain_new2old);
   ISDestroy(&edgeNumberingIS_global_new2old);
   ierr = enforceMemoryLimit(PROTEUS_COMM_WORLD, rank, max_rss_gb,"Done allocating edgeNumering old2new/new2old");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+  std::cout<<"Ended stage 5\n";
   //
   //6. Figure out what is in the node stars but not locally owned, create ghost information
   //
@@ -3948,6 +3951,13 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
     }//nodes on this processor
   elementNumbering_global_old2new.resize(0);
   //cek debugging, edge overlap seems to be messed up. Check global node tuples of edges vs global edge numbers
+  if(rank==0)
+    std::cout<<"rank 0 edges_overlap "<<edges_overlap.size()<<" subdomain "<<nEdges_subdomain_new[rank] << " "<<edgeNodesMap.size()<<" "<<elementBoundaries_overlap.size()<<std::endl;
+  MPI_Barrier(PROTEUS_COMM_WORLD);
+  if(rank==1)
+    std::cout<<"rank 1 edges_overlap "<<edges_overlap.size()<<" subdomain "<<nEdges_subdomain_new[rank] << " "<<edgeNodesMap.size()<<" "<<elementBoundaries_overlap.size()<<std::endl;
+
+
   assert(edges_overlap.size() + nEdges_subdomain_new[rank] == edgeNodesMap.size());
   //
   //enumerate the overlap
@@ -4009,10 +4019,11 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   //
   //now finally finish reading node coordinates and node flags
   //
+  std::cout<<"node coordinates and flags\n";
   for (int iv = 0; iv < nNodes_global; iv++)
     {
-      int nv; double x,y,z; int nodeId(0);
-      vertexFile >> eatcomments >> nv >> x >> y >> z;
+      int nv; double x,y; int nodeId(0);
+      vertexFile >> eatcomments >> nv >> x >> y;
       if (hasVertexMarkers > 0)
         vertexFile >> nodeId;
       nv -= indexBase;
@@ -4026,7 +4037,6 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
           nodeNumbering_global2subdomainMap[nN_global_new] = nv_subdomain_new;
           newMesh.subdomainp->nodeArray[vertexDim*nv_subdomain_new + 0] = x;
           newMesh.subdomainp->nodeArray[vertexDim*nv_subdomain_new + 1] = y;
-          newMesh.subdomainp->nodeArray[vertexDim*nv_subdomain_new + 2] = z;
           if (hasVertexMarkers > 0)
             newMesh.subdomainp->nodeMaterialTypes[nv_subdomain_new] = nodeId;
         }
@@ -4038,7 +4048,6 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
           nodeNumbering_global2subdomainMap[nN_global_new] = nv_subdomain_new;
           newMesh.subdomainp->nodeArray[vertexDim*nv_subdomain_new + 0] = x;
           newMesh.subdomainp->nodeArray[vertexDim*nv_subdomain_new + 1] = y;
-          newMesh.subdomainp->nodeArray[vertexDim*nv_subdomain_new + 2] = z;
           if (hasVertexMarkers > 0)
             newMesh.subdomainp->nodeMaterialTypes[nv_subdomain_new] = nodeId;
         }
@@ -4188,7 +4197,7 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
   //now build rest of subdomain mesh connectivity information etc
   bool callOld=true;
   if(callOld)
-    constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_tetrahedron(*newMesh.subdomainp);
+    constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_triangle(*newMesh.subdomainp);
   else
     {
       //const int DEFAULT_ELEMENT_MATERIAL=0;
@@ -4364,8 +4373,8 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
       //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     }
   //build local geometric info
-  allocateGeometricInfo_tetrahedron(*newMesh.subdomainp);
-  computeGeometricInfo_tetrahedron(*newMesh.subdomainp);
+  allocateGeometricInfo_triangle(*newMesh.subdomainp);
+  computeGeometricInfo_triangle(*newMesh.subdomainp);
 
   if (hasElementBoundaryMarkers)
     {
