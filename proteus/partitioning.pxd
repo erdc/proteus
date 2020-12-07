@@ -10,6 +10,11 @@ cdef extern from "partitioning.h" namespace "proteus":
                                                                                          const char* filebase,
                                                                                          int indexBase, mesh.Mesh& newMesh,
                                                                                          int nNodes_overlap);
+    extern int c_partitionNodesFromTriangleFiles "proteus::partitionNodesFromTriangleFiles" (const MPI_Comm& PROTEUS_COMM_WORLD,
+                                                                                         const char* filebase,
+                                                                                         int indexBase, mesh.Mesh& newMesh,
+                                                                                         int nNodes_overlap);
+
     extern int c_partitionElements "proteus::partitionElements" (const MPI_Comm& PROTEUS_COMM_WORLD,
                                                                  mesh.Mesh& mesh,
                                                                  int nElements_overlap);

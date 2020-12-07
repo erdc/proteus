@@ -675,19 +675,37 @@ class Mesh(object):
             logEvent("base {0:d}".format(base))
             logEvent("nLayersOfOverlap {0:d}".format(nLayersOfOverlap))
             logEvent("parallelPartitioningType {0:d}".format(parallelPartitioningType))
-            (self.elementOffsets_subdomain_owned,
-             self.elementNumbering_subdomain2global,
-             self.nodeOffsets_subdomain_owned,
-             self.nodeNumbering_subdomain2global,
-             self.elementBoundaryOffsets_subdomain_owned,
-             self.elementBoundaryNumbering_subdomain2global,
-             self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = cpartitioning.partitionNodesFromTetgenFiles(comm.comm.tompi4py(),
-                                                                                                filebase,
-                                                                                                base,
-                                                                                                nLayersOfOverlap,
-                                                                                                self.cmesh,
-                                                                                                self.subdomainMesh.cmesh)
+            if isinstance(self,TetrahedralMesh):
+                    (self.elementOffsets_subdomain_owned,
+                     self.elementNumbering_subdomain2global,
+                     self.nodeOffsets_subdomain_owned,
+                     self.nodeNumbering_subdomain2global,
+                     self.elementBoundaryOffsets_subdomain_owned,
+                     self.elementBoundaryNumbering_subdomain2global,
+                     self.edgeOffsets_subdomain_owned,
+                     self.edgeNumbering_subdomain2global) = cpartitioning.partitionNodesFromTetgenFiles(comm.comm.tompi4py(),
+                                                                                                                filebase,
+                                                                                                                base,
+                                                                                                                nLayersOfOverlap,
+                                                                                                                self.cmesh,
+                                                                                                                self.subdomainMesh.cmesh)
+            elif isinstance(self,TriangularMesh):
+                    (self.elementOffsets_subdomain_owned,
+                     self.elementNumbering_subdomain2global,
+                     self.nodeOffsets_subdomain_owned,
+                     self.nodeNumbering_subdomain2global,
+                     self.elementBoundaryOffsets_subdomain_owned,
+                     self.elementBoundaryNumbering_subdomain2global,
+                     self.edgeOffsets_subdomain_owned,
+                     self.edgeNumbering_subdomain2global) = cpartitioning.partitionNodesFromTriangleFiles(comm.comm.tompi4py(),
+                                                                                                                filebase,
+                                                                                                                base,
+                                                                                                                nLayersOfOverlap,
+                                                                                                                self.cmesh,
+                                                                                                                self.subdomainMesh.cmesh)
+            else:
+                assert 0,"can't partition non-simplex mesh"
+
         else:
             logEvent("Starting element partitioning")
             (self.elementOffsets_subdomain_owned,
@@ -3832,6 +3850,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
         self.buildFromC(self.cmultilevelMesh)
         logEvent("partitionMesh")
         self.meshList[0].partitionMeshFromFiles(filebase,base,nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+
     def refine(self):
         self.meshList.append(TetrahedralMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
@@ -4998,6 +5017,29 @@ class MultilevelTriangularMesh(MultilevelMesh):
         self.buildFromC(self.cmultilevelMesh)
         self.elementParents = None
         self.elementChildren=[]
+
+    def generatePartitionedMeshFromTriangleFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
+                                               parallelPartitioningType=MeshParallelPartitioningTypes.node):
+        from . import cmeshTools
+        if filebase==None:
+            filebase="mesh"
+        assert(refinementLevels==1)
+        assert(parallelPartitioningType==MeshParallelPartitioningTypes.node)
+        assert(nLayersOfOverlap<=1)
+        mesh0.cmesh = cmeshTools.CMesh()
+        #blow away or just trust garbage collection
+        self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
+        self.meshList = []
+        self.elementParents = None
+        self.cmultilevelMesh = None
+        self.meshList.append(mesh0)
+        logEvent("cmeshTools.CMultilevelMesh")
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        logEvent("buildFromC")
+        self.buildFromC(self.cmultilevelMesh)
+        logEvent("partitionMesh")
+        self.meshList[0].partitionMeshFromFiles(filebase,base,nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+
 
     def refine(self):
         self.meshList.append(TriangularMesh())
@@ -7166,14 +7208,21 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
         comm.barrier()
         assert fileprefix is not None, 'did not find mesh file name'
         # convert mesh to proteus format
+        nbase = 1
         mesh = TriangularMesh()
-        mesh.generateFromTriangleFiles(filebase=fileprefix,
-                                       base=1)
         mlMesh = MultilevelTriangularMesh(0, 0,0,skipInit=True,
                                           nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
                                           parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
         logEvent("Generating %i-level mesh from coarse Triangle mesh" % (domain.MeshOptions.nLevels,))
-        mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
+        if generatePartitionedMeshFromFiles:
+            logEvent("Generating partitioned mesh from Tetgen files")
+            mlMesh.generatePartitionedMeshFromTriangleFiles(fileprefix, nbase,mesh,domain.MeshOptions.nLevels,
+                                                          nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+        else:
+            mesh.generateFromTriangleFiles(filebase=fileprefix,
+                                       base=1)
+            mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
                                               nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
                                               parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
     elif isinstance(domain, Domain.PiecewiseLinearComplexDomain):

@@ -151,6 +151,7 @@ namespace proteus
   extern int partitionNodes(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh, int nNodes_overlap);
 
   extern int partitionNodesFromTetgenFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const char* filebase, int indexBase, Mesh& newMesh, int nNodes_overlap);
+  extern int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const char* filebase, int indexBase, Mesh& newMesh, int nNodes_overlap);
 
   extern int partitionElements(const MPI_Comm& PROTEUS_COMM_WORLD, Mesh& mesh, int nElements_overlap);
 
