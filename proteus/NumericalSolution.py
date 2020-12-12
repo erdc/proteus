@@ -196,7 +196,7 @@ class NS_base(object):  # (HasTraits):
         try:
             mlMesh = self.pList[0].domain.mesh
         except:
-            mlMesh = MeshTools.generateMesh(self.pList[0].domain,opts.generatePartitionedMeshFromFiles)
+            mlMesh = MeshTools.generateMesh(self.pList[0],self.nList[0],opts.generatePartitionedMeshFromFiles)
 
         theMesh = mlMesh.meshList[0].subdomainMesh
 
