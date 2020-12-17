@@ -6865,10 +6865,10 @@ def generateMesh(physics,numerics,generatePartitionedMeshFromFiles=False):
     try:
         meshOptions = physics.domain.MeshOptions
         assert(not (meshOptions.genMesh == True and
-                    self.nn == None and 
-                    self.nnx  == None and
-                    self.nny == None and
-                    self.nnz == None))
+                    meshOptions.nn == None and 
+                    meshOptions.nnx  == None and
+                    meshOptions.nny == None and
+                    meshOptions.nnz == None))
         mlMesh = _generateMesh(physics.domain, meshOptions, generatePartitionedMeshFromFiles)
     except:
         meshOptions = numerics
@@ -7246,10 +7246,11 @@ def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
             fileprefix = domain.geofile
         else:
             fileprefix = domain.polyfile
-        if comm.rank() == 0 and (not (os.path.exists(fileprefix+".ele") and
-                                      os.path.exists(fileprefix+".node") and
-                                      os.path.exists(fileprefix+".face"))):
-            if meshOptions.use_gmsh is True:
+        if comm.rank() == 0 and (meshOptions.genMesh or (
+                not (os.path.exists(fileprefix+".ele") and
+                     os.path.exists(fileprefix+".node") and
+                     os.path.exists(fileprefix+".face")))):
+            if domain.use_gmsh is True:
                 if not os.path.exists(fileprefix+".msh"):
                     logEvent("Running gmsh to generate 3D mesh for "+name, level=1)
                     gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh2".format(fileprefix+'.geo', domain.geofile+'.msh')
@@ -7262,6 +7263,19 @@ def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
                 check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
             else:
                 logEvent("Running tetgen to generate 3D mesh for "+name, level=1)
+                check_call("rm {0:s}.ele".format(fileprefix), shell=True)
+                check_call("rm {0:s}.node".format(fileprefix), shell=True)
+                check_call("rm {0:s}.face".format(fileprefix), shell=True)
+                try:
+                    check_call("rm {0:s}.neigh".format(fileprefix), shell=True)
+                except:
+                    logEvent("Warning: couldn't remove {0:s}.neigh".format(fileprefix))
+                    pass
+                try:
+                    check_call("rm {0:s}.edge".format(fileprefix), shell=True)
+                except:
+                    logEvent("Warning: couldn't remove {0:s}.edge".format(fileprefix))
+                    pass
                 tetcmd = "tetgen -{0} {1}.poly".format(meshOptions.triangleOptions, fileprefix)
                 logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
                 check_call(tetcmd, shell=True)

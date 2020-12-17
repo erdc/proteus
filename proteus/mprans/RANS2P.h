@@ -4745,7 +4745,7 @@ namespace proteus
 		    }
                 }
             }
-          p_L2 = sqrt(p_L2);
+          //p_L2 = sqrt(p_L2);
           //        std::cout<<"Pressure Integral Shifted"<<p_dv_new<<std::endl
           //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
           //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_LI<<std::endl;
