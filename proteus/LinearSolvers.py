@@ -4421,6 +4421,8 @@ class NavierStokesConstantPressure(SolverNullSpace):
         This needs to be tested more throughly for parallel
         implmentations.
         """
+        from proteus import Comm
+        comm = Comm.get()
         ksp = self.get_global_ksp()
         stabilized = False
         if ksp.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes==ksp.par_L.pde.u[1].femSpace.dofMap.nDOF_all_processes:
@@ -4431,14 +4433,18 @@ class NavierStokesConstantPressure(SolverNullSpace):
         null_space_vector = par_b.copy()
         null_space_vector.getArray().fill(0.)
         N_DOF_pressure = ksp.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes
-
+        N_DOF_pressure_subdomain_owned = ksp.par_L.pde.u[0].femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -ksp.par_L.pde.u[0].femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()]
         if stabilized:
-            tmp = null_space_vector.getArray()[::3]
-            tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
+            tmp = null_space_vector.getArray()[::len(ksp.par_L.pde.u)]
+            assert ksp.par_L.pde.isActiveDOF_p[:N_DOF_pressure_subdomain_owned].shape[0] == tmp.shape[0], str(tmp.shape) + " "+ str(ksp.par_L.pde.isActiveDOF_p[:N_DOF_pressure_subdomain_owned].shape)
+            N_ACTIVE_DOF_pressure = comm.globalSum(ksp.par_L.pde.isActiveDOF_p[:N_DOF_pressure_subdomain_owned].sum())
+            tmp[:] = np.where(ksp.par_L.pde.isActiveDOF_p[:N_DOF_pressure_subdomain_owned]==1.0, 1.0/sqrt(N_ACTIVE_DOF_pressure),0.0)
         else:
             n_DOF_pressure = ksp.par_L.pde.u[0].femSpace.dofMap.nDOF
             tmp = null_space_vector.getArray()[0:n_DOF_pressure]
             tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
+        null_space_vector.assemblyBegin()
+        null_space_vector.assemblyEnd()
         self.global_null_space = [null_space_vector]
 
 class ConstantNullSpace(SolverNullSpace):
