@@ -7263,19 +7263,11 @@ def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
                 check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
             else:
                 logEvent("Running tetgen to generate 3D mesh for "+name, level=1)
-                check_call("rm {0:s}.ele".format(fileprefix), shell=True)
-                check_call("rm {0:s}.node".format(fileprefix), shell=True)
-                check_call("rm {0:s}.face".format(fileprefix), shell=True)
-                try:
-                    check_call("rm {0:s}.neigh".format(fileprefix), shell=True)
-                except:
-                    logEvent("Warning: couldn't remove {0:s}.neigh".format(fileprefix))
-                    pass
-                try:
-                    check_call("rm {0:s}.edge".format(fileprefix), shell=True)
-                except:
-                    logEvent("Warning: couldn't remove {0:s}.edge".format(fileprefix))
-                    pass
+                check_call("rm -f {0:s}.ele".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.node".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.face".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.neigh".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.edge".format(fileprefix), shell=True)
                 tetcmd = "tetgen -{0} {1}.poly".format(meshOptions.triangleOptions, fileprefix)
                 logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
                 check_call(tetcmd, shell=True)
