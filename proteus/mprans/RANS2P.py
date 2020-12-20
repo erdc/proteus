@@ -1885,6 +1885,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                 r[self.offset[cj] + self.stride[cj] * dofN] -= self.mesh.nodeVelocityArray[dofN, cj - 1]
                         #assert(abs(r[self.offset[cj] + self.stride[cj] * dofN]) < 1.0e-8)
                         
+        #cek hack to fix singular system due pressure
+        # comm = Comm.get()
+        # if comm.rank() == 0:
+        #     for i in range(self.u[0].dof.shape[0]):
+        #         if self.isActiveR[i] != 1.0:
+        #             self.isActiveR[i] == 0.0
+        #             break
         try:
             #is sensitive to inactive DOF at velocity due to time derivative
             if self.coefficients.nParticles ==1:
@@ -2225,6 +2232,13 @@ velocity_I.append({:21.16e})
                         else:
                             self.nzval[i] = 0.0
                             # print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+        #cek hack to fix singular system due pressure
+        # comm = Comm.get()
+        # if comm.rank() == 0:
+        #     for i in range(self.u[0].dof.shape[0]):
+        #         if self.isActiveR[i] != 1.0:
+        #             self.isActiveR[i] == 0.0
+        #             break
         for global_dofN_a in np.argwhere(self.isActiveR==0.0):
             #assert(False)
             global_dofN = global_dofN_a[0]
