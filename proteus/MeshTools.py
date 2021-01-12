@@ -6966,8 +6966,7 @@ def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
                     if generatePartitionedMeshFromFiles:
                         if comm.isMaster():
                             globalMesh = TetrahedralMesh()
-                            memBase = Profiling.memLast
-                            logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution", memSaved=memBase))
+                            logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution", memSaved=Profiling.memLast))
                             memBeforeMesh = Profiling.memLast
                             logEvent("Generating tetrahedral mesh from regular grid")
                             globalMesh.generateTetrahedralMeshFromRectangularGrid(nnx, nny,nnz,domain.L[0],domain.L[1],domain.L[2])
