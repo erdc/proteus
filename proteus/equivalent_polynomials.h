@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 #include "equivalent_polynomials_coefficients.h"
 #include "equivalent_polynomials_coefficients_quad.h"
 #include "equivalent_polynomials_utils.h"
@@ -220,6 +221,10 @@ namespace equivalent_polynomials
 	    C_D[i] = 0.0;
 	    for (unsigned int j=0; j < nDOF; j++)
 	      {
+		assert(!isnan(Ainv[i*nDOF + j]));
+		assert(!isnan(b_H[j]));
+		assert(!isnan(b_ImH[j]));
+		assert(!isnan(b_D[j]));
 		C_H[i]   += Ainv[i*nDOF + j]*b_H[j];
 		C_ImH[i] += Ainv[i*nDOF + j]*b_ImH[j];
 		C_D[i]   += Ainv[i*nDOF + j]*b_D[j];
@@ -265,15 +270,16 @@ namespace equivalent_polynomials
     root_node=0;
     inside_out=false;
     quad_cut=false;
+    const double eps=1.0e-8;
     for (unsigned int i=0; i < nN; i++)
       {
-        if(phi_dof[i] > 0.0)
+        if(phi_dof[i] > eps)
           {
 	    if (pcount == 0)
 	      p_i = i;
             pcount  += 1;
           }
-        else if(phi_dof[i] < 0.0)
+        else if(phi_dof[i] < -eps)
           {
 	    if (ncount == 0)
 	      n_i = i;
@@ -366,6 +372,7 @@ namespace equivalent_polynomials
       }
     if(quad_cut)
       {
+	//std::cout<<"phi before"<<phi[0]<<'\t'<<phi[1]<<'\t'<<phi[2]<<'\t'<<phi[3]<<std::endl;
         if(phi_dof[permutation[nN-1]] > 0.0)
 	  {
 	    int tmp=permutation[nN-1];
@@ -395,6 +402,8 @@ namespace equivalent_polynomials
             nodes[i*3 + I] = phi_nodes[permutation[i]*3 + I];//nodes always 3D
           }
       }
+    //if(quad_cut)
+    //  std::cout<<"phi after"<<phi[0]<<'\t'<<phi[1]<<'\t'<<phi[2]<<'\t'<<phi[3]<<std::endl;
     double JacTest[nSpace*nSpace];
     for(unsigned int I=0; I < nSpace; I++)
       {
@@ -415,6 +424,7 @@ namespace equivalent_polynomials
 	    double tmp = permutation[2];
 	    permutation[2] = permutation[1];
 	    permutation[1] = tmp;
+	    //std::cout<<"inside out"<<std::endl;
 	  }
 	else//flip the last two nodes
 	  {
@@ -422,6 +432,8 @@ namespace equivalent_polynomials
 	    permutation[nN-1] = permutation[nN-2];
 	    permutation[nN-2] = tmp;
 	  }
+	//if (quad_cut)//flip the two internal positive nodes
+	//  std::cout<<"phi before"<<phi[0]<<'\t'<<phi[1]<<'\t'<<phi[2]<<'\t'<<phi[3]<<std::endl;
         for(unsigned int i=0; i < nN; i++)
           {
             phi[i] = phi_dof[permutation[i]];
@@ -430,6 +442,8 @@ namespace equivalent_polynomials
                 nodes[i*3 + I] = phi_nodes[permutation[i]*3 + I];//nodes always 3D
               }
           }
+	//if (quad_cut)//flip the two internal positive nodes
+	//  std::cout<<"phi "<<phi[0]<<'\t'<<phi[1]<<'\t'<<phi[2]<<'\t'<<phi[3]<<std::endl;
         for(unsigned int i=0; i < nN-1; i++)
           for(unsigned int I=0; I < nSpace; I++)
             Jac[I*nSpace+i] = nodes[(1+i)*3 + I] - nodes[I];
@@ -445,6 +459,7 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_cuts()
   {
+    const double eps=1.0e-8;
     for (unsigned int i=0; i < nN-1;i++)
       {
         if(phi[i+1]*phi[0] < 0.0)
@@ -459,7 +474,7 @@ namespace equivalent_polynomials
           }
         else
           {
-            assert(phi[i+1] == 0.0);
+            assert(phi[i+1] < eps);
             X_0[i] = 1.0;
             for (unsigned int I=0; I < 3; I++)
               {
@@ -472,10 +487,26 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_cuts_quad()
   {
-    THETA_01 = 0.5 - 0.5*(phi[1] + phi[0])/(phi[1]-phi[0]);
-    THETA_02 = 0.5 - 0.5*(phi[2] + phi[0])/(phi[2]-phi[0]);
-    THETA_31 = 0.5 - 0.5*(phi[1] + phi[3])/(phi[1]-phi[3]);
-    THETA_32 = 0.5 - 0.5*(phi[2] + phi[3])/(phi[2]-phi[3]);
+    const double eps=1.0e-8,Imeps=1.0-eps;
+    THETA_01 = 0.5 - 0.5*(phi[1] + phi[0])/(phi[1] - phi[0]);
+    THETA_02 = 0.5 - 0.5*(phi[2] + phi[0])/(phi[2] - phi[0]);
+    THETA_31 = 0.5 - 0.5*(phi[1] + phi[3])/(phi[1] - phi[3]);
+    THETA_32 = 0.5 - 0.5*(phi[2] + phi[3])/(phi[2] - phi[3]);
+    if ( (THETA_01 < eps || THETA_01 > Imeps) || (THETA_02 < eps || THETA_02 > Imeps) || (THETA_31 < eps || THETA_31 > Imeps) || (THETA_32 < eps || THETA_32 > Imeps))
+      {
+	std::cout<<"THETA_01 "<<std::setprecision(17)<<THETA_01<<"\t"<<phi[0]<<"\t"<<phi[1]<<std::endl;
+	std::cout<<"THETA_02 "<<std::setprecision(17)<<THETA_02<<"\t"<<phi[0]<<"\t"<<phi[2]<<std::endl;
+	std::cout<<"THETA_31 "<<std::setprecision(17)<<THETA_31<<"\t"<<phi[3]<<"\t"<<phi[1]<<std::endl;
+	std::cout<<"THETA_32 "<<std::setprecision(17)<<THETA_32<<"\t"<<phi[3]<<"\t"<<phi[2]<<std::endl;
+	THETA_01 = fmin(Imeps,fmax(eps,0.5 - 0.5*(phi[1] + phi[0])/(phi[1] - phi[0])));
+	THETA_02 = fmin(Imeps,fmax(eps,0.5 - 0.5*(phi[2] + phi[0])/(phi[2] - phi[0])));
+	THETA_31 = fmin(Imeps,fmax(eps,0.5 - 0.5*(phi[1] + phi[3])/(phi[1] - phi[3])));
+	THETA_32 = fmin(Imeps,fmax(eps,0.5 - 0.5*(phi[2] + phi[3])/(phi[2] - phi[3])));
+	std::cout<<"THETA_01 "<<std::setprecision(17)<<THETA_01<<"\t"<<phi[0]<<"\t"<<phi[1]<<std::endl;
+	std::cout<<"THETA_02 "<<std::setprecision(17)<<THETA_02<<"\t"<<phi[0]<<"\t"<<phi[2]<<std::endl;
+	std::cout<<"THETA_31 "<<std::setprecision(17)<<THETA_31<<"\t"<<phi[3]<<"\t"<<phi[1]<<std::endl;
+	std::cout<<"THETA_32 "<<std::setprecision(17)<<THETA_32<<"\t"<<phi[3]<<"\t"<<phi[2]<<std::endl;
+      }
     for (unsigned int I=0; I < 3; I++)
       {
 	phys_nodes_cut_quad_01[I] = (1-THETA_01)*nodes[I] + THETA_01*nodes[1*3 + I];
@@ -483,6 +514,26 @@ namespace equivalent_polynomials
 	phys_nodes_cut_quad_31[I] = (1-THETA_31)*nodes[3*3 + I] + THETA_31*nodes[1*3 + I];
 	phys_nodes_cut_quad_32[I] = (1-THETA_32)*nodes[3*3 + I] + THETA_32*nodes[2*3 + I];
       }
+    // double v1[3],v2[3],v3[3];
+    // for (unsigned int I=0; I < 3; I++)
+    //   {
+    // 	v1[I] = phys_nodes_cut_quad_02[I] - phys_nodes_cut_quad_01[I];
+    // 	v2[I] = phys_nodes_cut_quad_31[I] - phys_nodes_cut_quad_01[I];
+    // 	v3[I] = phys_nodes_cut_quad_32[I] - phys_nodes_cut_quad_01[I];
+    //   }
+    // double v2_x_v3[3];
+    // v2_x_v3[0] =   v2[1]*v3[2] - v2[2]*v3[1]; 
+    // v2_x_v3[1] = - v2[0]*v3[2] + v2[2]*v3[0]; 
+    // v2_x_v3[2] =   v2[0]*v3[1] - v2[1]*v3[0];
+    // double coplanar=0.0;
+    // for (unsigned int I=0; I < 3; I++)
+    //   coplanar += v1[I]*v2_x_v3[I];
+    // if (fabs(coplanar) > 1.0e-8)
+    //   {
+    // 	std::cout<<"not coplanar "<<coplanar<<std::endl;
+    // 	for (unsigned int I=0; I < 3; I++)
+    // 	  std::cout<<phys_nodes_cut_quad_01[I]<<'\t'<<phys_nodes_cut_quad_02[I]<<'\t'<<phys_nodes_cut_quad_31[I]<<'\t'<<phys_nodes_cut_quad_32[I]<<std::endl;
+    //   }
   }
   
   template<int nSpace, int nP, int nQ, int nEBQ>

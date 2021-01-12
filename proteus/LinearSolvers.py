@@ -421,11 +421,13 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.setFromOptions()
         # set null space class
         self.null_space = self._set_null_space_class()
-
-        if convergenceTest == 'r-true':
+        self.converged_on_maxit=False
+        if convergenceTest in ['r-true', 'rits-true']:
             self.r_work = self.petsc_L.getVecLeft()
             self.rnorm0 = None
             self.ksp.setConvergenceTest(self._converged_trueRes)
+            if convergenceTest == 'rits-true':
+                self.converged_on_maxit=True
         else:
             self.r_work = None
             
@@ -563,6 +565,8 @@ class KSP_petsc4py(LinearSolver):
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
             if truenorm < ksp.atol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
+            if self.converged_on_maxit and its == ksp.max_it:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ITS
         return False
 
     def _setPreconditioner(self,
@@ -4435,7 +4439,7 @@ class NavierStokesConstantPressure(SolverNullSpace):
         N_DOF_pressure = ksp.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes
         N_DOF_pressure_subdomain_owned = ksp.par_L.pde.u[0].femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -ksp.par_L.pde.u[0].femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()]
         if stabilized:
-            tmp = null_space_vector.getArray()[::len(ksp.par_L.pde.u)]
+            tmp = null_space_vector.getArray()[::ksp.par_L.pde.nSpace_global+1]
             assert ksp.par_L.pde.isActiveDOF_p[:N_DOF_pressure_subdomain_owned].shape[0] == tmp.shape[0], str(tmp.shape) + " "+ str(ksp.par_L.pde.isActiveDOF_p[:N_DOF_pressure_subdomain_owned].shape)
             N_ACTIVE_DOF_pressure = comm.globalSum(ksp.par_L.pde.isActiveDOF_p[:N_DOF_pressure_subdomain_owned].sum())
             tmp[:] = np.where(ksp.par_L.pde.isActiveDOF_p[:N_DOF_pressure_subdomain_owned]==1.0, 1.0/sqrt(N_ACTIVE_DOF_pressure),0.0)
