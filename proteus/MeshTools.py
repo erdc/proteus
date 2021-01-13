@@ -6868,7 +6868,8 @@ def generateMesh(physics,numerics,generatePartitionedMeshFromFiles=False):
                     meshOptions.nn == None and 
                     meshOptions.nnx  == None and
                     meshOptions.nny == None and
-                    meshOptions.nnz == None))
+                    meshOptions.nnz == None and
+                    meshOptions.triangleOptions == None))
         mlMesh = _generateMesh(physics.domain, meshOptions, generatePartitionedMeshFromFiles)
     except:
         meshOptions = numerics

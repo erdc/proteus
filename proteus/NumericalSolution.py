@@ -192,7 +192,7 @@ class NS_base(object):  # (HasTraits):
                 p.domain.MeshOptions.quad = n.quad
                 p.domain.MeshOptions.triangleFlag=n.triangleFlag
                 p.domain.MeshOptions.triangleOptions=n.triangleOptions
-    
+                p.domain.MeshOptions.genMesh=p.genMesh
         try:
             mlMesh = self.pList[0].domain.mesh
         except:
