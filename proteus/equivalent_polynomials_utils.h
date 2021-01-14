@@ -87,33 +87,6 @@ namespace equivalent_polynomials
     double norm = std::sqrt(level_set_normal[0]*level_set_normal[0] +
                             level_set_normal[1]*level_set_normal[1] +
                             level_set_normal[2]*level_set_normal[2]);
-    // double coplanar=0.0;
-    // for (unsigned int I=0; I < 3; I++)
-    //   coplanar += level_set_tangent_c[I]*level_set_normal[I];
-    // if (fabs(coplanar) > 1.0e-8)
-    //   {
-    // 	std::cout<<"not coplanar c"<<coplanar<<std::endl;
-    // 	for (unsigned int I=0; I < 3; I++)
-    // 	  std::cout<<phys_nodes_cut_quad_01[I]<<'\t'<<phys_nodes_cut_quad_02[I]<<'\t'<<phys_nodes_cut_quad_31[I]<<'\t'<<phys_nodes_cut_quad_32[I]<<std::endl;
-    //   }
-    // coplanar=0.0;
-    // for (unsigned int I=0; I < 3; I++)
-    //   coplanar += level_set_tangent_b[I]*level_set_normal[I];
-    // if (fabs(coplanar) > 1.0e-8)
-    //   {
-    // 	std::cout<<"not coplanar b"<<coplanar<<std::endl;
-    // 	for (unsigned int I=0; I < 3; I++)
-    // 	  std::cout<<phys_nodes_cut_quad_01[I]<<'\t'<<phys_nodes_cut_quad_02[I]<<'\t'<<phys_nodes_cut_quad_31[I]<<'\t'<<phys_nodes_cut_quad_32[I]<<std::endl;
-    //   }
-    // coplanar=0.0;
-    // for (unsigned int I=0; I < 3; I++)
-    //   coplanar += level_set_tangent_a[I]*level_set_normal[I];
-    // if (fabs(coplanar) > 1.0e-8)
-    //   {
-    // 	std::cout<<"not coplanar a"<<coplanar<<std::endl;
-    // 	for (unsigned int I=0; I < 3; I++)
-    // 	  std::cout<<phys_nodes_cut_quad_01[I]<<'\t'<<phys_nodes_cut_quad_02[I]<<'\t'<<phys_nodes_cut_quad_31[I]<<'\t'<<phys_nodes_cut_quad_32[I]<<std::endl;
-    //   }
     if (norm > 0.0)
       {
 	for(unsigned int I=0; I < nSpace; I++)
@@ -125,68 +98,6 @@ namespace equivalent_polynomials
 	  level_set_normal[I] =0.0;
 	level_set_normal[2] = 1.0;
       }
-    // for(unsigned int I=0; I < nSpace; I++)
-    //   {
-    //     level_set_tangent_a[I] = phys_nodes_cut_quad_32[I] - phys_nodes_cut_quad_01[I];
-    //     level_set_tangent_b[I] = phys_nodes_cut_quad_31[I] - phys_nodes_cut_quad_01[I];
-    //     level_set_tangent_c[I] = phys_nodes_cut_quad_02[I] - phys_nodes_cut_quad_01[I];
-    //   }
-    // level_set_normal_2[0] =   level_set_tangent_a[1]*level_set_tangent_b[2] - level_set_tangent_a[2]*level_set_tangent_b[1];
-    // level_set_normal_2[1] = - level_set_tangent_a[0]*level_set_tangent_b[2] + level_set_tangent_a[2]*level_set_tangent_b[0];
-    // level_set_normal_2[2] =   level_set_tangent_a[0]*level_set_tangent_b[1] - level_set_tangent_a[1]*level_set_tangent_b[0];
-    // coplanar=0.0;
-    // for (unsigned int I=0; I < 3; I++)
-    //   coplanar += level_set_tangent_c[I]*level_set_normal_2[I];
-    // if (fabs(coplanar) > 1.0e-8)
-    //   {
-    // 	std::cout<<"not coplanar (c2)"<<coplanar<<std::endl;
-    // 	for (unsigned int I=0; I < 3; I++)
-    // 	  std::cout<<phys_nodes_cut_quad_01[I]<<'\t'<<phys_nodes_cut_quad_02[I]<<'\t'<<phys_nodes_cut_quad_31[I]<<'\t'<<phys_nodes_cut_quad_32[I]<<std::endl;
-    //   }
-    // coplanar=0.0;
-    // for (unsigned int I=0; I < 3; I++)
-    //   coplanar += level_set_tangent_b[I]*level_set_normal_2[I];
-    // if (fabs(coplanar) > 1.0e-8)
-    //   {
-    // 	std::cout<<"not coplanar (b2)"<<coplanar<<std::endl;
-    // 	for (unsigned int I=0; I < 3; I++)
-    // 	  std::cout<<phys_nodes_cut_quad_01[I]<<'\t'<<phys_nodes_cut_quad_02[I]<<'\t'<<phys_nodes_cut_quad_31[I]<<'\t'<<phys_nodes_cut_quad_32[I]<<std::endl;
-    //   }
-    // coplanar=0.0;
-    // for (unsigned int I=0; I < 3; I++)
-    //   coplanar += level_set_tangent_a[I]*level_set_normal_2[I];
-    // if (fabs(coplanar) > 1.0e-8)
-    //   {
-    // 	std::cout<<"not coplanar (a2)"<<coplanar<<std::endl;
-    // 	for (unsigned int I=0; I < 3; I++)
-    // 	  std::cout<<phys_nodes_cut_quad_01[I]<<'\t'<<phys_nodes_cut_quad_02[I]<<'\t'<<phys_nodes_cut_quad_31[I]<<'\t'<<phys_nodes_cut_quad_32[I]<<std::endl;
-    //   }
-    // norm = std::sqrt(level_set_normal_2[0]*level_set_normal_2[0] +
-    // 		     level_set_normal_2[1]*level_set_normal_2[1] +
-    // 		     level_set_normal_2[2]*level_set_normal_2[2]);
-    // if (norm > 0.0)
-    //   {
-    // 	for(unsigned int I=0; I < nSpace; I++)
-    // 	  level_set_normal_2[I] /=  norm;
-    // 	double coplanarity_error=0.0;
-    // 	for(unsigned int I=0; I < nSpace; I++)
-    // 	  coplanarity_error += level_set_normal[I]*level_set_normal_2[I];
-    // 	coplanarity_error = 1.0 - fabs(coplanarity_error);
-    // 	if (coplanarity_error >= 1.0e-12)
-    // 	  {
-    // 	    std::cout<<coplanarity_error<<std::endl;
-    // 	    for(unsigned int I=0; I < nSpace; I++)
-    // 	      std::cout<<level_set_normal[I]<<'\t'<<level_set_normal_2[I]<<std::endl;
-    // 	  }
-    // 	//assert(coplanarity_error < 1.0e-12);
-    // 	for(unsigned int I=0; I < nSpace; I++)
-    // 	  level_set_normal[I] = 0.5*(level_set_normal[I]+level_set_normal_2[I]);
-    // 	norm = std::sqrt(level_set_normal[0]*level_set_normal[0] +
-    // 			 level_set_normal[1]*level_set_normal[1] +
-    // 			 level_set_normal[2]*level_set_normal[2]);
-    // 	for(unsigned int I=0; I < nSpace; I++)
-    // 	  level_set_normal[I] /=  norm;
-    //   }
     assert(std::fabs(1.0-level_set_normal[0]*level_set_normal[0] - level_set_normal[1]*level_set_normal[1] - level_set_normal[2]*level_set_normal[2]) < 1.0e-8);
   }
 

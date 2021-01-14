@@ -4745,10 +4745,6 @@ namespace proteus
 		    }
                 }
             }
-          //p_L2 = sqrt(p_L2);
-          //        std::cout<<"Pressure Integral Shifted"<<p_dv_new<<std::endl
-          //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
-          //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_LI<<std::endl;
         }
       assert(errors.shape(0)*errors.shape(1) == 15);
       MPI_Allreduce(MPI_IN_PLACE, errors.data(),(errors.shape(0)-1)*errors.shape(1),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
