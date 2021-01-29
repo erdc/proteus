@@ -6861,7 +6861,23 @@ def msh2simplex(fileprefix, nd):
 
     logEvent('msh2simplex: finished converting .msh to simplex files')
 
-def generateMesh(domain,generatePartitionedMeshFromFiles=False):
+def generateMesh(physics,numerics,generatePartitionedMeshFromFiles=False):
+    try:
+        meshOptions = physics.domain.MeshOptions
+        assert(not (meshOptions.genMesh == True and
+                    meshOptions.nn == None and 
+                    meshOptions.nnx  == None and
+                    meshOptions.nny == None and
+                    meshOptions.nnz == None and
+                    meshOptions.triangleOptions == None))
+        mlMesh = _generateMesh(physics.domain, meshOptions, generatePartitionedMeshFromFiles)
+    except:
+        meshOptions = numerics
+        meshOptions.genMesh = physics.genMesh
+        mlMesh = _generateMesh(physics.domain, meshOptions, generatePartitionedMeshFromFiles)
+    return mlMesh
+
+def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
     # convenience function to generate a mesh using triangle/tetgen/gmsh
     comm = Comm.get()
     name = domain.name
@@ -6871,87 +6887,87 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
     # now generate meshes, could move to Domain and use polymorphism or MeshTools
     if isinstance(domain, Domain.RectangularDomain):
         if domain.nd == 1:
-            mlMesh = MultilevelEdgeMesh(domain.MeshOptions.nn, 1, 1,
-                                                    domain.x[0], 0.0, 0.0,
-                                                    domain.L[0], 1.0, 1.0,
-                                                    refinementLevels=domain.MeshOptions.nLevels,
-                                                    nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                    parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                mlMesh = MultilevelEdgeMesh(meshOptions.nn, 1, 1,
+                                            domain.x[0], 0.0, 0.0,
+                                            domain.L[0], 1.0, 1.0,
+                                            refinementLevels=meshOptions.nLevels,
+                                            nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                            parallelPartitioningType=meshOptions.parallelPartitioningType)
         elif domain.nd == 2:
-            if (domain.MeshOptions.nnx == domain.MeshOptions.nny is None):
-                nnx = nny = domain.MeshOptions.nn
+            if (meshOptions.nnx == meshOptions.nny is None):
+                nnx = nny = meshOptions.nn
             else:
-                nnx = domain.MeshOptions.nnx
-                nny = domain.MeshOptions.nny
+                nnx = meshOptions.nnx
+                nny = meshOptions.nny
             logEvent("Building %i x %i rectangular mesh for %s" % (nnx, nny,name))
 
-            if not hasattr(domain.MeshOptions, 'quad'):
-                domain.MeshOptions.quad = False
+            if not hasattr(meshOptions, 'quad'):
+                meshOptions.quad = False
 
-            if (domain.MeshOptions.quad):
+            if (meshOptions.quad):
                 mlMesh = MultilevelQuadrilateralMesh(nnx, nny,1,
                                                                 domain.x[0], domain.x[1], 0.0,
                                                                 domain.L[0], domain.L[1],1,
-                                                                refinementLevels=domain.MeshOptions.nLevels,
-                                                                nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                                parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                                refinementLevels=meshOptions.nLevels,
+                                                                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                parallelPartitioningType=meshOptions.parallelPartitioningType)
             else:
-                if hasattr(domain.MeshOptions,'triangleFlag') ==True:
-                    triangleFlag = domain.MeshOptions.triangleFlag
+                if hasattr(meshOptions,'triangleFlag') ==True:
+                    triangleFlag = meshOptions.triangleFlag
                 else:
                     triangleFlag = 0
                 mlMesh = MultilevelTriangularMesh(nnx, nny,1,
                                                             domain.x[0], domain.x[1], 0.0,
                                                             domain.L[0], domain.L[1],1,
-                                                            refinementLevels=domain.MeshOptions.nLevels,
-                                                            nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                            parallelPartitioningType=domain.MeshOptions.parallelPartitioningType,
+                                                            refinementLevels=meshOptions.nLevels,
+                                                            nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                            parallelPartitioningType=meshOptions.parallelPartitioningType,
                                                             triangleFlag=triangleFlag)
 
         elif domain.nd == 3:
-            if (domain.MeshOptions.nnx == domain.MeshOptions.nny == domain.MeshOptions.nnz is None):
-                nnx = nny = nnz = domain.MeshOptions.nn
+            if (meshOptions.nnx == meshOptions.nny == meshOptions.nnz is None):
+                nnx = nny = nnz = meshOptions.nn
             else:
-                nnx = domain.MeshOptions.nnx
-                nny = domain.MeshOptions.nny
-                nnz = domain.MeshOptions.nnz
+                nnx = meshOptions.nnx
+                nny = meshOptions.nny
+                nnz = meshOptions.nnz
             logEvent("Building %i x %i x %i rectangular mesh for %s" % (nnx, nny,nnz,name))
             
-            if not hasattr(domain.MeshOptions,'NURBS'):
-                domain.MeshOptions.NURBS = False
-            if not hasattr(domain.MeshOptions, 'hex'):
-                domain.MeshOptions.hex = False
+            if not hasattr(meshOptions,'NURBS'):
+                meshOptions.NURBS = False
+            if not hasattr(meshOptions, 'hex'):
+                meshOptions.hex = False
             
-            if (domain.MeshOptions.NURBS):
+            if (meshOptions.NURBS):
                 mlMesh = MultilevelNURBSMesh(nnx,nny,nnz,
-                                                               domain.MeshOptions.px,domain.MeshOptions.py,domain.MeshOptions.pz,
+                                                               meshOptions.px,meshOptions.py,meshOptions.pz,
                                                                domain.x[0], domain.x[1], domain.x[2],
                                                                domain.L[0], domain.L[1], domain.L[2],
-                                                               refinementLevels=domain.MeshOptions.nLevels,
-                                                               nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                               parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
-            elif (domain.MeshOptions.hex):
-                if not hasattr(domain.MeshOptions, 'px'):
-                    domain.MeshOptions.px = 0
-                    domain.MeshOptions.py = 0
-                    domain.MeshOptions.pz = 0
+                                                               refinementLevels=meshOptions.nLevels,
+                                                               nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                               parallelPartitioningType=meshOptions.parallelPartitioningType)
+            elif (meshOptions.hex):
+                if not hasattr(meshOptions, 'px'):
+                    meshOptions.px = 0
+                    meshOptions.py = 0
+                    meshOptions.pz = 0
                 mlMesh = MultilevelHexahedralMesh(nnx, nny, nnz,
-                                                            domain.MeshOptions.px, domain.MeshOptions.py,domain.MeshOptions.pz,
+                                                            meshOptions.px, meshOptions.py,meshOptions.pz,
                                                             domain.x[0], domain.x[1], domain.x[2],
                                                             domain.L[0], domain.L[1], domain.L[2],
-                                                            refinementLevels=domain.MeshOptions.nLevels,
-                                                            nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                            parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                            refinementLevels=meshOptions.nLevels,
+                                                            nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                            parallelPartitioningType=meshOptions.parallelPartitioningType)
             else:
                 fileprefix = domain.polyfile
                 if fileprefix is None:
                     fileprefix = "regular_{0}x{1}x{2}_grid".format(nnx,nny,nnz)
                 nbase = 1
-                if domain.MeshOptions.genMesh:
+                if meshOptions.genMesh:
                     if generatePartitionedMeshFromFiles:
                         if comm.isMaster():
                             globalMesh = TetrahedralMesh()
-                            logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution", memSaved=memBase))
+                            logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution", memSaved=Profiling.memLast))
                             memBeforeMesh = Profiling.memLast
                             logEvent("Generating tetrahedral mesh from regular grid")
                             globalMesh.generateTetrahedralMeshFromRectangularGrid(nnx, nny,nnz,domain.L[0],domain.L[1],domain.L[2])
@@ -6978,11 +6994,11 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
                         logEvent("Generating partitioned mesh from Tetgen files")
                         mesh = TetrahedralMesh()
                         mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
-                                                                        nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                                        parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
-                        mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,domain.MeshOptions.nLevels,
-                                                                        nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                                        parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                                        nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=meshOptions.parallelPartitioningType)
+                        mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                                        nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=meshOptions.parallelPartitioningType)
 
                         mlMesh.meshList[0].subdomainMesh.nodeArray[:, 0] += domain.x[0]
                         mlMesh.meshList[0].subdomainMesh.nodeArray[:, 1] += domain.x[1]
@@ -6992,31 +7008,31 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
                         mlMesh = MultilevelTetrahedralMesh(nnx, nny, nnz,
                                                                         domain.x[0], domain.x[1], domain.x[2],
                                                                         domain.L[0], domain.L[1], domain.L[2],
-                                                                        refinementLevels=domain.MeshOptions.nLevels,
-                                                                        nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                                        parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                                        refinementLevels=meshOptions.nLevels,
+                                                                        nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=meshOptions.parallelPartitioningType)
                 else:
                     mesh = TetrahedralMesh()
                     mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
-                                                                    nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                                    parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                                    nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                    parallelPartitioningType=meshOptions.parallelPartitioningType)
                     if generatePartitionedMeshFromFiles:
                         logEvent("Generating partitioned mesh from Tetgen files")
-                        mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,domain.MeshOptions.nLevels,
-                                                                        nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                                        parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                        mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                                        nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=meshOptions.parallelPartitioningType)
                     else:
                         logEvent("Generating coarse global mesh from Tetgen files")
                         mesh.generateFromTetgenFiles(fileprefix, nbase,parallel = comm.size() > 1)
-                        logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (domain.MeshOptions.nLevels,))
-                        mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
-                                                                nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                                parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                        logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (meshOptions.nLevels,))
+                        mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                                                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                parallelPartitioningType=meshOptions.parallelPartitioningType)
 
     elif isinstance(domain, Domain.PUMIDomain):
         import sys
-        if(comm.size() >1 and domain.MeshOptions.parallelPartitioningType!=MeshParallelPartitioningTypes.element):
-            sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+        if(comm.size() >1 and meshOptions.parallelPartitioningType!=MeshParallelPartitioningTypes.element):
+            sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `meshOptions.setParallelPartitioningType('element')'.")
         if comm.size() > 1 and n.conservativeFlux != None:
             sys.exit("ERROR: Element based partitions don't have a functioning conservative flux calculation. Set conservativeFlux to None in twp_navier_stokes")
         # ibaned: PUMI conversion #1
@@ -7031,79 +7047,79 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
         if domain.nd == 3:
             mlMesh = MultilevelTetrahedralMesh(
                 0, 0,0,skipInit=True,
-                nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                parallelPartitioningType=meshOptions.parallelPartitioningType)
         if domain.nd == 2:
             mlMesh = MultilevelTriangularMesh(
                 0, 0,0,skipInit=True,
-                nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
-        logEvent("Generating %i-level mesh from PUMI mesh" % (domain.MeshOptions.nLevels,))
+                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from PUMI mesh" % (meshOptions.nLevels,))
         if comm.size() ==1:
             mlMesh.generateFromExistingCoarseMesh(
-                mesh, domain.MeshOptions.nLevels,
-                nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                mesh, meshOptions.nLevels,
+                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                parallelPartitioningType=meshOptions.parallelPartitioningType)
         else:
             mlMesh.generatePartitionedMeshFromPUMI(
-                mesh, domain.MeshOptions.nLevels,
-                nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel)
+                mesh, meshOptions.nLevels,
+                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel)
     elif isinstance(domain, Domain.MeshTetgenDomain):
         nbase = 1
         mesh = TetrahedralMesh()
         logEvent("Reading coarse mesh from tetgen file")
         mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
-                                                     nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                     parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                     nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                     parallelPartitioningType=meshOptions.parallelPartitioningType)
         if generatePartitionedMeshFromFiles:
             logEvent("Generating partitioned mesh from Tetgen files")
-            mlMesh.generatePartitionedMeshFromTetgenFiles(domain.meshfile, nbase,mesh,domain.MeshOptions.nLevels,
-                                                          nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                          parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+            mlMesh.generatePartitionedMeshFromTetgenFiles(domain.meshfile, nbase,mesh,meshOptions.nLevels,
+                                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
         else:
             logEvent("Generating coarse global mesh from Tetgen files")
             mesh.generateFromTetgenFiles(domain.polyfile, nbase,parallel = comm.size() > 1)
-            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (domain.MeshOptions.nLevels,))
-            mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
-                                                  nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                  parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (meshOptions.nLevels,))
+            mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                                  nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                  parallelPartitioningType=meshOptions.parallelPartitioningType)
     elif isinstance(domain, Domain.Mesh3DMDomain):
         mesh = TetrahedralMesh()
         logEvent("Reading coarse mesh from 3DM file")
         mesh.generateFrom3DMFile(domain.meshfile)
         mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
-                                                     nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                     parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
-        logEvent("Generating %i-level mesh from coarse 3DM mesh" % (domain.MeshOptions.nLevels,))
-        mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
-                                              nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                              parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                     nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                     parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from coarse 3DM mesh" % (meshOptions.nLevels,))
+        mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                              nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                              parallelPartitioningType=meshOptions.parallelPartitioningType)
     elif isinstance(domain, Domain.Mesh2DMDomain):
         mesh = TriangularMesh()
         logEvent("Reading coarse mesh from 2DM file")
         mesh.generateFrom2DMFile(domain.meshfile)
         mlMesh = MultilevelTriangularMesh(0, 0,0,skipInit=True,
-                                                    nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                    parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
-        logEvent("Generating %i-level mesh from coarse 2DM mesh" % (domain.MeshOptions.nLevels,))
-        mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
-                                              nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                              parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                    nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                    parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from coarse 2DM mesh" % (meshOptions.nLevels,))
+        mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                              nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                              parallelPartitioningType=meshOptions.parallelPartitioningType)
     elif isinstance(domain, Domain.MeshHexDomain):
         mesh = HexahedralMesh()
         logEvent("Reading coarse mesh from file")
         mesh.generateFromHexFile(domain.meshfile)
         mlMesh = MultilevelHexahedralMesh(0, 0,0,skipInit=True,
-                                                    nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                    parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
-        logEvent("Generating %i-level mesh from coarse mesh" % (domain.MeshOptions.nLevels,))
-        mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
-                                              nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                              parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                    nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                    parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from coarse mesh" % (meshOptions.nLevels,))
+        mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                              nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                              parallelPartitioningType=meshOptions.parallelPartitioningType)
     elif isinstance(domain, Domain.GMSH_3D_Domain):
         from subprocess import call
         import sys
-        if comm.rank() == 0 and (domain.MeshOptions.genMesh or not (os.path.exists(domain.polyfile+".ele") and
+        if comm.rank() == 0 and (meshOptions.genMesh or not (os.path.exists(domain.polyfile+".ele") and
                                                    os.path.exists(domain.polyfile+".node") and
                                                    os.path.exists(domain.polyfile+".face"))):
             logEvent("Running gmsh to generate 3D mesh for "+name, level=1)
@@ -7160,20 +7176,20 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
         nbase = 1
         mesh = TetrahedralMesh()
         mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
-                                                     nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                     parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                                     nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                     parallelPartitioningType=meshOptions.parallelPartitioningType)
         if generatePartitionedMeshFromFiles:
             logEvent("Generating partitioned mesh from Tetgen files")
-            mlMesh.generatePartitionedMeshFromTetgenFiles(domain.polyfile, nbase,mesh,domain.MeshOptions.nLevels,
-                                                          nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                          parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+            mlMesh.generatePartitionedMeshFromTetgenFiles(domain.polyfile, nbase,mesh,meshOptions.nLevels,
+                                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
         else:
             logEvent("Generating coarse global mesh from Tetgen files")
             mesh.generateFromTetgenFiles(domain.polyfile, nbase,parallel = comm.size() > 1)
-            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (domain.MeshOptions.nLevels,))
-            mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
-                                                  nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                  parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (meshOptions.nLevels,))
+            mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                                  nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                  parallelPartitioningType=meshOptions.parallelPartitioningType)
 
     elif isinstance(domain, Domain.PlanarStraightLineGraphDomain):
         fileprefix = None
@@ -7195,9 +7211,9 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
                 msh2simplex(fileprefix=fileprefix, nd=2)
         else:
             fileprefix = domain.polyfile
-            if comm.isMaster() and domain.MeshOptions.genMesh:
+            if comm.isMaster() and meshOptions.genMesh:
                 logEvent("Calling Triangle to generate 2D mesh for "+name)
-                tricmd = "triangle -{0} -e {1}.poly".format(domain.MeshOptions.triangleOptions, fileprefix)
+                tricmd = "triangle -{0} -e {1}.poly".format(meshOptions.triangleOptions, fileprefix)
                 logEvent("Calling triangle on rank 0 with command %s" % (tricmd,))
                 output = check_output(tricmd,shell=True)
                 logEvent(str(output, 'utf-8'))
@@ -7211,30 +7227,31 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
         nbase = 1
         mesh = TriangularMesh()
         mlMesh = MultilevelTriangularMesh(0, 0,0,skipInit=True,
-                                          nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                          parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
-        logEvent("Generating %i-level mesh from coarse Triangle mesh" % (domain.MeshOptions.nLevels,))
+                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from coarse Triangle mesh" % (meshOptions.nLevels,))
         if generatePartitionedMeshFromFiles:
             logEvent("Generating partitioned mesh from Tetgen files")
-            mlMesh.generatePartitionedMeshFromTriangleFiles(fileprefix, nbase,mesh,domain.MeshOptions.nLevels,
-                                                          nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                          parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+            mlMesh.generatePartitionedMeshFromTriangleFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
         else:
             mesh.generateFromTriangleFiles(filebase=fileprefix,
                                        base=1)
-            mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
-                                              nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                              parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+            mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                              nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                              parallelPartitioningType=meshOptions.parallelPartitioningType)
     elif isinstance(domain, Domain.PiecewiseLinearComplexDomain):
         import sys
         if domain.use_gmsh is True:
             fileprefix = domain.geofile
         else:
             fileprefix = domain.polyfile
-        if comm.rank() == 0 and (not (os.path.exists(fileprefix+".ele") and
-                                      os.path.exists(fileprefix+".node") and
-                                      os.path.exists(fileprefix+".face"))):
-            if domain.MeshOptions.use_gmsh is True:
+        if comm.rank() == 0 and (meshOptions.genMesh or (
+                not (os.path.exists(fileprefix+".ele") and
+                     os.path.exists(fileprefix+".node") and
+                     os.path.exists(fileprefix+".face")))):
+            if domain.use_gmsh is True:
                 if not os.path.exists(fileprefix+".msh"):
                     logEvent("Running gmsh to generate 3D mesh for "+name, level=1)
                     gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh2".format(fileprefix+'.geo', domain.geofile+'.msh')
@@ -7247,7 +7264,12 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
                 check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
             else:
                 logEvent("Running tetgen to generate 3D mesh for "+name, level=1)
-                tetcmd = "tetgen -{0} {1}.poly".format(domain.MeshOptions.triangleOptions, fileprefix)
+                check_call("rm -f {0:s}.ele".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.node".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.face".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.neigh".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.edge".format(fileprefix), shell=True)
+                tetcmd = "tetgen -{0} {1}.poly".format(meshOptions.triangleOptions, fileprefix)
                 logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
                 check_call(tetcmd, shell=True)
                 logEvent("Done running tetgen")
@@ -7269,22 +7291,22 @@ def generateMesh(domain,generatePartitionedMeshFromFiles=False):
         nbase = 1
         mesh = TetrahedralMesh()
         mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
-                                           nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                           parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+                                           nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                           parallelPartitioningType=meshOptions.parallelPartitioningType)
         if generatePartitionedMeshFromFiles:
             logEvent("Generating partitioned mesh from Tetgen files")
-            if("f" not in domain.MeshOptions.triangleOptions or "ee" not in domain.MeshOptions.triangleOptions):
+            if("f" not in meshOptions.triangleOptions or "ee" not in meshOptions.triangleOptions):
                 sys.exit("ERROR: Remake the mesh with the `f` flag and `ee` flags in triangleOptions.")
-            mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,domain.MeshOptions.nLevels,
-                                                          nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                          parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+            mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
         else:
             logEvent("Generating coarse global mesh from Tetgen files")
             mesh.generateFromTetgenFiles(fileprefix, nbase,parallel = comm.size() > 1)
-            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (domain.MeshOptions.nLevels,))
-            mlMesh.generateFromExistingCoarseMesh(mesh, domain.MeshOptions.nLevels,
-                                                  nLayersOfOverlap=domain.MeshOptions.nLayersOfOverlapForParallel,
-                                                  parallelPartitioningType=domain.MeshOptions.parallelPartitioningType)
+            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (meshOptions.nLevels,))
+            mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                                  nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                  parallelPartitioningType=meshOptions.parallelPartitioningType)
 
-    domain.MeshOptions.genMesh = False
+    meshOptions.genMesh = False
     return mlMesh
