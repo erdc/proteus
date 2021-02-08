@@ -57,10 +57,6 @@ else:
     nnx = None
     nny = None
 
-#domain.MeshOptions.nn = nn
-domain.MeshOptions.nnx = nnx
-domain.MeshOptions.nny = nny
-
 ###############################
 #  CONSTANTS NEEDED FOR SETUP #
 ###############################
@@ -123,6 +119,15 @@ class x_mom_at_t0(object):
 class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
+
+"""
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
+"""        
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):

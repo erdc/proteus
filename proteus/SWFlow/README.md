@@ -1,6 +1,6 @@
 # Proteus -- SWFlow API
 
-The SWFlow API contains solvers for the the 2D nonlinear Shallow Water Equations, and the 2D dispersive Serre--Saint-Venant equations (also known as Green-Naghdi equations, nonlinear Boussinesq, etc.). Both models are
+The SWFlow API contains solvers for the the 2D nonlinear Shallow Water Equations, and the 2D dispersive Serre-Green-Naghdi equations (also known as Green-Naghdi equations, nonlinear Boussinesq, etc.). Both models are
 numerically solved using continuous, linear finite elements as seen in
 [Guermond, *et al* 2018](https://doi.org/10.1137/17M1156162), [Guermond *et al* 2019](https://doi.org/10.1016/j.jcp.2019.108917) and [Guermond *et al* 2020].
 
