@@ -9,6 +9,7 @@ addons:
     - doxygen
     - graphviz
     - ca-certificates
+    - libsqlite3-dev
 
 cache:
   - timeout: 1000
@@ -27,7 +28,7 @@ jobs:
   - stage: test
     name: "hashdist linux"
     os: linux
-    dist: bionic
+    dist: focal
     language: python
     python: 2.7
     env: TEST_PROFILE="proteus-hashdist"
