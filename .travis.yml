@@ -33,8 +33,8 @@ jobs:
     install:
       - git lfs pull
       - ./stack/hit/bin/hit init-home
-      - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
-      - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_stack --objects="build"
+      - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_src --objects="source"
+      - ./stack/hit/bin/hit remote add http://proteus.cee.lsu.edu/hashdist_stack --objects="build"
       - make stack/default.yaml
       - pushd $HOME
       - mkdir -p hashdist_src
