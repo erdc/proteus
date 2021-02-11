@@ -410,24 +410,10 @@ public:
       /* Here we compute the limiters */
       ij = 0;
       for (int i = 0; i < numDOFs; i++) {
-        // read some vectors
-        double high_order_hnp1i = high_order_hnp1[i];
-        double high_order_hunp1i = high_order_hunp1[i];
-        double high_order_hvnp1i = high_order_hvnp1[i];
-        double high_order_hetanp1i = high_order_hetanp1[i];
-        double high_order_hwnp1i = high_order_hwnp1[i];
-        double high_order_hbetanp1i = high_order_hbetanp1[i];
-        double hi = h_old[i];
-        double huni = hu_old[i];
-        double hvni = hv_old[i];
-        double hetani = heta_old[i];
-        double hwni = hw_old[i];
-        double hbetani = hbeta_old[i];
-        double Zi = b_dof[i];
+        // read in lumped mass mastrix
         double mi = lumped_mass_matrix[i];
-        double one_over_hiReg =
-            2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
 
+        // initialize lij * Aij
         double ith_Limiter_times_FluxCorrectionMatrix1 = 0.;
         double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
         double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
@@ -443,32 +429,6 @@ public:
         for (int offset = csrRowIndeces_DofLoops[i];
              offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
           int j = csrColumnOffsets_DofLoops[offset];
-          // read some vectors
-          double hj = h_old[j];
-          double hunj = hu_old[j];
-          double hvnj = hv_old[j];
-          double hetanj = heta_old[j];
-          double hwnj = hw_old[j];
-          double hbetanj = hbeta_old[j];
-          double Zj = b_dof[j];
-          double one_over_hjReg =
-              2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
-
-          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
-          // hwStar, hbetaStar
-          double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
-          double huStarij = huni * hStarij * one_over_hiReg;
-          double hvStarij = hvni * hStarij * one_over_hiReg;
-          double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg, 2);
-          double hwStarij = hwni * hStarij * one_over_hiReg;
-          double hbetaStarij = hbetani * hStarij * one_over_hiReg;
-
-          double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
-          double huStarji = hunj * hStarji * one_over_hjReg;
-          double hvStarji = hvnj * hStarji * one_over_hjReg;
-          double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
-          double hwStarji = hwnj * hStarji * one_over_hjReg;
-          double hbetaStarji = hbetanj * hStarji * one_over_hjReg;
 
           // Compute limiter based on water height
           if (FCT_h[ij] >= 0) {
@@ -583,25 +543,24 @@ public:
           abort();
         } else {
           // clean up uHigh from round off error
-          // if (limited_hnp1[i] < hEps) {
-          //   limited_hnp1[i] = 0.0;
-          //   limited_hetanp1[i] = 0.0;
-          // }
+          if (limited_hnp1[i] < hEps) {
+            limited_hnp1[i] = 0.0;
+            limited_hetanp1[i] = 0.0;
+          }
 
-          // double aux = fmax(limited_hnp1[i], hEps);
-          // limited_hunp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-          //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-          //                      std::pow(aux, VEL_FIX_POWER));
-          // limited_hvnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-          //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-          //                      std::pow(aux, VEL_FIX_POWER));
-          // limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-          //                     (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-          //                      std::pow(aux, VEL_FIX_POWER));
-          // limited_hbetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER)
-          // /
-          //                        (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-          //                         std::pow(aux, VEL_FIX_POWER));
+          double aux = fmax(limited_hnp1[i], hEps);
+          limited_hunp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                               std::pow(aux, VEL_FIX_POWER));
+          limited_hvnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                               std::pow(aux, VEL_FIX_POWER));
+          limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                               std::pow(aux, VEL_FIX_POWER));
+          limited_hbetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                                 (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                                  std::pow(aux, VEL_FIX_POWER));
         }
       }
 
@@ -794,24 +753,17 @@ public:
         double vj = hvj * one_over_hjReg;
 
         // auxiliary functions to compute fluxes
-        double aux_h = (uj * hj) * Cx[ij] + (vj * hj) * Cy[ij];
-        double aux_hu = (uj * huj) * Cx[ij] + (vj * huj) * Cy[ij];
-        double aux_hv = (uj * hvj) * Cx[ij] + (vj * hvj) * Cy[ij];
-        // double aux_h =
-        //     (uj * hj - ui * hi) * Cx[ij] + (vj * hj - vi * hi) * Cy[ij];
-        // double aux_hu =
-        //     (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
-        // double aux_hv =
-        //     (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
+        double aux_h =
+            (uj * hj - ui * hi) * Cx[ij] + (vj * hj - vi * hi) * Cy[ij];
+        double aux_hu =
+            (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
+        double aux_hv =
+            (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
 
         // flux for entropy
         ith_flux_term1 += aux_h;
-        ith_flux_term2 +=
-            aux_hu + 0.5 * g * hj * hj *
-                         Cx[ij]; // g * hi * (hj + 0.) * Cx[ij]; // NOTE: Zj=0
-        ith_flux_term3 +=
-            aux_hv + 0.5 * g * hj * hj *
-                         Cy[ij]; // g * hi * (hj + 0.) * Cy[ij]; // NOTE: Zj=0
+        ith_flux_term2 += aux_hu + 0.5 * g * hj * hj * Cx[ij];
+        ith_flux_term3 += aux_hv + 0.5 * g * hj * hj * Cy[ij];
 
         // NOTE: WE CONSIDER FLAT BOTTOM
         entropy_flux +=
