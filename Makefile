@@ -197,7 +197,7 @@ develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-        ${PROTEUS_ENV} pip install recordtype
+	${PROTEUS_ENV} pip install recordtype
 	${PROTEUS_ENV} ${PROTEUS_DEVELOP_BUILD_CMD}
 	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
