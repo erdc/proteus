@@ -36,7 +36,7 @@ jobs:
       - git lfs pull
       - ./stack/hit/bin/hit init-home
       - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_src --objects="source"
-      - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_stack --objects="build"
+      - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_travis_focal --objects="build"
       - make stack/default.yaml
       - pushd $HOME
       - mkdir -p hashdist_src
