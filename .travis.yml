@@ -44,6 +44,8 @@ jobs:
       - rm -rf .hashdist/src .hashdist/bld
       - ln -s $HOME/hashdist_src .hashdist/src
       - ln -s $HOME/hashdist_bld .hashdist/bld
+      - chmod u+rwX -R hashdist_bld/zoltan
+      - rm -rf hashdist_bld/zoltan
       - popd
       - pushd stack
       - echo $PWD
