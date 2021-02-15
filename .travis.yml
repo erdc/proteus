@@ -41,6 +41,7 @@ jobs:
       - pushd $HOME
       - mkdir -p hashdist_src
       - mkdir -p hashdist_bld
+      - rm -rf hashdist_bld/*
       - rm -rf .hashdist/src .hashdist/bld
       - ln -s $HOME/hashdist_src .hashdist/src
       - ln -s $HOME/hashdist_bld .hashdist/bld
