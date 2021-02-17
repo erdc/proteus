@@ -68,6 +68,7 @@ class TestBDM2Mesh8(object):
         self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
 
         self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
+        #np.save(os.path.join(self.scriptdir,rel_path_2), self.bdm2_obj.q[('velocity',0)])
         np.testing.assert_almost_equal(self.bdm2_obj.q[('velocity',0)],bdm_values,decimal=6)
  
 

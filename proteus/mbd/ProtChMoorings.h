@@ -42,7 +42,8 @@ private:
 
     // Compute rest length, mass:
     //double length2 = (nodes[1]->GetX0() - nodes[0]->GetX0()).Length();
-    this->mass = this->length * GetSection()->Area * GetSection()->density;
+    //this->mass = this->length * GetSection()->Area * GetSection()->density;
+    this->mass = this->length * GetDensity();
 
     // Here we calculate the internal forces in the initial configuration
     // Contribution of initial configuration in elastic forces is automatically subtracted
@@ -65,7 +66,8 @@ private:
 
     // Compute rest length, mass:
     //this->length = (nodes[1]->GetX0().GetPos() - nodes[0]->GetX0().GetPos()).Length();
-    this->mass = this->length * GetSection()->Area * GetSection()->density;
+    //this->mass = this->length * GetSection()->Area * GetSection()->density;
+    this->mass = this->length * GetDensity();
 
     // Compute initial rotation
     ChMatrix33<> A0;
@@ -549,10 +551,11 @@ void cppMultiSegmentedCable::setContactMaterial(std::shared_ptr<ChMaterialSurfac
 
 void cppMultiSegmentedCable::buildNodesCloud() {
   if (contact_material) {
-    auto contact_cloud = chrono_types::make_shared<ChContactSurfaceNodeCloud>();
-    mesh->AddContactSurface(contact_cloud);
     // Use DEM surface material properties
-    contact_cloud->SetMaterialSurface(contact_material);
+    auto contact_cloud = chrono_types::make_shared<ChContactSurfaceNodeCloud>(contact_material);
+    //auto contact_cloud = chrono_types::make_shared<ChContactSurfaceNodeCloud>();
+    mesh->AddContactSurface(contact_cloud);
+    //contact_cloud->SetMaterialSurface(contact_material);
     // add cable nodes to cloud
     for (int i = 0; i < cables.size(); ++i) {
       cables[i]->addNodestoContactCloud(contact_cloud);

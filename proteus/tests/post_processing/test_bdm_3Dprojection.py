@@ -103,37 +103,29 @@ class TestBDM2Reference1(object):
                                   self.bdm2_obj.edgeFlags)
 
         test_rhs = self.bdm2_obj.q[('velocity_dofs',0)]
+        #np.save(os.path.join(self.scriptdir,rel_path), test_rhs)
 
         rel_path = "comparison_files/bdm2_reference_simplex_rhs.data"
         comparison_rhs = np.load(os.path.join(self.scriptdir,rel_path))
         np.testing.assert_almost_equal(comparison_rhs,test_rhs,decimal=6)
 
-    def test_BDM2_reference_triangle_full_in_space(self):
-        rel_path_1 = "import_modules/bdm2_3d_face_func_vals.data"
-        rel_path_2 = "import_modules/bdm2_3d_interior_func_vals.data"
+    def test_BDM2_reference_triangle_full_not_in_space(self):
+        rel_path_1 = "comparison_files/bdm_bdy_func_values_trig.npy"
+        rel_path_2 = "comparison_files/bdm_func_values_trig.npy"
         bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
         bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
         
-        self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values.copy()
-        self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
+        self.bdm2_obj.ebq[('velocity',0)][:] = bdm_bdy_values
+        self.bdm2_obj.q[('velocity',0)][:] = bdm_values
+
         self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
 
-        np.testing.assert_almost_equal(self.bdm2_obj.q[('velocity',0)],bdm_values,decimal=6)
-
-    # def test_BDM2_reference_triangle_full_not_in_space(self):
-    #     rel_path_1 = "comparison_files/bdm_bdy_func_values_trig.npy"
-    #     rel_path_2 = "comparison_files/bdm_func_values_trig.npy"
-    #     bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
-    #     bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
-        
-    #     self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values
-    #     self.bdm2_obj.q[('velocity',0)] = bdm_values
-
-    #     self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
-
-    #     rel_path_3 = "comparison_files/trig_velocity_rep.npy"
-    #     comparison_vec = np.load(os.path.join(self.scriptdir,rel_path_3))
-    #     assert np.allclose(self.bdm2_obj.q[('velocity',0)],comparison_vec)
+        rel_path_3 = "comparison_files/trig_velocity_rep.npy"
+        #np.save(os.path.join(self.scriptdir,rel_path_1), self.bdm2_obj.ebq[('velocity',0)])
+        #np.save(os.path.join(self.scriptdir,rel_path_2), self.bdm2_obj.q[('velocity',0)])
+        #np.save(os.path.join(self.scriptdir,rel_path_3), self.bdm2_obj.q[('velocity',0)])
+        comparison_vec = np.load(os.path.join(self.scriptdir,rel_path_3))
+        assert np.allclose(self.bdm2_obj.q[('velocity',0)],comparison_vec)
 
 
 if __name__ == '__main__':
