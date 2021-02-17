@@ -36,7 +36,7 @@ jobs:
       - git lfs pull
       - ./stack/hit/bin/hit init-home
       - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_src --objects="source"
-      - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_stack --objects="build"
+      - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_travis_focal --objects="build"
       - make stack/default.yaml
       - pushd $HOME
       - mkdir -p hashdist_src
@@ -53,9 +53,9 @@ jobs:
       - export PATHSAVE=$PATH
       - export PATH=$PWD/linux/bin:$PATH
       - export LD_LIBRARY_PATH=$PWD/linux/lib:$LD_LIBRARY_PATH
-      - PROTEUS_OPT="-w -g0 -O2 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
+      - PROTEUS_OPT="-w -g0 -O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
     script:
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/MeshAdaptPUMI --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI
