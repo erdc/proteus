@@ -3,8 +3,12 @@ from __future__ import absolute_import
 from builtins import range
 from proteus import *
 from proteus.default_n import *
-from .clsvof_p import *
-from .clsvof import *
+try:
+    from .clsvof_p import *
+    from .clsvof import *
+except:
+    from clsvof_p import *
+    from clsvof import *
 
 nd=2
 

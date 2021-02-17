@@ -25,7 +25,6 @@ class TestTwoPhaseFlow(object):
         FileList = ['marin.h5','marin.xmf'
                     'moses.h5','moses.xmf'
                     'damBreak.h5','damBreak.xmf'
-                    'damBreak_solver_options.h5','damBreak_solver_options.xmf'
                     'TwoDimBucklingFlow.h5','TwoDimBucklingFlow.xmf'
                     'filling.h5','filling.xmf'
                     ]
@@ -42,7 +41,8 @@ class TestTwoPhaseFlow(object):
         #write comparison file
         if(write):
             np.array(actual.root.phi_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2).flatten(),decimal=6)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),
+                                       np.array(actual.root.phi_t2).flatten(),decimal=6)
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_velocity_t2.csv'
         #write comparison file
@@ -67,20 +67,11 @@ class TestTwoPhaseFlow(object):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "damBreak.py -l5 -v -H -C 'final_time=0.1 dt_output=0.1 he=0.1 hotstart=True'")
 
-    @pytest.mark.skip(reason="numerics are very sensitive, hashdist build doesn't pass but conda does")
-    def test_damBreak_solver_options(self):
-        os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "damBreak_solver_options.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1'")
-        self.compare_vs_saved_files("damBreak_solver_options")
-
-#    @pytest.mark.skip(reason="long test")
     def test_TwoDimBucklingFlow(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "TwoDimBucklingFlow.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.09'")
         self.compare_vs_saved_files("TwoDimBucklingFlow")
 
-#    @pytest.mark.skip(reason="long test")
-    @pytest.mark.skip(reason="need to redo after history revision")
     def test_fillingTank(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "fillingTank.py -l5 -v -C 'final_time=0.02 dt_output=0.02 he=0.01'")
@@ -104,7 +95,7 @@ class TestTwoPhaseFlow(object):
     def test_damBreak_runPUMI(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "damBreak_PUMI.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1 adapt=0'")
-        self.compare_vs_saved_files("damBreak_PUMI",write=1)
+        self.compare_vs_saved_files("damBreak_PUMI")
 
     def test_damBreak_pseudo_CLSVOF(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "

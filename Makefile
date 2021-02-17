@@ -197,7 +197,7 @@ develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} pip install recordtype
+	${PROTEUS_ENV} pip --use-feature=2020-resolver install recordtype py2gmsh pytest pytest-xdist pytest-cov nose tables future
 	${PROTEUS_ENV} ${PROTEUS_DEVELOP_BUILD_CMD}
 	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"

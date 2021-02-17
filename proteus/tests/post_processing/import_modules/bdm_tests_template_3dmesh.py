@@ -104,7 +104,7 @@ n.multilevelNonlinearSolver = pr.NonlinearSolvers.Newton
 n.levelNonlinearSolver = pr.NonlinearSolvers.Newton
 n.maxNonlinearIts = 1
 n.fullNewtonFlag = True
-n.totFac = 1.0e-8
+n.tolFac = 0.0
 n.nl_atol_res = 1.0e-8
 n.matrix = pr.LinearAlgebraTools.SparseMatrix
 

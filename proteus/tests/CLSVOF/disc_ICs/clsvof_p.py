@@ -8,7 +8,10 @@ from proteus.ctransportCoefficients import smoothedHeaviside
 from proteus import Context
 from proteus.mprans import CLSVOF
 from math import *
-from .clsvof import *
+try:
+    from .clsvof import *
+except:
+    from clsvof import *
 
 LevelModelType = CLSVOF.LevelModel
 logEvent = Profiling.logEvent
