@@ -65,7 +65,7 @@ class TestCLSVOF(object):
                                                opts)
         ns.calculateSolution(name)
 
-    def compare_files(self,path,name):
+    def compare_files(self,path,name, write=False):
         # COMPARE VS SAVED FILES #
         #expected_path = path+'/'+name+'.h5'
         #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
@@ -76,7 +76,8 @@ class TestCLSVOF(object):
         actual = tables.open_file(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_u_t1.csv'
         #write comparison file
-        #np.array(actual.root.u_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        if write:
+            np.array(actual.root.u_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
         np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t1).flatten(),decimal=10)
         actual.close()
 

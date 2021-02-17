@@ -25,7 +25,6 @@ class TestTwoPhaseFlow(object):
         FileList = ['marin.h5','marin.xmf'
                     'moses.h5','moses.xmf'
                     'damBreak.h5','damBreak.xmf'
-                    'damBreak_solver_options.h5','damBreak_solver_options.xmf'
                     'TwoDimBucklingFlow.h5','TwoDimBucklingFlow.xmf'
                     'filling.h5','filling.xmf'
                     ]
@@ -35,7 +34,7 @@ class TestTwoPhaseFlow(object):
             else:
                 pass
 
-    def compare_vs_saved_files(self,name,write=0):
+    def compare_vs_saved_files(self,name,write=False):
         actual = tables.open_file(name+'.h5','r')
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_phi_t2.csv'
@@ -67,24 +66,16 @@ class TestTwoPhaseFlow(object):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "damBreak.py -l5 -v -H -C 'final_time=0.1 dt_output=0.1 he=0.1 hotstart=True'")
 
-    @pytest.mark.skip(reason="numerics are very sensitive, hashdist build doesn't pass but conda does")
-    def test_damBreak_solver_options(self):
-        os.system("parun --TwoPhaseFlow --path " + self.path + " "
-                  "damBreak_solver_options.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1'")
-        self.compare_vs_saved_files("damBreak_solver_options")
-
-#    @pytest.mark.skip(reason="long test")
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def test_TwoDimBucklingFlow(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "TwoDimBucklingFlow.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.09'")
         self.compare_vs_saved_files("TwoDimBucklingFlow")
 
-#    @pytest.mark.skip(reason="long test")
-    @pytest.mark.skip(reason="need to redo after history revision")
     def test_fillingTank(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "fillingTank.py -l5 -v -C 'final_time=0.02 dt_output=0.02 he=0.01'")
-        self.compare_vs_saved_files("fillingTank")
+        self.compare_vs_saved_files("fillingTank", write=True)
 
     # *** 3D tests *** #
     def test_marin(self):
@@ -95,7 +86,7 @@ class TestTwoPhaseFlow(object):
     def test_moses(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "moses.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.5'")
-        self.compare_vs_saved_files("moses")
+        self.compare_vs_saved_files("moses", write=True)
 
     def test_damBreak_genPUMI(self):
         os.system("parun --TwoPhaseFlow --genPUMI --path " + self.path + " "
@@ -104,9 +95,9 @@ class TestTwoPhaseFlow(object):
     def test_damBreak_runPUMI(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "damBreak_PUMI.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1 adapt=0'")
-        self.compare_vs_saved_files("damBreak_PUMI",write=1)
+        self.compare_vs_saved_files("damBreak_PUMI", write=True)
 
     def test_damBreak_pseudo_CLSVOF(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "damBreak_PUMI.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.1 adapt=1'")
-        self.compare_vs_saved_files("damBreak_PUMI")
+        self.compare_vs_saved_files("damBreak_PUMI", write=True)
