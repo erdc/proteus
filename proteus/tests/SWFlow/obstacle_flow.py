@@ -77,7 +77,12 @@ nny = None
 
 # hack for using same mesh for tests, don't remove
 if opts.he==4.0:
-    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"for_testMeshes/obstacle"
+    from shutil import copyfile
+    saved_mesh=os.path.join(os.path.dirname(os.path.abspath(__file__)), "for_testMeshes")
+    copyfile(os.path.join(saved_mesh,"obstacle.poly"), "obstacle.poly")
+    copyfile(os.path.join(saved_mesh,"obstacle.ele"), "obstacle.ele")
+    copyfile(os.path.join(saved_mesh,"obstacle.node"), "obstacle.node")
+    domain.polyfile="obstacle"
 
 ##########################################
 # DEFINE INITIAL CONSTANTS AND FUNCTIONS #
