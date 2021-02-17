@@ -67,6 +67,7 @@ class TestTwoPhaseFlow(object):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "damBreak.py -l5 -v -H -C 'final_time=0.1 dt_output=0.1 he=0.1 hotstart=True'")
 
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def test_TwoDimBucklingFlow(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "TwoDimBucklingFlow.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.09'")
