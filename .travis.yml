@@ -62,7 +62,7 @@ jobs:
   - stage: test
     name: "conda linux"
     os: linux
-    dist: xenial
+    dist: focal
     language: python
     python: 3.7
     env: TEST_PROFILE="proteus-conda"
@@ -80,8 +80,7 @@ jobs:
       - conda activate proteus-dev
       - make develop-conda N=1
     script:
-      - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
+      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
       - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
       - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
       - MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI
