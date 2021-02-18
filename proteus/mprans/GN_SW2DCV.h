@@ -232,6 +232,7 @@ public:
     xt::pyarray<double> &heta_min = args.array<double>("heta_min");
     xt::pyarray<double> &heta_max = args.array<double>("heta_max");
     xt::pyarray<double> &kin_max = args.array<double>("kin_max");
+    double KE_tiny = args.scalar<double>("KE_tiny");
 
     // Declare stuff for limiting on h and h*heta
     std::valarray<double> Rneg(0.0, numDOFs), Rpos(0.0, numDOFs),
@@ -434,9 +435,6 @@ public:
           }
         }
       } // i loop ends here
-
-      // for limiting kinetic energy
-      auto KE_tiny = xt::amax(kin_max)[0] * hEps;
 
       /* Here we compute the limiters Lij_array */
       ij = 0;
@@ -1324,31 +1322,16 @@ public:
             }
           }
 
-          // define pressure at jth node for bar states
-          double pressure_j = 0.5 * g * hj * hj + pTildej;
-
-          // Compute star states
-          double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
-          double huStarij = hui * hStarij * one_over_hiReg;
-          double hvStarij = hvi * hStarij * one_over_hiReg;
-          double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg, 2);
-          double hwStarij = hwi * hStarij * one_over_hiReg;
-          double hbetaStarij = hbetai * hStarij * one_over_hiReg;
-
-          double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
-          double huStarji = huj * hStarji * one_over_hjReg;
-          double hvStarji = hvj * hStarji * one_over_hjReg;
-          double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg, 2);
-          double hwStarji = hwj * hStarji * one_over_hjReg;
-          double hbetaStarji = hbetaj * hStarji * one_over_hjReg;
-
           // for bar_deltaSqd_h, bar_deltaSqd_heta, bar_deltaSqd_kin
           double muLowij = 0., muLij = 0., dLowij = 0., dLij = 0.;
+
           if (i != j) {
             // Put these computations first  before it gets messy
-            bar_deltaSqd_h[i] += delta_Sqd_h[j] + delta_Sqd_h[i];
-            bar_deltaSqd_heta[i] += delta_Sqd_heta[j] + delta_Sqd_heta[i];
-            bar_deltaSqd_kin[i] += delta_Sqd_kin[j] + delta_Sqd_kin[i];
+            bar_deltaSqd_h[i] += 0.5 * delta_Sqd_h[j] + 0.5 * delta_Sqd_h[i];
+            bar_deltaSqd_heta[i] +=
+                0.5 * delta_Sqd_heta[j] + 0.5 * delta_Sqd_heta[i];
+            bar_deltaSqd_kin[i] +=
+                0.5 * delta_Sqd_kin[j] + 0.5 * delta_Sqd_kin[i];
 
             if (lstage == 0)
               dLowij = dLow[ij];
@@ -1381,55 +1364,74 @@ public:
             ////////////////////////
             // COMPUTE BAR STATES //
             ////////////////////////
-            double hBar_ij = 0, hTilde_ij = 0, huBar_ij = 0, huTilde_ij = 0,
-                   hvBar_ij = 0, hvTilde_ij = 0, hetaBar_ij = 0,
-                   hetaTilde_ij = 0, hwBar_ij = 0, hwTilde_ij = 0,
-                   hbetaBar_ij = 0, hbetaTilde_ij = 0;
+
+            // define pressure at jth node for bar states
+            double pressure_j = 0.5 * g * hj * hj + pTildej;
+
+            // Compute star states
+            double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
+            double huStarij = hui * hStarij * one_over_hiReg;
+            double hvStarij = hvi * hStarij * one_over_hiReg;
+            double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg, 2);
+            double hwStarij = hwi * hStarij * one_over_hiReg;
+            double hbetaStarij = hbetai * hStarij * one_over_hiReg;
+
+            double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
+            double huStarji = huj * hStarji * one_over_hjReg;
+            double hvStarji = hvj * hStarji * one_over_hjReg;
+            double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg, 2);
+            double hwStarji = hwj * hStarji * one_over_hjReg;
+            double hbetaStarji = hbetaj * hStarji * one_over_hjReg;
+
+            double hBar_ij = 0., hTilde_ij = 0., huBar_ij = 0., huTilde_ij = 0.,
+                   hvBar_ij = 0., hvTilde_ij = 0., hetaBar_ij = 0.,
+                   hetaTilde_ij = 0., hwBar_ij = 0., hwTilde_ij = 0.,
+                   hbetaBar_ij = 0., hbetaTilde_ij = 0.;
 
             // h component
-            hBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
+            hBar_ij = -1. / (2.0 * fmax(dLij, dij_small)) *
                           ((uj * hj - ui * hi) * Cx[ij] +
                            (vj * hj - vi * hi) * Cy[ij]) +
                       0.5 * (hj + hi);
-            hTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                        ((hStarji - hj) - (hStarij - hi));
+            hTilde_ij = (dLij - muLij) / (2.0 * fmax(dLij, dij_small)) *
+                        (hStarji - hj - (hStarij - hi));
             // hu component
             huBar_ij =
-                -1. / (fmax(2.0 * dLij, dij_small)) *
+                -1. / (2.0 * fmax(dLij, dij_small)) *
                     ((uj * huj - ui * hui + pressure_j - pressure_i) * Cx[ij] +
                      (vj * huj - vi * hui) * Cy[ij]) +
                 0.5 * (huj + hui);
-            huTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                         ((huStarji - huj) - (huStarij - hui));
+            huTilde_ij = (dLij - muLij) / (2.0 * fmax(dLij, dij_small)) *
+                         (huStarji - huj - (huStarij - hui));
             // hv component
             hvBar_ij =
-                -1. / (fmax(2.0 * dLij, dij_small)) *
+                -1. / (2.0 * fmax(dLij, dij_small)) *
                     ((uj * hvj - ui * hvi) * Cx[ij] +
                      (vj * hvj - vi * hvi + pressure_j - pressure_i) * Cy[ij]) +
                 0.5 * (hvj + hvi);
-            hvTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                         ((hvStarji - hvj) - (hvStarij - hvi));
+            hvTilde_ij = (dLij - muLij) / (2.0 * fmax(dLij, dij_small)) *
+                         (hvStarji - hvj - (hvStarij - hvi));
             // heta component
-            hetaBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
+            hetaBar_ij = -1. / (2.0 * fmax(dLij, dij_small)) *
                              ((uj * hetaj - ui * hetai) * Cx[ij] +
                               (vj * hetaj - vi * hetai) * Cy[ij]) +
                          0.5 * (hetaj + hetai);
-            hetaTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                           ((hetaStarji - hetaj) - (hetaStarij - hetai));
+            hetaTilde_ij = (dLij - muLij) / (2.0 * fmax(dLij, dij_small)) *
+                           (hetaStarji - hetaj - (hetaStarij - hetai));
             // hw component
-            hwBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
+            hwBar_ij = -1. / (2.0 * fmax(dLij, dij_small)) *
                            ((uj * hwj - ui * hwi) * Cx[ij] +
                             (vj * hwj - vi * hwi) * Cy[ij]) +
                        0.5 * (hwj + hwi);
-            hwTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                         ((hwStarji - hwj) - (hwStarij - hwi));
+            hwTilde_ij = (dLij - muLij) / (2.0 * fmax(dLij, dij_small)) *
+                         (hwStarji - hwj - (hwStarij - hwi));
             // hbeta component
-            hbetaBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
+            hbetaBar_ij = -1. / (2.0 * fmax(dLij, dij_small)) *
                               ((uj * hbetaj - ui * hbetai) * Cx[ij] +
                                (vj * hbetaj - vi * hbetai) * Cy[ij]) +
                           0.5 * (hbetaj + hbetai);
-            hbetaTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                            ((hbetaStarji - hbetaj) - (hbetaStarij - hbetai));
+            hbetaTilde_ij = (dLij - muLij) / (2.0 * fmax(dLij, dij_small)) *
+                            (hbetaStarji - hbetaj - (hbetaStarij - hbetai));
 
             // Here we define uBar + uTilde
             hBT[ij] = hBar_ij + hTilde_ij;
@@ -1500,9 +1502,9 @@ public:
           double one_over_hBT =
               2.0 * hBT[ij] /
               (hBT[ij] * hBT[ij] + std::pow(fmax(hBT[ij], hEps), 2));
-          double psi_ij =
-              one_over_hBT * 0.5 *
-              (huBT[ij] * huBT[ij] + hvBT[ij] * hvBT[ij]); // Eqn (6.31)
+          double psi_ij = one_over_hBT *
+                          (huBT[ij] * huBT[ij] + hvBT[ij] * hvBT[ij]) /
+                          2.0; // Eqn (6.31)
 
           // COMPUTE LOCAL BOUNDS //
           kin_max[i] = fmax(psi_ij, kin_max[i]);
@@ -1510,22 +1512,6 @@ public:
           h_max[i] = std::max(h_max[i], hBT[ij]);
           heta_min[i] = std::min(heta_min[i], hetaBT[ij]);
           heta_max[i] = std::max(heta_max[i], hetaBT[ij]);
-
-          // Then do relaxation of bounds here. If confused, see convex
-          // limiting paper
-          kin_max[i] =
-              std::min(urelax[i] * kin_max[i],
-                       kin_max[i] + std::abs(bar_deltaSqd_kin[i]) / 2.0);
-          h_min[i] = std::max(drelax[i] * h_min[i],
-                              h_min[i] - std::abs(bar_deltaSqd_h[i]) / 2.0);
-          h_max[i] = std::min(urelax[i] * h_max[i],
-                              h_max[i] + std::abs(bar_deltaSqd_h[i]) / 2.0);
-          heta_min[i] =
-              std::max(drelax[i] * heta_min[i],
-                       heta_min[i] - std::abs(bar_deltaSqd_heta[i]) / 2.0);
-          heta_max[i] =
-              std::min(urelax[i] * heta_max[i],
-                       heta_max[i] + std::abs(bar_deltaSqd_heta[i]) / 2.0);
 
           /* COMPUTE LOW ORDER SOLUTION. See EQN 6.23 in SW friction paper */
           // This is low order solution WITHOUT sources
@@ -1546,6 +1532,19 @@ public:
           // UPDATE ij //
           ij += 1;
         } // j loop ends here
+
+        // Then do relaxation of bounds here. If confused, see convex
+        // limiting paper
+        kin_max[i] = std::min(urelax[i] * kin_max[i],
+                              kin_max[i] + std::abs(bar_deltaSqd_kin[i]));
+        h_min[i] = std::max(drelax[i] * h_min[i],
+                            h_min[i] - std::abs(bar_deltaSqd_h[i]));
+        h_max[i] = std::min(urelax[i] * h_max[i],
+                            h_max[i] + std::abs(bar_deltaSqd_h[i]));
+        heta_min[i] = std::max(drelax[i] * heta_min[i],
+                               heta_min[i] - std::abs(bar_deltaSqd_heta[i]));
+        heta_max[i] = std::min(urelax[i] * heta_max[i],
+                               heta_max[i] + std::abs(bar_deltaSqd_heta[i]));
 
         // clean up hLow from round off error
         if (hLow[i] < hEps) {
@@ -1652,7 +1651,7 @@ public:
         hyp_flux_hbeta[i] = 0;
 
         // FOR SMOOTHNESS INDICATOR //
-        double alphai; // smoothness indicator of solution
+        double alphai;
         double alpha_numerator = 0;
         double alpha_denominator = 0;
         double alpha_zero = 0.5; // if only want smoothness
@@ -1767,8 +1766,7 @@ public:
           if (POWER_SMOOTHNESS_INDICATOR == 0)
             psi[i] = 1.0;
           else
-            psi[i] = std::pow(
-                alphai, POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^4 for mGN
+            psi[i] = std::pow(alphai, POWER_SMOOTHNESS_INDICATOR);
         }
       }
       // ********** END OF 2nd LOOP ON DOFS ********** //
@@ -1861,8 +1859,7 @@ public:
           // define pressure at jth node
           double pressure_j = 0.5 * g * hj * hj + pTildej;
 
-          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, hwStar,
-          // hbetaStar
+          // COMPUTE STAR STATES
           double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
           double huStarij = hui * hStarij * one_over_hiReg;
           double hvStarij = hvi * hStarij * one_over_hiReg;

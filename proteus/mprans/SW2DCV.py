@@ -725,6 +725,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.h_min = None
         self.h_max = None
         self.kin_max = None
+        self.KE_tiny = None
         #
         self.extendedSourceTerm_hu = None
         self.extendedSourceTerm_hv = None
@@ -873,6 +874,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def FCTStep(self):
         # NOTE: this function is meant to be called within the solver
+        comm = Comm.get()
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         # Extract hnp1 from global solution u
         index = list(range(0, len(self.timeIntegration.u)))
@@ -883,6 +885,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hnp1 = np.zeros(self.h_dof_old.shape)
         limited_hunp1 = np.zeros(self.h_dof_old.shape)
         limited_hvnp1 = np.zeros(self.h_dof_old.shape)
+
+        self.KE_tiny = self.hEps * comm.globalMax(np.amax(self.kin_max))
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["dt"] = self.timeIntegration.dt
@@ -917,6 +921,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["h_min"] = self.h_min
         argsDict["h_max"] = self.h_max
         argsDict["kin_max"] = self.kin_max
+        argsDict["KE_tiny"] = self.kin_tiny
         self.sw2d.convexLimiting(argsDict)
 
         # Pass the post processed hnp1 solution to global solution u
@@ -1201,7 +1206,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hu_dof_old = np.copy(self.u[1].dof)
         self.hv_dof_old = np.copy(self.u[2].dof)
         # hEps
-        self.eps = 1E-7
+        self.eps = 1E-5
         self.hEps = self.eps * comm.globalMax(self.u[0].dof.max())
 
         # size_of_domain used in relaxation of bounds

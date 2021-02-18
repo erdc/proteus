@@ -816,6 +816,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.heta_min = None
         self.heta_max = None
         self.kin_max = None
+        self.KE_tiny = None
         #
         self.extendedSourceTerm_hu = None
         self.extendedSourceTerm_hv = None
@@ -975,6 +976,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def FCTStep(self):
         # NOTE: this function is meant to be called within the solver
+        comm = Comm.get()
+
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         # Extract hnp1 from global solution u
         index = list(range(0, len(self.timeIntegration.u)))
@@ -988,9 +991,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hnp1 = np.zeros(self.h_dof_old.shape)
         limited_hunp1 = np.zeros(self.h_dof_old.shape)
         limited_hvnp1 = np.zeros(self.h_dof_old.shape)
-        # limited_hetanp1 = np.zeros(self.h_dof_old.shape)
-        # limited_hwnp1 = np.zeros(self.h_dof_old.shape)
-        # limited_hbetanp1 = np.zeros(self.h_dof_old.shape)
+        limited_hetanp1 = np.zeros(self.h_dof_old.shape)
+        limited_hwnp1 = np.zeros(self.h_dof_old.shape)
+        limited_hbetanp1 = np.zeros(self.h_dof_old.shape)
+
+        self.KE_tiny = self.hEps * comm.globalMax(np.amax(self.kin_max))
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["dt"] = self.timeIntegration.dt
@@ -1050,6 +1055,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["heta_min"] = self.heta_min
         argsDict["heta_max"] = self.heta_max
         argsDict["kin_max"] = self.kin_max
+        argsDict["KE_tiny"] = self.KE_tiny
         self.dsw_2d.convexLimiting(argsDict)
 
         # scatter forward
