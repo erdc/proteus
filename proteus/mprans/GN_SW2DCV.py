@@ -1026,12 +1026,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["limited_hetanp1"] = limited_hetanp1
         argsDict["limited_hwnp1"] = limited_hwnp1
         argsDict["limited_hbetanp1"] = limited_hbetanp1
-        # argsDict["limited_hnp1"] = self.limited_hnp1
-        # argsDict["limited_hunp1"] = self.limited_hunp1
-        # argsDict["limited_hvnp1"] = self.limited_hvnp1
-        # argsDict["limited_hetanp1"] = self.limited_hetanp1
-        # argsDict["limited_hwnp1"] = self.limited_hwnp1
-        # argsDict["limited_hbetanp1"] = self.limited_hbetanp1
         argsDict["csrRowIndeces_DofLoops"] = rowptr
         argsDict["csrColumnOffsets_DofLoops"] = colind
         argsDict["MassMatrix"] = MassMatrix
@@ -1058,14 +1052,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["KE_tiny"] = self.KE_tiny
         self.dsw_2d.convexLimiting(argsDict)
 
-        # scatter forward
-        # self.par_limited_hnp1.scatter_forward_insert()
-        # self.par_limited_hunp1.scatter_forward_insert()
-        # self.par_limited_hvnp1.scatter_forward_insert()
-        # self.par_limited_hetanp1.scatter_forward_insert()
-        # self.par_limited_hwnp1.scatter_forward_insert()
-        # self.par_limited_hbetanp1.scatter_forward_insert()
-
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex] = limited_hnp1
         self.timeIntegration.u[huIndex] = limited_hunp1
@@ -1073,12 +1059,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.u[hetaIndex] = limited_hetanp1
         self.timeIntegration.u[hwIndex] = limited_hwnp1
         self.timeIntegration.u[hbetaIndex] = limited_hbetanp1
-        # self.timeIntegration.u[hIndex] = self.limited_hnp1
-        # self.timeIntegration.u[huIndex] = self.limited_hunp1
-        # self.timeIntegration.u[hvIndex] = self.limited_hvnp1
-        # self.timeIntegration.u[hetaIndex] = self.limited_hetanp1
-        # self.timeIntegration.u[hwIndex] = self.limited_hwnp1
-        # self.timeIntegration.u[hbetaIndex] = self.limited_hbetanp1
 
     def computeEV(self):
         entropy_residual = np.zeros(self.u[0].dof.shape)
@@ -1462,31 +1442,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
         #
-        self.par_limited_hnp1= LAT.ParVec_petsc4py(self.limited_hnp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
-        self.par_limited_hunp1 = LAT.ParVec_petsc4py(self.limited_hunp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
-        self.par_limited_hvnp1 = LAT.ParVec_petsc4py(self.limited_hvnp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
-        self.par_limited_hetanp1 = LAT.ParVec_petsc4py(self.limited_hetanp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
-        self.par_limited_hwnp1 = LAT.ParVec_petsc4py(self.limited_hwnp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
-        self.par_limited_hbetanp1 = LAT.ParVec_petsc4py(self.limited_hbetanp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
-        #
         self.par_h_min = LAT.ParVec_petsc4py(self.h_min,
                                                 bs=1,
                                                 n=n,N=N,nghosts=nghosts,
@@ -1785,12 +1740,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.par_hetaLow.scatter_forward_insert()
         self.par_hwLow.scatter_forward_insert()
         self.par_hbetaLow.scatter_forward_insert()
-        self.par_limited_hnp1.scatter_forward_insert()
-        self.par_limited_hunp1.scatter_forward_insert()
-        self.par_limited_hvnp1.scatter_forward_insert()
-        self.par_limited_hetanp1.scatter_forward_insert()
-        self.par_limited_hwnp1.scatter_forward_insert()
-        self.par_limited_hbetanp1.scatter_forward_insert()
         #
         self.par_h_min.scatter_forward_insert()
         self.par_h_max.scatter_forward_insert()

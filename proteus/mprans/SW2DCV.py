@@ -719,9 +719,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.huLow = None
         self.hvLow = None
         #
-        self.limited_hnp1 = None
-        self.limited_hunp1 = None
-        self.limited_hvnp1 = None
         self.h_min = None
         self.h_max = None
         self.kin_max = None
@@ -1231,9 +1228,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.huLow = np.zeros(self.u[0].dof.shape, 'd')
         self.hvLow = np.zeros(self.u[0].dof.shape, 'd')
         #
-        self.limited_hnp1 = np.zeros(self.u[0].dof.shape, 'd')
-        self.limited_hunp1 = np.zeros(self.u[0].dof.shape, 'd')
-        self.limited_hvnp1 = np.zeros(self.u[0].dof.shape, 'd')
         self.h_min = np.zeros(self.u[0].dof.shape, 'd')
         self.h_max = np.zeros(self.u[0].dof.shape, 'd')
         self.kin_max = np.zeros(self.u[0].dof.shape, 'd')
@@ -1272,18 +1266,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
         #
-        self.par_limited_hnp1= LAT.ParVec_petsc4py(self.limited_hnp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
-        self.par_limited_hunp1 = LAT.ParVec_petsc4py(self.limited_hunp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
-        self.par_limited_hvnp1 = LAT.ParVec_petsc4py(self.limited_hvnp1,
-                                                bs=1,
-                                                n=n,N=N,nghosts=nghosts,
-                                                subdomain2global=subdomain2global)
         self.par_h_min = LAT.ParVec_petsc4py(self.h_min,
                                                 bs=1,
                                                 n=n,N=N,nghosts=nghosts,
@@ -1526,9 +1508,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.par_hLow.scatter_forward_insert()
         self.par_huLow.scatter_forward_insert()
         self.par_hvLow.scatter_forward_insert()
-        self.par_limited_hnp1.scatter_forward_insert()
-        self.par_limited_hunp1.scatter_forward_insert()
-        self.par_limited_hvnp1.scatter_forward_insert()
         #
         self.par_h_min.scatter_forward_insert()
         self.par_h_max.scatter_forward_insert()
