@@ -80,10 +80,11 @@ jobs:
       - conda activate proteus-dev
       - make develop-conda N=1
     script:
-      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
-      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
-      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
-      - MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI
+      - export MPLBACKEND="AGG"
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
+      - py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
+      - mpiexec -np 2 pytest -v proteus/tests/FSI
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
