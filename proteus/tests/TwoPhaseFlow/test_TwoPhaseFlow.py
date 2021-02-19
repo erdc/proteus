@@ -78,6 +78,7 @@ class TestTwoPhaseFlow(object):
         self.compare_vs_saved_files("fillingTank", write=True)
 
     # *** 3D tests *** #
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def test_marin(self):
         os.system("parun --TwoPhaseFlow --path " + self.path + " "
                   "marin.py -l5 -v -C 'final_time=0.1 dt_output=0.1 he=0.5'")

@@ -78,7 +78,7 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - make develop-conda N=1
+      - make develop-conda N=2 PROTEUS_OPT="-g -O0 -UNDEBUG"
     script:
       - export MPLBACKEND="AGG"
       - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d --cov=proteus
@@ -107,7 +107,7 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install gmsh
-      - pip install -v -e .
+      - pip make develop-conda N=2 PROTEUS_OPT="-g -O0 -UNDEBUG"
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
