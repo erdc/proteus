@@ -19,7 +19,7 @@ notifications:
     on_failure: always
 
 after_success:
-  - conda install codecov
+  - pip install codecov
   - codecov
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
     os: linux
     dist: focal
     language: python
-    python: 2.7
+    python: 3.9
     env: TEST_PROFILE="proteus-hashdist"
     install:
       - export SSL_CERT_DIR=/etc/ssl/certs
@@ -64,7 +64,7 @@ jobs:
     os: linux
     dist: focal
     language: python
-    python: 3.7
+    python: 3.9
     env: TEST_PROFILE="proteus-conda"
     install:
       - git lfs pull
@@ -81,7 +81,7 @@ jobs:
       - PROTEUS_OPT="-g -O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop-conda N=2
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d
       - py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
       - py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
       - mpiexec -np 2 pytest -v proteus/tests/FSI
@@ -94,7 +94,7 @@ jobs:
   - stage: test
     name: "conda osx"
     os: osx
-    osx_image: xcode11.3
+    osx_image: xcode12.2
     env: TEST_PROFILE="proteus-conda-osx"
     install:
       - wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
@@ -112,6 +112,6 @@ jobs:
       - export MPLBACKEND="AGG"
       - git lfs install
       - git lfs pull
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py --cov=proteus
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py
