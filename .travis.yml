@@ -3,17 +3,6 @@ dist: focal
 language: python
 python: 3.9
 
-addons:
-  apt:
-    packages:
-    - gfortran
-    - libffi-dev
-    - libssl-dev
-    - python2 # for hit
-    - doxygen
-    - graphviz
-    - ca-certificates
-    - libsqlite3-dev
 
 cache:
   - timeout: 1000
@@ -38,6 +27,17 @@ jobs:
     dist: focal
     language: python
     python: 3.9
+    addons:
+      apt:
+        packages:
+        - gfortran
+        - libffi-dev
+        - libssl-dev
+        - python2 # for hit
+        - doxygen
+        - graphviz
+        - ca-certificates
+        - libsqlite3-dev
     env: TEST_PROFILE="proteus-hashdist"
     install:
       - export SSL_CERT_DIR=/etc/ssl/certs
@@ -103,6 +103,8 @@ jobs:
     name: "conda osx"
     os: osx
     osx_image: xcode12.2
+    language: python
+    python: 3.8
     env: TEST_PROFILE="proteus-conda-osx"
     install:
       - wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
