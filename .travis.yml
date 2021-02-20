@@ -95,6 +95,8 @@ jobs:
     name: "conda osx"
     os: osx
     osx_image: xcode12.2
+    language: python
+    python: 3.9
     env: TEST_PROFILE="proteus-conda-osx"
     install:
       - wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
