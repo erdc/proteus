@@ -4,7 +4,7 @@ addons:
     - gfortran
     - libffi-dev
     - libssl-dev
-    - python3
+    - python2 # for hit
     - doxygen
     - graphviz
     - ca-certificates
