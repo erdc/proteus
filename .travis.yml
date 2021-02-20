@@ -3,13 +3,6 @@ dist: focal
 language: python
 python: 3.9
 
-
-cache:
-  - timeout: 1000
-  - directories:
-    - hashdist_src
-    - hashdist_bld
-
 notifications:
   email:
     on_success: change
@@ -39,6 +32,11 @@ jobs:
         - ca-certificates
         - libsqlite3-dev
     env: TEST_PROFILE="proteus-hashdist"
+    cache:
+      - timeout: 1000
+      - directories:
+        - hashdist_src
+        - hashdist_bld
     install:
       - export SSL_CERT_DIR=/etc/ssl/certs
       - git lfs pull
@@ -67,6 +65,9 @@ jobs:
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI #can't  do --cov=proteus in parallel
+    after_success:
+      - pip install codecov
+      - codecov
   - stage: test
     name: "conda linux"
     os: linux
