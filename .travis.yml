@@ -1,3 +1,8 @@
+os: linux
+dist: focal
+language: python
+python: 3.9
+
 addons:
   apt:
     packages:
@@ -11,9 +16,10 @@ addons:
     - libsqlite3-dev
 
 cache:
-  directories:
-  - hashdist_src
-  - hashdist_bld
+  - timeout: 1000
+  - directories:
+    - hashdist_src
+    - hashdist_bld
 
 notifications:
   email:
@@ -60,7 +66,7 @@ jobs:
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/MeshAdaptPUMI --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI --cov=proteus
   - stage: test
     name: "conda linux"
     os: linux
