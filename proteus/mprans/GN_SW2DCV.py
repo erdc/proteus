@@ -804,13 +804,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hwLow = None
         self.hbetaLow = None
         #
-        self.limited_hnp1 = None
-        self.limited_hunp1 = None
-        self.limited_hvnp1 = None
-        self.limited_hetanp1 = None
-        self.limited_hwnp1 = None
-        self.limited_hbetanp1 = None
-        #
         self.h_min = None
         self.h_max = None
         self.heta_min = None
@@ -1377,13 +1370,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hetaLow = np.zeros(self.u[0].dof.shape, 'd')
         self.hwLow = np.zeros(self.u[0].dof.shape, 'd')
         self.hbetaLow = np.zeros(self.u[0].dof.shape, 'd')
-        #
-        self.limited_hnp1 = np.zeros(self.u[0].dof.shape, 'd')
-        self.limited_hunp1 = np.zeros(self.u[0].dof.shape, 'd')
-        self.limited_hvnp1 = np.zeros(self.u[0].dof.shape, 'd')
-        self.limited_hetanp1 = np.zeros(self.u[0].dof.shape, 'd')
-        self.limited_hwnp1 = np.zeros(self.u[0].dof.shape, 'd')
-        self.limited_hbetanp1 = np.zeros(self.u[0].dof.shape, 'd')
         #
         self.h_min = np.zeros(self.u[0].dof.shape, 'd')
         self.h_max = np.zeros(self.u[0].dof.shape, 'd')

@@ -234,7 +234,7 @@ public:
     xt::pyarray<double> &kin_max = args.array<double>("kin_max");
     double KE_tiny = args.scalar<double>("KE_tiny");
 
-    // Declare stuff for limiting on h and h*heta
+    // Create some vectors for limiting on h and h*eta
     std::valarray<double> Rneg(0.0, numDOFs), Rpos(0.0, numDOFs),
         Rneg_heta(0.0, numDOFs), Rpos_heta(0.0, numDOFs);
 
@@ -358,7 +358,7 @@ public:
     // Main loop to define limiters and computed limited solution //////
     ////////////////////////////////////////////////////////////////////
 
-    // Create Lij_array for initialization
+    // Create Lij_array and initialize with 1
     std::valarray<double> Lij_array(1.0, dH_minus_dL.size());
 
     /* Loop over limiting iterations */
@@ -436,7 +436,7 @@ public:
         }
       } // i loop ends here
 
-      /* Here we compute the limiters Lij_array */
+      /* Here we compute the limiters */
       ij = 0;
       for (int i = 0; i < numDOFs; i++) {
 
@@ -470,21 +470,20 @@ public:
             }
 
             /*======================================================*/
-            /*            KE limiting                               */
+            /*            Kinetic Energy limiting                   */
             double lambdaj =
                 csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i] - 1;
             double Ph_ij = FCT_h[ij] / mi / lambdaj;
             double Phu_ij = FCT_hu[ij] / mi / lambdaj;
             double Phv_ij = FCT_hv[ij] / mi / lambdaj;
 
-            // Here we have some conditions for the KE limiting
-
+            // Here we initialize limiter based on kinetic energy
             double KE_limiter = 1;
+            double neg_root_i = 1., neg_root_j = 1.;
 
             // We first check if local kinetic energy > 0
-            if (kin_max[i] * hLow[i] <= KE_tiny) {
+            if (kin_max[i] * hLow[i] <= KE_tiny)
               KE_limiter = 0.;
-            }
 
             // We then check if KE bound is already satisfied
             double hi_with_lijPij = hLow[i] + Lij_array[ij] * Ph_ij;
@@ -503,13 +502,11 @@ public:
             double bi =
                 kin_max[i] * Ph_ij - (huLow[i] * Phu_ij + hvLow[i] * Phv_ij);
             double delta_i = bi * bi - 4. * ai * ci;
-            double ri = 1.;
 
             if (delta_i < 0. || ai >= -0.) {
               KE_limiter = fmin(KE_limiter, Lij_array[ij]);
             } else {
-              double neg_root_i = (-bi - std::sqrt(delta_i)) / 2. / ai;
-              KE_limiter = fmin(KE_limiter, neg_root_i);
+              neg_root_i = (-bi - std::sqrt(delta_i)) / 2. / ai;
             }
 
             // root of jth-DOF (To compute transpose component)
@@ -524,20 +521,21 @@ public:
             double aj = -0.5 * (Phu_ji * Phu_ji + Phv_ji * Phv_ji);
             double bj =
                 kin_max[j] * Ph_ji - (huLow[j] * Phu_ji + hvLow[j] * Phv_ji);
-
             double delta_j = bj * bj - 4. * aj * cj;
-            double rj = 1.;
 
             if (delta_j < 0. || aj >= -0.) {
               KE_limiter = fmin(KE_limiter, Lij_array[ij]);
             } else {
-              double neg_root_j = (-bj - std::sqrt(delta_j)) / 2. / aj;
-              KE_limiter = fmin(KE_limiter, neg_root_j);
+              neg_root_j = (-bj - std::sqrt(delta_j)) / 2. / aj;
             }
 
-            // Compute KE limiter
+            // define final limiter based on KE
+            KE_limiter =
+                fmin(KE_limiter, fmin(fabs(neg_root_i), fabs(neg_root_j)));
+
+            // Here we set final limiter
             Lij_array[ij] = fmin(KE_limiter, Lij_array[ij]);
-            // Lij_array[ij] = fmin(fmin(fabs(ri), fabs(rj)), Lij_array[ij]);
+
           } else {
             // if i = j then lij = 0
             Lij_array[ij] = 0.;

@@ -918,7 +918,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["h_min"] = self.h_min
         argsDict["h_max"] = self.h_max
         argsDict["kin_max"] = self.kin_max
-        argsDict["KE_tiny"] = self.kin_tiny
+        argsDict["KE_tiny"] = self.KE_tiny
         self.sw2d.convexLimiting(argsDict)
 
         # Pass the post processed hnp1 solution to global solution u
