@@ -1,4 +1,5 @@
 [run]
+source = proteus
 omit =
   proteus/tests*
   proteus/config*
