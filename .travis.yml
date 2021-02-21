@@ -30,8 +30,7 @@ jobs:
     env: TEST_PROFILE="proteus-hashdist"
     cache:
       - directories:
-        - hashdist_bld/python
-        - hashdist_bld/sqlite
+        - hashdist_bld
     install:
       - export SSL_CERT_DIR=/etc/ssl/certs
       - git lfs pull
