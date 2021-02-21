@@ -29,9 +29,9 @@ jobs:
         - libsqlite3-dev
     env: TEST_PROFILE="proteus-hashdist"
     cache:
-      - timeout: 2000
       - directories:
-        - hashdist_bld
+        - hashdist_bld/python
+        - hashdist_bld/sqlite
     install:
       - export SSL_CERT_DIR=/etc/ssl/certs
       - git lfs pull

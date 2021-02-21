@@ -1,2 +1,5 @@
 [run]
-omit = proteus/tests/*
+omit =
+  proteus/tests*
+  proteus/config*
+  proteus/test_utils*
