@@ -8,10 +8,6 @@ notifications:
     on_success: change
     on_failure: always
 
-after_success:
-  - pip install codecov
-  - codecov
-
 jobs:
   include:
   - stage: test
@@ -33,9 +29,8 @@ jobs:
         - libsqlite3-dev
     env: TEST_PROFILE="proteus-hashdist"
     cache:
-      - timeout: 1000
+      - timeout: 2000
       - directories:
-        - hashdist_src
         - hashdist_bld
     install:
       - export SSL_CERT_DIR=/etc/ssl/certs
@@ -45,10 +40,8 @@ jobs:
       - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_travis_focal --objects="build"
       - make stack/default.yaml
       - pushd $HOME
-      - mkdir -p hashdist_src
       - mkdir -p hashdist_bld
-      - rm -rf .hashdist/src .hashdist/bld
-      - ln -s $HOME/hashdist_src .hashdist/src
+      - rm -rf .hashdist/bld
       - ln -s $HOME/hashdist_bld .hashdist/bld
       - popd
       - pushd stack
@@ -62,9 +55,9 @@ jobs:
       - PROTEUS_OPT="-g -O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
     script:
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/MeshAdaptPUMI --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI #can't  do --cov=proteus in parallel
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus --cov-append
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus --cov-append
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI #can't  do --cov=proteus in parallel for now
     after_success:
       - pip install codecov
       - codecov
