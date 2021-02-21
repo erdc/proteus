@@ -31,6 +31,7 @@ jobs:
     cache:
       - directories:
         - hashdist_bld
+        - hashdist_src
     install:
       - export SSL_CERT_DIR=/etc/ssl/certs
       - git lfs pull
@@ -42,6 +43,9 @@ jobs:
       - mkdir -p hashdist_bld
       - rm -rf .hashdist/bld
       - ln -s $HOME/hashdist_bld .hashdist/bld
+      - mkdir -p hashdist_src
+      - rm -rf .hashdist/src
+      - ln -s $HOME/hashdist_src .hashdist/src
       - popd
       - pushd stack
       - echo $PWD
@@ -54,14 +58,14 @@ jobs:
       - export LD_LIBRARY_PATH=$PWD/linux/lib:$LD_LIBRARY_PATH
       - PROTEUS_OPT="-g -O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
     script:
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/MeshAdaptPUMI --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus --cov-append
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus --cov-append
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/MeshAdaptPUMI --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus --cov-config=.coveragerc
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus --cov-append --cov-config=.coveragerc
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus --cov-append --cov-config=.coveragerc
       - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI #can't  do --cov=proteus in parallel for now
       - export PATH=$PATHSAVE
       - export LD_LIBRARY_PATH=$LD_LIBRARY_PATHSAVE
     after_success:
-      - pip install --user codecov
+      - pip install codecov
       - codecov
   - stage: test
     name: "conda linux"
