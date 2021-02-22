@@ -39,13 +39,14 @@ jobs:
       - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_src --objects="source"
       - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_travis_focal --objects="build"
       - make stack/default.yaml
-      - pushd $HOME
       - mkdir -p hashdist_bld
+      - mkdir -p hashdist_src
+      - pushd $HOME
       - rm -rf .hashdist/bld
-      - ln -s $HOME/hashdist_bld .hashdist/bld
+      - ln -s /home/travis/build/erdc/proteus/hashdist_bld .hashdist/bld
       - mkdir -p hashdist_src
       - rm -rf .hashdist/src
-      - ln -s $HOME/hashdist_src .hashdist/src
+      - ln -s /home/travis/build/erdc/proteus/hashdist_src .hashdist/src
       - popd
       - pushd stack
       - echo $PWD

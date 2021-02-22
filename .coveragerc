@@ -1,6 +1,6 @@
 [run]
 source = proteus
 omit =
-  proteus/tests*
-  proteus/config*
-  proteus/test_utils*
+  */tests/*
+  */config/*
+  */test_utils/*
