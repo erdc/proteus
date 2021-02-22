@@ -89,10 +89,13 @@ jobs:
       - PROTEUS_OPT="-g -O0 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop-conda N=2
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d
-      - py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
-      - py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d --cov --cov-config=.coveragerc
+      - py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov --cov-append --cov-config=.coveragerc
+      - py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov --cov-append --cov-config=.coveragerc
       - mpiexec -np 2 pytest -v proteus/tests/FSI
+    after_success:
+      - conda install codecov
+      - codecov
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
@@ -122,6 +125,9 @@ jobs:
       - export MPLBACKEND="AGG"
       - git lfs install
       - git lfs pull
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py
+      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d --cov --cov-config=.coveragerc
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov --cov-append --cov-config=.coveragerc
+      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py --cov --cov-append --cov-config=.coveragerc
+    after_success:
+      - conda install codecov
+      - codecov
