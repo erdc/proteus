@@ -4739,13 +4739,6 @@ Number of nodes : %d\n""" % (self.nElements_global,
         self.finalize()
         return childrenDict
 
-
-    def generateQuadrialteralMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
-        ''' WIP - This function needs to be constructed to allow MultilevelQuadrilateralMesh
-            to run using C.  Implementing this will require some work to the mesh.cpp module. '''
-        pass
-
-
     def finalize(self):
         ''' WIP '''
         self.buildLists()
