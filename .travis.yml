@@ -119,7 +119,7 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install gmsh
-      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop-conda N=1
+      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop-conda N=2
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
