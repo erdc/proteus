@@ -373,7 +373,7 @@ namespace proteus
    xx[2] = x[2] - x0[2];
 
    __cpp_uRandom(U, xx, t,  kDir,  kAbs,  omega,  phi,  amplitude,  mwl,  depth,  N,  waveDir,  vDir,  tanhKd, gAbs, fast );
-
+   
  }
 
 
@@ -406,7 +406,7 @@ namespace proteus
 
 
 
- inline double* __cpp_uWindow(double* U, double x[nDim], double x0[nDim], double t, double* t0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhF, double gAbs , bool fast)
+ inline void __cpp_uWindow(double* U, double x[nDim], double x0[nDim], double t, double* t0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhF, double gAbs , bool fast)
 
 
  {
@@ -432,8 +432,6 @@ namespace proteus
 
     }
 	
-
-
       
  }
  //=========================================2nd order correction==============================================

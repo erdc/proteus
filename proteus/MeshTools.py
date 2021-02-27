@@ -17,6 +17,9 @@ from builtins import object
 from .EGeometry import *
 import numpy as np
 import array
+import h5py
+import os
+from xml.etree import ElementTree as ET
 from .Archiver import *
 from .LinearAlgebraTools import ParVec_petsc4py
 from .Profiling import logEvent,memory
@@ -795,18 +798,15 @@ class Mesh(object):
                                        "Precision":"8",
                                        "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+str(tCount),
-                                                    offsets=self.globalMesh.elementOffsets_subdomain_owned,
-                                                    data=self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+str(tCount),
-                                                   offsets=self.globalMesh.nodeOffsets_subdomain_owned,
-                                                   data=self.nodeArray[:self.nNodes_owned])
-                    else:
-                        assert False, "global_sync not supported  with pytables"
+                    elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_sync('elements'+name+str(tCount),
+                                               offsets=self.globalMesh.elementOffsets_subdomain_owned,
+                                               data=self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                        ar.create_dataset_sync('nodes'+name+str(tCount),
+                                               offsets=self.globalMesh.nodeOffsets_subdomain_owned,
+                                               data=self.nodeArray[:self.nNodes_owned])
                 else:
                     assert False, "global_sync not  supported with text heavy data"
             else:
@@ -826,18 +826,11 @@ class Mesh(object):
                                        "Precision":"8",
                                        "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount),data=self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount),data=self.nodeArray)
-                    else:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
+                    elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount),data=self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount),data=self.nodeArray)
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -865,18 +858,11 @@ class Mesh(object):
                                      "Precision":"8",
                                      "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+str(ar.comm.rank())+name+str(tCount)
-                        ebnodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('elementBoundaries'+str(ar.comm.rank())+name+str(tCount), data = self.elementBoundaryNodesArray)
-                            #ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
-                    else:
-                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+str(tCount)
-                        ebnodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'elementBoundaries'+name+str(tCount),self.elementBoundaryNodesArray)
-                            #ar.hdfFile.create_array("/",'nodes'+name+`tCount`,self.nodeArray)
+                    ebelements.text = ar.hdfFilename+":/elementBoundaries"+str(ar.comm.rank())+name+str(tCount)
+                    ebnodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elementBoundaries'+str(ar.comm.rank())+name+str(tCount), data = self.elementBoundaryNodesArray)
+                        #ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
                 else:
                     SubElement(ebelements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elementBoundaries"+name+".txt"})
                     SubElement(ebnodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -906,18 +892,11 @@ class Mesh(object):
                                       "Dimensions":"%i" % (self.nElements_owned,)})
 
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+str(ar.comm.rank())+name+str(tCount)
-                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+str(ar.comm.rank())+name+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('nodeMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.create_dataset_async('cellMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
-                    else:
-                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+str(tCount)
-                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'nodeMapL2G'+name+str(tCount),self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.hdfFile.create_array("/",'cellMapL2G'+name+str(tCount),self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                    nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+str(ar.comm.rank())+name+str(tCount)
+                    elemMap.text = ar.hdfFilename+":/cellMapL2G"+str(ar.comm.rank())+name+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('nodeMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.nodeNumbering_subdomain2global)
+                        ar.create_dataset_async('cellMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                 else:
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodeMapL2G"+name+".txt"})
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/cellMapL2G"+name+".txt"})
@@ -958,17 +937,14 @@ class Mesh(object):
                                                            "DataType":"Int",
                                                            "Dimensions":"%i" % (self.globalMesh.nElementBoundaries_global,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
-                        ar.create_dataset_sync("nodeMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
-                        ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
-                        if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_t"+str(tCount)
-                            ar.create_dataset_sync("elementBoundaryMaterialTypes"+"_t"+str(tCount), offsets = self.globalMesh.elementBoundaryOffsets_subdomain_owned, data=self.elementBoundaryMaterialTypes[:self.nElementBoundaries_owned])
-                    else:
-                        assert False, "global_sync not supported  with pytables"
+                    nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
+                    ar.create_dataset_sync("nodeMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                    ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
+                    if EB:
+                        ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
+                        elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_t"+str(tCount)
+                        ar.create_dataset_sync("elementBoundaryMaterialTypes"+"_t"+str(tCount), offsets = self.globalMesh.elementBoundaryOffsets_subdomain_owned, data=self.elementBoundaryMaterialTypes[:self.nElementBoundaries_owned])
                 else:
                     assert False, "global_sync  not  supported with text heavy data"
             else:
@@ -1002,25 +978,14 @@ class Mesh(object):
                                                            "DataType":"Int",
                                                            "Dimensions":"%i" % (self.nElementBoundaries_global,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                        ar.create_dataset_async("nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.nodeMaterialTypes)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                        ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
-                        if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                            ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
-                    else:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                        ar.hdfFile.create_array("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                        ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
-                        if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                            #ar.hdfFile.create_array("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+str(tCount)
-                            ar.hdfFile.create_array("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
+                    nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                    ar.create_dataset_async("nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.nodeMaterialTypes)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                    ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
+                    if EB:
+                        ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                        elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                        ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
                 else:
                     numpy.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.nodeMaterialTypes)
                     SubElement(nodeMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"})
@@ -1500,7 +1465,6 @@ class Mesh(object):
         cmdOut = open(cmdfile,'w')
         cmdOut.write(plotcommand)
         cmdOut.close()
-        import os
         print('Calling matlab to view mesh')
         os.execlp('matlab',
                   'matlab',
@@ -1530,7 +1494,6 @@ class Mesh(object):
         cmdOut = open(cmdfile,'w')
         cmdOut.write(plotcommand)
         cmdOut.close()
-        import os
         print('Calling matlab to view mesh')
         os.execlp('matlab',
                   'matlab',
@@ -3304,22 +3267,19 @@ class Mesh2DM(Mesh):
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+str(tCount),
-                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
-                                                   data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+str(tCount),
-                                                   offsets = self.globalMesh.nodeOffsets_subdomain_owned,
-                                                   data = self.nodeArray[:self.nNodes_owned])
-                            ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
-                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
-                                                   data = self.elementMaterialTypes[:self.nElements_owned])
-                    else:
-                        assert False, "global_sync with pytables not supported"
+                    elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_sync('elements'+name+str(tCount),
+                                               offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                               data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                        ar.create_dataset_sync('nodes'+name+str(tCount),
+                                               offsets = self.globalMesh.nodeOffsets_subdomain_owned,
+                                               data = self.nodeArray[:self.nNodes_owned])
+                        ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
+                                               offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                               data = self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     assert False, "global_sync with text heavy data not supported"
             else:
@@ -3347,22 +3307,13 @@ class Mesh2DM(Mesh):
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
-                            ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
-                    else:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
-                            ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                    elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -3671,22 +3622,19 @@ class Mesh3DM(Mesh):
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_owned,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+str(tCount),
-                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
-                                                   data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+str(tCount),
-                                                   offsets = self.globalMesh.nodeOffsets_subdomain_owned,
-                                                   data = self.nodeArray[:self.nNodes_owned])
-                            ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
-                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
-                                                   data = self.elementMaterialTypes[:self.nElements_owned])
-                    else:
-                        assert False, "global_sync  not supported with pytables"
+                    elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_sync('elements'+name+str(tCount),
+                                               offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                               data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                        ar.create_dataset_sync('nodes'+name+str(tCount),
+                                               offsets = self.globalMesh.nodeOffsets_subdomain_owned,
+                                               data = self.nodeArray[:self.nNodes_owned])
+                        ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
+                                               offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                               data = self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     assert False, "global_sync not supported  with text heavy data"
             else:
@@ -3717,22 +3665,13 @@ class Mesh3DM(Mesh):
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
-                            ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
-                    else:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
-                            ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                    elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -4799,13 +4738,6 @@ Number of nodes : %d\n""" % (self.nElements_global,
             childrenDict[q.N]=[q1,q2,q3,q4]
         self.finalize()
         return childrenDict
-
-
-    def generateQuadrialteralMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
-        ''' WIP - This function needs to be constructed to allow MultilevelQuadrilateralMesh
-            to run using C.  Implementing this will require some work to the mesh.cpp module. '''
-        pass
-
 
     def finalize(self):
         ''' WIP '''
@@ -5890,8 +5822,6 @@ class MultilevelSimplicialMesh(MultilevelMesh):
 ## @}
 
 ###utility functions for reading meshes from Xdmf
-from xml.etree import ElementTree as ET
-import tables,os
 
 def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=0):
     """Try to find the element of the xml tree xmf that holds a uniform
@@ -5963,7 +5893,7 @@ def readUniformElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topolog
     entry = Topology[0].text.split(':')[-1]
     logEvent("Reading  elementNodesArray from %s " % entry,3)
 
-    elementNodesArray = hdf5.get_node(entry).read()
+    elementNodesArray = hdf5["/"+entry][:]
     assert elementNodesArray.shape[1] == nNodes_element
     nElements_global = elementNodesArray.shape[0]
     logEvent("nElements_global,nNodes_element= (%d,%d) " % (nElements_global,nNodes_element),3)
@@ -5993,7 +5923,7 @@ def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyi
     entry = Topology[0].text.split(':')[-1]
     logEvent("Reading xdmf_topology from %s " % entry,3)
 
-    xdmf_topology = hdf5.get_node(entry).read()
+    xdmf_topology = hdf5["/"+entry][:]
     #build elementNodesArray and offsets now
     nElements_global = 0
     i = 0
@@ -6024,7 +5954,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
 
     :return: a BasicMeshInfo object with the minimal information read
     
-    """    
+    """
     # start trying to read an xdmf archive with name xmf_archive_base.xmf
     # assumes heavy_file_base.h5 has heavy data
     # root Element is Xdmf
@@ -6074,7 +6004,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     MeshInfo = BasicMeshInfo()
 
     xmf = ET.parse(xmf_archive_base+'.xmf')
-    hdf5= tables.open_file(heavy_file_base+'.h5',mode="r")
+    hdf5= h5py.File(heavy_file_base+'.h5',"r")
     assert hasHDF5
 
     Grid = findXMLgridElement(xmf,MeshTag,id_in_collection=-1,verbose=verbose)
@@ -6085,13 +6015,13 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     entry = Geometry[0].text.split(':')[-1]
     logEvent("Reading nodeArray from %s " % entry,3)
 
-    MeshInfo.nodeArray = hdf5.get_node(entry).read()
+    MeshInfo.nodeArray = hdf5["/"+entry][:]
     MeshInfo.nNodes_global = MeshInfo.nodeArray.shape[0]
 
     if NodeMaterials is not None:
         entry = NodeMaterials[0].text.split(':')[-1]
         logEvent("Reading nodeMaterialTypes from %s " % entry,4)
-        MeshInfo.nodeMaterialTypes = hdf5.get_node(entry).read()
+        MeshInfo.nodeMaterialTypes = hdf5["/"+entry][:]
     else:
         MeshInfo.nodeMaterialTypes = np.zeros((MeshInfo.nNodes_global,),'i')
 
@@ -6118,7 +6048,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     if ElementMaterials is not None:
         entry = ElementMaterials[0].text.split(':')[-1]
         logEvent("Reading elementMaterialTypes from %s " % entry,3)
-        MeshInfo.elementMaterialTypes = hdf5.get_node(entry).read()
+        MeshInfo.elementMaterialTypes = hdf5["/"+entry][:]
 
     else:
         MeshInfo.elementMaterialTypes = np.zeros((MeshInfo.nElements_global,),'i')

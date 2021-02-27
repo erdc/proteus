@@ -1,69 +1,80 @@
-addons:
-  apt:
-    packages:
-    - gfortran
-    - libffi-dev
-    - libssl-dev
-    - python-lzma
-    - python3
-    - doxygen
-    - graphviz
-
-cache:
-  - timeout: 1000
+os: linux
+dist: focal
+language: python
+python: 3.9
 
 notifications:
   email:
     on_success: change
     on_failure: always
 
-after_success:
-  - conda install codecov
-  - codecov
-
 jobs:
   include:
   - stage: test
     name: "hashdist linux"
     os: linux
-    dist: bionic
+    dist: focal
     language: python
-    python: 2.7
+    python: 3.9
+    addons:
+      apt:
+        packages:
+        - gfortran
+        - libffi-dev
+        - libssl-dev
+        - python2 # for hit
+        - doxygen
+        - graphviz
+        - ca-certificates
+        - libsqlite3-dev
     env: TEST_PROFILE="proteus-hashdist"
+    cache:
+      - directories:
+        - hashdist_bld
+        - hashdist_src
     install:
+      - export SSL_CERT_DIR=/etc/ssl/certs
       - git lfs pull
       - ./stack/hit/bin/hit init-home
-      - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
-      - ./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_stack --objects="build"
+      - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_src --objects="source"
+      - ./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_travis_focal --objects="build"
       - make stack/default.yaml
-      - pushd $HOME
-      - mkdir -p hashdist_src
       - mkdir -p hashdist_bld
-      - rm -rf .hashdist/src .hashdist/bld
-      - ln -s $HOME/hashdist_src .hashdist/src
-      - ln -s $HOME/hashdist_bld .hashdist/bld
+      - mkdir -p hashdist_src
+      - pushd $HOME
+      - rm -rf .hashdist/bld
+      - ln -s /home/travis/build/erdc/proteus/hashdist_bld .hashdist/bld
+      - mkdir -p hashdist_src
+      - rm -rf .hashdist/src
+      - ln -s /home/travis/build/erdc/proteus/hashdist_src .hashdist/src
       - popd
       - pushd stack
       - echo $PWD
       - ls -l
-      - ./hit/bin/hit build -j 2 -v default.yaml
+      - PYTHONHTTPSVERIFY=0 ./hit/bin/hit build -j 2 -v default.yaml
       - popd
       - export PATHSAVE=$PATH
       - export PATH=$PWD/linux/bin:$PATH
+      - export LD_LIBRARY_PATHSAVE=$LD_LIBRARY_PATH
       - export LD_LIBRARY_PATH=$PWD/linux/lib:$LD_LIBRARY_PATH
-      - PROTEUS_OPT="-w -g0 -O2 -UNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
-      - export SSL_CERT_DIR=/etc/ssl/certs
+      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
     script:
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI
+      - export MPLBACKEND=Agg
+      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov --cov-config=.coveragerc
+      - py.test -n 1 --forked -v air-water-vv/Tests/1st_set --cov --cov-append --cov-config=.coveragerc
+      - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set --cov --cov-append --cov-config=.coveragerc
+      - mpiexec -np 2 pytest -v proteus/tests/FSI #can't  do --cov in parallel for now
+      - export PATH=$PATHSAVE
+      - export LD_LIBRARY_PATH=$LD_LIBRARY_PATHSAVE
+    after_success:
+      - pip install codecov
+      - codecov
   - stage: test
     name: "conda linux"
     os: linux
-    dist: xenial
+    dist: focal
     language: python
-    python: 3.7
+    python: 3.9
     env: TEST_PROFILE="proteus-conda"
     install:
       - git lfs pull
@@ -77,13 +88,13 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - make develop-conda N=1
+      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop-conda N=2
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
-      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set
-      - MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set
-      - MPLBACKEND=Agg mpiexec -np 2 pytest -v proteus/tests/FSI
+      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py
+      - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
+      - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set
+      - mpiexec -np 2 pytest -v proteus/tests/FSI
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
@@ -93,7 +104,9 @@ jobs:
   - stage: test
     name: "conda osx"
     os: osx
-    osx_image: xcode11.3
+    osx_image: xcode12.2
+    language: ruby
+    python: 2.6.6
     env: TEST_PROFILE="proteus-conda-osx"
     install:
       - wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
@@ -106,11 +119,11 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install gmsh
-      - pip install -v -e .
+      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop-conda N=2
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
       - git lfs pull
-      - py.test -n 1 --dist=loadfile --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/matrix_constructor --ignore=proteus/tests/MoveMeshMonitor --ignore-glob='proteus/tests/periodic/*test_periodic.py' --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --ignore proteus/tests/poisson_2d --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/1st_set --cov=proteus
-      - PATH=./linux/bin:$PATH MPLBACKEND=Agg py.test -n 1 --dist=loadfile --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py --cov=proteus
+      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore=proteus/tests/MoveMeshMonitor
+      - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
+      - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py

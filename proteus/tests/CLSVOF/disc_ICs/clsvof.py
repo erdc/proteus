@@ -8,7 +8,10 @@ from proteus import Context
 from proteus.mprans import CLSVOF
 import numpy as np
 import math
-from .parameters import *
+try:
+    from .parameters import *
+except:
+    from parameters import *
 
 #----- TEST CASE ----- #
 # 1: CIRCLE
@@ -56,7 +59,7 @@ nnz=1
 L=[1.0,1.0]
 # definition of he
 he=old_div(1.0,(nnx-1.0))
-clsvof_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
+clsvof_nl_atol_res = 1.0e-10#max(1.0e-10, 0.01 * he ** 2)
 
 unstructured=unstructured #True for tetgen, false for tet or hex from rectangular grid
 box=Domain.RectangularDomain(L)
