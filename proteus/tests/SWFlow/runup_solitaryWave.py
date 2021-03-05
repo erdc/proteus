@@ -52,8 +52,7 @@ else:
     domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
     nnx = None
     nny = None
-domain.MeshOptions.nnx = nnx
-domain.MeshOptions.nny = nny
+
 ###############################
 #  CONSTANTS NEEDED FOR SETUP #
 ###############################
@@ -110,12 +109,12 @@ class y_mom_at_t0(object):
 
 
 """
-heta and hw are needed for the modified green naghdi equations.
-For initial conditions, heta -> h^2 and hw -> h^2div(u).
-Note that the BCs for the heta and hw should be same as h.
-For more details see: 'Robust explicit relaxation techinque for solving
-the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
-JCP 2019
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
 """
 
 
@@ -184,5 +183,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
                                               bathymetry=bathymetry_function)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = opts.mannings

@@ -92,6 +92,14 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
+"""
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
+"""
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):
@@ -100,6 +108,10 @@ class heta_at_t0(object):
 
 
 class hw_at_t0(object):
+    def uOfXT(self, X, t):
+        return 0.
+
+class hbeta_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
@@ -133,12 +145,14 @@ boundaryConditions = {'water_height': lambda x, flag: None,
                       'x_mom': x_mom_DBC,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': lambda x, flag: None,
-                      'h_times_w': lambda x, flag: None}
+                      'h_times_w': lambda x, flag: None,
+                      'h_times_beta': x_mom_DBC}
 analytical_Solution = {'h_exact': water_height_at_t0(),
                      'hu_exact': x_mom_at_t0(),
                      'hv_exact': y_mom_at_t0(),
                      'heta_exact': heta_at_t0(),
-                     'hw_exact': hw_at_t0()}
+                     'hw_exact': hw_at_t0(),
+                     'hbeta_exact': hbeta_at_t0()}
 # ********************************************* #
 # ********** Create my SWFlowProblem ********** #
 # ********************************************* #
@@ -155,5 +169,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function,
                                               analyticalSolution=analytical_Solution)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0

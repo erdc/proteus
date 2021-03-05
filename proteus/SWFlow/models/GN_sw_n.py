@@ -86,7 +86,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = 1.0e-5
+nl_atol_res = 1.0e-7
 nl_rtol_res = 0.0
 l_atol_res = 1.0e-7
 l_rtol_res = 0.0
