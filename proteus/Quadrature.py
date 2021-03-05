@@ -1038,6 +1038,7 @@ def buildUnion(quadratureDict):
     for I,quadrature in quadratureDict.items():
         quadraturePointSet |= set([(p[0],p[1],p[2]) for p in quadrature.points])
     nQuadraturePoints = len(quadraturePointSet)
+    quadraturePointSet = sorted(quadraturePointSet)
     #
     #Now build a dictionary at each element quadrature point which
     #contains the weights for each integral

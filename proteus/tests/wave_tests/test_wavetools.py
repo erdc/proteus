@@ -629,6 +629,8 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         self.assertTrue((err_x <= 1e-08))
         self.assertTrue((err_y <= 1e-08))
         self.assertTrue((err_z <= 1e-08))
+
+    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def testAutoFenton(self):
         waveHeight = 0.05
         depth = 0.45

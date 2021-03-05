@@ -268,8 +268,8 @@ void cppRigidBody::prestep(double* force, double* torque)
   rotq_last = body->GetRot();
   angacc_last = body->GetWacc_loc();
   angvel_last = body->GetWvel_loc();
-  F_last = body->Get_Xforce();
-  M_last = body->Get_Xtorque();
+  F_last = body->Get_accumulated_torque();
+  M_last = body->Get_accumulated_torque();
   // apply external forces
   body->Empty_forces_accumulators();
   // calculate opposite force of gravity if free_x is 0
@@ -308,8 +308,8 @@ void cppRigidBody::poststep()
   rotq = body->GetRot();
   angacc = body->GetWacc_loc();
   angvel = body->GetWvel_loc();
-  F = body->Get_Xforce();
-  M = body->Get_Xtorque();
+  F = body->Get_accumulated_force();
+  M = body->Get_accumulated_torque();
   if (lock_motion_t_max > 0) {
     double t = system->system->GetChTime();
     if (lock_motion_t_max < t && lock_motion->IsDisabled() == false) {

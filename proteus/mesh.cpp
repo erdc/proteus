@@ -361,7 +361,8 @@ extern "C"
 
   int regularQuadrilateralMeshElementBoundaryMaterials(const double& Lx, const double& Ly, Mesh& mesh)
   {
-    regularRectangularToTriangularElementBoundaryMaterials(Lx, Ly, mesh);
+    int result = regularRectangularToTriangularElementBoundaryMaterials(Lx, Ly, mesh);
+    return result;
   }
   
   int regularMeshNodes(const int& nx, 

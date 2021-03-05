@@ -22,7 +22,7 @@ namespace chrono {
     void SetMfullmass(ChMatrixDynamic<> Mfullmass_in);
     void SetInvMfullmass(ChMatrixDynamic<> inv_Mfullmass_in);
     ChVariables& Variables() override { return variables; } 
-    ChVariablesBodyOwnMass& VariablesBody() override { return variables; }
+    ChVariablesBodyOwnMass& VariablesBody() { return variables; }
     ChVariablesBodyAddedMass& VariablesBodyAddedMass() { return variables; }
     //
     // STATE FUNCTIONS

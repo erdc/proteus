@@ -92,16 +92,14 @@ class TestPoisson2D(object):
         opts.verbose=True
         opts.profile=True
         opts.gatherArchive=True
-        nList[0].linearSolver=default_n.KSP_petsc4py
-        nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-        OptDB = nList[0].OptDB
         soln_name = so.name
         if solverType is 'direct':
-            OptDB.clear()
-            OptDB.setValue('ksp_type','preonly')
-            OptDB.setValue('pc_type','lu')
-            OptDB.setValue('pc_factor_mat_solver_package','superlu_dist')
+            nList[0].linearSolver=default_n.LU
+            nList[0].multilevelLinearSolver=default_n.LU
         else:
+            nList[0].linearSolver=default_n.KSP_petsc4py
+            nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
+            OptDB = nList[0].OptDB
             OptDB.clear()
             OptDB.setValue('ksp_type','cg')
             OptDB.setValue('pc_asm_type','basic')
@@ -171,8 +169,8 @@ def test_load_vector_use_weak(use_weak_dirichlet):
     nList[0].linearSolver=default_n.LU
     nList[0].multilevelLinearSolver=default_n.LU
     if use_weak_dirichlet:
-        nList[0].linearSolver=default_n.KSP_petsc4py
-        nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
+        nList[0].linearSolver=default_n.LU
+        nList[0].multilevelLinearSolver=default_n.LU
         nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
     OptDB = nList[0].OptDB
     soln_name = so.name
