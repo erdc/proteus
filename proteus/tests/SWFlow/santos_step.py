@@ -52,9 +52,6 @@ else:
     nnx = None
     nny = None
 
-domain.MeshOptions.nnx = nnx
-domain.MeshOptions.nny = nny
-
 ##################################
 # SOLITARY WAVE FUCTION AND BATH #
 ##################################
@@ -101,11 +98,12 @@ class y_mom_at_t0(object):
         return 0.
 
 """
-heta, hw and hbeta are needed for the dispersive Serre--Saint-Venant equations
-(ie shallow water equations). For initial conditions, heta -> h^2, hw -> h^2*div(u),
-hbeta->hu * grad(Z) (hbeta can just be 0 for simplicity).
-For boundary conditions, heta and hw should have same flags as h and hbeta
-same flags as hu.
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
 """
 
 class heta_at_t0(object):

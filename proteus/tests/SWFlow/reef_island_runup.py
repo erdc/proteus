@@ -58,8 +58,7 @@ else:
     domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
     nnx = None
     nny = None
-domain.MeshOptions.nnx = nnx
-domain.MeshOptions.nny = nny
+
 ###############################
 #  CONSTANTS NEEDED FOR SETUP #
 ###############################
@@ -143,6 +142,14 @@ class x_mom_at_t0(object):
         h = max(hTilde - bathymetry_function(X), 0.)
         return h * c * old_div(hTilde - h0, hTilde)
 
+"""
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
+"""
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):
@@ -232,7 +239,6 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function,
                                               analyticalSolution=None)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0
 if opts.want_gauges:
     mySWFlowProblem.auxiliaryVariables = [reefPointGauges]

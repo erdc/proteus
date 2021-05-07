@@ -36,7 +36,7 @@ class SWFlowProblem:
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         assert sw_model in [
-            0, 1], "sw_model={0,1} for shallow water equations or dispersive shallow water equations respectively"
+            0, 1], "sw_model={0,1} for shallow water equations or dispersive Serre-Green-Nagdhi respectively"
         assert cfl <= 1, "Choose cfl <= 1"
         assert isinstance(
             outputStepping, OutputStepping), "Provide an object from the OutputStepping class"
@@ -87,8 +87,8 @@ class SWFlowProblem:
 
     def assert_initialConditions(self, sw_model, initialConditions):
         assert 'water_height' in initialConditions, 'Provide water_height in initialConditions'
-        assert 'x_mom' in initialConditions, 'Provide y_mom in initialConditions'
-        assert 'y_mom' in initialConditions, 'Provide x_mom in initialConditions'
+        assert 'x_mom' in initialConditions, 'Provide x_mom in initialConditions'
+        assert 'y_mom' in initialConditions, 'Provide y_mom in initialConditions'
         if sw_model == 1:  # dispersive SWEs
             assert 'h_times_eta' in initialConditions, 'Provide auxiliary function h_eta in initialConditions'
             assert 'h_times_w' in initialConditions, 'Provide auxiliary function h_w in initialConditions'
@@ -170,8 +170,8 @@ default_physical_parameters = {'gravity': 9.81,
 default_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
                           'cfl': 0.33,
                           'SSPOrder': 3,
-                          'cE': 1}
+                          'cE': 1.0}
 default_GN_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
                              'cfl': 0.33,
                              'SSPOrder': 3,
-                             'cE': 1}
+                             'cE': 1.0}
