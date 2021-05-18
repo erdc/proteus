@@ -420,7 +420,8 @@ namespace proteus
       vx = ball_velocity[3*I + 0] - ball_angular_velocity[3*I + 2]*(y-ball_center[3*I + 1]);
       vy = ball_velocity[3*I + 1] + ball_angular_velocity[3*I + 2]*(x-ball_center[3*I + 0]);
     }
-    inline void updateSolidParticleTerms(const double NONCONSERVATIVE_FORM,
+    inline void updateSolidParticleTerms(int particle_index,
+					 const double NONCONSERVATIVE_FORM,
                                          bool element_owned,
                                          const double particle_nitsche,
                                          const double dV,
@@ -513,7 +514,7 @@ namespace proteus
       rho = rho_0 * ImH_mu + rho_1 * H_mu;
       mu = rho_0 * nu_0 * ImH_mu + rho_1 * nu_1 * H_mu;
       C = 0.0;
-      for (int i = 0; i < nParticles; i++)
+      for (int i = particle_index; i < particle_index+1; i++)//cek hack to leave loop for the moment
         {
           if(use_ball_as_particle==1)
             {
@@ -1694,6 +1695,7 @@ namespace proteus
           const double* elementResidual_w(NULL);
           double mesh_volume_conservation_element=0.0,
             mesh_volume_conservation_element_weak=0.0;
+	  int particle_index=0;
           for (int i=0;i<nDOF_test_element;i++)
             {
               int eN_i = eN*nDOF_test_element+i;
@@ -1713,12 +1715,22 @@ namespace proteus
           //Use for plotting result
           if(use_ball_as_particle==1 && nParticles > 0)
             {
+	      double min_d = 1e10;
+	      particle_index=0;
               for (int I=0;I<nDOF_mesh_trial_element;I++)
-                get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),
-                                     mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+0],
-                                     mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+1],
-                                     mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+2],
-                                     phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]]);
+                {
+		  int index = get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+0],
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+1],
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+2],
+						   phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]]);
+		  if (phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]] < min_d)
+		    {
+		      min_d = phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]];
+		      particle_index = index;
+		    }
+		  
+		}
             }
           else
             {
@@ -2602,7 +2614,8 @@ namespace proteus
 			    for (int I=0;I<nSpace;I++)
 			      level_set_normal[I] = particle_signed_distance_normals.data()[eN_k_3d+I];
 			}
-                      updateSolidParticleTerms(NONCONSERVATIVE_FORM,
+                      updateSolidParticleTerms(particle_index,
+					       NONCONSERVATIVE_FORM,
                                                eN < nElements_owned,
                                                particle_nitsche,
                                                dV,
@@ -4223,6 +4236,7 @@ namespace proteus
       //
       for(int eN=0;eN<nElements_global;eN++)
         {
+	  register int particle_index=0;
           register double eps_rho,eps_mu;
 
           register double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
@@ -4269,6 +4283,28 @@ namespace proteus
                 elementJacobian_w_v[i][j]=0.0;
                 elementJacobian_w_w[i][j]=0.0;
               }
+          if(use_ball_as_particle==1 && nParticles > 0)
+            {
+	      double min_d = 1e10;
+	      particle_index=0;
+              for (int I=0;I<nDOF_mesh_trial_element;I++)
+                {
+		  int index = get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+0],
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+1],
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+2],
+						   phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]]);
+		  if (phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]] < min_d)
+		    {
+		      min_d = phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]];
+		      particle_index = index;
+		    }
+		}
+            }
+          else
+            {
+              //phi_solid_nodes is updated in PreStep
+            }
           double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
           for (int j=0;j<nDOF_mesh_trial_element;j++)
             {
@@ -5136,7 +5172,8 @@ namespace proteus
 			    for (int I=0;I<nSpace;I++)
 			      level_set_normal[I] = particle_signed_distance_normals.data()[eN_k_3d+I];
 			}
-                      updateSolidParticleTerms(NONCONSERVATIVE_FORM,
+                      updateSolidParticleTerms(particle_index,
+					       NONCONSERVATIVE_FORM,
                                                eN < nElements_owned,
                                                particle_nitsche,
                                                dV,

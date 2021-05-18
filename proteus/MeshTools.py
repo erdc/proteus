@@ -7161,7 +7161,7 @@ def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
                                           parallelPartitioningType=meshOptions.parallelPartitioningType)
         logEvent("Generating %i-level mesh from coarse Triangle mesh" % (meshOptions.nLevels,))
         if generatePartitionedMeshFromFiles:
-            logEvent("Generating partitioned mesh from Tetgen files")
+            logEvent("Generating partitioned mesh from Triangle files")
             mlMesh.generatePartitionedMeshFromTriangleFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
                                                           nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=meshOptions.parallelPartitioningType)

@@ -631,7 +631,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.u_old_dof = self.model.u[1].dof.copy()
         self.v_old_dof = self.model.u[2].dof.copy()
         self.w_old_dof = self.model.u[3].dof.copy()
-        if self.nParticles > 0 and self.use_ball_as_particle == 0:
+        if self.nParticles > 0 and self.particle_sdfList != None:
             self.phi_s[:] = 1e10
             self.phisField[:] = 1e10
             self.ebqe_phi_s[:] = 1e10
