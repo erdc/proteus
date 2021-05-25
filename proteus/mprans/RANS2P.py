@@ -810,7 +810,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def evaluate(self, t, c):
-        pass
+        logEvent("Evaluating Coefficients")
 
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
@@ -1859,6 +1859,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
         argsDict["normalize_pressure"] = int(self.coefficients.normalize_pressure)
         argsDict["errors"]=self.errors
+        ball_u = self.u[1].dof.copy()
+        ball_v = self.u[2].dof.copy()
+        if self.nSpace_global == 3:
+            ball_w = self.u[3].dof.copy()
+        else:
+            ball_w = self.u[2].dof.copy()
+        argsDict["ball_u"]= ball_u
+        argsDict["ball_v"]= ball_v
+        argsDict["ball_w"]= ball_w
         self.rans2p.calculateResidual(argsDict)
         if self.forceStrongConditions:
             try:
@@ -1894,12 +1903,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #             break
         try:
             #is sensitive to inactive DOF at velocity due to time derivative
-            if self.coefficients.nParticles ==1:
+            if self.coefficients.use_ball_as_particle:
                 self.u[0].dof[:] = np.where(self.isActiveDOF_p==1.0, self.u[0].dof,0.0)
-                self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,self.coefficients.ball_velocity[0][0])
-                self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,self.coefficients.ball_velocity[0][1])
+                self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,ball_u)
+                self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,ball_v)
                 if self.nSpace_global == 3:
-                    self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,self.coefficients.ball_velocity[0][2])
+                    self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,ball_w)
             else:
                 self.u[0].dof[:] = np.where(self.isActiveDOF_p==1.0, self.u[0].dof,0.0)
                 self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,0.0)

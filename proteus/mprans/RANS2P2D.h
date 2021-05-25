@@ -1650,6 +1650,8 @@ namespace proteus
       xt::pyarray<double>& isActiveDOF_vel = args.array<double>("isActiveDOF_vel");
       const bool normalize_pressure = args.scalar<int>("normalize_pressure");
       xt::pyarray<double>& errors = args.array<double>("errors");
+      xt::pyarray<double>& ball_u = args.array<double>("ball_u");
+      xt::pyarray<double>& ball_v = args.array<double>("ball_v");
       logEvent("Entered mprans calculateResidual",6);
       gf.useExact = false;//useExact;
       gf_p.useExact = false;//useExact;
@@ -2882,6 +2884,14 @@ namespace proteus
                   isActiveR.data()[offset_v+stride_v*rvel_l2g.data()[eN_i]] = 1.0;
                   isActiveDOF_vel.data()[vel_l2g.data()[eN_i]] = 1.0;
                 }
+	      double x = mesh_dof.data()[3*mesh_l2g.data()[eN_i]+0],
+		y = mesh_dof.data()[3*mesh_l2g.data()[eN_i]+1],
+		z = mesh_dof.data()[3*mesh_l2g.data()[eN_i]+2];//cek hack: need lagrange nodes for higher order
+	    
+	      get_velocity_to_ith_ball(nParticles,ball_center.data(),ball_radius.data(),
+				       ball_velocity.data(),ball_angular_velocity.data(),
+                                       particle_index,x,y,z,
+                                       ball_u.data()[vel_l2g.data()[eN_i]],ball_v.data()[vel_l2g.data()[eN_i]]);
             }//i
           mesh_volume_conservation += mesh_volume_conservation_element;
           mesh_volume_conservation_weak += mesh_volume_conservation_element_weak;
