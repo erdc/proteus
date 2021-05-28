@@ -525,6 +525,8 @@ namespace proteus
                                        vel[0],vel[1]);
               center[0] = ball_center[3*i+0];
               center[1] = ball_center[3*i+1];
+              particle_velocities[i * sd_offset * 3 + 0] = vel[0];
+              particle_velocities[i * sd_offset * 3 + 1] = vel[1];
             }
           else
             {
@@ -2703,10 +2705,15 @@ namespace proteus
                   //
                   //cek this needs to go with the particle term updates if moved--or check particle_velocities[...] array
                   //cek on cut cells this is getting set twice. For now it's identical because of our formulations (neither includes density so it's either velocity or porosity*velocity--same for both phases
-                  //cek but this won't be right when we use a modified basis because we'll need the whole phase velocity from its vasis. hmm. special backward euler class that tracks both?
-                  //same situation with subgrid error velocity
-                  if (element_active)
-                    {
+                  //cek but this won't be right when we use a modified basis because we'll need the whole phase velocity from its basis. hmm. special backward euler class that tracks both?
+                  //same situation with subgrid error velocity		  
+		  //cek since this is for the history, could try using the solid velocity inside the solid instead of just in inactive elements as before
+		  //this avoids using the fluid values inside the solid that necessarily over/undershoot to give the right values inside the fluid domain
+                  //but then the mass quadrature would represent a function that is no longer polynomial on the element so leaving it as element_active
+		  //for now--alternative would be:
+                  //if (phi_solid.data()[eN_k] > 0)
+		  if (element_active)
+		    {
                       q_mom_u_acc.data()[eN_k] = mom_u_acc;
                       q_mom_v_acc.data()[eN_k] = mom_v_acc;
                       //subgrid error uses grid scale velocity
@@ -2715,10 +2722,10 @@ namespace proteus
                     }
                   else//use the solid velocity
                     {
-                      q_mom_u_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+0];
-                      q_mom_v_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+1];
-                      q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[eN_k_3d+0];
-                      q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[eN_k_3d+1];
+                      q_mom_u_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+0];
+                      q_mom_v_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+1];
+                      q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+0];
+                      q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+1];
                     }
                   //
                   //update element residual

@@ -1522,6 +1522,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
+        if self.coefficients.nParticles > 0:
+            self.ball_u = self.u[1].dof.copy()
+            self.ball_v = self.u[2].dof.copy()
+            if self.nSpace_global == 3:
+                self.ball_w = self.u[3].dof.copy()
+            else:
+                self.ball_w = self.u[2].dof.copy()
         self.errors = np.zeros((3,5),'d')
         self.velocityErrorNodal = self.u[0].dof.copy()
         logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
@@ -1859,15 +1866,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
         argsDict["normalize_pressure"] = int(self.coefficients.normalize_pressure)
         argsDict["errors"]=self.errors
-        ball_u = self.u[1].dof.copy()
-        ball_v = self.u[2].dof.copy()
-        if self.nSpace_global == 3:
-            ball_w = self.u[3].dof.copy()
-        else:
-            ball_w = self.u[2].dof.copy()
-        argsDict["ball_u"]= ball_u
-        argsDict["ball_v"]= ball_v
-        argsDict["ball_w"]= ball_w
+        argsDict["ball_u"]= self.ball_u
+        argsDict["ball_v"]= self.ball_v
+        argsDict["ball_w"]= self.ball_w
         self.rans2p.calculateResidual(argsDict)
         if self.forceStrongConditions:
             try:
@@ -1905,8 +1906,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #is sensitive to inactive DOF at velocity due to time derivative
             if self.coefficients.use_ball_as_particle:
                 self.u[0].dof[:] = np.where(self.isActiveDOF_p==1.0, self.u[0].dof,0.0)
-                self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,ball_u)
-                self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,ball_v)
+                self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,self.ball_u)
+                self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,self.ball_v)
                 if self.nSpace_global == 3:
                     self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,ball_w)
             else:
