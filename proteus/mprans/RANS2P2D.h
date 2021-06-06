@@ -10,10 +10,12 @@
 #include "PyEmbeddedFunctions.h"
 #include "equivalent_polynomials.h"
 #include "ArgumentsDict.h"
+#include "xtensor/xarray.hpp"
+#include "xtensor/xview.hpp"
+#include "xtensor/xfixed.hpp"
 #include "xtensor-python/pyarray.hpp"
-#include "xtensor-blas/xlinalg.hpp"
-#include <xtensor/xfixed.hpp>
 #include "mpi.h"
+#include "proteus_lapack.h"
 
 namespace py = pybind11;
 
@@ -26,6 +28,17 @@ const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume cha
 const double inertial_term=1.0;
 namespace proteus
 {
+  inline double enorm(double* v)
+  {
+    return std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]); 
+  }
+  inline double rnorm(double* r)
+  {
+    double rnorm=0.0;
+    for (int i=0;i<18;i++)
+      rnorm += r[i]*r[i];
+    return std::sqrt(rnorm);
+  }
   inline void F6DOF(double DT, double mass, double* Iref, double* last_u, double* FT, double* last_FT, double* last_mom, double* u, //inputs
 		    double* mom, double* r, double* J)//outputs
   {
@@ -51,7 +64,6 @@ namespace proteus
 	  J[i*18+j] = 0.0;
       }
     //I = Q*Iref*Q^t
-    //cek todo, collapse these
     for (int i=0; i < 3; i++)
       for (int j=0; j < 3; j++)
 	for (int k=0; k < 3; k++)
@@ -60,6 +72,7 @@ namespace proteus
       for (int j=0; j < 3; j++)
 	for (int k=0; k < 3; k++)
 	  I[i*3 + j] += I[i*3 + k]*Q[j*3 + k];
+    
     double M[36] = {0.0};
     for (int i=0; i< 3; i++)
       {
@@ -129,8 +142,10 @@ namespace proteus
       xt::pyarray<double>& ball_last_h = args.array<double>("ball_last_h");
       xt::pyarray<double>& ball_center = args.array<double>("ball_center");
       xt::pyarray<double>& ball_center_last = args.array<double>("ball_center_last");
+      //note: these are only used for the fluid
       xt::pyarray<double>& ball_velocity = args.array<double>("ball_velocity");
       xt::pyarray<double>& ball_angular_velocity = args.array<double>("ball_angular_velocity");
+      //
       xt::pyarray<double>& ball_last_velocity = args.array<double>("ball_last_velocity");
       xt::pyarray<double>& ball_last_angular_velocity = args.array<double>("ball_last_angular_velocity");
       xt::pyarray<double>& ball_Q = args.array<double>("ball_Q");
@@ -151,65 +166,87 @@ namespace proteus
       xt::pyarray<double>& particle_netMoments = args.array<double>("particle_netMoments");
       xt::pyarray<double>& last_particle_netForces = args.array<double>("last_particle_netForces");
       xt::pyarray<double>& last_particle_netMoments = args.array<double>("last_particle_netMoments");
-      xt::pyarray<double>& ball_angular_velocity_avg = args.array<double>("ball_angular_velocity_avg");
       xt::pyarray<double>& g = args.array<double>("g");
       xt::pyarray<double>& L = args.array<double>("L");
-      int nParticles = ball_center.shape(0);
-      double dt = args.scalar<double>("dt");
+      const double ball_force_range = args.scalar<double>("ball_force_range");
+      const double ball_stiffness = args.scalar<double>("ball_stiffness");
+      const double particle_cfl = args.scalar<double>("particle_cfl");
+      const double dt = args.scalar<double>("dt");
+      double& min_dt(*args.array<double>("min_dt").data());
+      int& nSteps(*args.array<int>("nSteps").data());
+      const int nParticles = ball_center.shape(0);
       double DT = dt;
-      double ball_force_range = args.scalar<double>("ball_force_range");
-      double ball_stiffness = args.scalar<double>("ball_stiffness");
       double td = 0.0;
-      double min_dt = dt;
-      int nSteps=0;
+      //double min_dt = dt;
+      //int nSteps=0;
+      min_dt = dt;
+      nSteps=0;
+      //double max_cfl=0.0;
       xt::xarray<double> cfl=xt::zeros<double>({nParticles});
+#pragma omp parallel for
+      for (int ip=0; ip < nParticles; ip++)
+	for (int i=0; i < 3; i++)
+	  {
+	    ball_velocity(ip,i) = 0.0;
+	    ball_angular_velocity(ip,i) = 0.0;
+	  }
+      
       while (td < dt)
 	{
 	  nSteps +=1;
-	  double max_cfl = 0.001;
 	  //particle-wall and particle-particle collision forces
-	  #pragma omp parallel for
+#pragma omp parallel for
 	  for (int ip=0; ip < nParticles; ip++)
 	    {
+	      double vnorm = enorm(&ball_last_velocity.data()[ip*3]);
 	      for (int i=0; i< 3; i++)
 		{
 		  //some of these aren't needed because we have last_u
-		  ball_last_FT(ip,   i) = particle_netForces(ip,i) + ball_mass(ip)*g[i] + ball_f(ip,i) + wall_f(ip,i);
+		  ball_last_FT(ip,   i) = particle_netForces(ip,i) + ball_mass(ip)*g[i] + ball_f(ip,i) + wall_f(ip,i);// - 0.01*vnorm*ball_last_velocity(ip,i);
 		  ball_last_FT(ip, 3+i) = particle_netMoments(ip,i);
 		}
+	      
 	      double wall_range = 2.0*ball_radius(ip) + ball_force_range;
 	      double wall_stiffness = ball_stiffness/2.0;
 	      double dx0 = fmin(wall_range, 2.0*fabs(ball_center(ip,0)));
 	      double dxL = fmin(wall_range, 2.0*fabs(ball_center(ip,0)-L(0)));
-	      double dy0 = fmin(wall_range, 2.0*fabs(ball_center(ip,1)));
-	      double dyL = fmin(wall_range, 2.0*fabs(ball_center(ip,1)-L(1)));
 	      wall_f(ip,0) = (1.0/wall_stiffness)*( pow(wall_range - dx0,2) * 2.0*ball_center(ip,0) +
 						    pow(wall_range - dxL,2) * 2.0*(ball_center(ip,0) - L(0)));
+	      double dy0 = fmin(wall_range, 2.0*fabs(ball_center(ip,1)));
+	      double dyL = fmin(wall_range, 2.0*fabs(ball_center(ip,1)-L(1)));
 	      wall_f(ip,1) = (1.0/wall_stiffness)*( pow(wall_range - dy0,2) * 2.0*ball_center(ip,1) +
 						    pow(wall_range - dyL,2) * 2.0*(ball_center(ip,1) - L(1)));
-	      wall_f(ip,0) = 0.0;
+	      /*
+	      double dz0 = fmin(wall_range, 2.0*fabs(ball_center(ip,2)));
+	      double dzL = fmin(wall_range, 2.0*fabs(ball_center(ip,2)-L(2)));
+	      wall_f(ip,2) = (1.0/wall_stiffness)*( pow(wall_range - dz0,2) * 2.0*ball_center(ip,2) +
+						    pow(wall_range - dzL,2) * 2.0*(ball_center(ip,2) - L(2)));
+	      */
+	      wall_f(ip,2) = 0.0;
+	      
 	      for (int i=0; i< 3;i++)
 		ball_f(ip,i) = 0.0;
 	      for (int jp=0; jp < nParticles; jp++)
 		{
 		  double ball_range, d;
-		  xt::xarray<double> f({0.0, 0.0, 0.0});
+		  double f[3], h_ipjp[3];
 		  ball_range = ball_radius(ip) + ball_radius(jp) + ball_force_range;
-		  d = ball_range - fmin(ball_range, xt::linalg::norm(xt::view(ball_center,jp,xt::all()) - xt::view(ball_center,ip,xt::all()),2));
+		  for(int i=0;i<3;i++)
+		    h_ipjp[i] = ball_center(jp,i) - ball_center(ip,i);
+		  d = ball_range - fmin(ball_range, enorm(h_ipjp));
 		  for (int i=0;i<3;i++)
-		    f(i) = (1.0/ball_stiffness)*(ball_center(ip,i) - ball_center(jp,i))*pow(d,2.0);
+		    f[i] = (1.0/ball_stiffness)*h_ipjp[i]*pow(d,2.0);
 		  if (ip != jp)
 		    for (int i=0;i<3;i++)
-		      ball_f(ip,i) += f(i);
+		      ball_f(ip,i) += f[i];
 		}
 	      double he = ball_force_range/1.5;
-	      cfl(ip) = fmax(xt::linalg::norm(xt::view(ball_last_velocity,ip,xt::all()),2)*DT/he,
-			     xt::linalg::norm(xt::view(ball_last_velocity,ip,xt::all()) + xt::view(ball_a,ip, xt::range(0, 3, 1))*DT,2)*DT/he);
+	      cfl(ip) = vnorm*DT/he;
+	      //max_cfl = fmax(max_cfl, vnorm*DT/he);
 	    }
-	  max_cfl = xt::amax(cfl,{0})(0);
-	  max_cfl = fmax(0.001,max_cfl);
-	  if (max_cfl > 0.001)//hardwired cfl<=0.001 due to explicit collisions
-	    DT = (0.001/max_cfl)*DT;
+	  double max_cfl = xt::amax(cfl,{0})(0);
+	  if (max_cfl > particle_cfl)
+	    DT = (particle_cfl/max_cfl)*DT;
 	  if (DT > dt - td - dt*1.0e-8)
 	    {
 	      DT = dt-td;
@@ -218,26 +255,32 @@ namespace proteus
 	  else
 	    td += DT;
 	  min_dt  =fmin(DT, min_dt);
-	  //Newton iteration
-          //#pragma omp for
+	  //Newton iterations
+#pragma omp parallel for
 	  for (int ip=0; ip < nParticles; ip++)
 	    {
-	      xt::xtensor_fixed<double, xt::xshape<18> > r;      
-	      xt::xtensor_fixed<double, xt::xshape<18,18> > J;
+	      int pivots[18];
+	      double r[18];
+	      double J[18*18];
 	      for (int i=0; i<3; i++)
 		{
 		  ball_FT(ip,   i) = particle_netForces(ip, i) + ball_mass(ip)*g[i] + ball_f(ip, i) + wall_f(ip, i);
 		  ball_FT(ip, 3+i) = particle_netMoments(ip, i);
 		}
 	      F6DOF(DT, ball_mass(ip), &ball_I.data()[ip*9], &ball_last_u.data()[ip*18], &ball_FT.data()[ip*6], &ball_last_FT.data()[ip*6], &ball_last_mom.data()[ip*6], &ball_u.data()[ip*18], 
-		    &ball_mom.data()[ip*6], r.data(), J.data());
+		    &ball_mom.data()[ip*6], r, J);
 	      int its=0;
 	      int maxits=100;
-	      while ((its==0 || xt::linalg::norm(r,2) > 1.0e-10) && its < maxits)
+	      while ((its==0 || rnorm(r) > 1.0e-10) && its < maxits)
 		{
-		  xt::view(ball_u,ip,xt::all()) -= xt::linalg::solve(J, r);
+		  int info,N=18,nrhs=1;
+		  char trans='T';
+		  dgetrf_(&N,&N,J,&N,pivots,&info);
+		  dgetrs_(&trans, &N,&nrhs,J,&N,pivots,r,&N,&info);//J = LU now
+		  for (int i=0;i<18;i++)
+		    ball_u(ip,i) -= r[i];//r=du now
 		  F6DOF(DT, ball_mass(ip), &ball_I.data()[ip*9], &ball_last_u.data()[ip*18], &ball_FT.data()[ip*6], &ball_last_FT.data()[ip*6], &ball_last_mom.data()[ip*6], &ball_u.data()[ip*18], 
-			&ball_mom.data()[ip*6], r.data(), J.data());
+			&ball_mom.data()[ip*6], r, J);
 		  its+=1;
 		}
 	      for (int i=0; i< 3; i++)
@@ -247,21 +290,12 @@ namespace proteus
 		  ball_last_velocity(ip,i) = ball_u(ip,i);
 		  ball_last_mom(ip,i) = ball_mom(ip,i);
 		  ball_last_mom(ip,3+i) = ball_mom(ip,3+i);
-		  ball_angular_velocity_avg(ip,i) += DT*ball_last_u(ip,3+i)/dt;
+		  //return averages over dt for the fluid velocities
+		  ball_velocity(ip,i) += DT*ball_u(ip,i)/dt;
+		  ball_angular_velocity(ip,i) += DT*ball_u(ip,3+i)/dt;
 		}
 	      for (int i=0; i< 18; i++)
 		ball_last_u(ip,i) = ball_u(ip,i);
-	    }
-	}
-      //history
-      //std::cout<<"nSteps "<<nSteps<<'\t'<<DT<<std::endl;
-      #pragma parallel omp for
-      for (int ip=0; ip < nParticles; ip++)
-	{
-	  for (int i=0; i< 3; i++)
-	    {
-	      ball_velocity(ip, i) = (ball_center(ip,i) - ball_center_last(ip,i))/dt;
-	      ball_angular_velocity(ip, i) = ball_angular_velocity_avg(ip, i);
 	    }
 	}
     }

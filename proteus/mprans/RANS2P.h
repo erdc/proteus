@@ -10,8 +10,12 @@
 #include "PyEmbeddedFunctions.h"
 #include "equivalent_polynomials.h"
 #include "ArgumentsDict.h"
+#include "xtensor/xarray.hpp"
+#include "xtensor/xview.hpp"
+#include "xtensor/xfixed.hpp"
 #include "xtensor-python/pyarray.hpp"
 #include "mpi.h"
+#include "proteus_lapack.h"
 
 namespace py = pybind11;
 
@@ -24,6 +28,96 @@ const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume cha
 const double inertial_term=1.0;
 namespace proteus
 {
+  inline double enorm(double* v)
+  {
+    return std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]); 
+  }
+  inline double rnorm(double* r)
+  {
+    double rnorm=0.0;
+    for (int i=0;i<18;i++)
+      rnorm += r[i]*r[i];
+    return std::sqrt(rnorm);
+  }
+  inline void F6DOF(double DT, double mass, double* Iref, double* last_u, double* FT, double* last_FT, double* last_mom, double* u, //inputs
+		    double* mom, double* r, double* J)//outputs
+  {
+    double *v = &u[0],
+      *last_v=&last_u[0],
+      *omega = &u[3],
+      *last_omega = &last_u[3],
+      *h = &u[6],
+      *last_h = &last_u[6],
+      *Q = &u[9],
+      *last_Q = &last_u[9];
+    register double Omega[9] = {     0.0, -omega[2],  omega[1],
+				omega[2],       0.0, -omega[0],
+			       -omega[1],  omega[0],      0.0},
+      last_Omega[9] = {          0.0, -last_omega[2],  last_omega[1],
+		       last_omega[2],            0.0, -last_omega[0],
+		      -last_omega[1],  last_omega[0],            0.0},
+      I[9] = {0.0};
+    for (int i=0;i<18;i++)
+      {
+	r[i] = 0.0;
+	for (int j=0;j<18;j++)
+	  J[i*18+j] = 0.0;
+      }
+    //I = Q*Iref*Q^t
+    for (int i=0; i < 3; i++)
+      for (int j=0; j < 3; j++)
+	for (int k=0; k < 3; k++)
+	  I[i*3 + j] += Q[i*3 + k]*Iref[k*3 +j];
+    for (int i=0; i < 3; i++)
+      for (int j=0; j < 3; j++)
+	for (int k=0; k < 3; k++)
+	  I[i*3 + j] += I[i*3 + k]*Q[j*3 + k];
+    double M[36] = {0.0};
+    for (int i=0; i< 3; i++)
+      {
+	M[i*6 + i] = mass;
+	mom[i] = mass*u[i];//save for next time step--linear momentum
+	mom[3+i] = 0.0;
+	for (int j=0; j<3; j++)
+	  {
+	    M[(3+i)*6 + (3+j)] = I[i*3 + j];
+	    mom[3+i] += I[i*3 + j]*u[3+j];//save for next time step--angular momentum
+	  }
+      }
+    //could do added mass modification here
+    //
+    //residual
+    //momentum conservation residual
+    for (int i=0; i < 6; i++)
+      {
+	r[i] = - last_mom[i] - DT*0.5*(FT[i] + last_FT[i]);
+	for (int j=0; j < 6; j++)
+	  {
+	    r[i] += M[i*6 + j]*u[j];
+	    J[i*18 + j] = M[i*6 + j];//all FT terms are explicit for now
+	  }
+      }
+    //displacement residual
+    for (int i=0; i < 3; i++)
+      {
+	r[6+i] = h[i] - last_h[i] - DT*0.5*(v[i] + last_v[i]);
+	J[(6+i)*18 + (6+i)] = 1.0;
+	J[(6+i)*18 + i] = -DT*0.5;
+      }
+    //rotation residual
+    for (int i=0; i < 3; i++)
+      for (int j=0; j < 3; j++)
+	{
+	  r[9 + i*3 + j] = Q[i*3 + j] - last_Q[i*3 + j];
+	  J[(9+i*3+j)*18 + (9+i*3+j)] = 1.0;
+	  for (int k=0; k < 3; k++)
+	    {
+	      r[9 + i*3 + j] -= DT*0.25*(Omega[i*3 + k] + last_Omega[i*3 +k])*(Q[k*3 + j]+last_Q[k*3 + j]);
+	      J[(9 + i*3 + j)*18 + 9+k*3+j] -= DT*0.25*(Omega[i*3 + k] + last_Omega[i*3 + k]);
+	    }
+	}
+  }
+  
   template<int nSpace, int nP, int nQ, int nEBQ>
   using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
@@ -37,6 +131,171 @@ namespace proteus
     virtual void getTwoPhaseAdvectionOperator(arguments_dict& args) = 0;
     virtual void getTwoPhaseInvScaledLaplaceOperator(arguments_dict& args)=0;
     virtual void getTwoPhaseScaledMassOperator(arguments_dict& args)=0;
+    void step6DOF(arguments_dict& args)
+    {
+      py::gil_scoped_release release;
+      //py::gil_scoped_acquire acquire;
+      xt::pyarray<double>& ball_FT = args.array<double>("ball_FT");
+      xt::pyarray<double>& ball_last_FT = args.array<double>("ball_last_FT");
+      xt::pyarray<double>& ball_h = args.array<double>("ball_h");
+      xt::pyarray<double>& ball_last_h = args.array<double>("ball_last_h");
+      xt::pyarray<double>& ball_center = args.array<double>("ball_center");
+      xt::pyarray<double>& ball_center_last = args.array<double>("ball_center_last");
+      //note: these are only used for the fluid
+      xt::pyarray<double>& ball_velocity = args.array<double>("ball_velocity");
+      xt::pyarray<double>& ball_angular_velocity = args.array<double>("ball_angular_velocity");
+      //
+      xt::pyarray<double>& ball_last_velocity = args.array<double>("ball_last_velocity");
+      xt::pyarray<double>& ball_last_angular_velocity = args.array<double>("ball_last_angular_velocity");
+      xt::pyarray<double>& ball_Q = args.array<double>("ball_Q");
+      xt::pyarray<double>& ball_last_Q = args.array<double>("ball_last_Q");
+      xt::pyarray<double>& ball_Omega = args.array<double>("ball_Omega");
+      xt::pyarray<double>& ball_last_Omega = args.array<double>("ball_last_Omega");
+      xt::pyarray<double>& ball_u = args.array<double>("ball_u");
+      xt::pyarray<double>& ball_last_u = args.array<double>("ball_last_u");
+      xt::pyarray<double>& ball_mom = args.array<double>("ball_mom");
+      xt::pyarray<double>& ball_last_mom = args.array<double>("ball_last_mom");
+      xt::pyarray<double>& ball_a = args.array<double>("ball_a");
+      xt::pyarray<double>& ball_I = args.array<double>("ball_I");
+      xt::pyarray<double>& ball_mass = args.array<double>("ball_mass");
+      xt::pyarray<double>& ball_radius = args.array<double>("ball_radius");
+      xt::pyarray<double>& ball_f = args.array<double>("ball_f");
+      xt::pyarray<double>& wall_f = args.array<double>("wall_f");
+      xt::pyarray<double>& particle_netForces = args.array<double>("particle_netForces");
+      xt::pyarray<double>& particle_netMoments = args.array<double>("particle_netMoments");
+      xt::pyarray<double>& last_particle_netForces = args.array<double>("last_particle_netForces");
+      xt::pyarray<double>& last_particle_netMoments = args.array<double>("last_particle_netMoments");
+      xt::pyarray<double>& g = args.array<double>("g");
+      xt::pyarray<double>& L = args.array<double>("L");
+      const double ball_force_range = args.scalar<double>("ball_force_range");
+      const double ball_stiffness = args.scalar<double>("ball_stiffness");
+      const double particle_cfl = args.scalar<double>("particle_cfl");
+      const double dt = args.scalar<double>("dt");
+      double& min_dt(*args.array<double>("min_dt").data());
+      int& nSteps(*args.array<int>("nSteps").data());
+      const int nParticles = ball_center.shape(0);
+      double DT = dt;
+      double td = 0.0;
+      //double min_dt = dt;
+      //int nSteps=0;
+      min_dt = dt;
+      nSteps=0;
+      //double max_cfl=0.0;
+      xt::xarray<double> cfl=xt::zeros<double>({nParticles});
+#pragma omp parallel for
+      for (int ip=0; ip < nParticles; ip++)
+	for (int i=0; i < 3; i++)
+	  {
+	    ball_velocity(ip,i) = 0.0;
+	    ball_angular_velocity(ip,i) = 0.0;
+	  }
+      
+      while (td < dt)
+	{
+	  nSteps +=1;
+	  //particle-wall and particle-particle collision forces
+#pragma omp parallel for
+	  for (int ip=0; ip < nParticles; ip++)
+	    {
+	      double vnorm = enorm(&ball_last_velocity.data()[ip*3]);
+	      for (int i=0; i< 3; i++)
+		{
+		  //some of these aren't needed because we have last_u
+		  ball_last_FT(ip,   i) = particle_netForces(ip,i) + ball_mass(ip)*g[i] + ball_f(ip,i) + wall_f(ip,i);// - 0.01*vnorm*ball_last_velocity(ip,i);
+		  ball_last_FT(ip, 3+i) = particle_netMoments(ip,i);
+		}
+	      
+	      double wall_range = 2.0*ball_radius(ip) + ball_force_range;
+	      double wall_stiffness = ball_stiffness/2.0;
+	      double dx0 = fmin(wall_range, 2.0*fabs(ball_center(ip,0)));
+	      double dxL = fmin(wall_range, 2.0*fabs(ball_center(ip,0)-L(0)));
+	      wall_f(ip,0) = (1.0/wall_stiffness)*( pow(wall_range - dx0,2) * 2.0*ball_center(ip,0) +
+						    pow(wall_range - dxL,2) * 2.0*(ball_center(ip,0) - L(0)));
+	      double dy0 = fmin(wall_range, 2.0*fabs(ball_center(ip,1)));
+	      double dyL = fmin(wall_range, 2.0*fabs(ball_center(ip,1)-L(1)));
+	      wall_f(ip,1) = (1.0/wall_stiffness)*( pow(wall_range - dy0,2) * 2.0*ball_center(ip,1) +
+						    pow(wall_range - dyL,2) * 2.0*(ball_center(ip,1) - L(1)));
+
+	      double dz0 = fmin(wall_range, 2.0*fabs(ball_center(ip,2)));
+	      double dzL = fmin(wall_range, 2.0*fabs(ball_center(ip,2)-L(2)));
+	      wall_f(ip,2) = (1.0/wall_stiffness)*( pow(wall_range - dz0,2) * 2.0*ball_center(ip,2) +
+						    pow(wall_range - dzL,2) * 2.0*(ball_center(ip,2) - L(2)));
+	      
+	      for (int i=0; i< 3;i++)
+		ball_f(ip,i) = 0.0;
+	      for (int jp=0; jp < nParticles; jp++)
+		{
+		  double ball_range, d;
+		  double f[3], h_ipjp[3];
+		  ball_range = ball_radius(ip) + ball_radius(jp) + ball_force_range;
+		  for(int i=0;i<3;i++)
+		    h_ipjp[i] = ball_center(jp,i) - ball_center(ip,i);
+		  d = ball_range - fmin(ball_range, enorm(h_ipjp));
+		  for (int i=0;i<3;i++)
+		    f[i] = (1.0/ball_stiffness)*h_ipjp[i]*pow(d,2.0);
+		  if (ip != jp)
+		    for (int i=0;i<3;i++)
+		      ball_f(ip,i) += f[i];
+		}
+	      double he = ball_force_range/1.5;
+	      cfl(ip) = vnorm*DT/he;
+	      //max_cfl = fmax(max_cfl, vnorm*DT/he);
+	    }
+	  double max_cfl = xt::amax(cfl,{0})(0);
+	  if (max_cfl > particle_cfl)
+	    DT = (particle_cfl/max_cfl)*DT;
+	  if (DT > dt - td - dt*1.0e-8)
+	    {
+	      DT = dt-td;
+	      td = dt;
+	    }
+	  else
+	    td += DT;
+	  min_dt  =fmin(DT, min_dt);
+	  //Newton iterations
+#pragma omp parallel for
+	  for (int ip=0; ip < nParticles; ip++)
+	    {
+	      int pivots[18];
+	      double r[18];
+	      double J[18*18];
+	      for (int i=0; i<3; i++)
+		{
+		  ball_FT(ip,   i) = particle_netForces(ip, i) + ball_mass(ip)*g[i] + ball_f(ip, i) + wall_f(ip, i);
+		  ball_FT(ip, 3+i) = particle_netMoments(ip, i);
+		}
+	      F6DOF(DT, ball_mass(ip), &ball_I.data()[ip*9], &ball_last_u.data()[ip*18], &ball_FT.data()[ip*6], &ball_last_FT.data()[ip*6], &ball_last_mom.data()[ip*6], &ball_u.data()[ip*18], 
+		    &ball_mom.data()[ip*6], r, J);
+	      int its=0;
+	      int maxits=100;
+	      while ((its==0 || rnorm(r) > 1.0e-10) && its < maxits)
+		{
+		  int info,N=18,nrhs=1;
+		  char trans='T';
+		  dgetrf_(&N,&N,J,&N,pivots,&info);
+		  dgetrs_(&trans, &N,&nrhs,J,&N,pivots,r,&N,&info);//J = LU now
+		  for (int i=0;i<18;i++)
+		    ball_u(ip,i) -= r[i];//r=du now
+		  F6DOF(DT, ball_mass(ip), &ball_I.data()[ip*9], &ball_last_u.data()[ip*18], &ball_FT.data()[ip*6], &ball_last_FT.data()[ip*6], &ball_last_mom.data()[ip*6], &ball_u.data()[ip*18], 
+			&ball_mom.data()[ip*6], r, J);
+		  its+=1;
+		}
+	      for (int i=0; i< 3; i++)
+		{
+		  ball_center(ip,i) += (ball_u(ip,6+i) - ball_last_u(ip,6+i));
+		  ball_a(ip,i) = (ball_u(ip,i) - ball_last_velocity(ip,i))/DT;
+		  ball_last_velocity(ip,i) = ball_u(ip,i);
+		  ball_last_mom(ip,i) = ball_mom(ip,i);
+		  ball_last_mom(ip,3+i) = ball_mom(ip,3+i);
+		  //return averages over dt for the fluid velocities
+		  ball_velocity(ip,i) += DT*ball_u(ip,i)/dt;
+		  ball_angular_velocity(ip,i) += DT*ball_u(ip,3+i)/dt;
+		}
+	      for (int i=0; i< 18; i++)
+		ball_last_u(ip,i) = ball_u(ip,i);
+	    }
+	}
+    }
   };
 
   template<class CompKernelType,

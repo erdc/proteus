@@ -29,5 +29,6 @@ PYBIND11_MODULE(cRANS2P, m)
         .def("calculateVelocityAverage"             , &RANS2P_base::calculateVelocityAverage              )
         .def("getTwoPhaseAdvectionOperator"         , &RANS2P_base::getTwoPhaseAdvectionOperator          )
         .def("getTwoPhaseInvScaledLaplaceOperator"  , &RANS2P_base::getTwoPhaseInvScaledLaplaceOperator   )
-        .def("getTwoPhaseScaledMassOperator"        , &RANS2P_base::getTwoPhaseScaledMassOperator         );
+        .def("getTwoPhaseScaledMassOperator"        , &RANS2P_base::getTwoPhaseScaledMassOperator         )
+        .def("step6DOF"        , &RANS2P_base::step6DOF);
 }
