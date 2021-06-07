@@ -72,7 +72,6 @@ namespace proteus
       for (int j=0; j < 3; j++)
 	for (int k=0; k < 3; k++)
 	  I[i*3 + j] += I[i*3 + k]*Q[j*3 + k];
-    
     double M[36] = {0.0};
     for (int i=0; i< 3; i++)
       {
@@ -118,7 +117,7 @@ namespace proteus
 	    }
 	}
   }
-
+  
   template<int nSpace, int nP, int nQ, int nEBQ>
   using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
@@ -199,13 +198,14 @@ namespace proteus
 	  for (int ip=0; ip < nParticles; ip++)
 	    {
 	      double vnorm = enorm(&ball_last_velocity.data()[ip*3]);
+	      double vp[3], vpnorm;
 	      for (int i=0; i< 3; i++)
 		{
-		  //some of these aren't needed because we have last_u
-		  ball_last_FT(ip,   i) = particle_netForces(ip,i) + ball_mass(ip)*g[i] + ball_f(ip,i) + wall_f(ip,i);// - 0.01*vnorm*ball_last_velocity(ip,i);
+		  ball_last_FT(ip,   i) = particle_netForces(ip,i) + ball_mass(ip)*g[i] + ball_f(ip,i) + wall_f(ip,i);// - 2.0*0.001*vnorm*ball_last_velocity(ip,i);
 		  ball_last_FT(ip, 3+i) = particle_netMoments(ip,i);
+		  vp[i] = ball_last_velocity(ip,i) + ball_a(ip,i)*DT;
 		}
-	      
+	      vpnorm = enorm(vp);
 	      double wall_range = 2.0*ball_radius(ip) + ball_force_range;
 	      double wall_stiffness = ball_stiffness/2.0;
 	      double dx0 = fmin(wall_range, 2.0*fabs(ball_center(ip,0)));
@@ -241,7 +241,7 @@ namespace proteus
 		      ball_f(ip,i) += f[i];
 		}
 	      double he = ball_force_range/1.5;
-	      cfl(ip) = vnorm*DT/he;
+	      cfl(ip) = fmax(vnorm*DT/he, vpnorm*DT/he);
 	      //max_cfl = fmax(max_cfl, vnorm*DT/he);
 	    }
 	  double max_cfl = xt::amax(cfl,{0})(0);
@@ -283,6 +283,10 @@ namespace proteus
 			&ball_mom.data()[ip*6], r, J);
 		  its+=1;
 		}
+	      /*
+		std::cout<<"Newton it "<<its<<std::endl
+		<<"DT "<<DT<<std::endl;
+	      */
 	      for (int i=0; i< 3; i++)
 		{
 		  ball_center(ip,i) += (ball_u(ip,6+i) - ball_last_u(ip,6+i));
