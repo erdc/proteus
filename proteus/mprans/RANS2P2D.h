@@ -791,8 +791,8 @@ namespace proteus
                                        vel[0],vel[1]);
               center[0] = ball_center[3*i+0];
               center[1] = ball_center[3*i+1];
-              particle_velocities[i * sd_offset * 3 + 0] = vel[0];
-              particle_velocities[i * sd_offset * 3 + 1] = vel[1];
+              particle_velocities[0] = vel[0];
+              particle_velocities[1] = vel[1];
             }
           else
             {
@@ -2986,10 +2986,10 @@ namespace proteus
                     }
                   else//use the solid velocity
                     {
-                      q_mom_u_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+0];
-                      q_mom_v_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+1];
-                      q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+0];
-                      q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+1];
+                      q_mom_u_acc.data()[eN_k] = particle_velocities.data()[0*nQuadraturePoints_global + eN_k_3d+0];
+                      q_mom_v_acc.data()[eN_k] = particle_velocities.data()[0*nQuadraturePoints_global + eN_k_3d+1];
+                      q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[0*nQuadraturePoints_global + eN_k_3d+0];
+                      q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[0*nQuadraturePoints_global + eN_k_3d+1];
                     }
                   //
                   //update element residual
