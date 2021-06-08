@@ -1522,13 +1522,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.testSpace[1].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
-        if self.coefficients.nParticles > 0:
-            self.ball_u = self.u[1].dof.copy()
-            self.ball_v = self.u[2].dof.copy()
-            if self.nSpace_global == 3:
-                self.ball_w = self.u[3].dof.copy()
-            else:
-                self.ball_w = self.u[2].dof.copy()
+        self.ball_u = self.u[1].dof.copy()
+        self.ball_v = self.u[2].dof.copy()
+        if self.nSpace_global == 3:
+            self.ball_w = self.u[3].dof.copy()
+        else:
+            self.ball_w = self.u[2].dof.copy()
         self.errors = np.zeros((3,5),'d')
         self.velocityErrorNodal = self.u[0].dof.copy()
         logEvent('WARNING: The boundary fluxes at interpart boundaries are skipped if elementBoundaryMaterialType is 0 for RANS2P-based models. This means that DG methods are currently incompatible with RANS2P.')
