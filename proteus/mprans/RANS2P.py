@@ -731,7 +731,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         comm = Comm.get()
         import os
         if comm.isMaster():
-            self.history_file = open("particles.txt","ab")
+            self.history_file = open(os.path.join(proteus.Profiling.logDir, "particles.txt"),"ab")
             self.timeHistory = open(os.path.join(proteus.Profiling.logDir, "timeHistory.txt"), "w")
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir, "wettedAreaHistory.txt"), "w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
@@ -995,6 +995,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             logEvent("particle sub-steps {0}".format(nSteps[0]))
             if self.comm.isMaster():
                 np.savetxt(self.history_file, np.vstack((self.ball_center,self.ball_velocity, self.ball_angular_velocity)))
+                self.history_file.flush()
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
