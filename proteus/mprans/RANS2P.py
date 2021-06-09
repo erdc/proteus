@@ -214,6 +214,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  LAG_LES=1.0,
                  use_ball_as_particle=1,
                  ball_center=None,
+                 ball_mass=None,
+                 ball_stiffness=None,
+                 ball_force_range=None,
+                 particle_cfl=0.001,
+                 particle_box=[1.,1.,1.],
                  ball_radius=None,
                  ball_velocity=None,
                  ball_angular_velocity=None,
@@ -238,7 +243,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  force_x=None,
                  force_y=None,
                  force_z=None,
-                 normalize_pressure=False):
+                 normalize_pressure=False,
+                 useInternalParticleSolver=True):
         self.normalize_pressure=normalize_pressure
         self.force_x=force_x
         self.force_y=force_y
@@ -246,6 +252,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.analyticalSolution=analyticalSolution
         self.useExact=useExact
         self.use_ball_as_particle = use_ball_as_particle
+        self.useInternalParticleSolver=useInternalParticleSolver
         self.nParticles = nParticles
         self.particle_nitsche = particle_nitsche
         self.particle_epsFact = particle_epsFact
@@ -261,6 +268,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.ball_center = ball_center
 
+        if ball_mass is None:
+            self.ball_mass = 1e10*numpy.ones((self.nParticles,),'d')
+        else:
+            self.ball_mass = ball_mass
+
+        self.ball_stiffness = ball_stiffness
+        self.ball_force_range = ball_force_range
+        self.particle_cfl = particle_cfl
+        self.L = np.array(particle_box)
         if ball_radius is None:
             self.ball_radius = 1e10*numpy.ones((self.nParticles,1),'d')
         else:
@@ -304,6 +320,47 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ball_angular_acceleration = ball_angular_acceleration
         self.ball_density = ball_density
         self.particle_centroids = particle_centroids
+        if nParticles > 0 and use_ball_as_particle and useInternalParticleSolver:
+            self.ball_FT = np.zeros((nParticles, 6),'d')
+            self.ball_last_FT = np.zeros((nParticles,  6),'d')
+            self.ball_h = np.zeros((nParticles, 3),'d')
+            self.ball_last_h = np.zeros((nParticles, 3),'d')
+            self.ball_center_last = ball_center.copy()
+            self.ball_last_velocity = self.ball_velocity.copy()
+            self.ball_last_angular_velocity = self.ball_angular_velocity.copy()
+            #
+            self.ball_Q = np.zeros((nParticles, 3,3),'d')
+            self.ball_last_Q = np.zeros((nParticles, 3,3),'d')
+            self.ball_Omega = np.zeros((nParticles, 3,3),'d')
+            self.ball_last_Omega = np.zeros((nParticles, 3,3),'d')
+            #
+            self.ball_u = np.zeros((nParticles,18),'d')#linear and angular velocity, linear displacement, and rotation matrix
+            self.ball_last_u = np.zeros((nParticles,18),'d')
+            self.ball_mom = np.zeros((nParticles,6),'d')
+            self.ball_last_mom = np.zeros((nParticles,6),'d')
+            self.ball_a = np.zeros((nParticles,6),'d')
+            #
+            self.ball_I = np.zeros((nParticles, 3, 3),'d')
+            self.ball_f = np.zeros((nParticles, 3),'d')
+            self.wall_f = np.zeros((nParticles, 3),'d')
+            self.last_particle_netForces = np.zeros((nParticles,3),'d')
+            self.last_particle_netMoments = np.zeros((nParticles,3),'d')
+            self.ball_angular_velocity_avg = self.ball_angular_velocity.copy()
+            for ip in range(nParticles):
+                if len(particle_box) == 2:
+                    self.particle_g=np.array([g[0],g[1],0.0])
+                    self.ball_I[ip] = np.eye(3)
+                    self.ball_I[ip,0,0] = (1.0/12.0)*self.ball_mass[ip]*(3*ball_radius[ip]**2 + 1.0)
+                    self.ball_I[ip,1,1] = (1.0/12.0)*self.ball_mass[ip]*(3*ball_radius[ip]**2 + 1.0)
+                    self.ball_I[ip,2,2] = 0.5*self.ball_mass[ip]*ball_radius[ip]**2
+                else:
+                    self.particle_g=np.array(g)
+                    self.ball_I[ip] = np.eye(3)*(2.0/5.0)*self.ball_mass[ip]*self.ball_radius[ip]**2
+                self.ball_Q[ip] = np.eye(3)
+                self.ball_last_Q[ip] = np.eye(3)
+                self.ball_u[ip,9:] = self.ball_Q[ip].flatten()
+            self.ball_last_u[:,:] = self.ball_u
+
         #
         self.LAG_LES=LAG_LES
         self.phaseFunction=phaseFunction
@@ -631,7 +688,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.u_old_dof = self.model.u[1].dof.copy()
         self.v_old_dof = self.model.u[2].dof.copy()
         self.w_old_dof = self.model.u[3].dof.copy()
-        if self.nParticles > 0 and self.particle_sdfList != None:
+        if self.nParticles > 0 and self.particle_sdfList != None and not self.use_ball_as_particle:
             self.phi_s[:] = 1e10
             self.phisField[:] = 1e10
             self.ebqe_phi_s[:] = 1e10
@@ -674,6 +731,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         comm = Comm.get()
         import os
         if comm.isMaster():
+            self.history_file = open("particles.txt","ab")
             self.timeHistory = open(os.path.join(proteus.Profiling.logDir, "timeHistory.txt"), "w")
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir, "wettedAreaHistory.txt"), "w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir, "forceHistory_p.txt"), "w")
@@ -885,6 +943,58 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.particle_pforceHistory.flush()
                 self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0, :]))
                 self.particle_momentHistory.flush()
+
+        if self.nParticles > 0 and self.use_ball_as_particle and self.useInternalParticleSolver:
+            argsDict = cArgumentsDict.ArgumentsDict()
+            argsDict["ball_FT"] = self.ball_FT
+            argsDict["ball_last_FT"] = self.ball_last_FT
+            argsDict["ball_h"] = self.ball_h
+            argsDict["ball_last_h"] = self.ball_last_h
+            argsDict["ball_center"] = self.ball_center
+            argsDict["ball_center_last"] = self.ball_center_last
+            argsDict["ball_velocity"] = self.ball_velocity
+            argsDict["ball_angular_velocity"] = self.ball_angular_velocity
+            argsDict["ball_last_velocity"] = self.ball_last_velocity
+            argsDict["ball_last_angular_velocity"] = self.ball_last_angular_velocity
+            argsDict["ball_Q"] = self.ball_Q
+            argsDict["ball_last_Q"] = self.ball_last_Q
+            argsDict["ball_Omega"] = self.ball_Omega
+            argsDict["ball_last_Omega"] = self.ball_last_Omega
+            argsDict["ball_u"] = self.ball_u
+            argsDict["ball_last_u"] = self.ball_last_u
+            argsDict["ball_mom"] = self.ball_mom
+            argsDict["ball_last_mom"] = self.ball_last_mom
+            argsDict["ball_a"] = self.ball_a
+            argsDict["ball_I"] = self.ball_I
+            argsDict["ball_mass"] = self.ball_mass
+            argsDict["ball_radius"] = self.ball_radius
+            argsDict["ball_f"] = self.ball_f
+            argsDict["wall_f"] = self.wall_f
+            argsDict["particle_netForces"] = self.particle_netForces
+            argsDict["particle_netMoments"] = self.particle_netMoments
+            argsDict["last_particle_netForces"] = self.last_particle_netForces
+            argsDict["last_particle_netMoments"] = self.last_particle_netMoments
+            argsDict["ball_angular_velocity_avg"] = self.ball_angular_velocity_avg
+            argsDict["g"] = self.particle_g
+            argsDict["L"] = self.L
+            argsDict["dt"] = self.model.timeIntegration.dt
+            argsDict["ball_force_range"] = self.ball_force_range
+            argsDict["ball_stiffness"] = self.ball_stiffness
+            argsDict["particle_cfl"] = self.particle_cfl
+            argsDict["min_dt"] = min_dt = np.zeros((1,),'d')
+            argsDict["nSteps"] = nSteps = np.zeros((1,),'i')
+            if self.comm.rank() == 0:
+                self.model.rans2p.step6DOF(argsDict)
+            from mpi4py import MPI
+            mpicomm = MPI.COMM_WORLD
+            mpicomm.Bcast(self.ball_center)
+            mpicomm.Bcast(self.ball_velocity)
+            mpicomm.Bcast(self.ball_angular_velocity)
+            self.model.q[('cfl',0)][:] = max(self.model.q[('cfl',0)].max(), np.linalg.norm(self.ball_velocity,axis=1).max()/(self.ball_force_range/1.5))
+            logEvent("minimimum particle dt {0}".format(min_dt[0]))
+            logEvent("particle sub-steps {0}".format(nSteps[0]))
+            if self.comm.isMaster():
+                np.savetxt(self.history_file, np.vstack((self.ball_center,self.ball_velocity, self.ball_angular_velocity)))
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
@@ -1908,7 +2018,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,self.ball_u)
                 self.u[2].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[2].dof,self.ball_v)
                 if self.nSpace_global == 3:
-                    self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,ball_w)
+                    self.u[3].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[3].dof,self.ball_w)
             else:
                 self.u[0].dof[:] = np.where(self.isActiveDOF_p==1.0, self.u[0].dof,0.0)
                 self.u[1].dof[:] = np.where(self.isActiveDOF_vel==1.0, self.u[1].dof,0.0)
@@ -1929,13 +2039,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
         comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
         comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),self.coefficients.particle_surfaceArea)
-        
-        for i in range(self.coefficients.nParticles):
-            logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
-            logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
-            logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
-            logEvent("particle i=" + repr(i)+ " stress force " + repr(self.coefficients.particle_netForces[i+self.coefficients.nParticles]))
-            logEvent("particle i=" + repr(i)+ " pressure force " + repr(self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]))
+
+        if (self.coefficients.nParticles < 10):
+            for i in range(self.coefficients.nParticles):
+                logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
+                logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
+                logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
+                logEvent("particle i=" + repr(i)+ " stress force " + repr(self.coefficients.particle_netForces[i+self.coefficients.nParticles]))
+                logEvent("particle i=" + repr(i)+ " pressure force " + repr(self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]))
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax), level=2)

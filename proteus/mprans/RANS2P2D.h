@@ -283,10 +283,6 @@ namespace proteus
 			&ball_mom.data()[ip*6], r, J);
 		  its+=1;
 		}
-	      /*
-		std::cout<<"Newton it "<<its<<std::endl
-		<<"DT "<<DT<<std::endl;
-	      */
 	      for (int i=0; i< 3; i++)
 		{
 		  ball_center(ip,i) += (ball_u(ip,6+i) - ball_last_u(ip,6+i));
@@ -2986,10 +2982,20 @@ namespace proteus
                     }
                   else//use the solid velocity
                     {
-                      q_mom_u_acc.data()[eN_k] = particle_velocities.data()[0*nQuadraturePoints_global + eN_k_3d+0];
-                      q_mom_v_acc.data()[eN_k] = particle_velocities.data()[0*nQuadraturePoints_global + eN_k_3d+1];
-                      q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[0*nQuadraturePoints_global + eN_k_3d+0];
-                      q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[0*nQuadraturePoints_global + eN_k_3d+1];
+		      if (use_ball_as_particle)
+			{
+			  q_mom_u_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+0];
+			  q_mom_v_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+1];
+			  q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[eN_k_3d+0];
+			  q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[eN_k_3d+1];
+			}
+		      else
+			{
+			  q_mom_u_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+0];
+			  q_mom_v_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+1];
+			  q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+0];
+			  q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+1];
+			}
                     }
                   //
                   //update element residual
