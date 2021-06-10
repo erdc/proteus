@@ -208,14 +208,14 @@ namespace proteus
 	      vpnorm = enorm(vp);
 	      double wall_range = 2.0*ball_radius(ip) + ball_force_range;
 	      double wall_stiffness = ball_stiffness/2.0;
-	      double dx0 = fmin(wall_range, 2.0*fabs(ball_center(ip,0)));
-	      double dxL = fmin(wall_range, 2.0*fabs(ball_center(ip,0)-L(0)));
-	      wall_f(ip,0) = (1.0/wall_stiffness)*( pow(wall_range - dx0,2) * 2.0*ball_center(ip,0) +
-						    pow(wall_range - dxL,2) * 2.0*(ball_center(ip,0) - L(0)));
-	      double dy0 = fmin(wall_range, 2.0*fabs(ball_center(ip,1)));
-	      double dyL = fmin(wall_range, 2.0*fabs(ball_center(ip,1)-L(1)));
-	      wall_f(ip,1) = (1.0/wall_stiffness)*( pow(wall_range - dy0,2) * 2.0*ball_center(ip,1) +
-						    pow(wall_range - dyL,2) * 2.0*(ball_center(ip,1) - L(1)));
+	      double dx0 = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,0))));
+	      double dxL = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,0)-L(0))));
+	      wall_f(ip,0) = (1.0/wall_stiffness)*( pow(wall_range - dx0,2) * (fmax(0.0, ball_center(ip,0)) + ball_radius(ip)) +
+						    pow(wall_range - dxL,2) * (fmin(L(0), ball_center(ip,0)) - (L(0) + ball_radius(ip))));
+	      double dy0 = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,1))));
+	      double dyL = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,1)-L(1))));
+	      wall_f(ip,1) = (1.0/wall_stiffness)*( pow(wall_range - dy0,2) * (fmax(0.0, ball_center(ip,1)) + ball_radius(ip)) +
+						    pow(wall_range - dyL,2) * (fmin(L(1), ball_center(ip,1)) - (L(1) + ball_radius(ip))));
 	      /*
 	      double dz0 = fmin(wall_range, 2.0*fabs(ball_center(ip,2)));
 	      double dzL = fmin(wall_range, 2.0*fabs(ball_center(ip,2)-L(2)));
@@ -232,8 +232,8 @@ namespace proteus
 		  double f[3], h_ipjp[3];
 		  ball_range = ball_radius(ip) + ball_radius(jp) + ball_force_range;
 		  for(int i=0;i<3;i++)
-		    h_ipjp[i] = ball_center(jp,i) - ball_center(ip,i);
-		  d = ball_range - fmin(ball_range, enorm(h_ipjp));
+		    h_ipjp[i] = ball_center(ip,i) - ball_center(jp,i);
+		  d = ball_range - fmin(ball_range, fmax(ball_radius(ip) + ball_radius(jp), enorm(h_ipjp)));
 		  for (int i=0;i<3;i++)
 		    f[i] = (1.0/ball_stiffness)*h_ipjp[i]*pow(d,2.0);
 		  if (ip != jp)
