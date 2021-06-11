@@ -270,7 +270,7 @@ namespace equivalent_polynomials
     root_node=0;
     inside_out=false;
     quad_cut=false;
-    const double eps=1.0e-8;
+    const double eps=1.0e-16;
     for (unsigned int i=0; i < nN; i++)
       {
         if(phi_dof[i] > eps)
@@ -451,7 +451,7 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_cuts()
   {
-    const double eps=1.0e-8;
+    const double eps=1.0e-16;
     for (unsigned int i=0; i < nN-1;i++)
       {
         if(phi[i+1]*phi[0] < 0.0)
@@ -479,7 +479,7 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_cuts_quad()
   {
-    const double eps=1.0e-8,Imeps=1.0-eps;
+    const double eps=1.0e-16,Imeps=1.0-eps;
     THETA_01 = 0.5 - 0.5*(phi[1] + phi[0])/(phi[1] - phi[0]);
     THETA_02 = 0.5 - 0.5*(phi[2] + phi[0])/(phi[2] - phi[0]);
     THETA_31 = 0.5 - 0.5*(phi[1] + phi[3])/(phi[1] - phi[3]);

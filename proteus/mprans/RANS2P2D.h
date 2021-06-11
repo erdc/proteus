@@ -315,8 +315,7 @@ namespace proteus
   {
   public:
     std::set<int> ifem_boundaries, ifem_boundary_elements,
-      cutfem_boundaries, cutfem_boundary_elements;
-    std::valarray<bool> elementIsActive;
+      cutfem_boundaries, cutfem_local_boundaries;
 
     const int nDOF_test_X_trial_element;
     const int nDOF_test_X_v_trial_element;
@@ -1916,6 +1915,8 @@ namespace proteus
       xt::pyarray<double>& errors = args.array<double>("errors");
       xt::pyarray<double>& ball_u = args.array<double>("ball_u");
       xt::pyarray<double>& ball_v = args.array<double>("ball_v");
+      xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
+      xt::pyarray<int>& isActiveElement_last = args.array<int>("isActiveElement_last");
       logEvent("Entered mprans calculateResidual",6);
       gf.useExact = false;//useExact;
       gf_p.useExact = false;//useExact;
@@ -1923,8 +1924,7 @@ namespace proteus
       ifem_boundaries.clear();
       ifem_boundary_elements.clear();
       cutfem_boundaries.clear();
-      cutfem_boundary_elements.clear();
-      elementIsActive.resize(nElements_global);
+      cutfem_local_boundaries.clear();
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -1957,7 +1957,7 @@ namespace proteus
             velocityErrorElement[nDOF_v_test_element],
             eps_rho,eps_mu;
           bool element_active=false;
-          elementIsActive[eN]=false;
+          isActiveElement[eN]=0;
           const double* elementResidual_w(NULL);
           double mesh_volume_conservation_element=0.0,
             mesh_volume_conservation_element_weak=0.0;
@@ -2017,17 +2017,26 @@ namespace proteus
           int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref.data(),false);
           if (icase_s == 0)
             {
+	      element_active=true;
+	      isActiveElement[eN]=1;
               //only works for simplices
               for (int ebN_element=0;ebN_element < nDOF_mesh_trial_element; ebN_element++)
                 {
                   const int ebN = elementBoundariesArray.data()[eN*nDOF_mesh_trial_element+ebN_element];
                   //internal and actually a cut edge
-                  //if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
-                  //  cutfem_boundaries.insert(ebN);
-                  if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned))
-                    cutfem_boundaries.insert(ebN);
+                  //if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned) && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] < 0.0)
+                  if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
+		    {
+		      cutfem_boundaries.insert(ebN);
+		      cutfem_local_boundaries.insert(ebN_element);
+		    }
                 }
             }
+	  else if (icase_s == 1)
+	    {
+	      element_active=true;
+	      isActiveElement[eN]=1;
+	    }
 #ifdef IFEM
           int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref.data(), -rho_1*g.data()[1], -rho_0*g.data()[1],false,true);
           int icase = gf.calculate(element_phi, element_nodes, x_ref.data(), rho_1*nu_1, rho_0*nu_0,false,false);
@@ -2441,11 +2450,13 @@ namespace proteus
                   //
                   const double H_s = gf_s.H(particle_eps,phi_solid.data()[eN_k]);
                   const double D_s = gf_s.D(particle_eps,phi_solid.data()[eN_k]);
+		  /*
                   if ( nParticles == 0 || H_s != 0.0 || D_s != 0.0)
                     {
                       element_active=true;
-                      elementIsActive[eN]=true;
+                      isActiveElement[eN]=true;
                     }
+		  */
                   //save velocity at quadrature points for other models to use
                   double p_e = q_u_0.data()[eN_k] - p,
                     u_e = q_u_1.data()[eN_k] - u,
@@ -2706,6 +2717,14 @@ namespace proteus
                          dmom_v_acc_v,
                          mom_v_acc_t,
                          dmom_v_acc_v_t);
+		  /* if (isActiveElement_last[eN]==0) */
+		  /*   { */
+		  /*     mom_u_acc_t=0.0; */
+		  /*     dmom_u_acc_u_t=0.0; */
+		  /*     mom_v_acc_t=0.0; */
+		  /*     dmom_v_acc_v_t=0.0; */
+		  /*   } */
+
                   if (NONCONSERVATIVE_FORM > 0.0)
                     {
                       mom_u_acc_t *= dmom_u_acc_u;
@@ -3021,7 +3040,7 @@ namespace proteus
                     {
                       assert(H_f == 1);
                     }
-		  if ((eN < nElements_owned) && elementIsActive[eN])
+		  if ((eN < nElements_owned) && isActiveElement[eN])
 		    {
 		      domain_volume += H_s*dV*H_f;
 		      p_L1 += fabs(p_e)*H_s*dV*H_f;
@@ -3109,7 +3128,7 @@ namespace proteus
                   //estimate the numerical viscosity combining shock capturing and VMS/SUPG
                   numerical_viscosity.data()[eN_k] = q_numDiff_u_last.data()[eN_k] + MOMENTUM_SGE*VELOCITY_SGE*tau_v*(dmom_adv_star[0]*dmom_adv_star[0]+
                                                                                                                       dmom_adv_star[1]*dmom_adv_star[1]);
-                  if (!elementIsActive[eN])
+                  if (!isActiveElement[eN])
                     {
                       assert(std::fabs(gf_s.H(particle_eps,phi_solid.data()[eN_k])) == 0.0);
                       assert(std::fabs(gf_s.D(particle_eps,phi_solid.data()[eN_k])) == 0.0);
@@ -3134,7 +3153,7 @@ namespace proteus
               register int eN_i=eN*nDOF_test_element+i;
               elementResidual_p_save.data()[eN_i] +=  elementResidual_p[i];
               mesh_volume_conservation_element_weak += elementResidual_mesh[i];
-              if (!elementIsActive[eN])
+              if (!isActiveElement[eN])
                 {
                   assert(elementResidual_p[i]==0.0);
                 }
@@ -3148,7 +3167,7 @@ namespace proteus
           for(int i=0;i<nDOF_v_test_element;i++)
             {
               register int eN_i=eN*nDOF_v_test_element+i;
-              if (!elementIsActive[eN])
+              if (!isActiveElement[eN])
                 {
                   assert(elementResidual_u[i]==0.0);
                   assert(elementResidual_v[i]==0.0);
@@ -3175,9 +3194,11 @@ namespace proteus
           mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element));
           mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
         }//elements
-      for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); )
+      std::set<int>::iterator it_local = cutfem_local_boundaries.begin();
+      std::set<int>::iterator it=cutfem_boundaries.begin();
+      while(it!=cutfem_boundaries.end())
         {
-          if(elementIsActive[elementBoundaryElementsArray[(*it)*2+0]] && elementIsActive[elementBoundaryElementsArray[(*it)*2+1]])
+          if(isActiveElement[elementBoundaryElementsArray[(*it)*2+0]] && isActiveElement[elementBoundaryElementsArray[(*it)*2+1]])
             {
               std::map<int,double> DWp_Dn_jump, DW_Dn_jump;
               register double gamma_cutfem=ghost_penalty_constant,gamma_cutfem_p=ghost_penalty_constant,h_cutfem=elementBoundaryDiameter.data()[*it];
@@ -3185,8 +3206,9 @@ namespace proteus
               //See Massing Schott Wall 2018
               //cek todo modify for two-fluids: rho_0 != rho_1
               double norm_v=0.0;
-              for (int i=0;i<nDOF_v_trial_element;i++)//MSW18 is just on face, but this is easier
+              for (int i_offset=1;i_offset<nDOF_v_trial_element;i_offset++)//MSW18 is just on face, so trying to just use face dof
                 {
+		  int i = (*it_local + i_offset)%nDOF_v_trial_element;
                   double u=u_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
                     v=v_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]];
                   norm_v=fmax(norm_v,sqrt(u*u+v*v));
@@ -3315,11 +3337,13 @@ namespace proteus
                       globalResidual.data()[offset_v+stride_v*i_global]+=gamma_cutfem*h_cutfem*Dv_Dn_jump*DW_Dn_jump_i*dS;
                     }//i
                 }//kb
-              ++it;
+	      it++;
+	      it_local++;
             }
           else
             {
               it = cutfem_boundaries.erase(it);
+              it_local = cutfem_local_boundaries.erase(it_local);
             }
         }//cutfem element boundaries
       //
@@ -4099,7 +4123,7 @@ namespace proteus
               //update residuals
               //
               const double H_s = gf_s.H(particle_eps, ebqe_phi_s.data()[ebNE_kb]);
-              if (elementIsActive[eN])
+              if (isActiveElement[eN])
                 { //if boundary flag positive, then include flux contributions on interpart boundaries
                   total_flux += flux_mass_ext*dS;
                   for (int i=0;i<nDOF_test_element;i++)
@@ -4257,7 +4281,7 @@ namespace proteus
                                               x,y,z);
                   dV = fabs(jacDet)*dV_ref.data()[k];
                   ck.valFromDOF(p_dof.data(),&p_l2g.data()[eN_nDOF_trial_element],&p_trial_ref.data()[k*nDOF_trial_element],p);
-		  if (elementIsActive[eN])
+		  if (isActiveElement[eN])
 		    {
 		      p_dv_new += p*H_s*dV;
 		      pa_dv_new += q_u_0.data()[eN_k]*H_s*dV;
@@ -4504,6 +4528,8 @@ namespace proteus
       xt::pyarray<double>& ebq_particle_velocity_s = args.array<double>("ebq_particle_velocity_s");
       xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
       xt::pyarray<double>& distance_to_solids = args.array<double>("distance_to_solids");
+      xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
+      xt::pyarray<int>& isActiveElement_last = args.array<int>("isActiveElement_last");
       int nParticles = args.scalar<int>("nParticles");
       int nElements_owned = args.scalar<int>("nElements_owned");
       double particle_nitsche = args.scalar<double>("particle_nitsche");
@@ -5250,6 +5276,13 @@ namespace proteus
                          dmom_v_acc_v,
                          mom_v_acc_t,
                          dmom_v_acc_v_t);
+		  /* if (isActiveElement_last[eN]==0) */
+		  /*   { */
+		  /*     mom_u_acc_t=0.0; */
+		  /*     dmom_u_acc_u_t=0.0; */
+		  /*     mom_v_acc_t=0.0; */
+		  /*     dmom_v_acc_v_t=0.0; */
+		  /*   } */
                   if (NONCONSERVATIVE_FORM > 0.0)
                     {
                       mom_u_acc_t *= dmom_u_acc_u;
@@ -5710,7 +5743,9 @@ namespace proteus
                 }//j
             }//i
         }//elements
-      for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); ++it)
+      std::set<int>::iterator it_local=cutfem_local_boundaries.begin();
+      std::set<int>::iterator it=cutfem_boundaries.begin();
+      while(it!=cutfem_boundaries.end())
         {
           std::map<int,double> DWp_Dn_jump,DW_Dn_jump;
           std::map<std::pair<int, int>, int> p_p_nz, u_u_nz, v_v_nz;
@@ -5719,8 +5754,9 @@ namespace proteus
           //See Massing Schott Wall 2018
           //cek todo modify for two-fluids: rho_0 != rho_1
           double norm_v=0.0;
-          for (int i=0;i<nDOF_v_trial_element;i++)//MSW18 is just on face, but this is easier
+          for (int i_offset=1;i_offset<nDOF_v_trial_element;i_offset++)//MSW18 is just on face
             {
+	      int i = (*it_local + i_offset)%nDOF_v_trial_element;//cek hack only works for P1
               double u=u_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
                 v=v_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]];
               norm_v=fmax(norm_v,sqrt(u*u+v*v));
@@ -5903,6 +5939,8 @@ namespace proteus
                     globalJacobian.data()[v_v_nz.at(ij)] += gamma_cutfem*h_cutfem*DW_Dn_jump_j*DW_Dn_jump_i*dS;
                   }//i,j
             }//kb
+	  it++;
+	  it_local++;
         }//cutfem element boundaries
       //
       //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
@@ -6591,7 +6629,7 @@ namespace proteus
               //
               ck.calculateGScale(G,normal,h_penalty);
               penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext.data()[ebNE_kb];
-              if (elementIsActive[eN])
+              if (isActiveElement[eN])
                 //                if(true)//boundaryFlags[ebN] > 0)
                 { //if boundary flag positive, then include flux contributions on interpart boundaries
                   for (int j=0;j<nDOF_trial_element;j++)
@@ -6661,7 +6699,7 @@ namespace proteus
               //update the global Jacobian from the flux Jacobian
               //
               const double H_s = gf_s.H(particle_eps, ebqe_phi_s[ebNE_kb]);
-              if (elementIsActive[eN])
+              if (isActiveElement[eN])
                 {
                   for (int i=0;i<nDOF_test_element;i++)
                     {

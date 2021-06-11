@@ -916,7 +916,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
-
+        self.model.isActiveElement_last[:] = self.model.isActiveElement
         if self.comm.isMaster():
             # logEvent("wettedAreas\n"+
             #          repr(self.wettedAreas[:]) +
@@ -1707,10 +1707,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.isActiveR[:] = 0.0
             self.isActiveDOF_p[:] = 0.0
             self.isActiveDOF_vel[:] = 0.0
+            self.isActiveElement[:] = 0
         except AttributeError:
             self.isActiveR = np.zeros_like(r)
             self.isActiveDOF_p = np.zeros_like(self.u[0].dof)
             self.isActiveDOF_vel = np.zeros_like(self.u[1].dof)
+            self.isActiveElement = np.zeros((self.mesh.nElements_global,),'i')
+            self.isActiveElement_last = np.ones((self.mesh.nElements_global,),'i')
         self.Ct_sge = 4.0
         self.Cd_sge = 36.0
         self.coefficients.wettedAreas[:] = 0.0
@@ -1974,6 +1977,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["isActiveR"] = self.isActiveR
         argsDict["isActiveDOF_p"] = self.isActiveDOF_p
         argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
+        argsDict["isActiveElement"] = self.isActiveElement
+        argsDict["isActiveElement_last"] = self.isActiveElement_last
         argsDict["normalize_pressure"] = int(self.coefficients.normalize_pressure)
         argsDict["errors"]=self.errors
         argsDict["ball_u"]= self.ball_u
@@ -2336,6 +2341,8 @@ velocity_I.append({:21.16e})
         argsDict["isActiveR"] = self.isActiveR
         argsDict["isActiveDOF_p"] = self.isActiveDOF_p
         argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
+        argsDict["isActiveElement"] = self.isActiveElement
+        argsDict["isActiveElement_last"] = self.isActiveElement_last
         self.rans2p.calculateJacobian(argsDict)
         assert(np.all(np.isfinite(jacobian.getCSRrepresentation()[2])))
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
