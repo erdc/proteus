@@ -216,12 +216,6 @@ namespace proteus
 	      double dyL = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,1)-L(1))));
 	      wall_f(ip,1) = (1.0/wall_stiffness)*( pow(wall_range - dy0,2) * (fmax(0.0, ball_center(ip,1)) + ball_radius(ip)) +
 						    pow(wall_range - dyL,2) * (fmin(L(1), ball_center(ip,1)) - (L(1) + ball_radius(ip))));
-	      /*
-	      double dz0 = fmin(wall_range, 2.0*fabs(ball_center(ip,2)));
-	      double dzL = fmin(wall_range, 2.0*fabs(ball_center(ip,2)-L(2)));
-	      wall_f(ip,2) = (1.0/wall_stiffness)*( pow(wall_range - dz0,2) * 2.0*ball_center(ip,2) +
-						    pow(wall_range - dzL,2) * 2.0*(ball_center(ip,2) - L(2)));
-	      */
 	      wall_f(ip,2) = 0.0;
 	      
 	      for (int i=0; i< 3;i++)
@@ -2450,13 +2444,6 @@ namespace proteus
                   //
                   const double H_s = gf_s.H(particle_eps,phi_solid.data()[eN_k]);
                   const double D_s = gf_s.D(particle_eps,phi_solid.data()[eN_k]);
-		  /*
-                  if ( nParticles == 0 || H_s != 0.0 || D_s != 0.0)
-                    {
-                      element_active=true;
-                      isActiveElement[eN]=true;
-                    }
-		  */
                   //save velocity at quadrature points for other models to use
                   double p_e = q_u_0.data()[eN_k] - p,
                     u_e = q_u_1.data()[eN_k] - u,
@@ -2717,13 +2704,6 @@ namespace proteus
                          dmom_v_acc_v,
                          mom_v_acc_t,
                          dmom_v_acc_v_t);
-		  /* if (isActiveElement_last[eN]==0) */
-		  /*   { */
-		  /*     mom_u_acc_t=0.0; */
-		  /*     dmom_u_acc_u_t=0.0; */
-		  /*     mom_v_acc_t=0.0; */
-		  /*     dmom_v_acc_v_t=0.0; */
-		  /*   } */
 
                   if (NONCONSERVATIVE_FORM > 0.0)
                     {
@@ -5276,13 +5256,6 @@ namespace proteus
                          dmom_v_acc_v,
                          mom_v_acc_t,
                          dmom_v_acc_v_t);
-		  /* if (isActiveElement_last[eN]==0) */
-		  /*   { */
-		  /*     mom_u_acc_t=0.0; */
-		  /*     dmom_u_acc_u_t=0.0; */
-		  /*     mom_v_acc_t=0.0; */
-		  /*     dmom_v_acc_v_t=0.0; */
-		  /*   } */
                   if (NONCONSERVATIVE_FORM > 0.0)
                     {
                       mom_u_acc_t *= dmom_u_acc_u;
