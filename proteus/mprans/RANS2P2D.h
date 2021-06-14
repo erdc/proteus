@@ -309,7 +309,8 @@ namespace proteus
   {
   public:
     std::set<int> ifem_boundaries, ifem_boundary_elements,
-      cutfem_boundaries, cutfem_local_boundaries;
+      cutfem_boundaries;
+    std::map<int, int> cutfem_local_boundaries;
 
     const int nDOF_test_X_trial_element;
     const int nDOF_test_X_v_trial_element;
@@ -2022,7 +2023,8 @@ namespace proteus
                   if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
 		    {
 		      cutfem_boundaries.insert(ebN);
-		      cutfem_local_boundaries.insert(ebN_element);
+		      if (elementBoundaryElementsArray[ebN*2 + 0] == eN)
+			cutfem_local_boundaries[ebN] = ebN_element;
 		    }
                 }
             }
@@ -3174,7 +3176,6 @@ namespace proteus
           mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element));
           mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
         }//elements
-      std::set<int>::iterator it_local = cutfem_local_boundaries.begin();
       std::set<int>::iterator it=cutfem_boundaries.begin();
       while(it!=cutfem_boundaries.end())
         {
@@ -3188,7 +3189,7 @@ namespace proteus
               double norm_v=0.0;
               for (int i_offset=1;i_offset<nDOF_v_trial_element;i_offset++)//MSW18 is just on face, so trying to just use face dof
                 {
-		  int i = (*it_local + i_offset)%nDOF_v_trial_element;
+		  int i = (cutfem_local_boundaries[*it] + i_offset)%nDOF_v_trial_element;
                   double u=u_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
                     v=v_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]];
                   norm_v=fmax(norm_v,sqrt(u*u+v*v));
@@ -3318,12 +3319,10 @@ namespace proteus
                     }//i
                 }//kb
 	      it++;
-	      it_local++;
             }
           else
             {
               it = cutfem_boundaries.erase(it);
-              it_local = cutfem_local_boundaries.erase(it_local);
             }
         }//cutfem element boundaries
       //
@@ -5716,7 +5715,6 @@ namespace proteus
                 }//j
             }//i
         }//elements
-      std::set<int>::iterator it_local=cutfem_local_boundaries.begin();
       std::set<int>::iterator it=cutfem_boundaries.begin();
       while(it!=cutfem_boundaries.end())
         {
@@ -5729,7 +5727,7 @@ namespace proteus
           double norm_v=0.0;
           for (int i_offset=1;i_offset<nDOF_v_trial_element;i_offset++)//MSW18 is just on face
             {
-	      int i = (*it_local + i_offset)%nDOF_v_trial_element;//cek hack only works for P1
+	      int i = (cutfem_local_boundaries[*it] + i_offset)%nDOF_v_trial_element;//cek hack only works for P1
               double u=u_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
                 v=v_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]];
               norm_v=fmax(norm_v,sqrt(u*u+v*v));
@@ -5913,7 +5911,6 @@ namespace proteus
                   }//i,j
             }//kb
 	  it++;
-	  it_local++;
         }//cutfem element boundaries
       //
       //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
