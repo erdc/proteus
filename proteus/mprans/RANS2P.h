@@ -218,8 +218,8 @@ namespace proteus
 						    pow(wall_range - dyL,2) * (fmin(L(1), ball_center(ip,1)) - (L(1) + ball_radius(ip))));
 	      double dz0 = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,2))));
 	      double dzL = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,2)-L(2))));
-	      wall_f(ip,2) = (1.0/wall_stiffness)*( pow(wall_range - dy0,2) * (fmax(0.0, ball_center(ip,2)) + ball_radius(ip)) +
-						    pow(wall_range - dyL,2) * (fmin(L(2), ball_center(ip,2)) - (L(2) + ball_radius(ip))));
+	      wall_f(ip,2) = (1.0/wall_stiffness)*( pow(wall_range - dz0,2) * (fmax(0.0, ball_center(ip,2)) + ball_radius(ip)) +
+						    pow(wall_range - dzL,2) * (fmin(L(2), ball_center(ip,2)) - (L(2) + ball_radius(ip))));
       
 	      for (int i=0; i< 3;i++)
 		ball_f(ip,i) = 0.0;
