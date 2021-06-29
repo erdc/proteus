@@ -6856,20 +6856,13 @@ def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
                         logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution", memSaved=Profiling.memLast))
                         memBeforeMesh = Profiling.memLast
                         logEvent("Generating triangular mesh from regular grid")
-                        globalMesh.generateTriangularMeshFromRectangularGrid(nnx, nny,domain.L[0],domain.L[1])
+                        globalMesh.generateTriangularMeshFromRectangularGrid(nnx, nny,domain.L[0],domain.L[1],triangleFlag=triangleFlag)
                         logEvent("Writing triangle files to {0:s}.ele, etc.".format(fileprefix))
                         globalMesh.writeTriangleFiles(fileprefix, nbase)
                         globalMesh.cmesh.deleteCMesh()
                         del globalMesh
                         import gc
                         gc.collect()
-                        logEvent("Writing triangle edge, etc.files to {0:s}.edge".format(fileprefix))
-                        check_call("rm -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
-                        check_call("triangle -VAen {0:s}.ele".format(fileprefix), shell=True)
-                        check_call("mv -f {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
-                        check_call("mv -f {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
-                        check_call("mv -f {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
-                        check_call("mv -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                         logEvent(Profiling.memory("After Generating Mesh", className="NumericalSolution", memSaved=memBeforeMesh))
                         memAfterMesh = Profiling.memLast
                         logEvent(Profiling.memory("After deleting mesh", className="NumericalSolution", memSaved=memAfterMesh))
