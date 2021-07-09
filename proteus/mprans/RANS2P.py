@@ -995,7 +995,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             mpicomm.Bcast(self.ball_center)
             mpicomm.Bcast(self.ball_velocity)
             mpicomm.Bcast(self.ball_angular_velocity)
-            self.model.q[('cfl',0)][:] = max(self.model.q[('cfl',0)].max(), np.linalg.norm(self.ball_velocity,axis=1).max()/(self.ball_force_range/1.5))
             logEvent("minimimum particle dt {0}".format(min_dt[0]))
             logEvent("particle sub-steps {0}".format(nSteps[0]))
             if self.comm.isMaster():

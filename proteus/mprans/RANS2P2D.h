@@ -234,9 +234,7 @@ namespace proteus
 		    for (int i=0;i<3;i++)
 		      ball_f(ip,i) += f[i];
 		}
-	      double he = ball_force_range/1.5;
-	      cfl(ip) = fmax(vnorm*DT/he, vpnorm*DT/he);
-	      //max_cfl = fmax(max_cfl, vnorm*DT/he);
+	      cfl(ip) = fmax(vnorm*DT/ball_force_range, vpnorm*DT/ball_force_range);
 	    }
 	  double max_cfl = xt::amax(cfl,{0})(0);
 	  if (max_cfl > particle_cfl)
