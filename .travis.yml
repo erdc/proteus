@@ -52,7 +52,7 @@ jobs:
       - echo $PWD
       - ls -l
       - export PYTHONHTTPSVERIFY=0
-      - travis_wait 30 ./hit/bin/hit build -j 2 default.yaml
+      - travis_wait 50 ./hit/bin/hit build -j 2 default.yaml
       - popd
       - export PATHSAVE=$PATH
       - export PATH=$PWD/linux/bin:$PATH
@@ -125,6 +125,6 @@ jobs:
       - export MPLBACKEND="AGG"
       - git lfs install
       - git lfs pull
-      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore=proteus/tests/MoveMeshMonitor
+      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore=proteus/tests/MoveMeshMonitor --ignore proteus/tests/periodic
       - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
       - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py
