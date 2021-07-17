@@ -52,24 +52,24 @@ jobs:
       - echo $PWD
       - ls -l
       - export PYTHONHTTPSVERIFY=0
-      - travis_wait 120 ./hit/bin/hit build -j 1 default.yaml
+      - travis_wait 60 ./hit/bin/hit build -j 2 default.yaml
       - popd
       - export PATHSAVE=$PATH
       - export PATH=$PWD/linux/bin:$PATH
       - export LD_LIBRARY_PATHSAVE=$LD_LIBRARY_PATH
       - export LD_LIBRARY_PATH=$PWD/linux/lib:$LD_LIBRARY_PATH
-      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
+#      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop N=2
     script:
       - export MPLBACKEND=Agg
-      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov --cov-config=.coveragerc
-      - py.test -n 1 --forked -v air-water-vv/Tests/1st_set --cov --cov-append --cov-config=.coveragerc
-      - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set --cov --cov-append --cov-config=.coveragerc
-      - mpiexec -np 2 pytest -v proteus/tests/FSI #can't  do --cov in parallel for now
+#      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov --cov-config=.coveragerc
+#      - py.test -n 1 --forked -v air-water-vv/Tests/1st_set --cov --cov-append --cov-config=.coveragerc
+#      - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set --cov --cov-append --cov-config=.coveragerc
+#      - mpiexec -np 2 pytest -v proteus/tests/FSI #can't  do --cov in parallel for now
       - export PATH=$PATHSAVE
       - export LD_LIBRARY_PATH=$LD_LIBRARY_PATHSAVE
-    after_success:
-      - pip install codecov
-      - codecov
+#    after_success:
+#      - pip install codecov
+#      - codecov
   - stage: test
     name: "conda linux"
     os: linux
