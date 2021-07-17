@@ -149,7 +149,7 @@ class TestVOF(object):
         expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_EV2_' + '_u_t2.csv'
         #write comparison file
         #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=8)
 
         actual.close()
 
