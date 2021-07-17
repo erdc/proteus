@@ -244,7 +244,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  force_y=None,
                  force_z=None,
                  normalize_pressure=False,
-                 useInternalParticleSolver=True):
+                 useInternalParticleSolver=False):
         self.normalize_pressure=normalize_pressure
         self.force_x=force_x
         self.force_y=force_y
