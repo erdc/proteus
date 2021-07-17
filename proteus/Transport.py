@@ -5612,7 +5612,7 @@ class OneLevelTransport(NonlinearEquation):
                 self.dof=r
                 self.name=res_name_base+'{0}'.format(ci)
                 self.femSpace=femSpace
-        for ci in range(self.coefficients.nc):
+        for ci in res_dict.keys():
             self.u[ci].femSpace.writeFunctionXdmf(archive,dummy(ci,res_dict[ci],self.u[ci].femSpace),tCount)
 
     def initializeMassJacobian(self):

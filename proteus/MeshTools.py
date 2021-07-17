@@ -6842,18 +6842,52 @@ def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
                                                                 nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=meshOptions.parallelPartitioningType)
             else:
+                fileprefix = domain.polyfile
+                if fileprefix is None:
+                    fileprefix = "regular_{0}x{1}_grid".format(nnx,nny)
+                nbase = 1
                 if hasattr(meshOptions,'triangleFlag') ==True:
                     triangleFlag = meshOptions.triangleFlag
                 else:
                     triangleFlag = 0
-                mlMesh = MultilevelTriangularMesh(nnx, nny,1,
-                                                            domain.x[0], domain.x[1], 0.0,
-                                                            domain.L[0], domain.L[1],1,
-                                                            refinementLevels=meshOptions.nLevels,
-                                                            nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
-                                                            parallelPartitioningType=meshOptions.parallelPartitioningType,
-                                                            triangleFlag=triangleFlag)
-
+                if generatePartitionedMeshFromFiles:
+                    if comm.isMaster():
+                        globalMesh = TriangularMesh()
+                        logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution", memSaved=Profiling.memLast))
+                        memBeforeMesh = Profiling.memLast
+                        logEvent("Generating triangular mesh from regular grid")
+                        globalMesh.generateTriangularMeshFromRectangularGrid(nnx, nny,domain.L[0],domain.L[1],triangleFlag=triangleFlag)
+                        logEvent("Writing triangle files to {0:s}.ele, etc.".format(fileprefix))
+                        globalMesh.writeTriangleFiles(fileprefix, nbase)
+                        globalMesh.cmesh.deleteCMesh()
+                        del globalMesh
+                        import gc
+                        gc.collect()
+                        logEvent(Profiling.memory("After Generating Mesh", className="NumericalSolution", memSaved=memBeforeMesh))
+                        memAfterMesh = Profiling.memLast
+                        logEvent(Profiling.memory("After deleting mesh", className="NumericalSolution", memSaved=memAfterMesh))
+                    comm.barrier()
+                    logEvent(Profiling.memory("Before partitioning", className="NumericalSolution"))
+                    memBeforePart = Profiling.memLast
+                    logEvent("Generating partitioned mesh from Triangle files")
+                    mesh = TriangularMesh()
+                    mlMesh = MultilevelTriangularMesh(0,0,0,skipInit=True,
+                                                      nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=meshOptions.parallelPartitioningType)
+                    mlMesh.generatePartitionedMeshFromTriangleFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                                    nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                    parallelPartitioningType=meshOptions.parallelPartitioningType)
+                    mlMesh.meshList[0].subdomainMesh.nodeArray[:, 0] += domain.x[0]
+                    mlMesh.meshList[0].subdomainMesh.nodeArray[:, 1] += domain.x[1]
+                    logEvent(Profiling.memory("After partitioning", className="NumericalSolution", memSaved=memBeforePart))
+                else:
+                    mlMesh = MultilevelTriangularMesh(nnx, nny,1,
+                                                      domain.x[0], domain.x[1], 0.0,
+                                                      domain.L[0], domain.L[1],1,
+                                                      refinementLevels=meshOptions.nLevels,
+                                                      nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=meshOptions.parallelPartitioningType,
+                                                      triangleFlag=triangleFlag)
         elif domain.nd == 3:
             if (meshOptions.nnx == meshOptions.nny == meshOptions.nnz is None):
                 nnx = nny = nnz = meshOptions.nn
@@ -7161,7 +7195,7 @@ def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
                                           parallelPartitioningType=meshOptions.parallelPartitioningType)
         logEvent("Generating %i-level mesh from coarse Triangle mesh" % (meshOptions.nLevels,))
         if generatePartitionedMeshFromFiles:
-            logEvent("Generating partitioned mesh from Tetgen files")
+            logEvent("Generating partitioned mesh from Triangle files")
             mlMesh.generatePartitionedMeshFromTriangleFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
                                                           nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=meshOptions.parallelPartitioningType)

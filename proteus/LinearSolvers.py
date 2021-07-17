@@ -516,6 +516,8 @@ class KSP_petsc4py(LinearSolver):
         return self.ksp.converged
     def failed(self):
         failedFlag = LinearSolver.failed(self)
+        logEvent("KSPpetsc4py return flag {0}".format(failedFlag))
+        logEvent("KSP converged flag {0}".format(self.ksp.converged))
         failedFlag = failedFlag or (not self.ksp.converged)
         return failedFlag
 

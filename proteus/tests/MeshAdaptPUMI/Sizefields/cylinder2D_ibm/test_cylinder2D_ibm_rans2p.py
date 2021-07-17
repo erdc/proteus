@@ -8,6 +8,7 @@ from proteus.MeshAdaptPUMI import MeshAdapt
 import tables
 import importlib
 import subprocess
+import pytest
 
 
 comm = Comm.get()
@@ -72,6 +73,7 @@ class Test_Adapt_ibm():
         runCommand = "cd "+currentPath+"; parun -l5 cylinder_so.py -C 'T=0.01 onlySaveFinalSolution=True genMesh=True usePUMI=True';"
         subprocess.check_call(runCommand,shell=True )
 
+    @pytest.mark.skip
     def test_adaptIBM_adaptMesh(self):
         currentPath = os.path.dirname(os.path.abspath(__file__))
         runCommand = "cd "+currentPath+"; parun -l5 cylinder_so.py -C 'T=0.01 onlySaveFinalSolution=True genMesh=False usePUMI=True';"
