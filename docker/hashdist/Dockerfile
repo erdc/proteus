@@ -14,7 +14,7 @@ ENV F90 mpif90
 RUN rm -rf proteus && \
     git clone https://github.com/erdc/proteus && \
     cd proteus && \
-    git checkout master && \
+    git checkout main && \
     git submodule update --init --recursive && \
     make PROTEUS_OPT="-DNDEBUG -g0 -O0" N=1 develop && \
     rm -rf air-water-vv && \

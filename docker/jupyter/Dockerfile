@@ -14,7 +14,7 @@ ENV F90 mpif90
 RUN rm -rf proteus && \
     git clone https://github.com/erdc/proteus && \
     cd proteus && \
-    git checkout master && \
+    git checkout main && \
     git submodule update --init --recursive && \
     make PROTEUS_OPT="-DNDEBUG -g0 -O2" N=2 develop && \
     CC=gcc CXX=g++ ./linux/bin/pip3 install matplotlib && \

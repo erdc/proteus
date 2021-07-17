@@ -14,7 +14,7 @@ ENV F90 mpif90
 RUN rm -rf proteus && \
     git clone https://github.com/erdc/proteus && \
     cd proteus && \
-    git checkout master && \
+    git checkout main && \
     git submodule update --init --recursive && \
     gcc --version && \
     g++ --version && \

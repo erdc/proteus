@@ -41,7 +41,7 @@ jobs:
       script: bash ./scripts/deploy.sh docs
       skip_cleanup: true
       on:
-        branch: master
+        branch: main
   - stage: test
     name: "conda osx"
     os: osx
