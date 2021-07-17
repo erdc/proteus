@@ -6,15 +6,7 @@ rapidly developing computer models and numerical methods.
 
 # Installation
 
-The recommended way is the following:
 
-```bash
-make develop
-make test
-```
-https://github.com/erdc/proteus/wiki/How-to-Build-Proteus
-
-However, we are transitioning to a conda-based environment. Proteus can be installed with:
 
 ```bash
 conda install proteus -c conda-forge
@@ -25,8 +17,17 @@ For a development installation, you want to install Proteus's dependencies and c
 ```bash
 conda env create -f environment-dev.yml
 conda activate proteus-dev
-pip install -v -e .
+make develop-conda # or pip install -v -e .
 ```
+
+You can also build proteus and dependencies from source (without conda) with 
+
+```bash
+make develop
+make test
+```
+
+See https://github.com/erdc/proteus/wiki/How-to-Build-Proteus for more information on building the entire stack.
 
 # Developer Information
 
