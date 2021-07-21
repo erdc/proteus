@@ -358,9 +358,9 @@ endif
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 ifdef CONDA_PREFIX
-	cd ${CONDA_PREFIX}/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+	cd ${CONDA_PREFIX}/lib/python3.9/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
 else
-	cd linux/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+	cd linux/lib/python3.9/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
 endif
 
 jupyterlab:
