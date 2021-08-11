@@ -2,6 +2,7 @@
 #define Richards_H
 #include <cmath>
 #include <iostream>
+#include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
 #include "../mprans/ArgumentsDict.h"
@@ -1585,6 +1586,7 @@ namespace proteus
 
     void calculateResidual_entropy_viscosity(arguments_dict& args)
     {
+      double dt = args.scalar<double>("dt");
       xt::pyarray<double>& mesh_trial_ref = args.array<double>("mesh_trial_ref");
       xt::pyarray<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
       xt::pyarray<double>& mesh_dof = args.array<double>("mesh_dof");
@@ -1626,7 +1628,9 @@ namespace proteus
       double sc_uref = args.scalar<double>("sc_uref");
       double sc_alpha = args.scalar<double>("sc_alpha");
       xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
+      xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
       xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
+      int degree_polynomial = args.scalar<int>("degree_polynomial");
       xt::pyarray<double>& u_dof = args.array<double>("u_dof");
       xt::pyarray<double>& u_dof_old = args.array<double>("u_dof_old");
       xt::pyarray<double>& velocity = args.array<double>("velocity");
@@ -1718,7 +1722,7 @@ namespace proteus
 	  // NODAL ENTROPY //
 	  if (STABILIZATION_TYPE==1) //EV stab
 	    {
-	      double porosity_times_solni = 1.0*u_free_dof_old.data()[i];
+	      double porosity_times_solni = 1.0*u_free_dof_old[i];
 	      eta[i] = ENTROPY_TYPE == 1 ? ENTROPY(porosity_times_solni,uL,uR) : ENTROPY_LOG(porosity_times_solni,uL,uR);
 	      global_entropy_residual[i]=0.;
 	    }
@@ -1776,25 +1780,25 @@ namespace proteus
 	      //get the physical integration weight
 	      ck.calculateMapping_element(eN,
 					  k,
-					  mesh_dof,
-					  mesh_l2g,
-					  mesh_trial_ref,
-					  mesh_grad_trial_ref,
+					  mesh_dof.data(),
+					  mesh_l2g.data(),
+					  mesh_trial_ref.data(),
+					  mesh_grad_trial_ref.data(),
 					  jac,
 					  jacDet,
 					  jacInv,
 					  x,y,z);
 	      ck.calculateMappingVelocity_element(eN,
 						  k,
-						  mesh_velocity_dof,
-						  mesh_l2g,
-						  mesh_trial_ref,
+						  mesh_velocity_dof.data(),
+						  mesh_l2g.data(),
+						  mesh_trial_ref.data(),
 						  xt,yt,zt);
 	      dV = fabs(jacDet)*dV_ref.data()[k];
 	      //get the solution (of Newton's solver). To compute time derivative term
-	      ck.valFromDOF(u_dof,&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
+	      ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
 	      //get the solution at quad point at tn and tnm1 for entropy viscosity
-	      ck.valFromDOF(u_dof_old,&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],un);
+	      ck.valFromDOF(u_dof_old.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],un);
 	      //get the solution gradients at tn for entropy viscosity
 	      ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 	      //precalculate test function products with integration weights for mass matrix terms
@@ -1814,11 +1818,11 @@ namespace proteus
 	      //calculate pde coefficients at quadrature points
 	      //
 	      double Kr, dKr;
-	      evaluateCoefficients(a_rowptr,
-				   a_colind,
+	      evaluateCoefficients(a_rowptr.data(),
+				   a_colind.data(),
 				   rho,
 				   beta,
-				   gravity,
+				   gravity.data(),
 				   alpha.data()[elementMaterialTypes[eN]],
 				   n.data()[elementMaterialTypes[eN]],
 				   thetaR.data()[elementMaterialTypes[eN]],
@@ -1882,13 +1886,13 @@ namespace proteus
 		    {
 		      int j_nSpace = j*nSpace;
 		      int i_nSpace = i*nSpace;
-		      elementTransport[i][j] += ck.SimpleDiffusionJacobian_weak(a_rowptr,
-										a_colind,
+		      elementTransport[i][j] += ck.SimpleDiffusionJacobian_weak(a_rowptr.data(),
+										a_colind.data(),
 										a,
 										&u_grad_trial[j_nSpace],
 										&u_grad_test_dV[i_nSpace]);
-		      elementTransportConsistent[i][j] += Kr*ck.SimpleDiffusionJacobian_weak(a_rowptr,
-											     a_colind,
+		      elementTransportConsistent[i][j] += Kr*ck.SimpleDiffusionJacobian_weak(a_rowptr.data(),
+											     a_colind.data(),
 											     a,
 											     &u_grad_trial[j_nSpace],
 											     &u_grad_test_dV[i_nSpace]);
@@ -1910,7 +1914,7 @@ namespace proteus
 	      globalResidual.data()[gi] += elementResidual_u[i];
 	      // distribute entropy_residual
 	      if (STABILIZATION_TYPE==1) // EV Stab
-		global_entropy_residual.data()[gi] += element_entropy_residual[i];
+		global_entropy_residual[gi] += element_entropy_residual[i];
 	      // distribute transport matrices
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
@@ -2110,7 +2114,7 @@ namespace proteus
 		  etaMaxi = fmax(etaMaxi,fabs(eta[j]));
 		  etaMini = fmin(etaMini,fabs(eta[j]));
 		}
-	      double porosity_times_solnj = 1.0*u_free_dof_old.data()[j];
+	      double porosity_times_solnj = 1.0*u_free_dof_old[j];
 	      // Update Cij matrices
 	      Cij[0] = Cx[ij];
 #if nSpace == 2
@@ -2144,8 +2148,8 @@ namespace proteus
 	  if (STABILIZATION_TYPE==1) //EV Stab
 	    {
 	      // Normalizae entropy residual
-	      global_entropy_residual.data()[i] *= etaMini == etaMaxi ? 0. : 2*cE/(etaMaxi-etaMini);
-	      quantDOFs.data()[i] = fabs(global_entropy_residual.data()[i]);
+	      global_entropy_residual[i] *= etaMini == etaMaxi ? 0. : 2*cE/(etaMaxi-etaMini);
+	      quantDOFs.data()[i] = fabs(global_entropy_residual[i]);
 	    }
 
 	  // Now that I have the gi vectors, I can use them for the current i-th DOF
@@ -2183,9 +2187,9 @@ namespace proteus
 	  quantDOFs.data()[i] = alphai;
 
 	  if (POWER_SMOOTHNESS_INDICATOR==0)
-	    psi.data()[i] = 1.0;
+	    psi[i] = 1.0;
 	  else
-	    psi.data()[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
 	}
       /////////////////////////////////////////////
       // ** LOOP IN DOFs FOR EDGE BASED TERMS ** //
@@ -2194,7 +2198,7 @@ namespace proteus
       for (int i=0; i<numDOFs; i++)
 	{
 	  // NOTE: Transport matrices already have the porosity considered. ---> Dissipation matrices as well.
-	  double solni = u_free_dof_old.data()[i]; // solution at time tn for the ith DOF
+	  double solni = u_free_dof_old[i]; // solution at time tn for the ith DOF
 	  for (int I=0;I<nSpace;I++)
 	    solni -= rho*gravity.data()[I]*mesh_dof.data()[i*3+I];
 	  double porosityi = 1.0;
@@ -2210,7 +2214,7 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops.data()[offset];
-	      double solnj = u_free_dof_old.data()[j]; // solution at time tn for the jth DOF
+	      double solnj = u_free_dof_old[j]; // solution at time tn for the jth DOF
 	      for (int I=0;I<nSpace;I++)
 		solnj -= rho*gravity.data()[I]*mesh_dof.data()[j*3+I];
 	      double porosityj = 1.0;
@@ -2220,17 +2224,17 @@ namespace proteus
 	      fA = fH;
 	      if (-TransportMatrix[ij]*(solnj - solni) <= 0.0)
 		{
-		  evaluateCoefficients(a_rowptr,
-				       a_colind,
+		  evaluateCoefficients(a_rowptr.data(),
+				       a_colind.data(),
 				       rho,
 				       beta,
-				       gravity,
+				       gravity.data(),
 				       alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
 				       n.data()[elementMaterialTypes.data()[0]],
 				       thetaR.data()[elementMaterialTypes.data()[0]],
 				       thetaSR.data()[elementMaterialTypes.data()[0]],
 				       &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
-				       u_free_dof_old.data()[i],
+				       u_free_dof_old[i],
 				       m,
 				       dm,
 				       f,
@@ -2245,17 +2249,17 @@ namespace proteus
 		}
 	      else
 		{
-		  evaluateCoefficients(a_rowptr,
-				       a_colind,
+		  evaluateCoefficients(a_rowptr.data(),
+				       a_colind.data(),
 				       rho,
 				       beta,
-				       gravity,
+				       gravity.data(),
 				       alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
 				       n.data()[elementMaterialTypes.data()[0]],
 				       thetaR.data()[elementMaterialTypes.data()[0]],
 				       thetaSR.data()[elementMaterialTypes.data()[0]],
 				       &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
-				       u_free_dof_old.data()[j],
+				       u_free_dof_old[j],
 				       m,
 				       dm,
 				       f,
@@ -2281,17 +2285,17 @@ namespace proteus
 	  //uDotLow.data()[i] = 1.0/mi*ith_consistent_flux_term;
 	  //+ boundary_integral[i]);
 	  //- ith_low_order_dissipative_term);
-	  evaluateCoefficients(a_rowptr,
-			       a_colind,
+	  evaluateCoefficients(a_rowptr.data(),
+			       a_colind.data(),
 			       rho,
 			       beta,
-			       gravity,
+			       gravity.data(),
 			       alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
 			       n.data()[elementMaterialTypes.data()[0]],
 			       thetaR.data()[elementMaterialTypes.data()[0]],
 			       thetaSR.data()[elementMaterialTypes.data()[0]],
 			       &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
-			       u_free_dof_old.data()[i],
+			       u_free_dof_old[i],
 			       m,
 			       dm,
 			       f,
@@ -2308,11 +2312,11 @@ namespace proteus
 	  //std::cout<<"mass density old "<<m<<std::endl;
 	  m = sLow.data()[i];
 	  //std::cout<<"mass density "<<m<<std::endl;
-	  evaluateInverseCoefficients(a_rowptr,
-				      a_colind,
+	  evaluateInverseCoefficients(a_rowptr.data(),
+				      a_colind.data(),
 				      rho,
 				      beta,
-				      gravity,
+				      gravity.data(),
 				      alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
 				      n.data()[elementMaterialTypes.data()[0]],
 				      thetaR.data()[elementMaterialTypes.data()[0]],
@@ -2405,77 +2409,77 @@ namespace proteus
     {
       //element
       double dt = args.scalar<double>("dt");
-      xt.array<double>& mesh_trial_ref = args.array<double>("");
-      xt.array<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
-      xt.array<double>& mesh_dof = args.array<double>("mesh_dof");
-      xt.array<double>& mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
+      xt::pyarray<double>& mesh_trial_ref = args.array<double>("");
+      xt::pyarray<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
+      xt::pyarray<double>& mesh_dof = args.array<double>("mesh_dof");
+      xt::pyarray<double>& mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
       double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
-      xt.array<int>& mesh_l2g = args.array<int>("mesh_l2g");
-      xt.array<double>& dV_ref = args.array<double>("dV_ref");
-      xt.array<double>& u_trial_ref = args.array<double>("u_trial_ref");
-      xt.array<double>& u_grad_trial_ref = args.array<double>("u_grad_ref");
-      xt.array<double>& u_test_ref = args.array<double>("u_test_ref");
-      xt.array<double>& u_grad_test_ref = args.array<double>("u_grad_test_ref");
+      xt::pyarray<int>& mesh_l2g = args.array<int>("mesh_l2g");
+      xt::pyarray<double>& dV_ref = args.array<double>("dV_ref");
+      xt::pyarray<double>& u_trial_ref = args.array<double>("u_trial_ref");
+      xt::pyarray<double>& u_grad_trial_ref = args.array<double>("u_grad_ref");
+      xt::pyarray<double>& u_test_ref = args.array<double>("u_test_ref");
+      xt::pyarray<double>& u_grad_test_ref = args.array<double>("u_grad_test_ref");
       //element boundary
-      xt.array<double>& mesh_trial_trace_ref = args.array<double>("mesh_trial_trace_ref");
-      xt.array<double>& mesh_grad_trial_trace_ref = args.array<double>("mesh_grad_trial_trace_ref");
-      xt.array<double>& dS_ref = args.array<double>("dS_ref");
-      xt.array<double>& u_trial_trace_ref = args.array<double>("u_trial_trace_ref");
-      xt.array<double>& u_grad_trial_trace_ref = args.array<double>("u_grad_trial_trace_ref");
-      xt.array<double>& u_test_trace_ref = args.array<double>("u_test_trace_ref");
-      xt.array<double>& u_grad_test_trace_ref = args.array<double>("u_grad_test_trace_ref");
-      xt.array<double>& normal_ref = args.array<double>("normal_ref");
-      xt.array<double>& boundaryJac_ref = args.array<double>("boundaryJac_ref");
+      xt::pyarray<double>& mesh_trial_trace_ref = args.array<double>("mesh_trial_trace_ref");
+      xt::pyarray<double>& mesh_grad_trial_trace_ref = args.array<double>("mesh_grad_trial_trace_ref");
+      xt::pyarray<double>& dS_ref = args.array<double>("dS_ref");
+      xt::pyarray<double>& u_trial_trace_ref = args.array<double>("u_trial_trace_ref");
+      xt::pyarray<double>& u_grad_trial_trace_ref = args.array<double>("u_grad_trial_trace_ref");
+      xt::pyarray<double>& u_test_trace_ref = args.array<double>("u_test_trace_ref");
+      xt::pyarray<double>& u_grad_test_trace_ref = args.array<double>("u_grad_test_trace_ref");
+      xt::pyarray<double>& normal_ref = args.array<double>("normal_ref");
+      xt::pyarray<double>& boundaryJac_ref = args.array<double>("boundaryJac_ref");
       //physics
       int nElements_global = args.scalar<int>("nElements_global");
-      xt.array<double>& ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
-      xt.array<int>& elementMaterialTypes = args.array<int>("elementMaterialTypes");	
-      xt.array<int>& isSeepageFace = args.array<int>("isSeepageFace");
-      xt.array<int>& a_rowptr = args.array<int>("a_rowptr");
-      xt.array<int>& a_colind = args.array<int>("a_colind");
+      xt::pyarray<double>& ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
+      xt::pyarray<int>& elementMaterialTypes = args.array<int>("elementMaterialTypes");	
+      xt::pyarray<int>& isSeepageFace = args.array<int>("isSeepageFace");
+      xt::pyarray<int>& a_rowptr = args.array<int>("a_rowptr");
+      xt::pyarray<int>& a_colind = args.array<int>("a_colind");
       double rho = args.scalar<double>("rho");
       double beta = args.scalar<double>("beta");
-      xt.array<double>& gravity = args.array<double>("gravity");
-      xt.array<double>& alpha = args.array<double>("alpha");
-      xt.array<double>& n = args.array<double>("n");
-      xt.array<double>& thetaR = args.array<double>("thetaR");
-      xt.array<double>& thetaSR = args.array<double>("thetaSR");
-      xt.array<double>& KWs = args.array<double>("KWs");
+      xt::pyarray<double>& gravity = args.array<double>("gravity");
+      xt::pyarray<double>& alpha = args.array<double>("alpha");
+      xt::pyarray<double>& n = args.array<double>("n");
+      xt::pyarray<double>& thetaR = args.array<double>("thetaR");
+      xt::pyarray<double>& thetaSR = args.array<double>("thetaSR");
+      xt::pyarray<double>& KWs = args.array<double>("KWs");
       double useMetrics = args.scalar<double>("useMetrics");
       double alphaBDF = args.scalar<double>("alphaBDF");
       int lag_shockCapturing = args.scalar<int>("lag_shockCapturing");
       double shockCapturingDiffusion = args.scalar<double>("shockCapturingDiffusion");
       double sc_uref = args.scalar<double>("sc_uref");
       double sc_alpha = args.scalar<double>("sc_alpha");
-      xt.array<int>& u_l2g = args.array<int>("u_l2g");
-      xt.array<int>& r_l2g = args.array<int>("r_l2g");
-      xt.array<double>& elementDiameter = args.array<double>("elementDiameter");
+      xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
+      xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
+      xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
       int degree_polynomial = args.scalar<int>("degree_polynomial");
-      xt.array<double>& u_dof = args.array<double>("u_dof");
-      xt.array<double>& u_dof_old = args.array<double>("u_dof_old");	
-      xt.array<double>& velocity = args.array<double>("velocity");
-      xt.array<double>& q_m = args.array<double>("q_m");
-      xt.array<double>& q_u = args.array<double>("q_u");
-      xt.array<double>& q_m_betaBDF = args.array<double>("q_m_betaBDF");
-      xt.array<double>& cfl = args.array<double>("cfl");
-      xt.array<double>& edge_based_cfl = args.array<double>("edge_based_cfl");
-      xt.array<double>& q_numDiff_u = args.array<double>("q_numDiff_u"); 
-      xt.array<double>& q_numDiff_u_last = args.array<double>("q_numDiff_u_last"); 
+      xt::pyarray<double>& u_dof = args.array<double>("u_dof");
+      xt::pyarray<double>& u_dof_old = args.array<double>("u_dof_old");	
+      xt::pyarray<double>& velocity = args.array<double>("velocity");
+      xt::pyarray<double>& q_m = args.array<double>("q_m");
+      xt::pyarray<double>& q_u = args.array<double>("q_u");
+      xt::pyarray<double>& q_m_betaBDF = args.array<double>("q_m_betaBDF");
+      xt::pyarray<double>& cfl = args.array<double>("cfl");
+      xt::pyarray<double>& edge_based_cfl = args.array<double>("edge_based_cfl");
+      xt::pyarray<double>& q_numDiff_u = args.array<double>("q_numDiff_u"); 
+      xt::pyarray<double>& q_numDiff_u_last = args.array<double>("q_numDiff_u_last"); 
       int offset_u = args.scalar<int>(""); int stride_u = args.scalar<int>("offset_u"); 
-      xt.array<double>& globalResidual = args.array<double>("globalResidual");
+      xt::pyarray<double>& globalResidual = args.array<double>("globalResidual");
       int nExteriorElementBoundaries_global = args.scalar<int>("nExteriorElementBoundaries_global");
-      xt.array<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
-      xt.array<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
-      xt.array<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
-      xt.array<double>& ebqe_velocity_ext = args.array<double>("ebqe_velocity_ext");
-      xt.array<int>& isDOFBoundary_u = args.array<int>("isDOFBoundary_u");
-      xt.array<double>& ebqe_bc_u_ext = args.array<double>("ebqe_bc_u_ext");
-      xt.array<int>& isFluxBoundary_u = args.array<int>("isFluxBoundary_u");
-      xt.array<double>& ebqe_bc_flux_u_ext = args.array<double>("ebqe_bc_flux_u_ext");
-      xt.array<double>& ebqe_phi = args.array<double>("ebqe_phi");
-      double epsFact = args.array<double>("epsFact");
-      xt.array<double>& ebqe_u = args.array<double>("ebqe_u");
-      xt.array<double>& ebqe_flux = args.array<double>("ebqe_flux");
+      xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
+      xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
+      xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
+      xt::pyarray<double>& ebqe_velocity_ext = args.array<double>("ebqe_velocity_ext");
+      xt::pyarray<int>& isDOFBoundary_u = args.array<int>("isDOFBoundary_u");
+      xt::pyarray<double>& ebqe_bc_u_ext = args.array<double>("ebqe_bc_u_ext");
+      xt::pyarray<int>& isFluxBoundary_u = args.array<int>("isFluxBoundary_u");
+      xt::pyarray<double>& ebqe_bc_flux_u_ext = args.array<double>("ebqe_bc_flux_u_ext");
+      xt::pyarray<double>& ebqe_phi = args.array<double>("ebqe_phi");
+      double epsFact = args.scalar<double>("epsFact");
+      xt::pyarray<double>& ebqe_u = args.array<double>("ebqe_u");
+      xt::pyarray<double>& ebqe_flux = args.array<double>("ebqe_flux");
       // PARAMETERS FOR EDGE BASED STABILIZATION
       double cE = args.scalar<double>("cE");
       double cK = args.scalar<double>("cK");
@@ -2485,42 +2489,42 @@ namespace proteus
       // PARAMETERS FOR EDGE VISCOSITY
       int numDOFs = args.scalar<int>("numDOFs");
       int NNZ = args.scalar<int>("NNZ");
-      xt.array<int>& csrRowIndeces_DofLoops = args.array<int>("csrRowIndeces_DofLoops");
-      xt.array<int>& csrColumnOffsets_DofLoops = args.array<int>("csrColumnOffsets_DofLoops");
-      xt.array<int>& csrRowIndeces_CellLoops = args.array<int>("csrRowIndeces_CellLoops");
-      xt.array<int>& csrColumnOffsets_CellLoops = args.array<int>("csrColumnOffsets_CellLoops");
-      xt.array<int>& csrColumnOffsets_eb_CellLoops = args.array<int>("csrColumnOffsets_eb_CellLoops");
+      xt::pyarray<int>& csrRowIndeces_DofLoops = args.array<int>("csrRowIndeces_DofLoops");
+      xt::pyarray<int>& csrColumnOffsets_DofLoops = args.array<int>("csrColumnOffsets_DofLoops");
+      xt::pyarray<int>& csrRowIndeces_CellLoops = args.array<int>("csrRowIndeces_CellLoops");
+      xt::pyarray<int>& csrColumnOffsets_CellLoops = args.array<int>("csrColumnOffsets_CellLoops");
+      xt::pyarray<int>& csrColumnOffsets_eb_CellLoops = args.array<int>("csrColumnOffsets_eb_CellLoops");
       // C matrices
-      xt.array<double>& Cx = args.array<double>("Cx");
-      xt.array<double>& Cy = args.array<double>("Cy");
-      xt.array<double>& Cz = args.array<double>("Cz");
-      xt.array<double>& CTx = args.array<double>("CTx");
-      xt.array<double>& CTy = args.array<double>("CTy");
-      xt.array<double>& CTz = args.array<double>("CTz");
-      xt.array<double>& ML = args.array<double>("ML");
-      xt.array<double>& delta_x_ij = args.array<double>("delta_x_ij");
+      xt::pyarray<double>& Cx = args.array<double>("Cx");
+      xt::pyarray<double>& Cy = args.array<double>("Cy");
+      xt::pyarray<double>& Cz = args.array<double>("Cz");
+      xt::pyarray<double>& CTx = args.array<double>("CTx");
+      xt::pyarray<double>& CTy = args.array<double>("CTy");
+      xt::pyarray<double>& CTz = args.array<double>("CTz");
+      xt::pyarray<double>& ML = args.array<double>("ML");
+      xt::pyarray<double>& delta_x_ij = args.array<double>("delta_x_ij");
       // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
       int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
       int STABILIZATION_TYPE = args.scalar<int>("STABILIZATION_TYPE");
       int ENTROPY_TYPE = args.scalar<int>("ENTROPY_TYPE");
       // FOR FCT
-      xt.array<double>& dLow = args.array<double>("dLow");
-      xt.array<double>& fluxMatrix = args.array<double>("fluxMatrix");
-      xt.array<double>& uDotLow = args.array<double>("uDotLow");
-      xt.array<double>& uLow = args.array<double>("uLow");
-      xt.array<double>& dt_times_fH_minus_fL = args.array<double>("dt_types_fH_minus_fL");
-      xt.array<double>& min_s_bc = args.array<double>("min_s_bc");
-      xt.array<double>& max_s_bc = args.array<double>("max_s_bc");
+      xt::pyarray<double>& dLow = args.array<double>("dLow");
+      xt::pyarray<double>& fluxMatrix = args.array<double>("fluxMatrix");
+      xt::pyarray<double>& uDotLow = args.array<double>("uDotLow");
+      xt::pyarray<double>& uLow = args.array<double>("uLow");
+      xt::pyarray<double>& dt_times_fH_minus_fL = args.array<double>("dt_types_fH_minus_fL");
+      xt::pyarray<double>& min_s_bc = args.array<double>("min_s_bc");
+      xt::pyarray<double>& max_s_bc = args.array<double>("max_s_bc");
       // AUX QUANTITIES OF INTEREST
-      xt.array<double>& quantDOFs = args.array<double>("quantDOFs");
+      xt::pyarray<double>& quantDOFs = args.array<double>("quantDOFs");
       for (int i=0; i<numDOFs; i++)
 	{
 	  double dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
-	  evaluateInverseCoefficients(a_rowptr,
-				      a_colind,
+	  evaluateInverseCoefficients(a_rowptr.data(),
+				      a_colind.data(),
 				      rho,
 				      beta,
-				      gravity,
+				      gravity.data(),
 				      alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
 				      n.data()[elementMaterialTypes.data()[0]],
 				      thetaR.data()[elementMaterialTypes.data()[0]],
@@ -2540,71 +2544,71 @@ namespace proteus
     {
       //element
       double dt = args.scalar<double>("dt");
-      xt.array<double>& mesh_trial_ref = args.array<double>("mesh_trial_ref");
-      xt.array<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
-      xt.array<double>& mesh_dof = args.array<double>("mesh_dof");
-      xt.array<double>& mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
+      xt::pyarray<double>& mesh_trial_ref = args.array<double>("mesh_trial_ref");
+      xt::pyarray<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
+      xt::pyarray<double>& mesh_dof = args.array<double>("mesh_dof");
+      xt::pyarray<double>& mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
       double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
-      xt.array<int>& mesh_l2g = args.array<int>("mesh_l2g");
-      xt.array<double>& dV_ref = args.array<double>("dV_ref");
-      xt.array<double>& u_trial_ref = args.array<double>("u_trial_ref");
-      xt.array<double>& u_grad_trial_ref = args.array<double>("u_grad_trial_ref");
-      xt.array<double>& u_test_ref = args.array<double>("u_test_ref");
-      xt.array<double>& u_grad_test_ref = args.array<double>("u_grad_test_ref");
+      xt::pyarray<int>& mesh_l2g = args.array<int>("mesh_l2g");
+      xt::pyarray<double>& dV_ref = args.array<double>("dV_ref");
+      xt::pyarray<double>& u_trial_ref = args.array<double>("u_trial_ref");
+      xt::pyarray<double>& u_grad_trial_ref = args.array<double>("u_grad_trial_ref");
+      xt::pyarray<double>& u_test_ref = args.array<double>("u_test_ref");
+      xt::pyarray<double>& u_grad_test_ref = args.array<double>("u_grad_test_ref");
       //element boundary
-      xt.array<double>& mesh_trial_trace_ref = args.array<double>("mesh_trial_trace_ref");
-      xt.array<double>& mesh_grad_trial_trace_ref = args.array<double>("mesh_grad_trial_trace_ref");
-      xt.array<double>& dS_ref = args.array<double>("dS_ref");
-      xt.array<double>& u_trial_trace_ref = args.array<double>("u_trial_trace_ref");
-      xt.array<double>& u_grad_trial_trace_ref = args.array<double>("u_grad_trial_trace_ref");
-      xt.array<double>& u_test_trace_ref = args.array<double>("u_test_trace_ref");
-      xt.array<double>& u_grad_test_trace_ref = args.array<double>("u_grad_test_trace_ref");
-      xt.array<double>& normal_ref = args.array<double>("normal_ref");
-      xt.array<double>& boundaryJac_ref = args.array<double>("boundaryJac_ref");
+      xt::pyarray<double>& mesh_trial_trace_ref = args.array<double>("mesh_trial_trace_ref");
+      xt::pyarray<double>& mesh_grad_trial_trace_ref = args.array<double>("mesh_grad_trial_trace_ref");
+      xt::pyarray<double>& dS_ref = args.array<double>("dS_ref");
+      xt::pyarray<double>& u_trial_trace_ref = args.array<double>("u_trial_trace_ref");
+      xt::pyarray<double>& u_grad_trial_trace_ref = args.array<double>("u_grad_trial_trace_ref");
+      xt::pyarray<double>& u_test_trace_ref = args.array<double>("u_test_trace_ref");
+      xt::pyarray<double>& u_grad_test_trace_ref = args.array<double>("u_grad_test_trace_ref");
+      xt::pyarray<double>& normal_ref = args.array<double>("normal_ref");
+      xt::pyarray<double>& boundaryJac_ref = args.array<double>("boundaryJac_ref");
       //physics
       int nElements_global = args.scalar<int>("nElements_global");
       //new
-      xt.array<double>& ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
-      xt.array<int>& elementMaterialTypes = args.array<int>("elementMaterialTypes");	
-      xt.array<int>& isSeepageFace = args.array<int>("isSeepageFace");
-      xt.array<int>& a_rowptr = args.array<int>("a_rowptr");
-      xt.array<int>& a_colind = args.array<int>("a_colind");
+      xt::pyarray<double>& ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
+      xt::pyarray<int>& elementMaterialTypes = args.array<int>("elementMaterialTypes");	
+      xt::pyarray<int>& isSeepageFace = args.array<int>("isSeepageFace");
+      xt::pyarray<int>& a_rowptr = args.array<int>("a_rowptr");
+      xt::pyarray<int>& a_colind = args.array<int>("a_colind");
       double rho = args.scalar<double>("rho");
       double beta = args.scalar<double>("beta");
-      xt.array<double>& gravity = args.array<double>("gravity");
-      xt.array<double>& alpha = args.array<double>("alpha");
-      xt.array<double>& n = args.array<double>("n");
-      xt.array<double>& thetaR = args.array<double>("thetaR");
-      xt.array<double>& thetaSR = args.array<double>("thetaSR");
-      xt.array<double>& KWs = args.array<double>("KWs");
+      xt::pyarray<double>& gravity = args.array<double>("gravity");
+      xt::pyarray<double>& alpha = args.array<double>("alpha");
+      xt::pyarray<double>& n = args.array<double>("n");
+      xt::pyarray<double>& thetaR = args.array<double>("thetaR");
+      xt::pyarray<double>& thetaSR = args.array<double>("thetaSR");
+      xt::pyarray<double>& KWs = args.array<double>("KWs");
       //end new
       double useMetrics = args.scalar<double>("useMetrics"); 
       double alphaBDF = args.scalar<double>("alphaBDF");
       int lag_shockCapturing = args.scalar<int>("lag_shockCapturing");
       double shockCapturingDiffusion = args.scalar<double>("shockCapturingDiffusions");
-      xt.array<int>& u_l2g = args.array<int>("u_l2g");
-      xt.array<int>& r_l2g = args.array<int>("r_l2g");
-      xt.array<double>& elementDiameter = args.array<double>("elementDiameter");
+      xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
+      xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
+      xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
       int degree_polynomial = args.scalar<int>("degree_polynomial");
-      xt.array<double>& u_dof = args.array<double>("u_dof"); 
-      xt.array<double>& velocity = args.array<double>("velocity");
-      xt.array<double>& q_m_betaBDF = args.array<double>("q_m_betaBDF"); 
-      xt.array<double>& cfl = args.array<double>("cfl");
-      xt.array<double>& q_numDiff_u_last = args.array<double>("q_numDiff_u_last"); 
-      xt.array<int>& csrRowIndeces_u_u = args.array<int>("csrRowIndeces_u_u");
-      xt.array<int>& csrColumnOffsets_u_u = args.array<int>("csrColumnOffsets_u_u");
-      xt.array<double>& globalJacobian = args.array<double>("globalJacobian");
-      xt.array<double>& delta_x_ij = args.array<double>("delta_x_ij");
+      xt::pyarray<double>& u_dof = args.array<double>("u_dof"); 
+      xt::pyarray<double>& velocity = args.array<double>("velocity");
+      xt::pyarray<double>& q_m_betaBDF = args.array<double>("q_m_betaBDF"); 
+      xt::pyarray<double>& cfl = args.array<double>("cfl");
+      xt::pyarray<double>& q_numDiff_u_last = args.array<double>("q_numDiff_u_last"); 
+      xt::pyarray<int>& csrRowIndeces_u_u = args.array<int>("csrRowIndeces_u_u");
+      xt::pyarray<int>& csrColumnOffsets_u_u = args.array<int>("csrColumnOffsets_u_u");
+      xt::pyarray<double>& globalJacobian = args.array<double>("globalJacobian");
+      xt::pyarray<double>& delta_x_ij = args.array<double>("delta_x_ij");
       int nExteriorElementBoundaries_global = args.scalar<int>("nExteriorElementBoundaries_global");
-      xt.array<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
-      xt.array<int>& elementBoundaryElementsArray = args.array<int>("elementBoundariesArray");
-      xt.array<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
-      xt.array<double>& ebqe_velocity_ext = args.array<double>("ebqe_velocity_ext");
-      xt.array<int>& isDOFBoundary_u = args.array<int>("isDOFBoundary_u");
-      xt.array<double>& ebqe_bc_u_ext = args.array<double>("ebqe_bc_u_ext");
-      xt.array<int>& isFluxBoundary_u = args.array<int>("isFluxBoundary_u");
-      xt.array<double>& ebqe_bc_flux_u_ext = args.array<double>("ebqe_bc_flux_u_ext");
-      xt.array<int>& csrColumnOffsets_eb_u_u = args.array<int>("csrColumnOffsets_eb_u_u");
+      xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
+      xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundariesArray");
+      xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
+      xt::pyarray<double>& ebqe_velocity_ext = args.array<double>("ebqe_velocity_ext");
+      xt::pyarray<int>& isDOFBoundary_u = args.array<int>("isDOFBoundary_u");
+      xt::pyarray<double>& ebqe_bc_u_ext = args.array<double>("ebqe_bc_u_ext");
+      xt::pyarray<int>& isFluxBoundary_u = args.array<int>("isFluxBoundary_u");
+      xt::pyarray<double>& ebqe_bc_flux_u_ext = args.array<double>("ebqe_bc_flux_u_ext");
+      xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.array<int>("csrColumnOffsets_eb_u_u");
       int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
       //std::cout<<"ndjaco  address "<<q_numDiff_u_last<<std::endl;
       double Ct_sge = 4.0;
@@ -2652,19 +2656,19 @@ namespace proteus
 	      //get jacobian, etc for mapping reference element
 	      ck.calculateMapping_element(eN,
 					  k,
-					  mesh_dof,
-					  mesh_l2g,
-					  mesh_trial_ref,
-					  mesh_grad_trial_ref,
+					  mesh_dof.data(),
+					  mesh_l2g.data(),
+					  mesh_trial_ref.data(),
+					  mesh_grad_trial_ref.data(),
 					  jac,
 					  jacDet,
 					  jacInv,
 					  x,y,z);
 	      ck.calculateMappingVelocity_element(eN,
 						  k,
-						  mesh_velocity_dof,
-						  mesh_l2g,
-						  mesh_trial_ref,
+						  mesh_velocity_dof.data(),
+						  mesh_l2g.data(),
+						  mesh_trial_ref.data(),
 						  xt,yt,zt);
 	      //get the physical integration weight
 	      dV = fabs(jacDet)*dV_ref.data()[k];
@@ -2672,9 +2676,9 @@ namespace proteus
 	      //get the trial function gradients
 	      ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 	      //get the solution
-	      ck.valFromDOF(u_dof,&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
+	      ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_ref.data()[k*nDOF_trial_element],u);
 	      //get the solution gradients
-	      ck.gradFromDOF(u_dof,&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
+	      ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial,grad_u);
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
@@ -2691,11 +2695,11 @@ namespace proteus
 	      //calculate pde coefficients and derivatives at quadrature points
 	      //
 	      double Kr,dKr;
-	      evaluateCoefficients(a_rowptr,
-				   a_colind,
+	      evaluateCoefficients(a_rowptr.data(),
+				   a_colind.data(),
 				   rho,
 				   beta,
-				   gravity,
+				   gravity.data(),
 				   alpha.data()[elementMaterialTypes.data()[eN]],
 				   n.data()[elementMaterialTypes.data()[eN]],
 				   thetaR.data()[elementMaterialTypes.data()[eN]],
@@ -2809,7 +2813,7 @@ namespace proteus
 		{
 		  int eN_i_j = eN_i*nDOF_trial_element+j;
 		  int J = u_l2g.data()[eN*nDOF_trial_element+j];
-		  globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u.data()[i][j];
+		  globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i][j];
 		  delta_x_ij.data()[3*(csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j])+0] = mesh_dof.data()[I*3+0] - mesh_dof.data()[J*3+0];
 		  delta_x_ij.data()[3*(csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j])+1] = mesh_dof.data()[I*3+1] - mesh_dof.data()[J*3+1];
 		  delta_x_ij.data()[3*(csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j])+2] = mesh_dof.data()[I*3+2] - mesh_dof.data()[J*3+2];
