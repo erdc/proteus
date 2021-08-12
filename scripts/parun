@@ -380,7 +380,7 @@ elif opts.TwoPhaseFlow:
     assert prob is not None, "No TwoPhaseFlowProblem object found"
 
     if len(petsc_argv) > 1:  # then petsc.options external file was used
-        prob.usePETScOptionsFileExternal = True
+        prob.SystemNumerics.usePETScOptionsFileExternal = True
     prob.initializeAll()
     so = prob.so
     so.name = name
