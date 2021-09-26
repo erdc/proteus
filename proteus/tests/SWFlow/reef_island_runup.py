@@ -35,7 +35,8 @@ opts = Context.Options([
     ("structured", True, "Structured or unstructured mesh"),
     ("he", 0.5, "Mesh size for unstructured mesh"),
     ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
-    ("want_gauges", False, "Output for water height point gauge")
+    ("want_gauges", False, "Output for water height point gauge"),
+    ("mannings", 0., "Mannings roughness coefficient") # usually = 0
 ])
 
 ###################
@@ -66,7 +67,7 @@ g = 9.81
 
 # stuff for solitary wave
 h0 = 0.78
-alpha = 0.4  # 0.5 * h0
+alpha = 0.4
 xs = 5.0
 r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
 c = np.sqrt(g * (h0 + alpha))
@@ -147,8 +148,8 @@ heta and hw are needed for the hyperbolic serre-green-naghdi equations.
 For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
 It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
 and BCs for hbeta should be same as x_mom.
-For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
-with topography' by Guermond, Popov, Tovar, Kees.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre--Green-Naghdi Equations
+with topography' by Guermond, Kees, Popov, Tovar.
 """
 
 class heta_at_t0(object):
@@ -239,6 +240,6 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function,
                                               analyticalSolution=None)
-mySWFlowProblem.physical_parameters['mannings'] = 0.0
+mySWFlowProblem.physical_parameters['mannings'] = opts.mannings
 if opts.want_gauges:
     mySWFlowProblem.auxiliaryVariables = [reefPointGauges]
