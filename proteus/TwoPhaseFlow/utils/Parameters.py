@@ -1694,7 +1694,8 @@ class ParametersModelAddedMass(ParametersModelBase):
         # COEFFICIENTS
         coeffs = self.p.coefficients
         coeffs.flowModelIndex = V_model
-        coeffs.barycenters = domain.barycenters
+        if(coeffs.barycenters is None):
+            coeffs.barycenters = domain.barycenters
         coeffs.nd = nd
         coeffs.initialize()
 

@@ -4,6 +4,7 @@
 #include <apfNumbering.h>
 #include <queue>
 #include "PyEmbeddedFunctions.h"
+#include "createAnalyticGeometry.h"
 
 /**
    \file MeshAdaptPUMI.h
@@ -73,8 +74,16 @@ class MeshAdaptPUMIDrvr{
   int gradeMesh(double gradationFactor);
 
   //analytic geometry
-  gmi_model* createSphereInBox(double* boxDim, double*sphereCenter,double radius);
+  void createAnalyticGeometry(int dim, double* boxDim, double*sphereCenter,double radius);
+  void createAnalyticGeometryCylinder(int dim, double* boxDim, double*sphereCenter,double radius);
+  Enclosure modelBox;
+  Sphere modelSphere;
+  Sphere modelCircle1;
+  Sphere modelCircle2;
+  PiercingCylinder modelPiercingCylinder;
+
   void updateSphereCoordinates(double*sphereCenter);
+  void initialAdapt_analytic();
 
   //Quality Check Functions
   double getMinimumQuality();
@@ -107,13 +116,16 @@ class MeshAdaptPUMIDrvr{
   bool hasAnalyticSphere;
   bool useProteus; 
   bool useProteusAniso;
+  bool isAnalytic;
+  bool useQuality;
 
   
 
   //User Inputs
   std::string size_field_config; //What type of size field: interface, ERM, isotropic
   std::string adapt_type_config; //What type of adapt for ERM: isotropic or anisotropic
-  std::string logging_config; // Logging on or off
+  //std::string logging_config; // Logging on or off
+  bool logging_config; // Logging on or off
 
   //Element Residual Method
   void get_local_error(double& total_error);

@@ -257,7 +257,6 @@ class PUMI_helper:
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
         self.auxiliaryVariables = {}
-        self.newAuxiliaryVariables = {}
         if self.simFlagsList is not None:
             for p, n, simFlags, model, index in zip(
                     self.pList,
@@ -302,7 +301,7 @@ class PUMI_helper:
                       av.dofsVecs = []
                       av.field_ids=[]
                       av.isGaugeOwner=False
-                ##reinitialize auxiliaryVariables
+                ##reinitialize auxiliaryVariables 
                 self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
         else:
             for p,n,s,model,index in zip(
@@ -319,11 +318,25 @@ class PUMI_helper:
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
 
-        #just added, need to initialize structures
+        #just added, need to initialize structures  
+        #chrono_aux = self.auxiliaryVariables['rans2p'][0]
+        #chrono_aux.initialized=False
+        #chrono_aux.calculate_init()
+        #chrono_aux.model_mesh = self.modelList[1].levelModelList[-1].mesh
+        #chrono_aux.model_addedmass = self.modelList[2]
+
+        #if chrono_aux.build_kdtree is True:
+        #    chrono_aux.u = self.modelList[1].levelModelList[-1].u
+        #    # finite element space (! linear for p, quadratic for velocity)
+        #    chrono_aux.femSpace_velocity = chrono_aux.u[1].femSpace
+        #    self.femSpace_pressure = chrono_aux.u[0].femSpace
+        #    self.nodes_kdtree = spatial.cKDTree(chrono_aux.modelList[1].levelModelList[-1].mesh.nodeArray)
+
         for model in self.modelList:
             logEvent("Auxiliary variable calculate_init for model %s" % (model.name,))
             for av in self.auxiliaryVariables[model.name]:
                 #gauges do not need to have aux variables recomputed as this would add additional lines to the output unnecessarily
+                #if hasattr(av,"isGaugeOwner") or isinstance(self.auxiliaryVariables['rans2p'][0],proteus.mbd.CouplingFSI.ProtChSystem):
                 if hasattr(av,"isGaugeOwner"):
                     pass
                 else:
@@ -372,6 +385,16 @@ class PUMI_helper:
             self.modelList[self.flowIdx].levelModelList[0].coefficients.phi_s[:]=scalar[:,0]
             del scalar
 
+        if(self.modelList[0].name=='moveMeshElastic'):
+            moveModel = self.modelList[0].levelModelList[-1]
+            for vci in range(len(moveModel.coefficients.vectorComponents)):
+                moveModel.mesh.nodeVelocityArray[:,vci] = moveModel.u[vci].dof[:]
+                moveModel.u[vci].dof[:] = 0
+                moveModel.coefficients.dt_last = modelListOld[0].levelModelList[-1].coefficients.dt_last 
+        #import pdb; pdb.set_trace()
+        #if(self.modelList[2].name=='addedMass'):
+        #    self.modelList[2].levelModelList[-1].added_mass_i = modelListOld[2].levelModelList[-1].added_mass_i
+        #import pdb; pdb.set_trace()
         logEvent("Attaching models on new mesh to each other")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
@@ -569,6 +592,17 @@ class PUMI_helper:
 
             del scalar
 
+        #mesh motion needs to be accurately transferred 
+        #import pdb; pdb.set_trace()
+        if(self.modelList[0].name=='moveMeshElastic'):
+            vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+            targetVector = self.modelList[0].levelModelList[-1].mesh.nodeVelocityArray
+            for vci in range(targetVector.shape[1]):
+                vector[:,vci] = self.modelList[0].levelModelList[0].mesh.nodeVelocityArray[:,vci]
+            domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(
+                self.modelList[0].levelModelList[0].coefficients.vectorName.encode('utf-8'), vector)
+            del vector
+
         #Get Physical Parameters
         #Can we do this in a problem-independent  way?
 
@@ -602,6 +636,19 @@ class PUMI_helper:
             domain.AdaptManager.PUMIAdapter.adaptMesh() and
             self.so.useOneMesh): #and
             #self.nSolveSteps%domain.AdaptManager.PUMIAdapter.numAdaptSteps()==0):
+
+            #this needs to update before mesh coordinates are updated for reparameterization
+            if self.auxiliaryVariables['rans2p'] != []:
+                if(self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
+                    sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
+                    logEvent("The sphere coordinates are %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
+                    domain.AdaptManager.PUMIAdapter.updateSphereCoordinates(sphereCoords)
+                    logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
+                else:
+                    sys.exit("Haven't been implemented code yet to cover this behavior.")
+            
+
+
             if (b"isotropicProteus" in self.domain.AdaptManager.sizeInputs):
                 domain.AdaptManager.PUMIAdapter.transferFieldToPUMI("proteus_size",
                                                        self.modelList[0].levelModelList[0].mesh.size_field)
@@ -646,20 +693,14 @@ class PUMI_helper:
               minQual = domain.AdaptManager.PUMIAdapter.getMinimumQuality()
               logEvent('The quality is %f ' % (minQual**(1./3.)))
               #adaptMeshNow=True
-              if(minQual**(1./3.)<0.25):
+              #if(minQual**(1./3.)<0.25):
+              if(minQual**(1./3.)<0.7):
                 adaptMeshNow=True
                 logEvent("Need to Adapt")
 
-              if (self.auxiliaryVariables['rans2p'][0].subcomponents[0].__class__.__name__== 'ProtChBody'):
-                sphereCoords = numpy.asarray(self.auxiliaryVariables['rans2p'][0].subcomponents[0].position)
-                domain.AdaptManager.PUMIAdapter.updateSphereCoordinates(sphereCoords)
-                logEvent("Updated the sphere coordinates %f %f %f" % (sphereCoords[0],sphereCoords[1],sphereCoords[2]))
-              else:
-                sys.exit("Haven't been implemented code yet to cover this behavior.")
-            
             if(b'pseudo' in self.domain.AdaptManager.sizeInputs):
                 adaptMeshNow=True
-
+            
             #if not adapting need to return data structures to original form which was modified by PUMI_transferFields()
             if(adaptMeshNow == False):
                 for m in self.modelList:

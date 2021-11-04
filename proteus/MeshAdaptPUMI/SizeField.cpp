@@ -1444,7 +1444,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     //apf::destroyField(curves);
     //apf::destroyField(hess);
 
-    if(logging_config=="on"){
+    if(logging_config){
       char namebuffer[20];
       sprintf(namebuffer,"pumi_preadapt_aniso_%i",nAdapt);
       apf::writeVtkFiles(namebuffer, m);
