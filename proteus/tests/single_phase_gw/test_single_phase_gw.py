@@ -54,7 +54,7 @@ class TestSinglePhaseGW(object):
         reload(sp_gw_p)
         reload(sp_gw_c0p1_n)
         pList = [sp_gw_p]
-        nList = [sp_gw_c0p1_n]    
+        nList = [sp_gw_c0p1_n]
         so = default_so
         sim_name = "single_phase_gw_c0p1"
         so.name = pList[0].name = sim_name +"pe"+repr(comm.size())
@@ -71,12 +71,13 @@ class TestSinglePhaseGW(object):
         failed = ns.calculateSolution(sim_name)
         self.aux_names.append(pList[0].name)
         assert (not failed)
-
+        
+    @pytest.mark.skipif(os.getenv('TEST_PROFILE')=="proteus-conda-osx", reason="need to fix locally on osx")
     def test_ncp1(self):
         reload(sp_gw_p)
         reload(sp_gw_ncp1_n)
         pList = [sp_gw_p]
-        nList = [sp_gw_ncp1_n]    
+        nList = [sp_gw_ncp1_n]
         so = default_so
         sim_name = "single_phase_gw_ncp1"
         so.name = pList[0].name = sim_name +"pe"+repr(comm.size())
@@ -87,7 +88,7 @@ class TestSinglePhaseGW(object):
         opts.gatherArchive=True
         nList[0].linearSolver=default_n.KSP_petsc4py
         nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-        nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior 
+        nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
         #set ksp options
         from petsc4py import PETSc
         OptDB = PETSc.Options()
@@ -106,7 +107,7 @@ class TestSinglePhaseGW(object):
         reload(sp_gw_p)
         reload(sp_gw_c0p1_n)
         pList = [sp_gw_p]
-        nList = [sp_gw_c0p1_n] 
+        nList = [sp_gw_c0p1_n]
         pList[0].ndays=500
         pList[0].nDTout=1
         so = default_so
@@ -158,7 +159,7 @@ class TestSinglePhaseGW(object):
 
         ntries=5
         for i in range(ntries):
-            x=np.random.rand(nc); 
+            x=np.random.rand(nc);
             m_split=np.zeros(nr,'d'); b_split=np.zeros(nr,'d')
             b_full=np.zeros(nr,'d')
             #J.x
@@ -169,9 +170,8 @@ class TestSinglePhaseGW(object):
             m_split /= dt
             #K.x
             stiff_jacobian.matvec(x,b_split)
-            b_split += m_split 
+            b_split += m_split
             npt.assert_almost_equal(b_split,b_full)
 
 if __name__ == '__main__':
     pass
-    
