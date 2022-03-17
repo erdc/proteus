@@ -16,6 +16,7 @@ from builtins import object
 import os
 import numpy as np
 import numpy.testing as npt
+import pytest
 
 from proteus.iproteus import *
 
@@ -71,7 +72,7 @@ class TestSinglePhaseGW(object):
         failed = ns.calculateSolution(sim_name)
         self.aux_names.append(pList[0].name)
         assert (not failed)
-        
+
     @pytest.mark.skipif(os.getenv('TEST_PROFILE')=="proteus-conda-osx", reason="need to fix locally on osx")
     def test_ncp1(self):
         reload(sp_gw_p)
