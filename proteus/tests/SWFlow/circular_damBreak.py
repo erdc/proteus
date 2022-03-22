@@ -8,15 +8,16 @@ from proteus import (Domain, Context, MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 
-"""This is a dam-break problem with three obstacles.  The computation domain is
-D = [0,75m]x[0,30m]. The dam is located at x = 16m and is of height 1.875m. """
+"""
+This is a circular dam break problem used to compare the physics of the two  swflow models.
+"""
 
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
 opts = Context.Options([
     # Simulation options
-    ('sw_model', 0, "sw_model = {0,1} for {SWEs,DSWEs}"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 20., "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
@@ -26,30 +27,29 @@ opts = Context.Options([
     ("he", 0.5, "Mesh size for unstructured mesh"),
     ("reflecting_BCs", True, "Use reflecting BCs"),
     # Problem specific options
-    ("mannings", 0.02, "Mannings roughness coefficient"), # usually = 0.02
-    ("still_water_depth", 0., "Depth of still water above floor"),
-    ("dam_height", 1.875, "Height of water dam above still water"),
-    ("dam_x_location", 16, "X position of dam"),
-    ("cone_amplifier", 1., "Amplification of bathymetry cone magnitudes"),
+    ("mannings", 0.0, "Mannings roughness coefficient"), # usually = 0.
+    ("still_water_depth", 1., "Depth of still water above floor"),
+    ("dam_height", 0.8, "Height of water dam above still water"),
+    ("dam_center", (10., 10.), "Center position of circular dam"),
+    ("dam_radius", 2., "Radius of circular dam"),
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (75.0, 30.0)  # this is length in x direction and y direction
+L = (20.0, 20.0)  # this is length in x direction and y direction
 refinement = opts.refinement
 rectangle = RectangularDomain(L=L)
 
 # CREATE REFINEMENT #
-nnx0 = 6
-nnx = (nnx0 - 1) * (2**refinement) + 1
-nny = old_div((nnx - 1), 2) + 1
+nnx = 50
+nny = 50
 he = old_div(L[0], float(nnx - 1))
 if opts.structured:
     domain = rectangle
 else:
-    rectangle.writePoly("dam3bumps")
-    domain = PlanarStraightLineGraphDomain(fileprefix="dam3bumps")
+    rectangle.writePoly("circular_damBreak")
+    domain = PlanarStraightLineGraphDomain(fileprefix="circular_damBreak")
     domain.MeshOptions.triangleOptions = "pAq30Dena%f" % (0.5 * opts.he**2,)
     nnx = None
     nny = None
@@ -60,11 +60,7 @@ else:
 
 def bathymetry_function(X):
     x = X[0]
-    y = X[1]
-    bump1 = 1. - opts.cone_amplifier * 1. / 8. * np.sqrt((x - 30.)**2 + (y - 6.)**2)
-    bump2 = 1. - opts.cone_amplifier * 1. / 8. * np.sqrt((x - 30.)**2 + (y - 24.)**2)
-    bump3 = 3. - opts.cone_amplifier * 3. / 10. * np.sqrt((x - 47.5)**2 + (y - 15.)**2)
-    return np.maximum(np.maximum(np.maximum(0., bump1), bump2), bump3)
+    return x * 0.
 
 
 ##############################
@@ -75,11 +71,14 @@ class water_height_at_t0(object):
     def uOfXT(self, X, t):
         # position coordinates
         x = X[0]
+        y = X[1]
         # dam options
-        xp = opts.dam_x_location
+        xc = opts.dam_center[0]
+        yc = opts.dam_center[1]
+        r = opts.dam_radius
         # define depth
         h = opts.still_water_depth
-        if (x <= xp):
+        if ((x - xc)**2 + (y - yc)**2 <= r**2):
             h = h + opts.dam_height
         return max(h - bathymetry_function(X), 0.)
 

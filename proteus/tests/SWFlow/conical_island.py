@@ -46,7 +46,7 @@ rectangle = RectangularDomain(L=L)
 # CREATE REFINEMENT #
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
-nny = old_div((nnx - 1), 2) + 1
+nny = old_div((nnx - 1), 1) + 1
 he = old_div(L[0], float(nnx - 1))
 if opts.structured:
     domain = rectangle
@@ -66,7 +66,7 @@ g = 9.81
 h0 = 0.32
 alpha = 0.181 * h0
 xs = 7.56023
-if opts.which_case==1:
+if opts.which_case == 1:
     alpha = 0.091 * h0
     xs = 6.81474
 
@@ -120,6 +120,7 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
+
 """
 heta and hw are needed for the hyperbolic serre-green-naghdi equations.
 For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
@@ -127,7 +128,8 @@ It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be
 and BCs for hbeta should be same as x_mom.
 For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
 with topography' by Guermond, Popov, Tovar, Kees.
-"""        
+"""
+
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):
@@ -144,9 +146,11 @@ class hw_at_t0(object):
         hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
         return hw
 
+
 class Zero(object):
     def uOfXT(self, X, t):
         return 0.
+
 
 ###############################
 ##### BOUNDARY CONDITIONS #####
@@ -186,13 +190,13 @@ boundaryConditions = {'water_height': lambda x, flag: None,
 # ********** GAUGES ********** #
 # **************************** #
 heightPointGauges = PointGauges(gauges=((('h',), ((xs, 16.05, 0),
-                                                 (xs, 14.55, 0),
-                                                 (xs, 13.05, 0),
-                                                 (xs, 11.55, 0),
-                                                 (9.36, 13.80, 0),
-                                                 (10.36, 13.80, 0),
-                                                 (12.96, 11.22, 0),
-                                                 (15.56, 13.80, 0))),),
+                                                  (xs, 14.55, 0),
+                                                  (xs, 13.05, 0),
+                                                  (xs, 11.55, 0),
+                                                  (9.36, 13.80, 0),
+                                                  (10.36, 13.80, 0),
+                                                  (12.96, 11.22, 0),
+                                                  (15.56, 13.80, 0))),),
                                 activeTime=(0.01, opts.final_time),
                                 fileName='island_wave_gauges.csv')
 # ********************************************* #
