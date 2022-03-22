@@ -1,10 +1,10 @@
 [submodule "air-water-vv"]
 	path = air-water-vv
-	url = git://github.com/erdc/air-water-vv.git
+	url = https://github.com/erdc/air-water-vv.git
 	branch = master
 [submodule "stack"]
 	path = stack
-	url = git://github.com/erdc/stack
+	url = https://github.com/erdc/stack
 [submodule "proteus/tests/proteus_tutorial"]
 	path = proteus/tests/proteus_tutorial
-	url = git://github.com/erdc/proteus_tutorial
+	url = https://github.com/erdc/proteus_tutorial
