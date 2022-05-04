@@ -7,7 +7,7 @@
 
 - Copyright 2017 U.S. Federal Government (in countries where recognized) christopher.e.kees@usace.army.mil
 - Copyright 2017 Chris Kees cekees@gmail.com
-- Copyright 2017 HR Wallingford Limited A.Dimakopoulos@hrwallingford.com
+- Copyright 2017 HR Wallingford Limited angdimak@gmail.com
 - Copyright 2017 Alvin Zhang alv.zhang@gmail.com
 - Copyright 2017 Alistair Bentley alistairbntl@gmail.com
 - Copyright 2017 Steven Mattis steve.a.mattis@gmail.com
