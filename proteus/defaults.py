@@ -143,10 +143,10 @@ for k in (set(dir(default_n)) -
     else:
         numerics_excluded_keys.append(k)
 
-_Numerics_base = recordtype.recordtype('Numerics_base',
-                                      [(k,default_n.__dict__[k])
-                                       for k in numerics_default_keys],
-                                      use_slots=False)
+_Numerics_base = namedlist.namedlist('Numerics_base',
+                                    [(k,default_n.__dict__[k])
+                                     for k in numerics_default_keys],
+                                    use_slots=False)
 class Numerics_base(_Numerics_base):
     __frozen = False
 
