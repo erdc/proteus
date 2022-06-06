@@ -212,10 +212,10 @@ for k in (set(dir(default_so)) -
     else:
         system_excluded_keys.append(k)
 
-_System_base = recordtype.recordtype('System_base',
-                                    [(k,default_so.__dict__[k])
-                                     for k in system_default_keys],
-                                    use_slots=False)
+_System_base = namedlist.namedlist('System_base',
+                                  [(k,default_so.__dict__[k])
+                                   for k in system_default_keys],
+                                  use_slots=False)
 
 class System_base(_System_base):
     def __init__(self, **args):
