@@ -27,7 +27,7 @@ Example (use the global context)::
 """
 from __future__ import print_function
 from collections import  namedtuple
-from recordtype import recordtype
+from namedlist import namedlist
 
 from .Profiling import logEvent
 
@@ -55,7 +55,7 @@ def setFromModule(moduleIn,mutable=False):
         if  key[:2] != "__":
             fields[key]=value
     if mutable:
-        Context = recordtype(moduleIn.__name__.split('.')[-1], iter(fields.items()))
+        Context = namedlist(moduleIn.__name__.split('.')[-1], iter(fields.items()))
         context = Context()
     else:
         Context = namedtuple(moduleIn.__name__.split('.')[-1], list(fields.keys()))
