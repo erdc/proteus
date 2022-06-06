@@ -1,4 +1,4 @@
-import sys, recordtype, os, imp, copy, inspect
+import sys, namedlist, os, imp, copy, inspect
 from . import (TransportCoefficients,
                Transport,
                default_p,
@@ -52,10 +52,10 @@ for k in (set(dir(default_p)) -
     else:
         physics_excluded_keys.append(k)
 
-_Physics_base = recordtype.recordtype('Physics_base',
-                                     [(k,default_p.__dict__[k])
-                                      for k in physics_default_keys],
-                                     use_slots=False)
+_Physics_base = namedlist.namedlist('Physics_base',
+                                   [(k,default_p.__dict__[k])
+                                    for k in physics_default_keys],
+                                   use_slots=False)
 class Physics_base(_Physics_base):
     __frozen = False
 
@@ -143,10 +143,10 @@ for k in (set(dir(default_n)) -
     else:
         numerics_excluded_keys.append(k)
 
-_Numerics_base = recordtype.recordtype('Numerics_base',
-                                      [(k,default_n.__dict__[k])
-                                       for k in numerics_default_keys],
-                                      use_slots=False)
+_Numerics_base = namedlist.namedlist('Numerics_base',
+                                    [(k,default_n.__dict__[k])
+                                     for k in numerics_default_keys],
+                                    use_slots=False)
 class Numerics_base(_Numerics_base):
     __frozen = False
 
@@ -212,10 +212,10 @@ for k in (set(dir(default_so)) -
     else:
         system_excluded_keys.append(k)
 
-_System_base = recordtype.recordtype('System_base',
-                                    [(k,default_so.__dict__[k])
-                                     for k in system_default_keys],
-                                    use_slots=False)
+_System_base = namedlist.namedlist('System_base',
+                                  [(k,default_so.__dict__[k])
+                                   for k in system_default_keys],
+                                  use_slots=False)
 
 class System_base(_System_base):
     def __init__(self, **args):
