@@ -1,4 +1,4 @@
-import sys, recordtype, os, imp, copy, inspect
+import sys, namedlist, os, imp, copy, inspect
 from . import (TransportCoefficients,
                Transport,
                default_p,
@@ -52,10 +52,10 @@ for k in (set(dir(default_p)) -
     else:
         physics_excluded_keys.append(k)
 
-_Physics_base = recordtype.recordtype('Physics_base',
-                                     [(k,default_p.__dict__[k])
-                                      for k in physics_default_keys],
-                                     use_slots=False)
+_Physics_base = namedlist.namedlist('Physics_base',
+                                   [(k,default_p.__dict__[k])
+                                    for k in physics_default_keys],
+                                   use_slots=False)
 class Physics_base(_Physics_base):
     __frozen = False
 
