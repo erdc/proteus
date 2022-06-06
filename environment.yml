@@ -5,6 +5,7 @@ channels:
 dependencies:
   - proteus
   - petsc4py
+  - namedlist
   - notebook
   - future
   - ipyparallel
@@ -12,5 +13,3 @@ dependencies:
   - pillow
   - pip
   - xtensor-python
-  - pip:
-    - recordtype
