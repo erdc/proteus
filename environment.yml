@@ -5,7 +5,6 @@ channels:
 dependencies:
   - proteus
   - petsc4py
-  - namedlist
   - notebook
   - future
   - ipyparallel

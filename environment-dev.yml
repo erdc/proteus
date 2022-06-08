@@ -15,7 +15,6 @@ dependencies:
   - mpich =3.4.2
   - mpich-mpicc =3.4.2
   - mpich-mpicxx =3.4.2
-  - namedlist =1.8
   - numpy =1.21.0
   - openblas =0.3.17
   - parmetis =4.0.3
