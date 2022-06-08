@@ -1,4 +1,4 @@
-import sys, namedlist, os, imp, copy, inspect
+import sys, os, imp, copy, inspect, dataclasses
 from . import (TransportCoefficients,
                Transport,
                default_p,
@@ -52,10 +52,11 @@ for k in (set(dir(default_p)) -
     else:
         physics_excluded_keys.append(k)
 
-_Physics_base = namedlist.namedlist('Physics_base',
-                                   [(k,default_p.__dict__[k])
-                                    for k in physics_default_keys],
-                                   use_slots=False)
+_Physics_base = dataclasses.make_dataclass('Physics_base',
+                                           [(k,
+                                             type(default_p.__dict__[k]),
+                                             dataclasses.field(default_factory= lambda x=default_p.__dict__[k]: x))
+                                            for k in physics_default_keys])
 class Physics_base(_Physics_base):
     __frozen = False
 
@@ -143,10 +144,10 @@ for k in (set(dir(default_n)) -
     else:
         numerics_excluded_keys.append(k)
 
-_Numerics_base = namedlist.namedlist('Numerics_base',
-                                    [(k,default_n.__dict__[k])
-                                     for k in numerics_default_keys],
-                                    use_slots=False)
+_Numerics_base = dataclasses.make_dataclass('Numerics_base',
+                                            [(k,type(default_n.__dict__[k]), dataclasses.field(default_factory= lambda x=default_n.__dict__[k]: x))
+                                             for k in numerics_default_keys])
+                                            
 class Numerics_base(_Numerics_base):
     __frozen = False
 
@@ -212,10 +213,9 @@ for k in (set(dir(default_so)) -
     else:
         system_excluded_keys.append(k)
 
-_System_base = namedlist.namedlist('System_base',
-                                  [(k,default_so.__dict__[k])
-                                   for k in system_default_keys],
-                                  use_slots=False)
+_System_base = dataclasses.make_dataclass('System_base',
+                                          [(k,type(default_so.__dict__[k]),dataclasses.field(default_factory= lambda x=default_so.__dict__[k]: x))
+                                           for k in system_default_keys])
 
 class System_base(_System_base):
     def __init__(self, **args):
