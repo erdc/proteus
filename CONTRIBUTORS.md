@@ -7,7 +7,7 @@
 
 - Copyright 2017 U.S. Federal Government (in countries where recognized) christopher.e.kees@usace.army.mil
 - Copyright 2017 Chris Kees cekees@gmail.com
-- Copyright 2017 HR Wallingford Limited A.Dimakopoulos@hrwallingford.com
+- Copyright 2017 HR Wallingford Limited angdimak@gmail.com
 - Copyright 2017 Alvin Zhang alv.zhang@gmail.com
 - Copyright 2017 Alistair Bentley alistairbntl@gmail.com
 - Copyright 2017 Steven Mattis steve.a.mattis@gmail.com
@@ -25,6 +25,7 @@
 - Copyright 2019 David Brochart david.brochart@quantstack.net
 - Copyright 2019 Martin Renou martin.renou@quantstack.net
 - Copyright 2019 Eric Tovar eric.j.tovar@usace.army.mil
+- Copyright 2022 Jan Janssen janssen@lanl.gov
 
 **Note for U.S. Federal Employees**
 

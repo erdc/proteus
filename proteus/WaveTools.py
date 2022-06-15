@@ -463,7 +463,8 @@ def sigma(omega,omega0):
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
 
-
+def custom():
+    pass
 def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
     """Calculates the JONSWAP frequency spectrum (Goda 2009)
 
@@ -1443,8 +1444,15 @@ class RandomWaves(object):
                   fast = True
                  ):
         self.fast= fast
-        validSpectra = [JONSWAP,PM_mod]
+        validSpectra = [JONSWAP,PM_mod,custom]
         spec_fun =loadExistingFunction(spectName, validSpectra)
+        if spec_fun.__name__=="custom":
+            try:
+                f_c=spectral_params["freq_array"]
+                S_c=spectral_params["freq_S"]
+            except:
+                    logEvent('ERROR!: Custom parameters not set')
+                    sys.exit(1)
         self.g = np.array(g)
         waveDir =  setDirVector(np.array(waveDir))
         self.waveDir = waveDir
@@ -1457,11 +1465,17 @@ class RandomWaves(object):
         self.fp = old_div(1.,Tp)
         self.bandFactor = bandFactor
         self.N = N
+        if spec_fun.__name__=="custom":
+            self.N =len(f_c)
         self.mwl = mwl        
         fmax = self.bandFactor*self.fp
         fmin = old_div(self.fp,self.bandFactor)
         self.df = old_div((fmax-fmin),float(self.N-1))
+        if spec_fun.__name__=="custom":
+            self.df = f_c[1]-f_c[0]
         self.fi = np.linspace(fmin,fmax,self.N)
+        if spec_fun.__name__=="custom":
+            self.fi = f_c
         self.omega = 2.*M_PI*self.fi
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
         omega_p = 2.*M_PI/Tp
@@ -1480,19 +1494,27 @@ class RandomWaves(object):
                 logEvent('ERROR! Wavetools.py: phi argument must be an array with N elements')
                 sys.exit(1)
 
+                
+                    
+
+
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
+        
         fim = reduceToIntervals(self.fi,self.df)
         self.fim = fim
-        if (spectral_params is None):
-            self.Si_Jm = spec_fun(fim,self.fp,self.Hs)
+        if spec_fun.__name__ !="custom":
+            if (spectral_params is None):
+                self.Si_Jm = spec_fun(fim,self.fp,self.Hs)
+            else:
+                try:
+                    self.Si_Jm = spec_fun(fim,self.fp,self.Hs,**spectral_params)
+                except:
+                    logEvent('ERROR! Wavetools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
+                    sys.exit(1)
         else:
-            try:
-                self.Si_Jm = spec_fun(fim,self.fp,self.Hs,**spectral_params)
-            except:
-                logEvent('ERROR! Wavetools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
-                sys.exit(1)
-
-        self.tanhF = np.zeros(N,"d")
+            self.Si_Jm = np.interp(fim,self.fi,S_c)
+            
+        self.tanhF = np.zeros(self.N,"d")
         for ii in range(self.N):
             self.tanhF[ii] = float(np.tanh(self.ki[ii]*self.depth) )
 
@@ -2794,6 +2816,8 @@ class RandomNLWaves(object):
         self.fast= fast
         RW = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi,fast = self.fast )
 
+
+        self.N = RW.N
         self.gAbs = RW.gAbs
         self.eta_linear = RW.eta
         self.eta = self.wtError
@@ -2803,15 +2827,15 @@ class RandomNLWaves(object):
         self.ki = RW.ki
         self.kDir = RW.kDir
         self.phi = RW.phi
-        self.N = N
         self.depth = depth
         self.tanhKd = np.zeros(self.N,"d")
         self.sinhKd = np.zeros(self.N,"d")
         for ii in range(self.N):
             self.tanhKd[ii] = np.tanh(self.ki[ii]*self.depth)
             self.sinhKd[ii] = np.sinh(self.ki[ii]*self.depth)
-        self.waveDir = RW.waveDir
-
+            self.waveDir = RW.waveDir
+#        print("Test \n ai:"+str(RW.ai)+"\n ki \n"+str(RW.ki)+"\n phi \n "+str(RW.phi)+"\n om \n"+str(RW.omega))
+#        print("Test \n tanh:"+str(self.tanhKd)+"\n sinh \n"+str(self.sinhKd))
         for ij in range(self.N):
             for kk in range(3):
                 self.kDir_c[3*ij+kk] = self.kDir[ij,kk]
@@ -2931,6 +2955,7 @@ class RandomNLWaves(object):
             Free-surface elevation as a float
 
         """
+        
         cython.declare(xx=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
