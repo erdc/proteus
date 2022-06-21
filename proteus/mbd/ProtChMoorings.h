@@ -10,7 +10,7 @@
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/physics/ChBodyEasy.h"
-#include "chrono/fea/ChElementBeamANCF.h"
+#include "chrono/fea/ChElementBeamANCF_3333.h"
 #include "chrono/fea/ChElementCableANCF.h"
 #include "chrono/fea/ChElementBeamEuler.h"
 #include "chrono/fea/ChBeamSection.h"
