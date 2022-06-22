@@ -25,7 +25,6 @@ reload(n)
 from proteus.Gauges import PointGauges, LineGauges, LineIntegralGauges
 
 from proteus.test_utils.util import setup_profiling, silent_rm
-from nose.tools import eq_
 
 def build1DMesh(p, nnx):
     return MeshTools.MultilevelEdgeMesh(nnx, 1, 1,
@@ -112,7 +111,7 @@ def run_gauge(p, time_list, nd=3, total_nodes=None):
 def parse_gauge_output(filename):
     with open(filename) as f:
         header = f.readline().split(',')
-        eq_(header[0].strip(), 'time')
+        assert header[0].strip() == 'time'
         gauge_names = [gauge_name.strip() for gauge_name in header[1:]]
         f.seek(0)
         data = np.genfromtxt(f, delimiter=",", skip_header=1)
@@ -138,7 +137,7 @@ def test_2D_point_gauge_output():
 
     gauge_names, data = parse_gauge_output(filename)
 
-    eq_(correct_gauge_names, gauge_names)
+    assert correct_gauge_names == gauge_names
     npt.assert_allclose(correct_data, data)
     delete_file(filename)
 
@@ -162,7 +161,7 @@ def test_point_gauge_output():
 
     gauge_names, data = parse_gauge_output(filename)
 
-    eq_(correct_gauge_names, gauge_names)
+    assert correct_gauge_names == gauge_names
     npt.assert_allclose(correct_data, data)
     delete_file(filename)
 
@@ -188,7 +187,7 @@ def test_point_gauge_output_2():
 
     gauge_names, data = parse_gauge_output(filename)
 
-    eq_(correct_gauge_names, gauge_names)
+    assert correct_gauge_names == gauge_names
     npt.assert_allclose(correct_data, data)
     delete_file(filename)
 
@@ -213,7 +212,7 @@ def test_line_integral_gauge_output():
     Comm.get().barrier()
 
     gauge_names, data = parse_gauge_output(filename)
-    eq_(correct_gauge_names, gauge_names)
+    assert correct_gauge_names == gauge_names
     npt.assert_allclose(correct_data, data)
     delete_file(filename)
 
@@ -252,7 +251,7 @@ def test_2D_line_integral_gauge_output():
     Comm.get().barrier()
 
     gauge_names, data = parse_gauge_output(filename)
-    eq_(correct_gauge_names, gauge_names)
+    assert correct_gauge_names == gauge_names
 
     npt.assert_allclose(correct_data, data)
     delete_file(filename)
@@ -293,7 +292,7 @@ def test_line_gauge_output():
 
     gauge_names, data = parse_gauge_output(filename)
 
-    eq_(correct_gauge_names, gauge_names)
+    assert correct_gauge_names == gauge_names
     npt.assert_allclose(correct_data, data)
     delete_file(filename)
 

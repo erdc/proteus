@@ -9,7 +9,6 @@ from proteus import Comm, Profiling
 from collections import namedtuple
 import numpy.testing as npt
 import numpy as np
-from nose.tools import eq_, ok_
 import os
 import math
 import pytest
@@ -91,31 +90,31 @@ class TestMeshTools(object):
         mmp = Node(nodeNumber=7, x=-0.5, y=-0.5, z= 0.5)
         mmm = Node(nodeNumber=8, x=-0.5, y=-0.5, z=-0.5)
         lexicographic_ordering = [ppp, ppm, pmp, pmm, mpp, mpm, mmp, mmm]
-        ok_(origin.N == 0)
-        ok_(origin.p[0] == 0.0)
-        ok_(origin.p[1] == 0.0)
-        ok_(origin.p[2] == 0.0)
-        ok_(origin.length == 1.0)
-        ok_(origin.diameter == 1.0)
-        ok_((origin.unitNormal == Node.xUnitVector).all())
-        ok_(origin == origin_default)
-        ok_(str(origin) == str(origin_default))
-        ok_(hash(origin) == hash(origin_default))
-        ok_(ppp > origin)
+        assert (origin.N == 0)
+        assert (origin.p[0] == 0.0)
+        assert (origin.p[1] == 0.0)
+        assert (origin.p[2] == 0.0)
+        assert (origin.length == 1.0)
+        assert (origin.diameter == 1.0)
+        assert ((origin.unitNormal == Node.xUnitVector).all())
+        assert (origin == origin_default)
+        assert (str(origin) == str(origin_default))
+        assert (hash(origin) == hash(origin_default))
+        assert (ppp > origin)
         for  i in range(8):
             p = lexicographic_ordering[i]
             for pg in lexicographic_ordering[:i]:
-                ok_(pg > p)
-                ok_(pg >= p)
-                ok_(pg != p)
+                assert (pg > p)
+                assert (pg >= p)
+                assert (pg != p)
             for pl in lexicographic_ordering[i+1:]:
-                ok_(pl < p)
-                ok_(pl <= p)
-                ok_(pl != p)
+                assert (pl < p)
+                assert (pl <= p)
+                assert (pl != p)
         v = EVec(0.25,0.35,0.45)
         ntest = Node(29,0.0,0.0,0.0)
         ntest.p +=v
-        ok_((ntest.p == (0.25, 0.35, 0.45)).all())
+        assert ((ntest.p == (0.25, 0.35, 0.45)).all())
 
     def test_Element(self):
         nodesCube= [Node(0,0.0,0.0,0.0),
@@ -128,9 +127,9 @@ class TestMeshTools(object):
                     Node(7,1.0,0.0,1.0)]
         e0 = Element(elementNumber=1, nodes = nodesCube)
         nodesCube.sort()
-        ok_(e0.N == 1)
+        assert (e0.N == 1)
         for N, n   in enumerate(nodesCube):
-            ok_(e0.nodes[N] == n)
+            assert (e0.nodes[N] == n)
 
     def test_Edge(self):
         edge0 = Edge(0,nodes=[Node(0,0.0,0.0,0.0),
@@ -142,36 +141,36 @@ class TestMeshTools(object):
         edgeKeys = list(edgesDisordered.keys())
         edgeKeys.sort()
         for e1,e2_key in zip(edgesOrdered, edgeKeys):
-            ok_(e1.nodes == edgesDisordered[e2_key].nodes)
+            assert (e1.nodes == edgesDisordered[e2_key].nodes)
         edge0.computeGeometricInfo()
-        ok_((edge0.barycenter == EVec(0.5,0.5,0.5)).all())
-        ok_(edge0.length == math.sqrt(3.0))
-        ok_(edge0.diameter == math.sqrt(3.0))
-        ok_(edge0.innerDiameter == math.sqrt(3.0))
-        ok_(edge0.hasGeometricInfo)
+        assert ((edge0.barycenter == EVec(0.5,0.5,0.5)).all())
+        assert (edge0.length == math.sqrt(3.0))
+        assert (edge0.diameter == math.sqrt(3.0))
+        assert (edge0.innerDiameter == math.sqrt(3.0))
+        assert (edge0.hasGeometricInfo)
         nodeSet = set(edge0.nodes + edge1.nodes)
-        ok_(nodeSet == set(getNodesFromEdges([edge0,edge1])))
+        assert (nodeSet == set(getNodesFromEdges([edge0,edge1])))
 
     def test_Polygon(self):
         nodeList = [Node(nodeNumber=1, x= 0.5, y= 0.5, z= 0.5),
                     Node(nodeNumber=2, x= 0.5, y= 0.5, z=-0.5),
                     Node(nodeNumber=3, x= 0.5, y=-0.5, z= 0.5)]
         polygon = Polygon(12,nodes=nodeList)
-        ok_(polygon.N == 12)
-        ok_(len(polygon.nodes) == 3)
+        assert (polygon.N == 12)
+        assert (len(polygon.nodes) == 3)
         nodeList.sort()
-        ok_(tuple(nodeList) == polygon.nodes)
+        assert (tuple(nodeList) == polygon.nodes)
         polygon.edges = [Edge(0,[nodeList[0], nodeList[1]]),
                          Edge(1,[nodeList[1], nodeList[2]]),
                          Edge(2,[nodeList[2], nodeList[0]])]
         edges = getEdgesFromPolygons([polygon])
-        ok_(len(edges) == 3)
+        assert (len(edges) == 3)
         polygon.edges = [Edge(0,[nodeList[0], nodeList[1]]),
                          Edge(1,[nodeList[1], nodeList[2]]),
                          Edge(3,[nodeList[1], nodeList[2]]),
                          Edge(2,[nodeList[2], nodeList[0]])]
         edges = getEdgesFromPolygons([polygon])
-        ok_(len(edges) == 3)
+        assert (len(edges) == 3)
 
     def test_Triangle(self):
         t0 = Triangle(0,nodes=[Node(0, 0.0, 0.0, 0.0),
@@ -180,10 +179,10 @@ class TestMeshTools(object):
         t1 = Triangle(0,nodes=[Node(3, 1.0, 1.0, 0.0),
                                Node(1, 0.0, 1.0, 0.0),
                                Node(2, 1.0, 0.0, 0.0)])
-        ok_(not t0.hasGeometricInfo)
-        ok_(t0.nodes < t1.nodes)
+        assert (not t0.hasGeometricInfo)
+        assert (t0.nodes < t1.nodes)
         t0.computeGeometricInfo()
-        ok_((t0.barycenter == EVec(old_div(1.0,3.0),old_div(1.0,3.0),0.0)).all())
+        assert ((t0.barycenter == EVec(old_div(1.0,3.0),old_div(1.0,3.0),0.0)).all())
         #needs more
 
     def test_Quadrilateral(self):
@@ -203,12 +202,12 @@ class TestMeshTools(object):
                   Edge(6,[nodes[5],nodes[3]])]
         q0 = Quadrilateral(0,edges0)
         q1 = Quadrilateral(1,edges1)
-        ok_(q0.nodes < q1.nodes)
-        ok_(q0.nodes != q1.nodes)
-        ok_( not q0.nodes > q1.nodes)
-        ok_(not q0.hasGeometricInfo)
+        assert (q0.nodes < q1.nodes)
+        assert (q0.nodes != q1.nodes)
+        assert ( not q0.nodes > q1.nodes)
+        assert (not q0.hasGeometricInfo)
         q0.computeGeometricInfo()
-        ok_(q0.area == 1.0)
+        assert (q0.area == 1.0)
 
     def test_Tetrahedron(self):
         nodes0=[Node(0, 0.0, 0.0, 0.0),
@@ -218,12 +217,12 @@ class TestMeshTools(object):
         nodes1=nodes0[1:] + [Node(4, 1.0, 0.0, 1.0)]
         T0 = Tetrahedron(0,nodes0)
         T1 = Tetrahedron(1,nodes1)
-        ok_(T0.nodes < T1.nodes)
-        ok_(T0.nodes != T1.nodes)
-        ok_(not T0.nodes > T1.nodes)
-        ok_(not T0.hasGeometricInfo)
+        assert (T0.nodes < T1.nodes)
+        assert (T0.nodes != T1.nodes)
+        assert (not T0.nodes > T1.nodes)
+        assert (not T0.hasGeometricInfo)
         T0.computeGeometricInfo()
-        ok_(T0.volume == old_div(1.0,6.0))
+        assert (T0.volume == old_div(1.0,6.0))
         triangleDict={}
         for t in T0.triangles:
             triangleDict[t.nodes] = t
@@ -233,22 +232,22 @@ class TestMeshTools(object):
         T0_1 = Tetrahedron(0,nodes0, edgeDict=edgeDict)
         T0_2 = Tetrahedron(0,nodes0, triangleDict=triangleDict)
         T0_3 = Tetrahedron(0,nodes0, edgeDict=edgeDict, triangleDict=triangleDict)
-        ok_(T0.nodes == T0_1.nodes == T0_2.nodes)
+        assert (T0.nodes == T0_1.nodes == T0_2.nodes)
 
     def test_Hexahedron(self):
         hexGrid = RectangularGrid(3,2,2,
                                   2.0,1.0,1.0)
         H0 = hexGrid.hexahedronList[0]
         H1 = hexGrid.hexahedronList[1]
-        ok_(H0.nodes < H1.nodes)
-        ok_(H0.nodes != H1.nodes)
-        ok_(not H0.nodes > H1.nodes)
-        ok_(not H0.hasGeometricInfo)
+        assert (H0.nodes < H1.nodes)
+        assert (H0.nodes != H1.nodes)
+        assert (not H0.nodes > H1.nodes)
+        assert (not H0.hasGeometricInfo)
 
     def test_MeshParallelPartitioningTypes(self):
-        ok_(MeshParallelPartitioningTypes.element == 0)
-        ok_(MeshParallelPartitioningTypes.node == 1)
-        ok_(MeshParallelPartitioningTypes.node !=
+        assert (MeshParallelPartitioningTypes.element == 0)
+        assert (MeshParallelPartitioningTypes.node == 1)
+        assert (MeshParallelPartitioningTypes.node !=
             MeshParallelPartitioningTypes.element)
 
     def test_intersect_points(self):
@@ -387,8 +386,8 @@ class TestMeshTools(object):
 
         mesh = mesh_type(nodeArray=nodeArray, elementNodesArray=elementNodesArray)
         toPolyhedron = tetrahedronVerticesToNormals
-        eq_(getMeshIntersections(mesh, toPolyhedron, endpoints),
-            set([((0.5, 0.5, 0.5), (1, 1, 1)), ((0, 0, 0), (0.5, 0.5, 0.5))]))
+        assert getMeshIntersections(mesh, toPolyhedron, endpoints) == set(
+            [((0.5, 0.5, 0.5), (1, 1, 1)), ((0, 0, 0), (0.5, 0.5, 0.5))])
 
 
     def test_PointMesh(self):
@@ -396,9 +395,9 @@ class TestMeshTools(object):
         pg=PointMesh(points)
         npt.assert_almost_equal(pg.nodeArray, np.array([[ 0., 0., 0.],
                                                         [ 1., 0., 0.]]))
-        ok_(pg.nNodes_global == 2)
-        ok_((pg.elementNodesArray == np.array([0,1])).all())
-        ok_(pg.nElements_global == 2)
+        assert pg.nNodes_global == 2
+        assert (pg.elementNodesArray == np.array([0,1])).all()
+        assert pg.nElements_global == 2
 
     def test_EdgeGrid(self):
          eg=EdgeGrid(nx=3,Lx=1.0)
@@ -408,13 +407,13 @@ class TestMeshTools(object):
          npt.assert_almost_equal(eg.nodeArray,np.array([[ 0.,   0.,   0. ],
                                                        [ 0.5,  0.,   0. ],
                                                        [ 1.,   0.,   0. ]]))
-         ok_(eg.nNodes_global == 3)
-         ok_((eg.elementNodesArray == np.array([[0, 1],
-                                                [1, 2]])).all())
-         ok_(eg.nElements_global == 2)
-         ok_((eg.elementBoundariesArray == [[ 0.,   0.,   0. ],
-                                            [ 0.5,  0.,   0. ],
-                                            [ 1.,   0.,   0. ]]).all())
+         assert eg.nNodes_global == 3
+         assert (eg.elementNodesArray == np.array([[0, 1],
+                                                   [1, 2]])).all()
+         assert eg.nElements_global == 2
+         assert (eg.elementBoundariesArray == [[ 0.,   0.,   0. ],
+                                               [ 0.5,  0.,   0. ],
+                                               [ 1.,   0.,   0. ]]).all()
 
     def test_QuadrilateralGrid(self):
          qg=QuadrilateralGrid(nx=3,ny=3,Lx=1.0,Ly=1.0)
@@ -430,12 +429,12 @@ class TestMeshTools(object):
                                                          [ 1.,   0.,   0., ],
                                                          [ 1.,   0.5,  0., ],
                                                          [ 1.,   1.,   0., ]]))
-         ok_(qg.nNodes_global == 9)
-         ok_((qg.elementNodesArray == np.array([[0, 1, 3, 4],
-                                                [1, 2, 4, 5],
-                                                [3, 4, 6, 7],
-                                                [4, 5, 7, 8]])).all())
-         ok_(qg.nElements_global == 4)
+         assert qg.nNodes_global == 9
+         assert (qg.elementNodesArray == np.array([[0, 1, 3, 4],
+                                                   [1, 2, 4, 5],
+                                                   [3, 4, 6, 7],
+                                                   [4, 5, 7, 8]])).all()
+         assert qg.nElements_global == 4
          edges = np.array([[0, 1],
                            [1, 2],
                            [0, 3],
@@ -448,10 +447,10 @@ class TestMeshTools(object):
                            [5, 8],
                            [6, 7],
                            [7, 8]])
-         ok_((qg.elementBoundariesArray == edges).all())
-         ok_(qg.nElementBoundaries_global == 12)
-         ok_((qg.edgeNodesArray == edges).all())
-         ok_(qg.nEdges_global == 12)
+         assert (qg.elementBoundariesArray == edges).all()
+         assert qg.nElementBoundaries_global == 12
+         assert (qg.edgeNodesArray == edges).all()
+         assert qg.nEdges_global == 12
 
     def test_RectangularGrid_1D(self):
          grid1d = RectangularGrid(3,1,1,1.0,1.0,1.0)
@@ -502,9 +501,9 @@ class TestMeshTools(object):
         parent=0
         child=0
         for pN,cL in children.items():
-            ok_(parent == pN)
+            assert parent == pN
             for c in cL:
-                ok_(child == c.N)
+                assert child == c.N
                 child +=1
             parent +=1
         if GNUPLOT:
@@ -521,9 +520,9 @@ class TestMeshTools(object):
                          [10, 14, 11, 15]]
         parent = 0
         for pN,cL in children.items():
-            ok_(parent == pN)
+            assert parent == pN
             for ci,c in enumerate(cL):
-                ok_(childElements[pN][ci] == c.N)
+                assert childElements[pN][ci] == c.N
             parent += 1
 
     def test_Refine_3D(self):
@@ -540,9 +539,9 @@ class TestMeshTools(object):
                          [42,58,46,62,43,59,47,63]]
         parent = 0
         for pN,cL in children.items():
-            ok_(parent == pN)
+            assert parent == pN
             for ci,c in enumerate(cL):
-                ok_(childElements[pN][ci] == c.N)
+                assert childElements[pN][ci] == c.N
             parent += 1
 
     def test_MultilevelEdgeMesh(self):
@@ -559,9 +558,9 @@ class TestMeshTools(object):
                              np.array([0, 0, 1, 1, 2, 2, 3, 3])]
             for l in range(n):
                 if l < n-1:
-                    ok_((elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all())
-                    ok_((elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all())
-                ok_((elementParents[l] == mlMesh.elementParentsArrayList[l]).all())
+                    assert (elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all()
+                    assert (elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all()
+                assert (elementParents[l] == mlMesh.elementParentsArrayList[l]).all()
 
     def test_MultilevelTriangularMesh(self):
         n = 3
@@ -594,9 +593,9 @@ class TestMeshTools(object):
             for l in range(n):
                 if l < n-1:
                     #pass
-                    ok_((elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all())
-                    ok_((elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all())
-                ok_((elementParents[l] == mlMesh.elementParentsArrayList[l]).all())
+                    assert (elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all()
+                    assert (elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all()
+                assert (elementParents[l] == mlMesh.elementParentsArrayList[l]).all()
             mlMesh = MultilevelTriangularMesh(3,3,1,refinementLevels=n,triangleFlag=1)
             mlMesh = MultilevelTriangularMesh(3,3,1,refinementLevels=n,triangleFlag=2)
             mlMesh2 = MultilevelTriangularMesh(0,0,0,skipInit=True)
@@ -668,9 +667,9 @@ class TestMeshTools(object):
                                                                       46, 46, 47, 47, 47, 47, 47, 47, 47, 47], dtype=np.int32)]
             for l in range(n):
                 if l < n-1:
-                    ok_((elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all())
-                    ok_((elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all())
-                ok_((elementParents[l] == mlMesh.elementParentsArrayList[l]).all())
+                    assert (elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all()
+                    assert (elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all()
+                assert (elementParents[l] == mlMesh.elementParentsArrayList[l]).all()
             mlMesh2 = MultilevelTetrahedralMesh(0,0,0,skipInit=True)
             mlMesh2.generateFromExistingCoarseMesh(mlMesh.meshList[0],
                                                    refinementLevels=n)
@@ -681,5 +680,4 @@ class TestMeshTools(object):
                                           refinementLevels=n)
 
 
-if __name__ == '__main__':
-    pass
+

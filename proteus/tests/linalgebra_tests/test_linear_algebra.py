@@ -5,8 +5,6 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 import os
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -58,16 +56,16 @@ def test_vec_create():
     for n in [1, 10, 100, 1000]:
         x = Vec(n)
         # Vector of length n
-        eq(x.size, n)
+        assert x.size == n
         # One-dimensional
-        eq(x.shape, (n,))
+        assert x.shape == (n,)
         # Of type double-precision
-        eq(x.dtype, np.double)
+        assert x.dtype == np.double
         # All entries are zero
-        eq(np.count_nonzero(x), 0)
+        assert np.count_nonzero(x) == 0
         # Verify assignment works
         x[:] = list(range(1, n+1))
-        eq(np.count_nonzero(x), n)
+        assert np.count_nonzero(x) == n
 
 @pytest.mark.LinearAlgebraTools
 def test_mat_create():
@@ -82,18 +80,18 @@ def test_mat_create():
     for m, n in [(1, 1), (1, 10), (100, 1), (500, 500)]:
         x = Mat(m, n)
         # Matrix containing m*n entries
-        eq(x.size, m*n)
+        assert x.size == m*n
         # Two-dimensional
-        eq(x.shape, (m, n))
+        assert x.shape == (m, n)
         # Of type double-precision
-        eq(x.dtype, np.double)
+        assert x.dtype == np.double
         # All entries are zero
-        eq(np.count_nonzero(x), 0)
+        assert np.count_nonzero(x) == 0
         # Assign a row
         x[0, :] = list(range(1, n+1))
         # Assign a column
         x[:, 0] = list(range(1, m+1))
-        eq(np.count_nonzero(x), m+n-1)
+        assert np.count_nonzero(x) == m+n-1
 
 @pytest.mark.LinearAlgebraTools
 def test_vec_scalar_math():
@@ -349,7 +347,3 @@ def test_petsc_load_vec(tmpdir):
 
     A_test = LAT.petsc_load_vector('dne.txt')
     assert A_test is None
-
-if __name__ == '__main__':
-    import nose
-    nose.main()

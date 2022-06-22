@@ -5,8 +5,6 @@ from proteus.MeshAdaptPUMI import MeshAdapt
 from proteus import Domain
 from proteus import Comm
 from petsc4py import PETSc
-from nose.tools import eq_ as eq
-from nose.tools import ok_ as ok
 import os
 import pytest
 
@@ -76,9 +74,9 @@ def test_gmshLoadAndAdapt(verbose=0):
     domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
 
     errorTotal=domain.AdaptManager.PUMIAdapter.get_local_error()
-    ok(errorTotal<1e-14)
+    assert (errorTotal<1e-14)
 
-    #ok(domain.AdaptManager.willAdapt(),1)
+    #assert (domain.AdaptManager.willAdapt(),1)
     domain.AdaptManager.PUMIAdapter.adaptPUMIMesh(b"")
     
     mesh = MeshTools.TetrahedralMesh()
@@ -88,7 +86,7 @@ def test_gmshLoadAndAdapt(verbose=0):
                      parallel = comm.size() > 1,
                      dim = domain.nd)
     nElements_final = mesh.nElements_global
-    ok(nElements_final>nElements_initial)
+    assert (nElements_final>nElements_initial)
 
 def test_2DgmshLoadAndAdapt(verbose=0):
     """Test for loading gmsh mesh through PUMI, estimating error and adapting for 
@@ -154,9 +152,9 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
 
     errorTotal=domain.AdaptManager.PUMIAdapter.get_local_error()
-    ok(errorTotal<1e-14)
+    assert (errorTotal<1e-14)
 
-    #ok(domain.AdaptManager.willAdapt(),1)
+    #assert (domain.AdaptManager.willAdapt(),1)
 
     domain.AdaptManager.PUMIAdapter.adaptPUMIMesh(b"")
     
@@ -167,7 +165,7 @@ def test_2DgmshLoadAndAdapt(verbose=0):
                      parallel = comm.size() > 1,
                      dim = domain.nd)
     nElements_final = mesh.nElements_global
-    ok(nElements_final>nElements_initial)
+    assert (nElements_final>nElements_initial)
 
 def test_2DmultiRegion(verbose=0):
     """Test for loading gmsh mesh through PUMI with multiple-regions"""
@@ -186,10 +184,6 @@ def test_2DmultiRegion(verbose=0):
     mesh.cmesh = cmeshTools.CMesh()
     comm = Comm.init()
     mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
-    ok(mesh.elementMaterialTypes[0]==1)
-    ok(mesh.elementMaterialTypes[-1]==2)
-
-if __name__ == '__main__':
-    import nose
-    nose.main(defaultTest='test_gmshCheck:test_gmshLoadAndAdapt,test_gmshCheck:test_2DgmshLoadAndAdapt,test_gmshCheck:test_2DmultiRegion')
+    assert mesh.elementMaterialTypes[0]==1
+    assert mesh.elementMaterialTypes[-1]==2
 

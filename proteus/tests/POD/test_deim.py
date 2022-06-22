@@ -8,8 +8,6 @@ from builtins import range
 from past.utils import old_div
 import numpy as np
 import numpy.testing as npt
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
 
 from proteus import deim_utils
 
@@ -227,9 +225,3 @@ def test_deim_approx_full(tol=1.0e-12):
     assert errors.min() < tol
     assert errors_mass.min() < tol
 
-if __name__ == "__main__":
-    from proteus import Comm
-    comm = Comm.init()
-    import nose
-    nose.main(defaultTest='test_deim:test_deim_approx_full')
-    

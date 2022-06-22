@@ -4,8 +4,6 @@ from proteus import MeshTools
 from proteus import cmeshTools
 from proteus.MeshAdaptPUMI import MeshAdapt
 from proteus import Domain
-from nose.tools import eq_ as eq
-from nose.tools import ok_ as ok
 import os
 import pytest
 
@@ -25,12 +23,7 @@ def test_meshLoadPUMI(verbose=0):
     cmeshTools.allocateGeometricInfo_tetrahedron(mesh.cmesh)
     cmeshTools.computeGeometricInfo_tetrahedron(mesh.cmesh)
     mesh.buildFromC(mesh.cmesh)
-    eq(mesh.nElements_global,670)
-    eq(mesh.nNodes_global,190)
-    eq(mesh.nEdges_global,977)
-    eq(mesh.nElementBoundaries_global,1458)
-
-if __name__ == '__main__':
-    import nose
-    nose.main(defaultTest='test_meshLoad:test_meshLoadPUMI')
-
+    assert mesh.nElements_global == 670
+    assert mesh.nNodes_global == 190
+    assert mesh.nEdges_global == 977
+    assert mesh.nElementBoundaries_global == 1458
