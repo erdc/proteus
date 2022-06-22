@@ -735,7 +735,7 @@ void cppCable::buildElementsCableANCF(bool set_lastnodes) {
     auto load = chrono_types::make_shared<ChLoadBeamWrench>(element);
     std::shared_ptr<ChLoad<MyLoaderTriangular>> loadtri(new ChLoad<MyLoaderTriangular>(element));
     auto load_volumetric = chrono_types::make_shared<ChLoad<ChLoaderGravity>>(element);
-    load_volumetric->loader.Set_G_acc(ChVector<>(0.,0.,0.));
+    load_volumetric->loader.Set_G_acc(system->Get_G_acc());
     /* loadcontainer->Add(load_distributed); */
     /* loadcontainer->Add(load); */
     loadcontainer->Add(loadtri);  // do not forget to add the load to the load container.
@@ -772,7 +772,7 @@ void cppCable::buildElementsBeamEuler(bool set_lastnodes) {
     auto load = chrono_types::make_shared<ChLoadBeamWrench>(element);
     std::shared_ptr<ChLoad<MyLoaderTriangular>> loadtri(new ChLoad<MyLoaderTriangular>(element));
     auto load_volumetric = chrono_types::make_shared<ChLoad<ChLoaderGravity>>(element);
-    load_volumetric->loader.Set_G_acc(ChVector<>(0.,0.,0.));
+    load_volumetric->loader.Set_G_acc(system->Get_G_acc());
     /* loadcontainer->Add(load_distributed); */
     /* loadcontainer->Add(load); */
     loadcontainer->Add(loadtri);  // do not forget to add the load to the load container.
