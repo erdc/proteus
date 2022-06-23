@@ -55,7 +55,7 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install gmsh
-      - make develop-conda N=2
+      - make develop-conda PROTEUS_OPT="-O0" N=1
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
