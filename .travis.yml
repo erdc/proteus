@@ -26,13 +26,13 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop-conda N=2
+      - make develop-conda N=2
     script:
       - export MPLBACKEND="AGG"
       - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py
       - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
       - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set
-      - mpiexec -np 2 pytest -v proteus/tests/FSI
+      - py.test -n 1 --forked -v proteus/tests/FSI
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
@@ -55,7 +55,7 @@ jobs:
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
       - pip install gmsh
-      - PROTEUS_OPT="-g0 -O2 -DNDEBUG" FC=gfortran CC=mpicc CXX=mpicxx make develop-conda N=2
+      - make develop-conda N=2
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
@@ -63,3 +63,4 @@ jobs:
       - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore=proteus/tests/MoveMeshMonitor --ignore proteus/tests/periodic
       - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
       - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py
+      - py.test -n 1 --forked -v proteus/tests/FSI
