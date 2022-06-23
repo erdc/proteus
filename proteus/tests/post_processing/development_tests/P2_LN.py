@@ -10,9 +10,6 @@ comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 import numpy.testing as npt
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
-from nose.tools import set_trace
 
 def test_BDM2_P2():
     '''
@@ -53,6 +50,4 @@ if __name__ == '__main__':
     comm = Comm.init()
     test_BDM_P1()
 #    test_BDM2_P2()
-   # import nose
-   # nose.main()
 

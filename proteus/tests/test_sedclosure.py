@@ -140,7 +140,7 @@ class TestHsu(unittest.TestCase):
         gl=GlobalVariables()
         import random
         rhoFluid = 10. + random.random()
-        f = 10
+        f = 9
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
