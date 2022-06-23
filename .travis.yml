@@ -1,7 +1,6 @@
 os: linux
 dist: focal
-language: python
-python: 3.10
+language: minimal
 
 notifications:
   email:
@@ -14,8 +13,6 @@ jobs:
     name: "conda linux"
     os: linux
     dist: focal
-    language: python
-    python: 3.10
     env: TEST_PROFILE="proteus-conda"
     install:
       - git lfs pull
@@ -46,8 +43,6 @@ jobs:
     name: "conda osx"
     os: osx
     osx_image: xcode13.4
-    language: ruby
-    python: 2.6.6
     env: TEST_PROFILE="proteus-conda-osx"
     install:
       - wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
