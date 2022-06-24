@@ -49,7 +49,7 @@ vessel = None
 #vessel = 'cube'
 #vessel = 'wigley'
 boundaryTags = { 'bottom': 1, 'front':2, 'right':3, 'back': 4, 'left':5, 'top':6, 'obstacle':7}
-if vessel is 'wigley-gmsh':
+if vessel == 'wigley-gmsh':
     domain = Domain.MeshTetgenDomain(fileprefix="mesh")
     domain.boundaryTags = boundaryTags
 else:
@@ -84,7 +84,7 @@ else:
     regions=[[x_ll[0]+0.5*L[0],x_ll[1]+0.5*L[1],x_ll[2]+0.5*L[2]]]
     regionFlags=[1.0]
     holes=[]
-    if vessel is 'wigley':
+    if vessel == 'wigley':
         from math import log
         he_hull = old_div(log(64.0*he+1.0),64.0)
         #print he,he_hull
@@ -160,7 +160,7 @@ else:
         #for v in vertices: print v
         #for f in facets: print f
         holes.append(hull_center)
-    if vessel is 'cube':
+    if vessel == 'cube':
         nStart = len(vertices)
         vertices.append([hull_center[0] - 0.5*hull_length,
                          hull_center[1] - 0.5*hull_beam,

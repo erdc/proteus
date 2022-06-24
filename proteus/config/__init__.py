@@ -1,7 +1,9 @@
 from __future__ import absolute_import
 import os
 
-if 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('gaffney'):
+if 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('mike'):
+    from .mike import *
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('gaffney'):
     from .gaffney import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('koehr'):
     from .koehr import *

@@ -40,9 +40,9 @@ def init():
         OptDB=PETSc.Options()
         narg = len(argv)
         for i,s in enumerate(argv):
-            if len(s) > 0 and s[0] is '-':
+            if len(s) > 0 and s[0] == '-':
                 name = s
-                if i+1 < narg and  argv[i+1][0] is not '-':
+                if i+1 < narg and  argv[i+1][0] != '-':
                     value = argv[i+1]
                     OptDB.setValue(name,value)
         if not OptDB.hasName("options_left"):
@@ -54,7 +54,7 @@ def init():
     return new_comm
 
 def get():
-    if comm is None:
+    if comm == None:
         logEvent("Comm.get called before init, init is being called for you.", 3)
         return init()
     return comm
