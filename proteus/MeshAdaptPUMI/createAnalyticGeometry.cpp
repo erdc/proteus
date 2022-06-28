@@ -643,7 +643,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
   gradeMesh(1.5);
    
 
-  ma::Input* in = ma::configure(m,size_iso);
+  ma::Input* in = ma::makeAdvanced(ma::configure(m,size_iso));
   in->maximumIterations = 10;
   in->shouldSnap = true;
   in->shouldTransferParametric = true;
@@ -670,7 +670,7 @@ gmi_model* MeshAdaptPUMIDrvr::createSphereInBox(double* boxDim,double*sphereCent
 
   gradeMesh(1.5);
    
-  in = ma::configure(m,size_iso);
+  in = ma::makeAdvanced(ma::configure(m,size_iso));
   in->maximumIterations = 10;
   in->shouldSnap = true;
   in->shouldTransferParametric = true;
