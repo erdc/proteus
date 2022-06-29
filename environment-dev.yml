@@ -20,7 +20,7 @@ dependencies:
   - parmetis =4.0.3
   - petsc4py =3.17.2
   - petsc =3.17.2
-  - scorec =2.2.2
+  - scorec =2.2.7
   - superlu =5.2.2
   - superlu_dist =7.2.0
   - triangle =1.6
