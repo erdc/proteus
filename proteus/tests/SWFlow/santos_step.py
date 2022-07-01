@@ -4,7 +4,8 @@ from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
-from proteus import (Domain, Context, MeshTools as mt)
+from proteus import (Domain, Context,
+                     MeshTools as mt)
 from proteus.Profiling import logEvent
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 
@@ -18,22 +19,21 @@ over a shelf or isolated obstacle'
 # *************************** #
 # ***** GENERAL OPTIONS ***** #
 # *************************** #
-
 opts = Context.Options([
-    ('sw_model', 1, "sw_model = {0,1} for {SWEs, Disperisve SWEs}}"),
+    ('sw_model', 1, "sw_model = {0,1} for {SWEs,DSWEs}"),
     ("final_time", 10.0, "Final time for simulation"),
     ("dt_output", 0.1, "Time interval to output solution"),
     ("cfl", 0.25, "Desired CFL restriction"),
     ("refinement", 4, "Refinement level"),
-    ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
     ("structured", True, "Structured or unstructured mesh"),
-    ("he", 0.1, "Mesh size for unstructured mesh")
+    ("he", 0.1, "Mesh size for unstructured mesh"),
+    ("reflecting_BCs", False, "Use reflecting BCs for all boundaries"),
 ])
 
 ###################
 # DOMAIN AND MESH #
 ###################
-L = (30.0, 2.0)
+L = (30.0, 2.0)  # this is length in x direction and y direction
 refinement = opts.refinement
 rectangle = RectangularDomain(L=L, x=[-15, 0, 0])
 
@@ -70,7 +70,6 @@ def solitary_wave(x, t):
 
 def bathymetry_function(X):
     x = X[0]
-    # return vector of zeros
     return 0.1 * (0.5 + 1.0/np.pi * np.arctan(x/0.075))
 
 
@@ -92,17 +91,13 @@ class x_mom_at_t0(object):
         h = max(hTilde - bathymetry_function(X), 0.)
         return h * c * old_div(hTilde - h0, hTilde)
 
-
-class y_mom_at_t0(object):
-    def uOfXT(self, X, t):
-        return 0.
-
 """
-heta, hw and hbeta are needed for the dispersive Serre--Saint-Venant equations
-(ie shallow water equations). For initial conditions, heta -> h^2, hw -> h^2*div(u),
-hbeta->hu * grad(Z) (hbeta can just be 0 for simplicity).
-For boundary conditions, heta and hw should have same flags as h and hbeta
-same flags as hu.
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
 """
 
 class heta_at_t0(object):
@@ -120,17 +115,15 @@ class hw_at_t0(object):
         hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
         return hw
 
-###################################
-#    FOR ANALYTICAL SOLUTIONS     #
-###################################
 class Zero(object):
-    def uOfXT(self, x, t):
-        return 0.0
+    def uOfXT(self, X, t):
+        return 0.
 
 
 class water_height_at_tfinal(object):
     def uOfXT(self, X, t):
         return h0 + solitary_wave(X[0], opts.final_time)
+
 
 ###############################
 #     BOUNDARY CONDITIONS     #
@@ -140,12 +133,17 @@ Y_coords = (0.0, 2.0)
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0] or X[0] == X_coords[1]:
-        return lambda x, t: 0.0
+        return lambda X, t: 0.0
+
+
 def y_mom_DBC(X, flag):
     if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
-        return lambda x, t: 0.0
+        return lambda X, t: 0.0
+
+
 def hbeta_DBC(X, flag):
-        return lambda x, t: 0.0
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
+        return lambda X, t: 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
@@ -156,7 +154,7 @@ outputStepping = SWFlowProblem.OutputStepping(
     opts.final_time, dt_output=opts.dt_output)
 initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
-                     'y_mom': y_mom_at_t0(),
+                     'y_mom': Zero(),
                      'h_times_eta': heta_at_t0(),
                      'h_times_w': hw_at_t0(),
                      'h_times_beta': Zero()}
@@ -166,12 +164,6 @@ boundaryConditions = {'water_height': lambda x, flag: None,
                       'h_times_eta': lambda x, flag: None,
                       'h_times_w': lambda x, flag: None,
                       'h_times_beta': hbeta_DBC}
-analytical_Solution = {'h_exact': water_height_at_tfinal(),
-                       'hu_exact': Zero(),
-                       'hv_exact': Zero(),
-                       'heta_exact': Zero(),
-                       'hw_exact': Zero(),
-                       'hbeta_exact': Zero()}
 
 mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               cfl=opts.cfl,
@@ -183,4 +175,6 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               domain=domain,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
-                                              bathymetry=bathymetry_function)
+                                              reflectingBCs=opts.reflecting_BCs,
+                                              bathymetry=bathymetry_function,
+                                              analyticalSolution=None)

@@ -235,18 +235,19 @@ else:
             #domain.writePLY("mesh2D")
             #domain.writeAsymptote("mesh2D")
             domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh2D"
-            triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+            domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
             #triangleOptions = "VApen"
         else:
             #domain.writePoly("mesh3D")
             #domain.writePLY("mesh3D")
             #domain.writeAsymptote("mesh3D")
             domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh3D"
-            triangleOptions="VApq1.4q12feena%21.16e" % (old_div((he**3),6.0),)
+            domain.MeshOptions.triangleOptions="VApq1.4q12feena%21.16e" % (old_div((he**3),6.0),)
             #triangleOptions="VApfeena0.002"
             
         logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
+domain.MeshOptions.genMesh=genMesh
 # Numerical parameters
 ns_forceStrongDirichlet = False
 ns_sed_forceStrongDirichlet = False

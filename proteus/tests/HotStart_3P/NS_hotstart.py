@@ -179,7 +179,10 @@ else:
         #domain.writePLY("mesh")
         #domain.writeAsymptote("mesh")
         domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh"
-        triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+        domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+
+domain.MeshOptions.genMesh = genMesh
+
 
 #logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 # Time steppings

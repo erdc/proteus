@@ -87,7 +87,6 @@ class RKEV(proteus.TimeIntegration.SSP):
         argsDict["csrRowIndeces_DofLoops"] = rowptr_cMatrix
         argsDict["csrColumnOffsets_DofLoops"] = colind_cMatrix
         argsDict["hEps"] = self.transport.hEps
-        argsDict["hReg"] = self.transport.hReg
         argsDict["Cx"] = Cx
         argsDict["Cy"] = Cy
         argsDict["CTx"] = CTx
@@ -255,8 +254,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(self,
                  bathymetry,
-                 nu=1.004e-6,
-                 g=9.8,
+                 g=9.81,
                  nd=2,
                  sd=True,
                  movingDomain=False,
@@ -275,7 +273,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.useRBLES = useRBLES
         self.useMetrics = useMetrics
         self.sd = sd
-        self.nu = nu
         self.g = g
         self.nd = nd
         self.cE = cE
@@ -370,7 +367,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
             # Init reflectingBoundaryIndex for partial reflecting boundaries
             self.model.reflectingBoundaryIndex = np.where(np.isin(self.model.mesh.nodeMaterialTypes, 99))[0].tolist()
-            # then redefine as numpy array
             self.model.reflectingBoundaryIndex = np.array(self.model.reflectingBoundaryIndex)
         #
         self.model.h_dof_old[:] = self.model.u[0].dof
@@ -570,9 +566,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # To compute edge_based_cfl from within choose_dt of RKEV
         self.edge_based_cfl = np.zeros(self.u[0].dof.shape)
         self.dLow = None
-        self.hBT = None
-        self.huBT = None
-        self.hvBT = None
         # Old DOFs
         # NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
         # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual).
@@ -584,9 +577,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Vector for mass matrix
         self.check_positivity_water_height = True
         # mesh
-        self.h_dof_sge = self.u[0].dof.copy()
-        self.hu_dof_sge = self.u[1].dof.copy()
-        self.hv_dof_sge = self.u[2].dof.copy()
         self.q['x'] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
         self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary, 3), 'd')
         self.ebq_global[('totalFlux', 0)] = np.zeros((self.mesh.nElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
@@ -595,6 +585,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('dV_u', 1)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('dV_u', 2)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q['dV'] = self.q[('dV_u',0)]
         self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 2)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -714,22 +705,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hReg = None
         self.ML = None  # lumped mass matrix
         self.MC_global = None  # consistent mass matrix
-        # Global C Matrices (mql)
+        ### Global C Matrices (mql)
         self.cterm_global = None
         self.cterm_transpose_global = None
-        # For FCT
+        ### For convex limiting
+        self.urelax = None
+        self.drelax = None
+        self.dH_minus_dL = None
+        self.muH_minus_muL = None
+        self.size_of_domain = None
+        #
+        self.hLow = None
+        self.huLow = None
+        self.hvLow = None
+        #
+        self.h_min = None
+        self.h_max = None
+        self.kin_max = None
+        self.KE_tiny = None
+        #
         self.extendedSourceTerm_hu = None
         self.extendedSourceTerm_hv = None
         self.new_SourceTerm_hu = None
         self.new_SourceTerm_hv = None
-        # for EV
+        ## for EV
         self.dij_small = None
         self.global_entropy_residual = None
-
-        self.dH_minus_dL = None
-        self.muH_minus_muL = None
-        self.size_of_domain = None # for relaxation of bounds
-        # NORMALS
+        ## NORMALS
         self.COMPUTE_NORMALS = 1
         self.normalx = None
         self.normaly = None
@@ -830,10 +832,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].femSpace, dofBoundaryConditionsSetterDict[cj], weakDirichletConditions=False)
 
         compKernelFlag = 0
-        # if self.coefficients.useConstantH:
-        #    self.elementDiameter = self.mesh.elementDiametersArray.copy()
-        #    self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
-        # else:
         self.elementDiameter = self.mesh.elementDiametersArray
         print(self.nSpace_global, " nSpace_global")
         self.sw2d = cSW2DCV_base(self.nSpace_global,
@@ -873,6 +871,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def FCTStep(self):
         # NOTE: this function is meant to be called within the solver
+        comm = Comm.get()
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         # Extract hnp1 from global solution u
         index = list(range(0, len(self.timeIntegration.u)))
@@ -883,6 +882,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         limited_hnp1 = np.zeros(self.h_dof_old.shape)
         limited_hunp1 = np.zeros(self.h_dof_old.shape)
         limited_hvnp1 = np.zeros(self.h_dof_old.shape)
+
+        self.KE_tiny = self.hEps * comm.globalMax(np.amax(self.kin_max))
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["dt"] = self.timeIntegration.dt
@@ -907,15 +908,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["dH_minus_dL"] = self.dH_minus_dL
         argsDict["muH_minus_muL"] = self.muH_minus_muL
         argsDict["hEps"] = self.hEps
-        argsDict["hReg"] = self.hReg
         argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
         argsDict["dLow"] = self.dLow
-        argsDict["hBT"] = self.hBT
-        argsDict["huBT"] = self.huBT
-        argsDict["hvBT"] = self.hvBT
         argsDict["new_SourceTerm_hu"] = self.new_SourceTerm_hu
         argsDict["new_SourceTerm_hv"] = self.new_SourceTerm_hv
-        argsDict["size_of_domain"] = self.size_of_domain
+        argsDict["hLow"] = self.hLow
+        argsDict["huLow"] = self.huLow
+        argsDict["hvLow"] = self.hvLow
+        argsDict["h_min"] = self.h_min
+        argsDict["h_max"] = self.h_max
+        argsDict["kin_max"] = self.kin_max
+        argsDict["KE_tiny"] = self.KE_tiny
         self.sw2d.convexLimiting(argsDict)
 
         # Pass the post processed hnp1 solution to global solution u
@@ -1200,7 +1203,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hu_dof_old = np.copy(self.u[1].dof)
         self.hv_dof_old = np.copy(self.u[2].dof)
         # hEps
-        self.eps = 1E-7
+        self.eps = 1E-5
         self.hEps = self.eps * comm.globalMax(self.u[0].dof.max())
 
         # size_of_domain used in relaxation of bounds
@@ -1213,14 +1216,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # boundary Index: I do this in preStep since I need normalx and normaly to be initialized first
         # Allocate space for dLow (for the first stage in the SSP method)
         self.dLow = np.zeros(self.Cx.shape, 'd')
-        self.hBT = np.zeros(self.Cx.shape, 'd')
-        self.huBT = np.zeros(self.Cx.shape, 'd')
-        self.hvBT = np.zeros(self.Cx.shape, 'd')
         # get coordinates of DOFs
         self.getDOFsCoord()
         # some vectors for convex limiting
+        self.urelax = np.zeros(self.u[0].dof.shape, 'd')
+        self.drelax = np.zeros(self.u[0].dof.shape, 'd')
         self.dH_minus_dL = np.zeros(self.Cx.shape, 'd')
         self.muH_minus_muL = np.zeros(self.Cx.shape, 'd')
+        #
+        self.hLow = np.zeros(self.u[0].dof.shape, 'd')
+        self.huLow = np.zeros(self.u[0].dof.shape, 'd')
+        self.hvLow = np.zeros(self.u[0].dof.shape, 'd')
+        #
+        self.h_min = np.zeros(self.u[0].dof.shape, 'd')
+        self.h_max = np.zeros(self.u[0].dof.shape, 'd')
+        self.kin_max = np.zeros(self.u[0].dof.shape, 'd')
+        #
         self.extendedSourceTerm_hu = np.zeros(self.u[0].dof.shape, 'd')
         self.extendedSourceTerm_hv = np.zeros(self.u[0].dof.shape, 'd')
         self.new_SourceTerm_hu = np.zeros(self.u[0].dof.shape, 'd')
@@ -1233,6 +1244,40 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         N=self.u[0].femSpace.dofMap.nDOF_all_processes
         nghosts = self.u[0].par_dof.nghosts
         subdomain2global=self.u[0].femSpace.dofMap.subdomain2global
+        #
+        self.par_urelax = LAT.ParVec_petsc4py(self.urelax,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_drelax = LAT.ParVec_petsc4py(self.drelax,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_hLow = LAT.ParVec_petsc4py(self.hLow,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_huLow = LAT.ParVec_petsc4py(self.huLow,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_hvLow = LAT.ParVec_petsc4py(self.hvLow,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        #
+        self.par_h_min = LAT.ParVec_petsc4py(self.h_min,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_h_max = LAT.ParVec_petsc4py(self.h_max,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
+        self.par_kin_max = LAT.ParVec_petsc4py(self.kin_max,
+                                                bs=1,
+                                                n=n,N=N,nghosts=nghosts,
+                                                subdomain2global=subdomain2global)
         #
         self.par_extendedSourceTerm_hu = LAT.ParVec_petsc4py(self.extendedSourceTerm_hu,
                                                 bs=1,
@@ -1250,6 +1295,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                 bs=1,
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
+        #
         self.par_global_entropy_residual = LAT.ParVec_petsc4py(self.global_entropy_residual,
                                                 bs=1,
                                                 n=n,N=N,nghosts=nghosts,
@@ -1267,6 +1313,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                 n=n,N=N,nghosts=nghosts,
                                                 subdomain2global=subdomain2global)
         self.par_ML.scatter_forward_insert()
+
+        self.urelax = 1.0 + pow(np.sqrt(np.sqrt(self.ML / self.size_of_domain)),3)
+        self.drelax = 1.0 - pow(np.sqrt(np.sqrt(self.ML / self.size_of_domain)),3)
+        self.par_urelax.scatter_forward_insert()
+        self.par_drelax.scatter_forward_insert()
         #
         self.dataStructuresInitialized = True
     #
@@ -1324,13 +1375,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # lets call calculate EV first and distribute
         self.computeEV()
+        self.par_global_entropy_residual.scatter_forward_insert()
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
         argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
         argsDict["mesh_dof"] = self.mesh.nodeArray
-        argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
-        argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
         argsDict["mesh_l2g"] = self.mesh.elementNodesArray
         argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
         argsDict["h_trial_ref"] = self.u[0].femSpace.psi
@@ -1343,7 +1393,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["vel_grad_test_ref"] = self.u[1].femSpace.grad_psi
         argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
         argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
-        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u', 0)]
         argsDict["h_trial_trace_ref"] = self.u[0].femSpace.psi_trace
         argsDict["h_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
         argsDict["h_test_trace_ref"] = self.u[0].femSpace.psi_trace
@@ -1356,10 +1405,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
         argsDict["elementDiameter"] = self.elementDiameter
         argsDict["nElements_global"] = self.mesh.nElements_global
-        argsDict["useRBLES"] = self.coefficients.useRBLES
-        argsDict["useMetrics"] = self.coefficients.useMetrics
-        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
-        argsDict["nu"] = self.coefficients.nu
         argsDict["g"] = self.coefficients.g
         argsDict["h_l2g"] = self.u[0].femSpace.dofMap.l2g
         argsDict["vel_l2g"] = self.u[1].femSpace.dofMap.l2g
@@ -1370,16 +1415,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["h_dof"] = self.u[0].dof
         argsDict["hu_dof"] = self.u[1].dof
         argsDict["hv_dof"] = self.u[2].dof
-        argsDict["h_dof_sge"] = self.h_dof_sge
-        argsDict["hu_dof_sge"] = self.hu_dof_sge
-        argsDict["hv_dof_sge"] = self.hv_dof_sge
-        argsDict["q_mass_acc"] = self.timeIntegration.m_tmp[0]
-        argsDict["q_mom_hu_acc"] = self.timeIntegration.m_tmp[1]
-        argsDict["q_mom_hv_acc"] = self.timeIntegration.m_tmp[2]
-        argsDict["q_mass_adv"] = self.q[('f', 0)]
-        argsDict["q_mass_acc_beta_bdf"] = self.timeIntegration.beta_bdf[0]
-        argsDict["q_mom_hu_acc_beta_bdf"] = self.timeIntegration.beta_bdf[1]
-        argsDict["q_mom_hv_acc_beta_bdf"] = self.timeIntegration.beta_bdf[2]
         argsDict["q_cfl"] = self.q[('cfl', 0)]
         argsDict["sdInfo_hu_hu_rowptr"] = self.coefficients.sdInfo[(1, 1)][0]
         argsDict["sdInfo_hu_hu_colind"] = self.coefficients.sdInfo[(1, 1)][1]
@@ -1433,7 +1468,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["cfl_run"] = self.timeIntegration.runCFL
         argsDict["eps"] = self.eps
         argsDict["hEps"] = self.hEps
-        argsDict["hReg"] = self.hReg
         argsDict["hnp1_at_quad_point"] = self.q[('u', 0)]
         argsDict["hunp1_at_quad_point"] = self.q[('u', 1)]
         argsDict["hvnp1_at_quad_point"] = self.q[('u', 2)]
@@ -1452,22 +1486,37 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["normalx"] = self.normalx
         argsDict["normaly"] = self.normaly
         argsDict["dLow"] = self.dLow
-        argsDict["hBT"] = self.hBT
-        argsDict["huBT"] = self.huBT
-        argsDict["hvBT"] = self.hvBT
         argsDict["lstage"] = self.timeIntegration.lstage
         argsDict["new_SourceTerm_hu"] = self.new_SourceTerm_hu
         argsDict["new_SourceTerm_hv"] = self.new_SourceTerm_hv
         argsDict["global_entropy_residual"] = self.global_entropy_residual
         argsDict["dij_small"] = self.dij_small
+        argsDict["hLow"] = self.hLow
+        argsDict["huLow"] = self.huLow
+        argsDict["hvLow"] = self.hvLow
+        argsDict["h_min"] = self.h_min
+        argsDict["h_max"] = self.h_max
+        argsDict["kin_max"] = self.kin_max
+        argsDict["size_of_domain"] = self.size_of_domain
+        argsDict["urelax"] = self.urelax
+        argsDict["drelax"] = self.drelax
 
-        # call calculate residual
-        self.par_global_entropy_residual.scatter_forward_insert()
+        ## call calculate residual
         self.calculateResidual(argsDict)
 
-        # distribute source terms
+        ## distribute local bounds and low order solutions (with bar states)
+        self.par_hLow.scatter_forward_insert()
+        self.par_huLow.scatter_forward_insert()
+        self.par_hvLow.scatter_forward_insert()
+        #
+        self.par_h_min.scatter_forward_insert()
+        self.par_h_max.scatter_forward_insert()
+        self.par_kin_max.scatter_forward_insert()
+
+        ## distribute source terms (not sure if needed)
         self.par_extendedSourceTerm_hu.scatter_forward_insert()
         self.par_extendedSourceTerm_hv.scatter_forward_insert()
+        ##
         self.par_new_SourceTerm_hu.scatter_forward_insert()
         self.par_new_SourceTerm_hv.scatter_forward_insert()
 
@@ -1542,10 +1591,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
         argsDict["elementDiameter"] = self.elementDiameter
         argsDict["nElements_global"] = self.mesh.nElements_global
-        argsDict["useRBLES"] = self.coefficients.useRBLES
-        argsDict["useMetrics"] = self.coefficients.useMetrics
-        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
-        argsDict["nu"] = self.coefficients.nu
         argsDict["g"] = self.coefficients.g
         argsDict["h_l2g"] = self.u[0].femSpace.dofMap.l2g
         argsDict["vel_l2g"] = self.u[1].femSpace.dofMap.l2g
@@ -1553,12 +1598,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["h_dof"] = self.u[0].dof
         argsDict["hu_dof"] = self.u[1].dof
         argsDict["hv_dof"] = self.u[2].dof
-        argsDict["h_dof_sge"] = self.h_dof_sge
-        argsDict["hu_dof_sge"] = self.hu_dof_sge
-        argsDict["hv_dof_sge"] = self.hv_dof_sge
-        argsDict["q_mass_acc_beta_bdf"] = self.timeIntegration.beta_bdf[0]
-        argsDict["q_mom_hu_acc_beta_bdf"] = self.timeIntegration.beta_bdf[1]
-        argsDict["q_mom_hv_acc_beta_bdf"] = self.timeIntegration.beta_bdf[2]
         argsDict["q_cfl"] = self.q[('cfl', 0)]
         argsDict["sdInfo_hu_hu_rowptr"] = self.coefficients.sdInfo[(1, 1)][0]
         argsDict["sdInfo_hu_hu_colind"] = self.coefficients.sdInfo[(1, 1)][1]
@@ -1756,9 +1795,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
 
     def calculateAuxiliaryQuantitiesAfterStep(self):
-        self.h_dof_sge[:] = self.u[0].dof
-        self.hu_dof_sge[:] = self.u[1].dof
-        self.hv_dof_sge[:] = self.u[2].dof
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
 
     def getForce(self, cg, forceExtractionFaces, force, moment):

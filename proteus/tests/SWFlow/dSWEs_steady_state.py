@@ -10,12 +10,12 @@ from proteus.Profiling import logEvent
 import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 
 """
-This is the steady state problem for to the dispersive Serre--Saint-Venant
+This is the steady state problem for to the dispersive Serre-Green-Nagdhi
 equations (or dispersive shallow water equations).
 We use the Bernoulli relation to derive the bathymetry profile where
 we assume the water height is given by h = h0 + a h0 sech(r*(x-x0))^2.
 The variables are defined below. See 'Hyperbolic Relaxation Technique
-For Solving The Dispersive Serre--Saint-Venant Equations With Topography'
+For Solving The Dispersive Serre Equations With Topography'
 by Guermond, Kees, Popov, Tovar for more details. Note that this is a fake
 1D problem, ie we are doing simulation in 2d but only consider x dominated flow.
 """
@@ -91,11 +91,12 @@ class y_mom_at_t0(object):
         return 0.
 
 """
-heta and hw are needed for the modified green naghdi equations.
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
 For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
-Note that the BCs for the heta and hw should be same as h.
-For more details see: '' by Guermond, Popov, Tovar, Kees.
-JCP 2020.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
 """
 class heta_at_t0(object):
     def uOfXT(self, X, t):
@@ -178,5 +179,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
                                               bathymetry=bathymetry_function)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
-mySWFlowProblem.physical_parameters['mannings'] = 0
+mySWFlowProblem.physical_parameters['mannings'] = 0.0

@@ -12,7 +12,6 @@ import unittest
 import numpy.testing as npt
 import numpy as np
 import os
-from nose.tools import eq_
 from proteus import Comm, Profiling, Gauges
 from proteus.Profiling import logEvent as log
 from proteus.Domain import (PiecewiseLinearComplexDomain,
@@ -271,7 +270,6 @@ class TestShapeDomainBuilding(unittest.TestCase):
         STLnames = ["Bed0","Concrete0","Inlet0","Outlet0","Top0","Wall0"]
         nSTLs = len(STLnames)
         j = 0
-        print
         for key,value in stl.boundaryTags.items():
             self.assertTrue(STLnames[value-1]==key)
         for key,value in domainSTL.boundaryTags.items():

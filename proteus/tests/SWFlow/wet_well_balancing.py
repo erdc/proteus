@@ -39,7 +39,7 @@ nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
 nny = old_div((nnx - 1), 2) + 1
 he = old_div(L[0], float(nnx - 1))
-triangleOptions = "pAq30Dena%f"  % (0.5 * he**2,)
+triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 if opts.structured:
     domain = rectangle
 else:
@@ -72,12 +72,15 @@ def bathymetry_function(X):
     radius = np.sqrt((x - 12.96)**2 + (y - 13.80)**2)
 
     conds = [radius <= rcone, radius > rcone]
-    bath = [lambda radius: np.minimum(htop, hcone-radius/scone), lambda radius: 0.0]
-    return np.piecewise(radius, conds, bath)
+    bath = [lambda radius: np.minimum(
+        htop, hcone-radius/scone), lambda radius: 0.0]
+    return 0. * x  # np.piecewise(radius, conds, bath)
 
 ##############################
 ##### INITIAL CONDITIONS #####
 ##############################
+
+
 class water_height_at_t0(object):
     def uOfXT(self, X, t):
         return max(h0 - bathymetry_function(X), 0.)
@@ -93,6 +96,16 @@ class y_mom_at_t0(object):
         return 0.
 
 
+"""
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
+"""
+
+
 class heta_at_t0(object):
     def uOfXT(self, X, t):
         h = water_height_at_t0().uOfXT(X, t)
@@ -103,11 +116,23 @@ class hw_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
+
+class hbeta_at_t0(object):
+    def uOfXT(self, X, t):
+        return 0.
+
+
 ###############################
 ##### BOUNDARY CONDITIONS #####
 ###############################
 X_coords = (0.0, 30.0)  # this is x domain, used in BCs
 Y_coords = (0.0, 25.0)  # this is y domain, used in BCs
+
+
+def h_DBC(X, flag):
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
+        return lambda x, t: h0
+
 
 def x_mom_DBC(X, flag):
     if X[0] == X_coords[0] or X[0] == X_coords[1]:
@@ -119,6 +144,11 @@ def y_mom_DBC(X, flag):
         return lambda x, t: 0.0
 
 
+def heta_DBC(X, flag):
+    if X[0] == X_coords[0] or X[0] == X_coords[1]:
+        return lambda x, t: h0**2
+
+
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
@@ -128,17 +158,20 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': hw_at_t0()}
-boundaryConditions = {'water_height': lambda x, flag: None,
+                     'h_times_w': hw_at_t0(),
+                     'h_times_beta': hw_at_t0()}
+boundaryConditions = {'water_height': h_DBC,
                       'x_mom': x_mom_DBC,
                       'y_mom': y_mom_DBC,
-                      'h_times_eta': lambda x, flag: None,
-                      'h_times_w': lambda x, flag: None}
+                      'h_times_eta': heta_DBC,
+                      'h_times_w': x_mom_DBC,
+                      'h_times_beta': x_mom_DBC}
 analytical_Solution = {'h_exact': water_height_at_t0(),
-                     'hu_exact': x_mom_at_t0(),
-                     'hv_exact': y_mom_at_t0(),
-                     'heta_exact': heta_at_t0(),
-                     'hw_exact': hw_at_t0()}
+                       'hu_exact': x_mom_at_t0(),
+                       'hv_exact': y_mom_at_t0(),
+                       'heta_exact': heta_at_t0(),
+                       'hw_exact': hw_at_t0(),
+                       'hbeta_exact': hbeta_at_t0()}
 # ********************************************* #
 # ********** Create my SWFlowProblem ********** #
 # ********************************************* #
@@ -155,5 +188,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function,
                                               analyticalSolution=analytical_Solution)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0

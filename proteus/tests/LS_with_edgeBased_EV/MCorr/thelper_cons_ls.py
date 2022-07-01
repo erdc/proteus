@@ -78,6 +78,11 @@ if ct.unstructured:
 else:
     domain = box
 
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
+domain.MeshOptions.nnz = nnz
+domain.MeshOptions.nn = nn
+domain.MeshOptions.triangleFlag=0
 # REDISTANCING #
 redist_Newton=True
 onlyVOF=False

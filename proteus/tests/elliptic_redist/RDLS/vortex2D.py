@@ -60,9 +60,15 @@ if unstructured:
     domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
     domain.boundaryTags = box.boundaryTags
     bt = domain.boundaryTags
-    triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
+    domain.MeshOptions.triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
 else:
     domain = box
+
+domain.MeshOptions.nn = nn
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
+domain.MeshOptions.nnz = nnz
+domain.MeshOptions.triangleFlag=0
 
 epsFactHeaviside=epsFactDirac=1.5
 epsFactRedistance=0.33

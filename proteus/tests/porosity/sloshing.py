@@ -184,6 +184,18 @@ else:
 # Boundary Conditions
 
 domain.MeshOptions.he = opts.he
+domain.MeshOptions.genMesh = opts.genMesh
+domain.MeshOptions.use_gmsh = opts.use_gmsh
+meshfile = 'mesh'+str(opts.he)
+domain.geofile = meshfile
+
+if opts.useHex:
+    domain.MeshOptions.nnx = 4 * refinement + 1
+    domain.MeshOptions.nny = 2*refinement+1
+elif opts.structured:
+    domain.MeshOptions.nnx = 4 * refinement
+    domain.MeshOptions.nny = 2 * refinement
+
 twoLayer=opts.twoLayer
 domain.porosityTypes =np.array([1.0,1.0,1.0],'d')
 domain.dragAlphaTypes=np.array([0.0,0.0,0.0],'d')
@@ -240,17 +252,6 @@ class AtRest:
         pass
     def uOfXT(self,x,t):
         return 0.0
-
-
-# instanciating the classes for *_p.py files
-initialConditions = {'pressure': PerturbedSurface_p(water_depth,
-                                                    water_amplitude),
-                     'vel_u': AtRest(),
-                     'vel_v': AtRest(),
-                     'vof': PerturbedSurface_H(),
-                     'ncls': PerturbedSurface_phi(),
-                     'rdls': PerturbedSurface_phi()}
-
 
 def eta0(x, t):
     eta_0 = np.sin(t)*np.cos(x)
@@ -385,73 +386,51 @@ def signedDistance(x, t):
 # |_| \_|\__,_|_| |_| |_|\___|_|  |_|\___|___/
 # Numerics
 
-outputStepping = TpFlow.OutputStepping(
-    final_time=opts.T,
-    dt_init=opts.dt_init,
-    #cfl=opts.cfl,
-    dt_output=opts.dt_output,
-    nDTout=None,
-    dt_fixed=opts.dt_fixed,
-)
 
-myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(
-    ns_model=None,
-    ls_model=None,
-    nd=domain.nd,
-    cfl=opts.cfl,
-    outputStepping=outputStepping,
-    structured=False,
-    he=he,
-    nnx=None,
-    nny=None,
-    nnz=None,
-    domain=domain,
-    initialConditions=initialConditions,
-    boundaryConditions=None, # set with SpatialTools,
-    useSuperlu=opts.useSuperlu,
-)
-myTpFlowProblem.movingDomain = opts.movingDomain
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem()
+myTpFlowProblem.outputStepping.final_time = 0.1
+myTpFlowProblem.outputStepping.dt_init = 0.01
+myTpFlowProblem.outputStepping.dt_output = 0.1
+myTpFlowProblem.outputStepping.dt_fixed = 0.01
+myTpFlowProblem.outputStepping.archiveAllSteps = opts.archiveAllSteps
 
-params = myTpFlowProblem.Parameters
+myTpFlowProblem.domain = domain
+
+myTpFlowProblem.SystemNumerics.useSuperlu=opts.useSuperlu
+myTpFlowProblem.SystemNumerics.cfl=opts.cfl
+
+myTpFlowProblem.SystemPhysics.setDefaults()
+myTpFlowProblem.SystemPhysics.useDefaultModels()
+
+myTpFlowProblem.SystemPhysics.movingDomain = opts.movingDomain
+
+m = myTpFlowProblem.SystemPhysics.modelDict
 
 # ELLIPTIC_REDISTANCING
 if opts.ELLIPTIC_REDISTANCING != 0:
-    m.rdls.p.ELLIPTIC_REDISTANCING = opts.ELLIPTIC_REDISTANCING
+    m['rdls'].p.ELLIPTIC_REDISTANCING = opts.ELLIPTIC_REDISTANCING
     from proteus import NonlinearSolvers
-    m.rdls.n.levelNonlinearSolver = NonlinearSolvers.TwoStageNewton
+    m['rdls'].n.levelNonlinearSolver = NonlinearSolvers.TwoStageNewton
 
-# MESH PARAMETERS
-params.mesh.genMesh = opts.genMesh
-params.mesh.he = opts.he
-if opts.useHex:
-    params.mesh.nnx = 4 * refinement + 1
-    params.mesh.nny = 2*refinement+1
-elif opts.structured:
-    params.mesh.nnx = 4 * refinement
-    params.mesh.nny = 2 * refinement
+params = myTpFlowProblem.SystemPhysics
 
 # PHYSICAL PARAMETERS
-params.physical.densityA = opts.rho_0  # water
-params.physical.densityB = opts.rho_1  # air
-params.physical.kinematicViscosityA = opts.nu_0  # water
-params.physical.kinematicViscosityB = opts.nu_1  # air
-params.physical.surf_tension_coeff = opts.sigma_01
+params['rho_0'] = opts.rho_0  # water
+params['rho_1'] = opts.rho_1  # air
+params['nu_0'] = opts.nu_0  # water
+params['nu_1'] = opts.nu_1  # air
+params['surf_tension_coeff'] = opts.sigma_01
 
-# MODEL PARAMETERS
-m = params.Models
-ind = -1
-m.rans2p.index = ind+1
-ind += 1
-m.vof.index = ind+1
-ind += 1
-m.ncls.index = ind+1
-ind += 1
-m.rdls.index = ind+1
-ind += 1
-m.mcorr.index = ind+1
-ind += 1
+m['flow'].p.coefficients.weak_bc_penalty_constant = 10.
 
-m.rans2p.p.coefficients.weak_bc_penalty_constant = 10.
+# INITIAL CONDITIONS
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['p']=PerturbedSurface_p(water_depth, water_amplitude)
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['u']=AtRest()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['v']=AtRest()
+myTpFlowProblem.SystemPhysics.modelDict['vof'].p.initialConditions['vof']=PerturbedSurface_H()
+myTpFlowProblem.SystemPhysics.modelDict['ncls'].p.initialConditions['phi']=PerturbedSurface_phi()
+myTpFlowProblem.SystemPhysics.modelDict['rdls'].p.initialConditions['phid']=PerturbedSurface_phi()
+myTpFlowProblem.SystemPhysics.modelDict['mcorr'].p.initialConditions['phiCorr']=AtRest()
 
 if opts.gauge_output:
     # ----- GAUGES ----- #
@@ -467,28 +446,28 @@ if opts.gauge_output:
         PG2.append((i, water_depth, 0.),)
         LG.append([(i, 0., 0.),(i, tank_dim[1], 0.)])
 
-    m.rans2p.auxiliaryVariables += [
+    m['flow'].auxiliaryVariables += [
         Gauges.PointGauges(
             gauges = ((('p',), PG),),
             activeTime=(0, opts.T),
             sampleRate=0,
             fileName='pointGauge_pressure.csv')
     ]
-    m.ncls.auxiliaryVariables += [
+    m['ncls'].auxiliaryVariables += [
         Gauges.PointGauges(
             gauges = ((('phi',), PG2),),
             activeTime=(0, opts.T),
             sampleRate=0,
             fileName='pointGauge_levelset.csv')
     ]
-    m.vof.auxiliaryVariables += [
+    m['vof'].auxiliaryVariables += [
         Gauges.LineIntegralGauges(
             gauges = ((('vof',), LG),),
             activeTime=(0, opts.T),
             sampleRate=0,
             fileName='lineGauge_vof.csv')
     ]
-    m.rans2p.auxiliaryVariables += [
+    m['flow'].auxiliaryVariables += [
         Gauges.LineIntegralGauges(
             gauges = ((('p',), LG),),
             activeTime=(0, opts.T),
@@ -503,17 +482,6 @@ if opts.gauge_output:
 # | |  | |  __/\__ \ | | | | |_| | |_) | |_| | (_) | | | \__ \
 # |_|  |_|\___||___/_| |_|  \___/| .__/ \__|_|\___/|_| |_|___/
 #                                |_|
-
-
-domain.use_gmsh = opts.use_gmsh
-meshfile = 'mesh'+str(opts.he)
-domain.geofile = meshfile
-# if nopts.outputFiles['poly'] is True:
-#     domain.writePoly(meshfile)
-# if nopts.outputFiles['ply'] is True:
-#     domain.writePLY(meshfile)
-# if nopts.outputFiles['asymptote'] is True:
-#     domain.writeAsymptote(meshfile)
 
 if opts.use_gmsh:
     import py2gmsh
@@ -556,6 +524,6 @@ def my_func(x, t):
     dist = 1.
     return dist
 
-m.mcorr.p.coefficients.checkMass=True
-m.mcorr.n.nl_atol_res=1e-10
-m.mcorr.n.tolFac=0.0
+m['mcorr'].p.coefficients.checkMass=True
+m['mcorr'].n.nl_atol_res=1e-10
+m['mcorr'].n.tolFac=0.0

@@ -11,44 +11,41 @@
 
 namespace py = pybind11;
 
-#define GLOBAL_FCT 0
-#define POWER_SMOOTHNESS_INDICATOR 2
 #define VEL_FIX_POWER 2.
-#define REESTIMATE_MAX_EDGE_BASED_CFL 0
-#define LAMBDA_MGN 1
+#define LAMBDA_MGN 1.
 #define IF_BOTH_GAMMA_BRANCHES 0
 #define LIMITING_ITERATION 2
+#define IF_DEBUGGING 0
+#define IF_LIMITING_DEBUGGING 0
 
 /* inline functions */
 namespace proteus {
 
-// for mGN stuff "max" wave speeds. See section 4.4 of first mGN paper by
-// Guermond, Popov, Tovar, Kees for formulas
+// for Serre-Green-Naghdi "max" wave speeds
 inline double GN_nu1(const double &g, const double &hL, const double &uL,
-                     const double &etaL, const double &meshSizeL) {
+                     const double &etaL, const double &inv_meshSizeL) {
 
-  double augL = LAMBDA_MGN / (3. * meshSizeL) * (6. * hL + 12. * (hL - etaL));
+  double augL = LAMBDA_MGN / 3. * inv_meshSizeL * (6. * hL + 12. * (hL - etaL));
+  const double meshSizeL = 1. / inv_meshSizeL;
 
   if (etaL >= hL) {
-    augL = LAMBDA_MGN / (3. * meshSizeL) * (6. * hL);
+    augL = LAMBDA_MGN / 3. * inv_meshSizeL * (6. * hL);
   }
   augL = augL * std::pow(meshSizeL / fmax(meshSizeL, hL), 2);
 
   return uL - sqrt(g * hL) * sqrt(1. + augL);
 }
 inline double GN_nu3(const double &g, const double &hR, const double &uR,
-                     const double &etaR, const double &meshSizeR) {
-  // See section 4.4 of first mGN paper by Guermond, Popov, Tovar, Kees for
-  // formulas
-  double augR = LAMBDA_MGN / (3. * meshSizeR) * (6. * hR + 12. * (hR - etaR));
+                     const double &etaR, const double &inv_meshSizeR) {
+  double augR = LAMBDA_MGN / 3. * inv_meshSizeR * (6. * hR + 12. * (hR - etaR));
+  const double meshSizeR = 1. / inv_meshSizeR;
 
   if (etaR >= hR) {
-    augR = LAMBDA_MGN / (3. * meshSizeR) * (6. * hR);
+    augR = LAMBDA_MGN / 3. * inv_meshSizeR * (6. * hR);
   }
   augR = augR * std::pow(meshSizeR / fmax(meshSizeR, hR), 2);
   return uR + sqrt(g * hR) * sqrt(1 + augR);
 }
-
 // FOR CELL BASED ENTROPY VISCOSITY
 inline double ENTROPY(const double &g, const double &h, const double &hu,
                       const double &hv, const double &z,
@@ -85,88 +82,27 @@ inline double ENTROPY_FLUX2(const double &g, const double &h, const double &hu,
           g * h * z) *
          hv * one_over_hReg;
 }
-// FOR ESTIMATING MAX WAVE SPEEDS
-inline double f(const double &g, const double &h, const double &hZ) {
-  return ((h <= hZ) ? 2. * (sqrt(g * h) - sqrt(g * hZ))
-                    : (h - hZ) * sqrt(0.5 * g * (h + hZ) / h / hZ));
+inline double relaxation(const double &xi, const double &alpha) {
+  double function = 0.;
+  if (xi < 1.) {
+    const double den = 1.0 - alpha;
+    const double num = std::exp(-std::abs(std::log(alpha)) * xi * xi) - alpha;
+    function = num / den;
+  }
+  return function;
 }
-inline double phi(const double &g, const double &h, const double &hL,
-                  const double &hR, const double &uL, const double &uR) {
-  return (f(g, h, hL) + f(g, h, hR) + uR - uL);
-}
-inline double fp(const double &g, const double &h, const double &hZ) {
-  return ((h <= hZ)
-              ? sqrt(g / h)
-              : g * (2 * h * h + h * hZ + hZ * hZ) /
-                    (2 * sqrt(2 * g) * h * h * hZ * sqrt(1 / h + 1 / hZ)));
-}
-inline double phip(const double &g, const double &h, const double &hL,
-                   const double &hR) {
-  return (fp(g, h, hL) + fp(g, h, hR));
-}
-inline double nu1(const double &g, const double &hStar, const double &hL,
-                  const double &uL, const double &one_over_hL) {
-  return (uL - sqrt(g * hL) *
-                   sqrt((1. + fmax((hStar - hL) / 2. * one_over_hL, 0.0)) *
-                        (1. + fmax((hStar - hL) * one_over_hL, 0.))));
-}
-inline double nu3(const double &g, const double &hStar, const double &hR,
-                  const double &uR, const double &one_over_hR) {
-  return (uR + sqrt(g * hR) *
-                   sqrt((1. + fmax((hStar - hR) / 2. * one_over_hR, 0.0)) *
-                        (1. + fmax((hStar - hR) * one_over_hR, 0.))));
-}
-inline double phiDiff(const double &g, const double &h1k, const double &h2k,
-                      const double &hL, const double &hR, const double &uL,
-                      const double &uR) {
-  return ((phi(g, h2k, hL, hR, uL, uR) - phi(g, h1k, hL, hR, uL, uR)) /
-          (h2k - h1k));
-}
-inline double phiDDiff1(const double &g, const double &h1k, const double &h2k,
-                        const double &hL, const double &hR, const double &uL,
-                        const double &uR) {
-  return ((phiDiff(g, h1k, h2k, hL, hR, uL, uR) - phip(g, h1k, hL, hR)) /
-          (h2k - h1k));
-}
-inline double phiDDiff2(const double &g, const double &h1k, const double &h2k,
-                        const double &hL, const double &hR, const double &uL,
-                        const double &uR) {
-  return ((phip(g, h2k, hL, hR) - phiDiff(g, h1k, h2k, hL, hR, uL, uR)) /
-          (h2k - h1k));
-}
-inline double hStarLFromQuadPhiFromAbove(const double &g, const double &hStarL,
-                                         const double &hStarR, const double &hL,
-                                         const double &hR, const double &uL,
-                                         const double &uR) {
-  return (hStarL -
-          2 * phi(g, hStarL, hL, hR, uL, uR) /
-              (phip(g, hStarL, hL, hR) +
-               sqrt(std::pow(phip(g, hStarL, hL, hR), 2) -
-                    4 * phi(g, hStarL, hL, hR, uL, uR) *
-                        phiDDiff1(g, hStarL, hStarR, hL, hR, uL, uR))));
-}
-inline double hStarRFromQuadPhiFromBelow(const double &g, const double &hStarL,
-                                         const double &hStarR, const double &hL,
-                                         const double &hR, const double &uL,
-                                         const double &uR) {
-  return (hStarR -
-          2 * phi(g, hStarR, hL, hR, uL, uR) /
-              (phip(g, hStarR, hL, hR) +
-               sqrt(std::pow(phip(g, hStarR, hL, hR), 2) -
-                    4 * phi(g, hStarR, hL, hR, uL, uR) *
-                        phiDDiff2(g, hStarL, hStarR, hL, hR, uL, uR))));
-}
-} // end namespace proteus
+} // namespace proteus
 
 namespace proteus {
+
 class GN_SW2DCV_base {
 public:
-  std::valarray<double> Rneg, Rpos, Rneg_heta, Rpos_heta, hLow, huLow, hvLow,
-      hetaLow, hwLow, hbetaLow, Kmax;
   virtual ~GN_SW2DCV_base() {}
   virtual void convexLimiting(arguments_dict &args) = 0;
   virtual double calculateEdgeBasedCFL(arguments_dict &args) = 0;
+  virtual void calculatePreStep(arguments_dict &args) = 0;
   virtual void calculateEV(arguments_dict &args) = 0;
+  virtual void calculateBoundsAndHighOrderRHS(arguments_dict &args) = 0;
   virtual void calculateResidual(arguments_dict &args) = 0;
   virtual void calculateMassMatrix(arguments_dict &args) = 0;
   virtual void calculateLumpedMassMatrix(arguments_dict &args) = 0;
@@ -189,33 +125,28 @@ public:
               << std::flush;
   }
 
-  inline double maxWaveSpeedSharpInitialGuess(double g, double nx, double ny,
-                                              double hL, double huL, double hvL,
-                                              double hetaL, double lumpedL,
-                                              double hR, double huR, double hvR,
-                                              double hetaR, double lumpedR,
-                                              double hEpsL, double hEpsR,
-                                              bool debugging) {
-    double lambda1, lambda3;
+  inline double maxWaveSpeedSharpInitialGuess(
+      const double g, const double nx, const double ny, const double hL,
+      const double huL, double hvL, const double hetaL, const double inv_MeshL,
+      const double hR, const double huR, const double hvR, const double hetaR,
+      const double inv_MeshR, const double hEps) {
+    const double one_over_hL =
+        2.0 * hL / (hL * hL + std::pow(fmax(hL, hEps), 2.0));
+    const double one_over_hR =
+        2.0 * hR / (hR * hR + std::pow(fmax(hR, hEps), 2.0));
+    const double hVelL = nx * huL + ny * hvL;
+    const double hVelR = nx * huR + ny * hvR;
+    const double velL = one_over_hL * hVelL;
+    const double velR = one_over_hR * hVelR;
+    const double etaL = one_over_hL * hetaL;
+    const double etaR = one_over_hR * hetaR;
 
-    // To avoid division by 0
-    double one_over_hL = 2.0 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2.0));
-    double one_over_hR = 2.0 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2.0));
-    double hVelL = nx * huL + ny * hvL;
-    double hVelR = nx * huR + ny * hvR;
-    double velL = one_over_hL * hVelL;
-    double velR = one_over_hR * hVelR;
-    double etaL = 2.0 * hL / (hL * hL + std::pow(fmax(hL, hEpsL), 2)) * hetaL;
-    double etaR = 2.0 * hR / (hR * hR + std::pow(fmax(hR, hEpsR), 2)) * hetaR;
-    double meshSizeL = sqrt(lumpedL);
-    double meshSizeR = sqrt(lumpedR);
-
-    /* See equation 4.12 from mGN paper:
+    /* See equation 4.12 JCP 2019 paper:
       1-eigenvalue: uL-sqrt(g*hL)*sqrt(1 + augL)
       3-eigenvalue: uR+sqrt(g*hR)*sqrt(1 + augR)
     */
-    lambda1 = GN_nu1(g, hL, velL, etaL, meshSizeL);
-    lambda3 = GN_nu3(g, hR, velR, etaR, meshSizeR);
+    const double lambda1 = GN_nu1(g, hL, velL, etaL, inv_MeshL);
+    const double lambda3 = GN_nu3(g, hR, velR, etaR, inv_MeshR);
 
     return fmax(fabs(lambda1), fabs(lambda3));
   }
@@ -224,8 +155,8 @@ public:
                            const double &h, const double &hu, const double &hv,
                            const double hEps, double &cfl) {
     double cflx, cfly, c = sqrt(fmax(g * hEps, g * h));
-    double u = 2 * h / (h * h + std::pow(fmax(h, hEps), 2)) * hu;
-    double v = 2 * h / (h * h + std::pow(fmax(h, hEps), 2)) * hv;
+    const double u = 2 * h / (h * h + std::pow(fmax(h, hEps), 2)) * hu;
+    const double v = 2 * h / (h * h + std::pow(fmax(h, hEps), 2)) * hv;
 
     if (u > 0.0)
       cflx = (u + c) / elementDiameter;
@@ -240,673 +171,817 @@ public:
   }
 
   void convexLimiting(arguments_dict &args) {
-    double dt = args.scalar<double>("dt");
-    int NNZ = args.scalar<int>("NNZ");
-    int numDOFs = args.scalar<int>("numDOFs");
-    xt::pyarray<double> &lumped_mass_matrix =
+    const int numDOFs = args.scalar<int>("numDOFs");
+    const xt::pyarray<int> &csrRowIndeces_DofLoops =
+        args.array<int>("csrRowIndeces_DofLoops");
+    const xt::pyarray<int> &csrColumnOffsets_DofLoops =
+        args.array<int>("csrColumnOffsets_DofLoops");
+    const xt::pyarray<double> &MassMatrix = args.array<double>("MassMatrix");
+    const xt::pyarray<double> &lumped_mass_matrix =
         args.array<double>("lumped_mass_matrix");
-    xt::pyarray<double> &h_old = args.array<double>("h_old");
-    xt::pyarray<double> &hu_old = args.array<double>("hu_old");
-    xt::pyarray<double> &hv_old = args.array<double>("hv_old");
-    xt::pyarray<double> &heta_old = args.array<double>("heta_old");
-    xt::pyarray<double> &hw_old = args.array<double>("hw_old");
-    xt::pyarray<double> &hbeta_old = args.array<double>("hbeta_old");
-    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
-    xt::pyarray<double> &high_order_hnp1 = args.array<double>("high_order_hnp1");
-    xt::pyarray<double> &high_order_hunp1 = args.array<double>("high_order_hunp1");
-    xt::pyarray<double> &high_order_hvnp1 = args.array<double>("high_order_hvnp1");
-    xt::pyarray<double> &high_order_hetanp1 =
-        args.array<double>("high_order_hetanp1");
-    xt::pyarray<double> &high_order_hwnp1 = args.array<double>("high_order_hwnp1");
-    xt::pyarray<double> &high_order_hbetanp1 =
-        args.array<double>("high_order_hbetanp1");
-    xt::pyarray<double> &extendedSourceTerm_hu =
-        args.array<double>("extendedSourceTerm_hu");
-    xt::pyarray<double> &extendedSourceTerm_hv =
-        args.array<double>("extendedSourceTerm_hv");
-    xt::pyarray<double> &extendedSourceTerm_heta =
-        args.array<double>("extendedSourceTerm_heta");
-    xt::pyarray<double> &extendedSourceTerm_hw =
-        args.array<double>("extendedSourceTerm_hw");
-    xt::pyarray<double> &extendedSourceTerm_hbeta =
-        args.array<double>("extendedSourceTerm_hbeta");
+    const double dt = args.scalar<double>("dt");
+    const xt::pyarray<double> &h_old = args.array<double>("h_old");
+    const xt::pyarray<double> &hu_old = args.array<double>("hu_old");
+    const xt::pyarray<double> &hv_old = args.array<double>("hv_old");
+    const xt::pyarray<double> &heta_old = args.array<double>("heta_old");
+    const xt::pyarray<double> &hw_old = args.array<double>("hw_old");
+    const xt::pyarray<double> &hbeta_old = args.array<double>("hbeta_old");
+    const xt::pyarray<double> &b_dof = args.array<double>("b_dof");
     xt::pyarray<double> &limited_hnp1 = args.array<double>("limited_hnp1");
     xt::pyarray<double> &limited_hunp1 = args.array<double>("limited_hunp1");
     xt::pyarray<double> &limited_hvnp1 = args.array<double>("limited_hvnp1");
-    xt::pyarray<double> &limited_hetanp1 = args.array<double>("limited_hetanp1");
+    xt::pyarray<double> &limited_hetanp1 =
+        args.array<double>("limited_hetanp1");
     xt::pyarray<double> &limited_hwnp1 = args.array<double>("limited_hwnp1");
-    xt::pyarray<double> &limited_hbetanp1 = args.array<double>("limited_hbetanp1");
-    xt::pyarray<int> &csrRowIndeces_DofLoops =
-        args.array<int>("csrRowIndeces_DofLoops");
-    xt::pyarray<int> &csrColumnOffsets_DofLoops =
-        args.array<int>("csrColumnOffsets_DofLoops");
-    xt::pyarray<double> &MassMatrix = args.array<double>("MassMatrix");
-    xt::pyarray<double> &dH_minus_dL = args.array<double>("dH_minus_dL");
-    xt::pyarray<double> &muH_minus_muL = args.array<double>("muH_minus_muL");
-    double hEps = args.scalar<double>("hEps");
-    xt::pyarray<double> &hReg = args.array<double>("hReg");
-    int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
-    xt::pyarray<double> &dLow = args.array<double>("dLow");
-    xt::pyarray<double> &hBT = args.array<double>("hBT");
-    xt::pyarray<double> &huBT = args.array<double>("huBT");
-    xt::pyarray<double> &hvBT = args.array<double>("hvBT");
-    xt::pyarray<double> &hetaBT = args.array<double>("hetaBT");
-    xt::pyarray<double> &hwBT = args.array<double>("hwBT");
-    xt::pyarray<double> &hbetaBT = args.array<double>("hbetaBT");
-    xt::pyarray<double> &new_SourceTerm_hu = args.array<double>("new_SourceTerm_hu");
-    xt::pyarray<double> &new_SourceTerm_hv = args.array<double>("new_SourceTerm_hv");
-    xt::pyarray<double> &new_SourceTerm_heta =
-        args.array<double>("new_SourceTerm_heta");
-    xt::pyarray<double> &new_SourceTerm_hw = args.array<double>("new_SourceTerm_hw");
-    double size_of_domain = args.scalar<double>("size_of_domain");
-    Rneg.resize(numDOFs, 0.0);
-    Rpos.resize(numDOFs, 0.0);
-    Rneg_heta.resize(numDOFs, 0.0);
-    Rpos_heta.resize(numDOFs, 0.0);
-    hLow.resize(numDOFs, 0.0);
-    huLow.resize(numDOFs, 0.0);
-    hvLow.resize(numDOFs, 0.0);
-    hetaLow.resize(numDOFs, 0.0);
-    hwLow.resize(numDOFs, 0.0);
-    hbetaLow.resize(numDOFs, 0.0);
-    Kmax.resize(numDOFs, 0.0);
-
-    // for relaxation of bounds
-    std::valarray<double> urelax(0.0, numDOFs);
-    std::valarray<double> drelax(0.0, numDOFs);
-
-    // for h
-    std::valarray<double> h_min(0.0, numDOFs);
-    std::valarray<double> h_max(0.0, numDOFs);
-    std::valarray<double> delta_Sqd_h(0.0, numDOFs);
-    std::valarray<double> bar_deltaSqd_h(0.0, numDOFs);
-
-    // for heta
-    std::valarray<double> heta_min(0.0, numDOFs);
-    std::valarray<double> heta_max(0.0, numDOFs);
-    std::valarray<double> delta_Sqd_heta(0.0, numDOFs);
-    std::valarray<double> bar_deltaSqd_heta(0.0, numDOFs);
-
-    // for kinetic energy
-    xt::pyarray<double> kin(numDOFs);
-    xt::pyarray<double> max_of_h_and_hEps(numDOFs);
-    std::valarray<double> kin_max(0.0, numDOFs);
-    std::valarray<double> delta_Sqd_kin(0.0, numDOFs);
-    std::valarray<double> bar_deltaSqd_kin(0.0, numDOFs);
+    xt::pyarray<double> &limited_hbetanp1 =
+        args.array<double>("limited_hbetanp1");
+    const double hEps = args.scalar<double>("hEps");
+    xt::pyarray<double> &hLow = args.array<double>("hLow");
+    xt::pyarray<double> &huLow = args.array<double>("huLow");
+    xt::pyarray<double> &hvLow = args.array<double>("hvLow");
+    xt::pyarray<double> &hetaLow = args.array<double>("hetaLow");
+    xt::pyarray<double> &hwLow = args.array<double>("hwLow");
+    xt::pyarray<double> &hbetaLow = args.array<double>("hbetaLow");
+    const xt::pyarray<double> &h_min = args.array<double>("h_min");
+    const xt::pyarray<double> &h_max = args.array<double>("h_max");
+    const xt::pyarray<double> &heta_min = args.array<double>("heta_min");
+    const xt::pyarray<double> &heta_max = args.array<double>("heta_max");
+    const xt::pyarray<double> &kin_max = args.array<double>("kin_max");
+    const double KE_tiny = args.scalar<double>("KE_tiny");
+    const xt::pyarray<double> &SourceTerm_h =
+        args.array<double>("SourceTerm_h");
+    const xt::pyarray<double> &SourceTerm_hu =
+        args.array<double>("SourceTerm_hu");
+    const xt::pyarray<double> &SourceTerm_hv =
+        args.array<double>("SourceTerm_hv");
+    const xt::pyarray<double> &SourceTerm_heta =
+        args.array<double>("SourceTerm_heta");
+    const xt::pyarray<double> &SourceTerm_hw =
+        args.array<double>("SourceTerm_hw");
+    const xt::pyarray<double> &SourceTerm_hbeta =
+        args.array<double>("SourceTerm_hbeta");
+    const xt::pyarray<double> &global_entropy_residual =
+        args.array<double>("global_entropy_residual");
+    const xt::pyarray<double> &Cx = args.array<double>("Cx");
+    const xt::pyarray<double> &Cy = args.array<double>("Cy");
+    const xt::pyarray<double> &CTx = args.array<double>("CTx");
+    const xt::pyarray<double> &CTy = args.array<double>("CTy");
+    const xt::pyarray<double> &RHS_high_h = args.array<double>("RHS_high_h");
+    const xt::pyarray<double> &RHS_high_hu = args.array<double>("RHS_high_hu");
+    const xt::pyarray<double> &RHS_high_hv = args.array<double>("RHS_high_hv");
+    const xt::pyarray<double> &RHS_high_heta =
+        args.array<double>("RHS_high_heta");
+    const xt::pyarray<double> &RHS_high_hw = args.array<double>("RHS_high_hw");
+    const xt::pyarray<double> &RHS_high_hbeta =
+        args.array<double>("RHS_high_hbeta");
+    const xt::pyarray<double> &extendedSourceTerm_hu =
+        args.array<double>("extendedSourceTerm_hu");
+    const xt::pyarray<double> &extendedSourceTerm_hv =
+        args.array<double>("extendedSourceTerm_hv");
+    const xt::pyarray<double> &thetaj_inv = args.array<double>("thetaj_inv");
+    const double g = args.scalar<double>("g");
+    const xt::pyarray<double> &inverse_mesh =
+        args.array<double>("inverse_mesh");
 
     // Create FCT component matrices in vector form
-    std::valarray<double> FCT_h(0.0, dH_minus_dL.size());
-    std::valarray<double> FCT_hu(0.0, dH_minus_dL.size());
-    std::valarray<double> FCT_hv(0.0, dH_minus_dL.size());
-    std::valarray<double> FCT_heta(0.0, dH_minus_dL.size());
-    std::valarray<double> FCT_hw(0.0, dH_minus_dL.size());
-    std::valarray<double> FCT_hbeta(0.0, dH_minus_dL.size());
-
-    // Define kinetic energy, kin = 1/2 q^2 / h
-    max_of_h_and_hEps = xt::where(h_old > hEps, h_old, hEps);
-    kin = 0.5 * (hu_old * hu_old + hv_old * hv_old);
-    kin *=
-        2.0 * h_old / (h_old * h_old + max_of_h_and_hEps * max_of_h_and_hEps);
-
-    // We first do the loops to define the relaxation quantities
-    // First relaxation loop
-    for (int i = 0; i < numDOFs; i++) {
-      urelax[i] =
-          1.0 +
-          2.0 * std::pow(sqrt(sqrt(lumped_mass_matrix[i] / size_of_domain)), 3);
-      drelax[i] =
-          1.0 -
-          2.0 * std::pow(sqrt(sqrt(lumped_mass_matrix[i] / size_of_domain)), 3);
-      for (int offset = csrRowIndeces_DofLoops[i];
-           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
-        int j = csrColumnOffsets_DofLoops[offset];
-        if (i != j) {
-          delta_Sqd_h[i] += h_old[i] - h_old[j];
-          delta_Sqd_heta[i] += heta_old[i] - heta_old[j];
-          delta_Sqd_kin[i] += kin[i] - kin[j];
-        }
-      } // j loop ends here
-    }   // i loops ends here
-
-    // Second relaxation loop
-    for (int i = 0; i < numDOFs; i++) {
-      for (int offset = csrRowIndeces_DofLoops[i];
-           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
-        int j = csrColumnOffsets_DofLoops[offset];
-        if (i != j) {
-          bar_deltaSqd_h[i] += delta_Sqd_h[j] + delta_Sqd_h[i];
-          bar_deltaSqd_heta[i] += delta_Sqd_heta[j] + delta_Sqd_heta[i];
-          bar_deltaSqd_kin[i] += delta_Sqd_kin[j] + delta_Sqd_kin[i];
-        }
-      } // j loop ends here
-      bar_deltaSqd_h[i] =
-          bar_deltaSqd_h[i] /
-          (csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i]) / 2.0;
-      bar_deltaSqd_heta[i] =
-          bar_deltaSqd_heta[i] /
-          (csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i]) / 2.0;
-      bar_deltaSqd_kin[i] =
-          bar_deltaSqd_kin[i] /
-          (csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i]) / 2.0;
-    } // i loops ends here
-
-    ////////////////////////////////////////////////////////
-    // Loop to define local bounds and low order solution //
-    ////////////////////////////////////////////////////////
-    int ij = 0;
-    for (int i = 0; i < numDOFs; i++) {
-
-      // define m_i
-      double mi = lumped_mass_matrix[i];
-
-      /* Initialize hmin, hmax, heta_min, heta_max */
-      h_min[i] = h_old[i];
-      h_max[i] = h_old[i];
-      heta_min[i] = heta_old[i];
-      heta_max[i] = heta_old[i];
-
-      /* Initialize low order solution */
-      hLow[i] = h_old[i];
-      huLow[i] = hu_old[i];
-      hvLow[i] = hv_old[i];
-      hetaLow[i] = heta_old[i];
-      hwLow[i] = hw_old[i];
-      hbetaLow[i] = hbeta_old[i];
-      Kmax[i] = kin[i];
-
-      /* LOOP OVER THE SPARSITY PATTERN (j-LOOP) */
-      for (int offset = csrRowIndeces_DofLoops[i];
-           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
-        int j = csrColumnOffsets_DofLoops[offset];
-        double psi_ij = 0;
-        double one_over_hBT =
-            2.0 * hBT[ij] /
-            (hBT[ij] * hBT[ij] + std::pow(fmax(hBT[ij], hEps), 2));
-        psi_ij = one_over_hBT * (huBT[ij] * huBT[ij] + hvBT[ij] * hvBT[ij]) /
-                 2.0; // Eqn (6.31)
-
-        // COMPUTE LOCAL BOUNDS //
-        Kmax[i] = fmax(psi_ij, Kmax[i]);
-        h_min[i] = std::min(h_min[i], hBT[ij]);
-        h_max[i] = std::max(h_max[i], hBT[ij]);
-        heta_min[i] = std::min(heta_min[i], hetaBT[ij]);
-        heta_max[i] = std::max(heta_max[i], hetaBT[ij]);
-
-        // Then do relaxation of bounds here. If confused, see (4.12) of Euler
-        // convex limiting paper.
-        Kmax[i] = std::min(urelax[i] * Kmax[i],
-                           Kmax[i] + std::abs(bar_deltaSqd_kin[i]) / 2.0);
-        h_min[i] = std::max(drelax[i] * h_min[i],
-                            h_min[i] - std::abs(bar_deltaSqd_h[i]) / 2.0);
-        h_max[i] = std::min(urelax[i] * h_max[i],
-                            h_max[i] + std::abs(bar_deltaSqd_h[i]) / 2.0);
-        heta_min[i] =
-            std::max(drelax[i] * heta_min[i],
-                     heta_min[i] - std::abs(bar_deltaSqd_heta[i]) / 2.0);
-        heta_max[i] =
-            std::min(urelax[i] * heta_max[i],
-                     heta_max[i] + std::abs(bar_deltaSqd_heta[i]) / 2.0);
-
-        /* COMPUTE LOW ORDER SOLUTION. See EQN 6.23 in SW friction paper */
-        // This is low order solution WITHOUT sources
-        if (i != j) {
-          hLow[i] += h_old[i] * (-dt / mi * 2 * dLow[ij]) +
-                     dt / mi * (2 * dLow[ij] * hBT[ij]);
-          huLow[i] += hu_old[i] * (-dt / mi * 2 * dLow[ij]) +
-                      dt / mi * (2 * dLow[ij] * huBT[ij]);
-          hvLow[i] += hv_old[i] * (-dt / mi * 2 * dLow[ij]) +
-                      dt / mi * (2 * dLow[ij] * hvBT[ij]);
-          hetaLow[i] += heta_old[i] * (-dt / mi * 2 * dLow[ij]) +
-                        dt / mi * (2 * dLow[ij] * hetaBT[ij]);
-          hwLow[i] += hw_old[i] * (-dt / mi * 2 * dLow[ij]) +
-                      dt / mi * (2 * dLow[ij] * hwBT[ij]);
-          hbetaLow[i] += hbeta_old[i] * (-dt / mi * 2 * dLow[ij]) +
-                         dt / mi * (2 * dLow[ij] * hbetaBT[ij]);
-        }
-        // UPDATE ij //
-        ij += 1;
-      } // j loop ends here
-
-      // clean up hLow from round off error
-      if (hLow[i] < hEps)
-        hLow[i] = 0.0;
-    } // i loop ends here
+    std::valarray<double> FCT_h(0., Cx.size()), FCT_hu(0., Cx.size()),
+        FCT_hv(0., Cx.size()), FCT_heta(0., Cx.size()), FCT_hw(0., Cx.size()),
+        FCT_hbeta(0., Cx.size());
 
     ////////////////////////////////////////////////////
     // Loop to define FCT matrices for each component //
     ////////////////////////////////////////////////////
-    ij = 0;
+    int ij = 0;
     for (int i = 0; i < numDOFs; i++) {
-      // read some vectors
-      double high_order_hnp1i = high_order_hnp1[i];
-      double high_order_hunp1i = high_order_hunp1[i];
-      double high_order_hvnp1i = high_order_hvnp1[i];
-      double high_order_hetanp1i = high_order_hetanp1[i];
-      double high_order_hwnp1i = high_order_hwnp1[i];
-      double high_order_hbetanp1i = high_order_hbetanp1[i];
-      double hi = h_old[i];
-      double huni = hu_old[i];
-      double hvni = hv_old[i];
-      double hetani = heta_old[i];
-      double hwni = hw_old[i];
-      double hbetani = hbeta_old[i];
-      double Zi = b_dof[i];
-      double mi = lumped_mass_matrix[i];
-      double one_over_hiReg =
-          2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      // Read un at ith node
+      const double hi = h_old[i];
+      const double one_over_hi =
+          2. * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      const double hui = hu_old[i];
+      const double ui = hui * one_over_hi;
+      const double hvi = hv_old[i];
+      const double vi = hvi * one_over_hi;
+      const double hetai = heta_old[i];
+      const double hwi = hw_old[i];
+      const double hbetai = hbeta_old[i];
+      const double Zi = b_dof[i];
+      const double mi = lumped_mass_matrix[i];
+      const double inv_meshSizei = inverse_mesh[i];
 
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       for (int offset = csrRowIndeces_DofLoops[i];
            offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
-
         int j = csrColumnOffsets_DofLoops[offset];
 
-        // read some vectors
-        double hj = h_old[j];
-        double hunj = hu_old[j];
-        double hvnj = hv_old[j];
-        double hetanj = heta_old[j];
-        double hwnj = hw_old[j];
-        double hbetanj = hbeta_old[j];
-        double Zj = b_dof[j];
-        double one_over_hjReg =
-            2. * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
+        if (j == i) {
+          FCT_h[ij] = 0.;
+          FCT_hu[ij] = 0.;
+          FCT_hv[ij] = 0.;
+          FCT_heta[ij] = 0.;
+          FCT_hw[ij] = 0.;
+          FCT_hbeta[ij] = 0.;
+        } else {
+          // Read un stuff at jth node
+          const double hj = h_old[j];
+          const double one_over_hj =
+              2. * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
+          const double huj = hu_old[j];
+          const double uj = huj * one_over_hj;
+          const double hvj = hv_old[j];
+          const double vj = hvj * one_over_hj;
+          const double hetaj = heta_old[j];
+          const double hwj = hw_old[j];
+          const double hbetaj = hbeta_old[j];
+          const double Zj = b_dof[j];
+          const double mj = lumped_mass_matrix[j];
+          const double inv_meshSizej = inverse_mesh[j];
 
-        // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
-        // hwStar, hbetaStar
-        double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
-        double huStarij = huni * hStarij * one_over_hiReg;
-        double hvStarij = hvni * hStarij * one_over_hiReg;
-        double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg, 2);
-        double hwStarij = hwni * hStarij * one_over_hiReg;
-        double hbetaStarij = hbetani * hStarij * one_over_hiReg;
+          // Compute star states
+          const double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
+          const double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
+          //
+          const double hStar_ratio_i = hStarij * one_over_hi;
+          const double hStar_ratio_j = hStarji * one_over_hj;
+          //
+          const double huStarij = hui * hStar_ratio_i;
+          const double hvStarij = hvi * hStar_ratio_i;
+          const double hetaStarij = hetai * std::pow(hStar_ratio_i, 2);
+          const double hwStarij = hwi * hStar_ratio_i;
+          const double hbetaStarij = hbetai * hStar_ratio_i;
+          //
+          const double huStarji = huj * hStar_ratio_j;
+          const double hvStarji = hvj * hStar_ratio_j;
+          const double hetaStarji = hetaj * std::pow(hStar_ratio_j, 2);
+          const double hwStarji = hwj * hStar_ratio_j;
+          const double hbetaStarji = hbetaj * hStar_ratio_j;
 
-        double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
-        double huStarji = hunj * hStarji * one_over_hjReg;
-        double hvStarji = hvnj * hStarji * one_over_hjReg;
-        double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
-        double hwStarji = hwnj * hStarji * one_over_hjReg;
-        double hbetaStarji = hbetanj * hStarji * one_over_hjReg;
+          const double b_ij = 0. - MassMatrix[ij] / mj;
+          const double b_ji = 0. - MassMatrix[ij] / mi;
 
-        // i-th row of flux correction matrix
-        double ML_minus_MC = (LUMPED_MASS_MATRIX == 1
-                                  ? 0.
-                                  : (i == j ? 1. : 0.) * mi - MassMatrix[ij]);
+          /* Redefine high-order viscosity. Note that this is not so expensive
+          since we are just accessing and multipying. */
+          const double cij_norm = sqrt(Cx[ij] * Cx[ij] + Cy[ij] * Cy[ij]);
+          const double cji_norm = sqrt(CTx[ij] * CTx[ij] + CTy[ij] * CTy[ij]);
+          const double nxij = Cx[ij] / cij_norm;
+          const double nyij = Cy[ij] / cij_norm;
+          const double nxji = CTx[ij] / cji_norm;
+          const double nyji = CTy[ij] / cji_norm;
 
-        FCT_h[ij] =
-            ML_minus_MC * (high_order_hnp1[j] - hj - (high_order_hnp1i - hi)) +
-            dt * (dH_minus_dL[ij] - muH_minus_muL[ij]) * (hStarji - hStarij) +
-            dt * muH_minus_muL[ij] * (hj - hi);
+          const double muijL = fmax(std::abs(ui * Cx[ij] + vi * Cy[ij]),
+                                    std::abs(uj * CTx[ij] + vj * CTy[ij]));
+          double dijL = fmax(
+              maxWaveSpeedSharpInitialGuess(g, nxij, nyij, hi, hui, hvi, hetai,
+                                            inv_meshSizei, hj, huj, hvj, hetaj,
+                                            inv_meshSizej, hEps) *
+                  cij_norm,
+              maxWaveSpeedSharpInitialGuess(g, nxji, nyji, hj, huj, hvj, hetaj,
+                                            inv_meshSizej, hi, hui, hvi, hetai,
+                                            inv_meshSizei, hEps) *
+                  cji_norm);
 
-        FCT_hu[ij] =
-            ML_minus_MC *
-                (high_order_hunp1[j] - hunj - (high_order_hunp1i - huni)) +
-            dt * (dH_minus_dL[ij] - muH_minus_muL[ij]) * (huStarji - huStarij) +
-            dt * muH_minus_muL[ij] * (hunj - huni);
+          // Take max with muij
+          dijL = std::max(dijL, muijL);
 
-        FCT_hv[ij] =
-            ML_minus_MC *
-                (high_order_hvnp1[j] - hvnj - (high_order_hvnp1i - hvni)) +
-            dt * (dH_minus_dL[ij] - muH_minus_muL[ij]) * (hvStarji - hvStarij) +
-            dt * muH_minus_muL[ij] * (hvnj - hvni);
+          // Define high-order graph viscosity coefficients
+          const double dEVij =
+              std::max(global_entropy_residual[i], global_entropy_residual[j]);
 
-        FCT_heta[ij] = ML_minus_MC * (high_order_hetanp1[j] - hetanj -
-                                      (high_order_hetanp1i - hetani)) +
-                       dt * (dH_minus_dL[ij] - muH_minus_muL[ij]) *
-                           (hetaStarji - hetaStarij) +
-                       dt * muH_minus_muL[ij] * (hetanj - hetani);
+          const double dijH = std::min(dijL, dEVij);
+          const double muijH = std::min(muijL, dEVij);
 
-        FCT_hw[ij] =
-            ML_minus_MC *
-                (high_order_hwnp1[j] - hwnj - (high_order_hwnp1i - hwni)) +
-            dt * (dH_minus_dL[ij] - muH_minus_muL[ij]) * (hwStarji - hwStarij) +
-            dt * muH_minus_muL[ij] * (hwnj - hwni);
+          const double diff_dij_muij = (dijH - dijL) - (muijH - muijL);
+          const double diff_muij = (muijH - muijL);
 
-        FCT_hbeta[ij] = ML_minus_MC * (high_order_hbetanp1[j] - hbetanj -
-                                       (high_order_hbetanp1i - hbetani)) +
-                        dt * (dH_minus_dL[ij] - muH_minus_muL[ij]) *
-                            (hbetaStarji - hbetaStarij) +
-                        dt * muH_minus_muL[ij] * (hbetanj - hbetani);
+          // h
+          double viscous_terms =
+              diff_dij_muij * (hStarji - hStarij) + diff_muij * (hj - hi);
+          FCT_h[ij] = dt * (b_ij * RHS_high_h[j] - b_ji * RHS_high_h[i] +
+                            viscous_terms);
+          // hu
+          viscous_terms =
+              diff_dij_muij * (huStarji - huStarij) + diff_muij * (huj - hui);
+          FCT_hu[ij] = dt * (b_ij * RHS_high_hu[j] - b_ji * RHS_high_hu[i] +
+                             viscous_terms);
+          // hv
+          viscous_terms =
+              diff_dij_muij * (hvStarji - hvStarij) + diff_muij * (hvj - hvi);
+          FCT_hv[ij] = dt * (b_ij * RHS_high_hv[j] - b_ji * RHS_high_hv[i] +
+                             viscous_terms);
+          // heta
+          viscous_terms = diff_dij_muij * (hetaStarji - hetaStarij) +
+                          diff_muij * (hetaj - hetai);
+          FCT_heta[ij] = dt * (b_ij * RHS_high_heta[j] -
+                               b_ji * RHS_high_heta[i] + viscous_terms);
+          // hw
+          viscous_terms =
+              diff_dij_muij * (hwStarji - hwStarij) + diff_muij * (hwj - hwi);
+          FCT_hw[ij] = dt * (b_ij * RHS_high_hw[j] - b_ji * RHS_high_hw[i] +
+                             viscous_terms);
+          // hbeta
+          viscous_terms = diff_dij_muij * (hbetaStarji - hbetaStarij) +
+                          diff_muij * (hbetaj - hbetai);
+          FCT_hbeta[ij] = dt * (b_ij * RHS_high_hbeta[j] -
+                                b_ji * RHS_high_hbeta[i] + viscous_terms);
+        }
+
         // UPDATE ij //
         ij += 1;
       } // j loop ends here
     }   // i loop ends here
 
     ////////////////////////////////////////////////////////////////////
-    // Main loop to define limiters and computed limited solution //////
+    // Main loop to define limiters and compute limited solution //////
     ////////////////////////////////////////////////////////////////////
 
-    // Create Lij_array for initialization
-    std::valarray<double> Lij_array(1.0, dH_minus_dL.size());
+    // Create Lij_array and initialize with 1
+    std::valarray<double> Lij_array(1., Cx.size());
 
+    // define tolerance for limiting
+    const double eps = 1e-14;
+
+    /* Loop over # of limiting iterations */
     for (int limit_iter = 0; limit_iter < LIMITING_ITERATION; limit_iter++) {
 
-      /* Loop to define FCT Rpos and Rneg values */
+      /* Loop to compute limiter l^j_i and l^i_j */
       ij = 0;
       for (int i = 0; i < numDOFs; i++) {
-        // read some vectors
-        double mi = lumped_mass_matrix[i];
 
-        // Initialize Pneg and Ppos quantities at ith node
-        double Pnegi = 0., Pposi = 0.;
-        double Pnegi_heta = 0., Pposi_heta = 0.;
+        // Get low order solution at ith node
+        const double hLowi = hLow[i];
+        const double huLowi = huLow[i];
+        const double hvLowi = hvLow[i];
+        const double hetaLowi = hetaLow[i];
+        const double kinMaxi = kin_max[i];
+        const double mi = lumped_mass_matrix[i];
 
-        // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+        // LOOP OVER THE SPARSITY PATTERN (j-LOOP)
         for (int offset = csrRowIndeces_DofLoops[i];
              offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
-
           int j = csrColumnOffsets_DofLoops[offset];
 
-          // COMPUTE P VECTORS //
-          Pnegi += FCT_h[ij] * ((FCT_h[ij] < 0) ? 1. : 0.);
-          Pposi += FCT_h[ij] * ((FCT_h[ij] > 0) ? 1. : 0.);
-          Pnegi_heta += FCT_heta[ij] * ((FCT_heta[ij] < 0) ? 1. : 0.);
-          Pposi_heta += FCT_heta[ij] * ((FCT_heta[ij] > 0) ? 1. : 0.);
+          Lij_array[ij] = 1.;
 
-          // UPDATE ij //
+          // Get low order solution at jth node
+          const double hLowj = hLow[j];
+          const double huLowj = huLow[j];
+          const double hvLowj = hvLow[j];
+          const double hetaLowj = hetaLow[j];
+          const double kinMaxj = kin_max[j];
+          const double mj = lumped_mass_matrix[j];
+
+          // Compute Pij matrix and Pji
+          double denom = 1. / (mi * thetaj_inv[i]);
+          const double P_h = FCT_h[ij] * denom;
+          const double P_hu = FCT_hu[ij] * denom;
+          const double P_hv = FCT_hv[ij] * denom;
+          const double P_heta = FCT_heta[ij] * denom;
+
+          denom = 1. / (mj * thetaj_inv[j]);
+          const double P_h_tr = -FCT_h[ij] * denom;
+          const double P_hu_tr = -FCT_hu[ij] * denom;
+          const double P_hv_tr = -FCT_hv[ij] * denom;
+          const double P_heta_tr = -FCT_heta[ij] * denom;
+
+          /* h limiting -- to defne l_ji_h */
+          double l_ji_h = Lij_array[ij];
+          {
+            const double denominator = 1. / (std::abs(P_h) + eps * h_max[i]);
+
+            // Define limiter here
+            if (hLowi + P_h < h_min[i]) {
+              l_ji_h = std::min((std::abs(h_min[i] - hLowi) + eps * h_min[i]) *
+                                    denominator,
+                                1.);
+            } else if (h_max[i] < hLowi + P_h) {
+              l_ji_h = std::min((std::abs(h_max[i] - hLowi) + eps * h_min[i]) *
+                                    denominator,
+                                1.);
+            }
+
+            // Set limiter to 0 if water depth is close to 0
+            l_ji_h = (hLowi <= hEps) ? 0. : l_ji_h;
+
+            /* Box limiter to be safe? */
+            l_ji_h = std::min(l_ji_h, 1.);
+            l_ji_h = std::max(l_ji_h, 0.);
+
+#if IF_LIMITING_DEBUGGING
+            if ((hLowi + l_ji_h * P_h) - h_min[i] < -1e-12) {
+              std::cout << " MAJOR BUG 1a " << std::setprecision(15) << " \n "
+                        << " Diff   =  " << (hLowi + l_ji_h * P_h) - h_min[i]
+                        << " \n "
+                        << " hLowi  = " << hLowi << " \n "
+                        << " h_min  = " << h_min[i] << " \n "
+                        << " h_max  = " << h_max[i] << " \n "
+                        << " l_ji_h = " << l_ji_h << std::endl;
+              std::cout << "LIMIT_ITER " << limit_iter << std::endl;
+              abort();
+            }
+
+            if (h_max[i] - (hLowi + l_ji_h * P_h) < -1e-12) {
+              std::cout << " MAJOR BUG 1b " << std::setprecision(15) << " \n "
+                        << " Diff   = " << h_max[i] - (hLowi + l_ji_h * P_h)
+                        << " \n "
+                        << " Soln   = " << (hLowi + P_h) << " \n "
+                        << " hLowi  = " << hLowi << " \n "
+                        << " h_min  = " << h_min[i] << " \n "
+                        << " h_max  = " << h_max[i] << " \n "
+                        << " P_h    = " << P_h << " \n "
+                        << " l_ji_h = " << l_ji_h << std::endl;
+              std::cout << "LIMIT_ITER " << limit_iter << std::endl;
+              abort();
+            }
+#endif
+          }
+
+          /* h limiting -- to define l_ij_h */
+          double l_ij_h = Lij_array[ij];
+          {
+            const double denominator_test =
+                1. / (std::abs(P_h_tr) + eps * h_max[j]);
+
+            if (hLowj + P_h_tr < h_min[j]) {
+              l_ij_h = std::min((std::abs(h_min[j] - hLowj) + eps * h_min[j]) *
+                                    denominator_test,
+                                1.);
+            } else if (h_max[j] < hLowj + P_h_tr) {
+              l_ij_h = std::min((std::abs(h_max[j] - hLowj) + eps * h_min[j]) *
+                                    denominator_test,
+                                1.);
+            }
+
+            // set limiter to 0 if water depth is close to 0
+            l_ij_h = (hLowj <= hEps) ? 0. : l_ij_h;
+
+            /* Box limiter to be safe? */
+            l_ij_h = std::min(l_ij_h, 1.);
+            l_ij_h = std::max(l_ij_h, 0.);
+
+#if IF_LIMITING_DEBUGGING
+            if ((hLowj + l_ij_h * P_h_tr) - h_min[j] < -1e-12) {
+              std::cout << " MAJOR BUG 2a " << std::setprecision(15) << " \n "
+                        << " Diff   =  " << h_min[j] - (hLowj + l_ij_h * P_h_tr)
+                        << " \n "
+                        << " Soln   = " << (hLowj + P_h_tr) << " \n "
+                        << " hLowj  = " << hLowj << " \n "
+                        << " h_min  = " << h_min[j] << " \n "
+                        << " h_max  = " << h_max[j] << " \n "
+                        << " P_h_tr = " << P_h_tr << " \n "
+                        << " l_ij_h = " << l_ij_h << std::endl;
+              std::cout << "LIMIT_ITER " << limit_iter << std::endl;
+              abort();
+            }
+
+            if (h_max[j] - (hLowj + l_ij_h * P_h_tr) < -1e-12) {
+              std::cout << " MAJOR BUG 2b " << std::setprecision(15) << " \n "
+                        << " Diff   =  " << h_max[j] - (hLowj + l_ij_h * P_h_tr)
+                        << " \n "
+                        << " Soln   = " << (hLowj + P_h_tr) << " \n "
+                        << " hLowj  = " << hLowj << " \n "
+                        << " h_min  = " << h_min[j] << " \n "
+                        << " h_max  = " << h_max[j] << " \n "
+                        << " P_h_tr = " << P_h_tr << " \n "
+                        << " l_ij_h = " << l_ij_h << std::endl;
+              std::cout << "LIMIT_ITER " << limit_iter << std::endl;
+              abort();
+            }
+#endif
+          }
+
+          /* q1 limiting -- to define l_ji_q1 */
+          double l_ji_q1 = l_ji_h;
+          {
+            const double denominator =
+                1. / (std::abs(P_heta) + eps * heta_max[i]);
+
+            // Define limiter here
+            if (hetaLowi + P_heta < heta_min[i]) {
+              l_ji_q1 = std::min(
+                  (std::abs(heta_min[i] - hetaLowi) + eps * heta_min[i]) *
+                      denominator,
+                  1.);
+            } else if (heta_max[i] < hetaLowi + P_heta) {
+              l_ji_q1 = std::min(
+                  (std::abs(heta_max[i] - hetaLowi) + eps * heta_min[i]) *
+                      denominator,
+                  1.);
+            }
+
+            // set limiter to 0 if water depth is close to 0
+            l_ji_q1 = (hLowi <= hEps) ? 0. : l_ji_q1;
+
+            // get min of l_ji_q1 and previous limiter
+            l_ji_q1 = std::min(l_ji_q1, l_ji_h);
+
+            /* Box limiter to be safe? */
+            l_ji_q1 = std::min(l_ji_q1, 1.);
+            l_ji_q1 = std::max(l_ji_q1, 0.);
+
+#if IF_LIMITING_DEBUGGING
+            if ((hetaLowi + l_ji_q1 * P_heta) - heta_min[i] < -hEps * hEps) {
+              std::cout << " MAJOR BUG 3a " << std::setprecision(15) << " \n "
+                        << "New soln " << hetaLowi + l_ji_q1 * P_heta << " \n "
+                        << "hetaLowi " << hetaLowi << " \n "
+                        << "heta_min " << heta_min[i] << " \n "
+                        << "heta_max " << heta_max[i] << " \n "
+                        << "l_ji_q1  " << l_ji_q1 << " \n "
+                        << "test hi  " << hLowi << std::endl;
+              if (heta_max[i] > -hEps)
+                abort();
+            }
+
+            if (heta_max[i] - (hetaLowi + l_ji_q1 * P_heta) < -hEps * hEps) {
+              std::cout << " MAJOR BUG 3b " << std::setprecision(15) << " \n "
+                        << "New soln " << hetaLowi + l_ji_q1 * P_heta << " \n "
+                        << "hetaLowi " << hetaLowi << " \n "
+                        << "heta_min " << heta_min[i] << " \n "
+                        << "heta_max " << heta_max[i] << " \n "
+                        << "l_ji_q1  " << l_ji_q1 << " \n "
+                        << "test hi  " << hLowi << std::endl;
+              if (heta_max[i] > -hEps)
+                abort();
+            }
+#endif
+          }
+
+          /* q1 limiting -- to define l_ij_q1 */
+          double l_ij_q1 = l_ij_h;
+          {
+            const double denominator =
+                1. / (std::abs(P_heta_tr) + eps * heta_max[j]);
+
+            if (hetaLowj + P_heta_tr < heta_min[j]) {
+              l_ij_q1 = std::min(
+                  (std::abs(heta_min[j] - hetaLowj) + eps * heta_min[j]) *
+                      denominator,
+                  1.);
+            } else if (heta_max[j] < hetaLowj + P_heta_tr) {
+              l_ij_q1 = std::min(
+                  (std::abs(heta_max[j] - hetaLowj) + eps * heta_min[j]) *
+                      denominator,
+                  1.);
+            }
+
+            // set limiter to 0 if water depth is close to 0
+            l_ij_q1 = (hLowj <= hEps) ? 0. : l_ij_q1;
+
+            // get min of l_ij_q1 and previous limiter
+            l_ij_q1 = std::min(l_ij_q1, l_ij_h);
+
+            /* Box limiter to be safe? */
+            l_ij_q1 = std::min(l_ij_q1, 1.0);
+            l_ij_q1 = std::max(l_ij_q1, 0.0);
+          }
+
+#if IF_LIMITING_DEBUGGING
+          if ((hetaLowj + l_ij_q1 * P_heta_tr) - heta_min[j] < -hEps * hEps) {
+            std::cout << " MAJOR BUG 4a " << std::setprecision(15) << " \n "
+                      << "New soln " << hetaLowj + l_ij_q1 * P_heta_tr << " \n "
+                      << "hetaLowj " << hetaLowj << " \n "
+                      << "heta_min " << heta_min[j] << " \n "
+                      << "heta_max " << heta_max[j] << " \n "
+                      << "l_ij_q1  " << l_ij_q1 << " \n "
+                      << "test hj  " << hLowj << std::endl;
+            if (heta_max[j] > -hEps)
+              abort();
+          }
+
+          if (heta_max[j] - (hetaLowj + l_ij_q1 * P_heta_tr) < -hEps * hEps) {
+            std::cout << " MAJOR BUG 4b " << std::setprecision(15) << " \n "
+                      << "New soln " << hetaLowj + l_ij_q1 * P_heta_tr << " \n "
+                      << "hetaLowj " << hetaLowj << " \n "
+                      << "heta_min " << heta_min[j] << " \n "
+                      << "heta_max " << heta_max[j] << " \n "
+                      << "l_ij_q1  " << l_ij_q1 << " \n "
+                      << "test hj  " << hLowj << std::endl;
+            if (heta_max[j] > -hEps)
+              abort();
+          }
+#endif
+
+          /* kinetic energy limiting -- to define l_ji_K */
+          double l_tmp = 0.;
+          double l_ji_K = l_ji_q1;
+          {
+            // We first check if current l_ji_K is a good state
+            const double h_r = hLowi + l_ji_K * P_h;
+            const double hu_r = huLowi + l_ji_K * P_hu;
+            const double hv_r = hvLowi + l_ji_K * P_hv;
+            const double psi =
+                kin_max[i] * h_r - 0.5 * (hu_r * hu_r + hv_r * hv_r);
+
+            l_tmp = (psi > -KE_tiny) ? l_ji_K : l_tmp;
+
+            const double ai = -0.5 * (P_hu * P_hu + P_hv * P_hv);
+            const double ai_nudged = std::min(ai, -KE_tiny);
+            const double bi = kinMaxi * P_h - (huLowi * P_hu + hvLowi * P_hv);
+            const double ci =
+                hLowi * kinMaxi - 0.5 * (huLowi * huLowi + hvLowi * hvLowi);
+
+            const double delta_i = bi * bi - 4. * ai * ci;
+            const double root_i =
+                0.5 / ai_nudged * (-bi - std::sqrt(std::abs(delta_i)));
+
+            // define l_ji_K
+            l_ji_K = (root_i > 0.) ? std::min(root_i, l_ji_K)
+                                   : std::min(l_tmp, l_ji_K);
+
+            /* if previous bound was already satisfied, we should take
+             l_tmp instead of l_ji_K */
+            l_tmp = std::max(l_tmp, l_ji_K);
+
+            // If we are in a "dry state", limiter should be 0
+            l_tmp = (hLowi * kinMaxi <= KE_tiny) ? 0. : l_tmp;
+
+            /* Then box to be safe */
+            l_tmp = std::min(l_tmp, 1.);
+            l_tmp = std::max(l_tmp, 0.);
+          }
+
+          /* Define final l_ji_K */
+          l_ji_K = std::min(l_tmp, l_ji_q1);
+
+          /* kinetic energy limiting -- to define l_ij_K */
+          l_tmp = 0.;
+          double l_ij_K = l_ij_q1;
+          {
+            // We first check if current l_ij_K is a good state
+            const double h_r = hLowj + l_ij_K * P_h_tr;
+            const double hu_r = huLowj + l_ij_K * P_hu_tr;
+            const double hv_r = hvLowj + l_ij_K * P_hv_tr;
+            const double psi =
+                kinMaxj * h_r - 0.5 * (hu_r * hu_r + hv_r * hv_r);
+
+            l_tmp = (psi > -KE_tiny) ? l_ij_K : l_tmp;
+
+            const double aj = -0.5 * (P_hu_tr * P_hu_tr + P_hv_tr * P_hv_tr);
+            const double aj_nudged = std::min(aj, -KE_tiny);
+            const double bj =
+                kinMaxj * P_h_tr - (huLowj * P_hu_tr + hvLowj * P_hv_tr);
+            const double cj =
+                hLowj * kinMaxj - 0.5 * (huLowj * huLowj + hvLowj * hvLowj);
+
+            const double delta_j = bj * bj - 4. * aj * cj;
+            const double root_j =
+                0.5 / aj_nudged * (-bj - std::sqrt(std::abs(delta_j)));
+
+            // define l_ij_K
+            l_ij_K = (root_j > 0.) ? std::min(root_j, l_ij_K)
+                                   : std::min(l_tmp, l_ij_K);
+
+            /* if previous bound was already satisfied, we should take l_tmp
+            instead of l_ij_K */
+            l_tmp = std::max(l_tmp, l_ij_K);
+
+            // If we are in a "dry state", limiter should be 0
+            l_tmp = (hLowj * kinMaxj <= KE_tiny) ? 0. : l_tmp;
+
+            /* Box limiter */
+            l_tmp = std::min(l_tmp, 1.);
+            l_tmp = std::max(l_tmp, 0.);
+          }
+
+          /* Get final l_ij_K*/
+          l_ij_K = std::min(l_tmp, l_ij_q1);
+
+          /* Then we get the final limiter lij */
+          Lij_array[ij] = std::min(l_ji_K, l_ij_K);
+
+#if IF_LIMITING_DEBUGGING
+          if (Lij_array[ij] > 1. || Lij_array[ij] < 0.) {
+            std::cout << "\n Problem with limiter! \n " << Lij_array[ij]
+                      << "\n Aborting! " << std::endl;
+          }
+#endif
           ij += 1;
-        } // j loop ends here
+        } // end j loop
+      }   // end i loop
 
-        ///////////////////////
-        // COMPUTE Q VECTORS //
-        ///////////////////////
-        double Qnegi = std::min(mi * (h_min[i] - hLow[i]), 0.0);
-        double Qposi = std::max(mi * (h_max[i] - hLow[i]), 0.0);
-        double Qnegi_heta = std::min(mi * (heta_min[i] - hetaLow[i]), 0.0);
-        double Qposi_heta = std::max(mi * (heta_max[i] - hetaLow[i]), 0.0);
-
-        ///////////////////////
-        // COMPUTE R VECTORS //
-        ///////////////////////
-        if (high_order_hnp1[i] <= hEps) // hEps
-        {
-          Rneg[i] = 0.;
-          Rpos[i] = 0.;
-          Rneg_heta[i] = 0.;
-          Rpos_heta[i] = 0.;
-        } else {
-          Rneg[i] = ((Pnegi == 0) ? 1. : std::min(1.0, Qnegi / Pnegi));
-          Rpos[i] = ((Pposi == 0) ? 1. : std::min(1.0, Qposi / Pposi));
-          Rneg_heta[i] =
-              ((Pnegi_heta == 0) ? 1. : std::min(1.0, Qnegi_heta / Pnegi_heta));
-          Rpos_heta[i] =
-              ((Pposi_heta == 0) ? 1. : std::min(1.0, Qposi_heta / Pposi_heta));
-        }
-      } // i loop ends here
-
-      /* Here we compute the limiters */
+      /* Loop to define limited solution */
       ij = 0;
       for (int i = 0; i < numDOFs; i++) {
-        // read some vectors
-        double high_order_hnp1i = high_order_hnp1[i];
-        double high_order_hunp1i = high_order_hunp1[i];
-        double high_order_hvnp1i = high_order_hvnp1[i];
-        double high_order_hetanp1i = high_order_hetanp1[i];
-        double high_order_hwnp1i = high_order_hwnp1[i];
-        double high_order_hbetanp1i = high_order_hbetanp1[i];
-        double hi = h_old[i];
-        double huni = hu_old[i];
-        double hvni = hv_old[i];
-        double hetani = heta_old[i];
-        double hwni = hw_old[i];
-        double hbetani = hbeta_old[i];
-        double Zi = b_dof[i];
-        double mi = lumped_mass_matrix[i];
-        double one_over_hiReg =
-            2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
 
-        double ith_Limiter_times_FluxCorrectionMatrix1 = 0.;
-        double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
-        double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
-        double ith_Limiter_times_FluxCorrectionMatrix4 = 0.;
-        double ith_Limiter_times_FluxCorrectionMatrix5 = 0.;
-        double ith_Limiter_times_FluxCorrectionMatrix6 = 0.;
-
-        double ci =
-            Kmax[i] * hLow[i] -
-            0.5 * (huLow[i] * huLow[i] + hvLow[i] * hvLow[i]); // for KE lim.
+        const double one_over_mi = 1. / lumped_mass_matrix[i];
+        double ith_Limiter_times_FCT_matrix1 = 0.;
+        double ith_Limiter_times_FCT_matrix2 = 0.;
+        double ith_Limiter_times_FCT_matrix3 = 0.;
+        double ith_Limiter_times_FCT_matrix4 = 0.;
+        double ith_Limiter_times_FCT_matrix5 = 0.;
+        double ith_Limiter_times_FCT_matrix6 = 0.;
 
         // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
         for (int offset = csrRowIndeces_DofLoops[i];
              offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
           int j = csrColumnOffsets_DofLoops[offset];
-          // read some vectors
-          double hj = h_old[j];
-          double hunj = hu_old[j];
-          double hvnj = hv_old[j];
-          double hetanj = heta_old[j];
-          double hwnj = hw_old[j];
-          double hbetanj = hbeta_old[j];
-          double Zj = b_dof[j];
-          double one_over_hjReg =
-              2 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2)); // hEps
-
-          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, and
-          // hwStar, hbetaStar
-          double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
-          double huStarij = huni * hStarij * one_over_hiReg;
-          double hvStarij = hvni * hStarij * one_over_hiReg;
-          double hetaStarij = hetani * std::pow(hStarij * one_over_hiReg, 2);
-          double hwStarij = hwni * hStarij * one_over_hiReg;
-          double hbetaStarij = hbetani * hStarij * one_over_hiReg;
-
-          double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
-          double huStarji = hunj * hStarji * one_over_hjReg;
-          double hvStarji = hvnj * hStarji * one_over_hjReg;
-          double hetaStarji = hetanj * std::pow(hStarji * one_over_hjReg, 2);
-          double hwStarji = hwnj * hStarji * one_over_hjReg;
-          double hbetaStarji = hbetanj * hStarji * one_over_hjReg;
-
-          // compute limiter based on water height
-          if (FCT_h[ij] >= 0) {
-            Lij_array[ij] = fmin(Lij_array[ij], std::min(Rneg[j], Rpos[i]));
-          } else {
-            Lij_array[ij] = fmin(Lij_array[ij], std::min(Rneg[i], Rpos[j]));
-          }
-
-          // COMPUTE LIMITER based on heta, note that we set lij =
-          // min(lij_h,lij_heta)
-          if (FCT_heta[ij] >= 0) {
-            Lij_array[ij] =
-                fmin(Lij_array[ij], std::min(Rneg_heta[j], Rpos_heta[i]));
-          } else {
-            Lij_array[ij] =
-                fmin(Lij_array[ij], std::min(Rneg_heta[i], Rpos_heta[j]));
-          }
-
-          double lambdaj =
-              csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i] - 1;
-          double Ph_ij = FCT_h[ij] / mi / lambdaj;
-          double Phu_ij = FCT_hu[ij] / mi / lambdaj;
-          double Phv_ij = FCT_hv[ij] / mi / lambdaj;
-
-          double ai = -0.5 * (Phu_ij * Phu_ij + Phv_ij * Phv_ij);
-          double bi = Kmax[i] * Ph_ij - (huLow[i] * Phu_ij + hvLow[i] * Phv_ij);
-
-          double r1 = ai == 0
-                          ? (bi == 0 ? 1. : -ci / bi)
-                          : (-bi + std::sqrt(bi * bi - 4 * ai * ci)) / 2. / ai;
-          double r2 = ai == 0
-                          ? (bi == 0 ? 1. : -ci / bi)
-                          : (-bi - std::sqrt(bi * bi - 4 * ai * ci)) / 2. / ai;
-          if (r1 < 0 && r2 < 0) {
-            r1 = 1.;
-            r2 = 1.;
-          }
-          double ri = fabs(fmax(r1, r2));
-
-          // root of jth-DOF (To compute transpose component)
-          double lambdai =
-              csrRowIndeces_DofLoops[j + 1] - csrRowIndeces_DofLoops[j] - 1;
-          double mj = lumped_mass_matrix[j];
-          double cj = Kmax[j] * hLow[j] -
-                      0.5 * (huLow[j] * huLow[j] + hvLow[j] * hvLow[j]);
-          double Ph_ji = -FCT_h[ij] / mj / lambdai; // Aij=-Aji
-          double Phu_ji = -FCT_hu[ij] / mj / lambdai;
-          double Phv_ji = -FCT_hv[ij] / mj / lambdai;
-          double aj = -0.5 * (Phu_ji * Phu_ji + Phv_ji * Phv_ji);
-          double bj = Kmax[j] * Ph_ji - (huLow[j] * Phu_ji + hvLow[j] * Phv_ji);
-
-          r1 = aj == 0 ? (bj == 0 ? 1. : -cj / bj)
-                       : (-bj + std::sqrt(bj * bj - 4 * aj * cj)) / 2. / aj;
-          r2 = aj == 0 ? (bj == 0 ? 1. : -cj / bj)
-                       : (-bj - std::sqrt(bj * bj - 4 * aj * cj)) / 2. / aj;
-          if (r1 < 0 && r2 < 0) {
-            r1 = 1.;
-            r2 = 1.;
-          }
-          double rj = fabs(fmax(r1, r2));
-
-          // COMPUTE LIMITER //
-          Lij_array[ij] =
-              fmin(fmin(ri, Lij_array[ij]), fmin(rj, Lij_array[ij]));
 
           // COMPUTE LIMITED FLUX //
-          ith_Limiter_times_FluxCorrectionMatrix1 += Lij_array[ij] * FCT_h[ij];
-          ith_Limiter_times_FluxCorrectionMatrix2 += Lij_array[ij] * FCT_hu[ij];
-          ith_Limiter_times_FluxCorrectionMatrix3 += Lij_array[ij] * FCT_hv[ij];
-          ith_Limiter_times_FluxCorrectionMatrix4 +=
-              Lij_array[ij] * FCT_heta[ij];
-          ith_Limiter_times_FluxCorrectionMatrix5 += Lij_array[ij] * FCT_hw[ij];
-          ith_Limiter_times_FluxCorrectionMatrix6 +=
-              Lij_array[ij] * FCT_hbeta[ij];
+          ith_Limiter_times_FCT_matrix1 += Lij_array[ij] * FCT_h[ij];
+          ith_Limiter_times_FCT_matrix2 += Lij_array[ij] * FCT_hu[ij];
+          ith_Limiter_times_FCT_matrix3 += Lij_array[ij] * FCT_hv[ij];
+          ith_Limiter_times_FCT_matrix4 += Lij_array[ij] * FCT_heta[ij];
+          ith_Limiter_times_FCT_matrix5 += Lij_array[ij] * FCT_hw[ij];
+          ith_Limiter_times_FCT_matrix6 += Lij_array[ij] * FCT_hbeta[ij];
 
           // update ij
           ij += 1;
-        }
+        } // end j loop
 
-        // update ulow solution
-        double one_over_mi = 1.0 / lumped_mass_matrix[i];
-        hLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix1;
-        huLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix2;
-        hvLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix3;
-        hetaLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix4;
-        hwLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix5;
-        hbetaLow[i] += one_over_mi * ith_Limiter_times_FluxCorrectionMatrix6;
-      } // end i loop for computing limiter and sum_j(lij * Aij)
+        // then we add lij*Aij to uLow
+        hLow[i] += one_over_mi * ith_Limiter_times_FCT_matrix1;
+        huLow[i] += one_over_mi * ith_Limiter_times_FCT_matrix2;
+        hvLow[i] += one_over_mi * ith_Limiter_times_FCT_matrix3;
+        hetaLow[i] += one_over_mi * ith_Limiter_times_FCT_matrix4;
+        hwLow[i] += one_over_mi * ith_Limiter_times_FCT_matrix5;
+        hbetaLow[i] += one_over_mi * ith_Limiter_times_FCT_matrix6;
 
-      // update final limted solution, need to change to vector form
-      for (int i = 0; i < numDOFs; i++) {
-        double one_over_mi = 1.0 / lumped_mass_matrix[i];
-        limited_hnp1[i] = hLow[i];
-        limited_hunp1[i] = huLow[i] + dt * one_over_mi * new_SourceTerm_hu[i];
-        limited_hvnp1[i] = hvLow[i] + dt * one_over_mi * new_SourceTerm_hv[i];
-        limited_hetanp1[i] =
-            hetaLow[i] - dt * one_over_mi * extendedSourceTerm_heta[i];
-        limited_hwnp1[i] =
-            hwLow[i] - dt * one_over_mi * extendedSourceTerm_hw[i];
-        limited_hbetanp1[i] =
-            hbetaLow[i] - dt * one_over_mi * extendedSourceTerm_hbeta[i];
-
-        if (limited_hnp1[i] < -hEps && dt < 1.0) {
-          std::cout << "Limited water height is negative: \n "
-                    << "hLow: " << hLow[i] << "\n"
-                    << "hHigh: " << limited_hnp1[i] << "\n"
-                    << "hEps:  " << hEps << "\n"
-                    << " ... aborting!" << std::endl;
+#if IF_LIMITING_DEBUGGING
+        if (hLow[i] < -hEps) {
+          std::cout
+              << " \n New intermediated/limited water depth is negative! \n"
+              << "new hLow[i] = " << hLow[i] << " \n "
+              << "-hEps   = " << -hEps << "\n"
+              << "h_min = " << h_min[i] << "\n"
+              << "h_max = " << h_max[i] << "\n"
+              << "... Aborting! \n"
+              << std::endl;
           abort();
-        } else {
-          // clean up uHigh from round off error
-          if (limited_hnp1[i] < hEps)
-            limited_hnp1[i] = 0.0;
-          double aux = fmax(limited_hnp1[i], hEps);
-          limited_hunp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                               std::pow(aux, VEL_FIX_POWER));
-          limited_hvnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                               std::pow(aux, VEL_FIX_POWER));
-          limited_hetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                                (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                                 std::pow(aux, VEL_FIX_POWER));
-          limited_hwnp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                              (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                               std::pow(aux, VEL_FIX_POWER));
-          limited_hbetanp1[i] *= 2 * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
-                                 (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
-                                  std::pow(aux, VEL_FIX_POWER));
         }
-      }
+        if (h_max[i] - hLow[i] < -1e-12 || hLow[i] - h_min[i] < -1e-12) {
+          std::cout
+              << std::setprecision(15)
+              << " --- We have a major problem (h limiting bounds) --- \n "
+              << "i        = " << i << " \n "
+              << "hLow[i]  = " << hLow[i] << " \n "
+              << "h_min[i] = " << h_min[i] << " \n "
+              << "h_max[i] = " << h_max[i] << " \n "
+              << "Diff max = " << h_max[i] - hLow[i] << " \n "
+              << "Diff min = " << hLow[i] - h_min[i] << " \n " << std::endl;
+          std::cout << "LIMIT_ITER " << limit_iter << std::endl;
+          abort();
+        }
+
+        if (heta_max[i] - hetaLow[i] < -hEps * hEps ||
+            hetaLow[i] - heta_min[i] < -hEps * hEps) {
+          std::cout
+              << std::setprecision(15)
+              << " --- We have a major problem (heta limiting bounds) --- \n
+                 "
+              << "hetaLow[i]  = " << hetaLow[i] << " \n "
+              << "heta_min[i] = " << heta_min[i] << " \n "
+              << "heta_max[i] = " << heta_max[i] << " \n "
+              << "Diff max = " << heta_max[i] - hetaLow[i] << " \n "
+              << "Diff min = " << hetaLow[i] - heta_min[i] << " \n "
+              << std::endl;
+          abort();
+        }
+#endif
+      } // end i loop
 
       // update FCT matrices as Fct = (1 - Lij)*Fct
-      FCT_h = (1.0 - Lij_array) * FCT_h;
-      FCT_hu = (1.0 - Lij_array) * FCT_hu;
-      FCT_hv = (1.0 - Lij_array) * FCT_hv;
-      FCT_heta = (1.0 - Lij_array) * FCT_heta;
-      FCT_hw = (1.0 - Lij_array) * FCT_hw;
-      FCT_hbeta = (1.0 - Lij_array) * FCT_hbeta;
+      FCT_h = (1. - Lij_array) * FCT_h;
+      FCT_hu = (1. - Lij_array) * FCT_hu;
+      FCT_hv = (1. - Lij_array) * FCT_hv;
+      FCT_heta = (1. - Lij_array) * FCT_heta;
+      FCT_hw = (1. - Lij_array) * FCT_hw;
+      FCT_hbeta = (1. - Lij_array) * FCT_hbeta;
     } // end loop for limiting iteration
-  }   // end convex limiting function
+
+    /* Update final solution */
+    for (int i = 0; i < numDOFs; i++) {
+
+      const double one_over_mi = 1. / lumped_mass_matrix[i];
+
+      limited_hnp1[i] = hLow[i] + dt * one_over_mi * SourceTerm_h[i];
+      limited_hunp1[i] = huLow[i] + dt * one_over_mi * extendedSourceTerm_hu[i];
+      limited_hvnp1[i] = hvLow[i] + dt * one_over_mi * extendedSourceTerm_hv[i];
+      limited_hetanp1[i] = hetaLow[i] + dt * one_over_mi * SourceTerm_heta[i];
+      limited_hwnp1[i] = hwLow[i] + dt * one_over_mi * SourceTerm_hw[i];
+      limited_hbetanp1[i] =
+          hbetaLow[i] + dt * one_over_mi * SourceTerm_hbeta[i];
+
+      if (limited_hnp1[i] < -hEps) {
+        std::cout << " \n "
+                  << " !!!! Limited water height is negative: !!!! \n"
+                  << "     hLim  = " << limited_hnp1[i] << "\n"
+                  << "     hEps  = " << hEps << "\n"
+                  << "     h_min = " << h_min[i] << "\n"
+                  << "     h_max = " << h_max[i] << "\n"
+                  << " !!!!             ABORTING              !!!! \n"
+                  << std::endl;
+        abort();
+      } else {
+        // clean up uHigh from round off error
+        if (limited_hnp1[i] < hEps) {
+          limited_hnp1[i] = 0.;
+        }
+
+        const double aux = fmax(limited_hnp1[i], hEps);
+        limited_hunp1[i] *= 2. * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                             std::pow(aux, VEL_FIX_POWER));
+        limited_hvnp1[i] *= 2. * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                             std::pow(aux, VEL_FIX_POWER));
+        limited_hwnp1[i] *= 2. * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                            (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                             std::pow(aux, VEL_FIX_POWER));
+        limited_hbetanp1[i] *= 2. * std::pow(limited_hnp1[i], VEL_FIX_POWER) /
+                               (std::pow(limited_hnp1[i], VEL_FIX_POWER) +
+                                std::pow(aux, VEL_FIX_POWER));
+      }
+    }
+
+  } // end convex limiting function
 
   double calculateEdgeBasedCFL(arguments_dict &args) {
-    double g = args.scalar<double>("g");
-    int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
-    xt::pyarray<double> &lumped_mass_matrix =
+    const double g = args.scalar<double>("g");
+    const int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
+    const xt::pyarray<double> &lumped_mass_matrix =
         args.array<double>("lumped_mass_matrix");
-    xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
-    xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
-    xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
-    xt::pyarray<double> &heta_dof_old = args.array<double>("heta_dof_old");
-    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
-    xt::pyarray<int> &csrRowIndeces_DofLoops =
+    const xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
+    const xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
+    const xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
+    const xt::pyarray<double> &heta_dof_old =
+        args.array<double>("heta_dof_old");
+    const xt::pyarray<int> &csrRowIndeces_DofLoops =
         args.array<int>("csrRowIndeces_DofLoops");
-    xt::pyarray<int> &csrColumnOffsets_DofLoops =
+    const xt::pyarray<int> &csrColumnOffsets_DofLoops =
         args.array<int>("csrColumnOffsets_DofLoops");
-    double hEps = args.scalar<double>("hEps");
-    xt::pyarray<double> &hReg = args.array<double>("hReg");
-    xt::pyarray<double> &Cx = args.array<double>("Cx");
-    xt::pyarray<double> &Cy = args.array<double>("Cy");
-    xt::pyarray<double> &CTx = args.array<double>("CTx");
-    xt::pyarray<double> &CTy = args.array<double>("CTy");
-    xt::pyarray<double> &dLow = args.array<double>("dLow");
-    double run_cfl = args.scalar<double>("run_cfl");
+    const double hEps = args.scalar<double>("hEps");
+    const xt::pyarray<double> &Cx = args.array<double>("Cx");
+    const xt::pyarray<double> &Cy = args.array<double>("Cy");
+    const xt::pyarray<double> &CTx = args.array<double>("CTx");
+    const xt::pyarray<double> &CTy = args.array<double>("CTy");
+    const xt::pyarray<double> &inverse_mesh =
+        args.array<double>("inverse_mesh");
     xt::pyarray<double> &edge_based_cfl = args.array<double>("edge_based_cfl");
-    int debug = args.scalar<int>("debug");
 
     double max_edge_based_cfl = 0.;
+    double dLowij = 0.;
+
     int ij = 0;
     for (int i = 0; i < numDOFsPerEqn; i++) {
+
       // solution at time tn for the ith DOF
-      double hi = h_dof_old[i];
-      double hui = hu_dof_old[i];
-      double hvi = hv_dof_old[i];
-      double hetai = heta_dof_old[i];
-      double mi = lumped_mass_matrix[i];
+      const double hi = h_dof_old[i];
+      const double one_over_hi =
+          2. * hi / (hi * hi + std::pow(fmax(hi, hEps), 2));
+      const double hui = hu_dof_old[i];
+      const double hvi = hv_dof_old[i];
+      const double ui = hui * one_over_hi;
+      const double vi = hvi * one_over_hi;
+      const double hetai = heta_dof_old[i];
+      const double mi = lumped_mass_matrix[i];
+      const double inv_meshSizei = inverse_mesh[i];
+
+      // Initialize diagonal entry
       double dLowii = 0.;
 
       for (int offset = csrRowIndeces_DofLoops[i];
            offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+
         // loop in j (sparsity pattern)
-        int j = csrColumnOffsets_DofLoops[offset];
+        const int j = csrColumnOffsets_DofLoops[offset];
 
         // solution at time tn for the jth DOF
-        double hj = h_dof_old[j];
-        double huj = hu_dof_old[j];
-        double hvj = hv_dof_old[j];
-        double hetaj = heta_dof_old[j];
-        double mj = lumped_mass_matrix[j];
+        const double hj = h_dof_old[j];
+        const double one_over_hj =
+            2. * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
+        const double huj = hu_dof_old[j];
+        const double hvj = hv_dof_old[j];
+        const double uj = huj * one_over_hj;
+        const double vj = hvj * one_over_hj;
+        const double hetaj = heta_dof_old[j];
+        const double mj = lumped_mass_matrix[j];
+        const double inv_meshSizej = inverse_mesh[j];
 
-        if (i != j) {
+        if (j != i) {
           ////////////////////////
           // DISSIPATIVE MATRIX //
           ////////////////////////
-          double cij_norm = sqrt(Cx[ij] * Cx[ij] + Cy[ij] * Cy[ij]);
-          double cji_norm = sqrt(CTx[ij] * CTx[ij] + CTy[ij] * CTy[ij]);
-          double nxij = Cx[ij] / cij_norm, nyij = Cy[ij] / cij_norm;
-          double nxji = CTx[ij] / cji_norm, nyji = CTy[ij] / cji_norm;
-          dLow[ij] =
-              fmax(maxWaveSpeedSharpInitialGuess(g, nxij, nyij, hi, hui, hvi,
-                                                 hetai, mi, hj, huj, hvj, hetaj,
-                                                 mj, hEps, hEps, debug) *
-                       cij_norm, // hEps
-                   maxWaveSpeedSharpInitialGuess(g, nxji, nyji, hj, huj, hvj,
-                                                 hetaj, mj, hi, hui, hvi, hetai,
-                                                 mi, hEps, hEps, debug) *
-                       cji_norm); // hEps
-          dLowii -= dLow[ij];
+          const double cij_norm = sqrt(Cx[ij] * Cx[ij] + Cy[ij] * Cy[ij]);
+          const double cji_norm = sqrt(CTx[ij] * CTx[ij] + CTy[ij] * CTy[ij]);
+          const double nxij = Cx[ij] / cij_norm, nyij = Cy[ij] / cij_norm;
+          const double nxji = CTx[ij] / cji_norm, nyji = CTy[ij] / cji_norm;
 
-        } else
-          dLow[ij] = 0.;
+          const double muijL = fmax(std::abs(ui * Cx[ij] + vi * Cy[ij]),
+                                    std::abs(uj * CTx[ij] + vj * CTy[ij]));
+          dLowij = fmax(maxWaveSpeedSharpInitialGuess(
+                            g, nxij, nyij, hi, hui, hvi, hetai, inv_meshSizei,
+                            hj, huj, hvj, hetaj, inv_meshSizej, hEps) *
+                            cij_norm,
+                        maxWaveSpeedSharpInitialGuess(
+                            g, nxji, nyji, hj, huj, hvj, hetaj, inv_meshSizej,
+                            hi, hui, hvi, hetai, inv_meshSizei, hEps) *
+                            cji_norm);
+
+          // Take max of dij and muij
+          dLowij = fmax(dLowij, muijL);
+
+          // Define diagonal entry
+          dLowii -= dLowij;
+        }
+
         // update ij
         ij += 1;
       }
@@ -916,93 +991,166 @@ public:
       edge_based_cfl[i] = 1.0 * fabs(dLowii) / mi;
       max_edge_based_cfl = fmax(max_edge_based_cfl, edge_based_cfl[i]);
     }
+
     return max_edge_based_cfl;
   } // End calculateEdgeBasedCFL
 
-  void calculateEV(arguments_dict &args) {
-    double g = args.scalar<double>("g");
-    xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
-    xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
-    xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
-    xt::pyarray<double> &heta_dof_old = args.array<double>("heta_dof_old");
-    xt::pyarray<double> &b_dof = args.array<double>("b_dof");
-    xt::pyarray<double> &Cx = args.array<double>("Cx");
-    xt::pyarray<double> &Cy = args.array<double>("Cy");
-    xt::pyarray<double> &CTx = args.array<double>("CTx");
-    xt::pyarray<double> &CTy = args.array<double>("CTy");
-    int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
-    xt::pyarray<int> &csrRowIndeces_DofLoops =
+  void calculatePreStep(arguments_dict &args) {
+    const double g = args.scalar<double>("g");
+    const xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
+    const xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
+    const xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
+    const xt::pyarray<double> &heta_dof_old =
+        args.array<double>("heta_dof_old");
+    const double hEps = args.scalar<double>("hEps");
+    const int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
+    const xt::pyarray<int> &csrRowIndeces_DofLoops =
         args.array<int>("csrRowIndeces_DofLoops");
-    xt::pyarray<int> &csrColumnOffsets_DofLoops =
+    const xt::pyarray<int> &csrColumnOffsets_DofLoops =
         args.array<int>("csrColumnOffsets_DofLoops");
-    xt::pyarray<double> &lumped_mass_matrix =
+    xt::pyarray<double> &entropy = args.array<double>("entropy");
+    xt::pyarray<double> &delta_Sqd_h = args.array<double>("delta_Sqd_h");
+    xt::pyarray<double> &delta_Sqd_heta = args.array<double>("delta_Sqd_heta");
+    xt::pyarray<double> &thetaj_inv = args.array<double>("thetaj_inv");
+    double &dij_small = args.scalar<double>("dij_small");
+    const double h0_max = args.scalar<double>("h0_max");
+    const xt::pyarray<double> &Cx = args.array<double>("Cx");
+    const xt::pyarray<double> &Cy = args.array<double>("Cy");
+
+    const double speed = std::sqrt(g * h0_max);
+    dij_small = 0.;
+
+    ////////////////////////////////////////
+    // ********** LOOP ON DOFs ********** //
+    ////////////////////////////////////////
+    // To compute:
+    //     * Entropy    at i-th nodes
+    //     * thetaj_inv at i-th nodes
+    //     * second order differences at i-th node
+    //     * dij_small
+
+    int ij = 0;
+    for (int i = 0; i < numDOFsPerEqn; i++) {
+
+      // Define things at ith node
+      const double hi = h_dof_old[i];
+      const double hu_i = hu_dof_old[i];
+      const double hv_i = hv_dof_old[i];
+      const double hetai = heta_dof_old[i];
+      const double one_over_hi =
+          2. * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      const double u_i = hu_i * one_over_hi;
+      const double v_i = hv_i * one_over_hi;
+      const double kin_i = 0.5 * hi * (u_i * u_i + v_i * v_i);
+
+      // Compute entropy (with a flat bottom)
+      entropy[i] = ENTROPY(g, hi, hu_i, hv_i, 0., one_over_hi);
+
+      // Define convex coefficients for each i
+      thetaj_inv[i] =
+          1. / (csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i] - 1);
+
+      // Initialize sum of differences
+      double h_diff = 0.;
+      double heta_diff = 0.;
+      double kin_diff = 0.;
+
+      for (int offset = csrRowIndeces_DofLoops[i];
+           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+        const int j = csrColumnOffsets_DofLoops[offset];
+
+        // Define things at jth node
+        const double hj = h_dof_old[j];
+        const double hu_j = hu_dof_old[j];
+        const double hv_j = hv_dof_old[j];
+        const double hetaj = heta_dof_old[j];
+        const double one_over_hj =
+            2. * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
+        const double u_j = hu_j * one_over_hj;
+        const double v_j = hv_j * one_over_hj;
+        const double kin_j = 0.5 * hj * (u_j * u_j + v_j * v_j);
+
+        /* To compute:
+         *    Second-difference relaxation quantities
+         */
+        if (j != i) {
+          h_diff += hi - hj;
+          heta_diff += hetai - hetaj;
+          kin_diff += kin_i - kin_j;
+        }
+
+        // Compute dij_small
+        const double x = fabs(Cx[ij]) + fabs(Cy[ij]);
+        dij_small = fmax(dij_small, x * speed);
+
+        ij += 1;
+      } // j loop ends here
+
+      // Set differences
+      delta_Sqd_h[i] = h_diff;
+      delta_Sqd_heta[i] = heta_diff;
+
+    } // i loop ends here
+
+    // Define final dij_small
+    dij_small = 1E-14 * dij_small;
+
+  } // end calculatePreStep
+
+  void calculateEV(arguments_dict &args) {
+    const double g = args.scalar<double>("g");
+    const xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
+    const xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
+    const xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
+    const xt::pyarray<double> &Cx = args.array<double>("Cx");
+    const xt::pyarray<double> &Cy = args.array<double>("Cy");
+    const xt::pyarray<double> &CTx = args.array<double>("CTx");
+    const xt::pyarray<double> &CTy = args.array<double>("CTy");
+    const int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
+    const xt::pyarray<int> &csrRowIndeces_DofLoops =
+        args.array<int>("csrRowIndeces_DofLoops");
+    const xt::pyarray<int> &csrColumnOffsets_DofLoops =
+        args.array<int>("csrColumnOffsets_DofLoops");
+    const xt::pyarray<double> &lumped_mass_matrix =
         args.array<double>("lumped_mass_matrix");
-    double eps = args.scalar<double>("eps");
-    double hEps = args.scalar<double>("hEps");
+    const double hEps = args.scalar<double>("hEps");
     xt::pyarray<double> &global_entropy_residual =
         args.array<double>("global_entropy_residual");
-    double &dij_small = args.scalar<double>("dij_small");
-
-    //////////////////////////////////////////////
-    // ********** FIRST LOOP ON DOFs ********** //
-    //////////////////////////////////////////////
-
-    // To compute:
-    //     * Entropy at i-th node
-    std::valarray<double> eta(numDOFsPerEqn);
-
-    for (int i = 0; i < numDOFsPerEqn; i++) {
-      // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM
-      double hi = h_dof_old[i];
-      double one_over_hiReg =
-          2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
-      eta[i] = ENTROPY(g, hi, hu_dof_old[i], hv_dof_old[i], 0., one_over_hiReg);
-    }
-
-    // ********** END OF FIRST LOOP ON DOFs ********** //
+    const xt::pyarray<double> &entropy = args.array<double>("entropy");
+    const double h0_max = args.scalar<double>("h0_max");
 
     ///////////////////////////////////////////////
-    // ********** SECOND LOOP ON DOFs ********** //
+    // ********** FIRST LOOP ON DOFs ********** //
     ///////////////////////////////////////////////
     // To compute:
     //     * global entropy residual
-    //     * dij_small to avoid division by 0
 
     int ij = 0;
-    std::valarray<double> etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
-
-    // speed = sqrt(g max(h_0)), I divide by h_epsilon to get max(h_0)
-    double speed = std::sqrt(g * hEps / eps);
-
     for (int i = 0; i < numDOFsPerEqn; i++) {
 
       // solution at time tn for the ith DOF
-      double hi = h_dof_old[i];
-      double hui = hu_dof_old[i];
-      double hvi = hv_dof_old[i];
-      double hetai = heta_dof_old[i];
-      double Zi = b_dof[i];
+      const double hi = h_dof_old[i];
+      const double hui = hu_dof_old[i];
+      const double hvi = hv_dof_old[i];
+      const double one_over_hiReg =
+          2. * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      const double ui = hui * one_over_hiReg;
+      const double vi = hvi * one_over_hiReg;
+      const double mi = lumped_mass_matrix[i];
 
-      // Define some things using above
-      double one_over_hiReg =
-          2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
-      double ui = hui * one_over_hiReg;
-      double vi = hvi * one_over_hiReg;
-      double etai = hetai * one_over_hiReg;
-      double mi = lumped_mass_matrix[i];
-      double meshSizei = std::sqrt(mi);
+      // initialize some things for entropy residual
+      double etaMax_i = fabs(entropy[i]);
+      double etaMin_i = fabs(entropy[i]);
 
-      // initialize etaMax and etaMin
-      etaMax[i] = fabs(eta[i]);
-      etaMin[i] = fabs(eta[i]);
-
-      // FOR ENTROPY RESIDUAL, NOTE: FLAT BOTTOM //
       double ith_flux_term1 = 0., ith_flux_term2 = 0., ith_flux_term3 = 0.;
       double entropy_flux = 0.;
       double sum_entprime_flux = 0.;
-      double eta_prime1 = DENTROPY_DH(g, hi, hui, hvi, 0., one_over_hiReg);
-      double eta_prime2 = DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);
-      double eta_prime3 = DENTROPY_DHV(g, hi, hui, hvi, 0., one_over_hiReg);
+      const double eta_prime1 =
+          DENTROPY_DH(g, hi, hui, hvi, 0., one_over_hiReg);
+      const double eta_prime2 =
+          DENTROPY_DHU(g, hi, hui, hvi, 0., one_over_hiReg);
+      const double eta_prime3 =
+          DENTROPY_DHV(g, hi, hui, hvi, 0., one_over_hiReg);
 
       // loop in j (sparsity pattern)
       for (int offset = csrRowIndeces_DofLoops[i];
@@ -1011,54 +1159,39 @@ public:
         int j = csrColumnOffsets_DofLoops[offset];
 
         // solution at time tn for the jth DOF
-        double hj = h_dof_old[j];
-        double huj = hu_dof_old[j];
-        double hvj = hv_dof_old[j];
-        double hetaj = heta_dof_old[j];
-        double Zj = b_dof[j];
-
-        // Then define some things here using above
-        double one_over_hjReg =
-            2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
-        double uj = huj * one_over_hjReg;
-        double vj = hvj * one_over_hjReg;
+        const double hj = h_dof_old[j];
+        const double huj = hu_dof_old[j];
+        const double hvj = hv_dof_old[j];
+        const double one_over_hjReg =
+            2. * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
+        const double uj = huj * one_over_hjReg;
+        const double vj = hvj * one_over_hjReg;
 
         // auxiliary functions to compute fluxes
-        double aux_h =
+        const double aux_h =
             (uj * hj - ui * hi) * Cx[ij] + (vj * hj - vi * hi) * Cy[ij];
-        double aux_hu =
+        const double aux_hu =
             (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
-        double aux_hv =
+        const double aux_hv =
             (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
 
-        // flux for entropy
+        // get regular flux
         ith_flux_term1 += aux_h;
-        ith_flux_term2 +=
-            aux_hu + 0.5 * g * hj * hj *
-                         Cx[ij]; // g * hi * (hj + 0.) * Cx[ij]; // NOTE: Zj=0
-        ith_flux_term3 +=
-            aux_hv + 0.5 * g * hj * hj *
-                         Cy[ij]; // g * hi * (hj + 0.) * Cy[ij]; // NOTE: Zj=0
+        ith_flux_term2 += aux_hu + 0.5 * g * hj * hj * Cx[ij];
+        ith_flux_term3 += aux_hv + 0.5 * g * hj * hj * Cy[ij];
 
-        // NOTE: WE CONSIDER FLAT BOTTOM
+        // define entropy flux with flat topography
         entropy_flux +=
             (Cx[ij] * ENTROPY_FLUX1(g, hj, huj, hvj, 0., one_over_hjReg) +
              Cy[ij] * ENTROPY_FLUX2(g, hj, huj, hvj, 0., one_over_hjReg));
 
-        // COMPUTE ETA MIN AND ETA MAX //
-        etaMax[i] = fmax(etaMax[i], fabs(eta[j]));
-        etaMin[i] = fmin(etaMin[i], fabs(eta[j]));
-
-        // define dij_small in j loop
-        double x = fabs(Cx[ij]) + fabs(Cy[ij]);
-        dij_small = fmax(dij_small, x * speed);
+        // compute eta_max and eta_min
+        etaMax_i = fmax(etaMax_i, fabs(entropy[j]));
+        etaMin_i = fmin(etaMin_i, fabs(entropy[j]));
 
         // update ij
         ij += 1;
       } // end j loop
-
-      // Finally dij_small here
-      dij_small = 1E-14 * dij_small;
 
       // define sum of entprime*flux
       sum_entprime_flux =
@@ -1066,49 +1199,717 @@ public:
            ith_flux_term3 * eta_prime3);
 
       // define rescale for normalization
-      double small_rescale = g * hEps * hEps / eps;
-      double rescale = fmax(fabs(etaMax[i] - etaMin[i]) / 2., small_rescale);
+      const double small_rescale = g * hEps * h0_max;
+      const double rescale =
+          fmax(fabs(etaMax_i - etaMin_i) / 2., small_rescale);
 
-      // COMPUTE ENTROPY RESIDUAL //
-      double one_over_entNormFactori = 1.0 / rescale;
+      // compute entropy residual
+      const double one_over_entNormFactori = 1. / rescale;
       global_entropy_residual[i] =
           one_over_entNormFactori * fabs(entropy_flux - sum_entprime_flux);
 
-      // COMPUTE SMOOTHNESS INDICATOR //
+      // if "dry" state, set residual to 1
       if (hi <= hEps) {
-        global_entropy_residual[i] = 1.0;
+        global_entropy_residual[i] = 1.;
       }
-    }
+    } // end i loop
+
     // ********** END OF LOOP IN DOFs ********** //
   } // end calculateEV
+
+  void calculateBoundsAndHighOrderRHS(arguments_dict &args) {
+    const double g = args.scalar<double>("g");
+    const xt::pyarray<double> &h_dof_old = args.array<double>("h_dof_old");
+    const xt::pyarray<double> &hu_dof_old = args.array<double>("hu_dof_old");
+    const xt::pyarray<double> &hv_dof_old = args.array<double>("hv_dof_old");
+    const xt::pyarray<double> &heta_dof_old =
+        args.array<double>("heta_dof_old");
+    const xt::pyarray<double> &hw_dof_old = args.array<double>("hw_dof_old");
+    const xt::pyarray<double> &hbeta_dof_old =
+        args.array<double>("hbeta_dof_old");
+    const xt::pyarray<double> &b_dof = args.array<double>("b_dof");
+    const xt::pyarray<double> &Cx = args.array<double>("Cx");
+    const xt::pyarray<double> &Cy = args.array<double>("Cy");
+    const xt::pyarray<double> &CTx = args.array<double>("CTx");
+    const xt::pyarray<double> &CTy = args.array<double>("CTy");
+    const int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
+    const xt::pyarray<int> &csrRowIndeces_DofLoops =
+        args.array<int>("csrRowIndeces_DofLoops");
+    const xt::pyarray<int> &csrColumnOffsets_DofLoops =
+        args.array<int>("csrColumnOffsets_DofLoops");
+    const xt::pyarray<double> &lumped_mass_matrix =
+        args.array<double>("lumped_mass_matrix");
+    const double hEps = args.scalar<double>("hEps");
+    xt::pyarray<double> &SourceTerm_h = args.array<double>("SourceTerm_h");
+    xt::pyarray<double> &SourceTerm_hu = args.array<double>("SourceTerm_hu");
+    xt::pyarray<double> &SourceTerm_hv = args.array<double>("SourceTerm_hv");
+    xt::pyarray<double> &SourceTerm_heta =
+        args.array<double>("SourceTerm_heta");
+    xt::pyarray<double> &SourceTerm_hw = args.array<double>("SourceTerm_hw");
+    xt::pyarray<double> &SourceTerm_hbeta =
+        args.array<double>("SourceTerm_hbeta");
+    const double dt = args.scalar<double>("dt");
+    const double mannings = args.scalar<double>("mannings");
+    const int lstage = args.scalar<int>("lstage");
+    xt::pyarray<double> &global_entropy_residual =
+        args.array<double>("global_entropy_residual");
+    const double dij_small = args.scalar<double>("dij_small");
+    xt::pyarray<double> &hLow = args.array<double>("hLow");
+    xt::pyarray<double> &huLow = args.array<double>("huLow");
+    xt::pyarray<double> &hvLow = args.array<double>("hvLow");
+    xt::pyarray<double> &hetaLow = args.array<double>("hetaLow");
+    xt::pyarray<double> &hwLow = args.array<double>("hwLow");
+    xt::pyarray<double> &hbetaLow = args.array<double>("hbetaLow");
+    xt::pyarray<double> &h_min = args.array<double>("h_min");
+    xt::pyarray<double> &h_max = args.array<double>("h_max");
+    xt::pyarray<double> &heta_min = args.array<double>("heta_min");
+    xt::pyarray<double> &heta_max = args.array<double>("heta_max");
+    xt::pyarray<double> &kin_max = args.array<double>("kin_max");
+    const xt::pyarray<double> &x_values = args.array<double>("x_values");
+    const double x_min = args.scalar<double>("x_min");
+    const double x_max = args.scalar<double>("x_min");
+    const xt::pyarray<double> &inverse_mesh =
+        args.array<double>("inverse_mesh");
+    const double h0_max = args.scalar<double>("h0_max");
+    xt::pyarray<double> &RHS_high_h = args.array<double>("RHS_high_h");
+    xt::pyarray<double> &RHS_high_hu = args.array<double>("RHS_high_hu");
+    xt::pyarray<double> &RHS_high_hv = args.array<double>("RHS_high_hv");
+    xt::pyarray<double> &RHS_high_heta = args.array<double>("RHS_high_heta");
+    xt::pyarray<double> &RHS_high_hw = args.array<double>("RHS_high_hw");
+    xt::pyarray<double> &RHS_high_hbeta = args.array<double>("RHS_high_hbeta");
+    xt::pyarray<double> &extendedSourceTerm_hu =
+        args.array<double>("extendedSourceTerm_hu");
+    xt::pyarray<double> &extendedSourceTerm_hv =
+        args.array<double>("extendedSourceTerm_hv");
+    double size_of_domain = args.scalar<double>("size_of_domain");
+    xt::pyarray<double> &delta_Sqd_h = args.array<double>("delta_Sqd_h");
+    xt::pyarray<double> &delta_Sqd_heta = args.array<double>("delta_Sqd_heta");
+    const double gen_length = args.scalar<double>("gen_length");
+    const double gen_start = args.scalar<double>("gen_start");
+    const double abs_length = args.scalar<double>("abs_length");
+    const double abs_start = args.scalar<double>("abs_start");
+    // xt::pyarray<int> &relaxation_zone_nodes =
+    //     args.array<int>("relaxation_zone_nodes");
+    xt::pyarray<double> &h_wave = args.array<double>("h_wave");
+    xt::pyarray<double> &h_u_wave = args.array<double>("h_u_wave");
+    xt::pyarray<double> &h_v_wave = args.array<double>("h_v_wave");
+    xt::pyarray<double> &h_eta_wave = args.array<double>("h_eta_wave");
+    xt::pyarray<double> &h_w_wave = args.array<double>("h_w_wave");
+    xt::pyarray<double> &h_beta_wave = args.array<double>("h_beta_wave");
+
+    /* Define constants for sources here. Note that these do not depend on the
+     * DOFs so we should only compute once */
+    const double n2 = std::pow(mannings, 2.);
+    const double gamma = 4. / 3;
+    const double xi = 10.;
+    const double alpha = 0.005;
+    /* ---------------------------------- */
+
+    /////////////////////////////////////////////////////
+    // ********** FIRST SET OF LOOP ON DOFs ********** //
+    /////////////////////////////////////////////////////
+    // To compute:
+    //     * Soure terms
+    //     * Low order solution (in terms of bar states)
+    //     * Local bounds for limiting
+    //     * High-order right hand side
+
+    /* ----------- Here we do some initial declaration --------------- */
+    // Bar states
+    std::valarray<double> hBT(0., Cx.size()), huBT(0., Cx.size()),
+        hvBT(0., Cx.size()), hetaBT(0., Cx.size()), hwBT(0., Cx.size()),
+        hbetaBT(0., Cx.size()), dLow(0., Cx.size());
+
+    // Relaxation quantities
+    std::valarray<double> bar_deltaSqd_h(0., numDOFsPerEqn),
+        bar_deltaSqd_heta(0., numDOFsPerEqn);
+
+    double high_viscosity_h, high_viscosity_hu, high_viscosity_hv,
+        high_viscosity_heta, high_viscosity_hw, high_viscosity_hbeta;
+
+    /* First loop to compute:
+      1. bar states
+      2. Sources
+      3 high-order RHS
+     */
+    int ij = 0;
+    for (int i = 0; i < numDOFsPerEqn; i++) {
+
+      // define things at ith node
+      const double hi = h_dof_old[i];
+      const double hui = hu_dof_old[i];
+      const double hvi = hv_dof_old[i];
+      const double hetai = heta_dof_old[i];
+      const double hwi = hw_dof_old[i];
+      const double hbetai = hbeta_dof_old[i];
+      const double Zi = b_dof[i];
+      const double mi = lumped_mass_matrix[i];
+      const double one_over_hiReg =
+          2. * hi / (hi * hi + std::pow(fmax(hi, hEps), 2));
+      const double ui = hui * one_over_hiReg;
+      const double vi = hvi * one_over_hiReg;
+      const double etai = hetai * one_over_hiReg;
+      const double inv_meshSizei = inverse_mesh[i];
+      const double x_i = x_values[i]; // x value at ith dof
+
+      // Initialize Sources to 0
+      SourceTerm_h[i] = 0.;
+      SourceTerm_hu[i] = 0.;
+      SourceTerm_hv[i] = 0.;
+      SourceTerm_heta[i] = 0.;
+      SourceTerm_hw[i] = 0.;
+      SourceTerm_hbeta[i] = 0.;
+
+      // Define pTilde at ith node here
+      double pTildei =
+          -(LAMBDA_MGN * g / 3. * inv_meshSizei) * 6. * hi * (hetai - hi * hi);
+      if (IF_BOTH_GAMMA_BRANCHES) {
+        double diff_over_h_i = (hetai - hi * hi) * one_over_hiReg;
+        if (hetai > std::pow(hi, 2.0)) {
+          pTildei = -(LAMBDA_MGN * g / 3.0 * inv_meshSizei) * 2.0 *
+                    diff_over_h_i * (etai * etai + etai * hi + hi * hi);
+        }
+      }
+
+      // Define full pressure
+      const double pressure_i = 0.5 * g * hi * hi + pTildei;
+
+      // For extended topography source for bar state verison of low-order
+      extendedSourceTerm_hu[i] = 0.;
+      extendedSourceTerm_hv[i] = 0.;
+
+      /* ---- For nodal sources, part 1 (assuming source is on RHS) ---------*/
+
+      // Friction terms
+      const double veli_norm = std::sqrt(ui * ui + vi * vi);
+      const double hi_to_the_gamma = std::pow(fmax(hi, hEps), gamma);
+      const double friction_aux =
+          veli_norm == 0.
+              ? 0.
+              : (2 * g * n2 * veli_norm * mi /
+                 (hi_to_the_gamma +
+                  fmax(hi_to_the_gamma, xi * g * n2 * dt * veli_norm)));
+      SourceTerm_hu[i] = -friction_aux * hui;
+      SourceTerm_hv[i] = -friction_aux * hvi;
+
+      // Set flux sum terms to 0.
+      double sum_flux_h = 0.;
+      double sum_flux_hu = 0.;
+      double sum_flux_hv = 0.;
+      double sum_flux_heta = 0.;
+      double sum_flux_hw = 0.;
+      double sum_flux_hbeta = 0.;
+
+      // Initialize sum for high-order viscosity terms
+      high_viscosity_h = 0.;
+      high_viscosity_hu = 0.;
+      high_viscosity_hv = 0.;
+      high_viscosity_heta = 0.;
+      high_viscosity_hw = 0.;
+      high_viscosity_hbeta = 0.;
+
+      // Set some values to 0 for ith node
+      double grad_Z_x_i = 0.;
+      double grad_Z_y_i = 0.;
+
+      const double card_inv =
+          1. / (csrRowIndeces_DofLoops[i + 1] - csrRowIndeces_DofLoops[i]);
+
+      // loop over the sparsity pattern of the i-th DOF
+      for (int offset = csrRowIndeces_DofLoops[i];
+           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+        const int j = csrColumnOffsets_DofLoops[offset];
+
+        // define things at jth node
+        const double hj = h_dof_old[j];
+        const double huj = hu_dof_old[j];
+        const double hvj = hv_dof_old[j];
+        const double hetaj = heta_dof_old[j];
+        const double hwj = hw_dof_old[j];
+        const double hbetaj = hbeta_dof_old[j];
+        const double Zj = b_dof[j];
+        const double one_over_hjReg =
+            2. * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
+        const double uj = huj * one_over_hjReg;
+        const double vj = hvj * one_over_hjReg;
+        const double etaj = hetaj * one_over_hjReg;
+        const double mj = lumped_mass_matrix[j];
+        const double inv_meshSizej = inverse_mesh[j]; // local mesh size in 2d
+
+        // Define grad_Z_x and grad_Z_y
+        grad_Z_x_i += Zj * Cx[ij];
+        grad_Z_y_i += Zj * Cy[ij];
+
+        // Define pTilde at jth node
+        double pTildej = -(LAMBDA_MGN * g / 3. * inv_meshSizej) * 6. * hj *
+                         (hetaj - hj * hj);
+        if (IF_BOTH_GAMMA_BRANCHES) {
+          double diff_over_h_j = (hetaj - hj * hj) * one_over_hjReg;
+          if (hetaj > std::pow(hj, 2.0)) {
+            pTildej = -(LAMBDA_MGN * g / 3.0 * inv_meshSizej) * 2.0 *
+                      diff_over_h_j * (etaj * etaj + etaj * hj + hj * hj);
+          }
+        }
+
+        // Define full pressure at jth node
+        const double pressure_j = 0.5 * g * hj * hj + pTildej;
+
+        // Define extended source term for hu and hv
+        extendedSourceTerm_hu[i] +=
+            g * (-hi * Zj + 0.5 * (hj - hi) * (hj - hi)) * Cx[ij];
+        extendedSourceTerm_hv[i] +=
+            g * (-hi * Zj + 0.5 * (hj - hi) * (hj - hi)) * Cy[ij];
+
+        /*  -------  Define hyperbolic fluxes (for bar states) ------------ */
+        const double flux_h =
+            (hj * uj - hi * ui) * Cx[ij] + (hj * vj - hi * vi) * Cy[ij];
+        //
+        const double aux_hu =
+            (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
+        const double flux_hu = aux_hu + (pressure_j - pressure_i) * Cx[ij];
+        //
+        const double aux_hv =
+            (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
+        const double flux_hv = aux_hv + (pressure_j - pressure_i) * Cy[ij];
+        //
+        const double flux_heta = (uj * hj * etaj - ui * hi * etai) * Cx[ij] +
+                                 (vj * hj * etaj - vi * hi * etai) * Cy[ij];
+        const double flux_hw =
+            (uj * hwj - ui * hwi) * Cx[ij] + (vj * hwj - vi * hwi) * Cy[ij];
+        //
+        const double flux_hbeta = (uj * hbetaj - ui * hbetai) * Cx[ij] +
+                                  (vj * hbetaj - vi * hbetai) * Cy[ij];
+        /* --------------------------------------------------------- */
+
+        /* ------ Sum flux terms with well-balancing term on hu,hv ---------- */
+        sum_flux_h += flux_h;
+        sum_flux_hu += aux_hu + (g * hi * (hj + Zj) + pTildej) * Cx[ij];
+        sum_flux_hv += aux_hv + (g * hi * (hj + Zj) + pTildej) * Cy[ij];
+        sum_flux_heta += flux_heta;
+        sum_flux_hw += flux_hw;
+        sum_flux_hbeta += flux_hbeta;
+        /* -------------------------------------------- */
+
+        // Initialize low and high graph-viscosity coefficients to 0
+        double muLij = 0., muHij = 0.;
+        double dLowij = 0., dLij = 0., dHij = 0.;
+
+        if (j != i) {
+          // Put these computations first  before it gets messy
+          bar_deltaSqd_h[i] += 0.5 * delta_Sqd_h[j] + 0.5 * delta_Sqd_h[i];
+          bar_deltaSqd_heta[i] +=
+              0.5 * delta_Sqd_heta[j] + 0.5 * delta_Sqd_heta[i];
+
+          /* ------------ Define viscosity  ------------ */
+          const double cij_norm = sqrt(Cx[ij] * Cx[ij] + Cy[ij] * Cy[ij]);
+          const double cji_norm = sqrt(CTx[ij] * CTx[ij] + CTy[ij] * CTy[ij]);
+          const double nxij = Cx[ij] / cij_norm;
+          const double nyij = Cy[ij] / cij_norm;
+          const double nxji = CTx[ij] / cji_norm;
+          const double nyji = CTy[ij] / cji_norm;
+          dLowij = fmax(maxWaveSpeedSharpInitialGuess(
+                            g, nxij, nyij, hi, hui, hvi, hetai, inv_meshSizei,
+                            hj, huj, hvj, hetaj, inv_meshSizej, hEps) *
+                            cij_norm,
+                        maxWaveSpeedSharpInitialGuess(
+                            g, nxji, nyji, hj, huj, hvj, hetaj, inv_meshSizej,
+                            hi, hui, hvi, hetai, inv_meshSizei, hEps) *
+                            cji_norm);
+
+          // Low-order graph viscoscity coefficients
+          muLij = fmax(std::abs(ui * Cx[ij] + vi * Cy[ij]),
+                       std::abs(uj * CTx[ij] + vj * CTy[ij]));
+          dLij = fmax(dLowij, muLij);
+
+          // Safe for computation of bounds below (do not pass to others)
+          dLow[ij] = dLij;
+
+          // High-order graph viscosity coefficients
+          const double dEVij =
+              fmax(global_entropy_residual[i], global_entropy_residual[j]);
+          dHij = fmin(dLij, dEVij);
+          muHij = fmin(muLij, dEVij);
+          /* --------------------------------------------- */
+
+          /* ---------- Compute star states ------------ */
+          const double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
+          const double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
+          const double hStar_ratio_i = hStarij * one_over_hiReg;
+          const double hStar_ratio_j = hStarji * one_over_hjReg;
+          //
+          const double huStarij = hui * hStar_ratio_i;
+          const double hvStarij = hvi * hStar_ratio_i;
+          const double hetaStarij = hetai * std::pow(hStar_ratio_i, 2);
+          const double hwStarij = hwi * hStar_ratio_i;
+          const double hbetaStarij = hbetai * hStar_ratio_i;
+          //
+          const double huStarji = huj * hStar_ratio_j;
+          const double hvStarji = hvj * hStar_ratio_j;
+          const double hetaStarji = hetaj * std::pow(hStar_ratio_j, 2);
+          const double hwStarji = hwj * hStar_ratio_j;
+          const double hbetaStarji = hbetaj * hStar_ratio_j;
+          /* ------------------------------------------- */
+
+          /* --------- Bar states for i not equal j --------- */
+          double hBar_ij = 0., hTilde_ij = 0., huBar_ij = 0., huTilde_ij = 0.,
+                 hvBar_ij = 0., hvTilde_ij = 0., hetaBar_ij = 0.,
+                 hetaTilde_ij = 0., hwBar_ij = 0., hwTilde_ij = 0.,
+                 hbetaBar_ij = 0., hbetaTilde_ij = 0.;
+
+          const double half_dij_inv = -0.5 / fmax(dLij, dij_small);
+          const double visc_ratio = -half_dij_inv * (dLij - muLij);
+
+          // h component
+          hBar_ij = half_dij_inv * flux_h + 0.5 * (hj + hi);
+          hTilde_ij = visc_ratio * (hStarji - hj - (hStarij - hi));
+
+          // hu component
+          huBar_ij = half_dij_inv * flux_hu + 0.5 * (huj + hui);
+          huTilde_ij = visc_ratio * (huStarji - huj - (huStarij - hui));
+
+          // hv component
+          hvBar_ij = half_dij_inv * flux_hv + 0.5 * (hvj + hvi);
+          hvTilde_ij = visc_ratio * (hvStarji - hvj - (hvStarij - hvi));
+
+          // heta component
+          hetaBar_ij = half_dij_inv * flux_heta + 0.5 * (hetaj + hetai);
+          hetaTilde_ij =
+              visc_ratio * (hetaStarji - hetaj - (hetaStarij - hetai));
+
+          // hw component
+          hwBar_ij = half_dij_inv * flux_hw + 0.5 * (hwj + hwi);
+          hwTilde_ij = visc_ratio * (hwStarji - hwj - (hwStarij - hwi));
+
+          // hbeta component
+          hbetaBar_ij = half_dij_inv * flux_hbeta + 0.5 * (hbetaj + hbetai);
+          hbetaTilde_ij =
+              visc_ratio * (hbetaStarji - hbetaj - (hbetaStarij - hbetai));
+
+          /* Define bar states here. Note we take max with 0 for hBT due to
+           potential round off */
+          hBT[ij] = std::max(hBar_ij + hTilde_ij, 0.);
+          huBT[ij] = huBar_ij + huTilde_ij;
+          hvBT[ij] = hvBar_ij + hvTilde_ij;
+          hetaBT[ij] = hetaBar_ij + hetaTilde_ij;
+          hwBT[ij] = hwBar_ij + hwTilde_ij;
+          hbetaBT[ij] = hbetaBar_ij + hbetaTilde_ij;
+          /* ------------------------------------------- */
+
+          /* --------- Sum high viscosity terms ------- */
+          high_viscosity_h +=
+              (dHij - muHij) * (hStarji - hStarij) + muHij * (hj - hi);
+
+          high_viscosity_hu +=
+              (dHij - muHij) * (huStarji - huStarij) + muHij * (huj - hui);
+
+          high_viscosity_hv +=
+              (dHij - muHij) * (hvStarji - hvStarij) + muHij * (hvj - hvi);
+
+          high_viscosity_heta += (dHij - muHij) * (hetaStarji - hetaStarij) +
+                                 muHij * (hetaj - hetai);
+
+          high_viscosity_hw +=
+              (dHij - muHij) * (hwStarji - hwStarij) + muHij * (hwj - hwi);
+
+          high_viscosity_hbeta += (dHij - muHij) * (hbetaStarji - hbetaStarij) +
+                                  muHij * (hbetaj - hbetai);
+          /* ------------------------------------------- */
+
+        } else {
+          // Bar states by definition satisfy Utilde_ii + Ubar_ii = U_i
+          hBT[ij] = hi;
+          huBT[ij] = hui;
+          hvBT[ij] = hvi;
+          hetaBT[ij] = hetai;
+          hwBT[ij] = hwi;
+          hbetaBT[ij] = hbetai;
+        }
+
+        // UPDATE ij //
+        ij += 1;
+      } // j loop ends here
+
+      // for bar_deltaSqd_h, bar_deltaSqd_heta
+      bar_deltaSqd_h[i] *= card_inv * 0.5;
+      bar_deltaSqd_heta[i] *= card_inv * 0.5;
+
+      /* ---- For nodal sources, part 2 (assuming source is on RHS) ---------*/
+      // PDE source terms
+      double hSqd_GammaPi = 6.0 * (hetai - hi * hi);
+      if (IF_BOTH_GAMMA_BRANCHES) {
+        const double diff_over_h_i = (hetai - hi * hi) * one_over_hiReg;
+        if (hetai > std::pow(hi, 2.0)) {
+          hSqd_GammaPi = 6.0 * etai * diff_over_h_i;
+        }
+      }
+
+      const double q_dot_gradZ = hui * grad_Z_x_i + hvi * grad_Z_y_i;
+      const double R1 = hwi - 1.5 * q_dot_gradZ / mi;
+      const double R2 = LAMBDA_MGN * g * inv_meshSizei * hSqd_GammaPi;
+      const double R3 = LAMBDA_MGN * std::sqrt(g * h0_max) * inv_meshSizei *
+                        (q_dot_gradZ / mi - hbetai);
+
+      SourceTerm_h[i] += 0.;
+      SourceTerm_hu[i] += (0.5 * R2 - 0.25 * R3) * grad_Z_x_i;
+      SourceTerm_hv[i] += (0.5 * R2 - 0.25 * R3) * grad_Z_y_i;
+      SourceTerm_heta[i] += mi * R1;
+      SourceTerm_hw[i] += -mi * R2;
+      SourceTerm_hbeta[i] += mi * R3;
+
+      /* Generation/absorption sources */
+      if (gen_length > 0.) {
+        const double shift = -(gen_start - gen_length);
+        const double xhat = (x_i + shift) / gen_length;
+        const double function_gen = relaxation(xhat, alpha);
+
+        SourceTerm_h[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                           function_gen * (hi - h_wave[i]);
+        SourceTerm_hu[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                            function_gen * (hui - h_u_wave[i]);
+        SourceTerm_hv[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                            function_gen * (hvi - h_v_wave[i]);
+        SourceTerm_heta[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                              function_gen * (hetai - h_eta_wave[i]);
+        SourceTerm_hw[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                            function_gen * (hwi - h_w_wave[i]);
+        SourceTerm_hbeta[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                               function_gen * (hbetai - 0.);
+        // for hu and hv
+        extendedSourceTerm_hu[i] += -mi * std::sqrt(g * h0_max) *
+                                    inv_meshSizei * function_gen *
+                                    (hui - h_u_wave[i]);
+        extendedSourceTerm_hv[i] += -mi * std::sqrt(g * h0_max) *
+                                    inv_meshSizei * function_gen *
+                                    (hvi - h_v_wave[i]);
+      }
+
+      if (abs_length > 0.) {
+        const double shift = (abs_start + abs_length);
+        const double xhat = (shift - x_i) / abs_length;
+        const double function_gen = relaxation(xhat, alpha);
+
+        SourceTerm_hu[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                            function_gen * (hui - 0.);
+        SourceTerm_hv[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                            function_gen * (hvi - 0.);
+        SourceTerm_hw[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                            function_gen * (hwi - 0.);
+        SourceTerm_hbeta[i] += -mi * std::sqrt(g * h0_max) * inv_meshSizei *
+                               function_gen * (hbetai - 0.);
+        // for hu and hv
+        extendedSourceTerm_hu[i] += -mi * std::sqrt(g * h0_max) *
+                                    inv_meshSizei * function_gen * (hui - 0.);
+        extendedSourceTerm_hv[i] += -mi * std::sqrt(g * h0_max) *
+                                    inv_meshSizei * function_gen * (hvi - 0.);
+      }
+      /* ----------------------------------------------------- */
+
+      /* ----------- Save high order RHS -------------------- */
+      RHS_high_h[i] = SourceTerm_h[i] - sum_flux_h + high_viscosity_h;
+      RHS_high_hu[i] = SourceTerm_hu[i] - sum_flux_hu + high_viscosity_hu;
+      RHS_high_hv[i] = SourceTerm_hv[i] - sum_flux_hv + high_viscosity_hv;
+      RHS_high_heta[i] =
+          SourceTerm_heta[i] - sum_flux_heta + high_viscosity_heta;
+      RHS_high_hw[i] = SourceTerm_hw[i] - sum_flux_hw + high_viscosity_hw;
+      RHS_high_hbeta[i] =
+          SourceTerm_hbeta[i] - sum_flux_hbeta + high_viscosity_hbeta;
+      /* ----------------------------------------------------*/
+
+    } // i loops ends here
+
+    /* Then final loop to get low order solution and local bounds */
+    ij = 0;
+    for (int i = 0; i < numDOFsPerEqn; i++) {
+
+      /* Define things at ith node */
+      const double hi = h_dof_old[i];
+      const double hu_i = hu_dof_old[i];
+      const double hv_i = hv_dof_old[i];
+      const double hetai = heta_dof_old[i];
+      const double hwi = hw_dof_old[i];
+      const double hbetai = hbeta_dof_old[i];
+      const double one_over_hi =
+          2. * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
+      const double u_i = hu_i * one_over_hi;
+      const double v_i = hv_i * one_over_hi;
+      const double kin_i = 0.5 * hi * (u_i * u_i + v_i * v_i);
+      const double mi = lumped_mass_matrix[i];
+
+      /* Initialize bounds */
+      h_min[i] = hi;
+      h_max[i] = hi;
+      heta_min[i] = hetai;
+      heta_max[i] = hetai;
+      kin_max[i] = kin_i;
+
+      // For convex low-order update
+      double sum_dij = 0.;
+      double sum_dij_hbar = 0.;
+      double sum_dij_hubar = 0.;
+      double sum_dij_hvbar = 0.;
+      double sum_dij_hetabar = 0.;
+      double sum_dij_hwbar = 0.;
+      double sum_dij_hbetabar = 0.;
+
+      // loop in j (sparsity pattern)
+      for (int offset = csrRowIndeces_DofLoops[i];
+           offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
+        const int j = csrColumnOffsets_DofLoops[offset];
+
+        const double one_over_hBT =
+            2. * hBT[ij] /
+            (hBT[ij] * hBT[ij] + std::pow(fmax(hBT[ij], hEps), 2));
+        const double psi_ij =
+            0.5 * one_over_hBT * (huBT[ij] * huBT[ij] + hvBT[ij] * hvBT[ij]);
+
+        // compute local bounds
+        h_min[i] = std::min(h_min[i], hBT[ij]);
+        h_max[i] = std::max(h_max[i], hBT[ij]);
+        heta_min[i] = std::min(heta_min[i], hetaBT[ij]);
+        heta_max[i] = std::max(heta_max[i], hetaBT[ij]);
+        kin_max[i] = fmax(psi_ij, kin_max[i]);
+
+        if (j != i) {
+          sum_dij += dLow[ij];
+          sum_dij_hbar += dLow[ij] * hBT[ij];
+          sum_dij_hubar += dLow[ij] * huBT[ij];
+          sum_dij_hvbar += dLow[ij] * hvBT[ij];
+          sum_dij_hetabar += dLow[ij] * hetaBT[ij];
+          sum_dij_hwbar += dLow[ij] * hwBT[ij];
+          sum_dij_hbetabar += dLow[ij] * hbetaBT[ij];
+        }
+
+        // update ij
+        ij += 1;
+      } // j loop ends here
+
+      const double cfl_condition = (1. - dt / mi * 2. * sum_dij);
+
+      // Here we define low-order convex update (WITHOUT SOURCES)
+      hLow[i] = hi * cfl_condition + dt / mi * (2. * sum_dij_hbar);
+      huLow[i] = hu_i * cfl_condition + dt / mi * (2. * sum_dij_hubar);
+      hvLow[i] = hv_i * cfl_condition + dt / mi * (2. * sum_dij_hvbar);
+      hetaLow[i] = hetai * cfl_condition + dt / mi * (2. * sum_dij_hetabar);
+      hwLow[i] = hwi * cfl_condition + dt / mi * (2. * sum_dij_hwbar);
+      hbetaLow[i] = hbetai * cfl_condition + dt / mi * (2. * sum_dij_hbetabar);
+
+      // clean up hLow from round off error
+      if (dt < 1e-2 && hLow[i] < -hEps) {
+        std::cout << "Low-order water depth is negative !!! " << hLow[i] << "\n"
+                  << "hLow[i] + hEps                    !!! " << hLow[i] + hEps
+                  << "\n"
+                  << "hEps                              !!! " << hEps << "\n"
+                  << " ... aborting!" << std::endl;
+        abort();
+      } else {
+        if (hLow[i] <= hEps) {
+          // Clean up low-order h and heta
+          hLow[i] = 0.;
+        }
+      }
+
+#if IF_DEBUGGING
+      if (h_min[i] < 0.) {
+        std::cout << " \n "
+                  << " Minimum water depth is negative !!! " << h_min[i]
+                  << "\n "
+                  << " hLow[i]                         !!! " << hLow[i] << "\n "
+                  << " ... aborting!"
+                  << "\n"
+                  << std::endl;
+      } else {
+        if (h_min[i] <= hEps) {
+          // Clean up low-order h and heta
+          h_min[i] = 0.;
+        }
+      }
+
+      if (h_max[i] < 0.) {
+        std::cout << " Maximum water depth is negative !!! " << h_max[i] << "\n"
+                  << " hLow[i]                         !!! " << hLow[i] << "\n "
+                  << " ... aborting!" << std::endl;
+        abort();
+      } else {
+        if (h_max[i] <= hEps) {
+          // Clean up low-order h and heta
+          h_max[i] = 0.;
+        }
+      }
+#endif
+
+      /* Relaxation of bounds */
+      const double s_i = std::pow(std::sqrt(std::sqrt(mi / size_of_domain)), 3);
+      const double urelax_i = 1. + s_i;
+      const double drelax_i = 1. - s_i;
+
+      kin_max[i] =
+          std::max((1. + std::sqrt(mi / size_of_domain)) * kin_max[i], 0.);
+      h_min[i] =
+          std::max(drelax_i * h_min[i], h_min[i] - std::abs(bar_deltaSqd_h[i]));
+      h_max[i] =
+          std::min(urelax_i * h_max[i], h_max[i] + std::abs(bar_deltaSqd_h[i]));
+      heta_min[i] = std::max(drelax_i * heta_min[i],
+                             heta_min[i] - std::abs(bar_deltaSqd_heta[i]));
+      heta_max[i] = std::min(urelax_i * heta_max[i],
+                             heta_max[i] + std::abs(bar_deltaSqd_heta[i]));
+
+#if IF_DEBUGGING
+      if (hLow[i] > h_max[i] || hLow[i] < h_min[i]) {
+        std::cout << " --- We have a major problem (h bounds) --- "
+                  << std::setprecision(15) << std::endl;
+        std::cout << "hLow[i]  = " << hLow[i] << " \n "
+                  << "h_min[i] = " << h_min[i] << " \n "
+                  << "h_max[i] = " << h_max[i] << " \n "
+                  << "Diff max = " << h_max[i] - hLow[i] << " \n "
+                  << "Diff min = " << hLow[i] - h_min[i] << " \n " << std::endl;
+      }
+
+      if (heta_max[i] - hetaLow[i] < -hEps * hEps ||
+          hetaLow[i] - heta_min[i] < -hEps * hEps) {
+        std::cout << " --- We have a major problem (heta bounds) --- "
+                  << std::setprecision(15) << std::endl;
+        std::cout << "hetaLow[i]  = " << hetaLow[i] << " \n "
+                  << "heta_min[i] = " << heta_min[i] << " \n "
+                  << "heta_max[i] = " << heta_max[i] << " \n "
+                  << "Diff max = " << heta_max[i] - hetaLow[i] << " \n "
+                  << "Diff min = " << hetaLow[i] - heta_min[i] << " \n "
+                  << std::endl;
+      }
+#endif
+    } // i loop ends here
+
+    // ********** END OF LOOP IN DOFs ********** //
+  } // end calculateBoundsAndHighOrderRHS
 
   void calculateResidual(arguments_dict &args) {
     xt::pyarray<double> &mesh_trial_ref = args.array<double>("mesh_trial_ref");
     xt::pyarray<double> &mesh_grad_trial_ref =
         args.array<double>("mesh_grad_trial_ref");
     xt::pyarray<double> &mesh_dof = args.array<double>("mesh_dof");
-    xt::pyarray<double> &mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
-    double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
     xt::pyarray<int> &mesh_l2g = args.array<int>("mesh_l2g");
     xt::pyarray<double> &dV_ref = args.array<double>("dV_ref");
     xt::pyarray<double> &h_trial_ref = args.array<double>("h_trial_ref");
-    xt::pyarray<double> &h_grad_trial_ref = args.array<double>("h_grad_trial_ref");
+    xt::pyarray<double> &h_grad_trial_ref =
+        args.array<double>("h_grad_trial_ref");
     xt::pyarray<double> &h_test_ref = args.array<double>("h_test_ref");
-    xt::pyarray<double> &h_grad_test_ref = args.array<double>("h_grad_test_ref");
+    xt::pyarray<double> &h_grad_test_ref =
+        args.array<double>("h_grad_test_ref");
     xt::pyarray<double> &vel_trial_ref = args.array<double>("vel_trial_ref");
     xt::pyarray<double> &vel_grad_trial_ref =
         args.array<double>("vel_grad_trial_ref");
     xt::pyarray<double> &vel_test_ref = args.array<double>("vel_test_ref");
-    xt::pyarray<double> &vel_grad_test_ref = args.array<double>("vel_grad_test_ref");
+    xt::pyarray<double> &vel_grad_test_ref =
+        args.array<double>("vel_grad_test_ref");
     xt::pyarray<double> &mesh_trial_trace_ref =
         args.array<double>("mesh_trial_trace_ref");
     xt::pyarray<double> &mesh_grad_trial_trace_ref =
         args.array<double>("mesh_grad_trial_trace_ref");
-    xt::pyarray<double> &dS_ref = args.array<double>("dS_ref");
-    xt::pyarray<double> &h_trial_trace_ref = args.array<double>("h_trial_trace_ref");
+    xt::pyarray<double> &h_trial_trace_ref =
+        args.array<double>("h_trial_trace_ref");
     xt::pyarray<double> &h_grad_trial_trace_ref =
         args.array<double>("h_grad_trial_trace_ref");
-    xt::pyarray<double> &h_test_trace_ref = args.array<double>("h_test_trace_ref");
+    xt::pyarray<double> &h_test_trace_ref =
+        args.array<double>("h_test_trace_ref");
     xt::pyarray<double> &h_grad_test_trace_ref =
         args.array<double>("h_grad_test_trace_ref");
     xt::pyarray<double> &vel_trial_trace_ref =
@@ -1120,13 +1921,11 @@ public:
     xt::pyarray<double> &vel_grad_test_trace_ref =
         args.array<double>("vel_grad_test_trace_ref");
     xt::pyarray<double> &normal_ref = args.array<double>("normal_ref");
-    xt::pyarray<double> &boundaryJac_ref = args.array<double>("boundaryJac_ref");
-    xt::pyarray<double> &elementDiameter = args.array<double>("elementDiameter");
+    xt::pyarray<double> &boundaryJac_ref =
+        args.array<double>("boundaryJac_ref");
+    xt::pyarray<double> &elementDiameter =
+        args.array<double>("elementDiameter");
     int nElements_global = args.scalar<int>("nElements_global");
-    double useRBLES = args.scalar<double>("useRBLES");
-    double useMetrics = args.scalar<double>("useMetrics");
-    double alphaBDF = args.scalar<double>("alphaBDF");
-    double nu = args.scalar<double>("nu");
     double g = args.scalar<double>("g");
     xt::pyarray<int> &h_l2g = args.array<int>("h_l2g");
     xt::pyarray<int> &vel_l2g = args.array<int>("vel_l2g");
@@ -1143,22 +1942,6 @@ public:
     xt::pyarray<double> &heta_dof = args.array<double>("heta_dof");
     xt::pyarray<double> &hw_dof = args.array<double>("hw_dof");
     xt::pyarray<double> &hbeta_dof = args.array<double>("hbeta_dof");
-    xt::pyarray<double> &h_dof_sge = args.array<double>("h_dof_sge");
-    xt::pyarray<double> &hu_dof_sge = args.array<double>("hu_dof_sge");
-    xt::pyarray<double> &hv_dof_sge = args.array<double>("hv_dof_sge");
-    xt::pyarray<double> &heta_dof_sge = args.array<double>("heta_dof_sge");
-    xt::pyarray<double> &hw_dof_sge = args.array<double>("hw_dof_sge");
-    xt::pyarray<double> &hbeta_dof_sge = args.array<double>("hbeta_dof_sge");
-    xt::pyarray<double> &q_mass_acc = args.array<double>("q_mass_acc");
-    xt::pyarray<double> &q_mom_hu_acc = args.array<double>("q_mom_hu_acc");
-    xt::pyarray<double> &q_mom_hv_acc = args.array<double>("q_mom_hv_acc");
-    xt::pyarray<double> &q_mass_adv = args.array<double>("q_mass_adv");
-    xt::pyarray<double> &q_mass_acc_beta_bdf =
-        args.array<double>("q_mass_acc_beta_bdf");
-    xt::pyarray<double> &q_mom_hu_acc_beta_bdf =
-        args.array<double>("q_mom_hu_acc_beta_bdf");
-    xt::pyarray<double> &q_mom_hv_acc_beta_bdf =
-        args.array<double>("q_mom_hv_acc_beta_bdf");
     xt::pyarray<double> &q_cfl = args.array<double>("q_cfl");
     xt::pyarray<int> &sdInfo_hu_hu_rowptr =
         args.array<int>("sdInfo_hu_hu_rowptr");
@@ -1220,7 +2003,8 @@ public:
     xt::pyarray<double> &ebqe_bc_hu_ext = args.array<double>("ebqe_bc_hu_ext");
     xt::pyarray<double> &ebqe_bc_flux_hu_diff_ext =
         args.array<double>("ebqe_bc_flux_hu_diff_ext");
-    xt::pyarray<double> &ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
+    xt::pyarray<double> &ebqe_penalty_ext =
+        args.array<double>("ebqe_penalty_ext");
     xt::pyarray<double> &ebqe_bc_hv_ext = args.array<double>("ebqe_bc_hv_ext");
     xt::pyarray<double> &ebqe_bc_flux_hv_diff_ext =
         args.array<double>("ebqe_bc_flux_hv_diff_ext");
@@ -1229,22 +2013,19 @@ public:
     xt::pyarray<double> &flux = args.array<double>("flux");
     xt::pyarray<double> &elementResidual_h_save =
         args.array<double>("elementResidual_h_save");
-    xt::pyarray<double> &Cx = args.array<double>("Cx");
-    xt::pyarray<double> &Cy = args.array<double>("Cy");
-    xt::pyarray<double> &CTx = args.array<double>("CTx");
-    xt::pyarray<double> &CTy = args.array<double>("CTy");
-    int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
-    int NNZ = args.scalar<int>("NNZ");
-    xt::pyarray<int> &csrRowIndeces_DofLoops =
+    const xt::pyarray<double> &Cx = args.array<double>("Cx");
+    const xt::pyarray<double> &Cy = args.array<double>("Cy");
+    const xt::pyarray<double> &CTx = args.array<double>("CTx");
+    const xt::pyarray<double> &CTy = args.array<double>("CTy");
+    const int numDOFsPerEqn = args.scalar<int>("numDOFsPerEqn");
+    const xt::pyarray<int> &csrRowIndeces_DofLoops =
         args.array<int>("csrRowIndeces_DofLoops");
-    xt::pyarray<int> &csrColumnOffsets_DofLoops =
+    const xt::pyarray<int> &csrColumnOffsets_DofLoops =
         args.array<int>("csrColumnOffsets_DofLoops");
-    xt::pyarray<double> &lumped_mass_matrix =
+    const xt::pyarray<double> &lumped_mass_matrix =
         args.array<double>("lumped_mass_matrix");
-    double cfl_run = args.scalar<double>("cfl_run");
-    double eps = args.scalar<double>("eps");
-    double hEps = args.scalar<double>("hEps");
-    xt::pyarray<double> &hReg = args.array<double>("hReg");
+    const double cfl_run = args.scalar<double>("cfl_run");
+    const double hEps = args.scalar<double>("hEps");
     xt::pyarray<double> &hnp1_at_quad_point =
         args.array<double>("hnp1_at_quad_point");
     xt::pyarray<double> &hunp1_at_quad_point =
@@ -1257,49 +2038,24 @@ public:
         args.array<double>("hwnp1_at_quad_point");
     xt::pyarray<double> &hbetanp1_at_quad_point =
         args.array<double>("hbetanp1_at_quad_point");
-    xt::pyarray<double> &extendedSourceTerm_hu =
-        args.array<double>("extendedSourceTerm_hu");
-    xt::pyarray<double> &extendedSourceTerm_hv =
-        args.array<double>("extendedSourceTerm_hv");
-    xt::pyarray<double> &extendedSourceTerm_heta =
-        args.array<double>("extendedSourceTerm_heta");
-    xt::pyarray<double> &extendedSourceTerm_hw =
-        args.array<double>("extendedSourceTerm_hw");
-    xt::pyarray<double> &extendedSourceTerm_hbeta =
-        args.array<double>("extendedSourceTerm_hbeta");
-    xt::pyarray<double> &dH_minus_dL = args.array<double>("dH_minus_dL");
-    xt::pyarray<double> &muH_minus_muL = args.array<double>("muH_minus_muL");
-    double cE = args.scalar<double>("cE");
     int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
     double dt = args.scalar<double>("dt");
-    int LINEAR_FRICTION = args.scalar<int>("LINEAR_FRICTION");
-    double mannings = args.scalar<double>("mannings");
     xt::pyarray<double> &quantDOFs = args.array<double>("quantDOFs");
     int SECOND_CALL_CALCULATE_RESIDUAL =
         args.scalar<int>("SECOND_CALL_CALCULATE_RESIDUAL");
     int COMPUTE_NORMALS = args.scalar<int>("COMPUTE_NORMALS");
     xt::pyarray<double> &normalx = args.array<double>("normalx");
     xt::pyarray<double> &normaly = args.array<double>("normaly");
-    xt::pyarray<double> &dLow = args.array<double>("dLow");
-    xt::pyarray<double> &hBT = args.array<double>("hBT");
-    xt::pyarray<double> &huBT = args.array<double>("huBT");
-    xt::pyarray<double> &hvBT = args.array<double>("hvBT");
-    xt::pyarray<double> &hetaBT = args.array<double>("hetaBT");
-    xt::pyarray<double> &hwBT = args.array<double>("hwBT");
-    xt::pyarray<double> &hbetaBT = args.array<double>("hbetaBT");
-    int lstage = args.scalar<int>("lstage");
-    xt::pyarray<double> &new_SourceTerm_hu = args.array<double>("new_SourceTerm_hu");
-    xt::pyarray<double> &new_SourceTerm_hv = args.array<double>("new_SourceTerm_hv");
-    xt::pyarray<double> &new_SourceTerm_heta =
-        args.array<double>("new_SourceTerm_heta");
-    xt::pyarray<double> &new_SourceTerm_hw = args.array<double>("new_SourceTerm_hw");
-    xt::pyarray<double> &global_entropy_residual =
-        args.array<double>("global_entropy_residual");
-    double dij_small = args.scalar<double>("dij_small");
-    // FOR FRICTION//
-    double n2 = std::pow(mannings, 2.);
-    double gamma = 4. / 3;
-    double xi = 10.;
+    const int lstage = args.scalar<int>("lstage");
+    const xt::pyarray<double> &MassMatrix = args.array<double>("MassMatrix");
+    const xt::pyarray<double> &RHS_high_h = args.array<double>("RHS_high_h");
+    const xt::pyarray<double> &RHS_high_hu = args.array<double>("RHS_high_hu");
+    const xt::pyarray<double> &RHS_high_hv = args.array<double>("RHS_high_hv");
+    const xt::pyarray<double> &RHS_high_heta =
+        args.array<double>("RHS_high_heta");
+    const xt::pyarray<double> &RHS_high_hw = args.array<double>("RHS_high_hw");
+    const xt::pyarray<double> &RHS_high_hbeta =
+        args.array<double>("RHS_high_hbeta");
 
     //////////////////////////////////////
     // ********** CELL LOOPS ********** //
@@ -1336,7 +2092,8 @@ public:
         register double h = 0.0, hu = 0.0, hv = 0.0, heta = 0.0, hw = 0.0,
                         hbeta = 0.0, // solution at current time
             h_old = 0.0, hu_old = 0.0, hv_old = 0.0, heta_old = 0.0,
-                        hw_old = 0.0, hbeta_old = 0.0, // solution at lstage
+                        hw_old = 0.0,
+                        hbeta_old = 0.0, // solution at lstage
             jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
                         h_test_dV[nDOF_trial_element], dV, x, y, xt, yt;
         // get jacobian, etc for mapping reference element
@@ -1346,33 +2103,34 @@ public:
         // get the physical integration weight
         dV = fabs(jacDet) * dV_ref[k];
         // get the solution at current time
-        ck.valFromDOF(h_dof.data(), &h_l2g[eN_nDOF_trial_element],
-                      &h_trial_ref[k * nDOF_trial_element], h);
+        ck.valFromDOF(h_dof.data(), &h_l2g.data()[eN_nDOF_trial_element],
+                      &h_trial_ref.data()[k * nDOF_trial_element], h);
         ck.valFromDOF(hu_dof.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], hu);
+                      &vel_trial_ref.data()[k * nDOF_trial_element], hu);
         ck.valFromDOF(hv_dof.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], hv);
-        ck.valFromDOF(heta_dof.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], heta);
-        ck.valFromDOF(hw_dof.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], hw);
-        ck.valFromDOF(hbeta_dof.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], hbeta);
+                      &vel_trial_ref.data()[k * nDOF_trial_element], hv);
+        ck.valFromDOF(heta_dof.data(), &vel_l2g.data()[eN_nDOF_trial_element],
+                      &vel_trial_ref.data()[k * nDOF_trial_element], heta);
+        ck.valFromDOF(hw_dof.data(), &vel_l2g.data()[eN_nDOF_trial_element],
+                      &vel_trial_ref.data()[k * nDOF_trial_element], hw);
+        ck.valFromDOF(hbeta_dof.data(), &vel_l2g.data()[eN_nDOF_trial_element],
+                      &vel_trial_ref.data()[k * nDOF_trial_element], hbeta);
         // get the solution at the lstage
-        ck.valFromDOF(h_dof_old.data(), &h_l2g[eN_nDOF_trial_element],
-                      &h_trial_ref[k * nDOF_trial_element], h_old);
-        ck.valFromDOF(hu_dof_old.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], hu_old);
-        ck.valFromDOF(hv_dof_old.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], hv_old);
+        ck.valFromDOF(h_dof_old.data(), &h_l2g.data()[eN_nDOF_trial_element],
+                      &h_trial_ref.data()[k * nDOF_trial_element], h_old);
+        ck.valFromDOF(hu_dof_old.data(), &vel_l2g.data()[eN_nDOF_trial_element],
+                      &vel_trial_ref.data()[k * nDOF_trial_element], hu_old);
+        ck.valFromDOF(hv_dof_old.data(), &vel_l2g.data()[eN_nDOF_trial_element],
+                      &vel_trial_ref.data()[k * nDOF_trial_element], hv_old);
         ck.valFromDOF(heta_dof_old.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], heta_old);
-        ck.valFromDOF(hw_dof_old.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], hw_old);
-        ck.valFromDOF(hbeta_dof_old.data(), &vel_l2g[eN_nDOF_trial_element],
-                      &vel_trial_ref[k * nDOF_trial_element], hbeta_old);
+                      &vel_trial_ref.data()[k * nDOF_trial_element], heta_old);
+        ck.valFromDOF(hw_dof_old.data(), &vel_l2g.data()[eN_nDOF_trial_element],
+                      &vel_trial_ref.data()[k * nDOF_trial_element], hw_old);
+        ck.valFromDOF(hbeta_dof_old.data(),
+                      &vel_l2g.data()[eN_nDOF_trial_element],
+                      &vel_trial_ref.data()[k * nDOF_trial_element], hbeta_old);
         // calculate cell based CFL to keep a reference
-        calculateCFL(elementDiameter[eN], g, h_old, hu_old, hv_old, hEps,
+        calculateCFL(elementDiameter.data()[eN], g, h_old, hu_old, hv_old, hEps,
                      q_cfl[eN_k]);
         // precalculate test function products with integration weights
         for (int j = 0; j < nDOF_trial_element; j++)
@@ -1422,278 +2180,32 @@ public:
 
     if (SECOND_CALL_CALCULATE_RESIDUAL == 0) // This is to save some time
     {
-
-      ///////////////////////////////////////////////
-      // ********** FIRST LOOP ON DOFs ********** //
-      ///////////////////////////////////////////////
+      ///////////////////////////////////////////////////////
+      // ********** FIRST AND ONLY LOOP ON DOFs ********** //
+      ///////////////////////////////////////////////////////
       // To compute:
-      //     * Hyperbolic part of the flux
-      //     * Extended source terms
-      //     * Smoothness indicator
+      //     * High-order update with neumann series approximation
 
       int ij = 0;
-      std::valarray<double> hyp_flux_h(numDOFsPerEqn),
-          hyp_flux_hu(numDOFsPerEqn), hyp_flux_hv(numDOFsPerEqn),
-          hyp_flux_heta(numDOFsPerEqn), hyp_flux_hw(numDOFsPerEqn),
-          hyp_flux_hbeta(numDOFsPerEqn), psi(numDOFsPerEqn),
-          etaMax(numDOFsPerEqn), etaMin(numDOFsPerEqn);
-
       for (int i = 0; i < numDOFsPerEqn; i++) {
 
-        // solution at time tn for the ith DOF
-        double hi = h_dof_old[i];
-        double hui = hu_dof_old[i];
-        double hvi = hv_dof_old[i];
-        double hetai = heta_dof_old[i];
-        double hwi = hw_dof_old[i];
-        double hbetai = hbeta_dof_old[i];
-        double Zi = b_dof[i];
-        // Define some things using above
-        double one_over_hiReg =
-            2 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2)); // hEps
-        double ui = hui * one_over_hiReg;
-        double vi = hvi * one_over_hiReg;
-        double etai = hetai * one_over_hiReg;
-        double mi = lumped_mass_matrix[i];
-        double meshSizei = std::sqrt(mi);
+        // get things at ith node
+        const double hi = h_dof_old[i];
+        const double hui = hu_dof_old[i];
+        const double hvi = hv_dof_old[i];
+        const double hetai = heta_dof_old[i];
+        const double hwi = hw_dof_old[i];
+        const double hbetai = hbeta_dof_old[i];
+        const double mi = lumped_mass_matrix[i];
 
-        /* COMPUTE EXTENDED SOURCE TERMS for all equations:
-         * Friction terms
-         * NOTE: Be careful with sign of source terms. Extended sources are on
-         * left side of equations. "new_SourceTerm" variables are on right
-         */
+        double sum_RHS_h = 0.;
+        double sum_RHS_hu = 0.;
+        double sum_RHS_hv = 0.;
+        double sum_RHS_heta = 0.;
+        double sum_RHS_hw = 0.;
+        double sum_RHS_hbeta = 0.;
 
-        // FRICTION
-        if (LINEAR_FRICTION == 1) {
-          extendedSourceTerm_hu[i] = mannings * hui * mi;
-          extendedSourceTerm_hv[i] = mannings * hvi * mi;
-          // For use in the convex limiting function
-          // actually didn't need to do this but it helps with signs
-          new_SourceTerm_hu[i] = -mannings * hui * mi;
-          new_SourceTerm_hv[i] = -mannings * hvi * mi;
-        } else {
-          double veli_norm = std::sqrt(ui * ui + vi * vi);
-          double hi_to_the_gamma = std::pow(fmax(hi, hEps), gamma);
-          double friction_aux =
-              veli_norm == 0.
-                  ? 0.
-                  : (2 * g * n2 * veli_norm * mi /
-                     (hi_to_the_gamma +
-                      fmax(hi_to_the_gamma, xi * g * n2 * dt * veli_norm)));
-          extendedSourceTerm_hu[i] = friction_aux * hui;
-          extendedSourceTerm_hv[i] = friction_aux * hvi;
-          // For use in the convex limiting functionT
-          new_SourceTerm_hu[i] = -friction_aux * hui;
-          new_SourceTerm_hv[i] = -friction_aux * hvi;
-        }
-
-        // Define some things for heta, hw and hbeta sources
-        double ratio_i = 1.0; //(2.0 * hetai) / (etai * etai + hi * hi + hEps);
-        double diff_over_h_i = (hetai - hi * hi) * one_over_hiReg;
-        double hSqd_GammaPi = 6.0 * (hetai - hi * hi);
-        double s_i = LAMBDA_MGN * g / meshSizei * hSqd_GammaPi;
-        double mu_bar_i = LAMBDA_MGN * std::sqrt(g * hEps / eps) / meshSizei;
-        double grad_Z_x_i = 0.0;
-        double grad_Z_y_i = 0.0;
-        double q_dot_gradZ = 0.0;
-
-        if (IF_BOTH_GAMMA_BRANCHES) {
-          if (hetai > std::pow(hi, 2.0)) {
-            hSqd_GammaPi = 6.0 * etai * diff_over_h_i;
-          }
-        }
-
-        // heta source first part
-        extendedSourceTerm_heta[i] = -hwi * mi * ratio_i;
-        new_SourceTerm_heta[i] = hwi * mi * ratio_i;
-
-        // hw source
-        extendedSourceTerm_hw[i] =
-            (LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratio_i;
-        new_SourceTerm_hw[i] =
-            -(LAMBDA_MGN * g / meshSizei) * hSqd_GammaPi * mi * ratio_i;
-
-        /* HYPERBOLIC FLUXES */
-        hyp_flux_h[i] = 0;
-        hyp_flux_hu[i] = 0;
-        hyp_flux_hv[i] = 0;
-        hyp_flux_heta[i] = 0;
-        hyp_flux_hw[i] = 0;
-        hyp_flux_hbeta[i] = 0;
-
-        // FOR SMOOTHNESS INDICATOR //
-        double alphai; // smoothness indicator of solution
-        double alpha_numerator = 0;
-        double alpha_denominator = 0;
-        double alpha_zero = 0.5; // if only want smoothness
-        double alpha_factor = 1.0 / (1.0 - alpha_zero);
-
-        // loop in j (sparsity pattern)
-        for (int offset = csrRowIndeces_DofLoops[i];
-             offset < csrRowIndeces_DofLoops[i + 1]; offset++) {
-
-          int j = csrColumnOffsets_DofLoops[offset];
-
-          // solution at time tn for the jth DOF
-          double hj = h_dof_old[j];
-          double huj = hu_dof_old[j];
-          double hvj = hv_dof_old[j];
-          double hetaj = heta_dof_old[j];
-          double hwj = hw_dof_old[j];
-          double hbetaj = hbeta_dof_old[j];
-          double Zj = b_dof[j];
-          // Then define some things here using above
-          double one_over_hjReg =
-              2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
-          double uj = huj * one_over_hjReg;
-          double vj = hvj * one_over_hjReg;
-          double etaj = hetaj * one_over_hjReg;
-          double meshSizej =
-              std::sqrt(lumped_mass_matrix[j]); // local mesh size in 2d
-
-          // pTilde at jth node gets defined here
-          double diff_over_h_j = (hetaj - hj * hj) * one_over_hjReg;
-          double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
-                           (hetaj - hj * hj);
-
-          if (IF_BOTH_GAMMA_BRANCHES) {
-            if (hetaj > std::pow(hj, 2.0)) {
-              pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
-                        diff_over_h_j * (etaj * etaj + etaj * hj + hj * hj);
-            }
-          }
-
-          // auxiliary functions to compute fluxes
-          double aux_h =
-              (uj * hj - ui * hi) * Cx[ij] + (vj * hj - vi * hi) * Cy[ij];
-          double aux_hu =
-              (uj * huj - ui * hui) * Cx[ij] + (vj * huj - vi * hui) * Cy[ij];
-          double aux_hv =
-              (uj * hvj - ui * hvi) * Cx[ij] + (vj * hvj - vi * hvi) * Cy[ij];
-          double aux_heta = (uj * hetaj - ui * hetai) * Cx[ij] +
-                            (vj * hetaj - vi * hetai) * Cy[ij];
-          double aux_hw =
-              (uj * hwj - ui * hwi) * Cx[ij] + (vj * hwj - vi * hwi) * Cy[ij];
-          double aux_hbeta = (uj * hbetaj - ui * hbetai) * Cx[ij] +
-                             (vj * hbetaj - vi * hbetai) * Cy[ij];
-
-          // Define grad_Z_x and grad_Z_y
-          grad_Z_x_i += Zj * Cx[ij];
-          grad_Z_y_i += Zj * Cy[ij];
-
-          /* HYPERBOLIC FLUX */
-          hyp_flux_h[i] += aux_h;
-          hyp_flux_hu[i] += aux_hu + pTildej * Cx[ij];
-          hyp_flux_hv[i] += aux_hv + pTildej * Cy[ij];
-          hyp_flux_heta[i] += aux_heta;
-          hyp_flux_hw[i] += aux_hw;
-          hyp_flux_hbeta[i] += aux_hbeta;
-
-          // EXTENDED SOURCE, USING 6.13 //
-          extendedSourceTerm_hu[i] += g * hi * (hj + Zj) * Cx[ij];
-          extendedSourceTerm_hv[i] += g * hi * (hj + Zj) * Cy[ij];
-
-          new_SourceTerm_hu[i] +=
-              g * (-hi * (Zj - Zi) + 0.5 * std::pow(hj - hi, 2)) * Cx[ij];
-          new_SourceTerm_hv[i] +=
-              g * (-hi * (Zj - Zi) + 0.5 * std::pow(hj - hi, 2)) * Cy[ij];
-
-          // FOR SMOOTHNESS INDICATOR //
-          alpha_numerator += hj - hi;
-          alpha_denominator += fabs(hj - hi);
-
-          // update ij
-          ij += 1;
-        } // end j loop
-
-        // update sources with gradZ contribution
-        q_dot_gradZ = hui * grad_Z_x_i + hvi * grad_Z_y_i;
-        double Spi = mu_bar_i * (q_dot_gradZ / mi - hbetai);
-        double r_i = -s_i / 2.0 + Spi / 4.0;
-        // q1
-        extendedSourceTerm_heta[i] += 1.5 * q_dot_gradZ;
-        new_SourceTerm_heta -= 1.5 * q_dot_gradZ;
-        // q3
-        extendedSourceTerm_hbeta[i] = -mi * Spi;
-        // momentum equations
-        extendedSourceTerm_hu[i] -= -r_i * grad_Z_x_i;
-        new_SourceTerm_hu[i] += -r_i * grad_Z_x_i;
-        extendedSourceTerm_hv[i] -= -r_i * grad_Z_y_i;
-        new_SourceTerm_hv[i] += -r_i * grad_Z_y_i;
-
-        // COMPUTE SMOOTHNESS INDICATOR //
-        if (hi <= hEps) {
-          alphai = 1.0;
-          psi[i] = 1.0;
-        } else {
-          // Force alphai=0 in constant states
-          if (fabs(alpha_numerator) <= hEps) {
-            alphai = 0.;
-          } else {
-            alphai =
-                (fabs(alpha_numerator) - hEps) / fabs(alpha_denominator - hEps);
-          }
-          alphai = fmax(alphai - alpha_zero, 0.0) * alpha_factor;
-          if (POWER_SMOOTHNESS_INDICATOR == 0)
-            psi[i] = 1.0;
-          else
-            psi[i] = std::pow(
-                alphai, POWER_SMOOTHNESS_INDICATOR); // NOTE: alpha^4 for mGN
-        }
-      }
-      // ********** END OF 2nd LOOP ON DOFS ********** //
-
-      /////////////////////////////////////////////
-      // ********** MAIN LOOP ON DOFs **********
-      // To compute:
-      //      * dissipative terms
-      //      * bar states
-      /////////////////////////////////////////////
-
-      ij = 0;
-      for (int i = 0; i < numDOFsPerEqn; i++) {
-
-        double hi = h_dof_old[i];
-        double hui = hu_dof_old[i];
-        double hvi = hv_dof_old[i];
-        double hetai = heta_dof_old[i];
-        double hwi = hw_dof_old[i];
-        double hbetai = hbeta_dof_old[i];
-        double Zi = b_dof[i];
-        double mi = lumped_mass_matrix[i];
-
-        double one_over_hiReg =
-            2.0 * hi / (hi * hi + std::pow(fmax(hi, hEps), 2));
-        double ui = hui * one_over_hiReg;
-        double vi = hvi * one_over_hiReg;
-        double etai = hetai * one_over_hiReg;
-        double meshSizei = std::sqrt(mi); // local mesh size in 2d
-
-        // We define pTilde at ith node here
-        double diff_over_h_i = (hetai - hi * hi) * one_over_hiReg;
-        double pTildei = -(LAMBDA_MGN * g / (3.0 * meshSizei)) * 6.0 * hi *
-                         (hetai - hi * hi);
-
-        if (IF_BOTH_GAMMA_BRANCHES) {
-          if (hetai > std::pow(hi, 2.0)) {
-            pTildei = -(LAMBDA_MGN * g / (3.0 * meshSizei)) * 2.0 *
-                      diff_over_h_i * (etai * etai + etai * hi + hi * hi);
-          }
-        }
-
-        // Define full pressure at ith node for definition of bar states below
-        double pressure_i = 0.5 * g * hi * hi + pTildei;
-
-        // HIGH ORDER DISSIPATIVE TERMS, for Aij matrix
-        double ith_dHij_minus_muHij_times_hStarStates = 0.,
-               ith_dHij_minus_muHij_times_huStarStates = 0.,
-               ith_dHij_minus_muHij_times_hvStarStates = 0.,
-               ith_dHij_minus_muHij_times_hetaStarStates = 0.,
-               ith_dHij_minus_muHij_times_hwStarStates = 0.,
-               ith_dHij_minus_muHij_times_hbetaStarStates = 0.,
-               ith_muHij_times_hStates = 0., ith_muHij_times_huStates = 0.,
-               ith_muHij_times_hvStates = 0., ith_muHij_times_hetaStates = 0.,
-               ith_muHij_times_hwStates = 0., ith_muHij_times_hbetaStates = 0.;
+        double b_ij = 0., b_ji = 0.;
 
         // loop over the sparsity pattern of the i-th DOF
         for (int offset = csrRowIndeces_DofLoops[i];
@@ -1701,276 +2213,54 @@ public:
 
           int j = csrColumnOffsets_DofLoops[offset];
 
-          double hj = h_dof_old[j];
-          double huj = hu_dof_old[j];
-          double hvj = hv_dof_old[j];
-          double hetaj = heta_dof_old[j];
-          double hwj = hw_dof_old[j];
-          double hbetaj = hbeta_dof_old[j];
-          double Zj = b_dof[j];
+          // get things at jth node
+          const double mj = lumped_mass_matrix[j];
 
-          double one_over_hjReg =
-              2.0 * hj / (hj * hj + std::pow(fmax(hj, hEps), 2));
-          double uj = huj * one_over_hjReg;
-          double vj = hvj * one_over_hjReg;
-          double etaj = hetaj * one_over_hjReg;
-          double mj = lumped_mass_matrix[j];
-          double meshSizej = std::sqrt(mj); // local mesh size in 2d
-
-          // Here we define pTilde at jth node
-          double diff_over_h_j = (hetaj - hj * hj) * one_over_hjReg;
-          double pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 6.0 * hj *
-                           (hetaj - hj * hj);
-
-          if (IF_BOTH_GAMMA_BRANCHES) {
-            if (hetaj > std::pow(hj, 2.0)) {
-              pTildej = -(LAMBDA_MGN * g / (3.0 * meshSizej)) * 2.0 *
-                        diff_over_h_j * (etaj * etaj + etaj * hj + hj * hj);
-            }
+          // define b_ij and b_ji
+          if (j != i) {
+            b_ij = (0. - MassMatrix[ij] / mj);
+            b_ji = (0. - MassMatrix[ij] / mi);
+          } else {
+            b_ij = (1. - MassMatrix[ij] / mj);
+            b_ji = (1. - MassMatrix[ij] / mi);
           }
 
-          // define pressure at jth node
-          double pressure_j = 0.5 * g * hj * hj + pTildej;
-
-          // COMPUTE STAR SOLUTION // hStar, huStar, hvStar, hetaStar, hwStar,
-          // hbetaStar
-          double hStarij = fmax(0., hi + Zi - fmax(Zi, Zj));
-          double huStarij = hui * hStarij * one_over_hiReg;
-          double hvStarij = hvi * hStarij * one_over_hiReg;
-          double hetaStarij = hetai * std::pow(hStarij * one_over_hiReg, 2);
-          double hwStarij = hwi * hStarij * one_over_hiReg;
-          double hbetaStarij = hbetai * hStarij * one_over_hiReg;
-
-          double hStarji = fmax(0., hj + Zj - fmax(Zi, Zj));
-          double huStarji = huj * hStarji * one_over_hjReg;
-          double hvStarji = hvj * hStarji * one_over_hjReg;
-          double hetaStarji = hetaj * std::pow(hStarji * one_over_hjReg, 2);
-          double hwStarji = hwj * hStarji * one_over_hjReg;
-          double hbetaStarji = hbetaj * hStarji * one_over_hjReg;
-
-          // Dissipative well balancing term
-          double muLowij = 0., muLij = 0., muHij = 0.;
-          double dLowij = 0., dLij = 0., dHij = 0.;
-          if (i != j) // This is not necessary. See formula for
-                      // ith_dissipative_terms
-          {
-            ////////////////////////
-            // DISSIPATIVE MATRIX //
-            ////////////////////////
-            if (lstage == 0)
-              dLowij = dLow[ij];
-            else {
-              double cij_norm = sqrt(Cx[ij] * Cx[ij] + Cy[ij] * Cy[ij]);
-              double cji_norm = sqrt(CTx[ij] * CTx[ij] + CTy[ij] * CTy[ij]);
-              double nxij = Cx[ij] / cij_norm, nyij = Cy[ij] / cij_norm;
-              double nxji = CTx[ij] / cji_norm, nyji = CTy[ij] / cji_norm;
-              dLowij = fmax(maxWaveSpeedSharpInitialGuess(
-                                g, nxij, nyij, hi, hui, hvi, hetai, mi, hj, huj,
-                                hvj, hetaj, mj, hEps, hEps, false) *
-                                cij_norm,
-                            maxWaveSpeedSharpInitialGuess(
-                                g, nxji, nyji, hj, huj, hvj, hetaj, mj, hi, hui,
-                                hvi, hetai, mi, hEps, hEps, false) *
-                                cji_norm);
-            }
-            // this is standard low-order dij, can you use dLij =
-            // dLowij*fmax(psi[i],psi[j]) if want smoothness based as low order
-            dLij = dLowij;
-
-            ///////////////////////////////////////
-            // WELL BALANCING DISSIPATIVE MATRIX //
-            ///////////////////////////////////////
-            muLowij = fmax(fmax(0., -(ui * Cx[ij] + vi * Cy[ij])),
-                           fmax(0., (uj * Cx[ij] + vj * Cy[ij])));
-            muLij = muLowij;
-
-            // Define dLij as low order dijs
-            muLij = muLowij;
-            dLij = fmax(dLowij, muLij);
-
-            // Then save dLow for limiting step, maybe a bit confusing
-            dLow[ij] = fmax(dLij, muLij);
-
-            ////////////////////////
-            // COMPUTE BAR STATES //
-            ////////////////////////
-            double hBar_ij = 0, hTilde_ij = 0, huBar_ij = 0, huTilde_ij = 0,
-                   hvBar_ij = 0, hvTilde_ij = 0, hetaBar_ij = 0,
-                   hetaTilde_ij = 0, hwBar_ij = 0, hwTilde_ij = 0,
-                   hbetaBar_ij = 0, hbetaTilde_ij = 0;
-
-            // h component
-            hBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
-                          ((uj * hj - ui * hi) * Cx[ij] +
-                           (vj * hj - vi * hi) * Cy[ij]) +
-                      0.5 * (hj + hi);
-            hTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                        ((hStarji - hj) - (hStarij - hi));
-            // hu component
-            huBar_ij =
-                -1. / (fmax(2.0 * dLij, dij_small)) *
-                    ((uj * huj - ui * hui + pressure_j - pressure_i) * Cx[ij] +
-                     (vj * huj - vi * hui) * Cy[ij]) +
-                0.5 * (huj + hui);
-            huTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                         ((huStarji - huj) - (huStarij - hui));
-            // hv component
-            hvBar_ij =
-                -1. / (fmax(2.0 * dLij, dij_small)) *
-                    ((uj * hvj - ui * hvi) * Cx[ij] +
-                     (vj * hvj - vi * hvi + pressure_j - pressure_i) * Cy[ij]) +
-                0.5 * (hvj + hvi);
-            hvTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                         ((hvStarji - hvj) - (hvStarij - hvi));
-            // heta component
-            hetaBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
-                             ((uj * hetaj - ui * hetai) * Cx[ij] +
-                              (vj * hetaj - vi * hetai) * Cy[ij]) +
-                         0.5 * (hetaj + hetai);
-            hetaTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                           ((hetaStarji - hetaj) - (hetaStarij - hetai));
-            // hw component
-            hwBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
-                           ((uj * hwj - ui * hwi) * Cx[ij] +
-                            (vj * hwj - vi * hwi) * Cy[ij]) +
-                       0.5 * (hwj + hwi);
-            hwTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                         ((hwStarji - hwj) - (hwStarij - hwi));
-            // hbeta component
-            hbetaBar_ij = -1. / (fmax(2.0 * dLij, dij_small)) *
-                              ((uj * hbetaj - ui * hbetai) * Cx[ij] +
-                               (vj * hbetaj - vi * hbetai) * Cy[ij]) +
-                          0.5 * (hbetaj + hbetai);
-            hbetaTilde_ij = (dLij - muLij) / (fmax(2.0 * dLij, dij_small)) *
-                            ((hbetaStarji - hbetaj) - (hbetaStarij - hbetai));
-
-            // Here we define uBar + uTilde
-            hBT[ij] = hBar_ij + hTilde_ij;
-            huBT[ij] = huBar_ij + huTilde_ij;
-            hvBT[ij] = hvBar_ij + hvTilde_ij;
-            hetaBT[ij] = hetaBar_ij + hetaTilde_ij;
-            hwBT[ij] = hwBar_ij + hwTilde_ij;
-            hbetaBT[ij] = hbetaBar_ij + hbetaTilde_ij;
-
-            ///////////////////////
-            // ENTROPY VISCOSITY //
-            ///////////////////////
-            double dEVij = cE * fmax(global_entropy_residual[i],
-                                     global_entropy_residual[j]);
-            dHij = fmin(dLowij, dEVij);
-            muHij = fmin(muLowij, dEVij);
-
-            // compute dij_minus_muij times star solution terms
-            // see: eqn (6.13)
-            ith_dHij_minus_muHij_times_hStarStates +=
-                (dHij - muHij) * (hStarji - hStarij);
-            ith_dHij_minus_muHij_times_huStarStates +=
-                (dHij - muHij) * (huStarji - huStarij);
-            ith_dHij_minus_muHij_times_hvStarStates +=
-                (dHij - muHij) * (hvStarji - hvStarij);
-            ith_dHij_minus_muHij_times_hetaStarStates +=
-                (dHij - muHij) * (hetaStarji - hetaStarij);
-            ith_dHij_minus_muHij_times_hwStarStates +=
-                (dHij - muHij) * (hwStarji - hwStarij);
-            ith_dHij_minus_muHij_times_hbetaStarStates +=
-                (dHij - muHij) * (hbetaStarji - hbetaStarij);
-
-            // compute muij times solution terms
-            ith_muHij_times_hStates += muHij * (hj - hi);
-            ith_muHij_times_huStates += muHij * (huj - hui);
-            ith_muHij_times_hvStates += muHij * (hvj - hvi);
-            ith_muHij_times_hetaStates += muHij * (hetaj - hetai);
-            ith_muHij_times_hwStates += muHij * (hwj - hwi);
-            ith_muHij_times_hbetaStates += muHij * (hbetaj - hbetai);
-
-            // compute dH_minus_dL
-            dH_minus_dL[ij] = dHij - dLij;
-            muH_minus_muL[ij] = muHij - muLij;
-          } else // i==j
-          {
-            dH_minus_dL[ij] = 0.;   // Not true but the prod of this times
-                                    // Uj-Ui will be zero
-            muH_minus_muL[ij] = 0.; // Not true but the prod of this times
-            // Uj-Ui will be zero
-            // Bar states by definition satisfy Utilde_ii + Ubar_ii = U_i
-            hBT[ij] = hi;
-            huBT[ij] = hui;
-            hvBT[ij] = hvi;
-            hetaBT[ij] = hetai;
-            hwBT[ij] = hwi;
-            hbetaBT[ij] = hbetai;
-          }
+          // define sum for high-order RHS
+          sum_RHS_h += b_ij * RHS_high_h[j] - b_ji * RHS_high_h[i];
+          sum_RHS_hu += b_ij * RHS_high_hu[j] - b_ji * RHS_high_hu[i];
+          sum_RHS_hv += b_ij * RHS_high_hv[j] - b_ji * RHS_high_hv[i];
+          sum_RHS_heta += b_ij * RHS_high_heta[j] - b_ji * RHS_high_heta[i];
+          sum_RHS_hw += b_ij * RHS_high_hw[j] - b_ji * RHS_high_hw[i];
+          sum_RHS_hbeta += b_ij * RHS_high_hbeta[j] - b_ji * RHS_high_hbeta[i];
 
           // update ij
           ij += 1;
         } // j loop ends here
 
         /* Define global residual */
-        if (LUMPED_MASS_MATRIX == 1) {
-          globalResidual[offset_h + stride_h * i] =
-              hi - dt / mi *
-                       (hyp_flux_h[i] - ith_dHij_minus_muHij_times_hStarStates -
-                        ith_muHij_times_hStates);
-          globalResidual[offset_hu + stride_hu * i] =
-              hui - dt / mi *
-                        ((hyp_flux_hu[i] + extendedSourceTerm_hu[i]) -
-                         ith_dHij_minus_muHij_times_huStarStates -
-                         ith_muHij_times_huStates);
-          globalResidual[offset_hv + stride_hv * i] =
-              hvi - dt / mi *
-                        ((hyp_flux_hv[i] + extendedSourceTerm_hv[i]) -
-                         ith_dHij_minus_muHij_times_hvStarStates -
-                         ith_muHij_times_hvStates);
-          globalResidual[offset_heta + stride_heta * i] =
-              hetai - dt / mi *
-                          ((hyp_flux_heta[i] + extendedSourceTerm_heta[i]) -
-                           ith_dHij_minus_muHij_times_hetaStarStates -
-                           ith_muHij_times_hetaStates);
-          globalResidual[offset_hw + stride_hw * i] =
-              hwi - dt / mi *
-                        ((hyp_flux_hw[i] + extendedSourceTerm_hw[i]) -
-                         ith_dHij_minus_muHij_times_hwStarStates -
-                         ith_muHij_times_hwStates);
-          globalResidual[offset_hbeta + stride_hbeta * i] =
-              hbetai - dt / mi *
-                           ((hyp_flux_hbeta[i] + extendedSourceTerm_hbeta[i]) -
-                            ith_dHij_minus_muHij_times_hbetaStarStates -
-                            ith_muHij_times_hbetaStates);
+        // if (LUMPED_MASS_MATRIX == 1) {
+        globalResidual[offset_h + stride_h * i] =
+            hi + dt / mi * (RHS_high_h[i] + sum_RHS_h);
 
-          // clean up potential negative water height due to machine
-          // precision
-          if (globalResidual[offset_h + stride_h * i] >= -hEps &&
-              globalResidual[offset_h + stride_h * i] < hEps) {
-            globalResidual[offset_h + stride_h * i] = 0.0;
-            globalResidual[offset_heta + stride_heta * i] = 0.0;
-          }
+        globalResidual[offset_hu + stride_hu * i] =
+            hui + dt / mi * (RHS_high_hu[i] + sum_RHS_hu);
 
-        } else {
-          // Distribute residual
-          // NOTE: MASS MATRIX IS CONSISTENT
-          globalResidual[offset_h + stride_h * i] +=
-              dt * (hyp_flux_h[i] - ith_dHij_minus_muHij_times_hStarStates -
-                    ith_muHij_times_hStates);
-          globalResidual[offset_hu + stride_hu * i] +=
-              dt * (hyp_flux_hu[i] + extendedSourceTerm_hu[i] -
-                    ith_dHij_minus_muHij_times_huStarStates -
-                    ith_muHij_times_huStates);
-          globalResidual[offset_hv + stride_hv * i] +=
-              dt * (hyp_flux_hv[i] + extendedSourceTerm_hv[i] -
-                    ith_dHij_minus_muHij_times_hvStarStates -
-                    ith_muHij_times_hvStates);
-          globalResidual[offset_heta + stride_heta * i] +=
-              dt * (hyp_flux_heta[i] + extendedSourceTerm_heta[i] -
-                    ith_dHij_minus_muHij_times_hetaStarStates -
-                    ith_muHij_times_hetaStates);
-          globalResidual[offset_hw + stride_hw * i] +=
-              dt * (hyp_flux_hw[i] + extendedSourceTerm_hw[i] -
-                    ith_dHij_minus_muHij_times_hwStarStates -
-                    ith_muHij_times_hwStates);
-          globalResidual[offset_hbeta + stride_hbeta * i] +=
-              dt * (hyp_flux_hbeta[i] + extendedSourceTerm_hbeta[i] -
-                    ith_dHij_minus_muHij_times_hbetaStarStates -
-                    ith_muHij_times_hbetaStates);
+        globalResidual[offset_hv + stride_hv * i] =
+            hvi + dt / mi * (RHS_high_hv[i] + sum_RHS_hv);
+
+        globalResidual[offset_heta + stride_heta * i] =
+            hetai + dt / mi * (RHS_high_heta[i] + sum_RHS_heta);
+
+        globalResidual[offset_hw + stride_hw * i] =
+            hwi + dt / mi * (RHS_high_hw[i] + sum_RHS_hw);
+
+        globalResidual[offset_hbeta + stride_hbeta * i] =
+            hbetai + dt / mi * (RHS_high_hbeta[i] + sum_RHS_hbeta);
+
+        // clean up potential negative water height due to machine precision
+        if (globalResidual[offset_h + stride_h * i] >= -hEps &&
+            globalResidual[offset_h + stride_h * i] < hEps) {
+          globalResidual[offset_h + stride_h * i] = 0.;
         }
       }
       // ********** END OF LOOP IN DOFs ********** //
@@ -2031,28 +2321,34 @@ public:
     xt::pyarray<double> &mesh_grad_trial_ref =
         args.array<double>("mesh_grad_trial_ref");
     xt::pyarray<double> &mesh_dof = args.array<double>("mesh_dof");
-    xt::pyarray<double> &mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
+    xt::pyarray<double> &mesh_velocity_dof =
+        args.array<double>("mesh_velocity_dof");
     double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
     xt::pyarray<int> &mesh_l2g = args.array<int>("mesh_l2g");
     xt::pyarray<double> &dV_ref = args.array<double>("dV_ref");
     xt::pyarray<double> &h_trial_ref = args.array<double>("h_trial_ref");
-    xt::pyarray<double> &h_grad_trial_ref = args.array<double>("h_grad_trial_ref");
+    xt::pyarray<double> &h_grad_trial_ref =
+        args.array<double>("h_grad_trial_ref");
     xt::pyarray<double> &h_test_ref = args.array<double>("h_test_ref");
-    xt::pyarray<double> &h_grad_test_ref = args.array<double>("h_grad_test_ref");
+    xt::pyarray<double> &h_grad_test_ref =
+        args.array<double>("h_grad_test_ref");
     xt::pyarray<double> &vel_trial_ref = args.array<double>("vel_trial_ref");
     xt::pyarray<double> &vel_grad_trial_ref =
         args.array<double>("vel_grad_trial_ref");
     xt::pyarray<double> &vel_test_ref = args.array<double>("vel_test_ref");
-    xt::pyarray<double> &vel_grad_test_ref = args.array<double>("vel_grad_test_ref");
+    xt::pyarray<double> &vel_grad_test_ref =
+        args.array<double>("vel_grad_test_ref");
     xt::pyarray<double> &mesh_trial_trace_ref =
         args.array<double>("mesh_trial_trace_ref");
     xt::pyarray<double> &mesh_grad_trial_trace_ref =
         args.array<double>("mesh_grad_trial_trace_ref");
     xt::pyarray<double> &dS_ref = args.array<double>("dS_ref");
-    xt::pyarray<double> &h_trial_trace_ref = args.array<double>("h_trial_trace_ref");
+    xt::pyarray<double> &h_trial_trace_ref =
+        args.array<double>("h_trial_trace_ref");
     xt::pyarray<double> &h_grad_trial_trace_ref =
         args.array<double>("h_grad_trial_trace_ref");
-    xt::pyarray<double> &h_test_trace_ref = args.array<double>("h_test_trace_ref");
+    xt::pyarray<double> &h_test_trace_ref =
+        args.array<double>("h_test_trace_ref");
     xt::pyarray<double> &h_grad_test_trace_ref =
         args.array<double>("h_grad_test_trace_ref");
     xt::pyarray<double> &vel_trial_trace_ref =
@@ -2064,13 +2360,11 @@ public:
     xt::pyarray<double> &vel_grad_test_trace_ref =
         args.array<double>("vel_grad_test_trace_ref");
     xt::pyarray<double> &normal_ref = args.array<double>("normal_ref");
-    xt::pyarray<double> &boundaryJac_ref = args.array<double>("boundaryJac_ref");
-    xt::pyarray<double> &elementDiameter = args.array<double>("elementDiameter");
+    xt::pyarray<double> &boundaryJac_ref =
+        args.array<double>("boundaryJac_ref");
+    xt::pyarray<double> &elementDiameter =
+        args.array<double>("elementDiameter");
     int nElements_global = args.scalar<int>("nElements_global");
-    double useRBLES = args.scalar<double>("useRBLES");
-    double useMetrics = args.scalar<double>("useMetrics");
-    double alphaBDF = args.scalar<double>("alphaBDF");
-    double nu = args.scalar<double>("nu");
     double g = args.scalar<double>("g");
     xt::pyarray<int> &h_l2g = args.array<int>("h_l2g");
     xt::pyarray<int> &vel_l2g = args.array<int>("vel_l2g");
@@ -2081,18 +2375,6 @@ public:
     xt::pyarray<double> &heta_dof = args.array<double>("heta_dof");
     xt::pyarray<double> &hw_dof = args.array<double>("hw_dof");
     xt::pyarray<double> &hbeta_dof = args.array<double>("hbeta_dof");
-    xt::pyarray<double> &h_dof_sge = args.array<double>("h_dof_sge");
-    xt::pyarray<double> &hu_dof_sge = args.array<double>("hu_dof_sge");
-    xt::pyarray<double> &hv_dof_sge = args.array<double>("hv_dof_sge");
-    xt::pyarray<double> &heta_dof_sge = args.array<double>("heta_dof_sge");
-    xt::pyarray<double> &hw_dof_sge = args.array<double>("hw_dof_sge");
-    xt::pyarray<double> &hbeta_dof_sge = args.array<double>("hbeta_dof_sge");
-    xt::pyarray<double> &q_mass_acc_beta_bdf =
-        args.array<double>("q_mass_acc_beta_bdf");
-    xt::pyarray<double> &q_mom_hu_acc_beta_bdf =
-        args.array<double>("q_mom_hu_acc_beta_bdf");
-    xt::pyarray<double> &q_mom_hv_acc_beta_bdf =
-        args.array<double>("q_mom_hv_acc_beta_bdf");
     xt::pyarray<double> &q_cfl = args.array<double>("q_cfl");
     xt::pyarray<int> &sdInfo_hu_hu_rowptr =
         args.array<int>("sdInfo_hu_hu_rowptr");
@@ -2113,24 +2395,28 @@ public:
     xt::pyarray<int> &csrRowIndeces_h_h = args.array<int>("csrRowIndeces_h_h");
     xt::pyarray<int> &csrColumnOffsets_h_h =
         args.array<int>("csrColumnOffsets_h_h");
-    xt::pyarray<int> &csrRowIndeces_h_hu = args.array<int>("csrRowIndeces_h_hu");
+    xt::pyarray<int> &csrRowIndeces_h_hu =
+        args.array<int>("csrRowIndeces_h_hu");
     xt::pyarray<int> &csrColumnOffsets_h_hu =
         args.array<int>("csrColumnOffsets_h_hu");
-    xt::pyarray<int> &csrRowIndeces_h_hv = args.array<int>("csrRowIndeces_h_hv");
+    xt::pyarray<int> &csrRowIndeces_h_hv =
+        args.array<int>("csrRowIndeces_h_hv");
     xt::pyarray<int> &csrColumnOffsets_h_hv =
         args.array<int>("csrColumnOffsets_h_hv");
     xt::pyarray<int> &csrRowIndeces_h_heta =
         args.array<int>("csrRowIndeces_h_heta");
     xt::pyarray<int> &csrColumnOffsets_h_heta =
         args.array<int>("csrColumnOffsets_h_heta");
-    xt::pyarray<int> &csrRowIndeces_h_hw = args.array<int>("csrRowIndeces_h_hw");
+    xt::pyarray<int> &csrRowIndeces_h_hw =
+        args.array<int>("csrRowIndeces_h_hw");
     xt::pyarray<int> &csrColumnOffsets_h_hw =
         args.array<int>("csrColumnOffsets_h_hw");
     xt::pyarray<int> &csrRowIndeces_h_hbeta =
         args.array<int>("csrRowIndeces_h_hbeta");
     xt::pyarray<int> &csrColumnOffsets_h_hbeta =
         args.array<int>("csrColumnOffsets_h_hbeta");
-    xt::pyarray<int> &csrRowIndeces_hu_h = args.array<int>("csrRowIndeces_hu_h");
+    xt::pyarray<int> &csrRowIndeces_hu_h =
+        args.array<int>("csrRowIndeces_hu_h");
     xt::pyarray<int> &csrColumnOffsets_hu_h =
         args.array<int>("csrColumnOffsets_hu_h");
     xt::pyarray<int> &csrRowIndeces_hu_hu =
@@ -2153,7 +2439,8 @@ public:
         args.array<int>("csrRowIndeces_hu_hbeta");
     xt::pyarray<int> &csrColumnOffsets_hu_hbeta =
         args.array<int>("csrColumnOffsets_hu_hbeta");
-    xt::pyarray<int> &csrRowIndeces_hv_h = args.array<int>("csrRowIndeces_hv_h");
+    xt::pyarray<int> &csrRowIndeces_hv_h =
+        args.array<int>("csrRowIndeces_hv_h");
     xt::pyarray<int> &csrColumnOffsets_hv_h =
         args.array<int>("csrColumnOffsets_hv_h");
     xt::pyarray<int> &csrRowIndeces_hv_hu =
@@ -2200,7 +2487,8 @@ public:
         args.array<int>("csrRowIndeces_heta_hbeta");
     xt::pyarray<int> &csrColumnOffsets_heta_hbeta =
         args.array<int>("csrColumnOffsets_heta_hbeta");
-    xt::pyarray<int> &csrRowIndeces_hw_h = args.array<int>("csrRowIndeces_hw_h");
+    xt::pyarray<int> &csrRowIndeces_hw_h =
+        args.array<int>("csrRowIndeces_hw_h");
     xt::pyarray<int> &csrColumnOffsets_hw_h =
         args.array<int>("csrColumnOffsets_hw_h");
     xt::pyarray<int> &csrRowIndeces_hw_hu =
@@ -2280,7 +2568,8 @@ public:
     xt::pyarray<double> &ebqe_bc_hu_ext = args.array<double>("ebqe_bc_hu_ext");
     xt::pyarray<double> &ebqe_bc_flux_hu_diff_ext =
         args.array<double>("ebqe_bc_flux_hu_diff_ext");
-    xt::pyarray<double> &ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
+    xt::pyarray<double> &ebqe_penalty_ext =
+        args.array<double>("ebqe_penalty_ext");
     xt::pyarray<double> &ebqe_bc_hv_ext = args.array<double>("ebqe_bc_hv_ext");
     xt::pyarray<double> &ebqe_bc_flux_hv_diff_ext =
         args.array<double>("ebqe_bc_flux_hv_diff_ext");
@@ -2401,28 +2690,34 @@ public:
     xt::pyarray<double> &mesh_grad_trial_ref =
         args.array<double>("mesh_grad_trial_ref");
     xt::pyarray<double> &mesh_dof = args.array<double>("mesh_dof");
-    xt::pyarray<double> &mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
+    xt::pyarray<double> &mesh_velocity_dof =
+        args.array<double>("mesh_velocity_dof");
     double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
     xt::pyarray<int> &mesh_l2g = args.array<int>("mesh_l2g");
     xt::pyarray<double> &dV_ref = args.array<double>("dV_ref");
     xt::pyarray<double> &h_trial_ref = args.array<double>("h_trial_ref");
-    xt::pyarray<double> &h_grad_trial_ref = args.array<double>("h_grad_trial_ref");
+    xt::pyarray<double> &h_grad_trial_ref =
+        args.array<double>("h_grad_trial_ref");
     xt::pyarray<double> &h_test_ref = args.array<double>("h_test_ref");
-    xt::pyarray<double> &h_grad_test_ref = args.array<double>("h_grad_test_ref");
+    xt::pyarray<double> &h_grad_test_ref =
+        args.array<double>("h_grad_test_ref");
     xt::pyarray<double> &vel_trial_ref = args.array<double>("vel_trial_ref");
     xt::pyarray<double> &vel_grad_trial_ref =
         args.array<double>("vel_grad_trial_ref");
     xt::pyarray<double> &vel_test_ref = args.array<double>("vel_test_ref");
-    xt::pyarray<double> &vel_grad_test_ref = args.array<double>("vel_grad_test_ref");
+    xt::pyarray<double> &vel_grad_test_ref =
+        args.array<double>("vel_grad_test_ref");
     xt::pyarray<double> &mesh_trial_trace_ref =
         args.array<double>("mesh_trial_trace_ref");
     xt::pyarray<double> &mesh_grad_trial_trace_ref =
         args.array<double>("mesh_grad_trial_trace_ref");
     xt::pyarray<double> &dS_ref = args.array<double>("dS_ref");
-    xt::pyarray<double> &h_trial_trace_ref = args.array<double>("h_trial_trace_ref");
+    xt::pyarray<double> &h_trial_trace_ref =
+        args.array<double>("h_trial_trace_ref");
     xt::pyarray<double> &h_grad_trial_trace_ref =
         args.array<double>("h_grad_trial_trace_ref");
-    xt::pyarray<double> &h_test_trace_ref = args.array<double>("h_test_trace_ref");
+    xt::pyarray<double> &h_test_trace_ref =
+        args.array<double>("h_test_trace_ref");
     xt::pyarray<double> &h_grad_test_trace_ref =
         args.array<double>("h_grad_test_trace_ref");
     xt::pyarray<double> &vel_trial_trace_ref =
@@ -2434,13 +2729,11 @@ public:
     xt::pyarray<double> &vel_grad_test_trace_ref =
         args.array<double>("vel_grad_test_trace_ref");
     xt::pyarray<double> &normal_ref = args.array<double>("normal_ref");
-    xt::pyarray<double> &boundaryJac_ref = args.array<double>("boundaryJac_ref");
-    xt::pyarray<double> &elementDiameter = args.array<double>("elementDiameter");
+    xt::pyarray<double> &boundaryJac_ref =
+        args.array<double>("boundaryJac_ref");
+    xt::pyarray<double> &elementDiameter =
+        args.array<double>("elementDiameter");
     int nElements_global = args.scalar<int>("nElements_global");
-    double useRBLES = args.scalar<double>("useRBLES");
-    double useMetrics = args.scalar<double>("useMetrics");
-    double alphaBDF = args.scalar<double>("alphaBDF");
-    double nu = args.scalar<double>("nu");
     double g = args.scalar<double>("g");
     xt::pyarray<int> &h_l2g = args.array<int>("h_l2g");
     xt::pyarray<int> &vel_l2g = args.array<int>("vel_l2g");
@@ -2448,15 +2741,6 @@ public:
     xt::pyarray<double> &h_dof = args.array<double>("h_dof");
     xt::pyarray<double> &hu_dof = args.array<double>("hu_dof");
     xt::pyarray<double> &hv_dof = args.array<double>("hv_dof");
-    xt::pyarray<double> &h_dof_sge = args.array<double>("h_dof_sge");
-    xt::pyarray<double> &hu_dof_sge = args.array<double>("hu_dof_sge");
-    xt::pyarray<double> &hv_dof_sge = args.array<double>("hv_dof_sge");
-    xt::pyarray<double> &q_mass_acc_beta_bdf =
-        args.array<double>("q_mass_acc_beta_bdf");
-    xt::pyarray<double> &q_mom_hu_acc_beta_bdf =
-        args.array<double>("q_mom_hu_acc_beta_bdf");
-    xt::pyarray<double> &q_mom_hv_acc_beta_bdf =
-        args.array<double>("q_mom_hv_acc_beta_bdf");
     xt::pyarray<double> &q_cfl = args.array<double>("q_cfl");
     xt::pyarray<int> &sdInfo_hu_hu_rowptr =
         args.array<int>("sdInfo_hu_hu_rowptr");
@@ -2478,21 +2762,25 @@ public:
     xt::pyarray<int> &csrRowIndeces_h_h = args.array<int>("csrRowIndeces_h_h");
     xt::pyarray<int> &csrColumnOffsets_h_h =
         args.array<int>("csrColumnOffsets_h_h");
-    xt::pyarray<int> &csrRowIndeces_h_hu = args.array<int>("csrRowIndeces_h_hu");
+    xt::pyarray<int> &csrRowIndeces_h_hu =
+        args.array<int>("csrRowIndeces_h_hu");
     xt::pyarray<int> &csrColumnOffsets_h_hu =
         args.array<int>("csrColumnOffsets_h_hu");
-    xt::pyarray<int> &csrRowIndeces_h_hv = args.array<int>("csrRowIndeces_h_hv");
+    xt::pyarray<int> &csrRowIndeces_h_hv =
+        args.array<int>("csrRowIndeces_h_hv");
     xt::pyarray<int> &csrColumnOffsets_h_hv =
         args.array<int>("csrColumnOffsets_h_hv");
     xt::pyarray<int> &csrRowIndeces_h_heta =
         args.array<int>("csrRowIndeces_h_heta");
     xt::pyarray<int> &csrColumnOffsets_h_heta =
         args.array<int>("csrColumnOffsets_h_heta");
-    xt::pyarray<int> &csrRowIndeces_h_hw = args.array<int>("csrRowIndeces_h_hw");
+    xt::pyarray<int> &csrRowIndeces_h_hw =
+        args.array<int>("csrRowIndeces_h_hw");
     xt::pyarray<int> &csrColumnOffsets_h_hw =
         args.array<int>("csrColumnOffsets_h_hw");
     // hu
-    xt::pyarray<int> &csrRowIndeces_hu_h = args.array<int>("csrRowIndeces_hu_h");
+    xt::pyarray<int> &csrRowIndeces_hu_h =
+        args.array<int>("csrRowIndeces_hu_h");
     xt::pyarray<int> &csrColumnOffsets_hu_h =
         args.array<int>("csrColumnOffsets_hu_h");
     xt::pyarray<int> &csrRowIndeces_hu_hu =
@@ -2512,7 +2800,8 @@ public:
     xt::pyarray<int> &csrColumnOffsets_hu_hw =
         args.array<int>("csrColumnOffsets_hu_hw");
     // hv
-    xt::pyarray<int> &csrRowIndeces_hv_h = args.array<int>("csrRowIndeces_hv_h");
+    xt::pyarray<int> &csrRowIndeces_hv_h =
+        args.array<int>("csrRowIndeces_hv_h");
     xt::pyarray<int> &csrColumnOffsets_hv_h =
         args.array<int>("csrColumnOffsets_hv_h");
     xt::pyarray<int> &csrRowIndeces_hv_hu =
@@ -2553,7 +2842,8 @@ public:
     xt::pyarray<int> &csrColumnOffsets_heta_hw =
         args.array<int>("csrColumnOffsets_heta_hw");
     // hw
-    xt::pyarray<int> &csrRowIndeces_hw_h = args.array<int>("csrRowIndeces_hw_h");
+    xt::pyarray<int> &csrRowIndeces_hw_h =
+        args.array<int>("csrRowIndeces_hw_h");
     xt::pyarray<int> &csrColumnOffsets_hw_h =
         args.array<int>("csrColumnOffsets_hw_h");
     xt::pyarray<int> &csrRowIndeces_hw_hu =
@@ -2608,7 +2898,8 @@ public:
     xt::pyarray<double> &ebqe_bc_hu_ext = args.array<double>("ebqe_bc_hu_ext");
     xt::pyarray<double> &ebqe_bc_flux_hu_diff_ext =
         args.array<double>("ebqe_bc_flux_hu_diff_ext");
-    xt::pyarray<double> &ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
+    xt::pyarray<double> &ebqe_penalty_ext =
+        args.array<double>("ebqe_penalty_ext");
     xt::pyarray<double> &ebqe_bc_hv_ext = args.array<double>("ebqe_bc_hv_ext");
     xt::pyarray<double> &ebqe_bc_flux_hv_diff_ext =
         args.array<double>("ebqe_bc_flux_hv_diff_ext");

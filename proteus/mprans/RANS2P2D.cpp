@@ -23,11 +23,12 @@ PYBIND11_MODULE(cRANS2P2D, m)
     xt::import_numpy();
 
     py::class_<RANS2P2D_base>(m, "cRANS2P2D_base")
-        .def(py::init(&proteus::newRANS2P2D))
-        .def("calculateResidual"                    , &RANS2P2D_base::calculateResidual                     )
-        .def("calculateJacobian"                    , &RANS2P2D_base::calculateJacobian                     )
-        .def("calculateVelocityAverage"             , &RANS2P2D_base::calculateVelocityAverage              )
-        .def("getTwoPhaseAdvectionOperator"         , &RANS2P2D_base::getTwoPhaseAdvectionOperator          )
-        .def("getTwoPhaseInvScaledLaplaceOperator"  , &RANS2P2D_base::getTwoPhaseInvScaledLaplaceOperator   )
-        .def("getTwoPhaseScaledMassOperator"        , &RANS2P2D_base::getTwoPhaseScaledMassOperator         );
+      .def(py::init(&proteus::newRANS2P2D))
+      .def("calculateResidual"                    , &RANS2P2D_base::calculateResidual                     )
+      .def("calculateJacobian"                    , &RANS2P2D_base::calculateJacobian                     )
+      .def("calculateVelocityAverage"             , &RANS2P2D_base::calculateVelocityAverage              )
+      .def("getTwoPhaseAdvectionOperator"         , &RANS2P2D_base::getTwoPhaseAdvectionOperator          )
+      .def("getTwoPhaseInvScaledLaplaceOperator"  , &RANS2P2D_base::getTwoPhaseInvScaledLaplaceOperator   )
+      .def("getTwoPhaseScaledMassOperator"        , &RANS2P2D_base::getTwoPhaseScaledMassOperator         )
+      .def("step6DOF"        , &RANS2P2D_base::step6DOF);
 }

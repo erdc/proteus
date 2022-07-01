@@ -21,6 +21,9 @@ shockCapturing = ResGradQuad_SC(coefficients,nd,
                                lag=True)
 numericalFluxType = Advection_DiagonalUpwind_Diffusion_SIPG_exterior
 nnx=41; nny=41
+hex = False
+quad = False
+triangleFlag=0
 tnList=[old_div(float(i),40.0) for i in range(11)]
 matrix = SparseMatrix
 multilevelLinearSolver = KSP_petsc4py#LU

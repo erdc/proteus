@@ -23,6 +23,8 @@ timeIntegration = TimeIntegration.NoIntegration
 nLevels = ct.nLevels
 restrictFineSolutionToAllMeshes = mesh.restrictFineSolutionToAllMeshes
 nn = ct.nn
+mesh.nn = nn
+mesh.triangleFlag = 0
 
 from petsc4py import PETSc
 OptDB = PETSc.Options()

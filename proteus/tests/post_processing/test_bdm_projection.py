@@ -125,23 +125,8 @@ class TestBDM2Reference1(object):
         self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
 
         self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
-
+        #np.save(os.path.join(self.scriptdir,rel_path_2), self.bdm2_obj.q[('velocity',0)])
         np.testing.assert_almost_equal(self.bdm2_obj.q[('velocity',0)],bdm_values,decimal=6)
-
-    def test_BDM2_reference_triangle_full_not_in_space(self):
-        rel_path_1 = "comparison_files/bdm_bdy_func_values_trig.npy"
-        rel_path_2 = "comparison_files/bdm_func_values_trig.npy"
-        bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
-        bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
-
-        self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values
-        self.bdm2_obj.q[('velocity',0)] = bdm_values
-
-        self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
-
-        rel_path_3 = "comparison_files/trig_velocity_rep.npy"
-        comparison_vec = np.load(os.path.join(self.scriptdir,rel_path_3))
-        np.testing.assert_almost_equal(self.bdm2_obj.q[('velocity',0)],comparison_vec,decimal=6)
 
 
 if __name__ == '__main__':

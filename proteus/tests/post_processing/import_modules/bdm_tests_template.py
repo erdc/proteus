@@ -18,6 +18,8 @@ p.polyfile = "reference_triangle"
 p.rdomain.writePoly(p.polyfile)
 n.triangleOptions = "Yp"
 
+n.triangleFlag=0 
+
 p.nc = 1
 
 class velEx(object):

@@ -22,8 +22,9 @@ elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 nnx = 11
 nny = 11
 nnz = 11
+hex = False
+quad = False
 #if unstructured would need triangleOptions flag to be set
-
 
 #number of levels in mesh
 nLevels = 1

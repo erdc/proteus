@@ -97,9 +97,9 @@ EXTENSIONS_TO_BUILD = [
                language='c++',
                include_dirs=[numpy.get_include(),'include',
                              'proteus','proteus/MeshAdaptPUMI']+
-               PROTEUS_SCOREC_INCLUDE_DIRS,
-               library_dirs=PROTEUS_SCOREC_LIB_DIRS,
-               libraries=PROTEUS_SCOREC_LIBS,
+               PROTEUS_SCOREC_INCLUDE_DIRS+PROTEUS_MPI_INCLUDE_DIRS,
+               library_dirs=PROTEUS_SCOREC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS,
+               libraries=PROTEUS_SCOREC_LIBS+PROTEUS_MPI_LIBS,
                extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
                extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
     Extension(
@@ -638,9 +638,14 @@ EXTENSIONS_TO_BUILD = [
             "proteus/equivalent_polynomials_utils.h",
             "proteus/equivalent_polynomials_coefficients.h",
             'proteus/equivalent_polynomials_coefficients_quad.h'],
-        include_dirs=get_xtensor_include()+PROTEUS_MPI_INCLUDE_DIRS,
-        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14'],
-        libraries=PROTEUS_MPI_LIBS,
+        include_dirs=get_xtensor_include() + PROTEUS_MPI_INCLUDE_DIRS,
+        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14','-fopenmp'],#,'-DXTENSOR_USE_OPENMP'],
+        library_dirs=PROTEUS_MPI_LIB_DIRS+[PROTEUS_LAPACK_LIB_DIR,
+                      PROTEUS_BLAS_LIB_DIR],
+        libraries=PROTEUS_MPI_LIBS+['m',
+                                    PROTEUS_LAPACK_LIB,
+                                    PROTEUS_BLAS_LIB],
+        extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS+['-fopenmp'],
         language='c++'),
     Extension(
         'mprans.cRANS2P_IB',
@@ -662,8 +667,13 @@ EXTENSIONS_TO_BUILD = [
             "proteus/equivalent_polynomials_coefficients.h",
             'proteus/equivalent_polynomials_coefficients_quad.h'],
         include_dirs=get_xtensor_include() + PROTEUS_MPI_INCLUDE_DIRS,
-        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14'],
-        libraries=PROTEUS_MPI_LIBS,
+        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14','-fopenmp'],#,'-DXTENSOR_USE_OPENMP'],
+        library_dirs=PROTEUS_MPI_LIB_DIRS+[PROTEUS_LAPACK_LIB_DIR,
+                      PROTEUS_BLAS_LIB_DIR],
+        libraries=PROTEUS_MPI_LIBS+['m',
+                                    PROTEUS_LAPACK_LIB,
+                                    PROTEUS_BLAS_LIB],
+        extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS+['-fopenmp'],
         language='c++'),
     Extension(
         'mprans.cRDLS',
@@ -750,7 +760,7 @@ EXTENSIONS_TO_BUILD = [
 
 def setup_given_extensions(extensions):
     setup(name='proteus',
-          version='1.7.5dev',
+          version='1.8.1',
           classifiers=[
               'Development Status :: 4 - Beta',
               'Environment :: Console',

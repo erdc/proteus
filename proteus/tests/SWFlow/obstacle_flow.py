@@ -77,7 +77,12 @@ nny = None
 
 # hack for using same mesh for tests, don't remove
 if opts.he==4.0:
-    domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"for_testMeshes/obstacle"
+    from shutil import copyfile
+    saved_mesh=os.path.join(os.path.dirname(os.path.abspath(__file__)), "for_testMeshes")
+    copyfile(os.path.join(saved_mesh,"obstacle.poly"), "obstacle.poly")
+    copyfile(os.path.join(saved_mesh,"obstacle.ele"), "obstacle.ele")
+    copyfile(os.path.join(saved_mesh,"obstacle.node"), "obstacle.node")
+    domain.polyfile="obstacle"
 
 ##########################################
 # DEFINE INITIAL CONSTANTS AND FUNCTIONS #
@@ -117,12 +122,12 @@ class y_mom_at_t0(object):
 
 
 """
-heta and hw are needed for the modified green naghdi equations.
-For initial conditions, heta -> h^2 and hw -> h^2*div(u).
-Note that the BC flags for the heta and hw should be same as h.
-For more details see: 'Robust explicit relaxation techinque for solving
-the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
-JCP 2019
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
 """
 
 class heta_at_t0(object):
@@ -177,12 +182,14 @@ initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),
                      'h_times_eta': heta_at_t0(),
-                     'h_times_w': hw_at_t0()}
+                     'h_times_w': hw_at_t0(),
+                     'h_times_beta':Zero()}
 boundaryConditions = {'water_height': h_DBC,
                       'x_mom': x_mom_DBC,
                       'y_mom': y_mom_DBC,
                       'h_times_eta': heta_DBC,
-                      'h_times_w': hw_DBC}
+                      'h_times_w': hw_DBC,
+                      'h_times_beta':x_mom_DBC}
 # if want to use reflecting conditions on all boundaries switch above to
 # boundaryConditions = {'water_height': lambda x, flag: None,
 #                       'x_mom': lambda x, flag: None,
@@ -203,5 +210,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               reflectingBCs=opts.reflecting_BCs,
                                               bathymetry=bathymetry_function,
                                               genMesh=False)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = opts.mannings

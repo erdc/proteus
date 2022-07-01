@@ -23,11 +23,10 @@ platform_blas_h = None
 platform_lapack_h = None
 platform_lapack_integer = None
 if sys.platform == 'darwin':
-    platform_extra_link_args = ['-framework', 'Accelerate']
-    platform_lapack_integer = '__CLPK_integer'
-    platform_blas_h = r'<Accelerate/Accelerate.h>'
-    platform_lapack_h = r'<Accelerate/Accelerate.h>'
-    platform_extra_compile_args = ['-flax-vector-conversions','-DPETSC_INCLUDE_AS_C','-DPETSC_SKIP_COMPLEX']
+    platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C', '-DPETSC_SKIP_COMPLEX']
+    platform_extra_link_args = ['-L'+PROTEUS_LIB_DIR,'-Wl,-rpath,' + PROTEUS_LIB_DIR]
+    platform_blas_h = r'"proteus_blas.h"'
+    platform_lapack_h = r'"proteus_lapack.h"'
     major,minor = platform.mac_ver()[0].split('.')[0:2]
     os.environ["MACOSX_DEPLOYMENT_TARGET"]= major+'.'+minor
 elif sys.platform.startswith('linux'):
@@ -150,7 +149,7 @@ PROTEUS_SCOREC_LIBS = [
     'parmetis',
     'metis',
     'sam',
-    'bz2']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
+    'bz2']+PROTEUS_PETSC_LIBS
 
 PROTEUS_SCOREC_EXTRA_LINK_ARGS = []
 PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = ['-g','-DMESH_INFO']

@@ -2,6 +2,7 @@ import numpy as np
 from proteus import Domain, Context, Comm
 from proteus.mprans import SpatialTools as st
 import proteus.TwoPhaseFlow.TwoPhaseFlowProblem as TpFlow
+import proteus.TwoPhaseFlow.utils.Parameters as Parameters
 from proteus import WaveTools as wt
 from proteus.Profiling import logEvent
 from proteus.mbd import CouplingFSI as fsi
@@ -91,6 +92,11 @@ class P_IC:
                           +(rho_1 -rho_0)*(smoothedHeaviside_integral(smoothing,phi_L)
                                                 -smoothedHeaviside_integral(smoothing,phi)))
         return p
+
+class Zero_IC:
+    def uOfXT(self, x, t):
+        return 0.0
+
 class U_IC:
     def uOfXT(self, x, t):
         return 0.0
@@ -106,15 +112,6 @@ class VF_IC:
 class PHI_IC:
     def uOfXT(self, x, t):
         return x[nd-1] - water_level
-
-# instanciating the classes for *_p.py files
-initialConditions = {'pressure': P_IC(),
-                     'vel_u': U_IC(),
-                     'vel_v': V_IC(),
-                     'vel_w': W_IC(),
-                     'vof': VF_IC(),
-                     'ncls': PHI_IC(),
-                     'rdls': PHI_IC()}
 
 #   ____ _
 #  / ___| |__  _ __ ___  _ __   ___
@@ -175,74 +172,57 @@ domain.geofile = mesh_fileprefix
 # |_| \_|\__,_|_| |_| |_|\___|_|  |_|\___|___/
 # Numerics
 
-outputStepping = TpFlow.OutputStepping(
-    final_time=0.1,
-    dt_init=0.01,
-    dt_output=0.1,
-    nDTout=None,
-    dt_fixed=0.01,
-)
+myTpFlowProblem = TpFlow.TwoPhaseFlowProblem()
+myTpFlowProblem.outputStepping.final_time = 0.1
+myTpFlowProblem.outputStepping.dt_init = 0.01
+myTpFlowProblem.outputStepping.dt_output = 0.1
+myTpFlowProblem.outputStepping.dt_fixed = 0.01
+myTpFlowProblem.outputStepping.archiveAllSteps = True
 
-myTpFlowProblem = TpFlow.TwoPhaseFlowProblem(
-    ns_model=None,
-    ls_model=None,
-    nd=domain.nd,
-    cfl=0.9,
-    outputStepping=outputStepping,
-    structured=False,
-    he=he,
-    nnx=None,
-    nny=None,
-    nnz=None,
-    domain=domain,
-    initialConditions=initialConditions,
-    boundaryConditions=None, # set with SpatialTools,
-    useSuperlu=False,
-)
+myTpFlowProblem.domain = domain
 
+myTpFlowProblem.SystemNumerics.useSuperlu=False
+myTpFlowProblem.SystemNumerics.cfl=0.9
+
+myTpFlowProblem.SystemPhysics.setDefaults()
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelMoveMeshElastic,'move')
+myTpFlowProblem.SystemPhysics.useDefaultModels()
+myTpFlowProblem.SystemPhysics.addModel(Parameters.ParametersModelAddedMass,'addedMass')
+
+myTpFlowProblem.SystemPhysics.movingDomain = True
 # line below needed for relaxation zones
 # (!) hack
-m = myTpFlowProblem.Parameters.Models
-m.rans2p.auxiliaryVariables += domain.auxiliaryVariables['twp']
-myTpFlowProblem.archiveAllSteps = True
+m = myTpFlowProblem.SystemPhysics.modelDict
+m['flow'].auxiliaryVariables += domain.auxiliaryVariables['twp']
 
-myTpFlowProblem.movingDomain = True
+params = myTpFlowProblem.SystemPhysics
 
-params = myTpFlowProblem.Parameters
-
-# MESH PARAMETERS
-params.mesh.genMesh = genMesh
-params.mesh.he = he
+#initialConditions
+myTpFlowProblem.SystemPhysics.modelDict['move'].p.initialConditions['hx']=Zero_IC()
+myTpFlowProblem.SystemPhysics.modelDict['move'].p.initialConditions['hy']=Zero_IC()
+myTpFlowProblem.SystemPhysics.modelDict['move'].p.initialConditions['hz']=Zero_IC()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['p']=P_IC()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['u']=U_IC()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['v']=V_IC()
+myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['w']=W_IC()
+myTpFlowProblem.SystemPhysics.modelDict['vof'].p.initialConditions['vof']=VF_IC()
+myTpFlowProblem.SystemPhysics.modelDict['ncls'].p.initialConditions['phi']=PHI_IC()
+myTpFlowProblem.SystemPhysics.modelDict['rdls'].p.initialConditions['phid']=PHI_IC()
+myTpFlowProblem.SystemPhysics.modelDict['mcorr'].p.initialConditions['phiCorr']=PHI_IC()
+myTpFlowProblem.SystemPhysics.modelDict['addedMass'].p.initialConditions['addedMass']=Zero_IC()
 
 # PHYSICAL PARAMETERS
-params.physical.densityA = rho_0  # water
-params.physical.densityB = rho_1  # air
-params.physical.kinematicViscosityA = nu_0  # water
-params.physical.kinematicViscosityB = nu_1  # air
-params.physical.gravity = np.array(g)
-params.physical.surf_tension_coeff = sigma_01
+params['rho_0'] = rho_0  # water
+params['rho_1'] = rho_1  # air
+params['nu_0'] = nu_0  # water
+params['nu_1'] = nu_1  # air
+params['gravity'] = np.array(g)
+params['surf_tension_coeff'] = sigma_01
 
-# MODEL PARAMETERS
-ind = -1
-m.moveMeshElastic.index = ind+1
-ind += 1
-m.rans2p.index = ind+1
-ind += 1
-m.vof.index = ind+1
-ind += 1
-m.ncls.index = ind+1
-ind += 1
-m.rdls.index = ind+1
-ind += 1
-m.mcorr.index = ind+1
-ind += 1
-m.addedMass.index = ind+1
-ind += 1
-
-m.rans2p.auxiliaryVariables += [system]
-m.rans2p.p.coefficients.eb_bc_penalty_constant = 10.#/nu_0#Re
-m.addedMass.auxiliaryVariables += [system.ProtChAddedMass]
-m.rans2p.p.coefficients.NONCONSERVATIVE_FORM=0.0
+m['flow'].auxiliaryVariables += [system]
+m['flow'].p.coefficients.eb_bc_penalty_constant = 10.#/nu_0#Re
+m['addedMass'].auxiliaryVariables += [system.ProtChAddedMass]
+m['flow'].p.coefficients.NONCONSERVATIVE_FORM=0.0
 max_flag = 0
 max_flag = max(domain.vertexFlags)
 max_flag = max(domain.segmentFlags+[max_flag])
@@ -252,5 +232,5 @@ for s in system.subcomponents:
     if type(s) is fsi.ProtChBody:
         for i in s.boundaryFlags:
             flags_rigidbody[i] = 1
-m.addedMass.p.coefficients.flags_rigidbody = flags_rigidbody
+m['addedMass'].p.coefficients.flags_rigidbody = flags_rigidbody
 

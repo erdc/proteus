@@ -257,3 +257,4 @@ adaptMesh_numIter = 2
 """If the mesh adaption  algorithm is iterative, do this many iterates"""
 
 quad = None
+hex = None

@@ -32,7 +32,6 @@ class TestCable(unittest.TestCase):
         fairlead_body = fsi.ProtChBody(system)
         fairlead_body.ChBody.SetBodyFixed(True)
         mooring = fsi.ProtChMoorings(system=system, mesh=mesh, length=L, nb_elems=nb_elems, d=d, rho=rho, E=E, beam_type=cable_type)
-        mooring.external_forces_manual = True # tri: should work without this line
         # vertical cable
         mooring.setNodesPositionFunction(lambda s: np.array([0., 0., s]), lambda s: np.array([0., 0., 1.]))
         mooring.setNodesPosition()

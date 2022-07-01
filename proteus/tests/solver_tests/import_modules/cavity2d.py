@@ -114,11 +114,12 @@ else:
         #domain.writePoly("mesh")
         #domain.writePLY("mesh")
         #domain.writeAsymptote("mesh")
-        triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+        domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
 
         #logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
-
+domain.MeshOptions.nnx = nnx
+domain.MeshOptions.nny = nny
 
 #boundaryTags=domain.boundaryFlags
 # Time stepping
@@ -161,7 +162,8 @@ if structured is False:
     #domain.writePLY('cavity2D')
     #domain.writePoly('cavity2D')
     domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/../"+"cavity2D"
-    genMesh=False
+    domain.MeshOptions.genMesh=False 
+    domain.MeshOptions.triangleOptions = triangleOptions
 
 
 ns_forceStrongDirichlet = True

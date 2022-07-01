@@ -595,7 +595,7 @@ class Sphere(Shape):
 
         hxi = old_div(radius,(math.sqrt(2.0)*float(nSectors)));
         heta = old_div(radius,(math.sqrt(2.0)*float(nSectors)));
-    #now loop over grains
+        #now loop over grains
         #top half  sphere nodes
         top_nodes = {}
         for ii in range(2*nSectors+1):

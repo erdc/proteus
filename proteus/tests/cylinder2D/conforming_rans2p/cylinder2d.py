@@ -114,8 +114,8 @@ nu = 1.0e-3
 # Gravity
 g = [0.0,0.0]
 
-triangleOptions="pAq30ena"#D=Delaunay gives bad results for this composite meshing approach
-genMesh=False#True
+domain.MeshOptions.triangleOptions="pAq30ena"#D=Delaunay gives bad results for this composite meshing approach
+domain.MeshOptions.genMesh=False#True
 #domain.writePLY('cylinder2D')
 #domain.writePoly('mesh_cylinder2D')
 domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh_cylinder2D"

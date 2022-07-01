@@ -335,6 +335,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ball_velocity = ball_velocity
         self.ball_angular_velocity = ball_angular_velocity
         self.forceTerms = None
+        if(nd == 2):
+            self.variableNames=['u','v']
+        else:
+            self.variableNames= ['u', 'v','w']
+
         if initialize:
             self.initialize()
 
@@ -456,6 +461,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              movingDomain=self.movingDomain)
             self.vectorComponents = [0, 1, 2]
             self.vectorName = "velocity"
+        # DEM particles
+        self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]
+        self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
+        self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
+        self.particle_centroids = np.zeros((self.nParticles, 3), 'd')
 
     def attachModels(self, modelList):
         # level set
@@ -465,20 +475,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_rho = self.model.ebqe[('u', 0)].copy()
         self.q_nu = self.model.q[('u', 0)].copy()
         self.ebqe_nu = self.model.ebqe[('u', 0)].copy()
-        # DEM particles
-        self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]
-        self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
-        self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
-        self.particle_centroids = np.zeros((self.nParticles, 3), 'd')
-        self.particle_signed_distances = np.zeros((self.nParticles,) + self.model.q[('u', 0)].shape, 'd')
-        self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
-        self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
 
         self.phisField = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
         self.ebq_global_phi_s = np.ones_like(self.model.ebq_global[('totalFlux',0)]) * 1.e10
         self.ebq_global_grad_phi_s = np.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
         self.ebq_particle_velocity_s = np.ones(self.model.ebq_global[('velocityAverage',0)].shape[:-1]+(3,),'d') * 1.e10
 
+        # DEM particles
+        self.particle_signed_distances = np.zeros((self.nParticles,) + self.model.q[('u', 0)].shape, 'd')
+        self.particle_signed_distance_normals = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
+        self.particle_velocities = np.zeros((self.nParticles,) + self.model.q[('velocity', 0)].shape[:-1]+(3,), 'd')
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
         # otherwise the sdf are calculated based on the input sdf list for each body
@@ -1892,9 +1898,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
 
         self.setupFieldStrides()
-        # Aux quantity at DOFs to be filled by optimized code (MQL)
-        self.quantDOFs = np.zeros(self.u[0].dof.shape, 'd')
-        self.isBoundary_1D = None
 
         # mql: material parameters defined by a function at quad points
         self.q['density'] = np.zeros(
@@ -1939,6 +1942,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     options.periodicDirichletConditions)
         else:
             self.numericalFlux = None
+        # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.quantDOFs = np.zeros(self.u[0].dof.shape, 'd')
+        self.isBoundary_1D = None
+        
         # set penalty terms
         log("initializing numerical flux penalty")
         self.numericalFlux.penalty_constant = self.coefficients.eb_penalty_constant
@@ -2267,7 +2274,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.wStar_dMatrix = np.zeros(self.nnz_1D)
         #
         if self.isBoundary_1D is None:
-            self.isBoundary_1D = np.zeros(self.numDOFs_1D)
+            self.isBoundary_1D = np.zeros(self.u[0].dof.shape[0])
             argsDict_ = cArgumentsDict.ArgumentsDict()
             argsDict_["mesh_dof"] = self.mesh.nodeArray
             argsDict_["mesh_l2g"] = self.mesh.elementNodesArray
@@ -2549,6 +2556,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["colind_1D"] = self.colind_1D
         argsDict["isBoundary_1D"] = self.isBoundary_1D
         argsDict["INT_BY_PARTS_PRESSURE"] = self.coefficients.INT_BY_PARTS_PRESSURE
+
         self.rans3pf.calculateResidual(
             argsDict,
             self.coefficients.useExact)

@@ -101,7 +101,10 @@ clean:
 
 distclean: clean
 	-rm -f stack.done
+ifdef CONDA_PREFIX
+else
 	-rm -rf ${PROTEUS_PREFIX}
+endif
 	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a proteus/MeshAdaptPUMI/*.so
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 	-rm -rf build proteus/richards/*.pyc proteus/richards/*.so proteus/richards/*.a
@@ -115,7 +118,7 @@ stack/hit/bin/hit:
 	cd stack && git submodule update --init
 	@echo "Adding source cache if not done already"
 	-./stack/hit/bin/hit init-home
-	-./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_src --objects="source"
+	-./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_src --objects="source"
 
 stack:
 	@echo "Updating stack submodule"
@@ -128,7 +131,7 @@ air-water-vv:
 bld_cache: stack/hit/bin/hit
 	@echo "Trying to add build cache for your arch"
 	HASHSTACK_BLD = $(shell lsb_release -ir | python3 -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
-	./stack/hit/bin/hit remote add http://levant.hrwallingford.com/hashdist_${HASHSTACK_BLD} --objects="build"
+	./stack/hit/bin/hit remote add https://proteus.cee.lsu.edu/hashdist_${HASHSTACK_BLD} --objects="build"
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python3 stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
@@ -194,6 +197,7 @@ develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
+	${PROTEUS_ENV} pip install py2gmsh pytest pytest-xdist pytest-cov tables future
 	${PROTEUS_ENV} ${PROTEUS_DEVELOP_BUILD_CMD}
 	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
@@ -354,9 +358,9 @@ endif
 	printf "c.LocalEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 	printf "c.MPIEngineSetLauncher.engine_cmd = ['python', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 ifdef CONDA_PREFIX
-	cd ${CONDA_PREFIX}/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+	cd ${CONDA_PREFIX}/lib/python3.9/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
 else
-	cd linux/lib/python3.7/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+	cd linux/lib/python3.9/site-packages/notebook/static/components/react && wget https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
 endif
 
 jupyterlab:

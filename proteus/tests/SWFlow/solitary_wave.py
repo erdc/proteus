@@ -32,8 +32,9 @@ opts = Context.Options([
 # DOMAIN AND MESH #
 ###################
 L = (25.0, 2.0)
+origin = [0, 0, 0]
 refinement = opts.refinement
-rectangle = RectangularDomain(L=L, x=[0, 0, 0])
+rectangle = RectangularDomain(L=L, x=origin)
 
 # CREATE REFINEMENT #
 nnx0 = 6
@@ -62,9 +63,11 @@ xs = 5.0
 r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
 c = np.sqrt(g * (h0 + alpha))
 
+
 def solitary_wave(x, t):
     sechSqd = (1.0 / np.cosh(r * (x - xs - c * t)))**2
     return alpha * sechSqd
+
 
 def bathymetry_function(X):
     x = X[0]
@@ -93,14 +96,16 @@ class y_mom_at_t0(object):
     def uOfXT(self, X, t):
         return 0.
 
+
 """
-heta and hw are needed for the modified green naghdi equations.
-For initial conditions, heta -> h^2 and hw -> h^2div(u).
-Note that the BCs for the heta and hw should be same as h.
-For more details see: 'Robust explicit relaxation techinque for solving
-the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
-JCP 2019
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
 """
+
 
 class heta_at_t0(object):
     def uOfXT(self, X, t):
@@ -119,6 +124,8 @@ class hw_at_t0(object):
 ###################################
 #    FOR ANALYTICAL SOLUTIONS     #
 ###################################
+
+
 class Zero(object):
     def uOfXT(self, x, t):
         return 0.0
@@ -128,20 +135,26 @@ class water_height_at_tfinal(object):
     def uOfXT(self, X, t):
         return h0 + solitary_wave(X[0], opts.final_time)
 
+
 ###############################
 #     BOUNDARY CONDITIONS     #
 ###############################
-X_coords = (0.0, L[0])
-Y_coords = (0.0, L[1])
+X_endPoints = (origin[0], L[0])
+Y_endPoints = (origin[1], L[1])
+
 
 def x_mom_DBC(X, flag):
-    if X[0] == X_coords[0] or X[0] == X_coords[1]:
+    if X[0] == X_endPoints[0] or X[0] == X_endPoints[1]:
         return lambda x, t: 0.0
+
+
 def y_mom_DBC(X, flag):
-    if X[1] == Y_coords[0] or X[1] == Y_coords[1]:
+    if X[1] == Y_endPoints[0] or X[1] == Y_endPoints[1]:
         return lambda x, t: 0.0
+
+
 def hbeta_DBC(X, flag):
-        return lambda x, t: 0.0
+    return lambda x, t: 0.0
 
 # ********************************** #
 # ***** Create mySWFlowProblem ***** #

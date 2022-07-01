@@ -10,6 +10,7 @@ from proteus cimport cmeshTools
 from proteus.partitioning cimport (c_partitionElements,
                                    c_partitionNodes,
                                    c_partitionNodesFromTetgenFiles,
+                                   c_partitionNodesFromTriangleFiles,
                                    buildQuadraticSubdomain2GlobalMappings_1d,
                                    buildQuadraticSubdomain2GlobalMappings_2d,
                                    buildQuadraticSubdomain2GlobalMappings_3d,
@@ -67,6 +68,26 @@ def partitionNodesFromTetgenFiles(Comm comm, object filebase, int indexBase, int
     if not isinstance(filebase, bytes):
         filebase = filebase.encode()
     c_partitionNodesFromTetgenFiles(comm.ob_mpi,
+                                    <const char*>(<char*>filebase),
+                                    indexBase,
+                                    cmesh.mesh,
+                                    nLayersOfOverlap)
+    return (
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.elementOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nElements_global]> cmesh.mesh.elementNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.nodeOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nNodes_global]> cmesh.mesh.nodeNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.elementBoundaryOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nElementBoundaries_global]> cmesh.mesh.elementBoundaryNumbering_subdomain2global),
+        np.asarray(<int[:comm.size+1]> cmesh.mesh.edgeOffsets_subdomain_owned),
+        np.asarray(<int[:cmesh.mesh.subdomainp.nEdges_global]> cmesh.mesh.edgeNumbering_subdomain2global)
+    )
+
+def partitionNodesFromTriangleFiles(Comm comm, object filebase, int indexBase, int nLayersOfOverlap, cmeshTools.CMesh cmesh, cmeshTools.CMesh subdomain_cmesh):
+    cmesh.mesh.subdomainp = &subdomain_cmesh.mesh
+    if not isinstance(filebase, bytes):
+        filebase = filebase.encode()
+    c_partitionNodesFromTriangleFiles(comm.ob_mpi,
                                     <const char*>(<char*>filebase),
                                     indexBase,
                                     cmesh.mesh,

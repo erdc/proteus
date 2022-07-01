@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from nose.tools import eq_ as eq
-from nose.tools import ok_ as ok
 import subprocess
 import os
 import pytest
@@ -34,7 +32,3 @@ def test_MeshAdaptRestart_withRedistancing(verbose=0):
             if(line1 != line2):
                 pytest.fail("pressure gauge values are not the same!\n")
             
-if __name__ == '__main__':
-    import nose
-    nose.main(defaultTest='test_MeshAdaptRestart_withRedistancing:test_MeshAdaptRestart_generateMesh, test_MeshAdaptRestart_withRedistancing:test_MeshAdaptRestart_adaptiveTime_BackwardEuler_baseline_withRedistancing, test_MeshAdaptRestart_withRedistancing:test_MeshAdaptRestart_adaptiveTime_BackwardEuler_withRedistancing, test_MeshAdaptRestart_withRedistancing:test_MeshAdaptRestart_withRedistancing')
-

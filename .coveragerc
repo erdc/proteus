@@ -1,0 +1,13 @@
+[run]
+#plugins = Cython.Coverage # not working for now; excluding cython source below for now
+source = proteus
+omit =
+  */config/*
+  */test_utils/*
+  */tests/*
+  #cythonized modules, not currently showing coverage but tests are running
+  */proteus/WaveTools.py
+  */proteus/BoundaryConditions.py
+  */proteus/SpatialTools.py
+  */proteus/mprans/BoundaryConditions.py
+  */proteus/mprans/SpatialTools.py

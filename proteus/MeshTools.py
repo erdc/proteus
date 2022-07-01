@@ -17,9 +17,15 @@ from builtins import object
 from .EGeometry import *
 import numpy as np
 import array
+import h5py
+import os
+from xml.etree import ElementTree as ET
 from .Archiver import *
 from .LinearAlgebraTools import ParVec_petsc4py
 from .Profiling import logEvent,memory
+from . import Domain
+from . import Comm
+from subprocess import check_call, check_output
 
 class Node(object):
     """A numbered point in 3D Euclidean space
@@ -672,19 +678,37 @@ class Mesh(object):
             logEvent("base {0:d}".format(base))
             logEvent("nLayersOfOverlap {0:d}".format(nLayersOfOverlap))
             logEvent("parallelPartitioningType {0:d}".format(parallelPartitioningType))
-            (self.elementOffsets_subdomain_owned,
-             self.elementNumbering_subdomain2global,
-             self.nodeOffsets_subdomain_owned,
-             self.nodeNumbering_subdomain2global,
-             self.elementBoundaryOffsets_subdomain_owned,
-             self.elementBoundaryNumbering_subdomain2global,
-             self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global) = cpartitioning.partitionNodesFromTetgenFiles(comm.comm.tompi4py(),
-                                                                                                filebase,
-                                                                                                base,
-                                                                                                nLayersOfOverlap,
-                                                                                                self.cmesh,
-                                                                                                self.subdomainMesh.cmesh)
+            if isinstance(self,TetrahedralMesh):
+                    (self.elementOffsets_subdomain_owned,
+                     self.elementNumbering_subdomain2global,
+                     self.nodeOffsets_subdomain_owned,
+                     self.nodeNumbering_subdomain2global,
+                     self.elementBoundaryOffsets_subdomain_owned,
+                     self.elementBoundaryNumbering_subdomain2global,
+                     self.edgeOffsets_subdomain_owned,
+                     self.edgeNumbering_subdomain2global) = cpartitioning.partitionNodesFromTetgenFiles(comm.comm.tompi4py(),
+                                                                                                                filebase,
+                                                                                                                base,
+                                                                                                                nLayersOfOverlap,
+                                                                                                                self.cmesh,
+                                                                                                                self.subdomainMesh.cmesh)
+            elif isinstance(self,TriangularMesh):
+                    (self.elementOffsets_subdomain_owned,
+                     self.elementNumbering_subdomain2global,
+                     self.nodeOffsets_subdomain_owned,
+                     self.nodeNumbering_subdomain2global,
+                     self.elementBoundaryOffsets_subdomain_owned,
+                     self.elementBoundaryNumbering_subdomain2global,
+                     self.edgeOffsets_subdomain_owned,
+                     self.edgeNumbering_subdomain2global) = cpartitioning.partitionNodesFromTriangleFiles(comm.comm.tompi4py(),
+                                                                                                                filebase,
+                                                                                                                base,
+                                                                                                                nLayersOfOverlap,
+                                                                                                                self.cmesh,
+                                                                                                                self.subdomainMesh.cmesh)
+            else:
+                assert 0,"can't partition non-simplex mesh"
+
         else:
             logEvent("Starting element partitioning")
             (self.elementOffsets_subdomain_owned,
@@ -774,18 +798,15 @@ class Mesh(object):
                                        "Precision":"8",
                                        "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+str(tCount),
-                                                    offsets=self.globalMesh.elementOffsets_subdomain_owned,
-                                                    data=self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+str(tCount),
-                                                   offsets=self.globalMesh.nodeOffsets_subdomain_owned,
-                                                   data=self.nodeArray[:self.nNodes_owned])
-                    else:
-                        assert False, "global_sync not supported  with pytables"
+                    elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_sync('elements'+name+str(tCount),
+                                               offsets=self.globalMesh.elementOffsets_subdomain_owned,
+                                               data=self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                        ar.create_dataset_sync('nodes'+name+str(tCount),
+                                               offsets=self.globalMesh.nodeOffsets_subdomain_owned,
+                                               data=self.nodeArray[:self.nNodes_owned])
                 else:
                     assert False, "global_sync not  supported with text heavy data"
             else:
@@ -805,18 +826,11 @@ class Mesh(object):
                                        "Precision":"8",
                                        "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount),data=self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount),data=self.nodeArray)
-                    else:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
+                    elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount),data=self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount),data=self.nodeArray)
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -844,18 +858,11 @@ class Mesh(object):
                                      "Precision":"8",
                                      "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+str(ar.comm.rank())+name+str(tCount)
-                        ebnodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('elementBoundaries'+str(ar.comm.rank())+name+str(tCount), data = self.elementBoundaryNodesArray)
-                            #ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
-                    else:
-                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+str(tCount)
-                        ebnodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'elementBoundaries'+name+str(tCount),self.elementBoundaryNodesArray)
-                            #ar.hdfFile.create_array("/",'nodes'+name+`tCount`,self.nodeArray)
+                    ebelements.text = ar.hdfFilename+":/elementBoundaries"+str(ar.comm.rank())+name+str(tCount)
+                    ebnodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elementBoundaries'+str(ar.comm.rank())+name+str(tCount), data = self.elementBoundaryNodesArray)
+                        #ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
                 else:
                     SubElement(ebelements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elementBoundaries"+name+".txt"})
                     SubElement(ebnodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -885,18 +892,11 @@ class Mesh(object):
                                       "Dimensions":"%i" % (self.nElements_owned,)})
 
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+str(ar.comm.rank())+name+str(tCount)
-                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+str(ar.comm.rank())+name+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('nodeMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.create_dataset_async('cellMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
-                    else:
-                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+str(tCount)
-                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'nodeMapL2G'+name+str(tCount),self.globalMesh.nodeNumbering_subdomain2global)
-                            ar.hdfFile.create_array("/",'cellMapL2G'+name+str(tCount),self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                    nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+str(ar.comm.rank())+name+str(tCount)
+                    elemMap.text = ar.hdfFilename+":/cellMapL2G"+str(ar.comm.rank())+name+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('nodeMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.nodeNumbering_subdomain2global)
+                        ar.create_dataset_async('cellMapL2G'+str(ar.comm.rank())+name+str(tCount), data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                 else:
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodeMapL2G"+name+".txt"})
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/cellMapL2G"+name+".txt"})
@@ -937,17 +937,14 @@ class Mesh(object):
                                                            "DataType":"Int",
                                                            "Dimensions":"%i" % (self.globalMesh.nElementBoundaries_global,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
-                        ar.create_dataset_sync("nodeMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
-                        ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
-                        if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_t"+str(tCount)
-                            ar.create_dataset_sync("elementBoundaryMaterialTypes"+"_t"+str(tCount), offsets = self.globalMesh.elementBoundaryOffsets_subdomain_owned, data=self.elementBoundaryMaterialTypes[:self.nElementBoundaries_owned])
-                    else:
-                        assert False, "global_sync not supported  with pytables"
+                    nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
+                    ar.create_dataset_sync("nodeMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                    ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
+                    if EB:
+                        ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
+                        elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_t"+str(tCount)
+                        ar.create_dataset_sync("elementBoundaryMaterialTypes"+"_t"+str(tCount), offsets = self.globalMesh.elementBoundaryOffsets_subdomain_owned, data=self.elementBoundaryMaterialTypes[:self.nElementBoundaries_owned])
                 else:
                     assert False, "global_sync  not  supported with text heavy data"
             else:
@@ -981,25 +978,14 @@ class Mesh(object):
                                                            "DataType":"Int",
                                                            "Dimensions":"%i" % (self.nElementBoundaries_global,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                        ar.create_dataset_async("nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.nodeMaterialTypes)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                        ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
-                        if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                            ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
-                    else:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                        ar.hdfFile.create_array("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                        ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
-                        if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                            #ar.hdfFile.create_array("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+str(tCount)
-                            ar.hdfFile.create_array("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
+                    nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                    ar.create_dataset_async("nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.nodeMaterialTypes)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                    ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
+                    if EB:
+                        ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                        elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                        ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
                 else:
                     numpy.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.nodeMaterialTypes)
                     SubElement(nodeMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"})
@@ -1479,7 +1465,6 @@ class Mesh(object):
         cmdOut = open(cmdfile,'w')
         cmdOut.write(plotcommand)
         cmdOut.close()
-        import os
         print('Calling matlab to view mesh')
         os.execlp('matlab',
                   'matlab',
@@ -1509,7 +1494,6 @@ class Mesh(object):
         cmdOut = open(cmdfile,'w')
         cmdOut.write(plotcommand)
         cmdOut.close()
-        import os
         print('Calling matlab to view mesh')
         os.execlp('matlab',
                   'matlab',
@@ -3283,22 +3267,19 @@ class Mesh2DM(Mesh):
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+str(tCount),
-                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
-                                                   data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+str(tCount),
-                                                   offsets = self.globalMesh.nodeOffsets_subdomain_owned,
-                                                   data = self.nodeArray[:self.nNodes_owned])
-                            ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
-                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
-                                                   data = self.elementMaterialTypes[:self.nElements_owned])
-                    else:
-                        assert False, "global_sync with pytables not supported"
+                    elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_sync('elements'+name+str(tCount),
+                                               offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                               data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                        ar.create_dataset_sync('nodes'+name+str(tCount),
+                                               offsets = self.globalMesh.nodeOffsets_subdomain_owned,
+                                               data = self.nodeArray[:self.nNodes_owned])
+                        ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
+                                               offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                               data = self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     assert False, "global_sync with text heavy data not supported"
             else:
@@ -3326,22 +3307,13 @@ class Mesh2DM(Mesh):
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
-                            ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
-                    else:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
-                            ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                    elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -3650,22 +3622,19 @@ class Mesh3DM(Mesh):
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_owned,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_sync('elements'+name+str(tCount),
-                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
-                                                   data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
-                            ar.create_dataset_sync('nodes'+name+str(tCount),
-                                                   offsets = self.globalMesh.nodeOffsets_subdomain_owned,
-                                                   data = self.nodeArray[:self.nNodes_owned])
-                            ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
-                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
-                                                   data = self.elementMaterialTypes[:self.nElements_owned])
-                    else:
-                        assert False, "global_sync  not supported with pytables"
+                    elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_sync('elements'+name+str(tCount),
+                                               offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                               data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                        ar.create_dataset_sync('nodes'+name+str(tCount),
+                                               offsets = self.globalMesh.nodeOffsets_subdomain_owned,
+                                               data = self.nodeArray[:self.nNodes_owned])
+                        ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
+                                               offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                               data = self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     assert False, "global_sync not supported  with text heavy data"
             else:
@@ -3696,22 +3665,13 @@ class Mesh3DM(Mesh):
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
                 if ar.hdfFile is not None:
-                    if ar.has_h5py:
-                        elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
-                        if init or meshChanged:
-                            ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
-                            ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
-                            ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
-                    else:
-                        elements.text = ar.hdfFilename+":/elements"+name+str(tCount)
-                        nodes.text = ar.hdfFilename+":/nodes"+name+str(tCount)
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                        if init or meshChanged:
-                            ar.hdfFile.create_array("/",'elements'+name+str(tCount),self.elementNodesArray[:self.nElements_owned])
-                            ar.hdfFile.create_array("/",'nodes'+name+str(tCount),self.nodeArray)
-                            ar.hdfFile.create_array("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                    elements.text = ar.hdfFilename+":/elements"+str(ar.comm.rank())+name+str(tCount)
+                    nodes.text = ar.hdfFilename+":/nodes"+str(ar.comm.rank())+name+str(tCount)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+str(ar.comm.rank())+name+str(tCount), data = self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+str(ar.comm.rank())+name+str(tCount), data = self.nodeArray)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+str(ar.comm.rank())+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
                 else:
                     SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                     SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -3829,6 +3789,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
         self.buildFromC(self.cmultilevelMesh)
         logEvent("partitionMesh")
         self.meshList[0].partitionMeshFromFiles(filebase,base,nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+
     def refine(self):
         self.meshList.append(TetrahedralMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
@@ -4778,13 +4739,6 @@ Number of nodes : %d\n""" % (self.nElements_global,
         self.finalize()
         return childrenDict
 
-
-    def generateQuadrialteralMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
-        ''' WIP - This function needs to be constructed to allow MultilevelQuadrilateralMesh
-            to run using C.  Implementing this will require some work to the mesh.cpp module. '''
-        pass
-
-
     def finalize(self):
         ''' WIP '''
         self.buildLists()
@@ -4995,6 +4949,29 @@ class MultilevelTriangularMesh(MultilevelMesh):
         self.buildFromC(self.cmultilevelMesh)
         self.elementParents = None
         self.elementChildren=[]
+
+    def generatePartitionedMeshFromTriangleFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
+                                               parallelPartitioningType=MeshParallelPartitioningTypes.node):
+        from . import cmeshTools
+        if filebase==None:
+            filebase="mesh"
+        assert(refinementLevels==1)
+        assert(parallelPartitioningType==MeshParallelPartitioningTypes.node)
+        assert(nLayersOfOverlap<=1)
+        mesh0.cmesh = cmeshTools.CMesh()
+        #blow away or just trust garbage collection
+        self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
+        self.meshList = []
+        self.elementParents = None
+        self.cmultilevelMesh = None
+        self.meshList.append(mesh0)
+        logEvent("cmeshTools.CMultilevelMesh")
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        logEvent("buildFromC")
+        self.buildFromC(self.cmultilevelMesh)
+        logEvent("partitionMesh")
+        self.meshList[0].partitionMeshFromFiles(filebase,base,nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+
 
     def refine(self):
         self.meshList.append(TriangularMesh())
@@ -5845,8 +5822,6 @@ class MultilevelSimplicialMesh(MultilevelMesh):
 ## @}
 
 ###utility functions for reading meshes from Xdmf
-from xml.etree import ElementTree as ET
-import tables,os
 
 def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=0):
     """Try to find the element of the xml tree xmf that holds a uniform
@@ -5918,7 +5893,7 @@ def readUniformElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topolog
     entry = Topology[0].text.split(':')[-1]
     logEvent("Reading  elementNodesArray from %s " % entry,3)
 
-    elementNodesArray = hdf5.get_node(entry).read()
+    elementNodesArray = hdf5["/"+entry][:]
     assert elementNodesArray.shape[1] == nNodes_element
     nElements_global = elementNodesArray.shape[0]
     logEvent("nElements_global,nNodes_element= (%d,%d) " % (nElements_global,nNodes_element),3)
@@ -5948,7 +5923,7 @@ def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyi
     entry = Topology[0].text.split(':')[-1]
     logEvent("Reading xdmf_topology from %s " % entry,3)
 
-    xdmf_topology = hdf5.get_node(entry).read()
+    xdmf_topology = hdf5["/"+entry][:]
     #build elementNodesArray and offsets now
     nElements_global = 0
     i = 0
@@ -5979,7 +5954,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
 
     :return: a BasicMeshInfo object with the minimal information read
     
-    """    
+    """
     # start trying to read an xdmf archive with name xmf_archive_base.xmf
     # assumes heavy_file_base.h5 has heavy data
     # root Element is Xdmf
@@ -6029,7 +6004,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     MeshInfo = BasicMeshInfo()
 
     xmf = ET.parse(xmf_archive_base+'.xmf')
-    hdf5= tables.open_file(heavy_file_base+'.h5',mode="r")
+    hdf5= h5py.File(heavy_file_base+'.h5',"r")
     assert hasHDF5
 
     Grid = findXMLgridElement(xmf,MeshTag,id_in_collection=-1,verbose=verbose)
@@ -6040,13 +6015,13 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     entry = Geometry[0].text.split(':')[-1]
     logEvent("Reading nodeArray from %s " % entry,3)
 
-    MeshInfo.nodeArray = hdf5.get_node(entry).read()
+    MeshInfo.nodeArray = hdf5["/"+entry][:]
     MeshInfo.nNodes_global = MeshInfo.nodeArray.shape[0]
 
     if NodeMaterials is not None:
         entry = NodeMaterials[0].text.split(':')[-1]
         logEvent("Reading nodeMaterialTypes from %s " % entry,4)
-        MeshInfo.nodeMaterialTypes = hdf5.get_node(entry).read()
+        MeshInfo.nodeMaterialTypes = hdf5["/"+entry][:]
     else:
         MeshInfo.nodeMaterialTypes = np.zeros((MeshInfo.nNodes_global,),'i')
 
@@ -6073,7 +6048,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
     if ElementMaterials is not None:
         entry = ElementMaterials[0].text.split(':')[-1]
         logEvent("Reading elementMaterialTypes from %s " % entry,3)
-        MeshInfo.elementMaterialTypes = hdf5.get_node(entry).read()
+        MeshInfo.elementMaterialTypes = hdf5["/"+entry][:]
 
     else:
         MeshInfo.elementMaterialTypes = np.zeros((MeshInfo.nElements_global,),'i')
@@ -6576,6 +6551,8 @@ class MeshOptions(object):
         self.nLayersOfOverlapForParallel = 1
         self.triangleOptions = None # defined when setTriangleOptions called
         self.nLevels = 1
+        self.structured = False
+        self.nn = None
         self.nnx = None
         self.nny = None
         self.nnz = None
@@ -6813,3 +6790,487 @@ def msh2simplex(fileprefix, nd):
         np.savetxt(fileprefix+'.ele', tetrahedra, fmt='%d', header=header, comments='')
 
     logEvent('msh2simplex: finished converting .msh to simplex files')
+
+def generateMesh(physics,numerics,generatePartitionedMeshFromFiles=False):
+    try:
+        meshOptions = physics.domain.MeshOptions
+        assert(not (meshOptions.genMesh == True and
+                    meshOptions.nn == None and 
+                    meshOptions.nnx  == None and
+                    meshOptions.nny == None and
+                    meshOptions.nnz == None and
+                    meshOptions.triangleOptions == None))
+        mlMesh = _generateMesh(physics.domain, meshOptions, generatePartitionedMeshFromFiles)
+    except:
+        meshOptions = numerics
+        meshOptions.genMesh = physics.genMesh
+        mlMesh = _generateMesh(physics.domain, meshOptions, generatePartitionedMeshFromFiles)
+    return mlMesh
+
+def _generateMesh(domain,meshOptions,generatePartitionedMeshFromFiles=False):
+    # convenience function to generate a mesh using triangle/tetgen/gmsh
+    comm = Comm.get()
+    name = domain.name
+    # this is the perfect place to create a factory function which takes in an instance and outputs a corresponding mesh
+    # support for old-style domain input
+
+    # now generate meshes, could move to Domain and use polymorphism or MeshTools
+    if isinstance(domain, Domain.RectangularDomain):
+        if domain.nd == 1:
+                mlMesh = MultilevelEdgeMesh(meshOptions.nn, 1, 1,
+                                            domain.x[0], 0.0, 0.0,
+                                            domain.L[0], 1.0, 1.0,
+                                            refinementLevels=meshOptions.nLevels,
+                                            nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                            parallelPartitioningType=meshOptions.parallelPartitioningType)
+        elif domain.nd == 2:
+            if (meshOptions.nnx == meshOptions.nny is None):
+                nnx = nny = meshOptions.nn
+            else:
+                nnx = meshOptions.nnx
+                nny = meshOptions.nny
+            logEvent("Building %i x %i rectangular mesh for %s" % (nnx, nny,name))
+
+            if not hasattr(meshOptions, 'quad'):
+                meshOptions.quad = False
+
+            if (meshOptions.quad):
+                mlMesh = MultilevelQuadrilateralMesh(nnx, nny,1,
+                                                                domain.x[0], domain.x[1], 0.0,
+                                                                domain.L[0], domain.L[1],1,
+                                                                refinementLevels=meshOptions.nLevels,
+                                                                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                parallelPartitioningType=meshOptions.parallelPartitioningType)
+            else:
+                fileprefix = domain.polyfile
+                if fileprefix is None:
+                    fileprefix = "regular_{0}x{1}_grid".format(nnx,nny)
+                nbase = 1
+                if hasattr(meshOptions,'triangleFlag') ==True:
+                    triangleFlag = meshOptions.triangleFlag
+                else:
+                    triangleFlag = 0
+                if generatePartitionedMeshFromFiles:
+                    if comm.isMaster():
+                        globalMesh = TriangularMesh()
+                        logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution", memSaved=Profiling.memLast))
+                        memBeforeMesh = Profiling.memLast
+                        logEvent("Generating triangular mesh from regular grid")
+                        globalMesh.generateTriangularMeshFromRectangularGrid(nnx, nny,domain.L[0],domain.L[1],triangleFlag=triangleFlag)
+                        logEvent("Writing triangle files to {0:s}.ele, etc.".format(fileprefix))
+                        globalMesh.writeTriangleFiles(fileprefix, nbase)
+                        globalMesh.cmesh.deleteCMesh()
+                        del globalMesh
+                        import gc
+                        gc.collect()
+                        logEvent(Profiling.memory("After Generating Mesh", className="NumericalSolution", memSaved=memBeforeMesh))
+                        memAfterMesh = Profiling.memLast
+                        logEvent(Profiling.memory("After deleting mesh", className="NumericalSolution", memSaved=memAfterMesh))
+                    comm.barrier()
+                    logEvent(Profiling.memory("Before partitioning", className="NumericalSolution"))
+                    memBeforePart = Profiling.memLast
+                    logEvent("Generating partitioned mesh from Triangle files")
+                    mesh = TriangularMesh()
+                    mlMesh = MultilevelTriangularMesh(0,0,0,skipInit=True,
+                                                      nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=meshOptions.parallelPartitioningType)
+                    mlMesh.generatePartitionedMeshFromTriangleFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                                    nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                    parallelPartitioningType=meshOptions.parallelPartitioningType)
+                    mlMesh.meshList[0].subdomainMesh.nodeArray[:, 0] += domain.x[0]
+                    mlMesh.meshList[0].subdomainMesh.nodeArray[:, 1] += domain.x[1]
+                    logEvent(Profiling.memory("After partitioning", className="NumericalSolution", memSaved=memBeforePart))
+                else:
+                    mlMesh = MultilevelTriangularMesh(nnx, nny,1,
+                                                      domain.x[0], domain.x[1], 0.0,
+                                                      domain.L[0], domain.L[1],1,
+                                                      refinementLevels=meshOptions.nLevels,
+                                                      nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=meshOptions.parallelPartitioningType,
+                                                      triangleFlag=triangleFlag)
+        elif domain.nd == 3:
+            if (meshOptions.nnx == meshOptions.nny == meshOptions.nnz is None):
+                nnx = nny = nnz = meshOptions.nn
+            else:
+                nnx = meshOptions.nnx
+                nny = meshOptions.nny
+                nnz = meshOptions.nnz
+            logEvent("Building %i x %i x %i rectangular mesh for %s" % (nnx, nny,nnz,name))
+            
+            if not hasattr(meshOptions,'NURBS'):
+                meshOptions.NURBS = False
+            if not hasattr(meshOptions, 'hex'):
+                meshOptions.hex = False
+            
+            if (meshOptions.NURBS):
+                mlMesh = MultilevelNURBSMesh(nnx,nny,nnz,
+                                                               meshOptions.px,meshOptions.py,meshOptions.pz,
+                                                               domain.x[0], domain.x[1], domain.x[2],
+                                                               domain.L[0], domain.L[1], domain.L[2],
+                                                               refinementLevels=meshOptions.nLevels,
+                                                               nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                               parallelPartitioningType=meshOptions.parallelPartitioningType)
+            elif (meshOptions.hex):
+                if not hasattr(meshOptions, 'px'):
+                    meshOptions.px = 0
+                    meshOptions.py = 0
+                    meshOptions.pz = 0
+                mlMesh = MultilevelHexahedralMesh(nnx, nny, nnz,
+                                                            meshOptions.px, meshOptions.py,meshOptions.pz,
+                                                            domain.x[0], domain.x[1], domain.x[2],
+                                                            domain.L[0], domain.L[1], domain.L[2],
+                                                            refinementLevels=meshOptions.nLevels,
+                                                            nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                            parallelPartitioningType=meshOptions.parallelPartitioningType)
+            else:
+                fileprefix = domain.polyfile
+                if fileprefix is None:
+                    fileprefix = "regular_{0}x{1}x{2}_grid".format(nnx,nny,nnz)
+                nbase = 1
+                if meshOptions.genMesh:
+                    if generatePartitionedMeshFromFiles:
+                        if comm.isMaster():
+                            globalMesh = TetrahedralMesh()
+                            logEvent(Profiling.memory("Before Generating Mesh", className="NumericalSolution", memSaved=Profiling.memLast))
+                            memBeforeMesh = Profiling.memLast
+                            logEvent("Generating tetrahedral mesh from regular grid")
+                            globalMesh.generateTetrahedralMeshFromRectangularGrid(nnx, nny,nnz,domain.L[0],domain.L[1],domain.L[2])
+                            logEvent("Writing tetgen files to {0:s}.ele, etc.".format(fileprefix))
+                            globalMesh.writeTetgenFiles(fileprefix, nbase)
+                            globalMesh.cmesh.deleteCMesh()
+                            del globalMesh
+                            import gc
+                            gc.collect()
+                            logEvent("Writing tetgen edge files to {0:s}.edge".format(fileprefix))
+                            check_call("rm -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                            check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
+                            check_call("mv -f {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+                            check_call("mv -f {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+                            check_call("mv -f {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
+                            check_call("mv -f {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+                            check_call("mv -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                            logEvent(Profiling.memory("After Generating Mesh", className="NumericalSolution", memSaved=memBeforeMesh))
+                            memAfterMesh = Profiling.memLast
+                            logEvent(Profiling.memory("After deleting mesh", className="NumericalSolution", memSaved=memAfterMesh))
+                        comm.barrier()
+                        logEvent(Profiling.memory("Before partitioning", className="NumericalSolution"))
+                        memBeforePart = Profiling.memLast
+                        logEvent("Generating partitioned mesh from Tetgen files")
+                        mesh = TetrahedralMesh()
+                        mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
+                                                                        nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=meshOptions.parallelPartitioningType)
+                        mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                                        nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=meshOptions.parallelPartitioningType)
+
+                        mlMesh.meshList[0].subdomainMesh.nodeArray[:, 0] += domain.x[0]
+                        mlMesh.meshList[0].subdomainMesh.nodeArray[:, 1] += domain.x[1]
+                        mlMesh.meshList[0].subdomainMesh.nodeArray[:, 2] += domain.x[2]
+                        logEvent(Profiling.memory("After partitioning", className="NumericalSolution", memSaved=memBeforePart))
+                    else:
+                        mlMesh = MultilevelTetrahedralMesh(nnx, nny, nnz,
+                                                                        domain.x[0], domain.x[1], domain.x[2],
+                                                                        domain.L[0], domain.L[1], domain.L[2],
+                                                                        refinementLevels=meshOptions.nLevels,
+                                                                        nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=meshOptions.parallelPartitioningType)
+                else:
+                    mesh = TetrahedralMesh()
+                    mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
+                                                                    nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                    parallelPartitioningType=meshOptions.parallelPartitioningType)
+                    if generatePartitionedMeshFromFiles:
+                        logEvent("Generating partitioned mesh from Tetgen files")
+                        mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                                        nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=meshOptions.parallelPartitioningType)
+                    else:
+                        logEvent("Generating coarse global mesh from Tetgen files")
+                        mesh.generateFromTetgenFiles(fileprefix, nbase,parallel = comm.size() > 1)
+                        logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (meshOptions.nLevels,))
+                        mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                                                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                                parallelPartitioningType=meshOptions.parallelPartitioningType)
+
+    elif isinstance(domain, Domain.PUMIDomain):
+        import sys
+        if(comm.size() >1 and meshOptions.parallelPartitioningType!=MeshParallelPartitioningTypes.element):
+            sys.exit("The mesh must be partitioned by elements and NOT nodes for adaptivity functionality. Do this with: `meshOptions.setParallelPartitioningType('element')'.")
+        if comm.size() > 1 and n.conservativeFlux != None:
+            sys.exit("ERROR: Element based partitions don't have a functioning conservative flux calculation. Set conservativeFlux to None in twp_navier_stokes")
+        # ibaned: PUMI conversion #1
+        if domain.nd == 3:
+            mesh = TetrahedralMesh()
+        else:
+            mesh = TriangularMesh()
+        logEvent("Converting PUMI mesh to Proteus")
+        mesh.convertFromPUMI(domain, domain.AdaptManager.PUMIAdapter, domain.faceList,
+                             domain.regList,
+                             parallel = comm.size() > 1, dim = domain.nd)
+        if domain.nd == 3:
+            mlMesh = MultilevelTetrahedralMesh(
+                0, 0,0,skipInit=True,
+                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                parallelPartitioningType=meshOptions.parallelPartitioningType)
+        if domain.nd == 2:
+            mlMesh = MultilevelTriangularMesh(
+                0, 0,0,skipInit=True,
+                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from PUMI mesh" % (meshOptions.nLevels,))
+        if comm.size() ==1:
+            mlMesh.generateFromExistingCoarseMesh(
+                mesh, meshOptions.nLevels,
+                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                parallelPartitioningType=meshOptions.parallelPartitioningType)
+        else:
+            mlMesh.generatePartitionedMeshFromPUMI(
+                mesh, meshOptions.nLevels,
+                nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel)
+    elif isinstance(domain, Domain.MeshTetgenDomain):
+        nbase = 1
+        mesh = TetrahedralMesh()
+        logEvent("Reading coarse mesh from tetgen file")
+        mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
+                                                     nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                     parallelPartitioningType=meshOptions.parallelPartitioningType)
+        if generatePartitionedMeshFromFiles:
+            logEvent("Generating partitioned mesh from Tetgen files")
+            mlMesh.generatePartitionedMeshFromTetgenFiles(domain.meshfile, nbase,mesh,meshOptions.nLevels,
+                                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
+        else:
+            logEvent("Generating coarse global mesh from Tetgen files")
+            mesh.generateFromTetgenFiles(domain.polyfile, nbase,parallel = comm.size() > 1)
+            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (meshOptions.nLevels,))
+            mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                                  nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                  parallelPartitioningType=meshOptions.parallelPartitioningType)
+    elif isinstance(domain, Domain.Mesh3DMDomain):
+        mesh = TetrahedralMesh()
+        logEvent("Reading coarse mesh from 3DM file")
+        mesh.generateFrom3DMFile(domain.meshfile)
+        mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
+                                                     nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                     parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from coarse 3DM mesh" % (meshOptions.nLevels,))
+        mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                              nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                              parallelPartitioningType=meshOptions.parallelPartitioningType)
+    elif isinstance(domain, Domain.Mesh2DMDomain):
+        mesh = TriangularMesh()
+        logEvent("Reading coarse mesh from 2DM file")
+        mesh.generateFrom2DMFile(domain.meshfile)
+        mlMesh = MultilevelTriangularMesh(0, 0,0,skipInit=True,
+                                                    nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                    parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from coarse 2DM mesh" % (meshOptions.nLevels,))
+        mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                              nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                              parallelPartitioningType=meshOptions.parallelPartitioningType)
+    elif isinstance(domain, Domain.MeshHexDomain):
+        mesh = HexahedralMesh()
+        logEvent("Reading coarse mesh from file")
+        mesh.generateFromHexFile(domain.meshfile)
+        mlMesh = MultilevelHexahedralMesh(0, 0,0,skipInit=True,
+                                                    nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                    parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from coarse mesh" % (meshOptions.nLevels,))
+        mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                              nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                              parallelPartitioningType=meshOptions.parallelPartitioningType)
+    elif isinstance(domain, Domain.GMSH_3D_Domain):
+        from subprocess import call
+        import sys
+        if comm.rank() == 0 and (meshOptions.genMesh or not (os.path.exists(domain.polyfile+".ele") and
+                                                   os.path.exists(domain.polyfile+".node") and
+                                                   os.path.exists(domain.polyfile+".face"))):
+            logEvent("Running gmsh to generate 3D mesh for "+name, level=1)
+            gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f}".format(domain.geofile, domain.name+".mesh", 0.5*domain.he)
+
+            logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+
+            check_call(gmsh_cmd, shell=True)
+
+            logEvent("Done running gmsh; converting to tetgen")
+
+            gmsh2tetgen_cmd = "gmsh2tetgen {0} {1:f} {2:d} {3:d} {4:d}".format(
+                domain.name+".mesh",
+                domain.length_scale,
+                domain.permute_dims[0]+1,  # switch to base 1 index...
+                domain.permute_dims[1]+1,
+                domain.permute_dims[2]+1)
+
+            check_call(gmsh2tetgen_cmd, shell=True)
+            fileprefix = "mesh"
+            check_call("rm -f {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+            check_call("rm -f {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+            check_call("rm -f {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
+            check_call("rm -f {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+            check_call("rm -f {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+            check_call("tetgen -Vfeen %s.ele" % ("mesh",), shell=True)
+            check_call("mv %s.1.ele %s.ele" % ("mesh", "mesh"), shell=True)
+            check_call("mv %s.1.node %s.node" % ("mesh", "mesh"), shell=True)
+            check_call("mv %s.1.face %s.face" % ("mesh", "mesh"), shell=True)
+            check_call("mv %s.1.neigh %s.neigh" % ("mesh", "mesh"), shell=True)
+            check_call("mv %s.1.edge %s.edge" % ("mesh", "mesh"), shell=True)
+            elefile = "mesh.ele"
+            nodefile = "mesh.node"
+            facefile = "mesh.face"
+            edgefile = "mesh.edge"
+            assert os.path.exists(elefile), "no mesh.ele"
+            tmp = "%s.ele" % domain.polyfile
+            os.rename(elefile, tmp)
+            assert os.path.exists(tmp), "no .ele"
+            assert os.path.exists(nodefile), "no mesh.node"
+            tmp = "%s.node" % domain.polyfile
+            os.rename(nodefile, tmp)
+            assert os.path.exists(tmp), "no .node"
+            if os.path.exists(facefile):
+                tmp = "%s.face" % domain.polyfile
+                os.rename(facefile, tmp)
+                assert os.path.exists(tmp), "no .face"
+            if os.path.exists(edgefile):
+                tmp = "%s.edge" % domain.polyfile
+                os.rename(edgefile, tmp)
+                assert os.path.exists(tmp), "no .edge"
+        comm.barrier()
+        logEvent("Initializing mesh and MultilevelMesh")
+        nbase = 1
+        mesh = TetrahedralMesh()
+        mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
+                                                     nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                     parallelPartitioningType=meshOptions.parallelPartitioningType)
+        if generatePartitionedMeshFromFiles:
+            logEvent("Generating partitioned mesh from Tetgen files")
+            mlMesh.generatePartitionedMeshFromTetgenFiles(domain.polyfile, nbase,mesh,meshOptions.nLevels,
+                                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
+        else:
+            logEvent("Generating coarse global mesh from Tetgen files")
+            mesh.generateFromTetgenFiles(domain.polyfile, nbase,parallel = comm.size() > 1)
+            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (meshOptions.nLevels,))
+            mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                                  nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                  parallelPartitioningType=meshOptions.parallelPartitioningType)
+
+    elif isinstance(domain, Domain.PlanarStraightLineGraphDomain):
+        fileprefix = None
+        # run mesher
+        if domain.use_gmsh is True:
+            fileprefix = domain.geofile
+            if comm.isMaster() and (not (os.path.exists(fileprefix+".ele") and
+                                         os.path.exists(fileprefix+".node") and
+                                         os.path.exists(fileprefix+".edge"))):
+                if not os.path.exists(fileprefix+".msh"):
+                    logEvent("Running gmsh to generate 2D mesh for "+name, level=1)
+                    gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh2".format(fileprefix+".geo", fileprefix+".msh")
+                    logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                    check_call(gmsh_cmd, shell=True)
+                    logEvent("Done running gmsh; converting to triangle")
+                else:
+                    logEvent("Using "+fileprefix+".msh to convert to triangle")
+                # convert gmsh to triangle format
+                msh2simplex(fileprefix=fileprefix, nd=2)
+        else:
+            fileprefix = domain.polyfile
+            if comm.isMaster() and meshOptions.genMesh:
+                logEvent("Calling Triangle to generate 2D mesh for "+name)
+                tricmd = "triangle -{0} -e {1}.poly".format(meshOptions.triangleOptions, fileprefix)
+                logEvent("Calling triangle on rank 0 with command %s" % (tricmd,))
+                output = check_output(tricmd,shell=True)
+                logEvent(str(output, 'utf-8'))
+                logEvent("Done running triangle")
+                check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+                check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+                check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+        comm.barrier()
+        assert fileprefix is not None, 'did not find mesh file name'
+        # convert mesh to proteus format
+        nbase = 1
+        mesh = TriangularMesh()
+        mlMesh = MultilevelTriangularMesh(0, 0,0,skipInit=True,
+                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
+        logEvent("Generating %i-level mesh from coarse Triangle mesh" % (meshOptions.nLevels,))
+        if generatePartitionedMeshFromFiles:
+            logEvent("Generating partitioned mesh from Triangle files")
+            mlMesh.generatePartitionedMeshFromTriangleFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
+        else:
+            mesh.generateFromTriangleFiles(filebase=fileprefix,
+                                       base=1)
+            mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                              nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                              parallelPartitioningType=meshOptions.parallelPartitioningType)
+    elif isinstance(domain, Domain.PiecewiseLinearComplexDomain):
+        import sys
+        if domain.use_gmsh is True:
+            fileprefix = domain.geofile
+        else:
+            fileprefix = domain.polyfile
+        if comm.rank() == 0 and (meshOptions.genMesh or (
+                not (os.path.exists(fileprefix+".ele") and
+                     os.path.exists(fileprefix+".node") and
+                     os.path.exists(fileprefix+".face")))):
+            if domain.use_gmsh is True:
+                if not os.path.exists(fileprefix+".msh"):
+                    logEvent("Running gmsh to generate 3D mesh for "+name, level=1)
+                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh2".format(fileprefix+'.geo', domain.geofile+'.msh')
+                    logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                    check_call(gmsh_cmd, shell=True)
+                    logEvent("Done running gmsh; converting to tetgen")
+                else:
+                    logEvent("Using "+domain.geofile+".msh to convert to tetgen")
+                msh2simplex(fileprefix=fileprefix, nd=3)
+                check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
+            else:
+                logEvent("Running tetgen to generate 3D mesh for "+name, level=1)
+                check_call("rm -f {0:s}.ele".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.node".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.face".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.neigh".format(fileprefix), shell=True)
+                check_call("rm -f {0:s}.edge".format(fileprefix), shell=True)
+                tetcmd = "tetgen -{0} {1}.poly".format(meshOptions.triangleOptions, fileprefix)
+                logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
+                check_call(tetcmd, shell=True)
+                logEvent("Done running tetgen")
+            check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+            check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+            check_call("mv {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
+            try:
+                check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+            except:
+                logEvent("Warning: couldn't move {0:s}.1.neigh".format(fileprefix))
+                pass
+            try:
+                check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+            except:
+                logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
+                pass
+        comm.barrier()
+        logEvent("Initializing mesh and MultilevelMesh")
+        nbase = 1
+        mesh = TetrahedralMesh()
+        mlMesh = MultilevelTetrahedralMesh(0, 0,0,skipInit=True,
+                                           nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                           parallelPartitioningType=meshOptions.parallelPartitioningType)
+        if generatePartitionedMeshFromFiles:
+            logEvent("Generating partitioned mesh from Tetgen files")
+            if("f" not in meshOptions.triangleOptions or "ee" not in meshOptions.triangleOptions):
+                sys.exit("ERROR: Remake the mesh with the `f` flag and `ee` flags in triangleOptions.")
+            mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix, nbase,mesh,meshOptions.nLevels,
+                                                          nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=meshOptions.parallelPartitioningType)
+        else:
+            logEvent("Generating coarse global mesh from Tetgen files")
+            mesh.generateFromTetgenFiles(fileprefix, nbase,parallel = comm.size() > 1)
+            logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (meshOptions.nLevels,))
+            mlMesh.generateFromExistingCoarseMesh(mesh, meshOptions.nLevels,
+                                                  nLayersOfOverlap=meshOptions.nLayersOfOverlapForParallel,
+                                                  parallelPartitioningType=meshOptions.parallelPartitioningType)
+
+    meshOptions.genMesh = False
+    return mlMesh

@@ -55,11 +55,11 @@ femSpaces = {0: FESpace['basis'],
 # ********** NONLINEAR SOLVER ********** #
 # ************************************** #
 multilevelNonlinearSolver = Newton
-fullNewtonFlag = False  #NOTE: False just if the method is explicit
-if (LUMPED_MASS_MATRIX == 1):
-    levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
-else:
-    levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
+fullNewtonFlag = False  # NOTE: False just if the method is explicit
+# if (LUMPED_MASS_MATRIX == 1):
+levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+# else:
+#     levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
 
 # ************************************ #
 # ********** NUMERICAL FLUX ********** #
@@ -86,7 +86,7 @@ linearSolverConvergenceTest = 'r-true'
 # ******************************** #
 # ********** TOLERANCES ********** #
 # ******************************** #
-nl_atol_res = 1.0e-5
+nl_atol_res = 1.0e-7
 nl_rtol_res = 0.0
 l_atol_res = 1.0e-7
 l_rtol_res = 0.0

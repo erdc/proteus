@@ -10,7 +10,7 @@ import proteus.SWFlow.SWFlowProblem as SWFlowProblem
 
 
 """
-This is a simple benchmark of a solitary wave propagating over a flat bottom.
+This is transcritical flow over a bump with a hydraulic jump.
 """
 
 # *************************** #
@@ -90,12 +90,12 @@ class y_mom_at_t0(object):
 
 
 """
-heta and hw are needed for the modified green naghdi equations.
-For initial conditions, heta -> h^2 and hw -> h^2*div(u).
-Note that the BC flags for the heta and hw should be same as h.
-For more details see: 'Robust explicit relaxation techinque for solving
-the Green-Naghdi equations' by Guermond, Popov, Tovar, Kees.
-JCP 2019
+heta and hw are needed for the hyperbolic serre-green-naghdi equations.
+For initial conditions, heta -> h^2, hbeta->q(dot)grad(Z), hw -> h^2div(u)+3/2*hbeta.
+It's often okay to take hbeta=0. Note that the BCs for the heta and hw should be same as h
+and BCs for hbeta should be same as x_mom.
+For more details see: 'Hyperbolic relaxation technique for solving the dispersive Serre Equations
+with topography' by Guermond, Popov, Tovar, Kees.
 """
 
 class heta_at_t0(object):
@@ -163,5 +163,4 @@ mySWFlowProblem = SWFlowProblem.SWFlowProblem(sw_model=opts.sw_model,
                                               initialConditions=initialConditions,
                                               boundaryConditions=boundaryConditions,
                                               bathymetry=bathymetry_function)
-mySWFlowProblem.physical_parameters['LINEAR_FRICTION'] = 0
 mySWFlowProblem.physical_parameters['mannings'] = 0.0

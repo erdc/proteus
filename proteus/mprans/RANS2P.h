@@ -10,8 +10,12 @@
 #include "PyEmbeddedFunctions.h"
 #include "equivalent_polynomials.h"
 #include "ArgumentsDict.h"
+#include "xtensor/xarray.hpp"
+#include "xtensor/xview.hpp"
+#include "xtensor/xfixed.hpp"
 #include "xtensor-python/pyarray.hpp"
 #include "mpi.h"
+#include "proteus_lapack.h"
 
 namespace py = pybind11;
 
@@ -24,6 +28,96 @@ const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume cha
 const double inertial_term=1.0;
 namespace proteus
 {
+  inline double enorm(double* v)
+  {
+    return std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]); 
+  }
+  inline double rnorm(double* r)
+  {
+    double rnorm=0.0;
+    for (int i=0;i<18;i++)
+      rnorm += r[i]*r[i];
+    return std::sqrt(rnorm);
+  }
+  inline void F6DOF(double DT, double mass, double* Iref, double* last_u, double* FT, double* last_FT, double* last_mom, double* u, //inputs
+		    double* mom, double* r, double* J)//outputs
+  {
+    double *v = &u[0],
+      *last_v=&last_u[0],
+      *omega = &u[3],
+      *last_omega = &last_u[3],
+      *h = &u[6],
+      *last_h = &last_u[6],
+      *Q = &u[9],
+      *last_Q = &last_u[9];
+    register double Omega[9] = {     0.0, -omega[2],  omega[1],
+				omega[2],       0.0, -omega[0],
+			       -omega[1],  omega[0],      0.0},
+      last_Omega[9] = {          0.0, -last_omega[2],  last_omega[1],
+		       last_omega[2],            0.0, -last_omega[0],
+		      -last_omega[1],  last_omega[0],            0.0},
+      I[9] = {0.0};
+    for (int i=0;i<18;i++)
+      {
+	r[i] = 0.0;
+	for (int j=0;j<18;j++)
+	  J[i*18+j] = 0.0;
+      }
+    //I = Q*Iref*Q^t
+    for (int i=0; i < 3; i++)
+      for (int j=0; j < 3; j++)
+	for (int k=0; k < 3; k++)
+	  I[i*3 + j] += Q[i*3 + k]*Iref[k*3 +j];
+    for (int i=0; i < 3; i++)
+      for (int j=0; j < 3; j++)
+	for (int k=0; k < 3; k++)
+	  I[i*3 + j] += I[i*3 + k]*Q[j*3 + k];
+    double M[36] = {0.0};
+    for (int i=0; i< 3; i++)
+      {
+	M[i*6 + i] = mass;
+	mom[i] = mass*u[i];//save for next time step--linear momentum
+	mom[3+i] = 0.0;
+	for (int j=0; j<3; j++)
+	  {
+	    M[(3+i)*6 + (3+j)] = I[i*3 + j];
+	    mom[3+i] += I[i*3 + j]*u[3+j];//save for next time step--angular momentum
+	  }
+      }
+    //could do added mass modification here
+    //
+    //residual
+    //momentum conservation residual
+    for (int i=0; i < 6; i++)
+      {
+	r[i] = - last_mom[i] - DT*0.5*(FT[i] + last_FT[i]);
+	for (int j=0; j < 6; j++)
+	  {
+	    r[i] += M[i*6 + j]*u[j];
+	    J[i*18 + j] = M[i*6 + j];//all FT terms are explicit for now
+	  }
+      }
+    //displacement residual
+    for (int i=0; i < 3; i++)
+      {
+	r[6+i] = h[i] - last_h[i] - DT*0.5*(v[i] + last_v[i]);
+	J[(6+i)*18 + (6+i)] = 1.0;
+	J[(6+i)*18 + i] = -DT*0.5;
+      }
+    //rotation residual
+    for (int i=0; i < 3; i++)
+      for (int j=0; j < 3; j++)
+	{
+	  r[9 + i*3 + j] = Q[i*3 + j] - last_Q[i*3 + j];
+	  J[(9+i*3+j)*18 + (9+i*3+j)] = 1.0;
+	  for (int k=0; k < 3; k++)
+	    {
+	      r[9 + i*3 + j] -= DT*0.25*(Omega[i*3 + k] + last_Omega[i*3 +k])*(Q[k*3 + j]+last_Q[k*3 + j]);
+	      J[(9 + i*3 + j)*18 + 9+k*3+j] -= DT*0.25*(Omega[i*3 + k] + last_Omega[i*3 + k]);
+	    }
+	}
+  }
+  
   template<int nSpace, int nP, int nQ, int nEBQ>
   using GeneralizedFunctions = equivalent_polynomials::GeneralizedFunctions_mix<nSpace, nP, nQ, nEBQ>;
 
@@ -37,6 +131,169 @@ namespace proteus
     virtual void getTwoPhaseAdvectionOperator(arguments_dict& args) = 0;
     virtual void getTwoPhaseInvScaledLaplaceOperator(arguments_dict& args)=0;
     virtual void getTwoPhaseScaledMassOperator(arguments_dict& args)=0;
+    void step6DOF(arguments_dict& args)
+    {
+      py::gil_scoped_release release;
+      //py::gil_scoped_acquire acquire;
+      xt::pyarray<double>& ball_FT = args.array<double>("ball_FT");
+      xt::pyarray<double>& ball_last_FT = args.array<double>("ball_last_FT");
+      xt::pyarray<double>& ball_h = args.array<double>("ball_h");
+      xt::pyarray<double>& ball_last_h = args.array<double>("ball_last_h");
+      xt::pyarray<double>& ball_center = args.array<double>("ball_center");
+      xt::pyarray<double>& ball_center_last = args.array<double>("ball_center_last");
+      //note: these are only used for the fluid
+      xt::pyarray<double>& ball_velocity = args.array<double>("ball_velocity");
+      xt::pyarray<double>& ball_angular_velocity = args.array<double>("ball_angular_velocity");
+      //
+      xt::pyarray<double>& ball_last_velocity = args.array<double>("ball_last_velocity");
+      xt::pyarray<double>& ball_last_angular_velocity = args.array<double>("ball_last_angular_velocity");
+      xt::pyarray<double>& ball_Q = args.array<double>("ball_Q");
+      xt::pyarray<double>& ball_last_Q = args.array<double>("ball_last_Q");
+      xt::pyarray<double>& ball_Omega = args.array<double>("ball_Omega");
+      xt::pyarray<double>& ball_last_Omega = args.array<double>("ball_last_Omega");
+      xt::pyarray<double>& ball_u = args.array<double>("ball_u");
+      xt::pyarray<double>& ball_last_u = args.array<double>("ball_last_u");
+      xt::pyarray<double>& ball_mom = args.array<double>("ball_mom");
+      xt::pyarray<double>& ball_last_mom = args.array<double>("ball_last_mom");
+      xt::pyarray<double>& ball_a = args.array<double>("ball_a");
+      xt::pyarray<double>& ball_I = args.array<double>("ball_I");
+      xt::pyarray<double>& ball_mass = args.array<double>("ball_mass");
+      xt::pyarray<double>& ball_radius = args.array<double>("ball_radius");
+      xt::pyarray<double>& ball_f = args.array<double>("ball_f");
+      xt::pyarray<double>& wall_f = args.array<double>("wall_f");
+      xt::pyarray<double>& particle_netForces = args.array<double>("particle_netForces");
+      xt::pyarray<double>& particle_netMoments = args.array<double>("particle_netMoments");
+      xt::pyarray<double>& last_particle_netForces = args.array<double>("last_particle_netForces");
+      xt::pyarray<double>& last_particle_netMoments = args.array<double>("last_particle_netMoments");
+      xt::pyarray<double>& g = args.array<double>("g");
+      xt::pyarray<double>& L = args.array<double>("L");
+      const double ball_force_range = args.scalar<double>("ball_force_range");
+      const double ball_stiffness = args.scalar<double>("ball_stiffness");
+      const double particle_cfl = args.scalar<double>("particle_cfl");
+      const double dt = args.scalar<double>("dt");
+      double& min_dt(*args.array<double>("min_dt").data());
+      int& nSteps(*args.array<int>("nSteps").data());
+      const int nParticles = ball_center.shape(0);
+      double DT = dt;
+      double td = 0.0;
+      //double min_dt = dt;
+      //int nSteps=0;
+      min_dt = dt;
+      nSteps=0;
+      //double max_cfl=0.0;
+      xt::xarray<double> cfl=xt::zeros<double>({nParticles});
+#pragma omp parallel for
+      for (int ip=0; ip < nParticles; ip++)
+	for (int i=0; i < 3; i++)
+	  {
+	    ball_velocity(ip,i) = 0.0;
+	    ball_angular_velocity(ip,i) = 0.0;
+	  }
+      
+      while (td < dt)
+	{
+	  nSteps +=1;
+	  //particle-wall and particle-particle collision forces
+#pragma omp parallel for
+	  for (int ip=0; ip < nParticles; ip++)
+	    {
+	      double vnorm = enorm(&ball_last_velocity.data()[ip*3]);
+	      double vp[3], vpnorm;
+	      for (int i=0; i< 3; i++)
+		{
+		  ball_last_FT(ip,   i) = particle_netForces(ip,i) + ball_mass(ip)*g[i] + ball_f(ip,i) + wall_f(ip,i);// - 2.0*0.001*vnorm*ball_last_velocity(ip,i);
+		  ball_last_FT(ip, 3+i) = particle_netMoments(ip,i);
+		  vp[i] = ball_last_velocity(ip,i) + ball_a(ip,i)*DT;
+		}
+	      vpnorm = enorm(vp);
+	      double wall_range = 2.0*ball_radius(ip) + ball_force_range;
+	      double wall_stiffness = ball_stiffness/2.0;
+	      double dx0 = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,0))));
+	      double dxL = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,0)-L(0))));
+	      wall_f(ip,0) = (1.0/wall_stiffness)*( pow(wall_range - dx0,2) * (fmax(0.0, ball_center(ip,0)) + ball_radius(ip)) +
+						    pow(wall_range - dxL,2) * (fmin(L(0), ball_center(ip,0)) - (L(0) + ball_radius(ip))));
+	      double dy0 = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,1))));
+	      double dyL = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,1)-L(1))));
+	      wall_f(ip,1) = (1.0/wall_stiffness)*( pow(wall_range - dy0,2) * (fmax(0.0, ball_center(ip,1)) + ball_radius(ip)) +
+						    pow(wall_range - dyL,2) * (fmin(L(1), ball_center(ip,1)) - (L(1) + ball_radius(ip))));
+	      double dz0 = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,2))));
+	      double dzL = fmin(wall_range, ball_radius(ip) + fmax(ball_radius(ip), fabs(ball_center(ip,2)-L(2))));
+	      wall_f(ip,2) = (1.0/wall_stiffness)*( pow(wall_range - dz0,2) * (fmax(0.0, ball_center(ip,2)) + ball_radius(ip)) +
+						    pow(wall_range - dzL,2) * (fmin(L(2), ball_center(ip,2)) - (L(2) + ball_radius(ip))));
+      
+	      for (int i=0; i< 3;i++)
+		ball_f(ip,i) = 0.0;
+	      for (int jp=0; jp < nParticles; jp++)
+		{
+		  double ball_range, d;
+		  double f[3], h_ipjp[3];
+		  ball_range = ball_radius(ip) + ball_radius(jp) + ball_force_range;
+		  for(int i=0;i<3;i++)
+		    h_ipjp[i] = ball_center(ip,i) - ball_center(jp,i);
+		  d = ball_range - fmin(ball_range, fmax(ball_radius(ip) + ball_radius(jp), enorm(h_ipjp)));
+		  for (int i=0;i<3;i++)
+		    f[i] = (1.0/ball_stiffness)*h_ipjp[i]*pow(d,2.0);
+		  if (ip != jp)
+		    for (int i=0;i<3;i++)
+		      ball_f(ip,i) += f[i];
+		}
+	      cfl(ip) = fmax(vnorm*DT/ball_force_range, vpnorm*DT/ball_force_range);
+	    }
+	  double max_cfl = xt::amax(cfl,{0})(0);
+	  if (max_cfl > particle_cfl)
+	    DT = (particle_cfl/max_cfl)*DT;
+	  if (DT > dt - td - dt*1.0e-8)
+	    {
+	      DT = dt-td;
+	      td = dt;
+	    }
+	  else
+	    td += DT;
+	  min_dt  =fmin(DT, min_dt);
+	  //Newton iterations
+#pragma omp parallel for
+	  for (int ip=0; ip < nParticles; ip++)
+	    {
+	      int pivots[18];
+	      double r[18];
+	      double J[18*18];
+	      for (int i=0; i<3; i++)
+		{
+		  ball_FT(ip,   i) = particle_netForces(ip, i) + ball_mass(ip)*g[i] + ball_f(ip, i) + wall_f(ip, i);
+		  ball_FT(ip, 3+i) = particle_netMoments(ip, i);
+		}
+	      F6DOF(DT, ball_mass(ip), &ball_I.data()[ip*9], &ball_last_u.data()[ip*18], &ball_FT.data()[ip*6], &ball_last_FT.data()[ip*6], &ball_last_mom.data()[ip*6], &ball_u.data()[ip*18], 
+		    &ball_mom.data()[ip*6], r, J);
+	      int its=0;
+	      int maxits=100;
+	      while ((its==0 || rnorm(r) > 1.0e-10) && its < maxits)
+		{
+		  int info,N=18,nrhs=1;
+		  char trans='T';
+		  dgetrf_(&N,&N,J,&N,pivots,&info);
+		  dgetrs_(&trans, &N,&nrhs,J,&N,pivots,r,&N,&info);//J = LU now
+		  for (int i=0;i<18;i++)
+		    ball_u(ip,i) -= r[i];//r=du now
+		  F6DOF(DT, ball_mass(ip), &ball_I.data()[ip*9], &ball_last_u.data()[ip*18], &ball_FT.data()[ip*6], &ball_last_FT.data()[ip*6], &ball_last_mom.data()[ip*6], &ball_u.data()[ip*18], 
+			&ball_mom.data()[ip*6], r, J);
+		  its+=1;
+		}
+	      for (int i=0; i< 3; i++)
+		{
+		  ball_center(ip,i) += (ball_u(ip,6+i) - ball_last_u(ip,6+i));
+		  ball_a(ip,i) = (ball_u(ip,i) - ball_last_velocity(ip,i))/DT;
+		  ball_last_velocity(ip,i) = ball_u(ip,i);
+		  ball_last_mom(ip,i) = ball_mom(ip,i);
+		  ball_last_mom(ip,3+i) = ball_mom(ip,3+i);
+		  //return averages over dt for the fluid velocities
+		  ball_velocity(ip,i) += DT*ball_u(ip,i)/dt;
+		  ball_angular_velocity(ip,i) += DT*ball_u(ip,3+i)/dt;
+		}
+	      for (int i=0; i< 18; i++)
+		ball_last_u(ip,i) = ball_u(ip,i);
+	    }
+	}
+    }
   };
 
   template<class CompKernelType,
@@ -53,8 +310,8 @@ namespace proteus
   {
   public:
     std::set<int> ifem_boundaries, ifem_boundary_elements,
-      cutfem_boundaries, cutfem_boundary_elements;
-    std::valarray<bool> elementIsActive;
+      cutfem_boundaries;
+    std::map<int, int> cutfem_local_boundaries;
 
     const int nDOF_test_X_trial_element;
     const int nDOF_test_X_v_trial_element;
@@ -596,7 +853,8 @@ namespace proteus
       vz = ball_velocity[3*I + 2] + angular_cross_position[2];
 
     }
-    inline void updateSolidParticleTerms(const double NONCONSERVATIVE_FORM,
+    inline void updateSolidParticleTerms(int particle_index,
+					 const double NONCONSERVATIVE_FORM,
                                          bool element_owned,
                                          const double particle_nitsche,
                                          const double dV,
@@ -693,7 +951,7 @@ namespace proteus
       rho = rho_0 * ImH_mu + rho_1 * H_mu;
       mu = rho_0 * nu_0 * ImH_mu + rho_1 * nu_1 * H_mu;
       C = 0.0;
-      for (int i = 0; i < nParticles; i++)
+      for (int i = particle_index; i < particle_index+1; i++)//cek hack to leave loop for the moment
         {
           if(use_ball_as_particle==1)
             {
@@ -705,6 +963,9 @@ namespace proteus
               center[0] = ball_center[3*i+0];
               center[1] = ball_center[3*i+1];
               center[2] = ball_center[3*i+2];
+              particle_velocities[0] = vel[0];
+              particle_velocities[1] = vel[1];
+              particle_velocities[2] = vel[2];
             }
           else
             {
@@ -2113,6 +2374,11 @@ namespace proteus
       xt::pyarray<double>& isActiveDOF_vel = args.array<double>("isActiveDOF_vel");
       const bool normalize_pressure = args.scalar<int>("normalize_pressure");
       xt::pyarray<double>& errors = args.array<double>("errors");
+      xt::pyarray<double>& ball_u = args.array<double>("ball_u");
+      xt::pyarray<double>& ball_v = args.array<double>("ball_v");
+      xt::pyarray<double>& ball_w = args.array<double>("ball_w");
+      xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
+      xt::pyarray<int>& isActiveElement_last = args.array<int>("isActiveElement_last");
       logEvent("Entered mprans calculateResidual",6);
       gf.useExact = false;//useExact;
       gf_p.useExact = false;//useExact;
@@ -2120,8 +2386,7 @@ namespace proteus
       ifem_boundaries.clear();
       ifem_boundary_elements.clear();
       cutfem_boundaries.clear();
-      cutfem_boundary_elements.clear();
-      elementIsActive.resize(nElements_global);
+      cutfem_local_boundaries.clear();
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2156,9 +2421,10 @@ namespace proteus
             velocityErrorElement[nDOF_v_test_element],
             eps_rho,eps_mu;
           bool element_active=false;
-          elementIsActive[eN]=false;
+          isActiveElement[eN]=0;
           double mesh_volume_conservation_element=0.0,
             mesh_volume_conservation_element_weak=0.0;
+	  int particle_index=0;
           for (int i=0;i<nDOF_test_element;i++)
             {
               int eN_i = eN*nDOF_test_element+i;
@@ -2180,12 +2446,20 @@ namespace proteus
           //Use for plotting result
           if(use_ball_as_particle==1 && nParticles > 0)
             {
+	      double min_d = 1e10;
               for (int I=0;I<nDOF_mesh_trial_element;I++)
-                get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),
-                                     mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+0],
-                                     mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+1],
-                                     mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+2],
-                                     phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]]);
+                {
+		  int index = get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+0],
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+1],
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+2],
+						   phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]]);
+		  if (phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]] < min_d)
+		    {
+		      min_d = phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]];
+		      particle_index = index;
+		    }
+		}
             }
           else
             {
@@ -2208,17 +2482,27 @@ namespace proteus
           int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref.data(),false);
           if (icase_s == 0)
             {
+	      element_active=true;
+	      isActiveElement[eN]=1;
               //only works for simplices
               for (int ebN_element=0;ebN_element < nDOF_mesh_trial_element; ebN_element++)
                 {
                   const int ebN = elementBoundariesArray.data()[eN*nDOF_mesh_trial_element+ebN_element];
                   //internal and actually a cut edge
-                  //if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
-                  //  cutfem_boundaries.insert(ebN);
-                  if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned))
-                    cutfem_boundaries.insert(ebN);
+                  //if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned) && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] < 0.0)
+                  if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
+		    {
+		      cutfem_boundaries.insert(ebN);
+		      if (elementBoundaryElementsArray[ebN*2 + 0] == eN)
+			cutfem_local_boundaries[ebN] = ebN_element;
+		    }
                 }
             }
+	  else if (icase_s == 1)
+	    {
+	      element_active=true;
+	      isActiveElement[eN]=1;
+	    }
 #ifdef IFEM
           int icase_p = gf_p.calculate(element_phi, element_nodes, x_ref.data(), -rho_1*g.data()[1], -rho_0*g.data()[1],false,true);
           int icase = gf.calculate(element_phi, element_nodes, x_ref.data(), rho_1*nu_1, rho_0*nu_0,false,false);
@@ -2665,11 +2949,6 @@ namespace proteus
                   //
                   const double H_s = gf_s.H(particle_eps,phi_solid.data()[eN_k]);
                   const double D_s = gf_s.D(particle_eps,phi_solid.data()[eN_k]);
-                  if ( nParticles == 0 || H_s != 0.0 || D_s != 0.0)
-                    {
-                      element_active=true;
-                      elementIsActive[eN]=true;
-                    }
                   //save velocity at quadrature points for other models to use
                   double p_e = q_u_0.data()[eN_k] - p,
                     u_e = q_u_1.data()[eN_k] - u,
@@ -2959,6 +3238,7 @@ namespace proteus
                          dmom_w_acc_w,
                          mom_w_acc_t,
                          dmom_w_acc_w_t);
+
                   if (NONCONSERVATIVE_FORM > 0.0)
                     {
                       mom_u_acc_t *= dmom_u_acc_u;
@@ -3156,7 +3436,8 @@ namespace proteus
 			    for (int I=0;I<nSpace;I++)
 			      level_set_normal[I] = particle_signed_distance_normals.data()[eN_k_3d+I];
 			}
-                      updateSolidParticleTerms(NONCONSERVATIVE_FORM,
+                      updateSolidParticleTerms(particle_index,
+					       NONCONSERVATIVE_FORM,
                                                eN < nElements_owned,
                                                particle_nitsche,
                                                dV,
@@ -3246,10 +3527,15 @@ namespace proteus
                   //
                   //cek this needs to go with the particle term updates if moved--or check particle_velocities[...] array
                   //cek on cut cells this is getting set twice. For now it's identical because of our formulations (neither includes density so it's either velocity or porosity*velocity--same for both phases
-                  //cek but this won't be right when we use a modified basis because we'll need the whole phase velocity from its vasis. hmm. special backward euler class that tracks both?
-                  //same situation with subgrid error velocity
-                  if (element_active)
-                    {
+                  //cek but this won't be right when we use a modified basis because we'll need the whole phase velocity from its basis. hmm. special backward euler class that tracks both?
+                  //same situation with subgrid error velocity		  
+		  //cek since this is for the history, could try using the solid velocity inside the solid instead of just in inactive elements as before
+		  //this avoids using the fluid values inside the solid that necessarily over/undershoot to give the right values inside the fluid domain
+                  //but then the mass quadrature would represent a function that is no longer polynomial on the element so leaving it as element_active
+		  //for now--alternative would be:
+                  //if (phi_solid.data()[eN_k] > 0)
+		  if (element_active)
+		    {
                       q_mom_u_acc.data()[eN_k] = mom_u_acc;
                       q_mom_v_acc.data()[eN_k] = mom_v_acc;
                       q_mom_w_acc.data()[eN_k] = mom_w_acc;
@@ -3260,12 +3546,24 @@ namespace proteus
                     }
                   else//use the solid velocity
                     {
-                      q_mom_u_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+0];
-                      q_mom_v_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+1];
-                      q_mom_w_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+2];
-                      q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[eN_k_3d+0];
-                      q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[eN_k_3d+1];
-                      q_mass_adv.data()[eN_k_nSpace+2] = particle_velocities.data()[eN_k_3d+2];
+		      if (use_ball_as_particle)
+			{
+			  q_mom_u_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+0];
+			  q_mom_v_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+1];
+			  q_mom_w_acc.data()[eN_k] = particle_velocities.data()[eN_k_3d+2];
+			  q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[eN_k_3d+0];
+			  q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[eN_k_3d+1];
+			  q_mass_adv.data()[eN_k_nSpace+2] = particle_velocities.data()[eN_k_3d+2];
+			}
+		      else
+			{
+			  q_mom_u_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+0];
+			  q_mom_v_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+1];
+			  q_mom_w_acc.data()[eN_k] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+2];
+			  q_mass_adv.data()[eN_k_nSpace+0] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+0];
+			  q_mass_adv.data()[eN_k_nSpace+1] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+1];
+			  q_mass_adv.data()[eN_k_nSpace+2] = particle_velocities.data()[particle_index*nQuadraturePoints_global + eN_k_3d+2];
+			}
                     }
                   //
                   //update element residual
@@ -3292,8 +3590,7 @@ namespace proteus
                     {
                       assert(H_f == 1);
                     }
-		  
-		  if ((eN < nElements_owned) && elementIsActive[eN])
+		  if ((eN < nElements_owned) && isActiveElement[eN])
 		    {
 		      domain_volume += H_s*dV*H_f;
 		      p_L1 += fabs(p_e)*H_s*dV*H_f;
@@ -3401,7 +3698,7 @@ namespace proteus
                   numerical_viscosity.data()[eN_k] = q_numDiff_u_last.data()[eN_k] + MOMENTUM_SGE*VELOCITY_SGE*tau_v*(dmom_adv_star[0]*dmom_adv_star[0]+
                                                                                                                       dmom_adv_star[1]*dmom_adv_star[1]+
                                                                                                                       dmom_adv_star[2]*dmom_adv_star[2]);
-                  if (!elementIsActive[eN])
+                  if (!isActiveElement[eN])
                     {
                       assert(std::fabs(gf_s.H(particle_eps,phi_solid.data()[eN_k])) == 0.0);
                       assert(std::fabs(gf_s.D(particle_eps,phi_solid.data()[eN_k])) == 0.0);
@@ -3426,7 +3723,7 @@ namespace proteus
               register int eN_i=eN*nDOF_test_element+i;
               elementResidual_p_save.data()[eN_i] +=  elementResidual_p[i];
               mesh_volume_conservation_element_weak += elementResidual_mesh[i];
-              if (!elementIsActive[eN])
+              if (!isActiveElement[eN])
                 {
                   assert(elementResidual_p[i]==0.0);
                 }
@@ -3440,7 +3737,7 @@ namespace proteus
           for(int i=0;i<nDOF_v_test_element;i++)
             {
               register int eN_i=eN*nDOF_v_test_element+i;
-              if (!elementIsActive[eN])
+              if (!isActiveElement[eN])
                 {
                   assert(elementResidual_u[i]==0.0);
                   assert(elementResidual_v[i]==0.0);
@@ -3456,16 +3753,24 @@ namespace proteus
                   isActiveR.data()[offset_w+stride_w*rvel_l2g.data()[eN_i]] = 1.0;
                   isActiveDOF_vel.data()[vel_l2g.data()[eN_i]] = 1.0;
                 }
+	      double x = mesh_dof.data()[3*mesh_l2g.data()[eN_i]+0],
+		y = mesh_dof.data()[3*mesh_l2g.data()[eN_i]+1],
+		z = mesh_dof.data()[3*mesh_l2g.data()[eN_i]+2];//cek hack: need lagrange nodes for higher order
+	    
+	      get_velocity_to_ith_ball(nParticles,ball_center.data(),ball_radius.data(),
+				       ball_velocity.data(),ball_angular_velocity.data(),
+                                       particle_index,x,y,z,
+                                       ball_u.data()[vel_l2g.data()[eN_i]], ball_v.data()[vel_l2g.data()[eN_i]], ball_w.data()[vel_l2g.data()[eN_i]]);
             }//i
           mesh_volume_conservation += mesh_volume_conservation_element;
           mesh_volume_conservation_weak += mesh_volume_conservation_element_weak;
           mesh_volume_conservation_err_max=fmax(mesh_volume_conservation_err_max,fabs(mesh_volume_conservation_element));
           mesh_volume_conservation_err_max_weak=fmax(mesh_volume_conservation_err_max_weak,fabs(mesh_volume_conservation_element_weak));
         }//elements
-      //std::cout<<"p,u,v L2 error integrals (shoudl be non-negative) "<<p_L2<<'\t'<<u_L2<<'\t'<<v_L2<<'\t'<<"Flow Domain Volume = "<<domain_volume<<std::endl;
-      for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); )
+      std::set<int>::iterator it=cutfem_boundaries.begin();
+      while(it!=cutfem_boundaries.end())
         {
-          if(elementIsActive[elementBoundaryElementsArray[(*it)*2+0]] && elementIsActive[elementBoundaryElementsArray[(*it)*2+1]])
+          if(isActiveElement[elementBoundaryElementsArray[(*it)*2+0]] && isActiveElement[elementBoundaryElementsArray[(*it)*2+1]])
             {
               std::map<int,double> DWp_Dn_jump, DW_Dn_jump;
               register double gamma_cutfem=ghost_penalty_constant,gamma_cutfem_p=ghost_penalty_constant,h_cutfem=elementBoundaryDiameter.data()[*it];
@@ -3473,8 +3778,9 @@ namespace proteus
               //See Massing Schott Wall 2018
               //cek todo modify for two-fluids: rho_0 != rho_1
               double norm_v=0.0;
-              for (int i=0;i<nDOF_v_trial_element;i++)//MSW18 is just on face, but this is easier
+              for (int i_offset=1;i_offset<nDOF_v_trial_element;i_offset++)//MSW18 is just on face, so trying to just use face dof
                 {
+		  int i = (cutfem_local_boundaries[*it] + i_offset)%nDOF_v_trial_element;
                   double u=u_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
                     v=v_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
                     w=w_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]];
@@ -3610,7 +3916,7 @@ namespace proteus
                       globalResidual.data()[offset_w+stride_w*i_global]+=gamma_cutfem*h_cutfem*Dw_Dn_jump*DW_Dn_jump_i*dS;
                     }//i
                 }//kb
-              ++it;
+	      it++;
             }
           else
             {
@@ -4515,8 +4821,8 @@ namespace proteus
               //update residuals
               //
               const double H_s = gf_s.H(particle_eps, ebqe_phi_s.data()[ebNE_kb]);
-              if (elementIsActive[eN])
-                { 
+              if (isActiveElement[eN])
+                { //if boundary flag positive, then include flux contributions on interpart boundaries
                   total_flux += flux_mass_ext*dS;
                   for (int i=0;i<nDOF_test_element;i++)
                     {
@@ -4652,7 +4958,6 @@ namespace proteus
               globalResidual.data()[offset_w+stride_w*rvel_l2g.data()[eN_i]]+=elementResidual_w[i];
             }//i
         }//ebNE
-      
       if (normalize_pressure)
         {
 	  double send[4]={pa_dv,p_dv,total_volume, total_surface_area}, recv[4]={0.,0.,0.,0.};
@@ -4732,7 +5037,7 @@ namespace proteus
                                               x,y,z);
                   dV = fabs(jacDet)*dV_ref.data()[k];
                   ck.valFromDOF(p_dof.data(),&p_l2g.data()[eN_nDOF_trial_element],&p_trial_ref.data()[k*nDOF_trial_element],p);
-		  if (elementIsActive[eN])
+		  if (isActiveElement[eN])
 		    {
 		      p_dv_new += p*H_s*dV;
 		      pa_dv_new += q_u_0.data()[eN_k]*H_s*dV;
@@ -4744,10 +5049,6 @@ namespace proteus
 		    }
                 }
             }
-          p_L2 = sqrt(p_L2);
-          //        std::cout<<"Pressure Integral Shifted"<<p_dv_new<<std::endl
-          //         <<"Analytical Pressure Integral 2 "<<pa_dv_new<<std::endl
-          //         <<"Errors "<<p_L1<<'\t'<<p_L2<<'\t'<<p_LI<<std::endl;
         }
       assert(errors.shape(0)*errors.shape(1) == 15);
       MPI_Allreduce(MPI_IN_PLACE, errors.data(),(errors.shape(0)-1)*errors.shape(1),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
@@ -4985,6 +5286,8 @@ namespace proteus
       xt::pyarray<double>& ebq_particle_velocity_s = args.array<double>("ebq_particle_velocity_s");
       xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
       xt::pyarray<double>& distance_to_solids = args.array<double>("distance_to_solids");
+      xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
+      xt::pyarray<int>& isActiveElement_last = args.array<int>("isActiveElement_last");
       int nParticles = args.scalar<int>("nParticles");
       int nElements_owned = args.scalar<int>("nElements_owned");
       double particle_nitsche = args.scalar<double>("particle_nitsche");
@@ -5004,6 +5307,7 @@ namespace proteus
       //
       for(int eN=0;eN<nElements_global;eN++)
         {
+	  register int particle_index=0;
           register double eps_rho,eps_mu;
 
           register double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
@@ -5050,6 +5354,28 @@ namespace proteus
                 elementJacobian_w_v[i][j]=0.0;
                 elementJacobian_w_w[i][j]=0.0;
               }
+          if(use_ball_as_particle==1 && nParticles > 0)
+            {
+	      double min_d = 1e10;
+	      particle_index=0;
+              for (int I=0;I<nDOF_mesh_trial_element;I++)
+                {
+		  int index = get_distance_to_ball(nParticles, ball_center.data(), ball_radius.data(),
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+0],
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+1],
+						   mesh_dof.data()[3*mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]+2],
+						   phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]]);
+		  if (phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]] < min_d)
+		    {
+		      min_d = phi_solid_nodes.data()[mesh_l2g.data()[eN*nDOF_mesh_trial_element+I]];
+		      particle_index = index;
+		    }
+		}
+            }
+          else
+            {
+              //phi_solid_nodes is updated in PreStep
+            }
           double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
           for (int j=0;j<nDOF_mesh_trial_element;j++)
             {
@@ -6009,7 +6335,8 @@ namespace proteus
 			    for (int I=0;I<nSpace;I++)
 			      level_set_normal[I] = particle_signed_distance_normals.data()[eN_k_3d+I];
 			}
-                      updateSolidParticleTerms(NONCONSERVATIVE_FORM,
+                      updateSolidParticleTerms(particle_index,
+					       NONCONSERVATIVE_FORM,
                                                eN < nElements_owned,
                                                particle_nitsche,
                                                dV,
@@ -6327,7 +6654,8 @@ namespace proteus
                 }//j
             }//i
         }//elements
-      for (std::set<int>::iterator it=cutfem_boundaries.begin(); it!=cutfem_boundaries.end(); ++it)
+      std::set<int>::iterator it=cutfem_boundaries.begin();
+      while(it!=cutfem_boundaries.end())
         {
           std::map<int,double> DWp_Dn_jump,DW_Dn_jump;
           std::map<std::pair<int, int>, int> p_p_nz, u_u_nz, v_v_nz, w_w_nz;
@@ -6336,8 +6664,9 @@ namespace proteus
           //See Massing Schott Wall 2018
           //cek todo modify for two-fluids: rho_0 != rho_1
           double norm_v=0.0;
-          for (int i=0;i<nDOF_v_trial_element;i++)//MSW18 is just on face, but this is easier
+          for (int i_offset=1;i_offset<nDOF_v_trial_element;i_offset++)//MSW18 is just on face
             {
+	      int i = (cutfem_local_boundaries[*it] + i_offset)%nDOF_v_trial_element;//cek hack only works for P1
               double u=u_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
                 v=v_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
                 w=w_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]];
@@ -6530,6 +6859,7 @@ namespace proteus
                     globalJacobian.data()[w_w_nz.at(ij)] += gamma_cutfem*h_cutfem*DW_Dn_jump_j*DW_Dn_jump_i*dS;
                   }//i,j
             }//kb
+	  it++;
         }//cutfem element boundaries
       //
       //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
@@ -7258,7 +7588,8 @@ namespace proteus
               //
               ck.calculateGScale(G,normal,h_penalty);
               penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext.data()[ebNE_kb];
-              if (elementIsActive[eN])
+              if (isActiveElement[eN])
+                //                if(true)//boundaryFlags[ebN] > 0)
                 { //if boundary flag positive, then include flux contributions on interpart boundaries
                   for (int j=0;j<nDOF_trial_element;j++)
                     {
@@ -7390,7 +7721,7 @@ namespace proteus
               //update the global Jacobian from the flux Jacobian
               //
               const double H_s = gf_s.H(particle_eps, ebqe_phi_s[ebNE_kb]);
-              if (elementIsActive[eN])
+              if (isActiveElement[eN])
                 {
                   for (int i=0;i<nDOF_test_element;i++)
                     {
@@ -7774,6 +8105,7 @@ namespace proteus
     {
       // This should be split off into a seperate function
       double H_rho, ImH_rho, H_mu, ImH_mu, rho, nu, mu;
+
 
       H_rho = (1.0-useVF)*gf.H(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
       ImH_rho = (1.0-useVF)*gf.ImH(eps_rho,phi) + useVF*(1.0-fmin(1.0,fmax(0.0,vf)));

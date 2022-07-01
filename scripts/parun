@@ -372,7 +372,13 @@ elif opts.TwoPhaseFlow:
     case = __import__(name)
     Context.setFromModule(case)
     ct = Context.get()
-    prob = ct.myTpFlowProblem
+    prob = None
+    for contextObject in ct:
+        if isinstance(contextObject,proteus.TwoPhaseFlow.TwoPhaseFlowProblem.TwoPhaseFlowProblem):
+            assert prob is None, 'More than one TwoPhaseFlowProblem object found'
+            prob = contextObject
+    assert prob is not None, "No TwoPhaseFlowProblem object found"
+
     if len(petsc_argv) > 1:  # then petsc.options external file was used
         prob.usePETScOptionsFileExternal = True
     prob.initializeAll()

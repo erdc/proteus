@@ -2407,7 +2407,6 @@ cdef class ProtChMesh:
 
     def __cinit__(self, ProtChSystem system):
         self.ChMeshh = chrono_fea.ChMesh()
-        self.ChMeshh.SetAutomaticGravity(True)
         cdef SwigPyObject *swig_obj = <SwigPyObject*> self.ChMeshh.this
         cdef shared_ptr[ch.ChMesh]* pt_to_shp = <shared_ptr[ch.ChMesh]*> swig_obj.ptr;
         self.mesh = pt_to_shp[0]

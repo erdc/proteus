@@ -78,6 +78,7 @@ class Coefficients(TC_base):
         self.rho_s_min = rho_s_min
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
+        self.variableNames=['pInc']
         self.sedModelIndex = sedModelIndex
         if initialize:
             self.initialize()

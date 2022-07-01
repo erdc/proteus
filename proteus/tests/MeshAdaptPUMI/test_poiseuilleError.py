@@ -8,8 +8,6 @@ from proteus import Comm
 from petsc4py import PETSc
 from proteus import Quadrature
 from proteus.default_n import *
-from nose.tools import eq_ as eq
-from nose.tools import ok_ as ok
 import os
 
 def test_poiseuilleError(verbose=0):
@@ -91,7 +89,7 @@ def test_poiseuilleError(verbose=0):
     # load the femspace with linear basis and get the quadrature points on a reference element
     elementQuadrature = Quadrature.SimplexGaussQuadrature(domain.nd,3)
 
-    ok(mesh.nNodes_element==4) #confirm all of the elements have 4 nodes
+    assert mesh.nNodes_element == 4 #confirm all of the elements have 4 nodes
 
     #hard code computation for H1 seminorm; ideally will be reformatted using the classes within proteus
     derivativeArrayRef = [[1,0,0],[0,1,0],[0,0,1],[-1,-1,-1]]
@@ -123,9 +121,4 @@ def test_poiseuilleError(verbose=0):
             error = error + (exactgradPhi-gradPhi_h)**2*elementQuadrature.weights[k]*abs(detJ)
 
     error = sqrt(error)
-    ok(error<errorTotal)
-
-if __name__ == '__main__':
-    import nose
-    nose.main(defaultTest='test_poiseuilleError:test_poiseuilleError')
-
+    assert error < errorTotal

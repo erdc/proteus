@@ -9,7 +9,7 @@ except ImportError:
     import pkgutil
     __path__ = pkgutil.extend_path(__path__, __name__)
 
-__version__ = '1.7.5dev'
+__version__ = '1.8.1'
 
 __all__ = ["Archiver",
            "Domain",
@@ -40,7 +40,6 @@ __all__ = ["Archiver",
            "SimTools",
            "SubgridError",
            "SubsurfaceTransportCoefficients",
-           "StupidHeap",
            "TimeIntegration",
            "Transport",
            "Viewers",
