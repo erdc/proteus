@@ -7,7 +7,7 @@ from __future__ import division
 from builtins import range
 from past.utils import old_div
 import numpy as np
-from math import fabs
+from math import fabs, isclose
 import proteus
 from proteus import cfemIntegrals, Quadrature, Norms, Comm
 from proteus.NonlinearSolvers import NonlinearEquation
@@ -1082,9 +1082,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ML = np.zeros((self.nFreeDOF_global[0],), 'd')
         for i in range(self.nFreeDOF_global[0]):
             self.ML[i] = self.MC_a[self.rowptr[i]:self.rowptr[i + 1]].sum()
-        np.testing.assert_almost_equal(self.ML.sum(),
-                                       self.mesh.volume,
-                                       err_msg="Trace of lumped mass matrix should be the domain volume", verbose=True)
+        assert isclose(self.ML.sum(),self.mesh.volume,rel_tol=1e-7), "Trace of lumped mass matrix should be the domain volume"+": "+str(self.ML.sum())+" =/= "+str(self.mesh.volume)
         
     def initVectors(self):
         if self.coefficients.porosity_dof is None:
