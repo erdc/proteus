@@ -1116,29 +1116,29 @@ class ShapeSTL(Shape):
         # self.BC = BCContainer(self.BC_dict)
         
     def reloadBCList(self):
-     """ 
-     Allows for easier addition/modification of shape BC's from the input file directly. 
-     Calls to this function should be made after adding a new entry to boundaryTags dict, 
-     and before assignment of boundary conditions.
-     
-     ex:
-     tank.boundaryTags["top"]=2 #<-new BC flag
-     tank.reloadBCList()
-     """
+        """ 
+        Allows for easier addition/modification of shape BC's from the input file directly. 
+        Calls to this function should be made after adding a new entry to boundaryTags dict, 
+        and before assignment of boundary conditions.
+        
+        ex:
+        tank.boundaryTags["top"]=2 #<-new BC flag
+        tank.reloadBCList()
+        """
         self.BC={}
         self.BC_list=[]
         for key,value in self.boundaryTags.items():
             self.BC[key] = self.BC_class(shape=self, name=key)
             self.BC_list += [self.BC[key]]
-
+            
     def assignFacetFlagsFromSTL(self,flag,boundary_stl):
-     """
-     Add flags to ShapeSTL facets using a separate STL surface containing only the boundary facets.
-     
-     ex:
-     tank.assignFacetFlagsFromSTL(boundaryTags["inflow"],"inflow.stl")
-     """
-          
+        """
+        Add flags to ShapeSTL facets using a separate STL surface containing only the boundary facets.
+        
+        ex:
+        tank.assignFacetFlagsFromSTL(boundaryTags["inflow"],"inflow.stl")
+        """
+        
         boundary_stl_info=getInfoFromSTL(boundary_stl)
         for i in range(len(self.facets)):
             if ((self.vertices[self.facets[i][0][0]].tolist() in boundary_stl_info[0].tolist()) and
