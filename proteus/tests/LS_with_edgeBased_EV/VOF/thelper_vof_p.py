@@ -4,13 +4,16 @@ from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
 from math import *
-from .thelper_vof import *
+try:
+    from .thelper_vof import *
+except:
+    from thelper_vof import *
 
 LevelModelType = VOF.LevelModel
 logEvent = Profiling.logEvent
 name=soname
 
-nd=2
+nd=ct.nd
 
 coefficients = MyCoefficients(
     checkMass=checkMass,
@@ -47,6 +50,10 @@ class init_cond(object):
         self.radius = 0.15
         self.xc=0.5
         self.yc=0.75
+        self.xc2=0.5
+        self.yc2=0.25
+        self.xc3=0.25
+        self.yc3=0.5
     def uOfXT(self,x,t):
         if ct.problem==0:
             if (x[0] >= 0.3 and x[0] <= 0.7):
@@ -54,12 +61,21 @@ class init_cond(object):
             else:
                 return 0.0
         else: 
-            r = math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2)
+            r  = math.sqrt((x[0]-self.xc )**2 + (x[1]-self.yc )**2)
+            r2 = math.sqrt((x[0]-self.xc2)**2 + (x[1]-self.yc2)**2)
+            r3 = math.sqrt((x[0]-self.xc3)**2 + (x[1]-self.yc3)**2)
             slit = x[0] > self.xc-0.025 and x[0] < self.xc+0.025 and x[1] < self.yc+0.1125
-            if (r<=self.radius and slit==False):
+            if (r <= self.radius and slit == False):
                 return 1.
-            else:
+            elif (r <= self.radius and slit == True):
                 return 0.
+            elif (r2 <= self.radius):
+                return (1.0 - r2/self.radius)
+            elif (r3 <= self.radius):
+                return (1.0 + math.cos(math.pi*r3/self.radius))/4.0
+            else:
+                return 0.0
+
 initialConditions  = {0:init_cond(L)}
 analyticalSolution = {0:init_cond(L)}
 

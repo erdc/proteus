@@ -1,5 +1,3 @@
-from __future__ import division
-from past.utils import old_div
 from proteus import Domain
 from proteus import Norms
 from proteus import Profiling 
@@ -11,6 +9,7 @@ import math
 ct=Context.Options([
     # General parameters #
     ("problem",0,"0: 1D problem with periodic BCs. 1: 2D rotation of zalesak disk"),
+    ("nd",2,"space dimension"),
     ("T",0.1,"Final time"),
     ("nDTout",1,"Number of time steps to archive"),
     ("refinement",0,"Level of refinement"),
@@ -33,7 +32,7 @@ shockCapturingFactor_vof=0.2
 lag_shockCapturing_vof=True
 
 # number of space dimensions #
-nd=2
+nd=ct.nd
 
 # General parameters #
 parallel = False # if True use PETSc solvers
@@ -54,22 +53,31 @@ partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 
 # create mesh #
 nn=nnx=(2**ct.refinement)*10+1
-nny=old_div((nnx-1),10)+1 if ct.problem==0 else nnx
+nny=1
+if nd == 2:
+    nny=(nnx-1)//10+1 if ct.problem==0 else nnx
 nnz=1
-he=old_div(1.0,(nnx-1.0))
+he=1.0/(nnx-1.0)
 
 unstructured=ct.unstructured #True for tetgen, false for tet or hex from rectangular grid
-box=Domain.RectangularDomain(L=(1.0,0.1 if ct.problem==0 else 1.0),
-                             x=(0.0,0.0),
-                             name="box");
-box.writePoly("box")
-if unstructured:
-    domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
-    domain.boundaryTags = box.boundaryTags
-    bt = domain.boundaryTags
-    triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
-else:
+if nd == 1:
+    box=Domain.RectangularDomain(L=(1.0,),
+                                 x=(0.0,),
+                                 name="box");
     domain = box
+elif nd == 2:
+    box=Domain.RectangularDomain(L=(1.0,0.1 if ct.problem==0 else 1.0),
+                                 x=(0.0,0.0),
+                                 name="box");
+    box.writePoly("box")
+    
+    if unstructured:
+        domain=Domain.PlanarStraightLineGraphDomain(fileprefix="box")
+        domain.boundaryTags = box.boundaryTags
+        bt = domain.boundaryTags
+        triangleOptions="pAq30Dena%8.8f"  % (0.5*he**2,)
+    else:
+        domain = box
 
 domain.MeshOptions.nn = nn
 domain.MeshOptions.nnx = nnx

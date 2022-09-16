@@ -2027,7 +2027,15 @@ namespace proteus
                           int nQuadraturePoints_elementBoundaryIn,
                           int CompKernelFlag)
   {
-    if (nSpaceIn == 2)
+    if (nSpaceIn == 1)
+      return proteus::chooseAndAllocateDiscretization1D<VOF_base,VOF,CompKernel>(nSpaceIn,
+                                                                                 nQuadraturePoints_elementIn,
+                                                                                 nDOF_mesh_trial_elementIn,
+                                                                                 nDOF_trial_elementIn,
+                                                                                 nDOF_test_elementIn,
+                                                                                 nQuadraturePoints_elementBoundaryIn,
+                                                                                 CompKernelFlag);
+    else if (nSpaceIn == 2)
       return proteus::chooseAndAllocateDiscretization2D<VOF_base,VOF,CompKernel>(nSpaceIn,
                                                                                  nQuadraturePoints_elementIn,
                                                                                  nDOF_mesh_trial_elementIn,

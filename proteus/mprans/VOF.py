@@ -1001,7 +1001,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              2: self.q[('x')][:, :, 2]}
         t = self.timeIntegration.t
         self.coefficients.q_v[..., 0] = self.velocityFieldAsFunction[0](X, t)
-        self.coefficients.q_v[..., 1] = self.velocityFieldAsFunction[1](X, t)
+        if (self.nSpace_global == 2):
+            self.coefficients.q_v[..., 1] = self.velocityFieldAsFunction[1](X, t)
         if (self.nSpace_global == 3):
             self.coefficients.q_v[..., 2] = self.velocityFieldAsFunction[2](X, t)
 
@@ -1010,7 +1011,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                   1: self.ebqe['x'][:, :, 1],
                   2: self.ebqe['x'][:, :, 2]}
         self.coefficients.ebqe_v[..., 0] = self.velocityFieldAsFunction[0](ebqe_X, t)
-        self.coefficients.ebqe_v[..., 1] = self.velocityFieldAsFunction[1](ebqe_X, t)
+        if (self.nSpace_global == 2):
+            self.coefficients.ebqe_v[..., 1] = self.velocityFieldAsFunction[1](ebqe_X, t)
         if (self.nSpace_global == 3):
             self.coefficients.ebqe_v[..., 2] = self.velocityFieldAsFunction[2](ebqe_X, t)
             
