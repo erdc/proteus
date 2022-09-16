@@ -3,9 +3,14 @@ from __future__ import absolute_import
 from builtins import range
 from proteus import *
 from proteus.default_n import *
-from .thelper_vof_p import *
-from .thelper_vof import *
-nd = 2
+try:
+    from .thelper_vof_p import *
+    from .thelper_vof import *
+except:
+    from thelper_vof_p import *
+    from thelper_vof import *
+
+nd = ct.nd
 
 multilevelNonlinearSolver  = Newton
 if ct.STABILIZATION_TYPE==0: #SUPG
