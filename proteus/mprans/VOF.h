@@ -175,29 +175,23 @@ namespace proteus
         double flow=0.0;
         for (int I=0; I < nSpace; I++)
           flow += n[I]*velocity[I];
-        //std::cout<<" isDOFBoundary_u= "<<isDOFBoundary_u<<" flow= "<<flow<<std::endl;
         if (isDOFBoundary_u == 1)
           {
-            //std::cout<<"Dirichlet boundary u and bc_u "<<u<<'\t'<<bc_u<<std::endl;
             if (flow >= 0.0)
               {
                 flux = u*flow;
-                //flux = flow;
               }
             else
               {
                 flux = bc_u*flow;
-                //flux = flow;
               }
           }
         else if (isFluxBoundary_u == 1)
           {
             flux = bc_flux_u;
-            //std::cout<<"Flux boundary flux and flow"<<flux<<'\t'<<flow<<std::endl;
           }
         else
           {
-            //std::cout<<"No BC boundary flux and flow"<<flux<<'\t'<<flow<<std::endl;
             if (flow >= 0.0)
               {
                 flux = u*flow;
@@ -221,7 +215,6 @@ namespace proteus
         double flow=0.0;
         for (int I=0; I < nSpace; I++)
           flow += n[I]*velocity[I];
-        //double flow=n[0]*velocity[0]+n[1]*velocity[1]+n[2]*velocity[2];
         dflux=0.0;//default to no flux
         if (isDOFBoundary_u == 1)
           {
@@ -389,25 +382,7 @@ namespace proteus
                   porosity,
                   //
                   G[nSpace*nSpace],G_dd_G,tr_G;//norm_Rv;
-                // //
-                // //compute solution and gradients at quadrature points
-                // //
-                // u=0.0;
-                // for (int I=0;I<nSpace;I++)
-                //   {
-                //     grad_u[I]=0.0;
-                //   }
-                // for (int j=0;j<nDOF_trial_element;j++)
-                //   {
-                //     int eN_j=eN*nDOF_trial_element+j;
-                //     int eN_k_j=eN_k*nDOF_trial_element+j;
-                //     int eN_k_j_nSpace = eN_k_j*nSpace;
-                //     u += valFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_trial[eN_k_j]);
-                //     for (int I=0;I<nSpace;I++)
-                //       {
-                //         grad_u[I] += gradFromDOF_c(u_dof.data()[u_l2g.data()[eN_j]],u_grad_trial[eN_k_j_nSpace+I]);
-                //       }
-                //   }
+
                 ck.calculateMapping_element(eN,
                                             k,
                                             mesh_dof.data(),
@@ -638,7 +613,7 @@ namespace proteus
                       }
                   }//i
                 //
-                //cek/ido todo, get rid of m, since u=m
+                //todo, get rid of m, since u=m
                 //save momentum for time history and velocity for subgrid error
                 //save solution for other models
                 //

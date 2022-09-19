@@ -28,13 +28,13 @@ coefficients.variableNames=['u']
 # VELOCITY FIELD #
 ##################
 def velx(X,t):
-    if ct.problem==0:
+    if ct.problem in [0,2]:
         return 1.0
     else:        
         return -2*pi*(X[1]-0.5)
 
 def vely(X,t):
-    if ct.problem==0:
+    if ct.problem in [0,2]:
         return 0.0
     else:
         return 2*pi*(X[0]-0.5)
@@ -60,7 +60,7 @@ class init_cond(object):
                 return 1.0
             else:
                 return 0.0
-        else: 
+        elif ct.problem==1: 
             r  = math.sqrt((x[0]-self.xc )**2 + (x[1]-self.yc )**2)
             r2 = math.sqrt((x[0]-self.xc2)**2 + (x[1]-self.yc2)**2)
             r3 = math.sqrt((x[0]-self.xc3)**2 + (x[1]-self.yc3)**2)
@@ -75,6 +75,14 @@ class init_cond(object):
                 return (1.0 + math.cos(math.pi*r3/self.radius))/4.0
             else:
                 return 0.0
+        elif ct.problem == 2:
+            if ct.nd == 1:
+                a = 0.15
+                b = 1.0
+                if fabs(x[0] - 0.5) <= a:
+                    return b/a*math.sqrt(a**2 - (x[0] - 0.5)**2)
+                else:
+                    return 0.0
 
 initialConditions  = {0:init_cond(L)}
 analyticalSolution = {0:init_cond(L)}
@@ -83,7 +91,7 @@ analyticalSolution = {0:init_cond(L)}
 # BOUNDARY CONDITIONS #
 #######################
 def getDBC(x,flag):
-    if ct.problem==0:
+    if ct.problem in [0,2]:
         None
     else:
         return lambda x,t: 0.0
@@ -94,7 +102,7 @@ eps=1.0e-8
 def getPDBC(x,flag):
     if x[0] <= eps or x[0] >= (L[0]-eps):
         return numpy.array([0.0,x[1],0.0])
-if ct.problem==0:
+if ct.problem in [0,2]:
     periodicDirichletConditions = {0:getPDBC}
 
 def zeroadv(x,flag):

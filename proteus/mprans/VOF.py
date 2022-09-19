@@ -1127,7 +1127,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
-        # cek can put in logic to skip of BC's don't depend on t or u
+        # cek can put in logic to skip if BC's don't depend on t or u
         # Dirichlet boundary conditions
         # if hasattr(self.numericalFlux,'setDirichletValues'):
         if (self.stage!=2):
