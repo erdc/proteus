@@ -26,7 +26,7 @@ ct=Context.Options([
     ("SSPOrder",2,"SSP method of order 1, 2 or 3")
 ],mutable=True)
 
-assert ct.problem==0 or ct.problem==1, "problem must be set to 0 or 1"
+assert ct.problem==0 or ct.problem==1 or ct.problem == 2, "problem must be set to 0 or 1"
 # SHOCK CAPTURING PARAMETERS #
 shockCapturingFactor_vof=0.2
 lag_shockCapturing_vof=True
@@ -61,7 +61,7 @@ he=1.0/(nnx-1.0)
 
 unstructured=ct.unstructured #True for tetgen, false for tet or hex from rectangular grid
 if nd == 1:
-    box=Domain.RectangularDomain(L=(1.0,),
+    box=Domain.RectangularDomain(L=(2.0,),
                                  x=(0.0,),
                                  name="box");
     domain = box
