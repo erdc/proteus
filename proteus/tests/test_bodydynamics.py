@@ -743,8 +743,8 @@ class Paddle(unittest.TestCase):
             disp = ramp*np.array(At)*np.sin(2*np.pi/Tt[0]*tt)
             rot =  ramp*np.array(Ar)*np.sin(2*np.pi/Tt[0]*tt)
             disp = disp - (PB.last_position - PB.init_barycenter)
-            npt.assert_equal(disp,getVars[0])
-            npt.assert_equal(rot,getVars[1])
+            npt.assert_almost_equal(disp,getVars[0])
+            npt.assert_almost_equal(rot,getVars[1])
             
 
 if __name__ == '__main__':

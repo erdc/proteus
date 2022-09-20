@@ -13,7 +13,7 @@ from proteus import Context
 # *********************************************** #
 ct = Context.get()
 mySWFlowProblem = ct.mySWFlowProblem
-genMesh=mySWFlowProblem.genMesh
+genMesh = mySWFlowProblem.genMesh
 physical_parameters = mySWFlowProblem.physical_parameters
 numerical_parameters = mySWFlowProblem.swe_parameters
 initialConditions = mySWFlowProblem.initialConditions
@@ -21,6 +21,7 @@ boundaryConditions = mySWFlowProblem.boundaryConditions
 bathymetry = mySWFlowProblem.bathymetry
 reflecting_BCs = mySWFlowProblem.reflectingBCs
 analyticalSolution = mySWFlowProblem.analyticalSolution
+waveConditions = mySWFlowProblem.waveConditions
 
 # DOMAIN #
 nd = 2
@@ -36,9 +37,12 @@ if domain is None:
 g = physical_parameters['gravity']
 LINEAR_FRICTION = physical_parameters['LINEAR_FRICTION']
 mannings = physical_parameters['mannings']
+gen_length = physical_parameters['gen_length']
+gen_start = physical_parameters['gen_start']
+abs_length = physical_parameters['abs_length']
+abs_start = physical_parameters['abs_start']
 
 # NUMERICAL PARAMETERS #
-cE = numerical_parameters['cE']
 LUMPED_MASS_MATRIX = numerical_parameters['LUMPED_MASS_MATRIX']
 
 # ********************************** #
@@ -48,10 +52,14 @@ LevelModelType = GN_SW2DCV.LevelModel
 coefficients = GN_SW2DCV.Coefficients(g=g,
                                       bathymetry={
                                           0: bathymetry} if bathymetry is not None else None,
-                                      cE=cE,
                                       LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
                                       LINEAR_FRICTION=LINEAR_FRICTION,
-                                      mannings=mannings)
+                                      mannings=mannings,
+                                      gen_length=gen_length,
+                                      gen_start=gen_start,
+                                      abs_length=abs_length,
+                                      abs_start=abs_start,
+                                      waveConditions=waveConditions)
 
 # **************************************** #
 # ********** INITIAL CONDITIONS ********** #
@@ -100,3 +108,13 @@ if (mySWFlowProblem.analyticalSolution is not None):
                           3: analyticalSolution['heta_exact'],
                           4: analyticalSolution['hw_exact'],
                           5: analyticalSolution['hbeta_exact']}
+# **************************************** #
+# **********   WAVE CONDITIONS   ********* #
+# **************************************** #
+if (mySWFlowProblem.waveConditions is not None):
+    waveConditions = {0: waveConditions['h'],
+                          1: waveConditions['h_u'],
+                          2: waveConditions['h_v'],
+                          3: waveConditions['h_eta'],
+                          4: waveConditions['h_w'],
+                          5: waveConditions['h_beta']}

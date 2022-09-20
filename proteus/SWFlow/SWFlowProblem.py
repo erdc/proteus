@@ -32,7 +32,14 @@ class SWFlowProblem:
                  analyticalSolution=None,
                  # AUXILIARY VARIABLES #
                  auxiliaryVariables=None,
-                 genMesh=True):
+                 genMesh=True,
+                 # GENERATION/absorption #
+                 gen_length=0.,
+                 gen_start=0.,
+                 abs_length=0.,
+                 abs_start=0.,
+                 # WAVE CONDITIONS #
+                 waveConditions=None):
         """ Constructor for structured meshes  """
         # ***** SET OF ASSERTS ***** #
         assert sw_model in [
@@ -44,7 +51,7 @@ class SWFlowProblem:
             he) == float, "Provide (float) he (characteristic mesh size)"
         if structured:
             assert type(nnx) == int and type(
-                nny) == int, "Provide (int) nnx and nny"
+                nny) == int, "Provide (int) nnx and (int) nny"
         if domain is None:
             assert AdH_file is not None, "If domain is None then provide an AdH File"
         else:
@@ -58,7 +65,7 @@ class SWFlowProblem:
         self.assert_boundaryConditions(sw_model, boundaryConditions)
 
         # ***** SAVE PARAMETERS ***** #
-        self.genMesh=genMesh
+        self.genMesh = genMesh
         self.sw_model = sw_model
         self.cfl = cfl
         self.outputStepping = outputStepping.getOutputStepping()
@@ -76,6 +83,7 @@ class SWFlowProblem:
         self.useSuperlu = useSuperlu
         self.analyticalSolution = analyticalSolution
         self.auxiliaryVariables = []
+        self.waveConditions = waveConditions
 
         # ***** CREATE FINITE ELEMENT SPACES ***** #
         self.FESpace = FESpace().getFESpace()
@@ -162,7 +170,11 @@ class FESpace:
 # ***************************************** #
 default_physical_parameters = {'gravity': 9.81,
                                'LINEAR_FRICTION': 0,
-                               'mannings': 0.0}
+                               'mannings': 0.0,
+                               'gen_start': 0.0,
+                               'gen_length': 0.0,
+                               'abs_start': 0.0,
+                               'abs_length': 0.0,}
 
 # ****************************************** #
 # ********** NUMERICAL PARAMETERS ********** #
@@ -170,8 +182,7 @@ default_physical_parameters = {'gravity': 9.81,
 default_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
                           'cfl': 0.33,
                           'SSPOrder': 3,
-                          'cE': 1.0}
+                          'cE' : 1.}
 default_GN_swe_parameters = {'LUMPED_MASS_MATRIX': 0,
                              'cfl': 0.33,
-                             'SSPOrder': 3,
-                             'cE': 1.0}
+                             'SSPOrder': 3}

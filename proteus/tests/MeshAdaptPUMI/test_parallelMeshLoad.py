@@ -4,8 +4,6 @@ from proteus import cmeshTools
 from proteus import Domain
 from proteus.MeshAdaptPUMI import MeshAdapt
 from proteus import Comm
-from nose.tools import eq_ as eq
-from nose.tools import ok_ as ok
 import os
 from petsc4py import PETSc
 import pytest
@@ -52,13 +50,8 @@ def test_2DparallelLoadPUMI(verbose=0):
     mesh = MeshTools.TriangularMesh()
     mesh.cmesh = cmeshTools.CMesh()
     mesh.convertFromPUMI(domain,domain.PUMIMesh, domain.faceList, domain.regList,parallel = comm.size() > 1, dim = domain.nd)
-    eq(mesh.nElements_global,8)
-    eq(mesh.nNodes_global,10)
-    eq(mesh.nEdges_global,17)
-    eq(mesh.nElementBoundaries_global,17)
-
-if __name__ == '__main__':
-    import nose
-    nose.main(defaultTest='test_parallelMeshLoad:test_3DparallelLoadPUMI,test_parallelMeshLoad:test_2DparallelLoadPUMI')
-
+    assert mesh.nElements_global == 8
+    assert mesh.nNodes_global == 10
+    assert mesh.nEdges_global == 17
+    assert mesh.nElementBoundaries_global == 17
 

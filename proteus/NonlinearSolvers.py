@@ -755,11 +755,13 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.secondCallCalculateResidual = 0
         self.computeResidual(u,r,b)
         u[:] = r
+        if par_u is not None:
+            par_u.scatter_forward_insert()
 
         ############################
         # FCT STEP ON WATER HEIGHT #
         ############################
-        logEvent("   FCT Step/Convex Limiting", level=1)
+        logEvent(" FCT Step/Convex Limiting", level=1)
         self.F.FCTStep()
         if par_u is not None:
             par_u.scatter_forward_insert()
@@ -767,6 +769,7 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
         #############################################
         # UPDATE SOLUTION THROUGH calculateResidual #
         #############################################
+        logEvent(" Udpating SWFlow solution", level=1)
         self.F.secondCallCalculateResidual = 1
         self.computeResidual(u,r,b)
         if par_u is not None:

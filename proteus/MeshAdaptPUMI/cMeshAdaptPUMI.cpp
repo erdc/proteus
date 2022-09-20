@@ -767,7 +767,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
   /// Adapt the mesh
   ma::Input* in;
   if(size_field_config == "uniform"){
-    in = ma::configureUniformRefine(m);
+    in = ma::makeAdvanced(ma::configureUniformRefine(m));
     in->shouldFixShape=false;
   }
   else{
@@ -778,12 +778,12 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh(const char* inputString)
       adaptFrame = apf::createFieldOn(m, "adapt_frame", apf::MATRIX);
       apf::copyData(adaptSize, size_scale);
       apf::copyData(adaptFrame, size_frame);
-      in = ma::configure(m, adaptSize, adaptFrame);
+      in = ma::makeAdvanced(ma::configure(m, adaptSize, adaptFrame));
     }
     else{
       adaptSize  = apf::createFieldOn(m, "adapt_size", apf::SCALAR);
       apf::copyData(adaptSize, size_iso);
-      in = ma::configure(m, adaptSize);
+      in = ma::makeAdvanced(ma::configure(m, adaptSize));
     }
   }
 

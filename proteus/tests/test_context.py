@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 import os, sys
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
 
 def ContextObject():
     from collections import namedtuple
@@ -10,9 +8,9 @@ def ContextObject():
     return MyContext._make(list(globalSettings.values()))
 
 def check_eq(context):
-    eq(context.nnx,11)
-    eq(context.T,10.0)
-    eq(context.g,9.8)
+    assert context.nnx == 11
+    assert context.T == 10.0
+    assert context.g == 9.8
 
 def test_set():
     from proteus import Context
@@ -42,7 +40,7 @@ def test_setMutableFromModule():
     check_eq(Context.context)
     ct = Context.get()
     ct.T=11.0
-    eq(ct.T,11.0)
+    assert ct.T == 11.0
 
 def test_get():
     from proteus import Context
@@ -65,7 +63,3 @@ def test_Options():
     os.remove("context_module.py")
     Context.setFromModule(context_module)
     check_eq(Context.context)
-
-if __name__ == '__main__':
-    import nose
-    nose.main()

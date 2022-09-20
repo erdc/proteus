@@ -38,7 +38,7 @@ outputStepping = ct.mySWFlowProblem.outputStepping
 # **************************** #
 if sw_model == 0:  # SWEs
     pnList = [("sw_p", "sw_n")]
-else:
+else: # DSWEs
     pnList = [("GN_sw_p", "GN_sw_n")]
 
 # **************************** #
