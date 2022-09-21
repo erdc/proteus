@@ -9,6 +9,7 @@ from proteus.Transport import TC_base, NonlinearEquation, logEvent, memory
 from proteus.Transport import FluxBoundaryConditions, Comm, cfemIntegrals
 from proteus.Transport import DOFBoundaryConditions, Quadrature
 from proteus.mprans import cArgumentsDict
+from proteus.LinearAlgebraTools import SparseMat
 
 class RKEV(proteus.TimeIntegration.SSP):
     from proteus import TimeIntegration
@@ -296,7 +297,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
-            
+
     def initializeMesh(self,mesh):
         from proteus.SubsurfaceTransportCoefficients import BlockHeterogeneousCoefficients
         self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
@@ -438,7 +439,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeTerm=True#allow turning off  the  time derivative
         #self.lowmem=False
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.ua = {}#analytical solutions
         self.phi  = phiDict
@@ -449,7 +450,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.reuse_test_trial_quadrature:
             for ci in range(1,coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
-        self.u_dof_old = None    
+        self.u_dof_old = None
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
         self.testSpace = testSpaceDict
@@ -498,7 +499,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
             self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+                                                 (numericalFluxType != None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -512,7 +513,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in list(self.testSpace.values())]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -567,7 +568,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -675,7 +676,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
-           
+
         if options != None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -781,7 +782,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if ci in self.coefficients.advection:
                     self.ebqe[('advectiveFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     self.ebqe[('advectiveFlux_bc_flag',ci)][t[0],t[1]] = 1
-        
+
         if hasattr(self.numericalFlux,'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
         if not hasattr(self.numericalFlux,'isDOFBoundary'):
@@ -871,7 +872,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                self.dirichletConditions[0].global2freeGlobal_free_dofs,
                                                                limited_solution,
                                                                self.timeintegration.u_dof_stage[0][self.timeIntegration.lstage])
-        
+
         self.richards.kth_FCT_step(
             self.timeIntegration.dt,
             self.coefficients.num_fct_iter,
@@ -885,11 +886,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.uLow,
             self.dLow,
             self.fluxMatrix,
-            limitedFlux,            
+            limitedFlux,
             rowptr,
             colind)
 
-        self.timeIntegration.u[:] = limited_solution        
+        self.timeIntegration.u[:] = limited_solution
         #self.u[0].dof[:] = limited_solution
         fromFreeToGlobal=1 #direction copying
         cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
@@ -1159,7 +1160,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
         argsDict["nElements_global"] = self.mesh.nElements_global
         argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
-        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,  
+        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,
         argsDict["isSeepageFace"] = self.coefficients.isSeepageFace
         argsDict["a_rowptr"] = self.coefficients.sdInfo[(0,0)][0]
         argsDict["a_colind"] = self.coefficients.sdInfo[(0,0)][1]
@@ -1205,6 +1206,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["epsFact"] = 0.0
         argsDict["ebqe_u"] = self.ebqe[('u',0)]
         argsDict["ebqe_flux"] = self.ebqe[('advectiveFlux',0)]
+        argsDict['STABILIZATION_TYPE'] = self.coefficients.STABILIZATION_TYPE
         # ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
         argsDict["cE"] = self.coefficients.cE
         argsDict["cK"] = self.coefficients.cK
@@ -1213,6 +1215,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["uR"] = self.coefficients.uR
         # PARAMETERS FOR EDGE VISCOSITY
         argsDict["numDOFs"] = len(rowptr) - 1  # num of DOFs
+        argsDict["NNZ"] = self.nnz 
         argsDict["Cx"] = len(Cx)  # num of non-zero entries in the sparsity pattern
         argsDict["csrRowIndeces_DofLoops"] = rowptr  # Row indices for Sparsity Pattern (convenient for DOF loops)
         argsDict["csrColumnOffsets_DofLoops"] = colind  # Column indices for Sparsity Pattern (convenient for DOF loops)
@@ -1237,7 +1240,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["fluxMatrix"] = self.fluxMatrix
         argsDict["uDotLow"] = self.uDotLow
         argsDict["uLow"] = self.uLow
-        argsDict["dt_times_dC_minux_dL"] = self.dt_times_dC_minus_dL
+        argsDict["dt_times_fH_minus_fL"] = self.dt_times_dC_minus_dL
         argsDict["min_s_bc"] = self.min_s_bc
         argsDict["max_s_bc"] = self.max_s_bc
         argsDict["quantDOFs"] = self.quantDOFs
@@ -1269,7 +1272,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = np.zeros(r.shape,'d')
-    
+
     def invert(self,u,r):
         #u=s
         #r=p
@@ -1336,7 +1339,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #physics
             self.mesh.nElements_global,
             self.ebqe['penalty'],#double* ebqe_penalty_ext,
-            self.mesh.elementMaterialTypes,#int* elementMaterialTypes,	
+            self.mesh.elementMaterialTypes,#int* elementMaterialTypes,
             self.coefficients.isSeepageFace,
             self.coefficients.sdInfo[(0,0)][0],#int* a_rowptr,
             self.coefficients.sdInfo[(0,0)][1],#int* a_colind,
@@ -1347,13 +1350,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.vgm_n_types,#double* n,
             self.coefficients.thetaR_types,#double* thetaR,
             self.coefficients.thetaSR_types,#double* thetaSR,
-            self.coefficients.Ksw_types,#double* KWs,            
-	    False,#self.coefficients.useMetrics, 
+            self.coefficients.Ksw_types,#double* KWs,
+            False,#self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
             0,#self.shockCapturing.lag,
             0.0,#cek hack self.shockCapturing.shockCapturingFactor,
-	    0.0,#self.coefficients.sc_uref, 
-	    0.0,#self.coefficients.sc_beta,
+            0.0,#self.coefficients.sc_uref,
+            0.0,#self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
             self.l2g[0]['freeGlobal'],
             self.mesh.elementDiametersArray,
@@ -1423,9 +1426,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.q[('mt',0)] *= self.timeIntegration.alpha_bdf
         #self.q[('mt',0)] += self.timeIntegration.beta_bdf[0]
         #self.timeIntegration.calculateElementCoefficients(self.q)
-	if self.forceStrongConditions:#
-	    for cj in range(len(self.dirichletConditionsForceDOF)):#
-		for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
@@ -1469,7 +1472,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
         argsDict["nElements_global"] = self.mesh.nElements_global
         argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
-        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,  
+        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,
         argsDict["isSeepageFace"] = self.coefficients.isSeepageFace
         argsDict["a_rowptr"] = self.coefficients.sdInfo[(0,0)][0]
         argsDict["a_colind"] = self.coefficients.sdInfo[(0,0)][1]
@@ -1507,7 +1510,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["ebqe_bc_flux_ext"] = self.ebqe[('advectiveFlux_bc',0)]
         argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0,0)]
         argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
-        self.vof.calculateJacobian(argsDict)
+        self.calculateJacobian(argsDict)
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
             for cj in range(self.nc):
@@ -1528,7 +1531,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
         #self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
