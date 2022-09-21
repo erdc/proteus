@@ -31,4 +31,5 @@ __all__ = ["AddedMass",
            "RANS2P",
            "RDLS",
            "SW2D",
-           "VOS3P"]
+           "VOS3P",
+           "TADR"]
