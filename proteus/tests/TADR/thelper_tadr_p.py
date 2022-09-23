@@ -5,11 +5,11 @@ from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
 from math import *
 try:
-    from .thelper_vof import *
+    from .thelper_tadr import *
 except:
-    from thelper_vof import *
+    from thelper_tadr import *
 
-LevelModelType = VOF.LevelModel
+LevelModelType = TADR.LevelModel
 logEvent = Profiling.logEvent
 name=soname
 
@@ -21,7 +21,7 @@ coefficients = MyCoefficients(
     LUMPED_MASS_MATRIX=ct.LUMPED_MASS_MATRIX, 
     STABILIZATION_TYPE=ct.STABILIZATION_TYPE, 
     ENTROPY_TYPE=ct.ENTROPY_TYPE, 
-    cE=ct.cE, cK=ct.cK) 
+    cE=ct.cE, cK=ct.cK, physicalDiffusion=ct.physicalDiffusion) 
 coefficients.variableNames=['u']
 
 ##################

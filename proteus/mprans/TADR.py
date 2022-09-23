@@ -24,11 +24,11 @@ from proteus.ShockCapturing import ShockCapturing_base
 from proteus.LinearAlgebraTools import SparseMat
 from proteus.NonlinearSolvers import ExplicitLumpedMassMatrix,ExplicitConsistentMassMatrixForVOF,TwoStageNewton
 from proteus import TimeIntegration
-from proteus.mprans.cVOF import *
+from proteus.mprans.cTADR import *
 from proteus import *
 from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
-#from . import cVOF3P
+
 from . import cArgumentsDict
 
 class SubgridError(SGE_base):
@@ -59,7 +59,7 @@ class ShockCapturing(ShockCapturing_base):
         self.nStepsToDelay = nStepsToDelay
         self.nSteps = 0
         if self.lag:
-            logEvent("VOF.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
+            logEvent("TADR.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
             self.nStepsToDelay = 1
             self.lag = False
 
@@ -77,12 +77,12 @@ class ShockCapturing(ShockCapturing_base):
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
-            logEvent("VOF.ShockCapturing: switched to lagged shock capturing")
+            logEvent("TADR.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             self.numDiff_last = []
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        logEvent("VOF: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        logEvent("TADR: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,
@@ -311,7 +311,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  outputQuantDOFs=False,
                  #NULLSPACE INFO
                  nullSpace='NoNullSpace',
-                 initialize=True):
+                 initialize=True,
+                 physicalDiffusion=0.0):
 
         self.variableNames = ['vof']
         self.LS_modelIndex = LS_model
@@ -355,6 +356,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.porosity_dof = None
         self.flowCoefficients = None
         self.set_vos = set_vos
+        self.physicalDiffusion=physicalDiffusion
         if initialize:
             self.initialize()
 
@@ -363,9 +365,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         mass = {0: {0: 'linear'}}
         advection = {0: {0: 'linear'}}
         hamiltonian = {}
-        diffusion = {}
-        potential = {}
-        reaction = {}
+        diffusion = {0: {0: {0: 'constant'}}}
+        potential = {0: {0: 'u'} }
+        reaction = {0: {0: 'linear'}}
         TC_base.__init__(self,
                          nc,
                          mass,
@@ -476,7 +478,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV_last'],
                                                     self.model.q[('m', 0)],
                                                     self.model.mesh.nElements_owned)
-            logEvent("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,), level=2)
+            logEvent("Phase  0 mass before TADR step = %12.5e" % (self.m_pre,), level=2)
         copyInstructions = {}
         return copyInstructions
 
@@ -486,12 +488,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m', 0)],
                                                      self.model.mesh.nElements_owned)
-            logEvent("Phase  0 mass after VOF step = %12.5e" % (self.m_post,), level=2)
+            logEvent("Phase  0 mass after TADR step = %12.5e" % (self.m_post,), level=2)
             # self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
             #                                                     self.model.ebqe[('advectiveFlux',0)],
             #                                                     self.model.mesh)
-            #logEvent("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
-            #logEvent("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            #logEvent("Phase  0 mass flux boundary integral after TADR step = %12.5e" % (self.fluxIntegral,),level=2)
+            #logEvent("Phase  0 mass conservation after TADR step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             # divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.model.ebqe['dS'],
             #                                                        self.ebqe_v,
             #                                                        self.model.ebqe['n'],
@@ -506,7 +508,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def evaluate(self, t, c):
         # mwf debug
-        # print "VOFcoeficients eval t=%s " % t
+        # print "TADRcoeficients eval t=%s " % t
         if c[('f', 0)].shape == self.q_v.shape:
             v = self.q_v
             phi = self.q_phi
@@ -524,7 +526,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             phi = None
             porosity = None
         if v is not None:
-            # self.VOFCoefficientsEvaluate(self.eps,
+            # self.TADRCoefficientsEvaluate(self.eps,
             #                              v,
             #                              phi,
             #                              c[('u',0)],
@@ -541,6 +543,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                        c[('dm', 0, 0)],
                                                        c[('f', 0)],
                                                        c[('df', 0, 0)])
+            c[('a',0,0)][:] = self.physicalDiffusion 
         # if self.checkMass:
         #     logEvent("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                                                        self.model.q[('m',0)],
@@ -886,7 +889,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag = 0
-        self.vof = cVOF_base(self.nSpace_global,
+        self.vof = cTADR_base(self.nSpace_global,
                              self.nQuadraturePoints_element,
                              self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                              self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
@@ -908,7 +911,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Stuff added by mql.
         # Some ASSERTS to restrict the combination of the methods
         if self.coefficients.STABILIZATION_TYPE > 1:
-            assert self.timeIntegration.isSSP == True, "If STABILIZATION_TYPE>1, use RKEV timeIntegration within VOF model"
+            assert self.timeIntegration.isSSP == True, "If STABILIZATION_TYPE>1, use RKEV timeIntegration within TADR model"
             cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver ==
                                                                ExplicitLumpedMassMatrix or options.levelNonlinearSolver == ExplicitConsistentMassMatrixForVOF)
             assert cond, "If STABILIZATION_TYPE>1, use levelNonlinearSolver=ExplicitLumpedMassMatrix or ExplicitConsistentMassMatrixForVOF"
@@ -1233,6 +1236,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["min_u_bc"] = self.min_u_bc
         argsDict["max_u_bc"] = self.max_u_bc
         argsDict["quantDOFs"] = self.quantDOFs
+        argsDict["physicalDiffusion"] = self.coefficients.physicalDiffusion                 
         self.calculateResidual(argsDict)
 
         if self.forceStrongConditions:
@@ -1307,6 +1311,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["ebqe_bc_flux_u_ext"] = self.ebqe[('advectiveFlux_bc', 0)]
         argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0, 0)]
         argsDict["STABILIZATION_TYPE"] = self.coefficients.STABILIZATION_TYPE
+        argsDict["physicalDiffusion"] = self.coefficients.physicalDiffusion                 
         self.calculateJacobian(argsDict)
 
         # Load the Dirichlet conditions directly into residual

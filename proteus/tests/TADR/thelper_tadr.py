@@ -2,12 +2,13 @@ from proteus import Domain
 from proteus import Norms
 from proteus import Profiling 
 from proteus import Context 
-from proteus.mprans import VOF
+from proteus.mprans import TADR
 import numpy as np
 import math 
 
 ct=Context.Options([
     # General parameters #
+    ("physicalDiffusion", 0.0, "isotropic diffusion coefficient"),
     ("problem",0,"0: 1D problem with periodic BCs. 1: 2D rotation of zalesak disk"),
     ("nd",2,"space dimension"),
     ("T",0.1,"Final time"),
@@ -28,8 +29,8 @@ ct=Context.Options([
 
 assert ct.problem==0 or ct.problem==1 or ct.problem == 2, "problem must be set to 0 or 1"
 # SHOCK CAPTURING PARAMETERS #
-shockCapturingFactor_vof=0.2
-lag_shockCapturing_vof=True
+shockCapturingFactor_tadr=0.2
+lag_shockCapturing_tadr=True
 
 # number of space dimensions #
 nd=ct.nd
@@ -40,12 +41,12 @@ linearSmoother = None
 checkMass = False
 
 # Finite element sapce #
-pDegree_vof=1
+pDegree_tadr=1
 useBernstein=False
 useHex=False
 
 # quadrature order #
-vof_quad_order = 2*pDegree_vof+1
+tadr_quad_order = 2*pDegree_tadr+1
 
 # parallel partitioning info #
 from proteus import MeshTools
@@ -85,9 +86,9 @@ domain.MeshOptions.nny = nny
 domain.MeshOptions.nnz = nnz
 domain.MeshOptions.triangleFlag=0
 
-soname="vof_level_"+repr(ct.refinement)
+soname="tadr_level_"+repr(ct.refinement)
 
-class MyCoefficients(VOF.Coefficients):
+class MyCoefficients(TADR.Coefficients):
     def attachModels(self,modelList):
         self.model = modelList[0]
         self.rdModel = self.model

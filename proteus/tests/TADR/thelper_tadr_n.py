@@ -4,11 +4,11 @@ from builtins import range
 from proteus import *
 from proteus.default_n import *
 try:
-    from .thelper_vof_p import *
-    from .thelper_vof import *
+    from .thelper_tadr_p import *
+    from .thelper_tadr import *
 except:
-    from thelper_vof_p import *
-    from thelper_vof import *
+    from thelper_tadr_p import *
+    from thelper_tadr import *
 
 nd = ct.nd
 
@@ -26,7 +26,7 @@ elif ct.STABILIZATION_TYPE==1: #TaylorGalerkin
 else:
     fullNewtonFlag = False
     updateJacobian = False
-    timeIntegration = VOF.RKEV # SSP33
+    timeIntegration = TADR.RKEV # SSP33
     if ct.LUMPED_MASS_MATRIX==True:
         levelNonlinearSolver = ExplicitLumpedMassMatrix
     else:
@@ -40,38 +40,38 @@ nStagesTime = ct.SSPOrder
 if useHex:
     hex=True
     quad=True
-    if pDegree_vof == 1:
+    if pDegree_tadr == 1:
         femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis}
-    elif pDegree_vof == 2:
+    elif pDegree_tadr == 2:
         if useBernstein:
             femSpaces = {0:C0_AffineBernsteinOnCube}
         else:
             femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
     else:
-        print("pDegree = %s not recognized " % pDegree_vof)
-    elementQuadrature = CubeGaussQuadrature(nd,vof_quad_order)
-    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vof_quad_order)
+        print("pDegree = %s not recognized " % pDegree_tadr)
+    elementQuadrature = CubeGaussQuadrature(nd,tadr_quad_order)
+    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,tadr_quad_order)
 else:
-    if pDegree_vof == 1:
+    if pDegree_tadr == 1:
         femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
-    elif pDegree_vof == 2:
+    elif pDegree_tadr == 2:
         femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
     else:
-        print("pDegree = %s not recognized " % pDegree_vof)
-    elementQuadrature = SimplexGaussQuadrature(nd,vof_quad_order)
-    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vof_quad_order)
+        print("pDegree = %s not recognized " % pDegree_tadr)
+    elementQuadrature = SimplexGaussQuadrature(nd,tadr_quad_order)
+    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,tadr_quad_order)
 
-#numericalFluxType = VOF.NumericalFlux
+#numericalFluxType = TADR.NumericalFlux
 #numericalFluxType = DoNothing
 numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior # PERIODIC
 
-shockCapturing = VOF.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_vof,lag=lag_shockCapturing_vof)
+shockCapturing = TADR.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_tadr,lag=lag_shockCapturing_tadr)
 
 matrix = SparseMatrix
 if parallel:
     multilevelLinearSolver = KSP_petsc4py
     levelLinearSolver = KSP_petsc4py
-    linear_solver_options_prefix = 'vof_'
+    linear_solver_options_prefix = 'tadr_'
     linearSolverConvergenceTest = 'r-true'
 else:
     multilevelLinearSolver = LU
