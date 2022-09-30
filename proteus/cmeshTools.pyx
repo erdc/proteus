@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+from os.path import exists
 import cython
 cimport cython
 import numpy as np
@@ -386,15 +387,21 @@ cpdef void generateFrom3DMFile(CMesh cmesh,
     cdef int failed
     failed = cppm.read3DM(cmesh.mesh,filebase.encode('utf8'),base);
     cppm.constructElementBoundaryElementsArray_tetrahedron(cmesh.mesh);
-    failed = cppm.readBC(cmesh.mesh,filebase.encode('utf8'),base);
-
+    if exists(filebase+".bc"):
+        failed = cppm.readBC(cmesh.mesh,filebase.encode('utf8'),base);
+    else:
+        failed = False;
+    
 cpdef void generateFrom2DMFile(CMesh cmesh,
                               unicode filebase,
                               int base):
     cdef int failed
     failed = cppm.read2DM(cmesh.mesh,filebase.encode('utf8'),base);
     cppm.constructElementBoundaryElementsArray_triangle(cmesh.mesh);
-    failed = cppm.readBC(cmesh.mesh,filebase.encode('utf8'),base);
+    if exists(filebase+".bc"):
+        failed = cppm.readBC(cmesh.mesh,filebase.encode('utf8'),base);
+    else:
+        failed = False
 
 cpdef void computeGeometricInfo_tetrahedron(CMesh cmesh):
     cppm.computeGeometricInfo_tetrahedron(cmesh.mesh);

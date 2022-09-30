@@ -164,8 +164,8 @@ namespace proteus
 	    {
 	      f[I]  += rho2*KWr*KWs[ii]*gravity[colind[ii]];
 	      df[I] += -rho2*DKWr_DpsiC*KWs[ii]*gravity[colind[ii]];
-	      a[ii]  = rho*KWs[ii];
-	      da[ii] = 0.0;
+	      a[ii]  = rho*KWr*KWs[ii];
+	      da[ii] = rho*DKWr_DpsiC*KWs[ii];
 	      kr = KWr;
 	      dkr=DKWr_DpsiC;
 	    }
@@ -2831,13 +2831,33 @@ namespace proteus
 				    int nQuadraturePoints_elementBoundaryIn,
 				    int CompKernelFlag)
   {
-    return proteus::chooseAndAllocateDiscretization<Richards_base,Richards,CompKernel>(nSpaceIn,
-										       nQuadraturePoints_elementIn,
-										       nDOF_mesh_trial_elementIn,
-										       nDOF_trial_elementIn,
-										       nDOF_test_elementIn,
-										       nQuadraturePoints_elementBoundaryIn,
-										       CompKernelFlag);
+    if (nSpaceIn == 1)
+      return proteus::chooseAndAllocateDiscretization1D<Richards_base,Richards,CompKernel>(nSpaceIn,
+											 nQuadraturePoints_elementIn,
+											 nDOF_mesh_trial_elementIn,
+											 nDOF_trial_elementIn,
+											 nDOF_test_elementIn,
+											 nQuadraturePoints_elementBoundaryIn,
+											   CompKernelFlag);
+    else if (nSpaceIn == 2)
+      return proteus::chooseAndAllocateDiscretization2D<Richards_base,Richards,CompKernel>(nSpaceIn,
+											   nQuadraturePoints_elementIn,
+											   nDOF_mesh_trial_elementIn,
+											   nDOF_trial_elementIn,
+											   nDOF_test_elementIn,
+											   nQuadraturePoints_elementBoundaryIn,
+											   CompKernelFlag);
+    else
+      {
+	assert(nSpaceIn == 3);
+	return proteus::chooseAndAllocateDiscretization<Richards_base,Richards,CompKernel>(nSpaceIn,
+											   nQuadraturePoints_elementIn,
+											   nDOF_mesh_trial_elementIn,
+											   nDOF_trial_elementIn,
+											   nDOF_test_elementIn,
+											   nQuadraturePoints_elementBoundaryIn,
+											   CompKernelFlag);
+      }
   }
 }//proteus
 #endif

@@ -5601,6 +5601,9 @@ int read2DM(Mesh& mesh, const char* filebase, int indexBase)
       failed = true;
       return failed;
     }
+  std::string meshName;
+  meshFile>>meshName>>meshName;
+  std::cout<<meshName<<std::endl;
   std::string firstWord;
   meshFile>>firstWord;
   mesh.nElements_global=0;

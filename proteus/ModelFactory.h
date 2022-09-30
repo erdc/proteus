@@ -513,7 +513,17 @@ namespace proteus
 	      {
 		if (nDOF_mesh_trial_elementIn == 2) // P1 FE-space. Default nquad=4
 		  {
-		    if (nQuadraturePoints_elementIn == 3)
+		    if (nQuadraturePoints_elementIn == 2)
+		      {
+		    	if (nQuadraturePoints_elementBoundaryIn == 1)
+			  return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<1,2,2,2>,1,2,2,2,2,1>());
+		    	else
+		    	  {
+		    	    NO_INSTANCE;
+		    	    abort();
+		    	  }
+		      }
+		    else if (nQuadraturePoints_elementIn == 3)
 		      {
 		    	if (nQuadraturePoints_elementBoundaryIn == 1)
 			  return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<1,2,2,2>,1,3,2,2,2,1>());
@@ -522,6 +532,16 @@ namespace proteus
 		    	    NO_INSTANCE;
 		    	    abort();
 		    	  }
+		      }
+		    else if (nQuadraturePoints_elementIn == 4)
+		      {
+			if (nQuadraturePoints_elementBoundaryIn == 1)
+			  return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<1,2,2,2>,1,4,2,2,2,1>());
+			else
+			  {
+			    NO_INSTANCE;
+			    abort();
+			  }
 		      }
 		    else
 		      {
