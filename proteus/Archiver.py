@@ -73,7 +73,7 @@ class AR_base(object):
                                  "rb")
             else:
                 xmlFile_old=open(os.path.join(self.dataDir,
-                                              filename+str(self.rank)()+".xmf"),
+                                              filename+str(self.rank)+".xmf"),
                                  "rb")
             self.tree=ElementTree(file=xmlFile_old)
             if self.comm.isMaster():
@@ -83,7 +83,7 @@ class AR_base(object):
                 self.treeGlobal=copy.deepcopy(self.tree)
             if not useGlobalXMF:
                 self.xmlFile=open(os.path.join(self.dataDir,
-                                               filename+str(self.rank)()+".xmf"),
+                                               filename+str(self.rank)+".xmf"),
                                   "ab")
             if not useTextArchive:
                 self.hdfFilename=filename+".h5"
@@ -108,7 +108,7 @@ class AR_base(object):
                                   "rb")
             else:
                 self.xmlFile=open(os.path.join(self.dataDir,
-                                               filename+str(self.rank)()+".xmf"),
+                                               filename+str(self.rank)+".xmf"),
                                   "rb")
             self.tree=ElementTree(file=self.xmlFile)
             if not useTextArchive:
@@ -137,7 +137,7 @@ class AR_base(object):
         else:
             if not self.useGlobalXMF:
                 self.xmlFile=open(os.path.join(self.dataDir,
-                                               filename+str(self.rank)()+".xmf"),
+                                               filename+str(self.rank)+".xmf"),
                                   "wb")
             self.tree=ElementTree(
                 Element("Xdmf",
@@ -335,9 +335,9 @@ class AR_base(object):
         self.allGatherIncremental()
         self.clear_xml()
         if not self.useGlobalXMF:
-            self.xmlFile.write(self.xmlHeader)
+            self.xmlFile.write(bytes(self.xmlHeader,"utf-8"))
             indentXML(self.tree.getroot())
-            self.tree.write(self.xmlFile)
+            self.tree.write(self.xmlFile, encoding="utf-8")
             self.xmlFile.flush()
         #delete grids for step from tree
         XDMF =self.tree.getroot()

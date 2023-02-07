@@ -9,6 +9,186 @@ from proteus.Transport import TC_base, NonlinearEquation, logEvent, memory
 from proteus.Transport import FluxBoundaryConditions, Comm, cfemIntegrals
 from proteus.Transport import DOFBoundaryConditions, Quadrature
 from proteus.mprans import cArgumentsDict
+from proteus.LinearAlgebraTools import SparseMat
+
+class RKEV(proteus.TimeIntegration.SSP):
+    from proteus import TimeIntegration
+    """
+    Wrapper for SSPRK time integration using EV
+
+    ... more to come ...
+    """
+
+    def __init__(self, transport, timeOrder=1, runCFL=0.1, integrateInterpolationPoints=False):
+        TimeIntegration.SSP.__init__(self, transport, integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL = runCFL
+        self.dtLast = None
+        self.isAdaptive = True
+        # About the cfl
+        assert transport.coefficients.STABILIZATION_TYPE > 0, "SSP method just works for edge based EV methods; i.e., STABILIZATION_TYPE>0"
+        assert hasattr(transport, 'edge_based_cfl'), "No edge based cfl defined"
+        self.cfl = transport.edge_based_cfl
+        # Stuff particular for SSP
+        self.timeOrder = timeOrder  # order of approximation
+        self.nStages = timeOrder  # number of stages total
+        self.lstage = 0  # last stage completed
+        # storage vectors
+        self.u_dof_last = {}
+        # per component stage values, list with array at each stage
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+            if ('m', ci) in transport.q:
+                self.u_dof_last[ci] = transport.u[ci].dof.copy()
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages + 1):
+                    self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+
+    # def set_dt(self, DTSET):
+    #    self.dt = DTSET #  don't update t
+    def choose_dt(self):
+        maxCFL = 1.0e-6
+        maxCFL = max(maxCFL, globalMax(self.cfl.max()))
+        self.dt = old_div(self.runCFL, maxCFL)
+        if self.dtLast is None:
+            self.dtLast = self.dt
+        self.t = self.tLast + self.dt
+        self.substeps = [self.t for i in range(self.nStages)]  # Manuel is ignoring different time step levels for now
+
+    def initialize_dt(self, t0, tOut, q):
+        """
+        Modify self.dt
+        """
+        self.tLast = t0
+        self.choose_dt()
+        self.t = t0 + self.dt
+
+    def setCoefficients(self):
+        """
+        beta are all 1's here
+        mwf not used right now
+        """
+        self.alpha = np.zeros((self.nStages, self.nStages), 'd')
+        self.dcoefs = np.zeros((self.nStages), 'd')
+
+    def updateStage(self):
+        """
+        Need to switch to use coefficients
+        """
+        self.lstage += 1
+        assert self.timeOrder in [1, 2, 3]
+        assert self.lstage > 0 and self.lstage <= self.timeOrder
+        if self.timeOrder == 3:
+            if self.lstage == 1:
+                logEvent("First stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+            elif self.lstage == 2:
+                logEvent("Second stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage] *= old_div(1., 4.)
+                    self.u_dof_stage[ci][self.lstage] += 3. / 4. * self.u_dof_last[ci]
+                    # Update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+            elif self.lstage == 3:
+                logEvent("Third stage of SSP33 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage] *= old_div(2.0, 3.0)
+                    self.u_dof_stage[ci][self.lstage] += 1.0 / 3.0 * self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
+        elif self.timeOrder == 2:
+            if self.lstage == 1:
+                logEvent("First stage of SSP22 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    # Update u_dof_old
+                    self.transport.u_dof_old[:] = self.transport.u[ci].dof
+            elif self.lstage == 2:
+                logEvent("Second stage of SSP22 method", level=4)
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
+                    self.u_dof_stage[ci][self.lstage][:] *= old_div(1., 2.)
+                    self.u_dof_stage[ci][self.lstage][:] += 1. / 2. * self.u_dof_last[ci]
+                    # update u_dof_old
+                    self.transport.u_dof_old[:] = self.u_dof_last[ci]
+                    # update solution to u[0].dof
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage]
+        else:
+            assert self.timeOrder == 1
+            for ci in range(self.nc):
+                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+                self.transport.u_dof_old[:] = self.transport.u[ci].dof
+
+    def initializeTimeHistory(self, resetFromDOF=True):
+        """
+        Push necessary information into time history arrays
+        """
+        for ci in range(self.nc):
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            for k in range(self.nStages):
+                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+
+    def updateTimeHistory(self, resetFromDOF=False):
+        """
+        assumes successful step has been taken
+        """
+
+        self.t = self.tLast + self.dt
+        for ci in range(self.nc):
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            for k in range(self.nStages):
+                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+        self.lstage = 0
+        self.dtLast = self.dt
+        self.tLast = self.t
+
+    def generateSubsteps(self, tList):
+        """
+        create list of substeps over time values given in tList. These correspond to stages
+        """
+        self.substeps = []
+        tLast = self.tLast
+        for t in tList:
+            dttmp = t - tLast
+            self.substeps.extend([tLast + dttmp for i in range(self.nStages)])
+            tLast = t
+
+    def resetOrder(self, order):
+        """
+        initialize data structures for stage updges
+        """
+        self.timeOrder = order  # order of approximation
+        self.nStages = order  # number of stages total
+        self.lstage = 0  # last stage completed
+        # storage vectors
+        # per component stage values, list with array at each stage
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+            if ('m', ci) in self.transport.q:
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages + 1):
+                    self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
+        self.substeps = [self.t for i in range(self.nStages)]
+
+    def setFromOptions(self, nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        if 'runCFL' in dir(nOptions):
+            self.runCFL = nOptions.runCFL
+        flags = ['timeOrder']
+        for flag in flags:
+            if flag in dir(nOptions):
+                val = getattr(nOptions, flag)
+                setattr(self, flag, val)
+                if flag == 'timeOrder':
+                    self.resetOrder(self.timeOrder)
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
@@ -27,7 +207,22 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  density,
                  beta,
                  diagonal_conductivity=True,
-                 getSeepageFace=None):
+                 getSeepageFace=None,
+                # FOR EDGE BASED EV
+                 STABILIZATION_TYPE=0,
+                 ENTROPY_TYPE=2,  # logarithmic
+                 LUMPED_MASS_MATRIX=False,
+                 MONOLITHIC=True,
+                 FCT=True,
+                 num_fct_iter=1,
+                 # FOR ENTROPY VISCOSITY
+                 cE=1.0,
+                 uL=0.0,
+                 uR=1.0,
+                 # FOR ARTIFICIAL COMPRESSION
+                 cK=1.0,
+                 # OUTPUT quantDOFs
+                 outputQuantDOFs=False):
         variableNames=['pressure_head']
         nc=1
         mass={0:{0:'nonlinear'}}
@@ -78,6 +273,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 assert Ksw_types.shape[1] == self.nd**2
                 self.Ksw_types = Ksw_types
+        # EDGE BASED (AND ENTROPY) VISCOSITY
+        self.LUMPED_MASS_MATRIX = LUMPED_MASS_MATRIX
+        self.MONOLITHIC = MONOLITHIC
+        self.STABILIZATION_TYPE = STABILIZATION_TYPE
+        self.ENTROPY_TYPE = ENTROPY_TYPE
+        self.FCT = FCT
+        self.num_fct_iter=num_fct_iter
+        self.uL = uL
+        self.uR = uR
+        self.cK = cK
+        self.forceStrongConditions = True
+        self.cE = cE
+        self.outputQuantDOFs = outputQuantDOFs
         TC_base.__init__(self,
                          nc,
                          mass,
@@ -89,11 +297,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
-            
+
     def initializeMesh(self,mesh):
         from proteus.SubsurfaceTransportCoefficients import BlockHeterogeneousCoefficients
-        #import pdb
-        #pdb.set_trace()
         self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
         #want element boundary material types for evaluating heterogeneity
         #not boundary conditions
@@ -233,7 +439,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeTerm=True#allow turning off  the  time derivative
         #self.lowmem=False
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.ua = {}#analytical solutions
         self.phi  = phiDict
@@ -244,6 +450,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.reuse_test_trial_quadrature:
             for ci in range(1,coefficients.nc):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
+        self.u_dof_old = None
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
         self.testSpace = testSpaceDict
@@ -292,7 +499,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
             self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+                                                 (numericalFluxType != None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -306,7 +513,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in list(self.testSpace.values())]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in list(self.dirichletConditions.values())]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -361,7 +568,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -410,6 +617,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global={}
         self.ebqe={}
         self.phi_ip={}
+        self.edge_based_cfl = np.zeros(self.u[0].dof.shape)+100
         #mesh
         #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -468,7 +676,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
-           
+
         if options != None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -480,6 +688,45 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
         self.stride = [1 for ci in range(self.nc)]
         #use contiguous layout of components for parallel, requires weak DBC's
+        # mql. Some ASSERTS to restrict the combination of the methods
+        if self.coefficients.STABILIZATION_TYPE > 0:
+            assert self.timeIntegration.isSSP == True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
+            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver ==
+                                                               ExplicitLumpedMassMatrixForRichards or options.levelNonlinearSolver == ExplicitConsistentMassMatrixForRichards)
+            assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrixForRichards or ExplicitConsistentMassMatrixForRichards"
+        try:
+            if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrixForRichards:
+                assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
+        except:
+            pass
+        if self.coefficients.LUMPED_MASS_MATRIX == True:
+            cond = self.coefficients.STABILIZATION_TYPE == 2
+            assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
+            cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrixForRichards
+            assert cond, "Use levelNonlinearSolver=ExplicitLumpedMassMatrixForRichards when the mass matrix is lumped"
+        if self.coefficients.FCT == True:
+            cond = self.coefficients.STABILIZATION_TYPE > 0, "Use FCT just with STABILIZATION_TYPE>0; i.e., edge based stabilization"
+        # END OF ASSERTS
+
+        # cek adding empty data member for low order numerical viscosity structures here for now
+        self.ML = None  # lumped mass matrix
+        self.MC_global = None  # consistent mass matrix
+        self.cterm_global = None
+        self.cterm_transpose_global = None
+        # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
+        self.residualComputed=False #TMP
+        self.dLow= None
+        self.fluxMatrix = None
+        self.uDotLow = None
+        self.uLow = None
+        self.dt_times_dC_minus_dL = None
+        self.min_s_bc = None
+        self.max_s_bc = None
+        # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.quantDOFs = np.zeros(self.u[0].dof.shape, 'd')
+        self.sLow = np.zeros(self.u[0].dof.shape, 'd')
+        self.sHigh = np.zeros(self.u[0].dof.shape, 'd')
+        self.sn = np.zeros(self.u[0].dof.shape, 'd')
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -535,7 +782,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if ci in self.coefficients.advection:
                     self.ebqe[('advectiveFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     self.ebqe[('advectiveFlux_bc_flag',ci)][t[0],t[1]] = 1
-        
+
         if hasattr(self.numericalFlux,'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
         if not hasattr(self.numericalFlux,'isDOFBoundary'):
@@ -545,7 +792,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #TODO how to handle redistancing calls for calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
         compKernelFlag=0
-        self.vof = cRichards_base(self.nSpace_global,
+        self.delta_x_ij=None
+        self.richards = cRichards_base(self.nSpace_global,
                              self.nQuadraturePoints_element,
                              self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                              self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
@@ -561,12 +809,97 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')        
-        self.forceStrongConditions=False
+        self.forceStrongConditions=True
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
-    #mwf these are getting called by redistancing classes,
+    def FCTStep(self):
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        limited_solution = np.zeros((len(rowptr) - 1),'d')
+        #self.u_free_dof_stage_0_l = np.zeros((len(rowptr) - 1),'d')
+        #self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],  # soln
+        #fromFreeToGlobal=0
+        #cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+        #                                                       self.offset[0],
+        #                                                       self.stride[0],
+        #                                                       self.dirichletConditions[0].global2freeGlobal_global_dofs,
+        #                                                       self.dirichletConditions[0].global2freeGlobal_free_dofs,
+        #                                                       self.u_free_dof_stage_0_l,
+        #                                                       self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage])
+        #limited_solution[:] = self.uLow
+        self.richards.FCTStep(
+            self.nnz,  # number of non zero entries
+            len(rowptr) - 1,  # number of DOFs
+            self.timeIntegration.dt,
+            self.ML,  # Lumped mass matrix
+            self.sn,
+            self.u_dof_old,
+            self.sHigh,  # high order solution
+            self.sLow,
+            limited_solution,
+            rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
+            colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
+            MassMatrix,
+            self.dt_times_dC_minus_dL,
+            self.min_s_bc,
+            self.max_s_bc,
+            self.coefficients.LUMPED_MASS_MATRIX,
+            self.coefficients.MONOLITHIC)
+        old_dof = self.u[0].dof.copy()
+        self.invert(limited_solution, self.u[0].dof)
+        self.timeIntegration.u[:] = self.u[0].dof
+        #fromFreeToGlobal=1 #direction copying
+        #cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+        #                                                       self.offset[0],
+        #                                                       self.stride[0],
+        #                                                       self.dirichletConditions[0].global2freeGlobal_global_dofs,
+        #                                                       self.dirichletConditions[0].global2freeGlobal_free_dofs,
+        #                                                       self.u[0].dof,
+        #                                                       limited_solution)
+    def kth_FCT_step(self):
+        #import pdb
+        #pdb.set_trace()
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()        
+        limitedFlux = np.zeros(self.nnz)
+        limited_solution = np.zeros((len(rowptr) - 1),'d')
+        #limited_solution[:] = self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage]
+        fromFreeToGlobal=0 #direction copying
+        cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+                                                               self.offset[0],
+                                                               self.stride[0],
+                                                               self.dirichletConditions[0].global2freeGlobal_global_dofs,
+                                                               self.dirichletConditions[0].global2freeGlobal_free_dofs,
+                                                               limited_solution,
+                                                               self.timeintegration.u_dof_stage[0][self.timeIntegration.lstage])
+
+        self.richards.kth_FCT_step(
+            self.timeIntegration.dt,
+            self.coefficients.num_fct_iter,
+            self.nnz,  # number of non zero entries
+            len(rowptr) - 1,  # number of DOFs
+            MassMatrix,
+            self.ML,  # Lumped mass matrix
+            self.u_dof_old,
+            limited_solution,
+            self.uDotLow,
+            self.uLow,
+            self.dLow,
+            self.fluxMatrix,
+            limitedFlux,
+            rowptr,
+            colind)
+
+        self.timeIntegration.u[:] = limited_solution
+        #self.u[0].dof[:] = limited_solution
+        fromFreeToGlobal=1 #direction copying
+        cfemIntegrals.copyBetweenFreeUnknownsAndGlobalUnknowns(fromFreeToGlobal,
+                                                               self.offset[0],
+                                                               self.stride[0],
+                                                               self.dirichletConditions[0].global2freeGlobal_global_dofs,
+                                                               self.dirichletConditions[0].global2freeGlobal_free_dofs,
+                                                               self.u[0].dof,
+                                                               limited_solution)
     def calculateCoefficients(self):
         pass
     def calculateElementResidual(self):
@@ -578,8 +911,206 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-
+        if self.u_dof_old is None:
+            # Pass initial condition to u_dof_old
+            self.u_dof_old = np.copy(self.u[0].dof)
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+        nnz = nzval.shape[-1]  # number of non-zero entries in sparse matrix
         r.fill(0.0)
+        ########################
+        ### COMPUTE C MATRIX ###
+        ########################
+        if self.cterm_global is None:
+            # since we only need cterm_global to persist, we can drop the other self.'s
+            self.cterm = {}
+            self.cterm_a = {}
+            self.cterm_global = {}
+            self.cterm_transpose = {}
+            self.cterm_a_transpose = {}
+            self.cterm_global_transpose = {}
+            rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+            nnz = nzval.shape[-1]  # number of non-zero entries in sparse matrix
+            di = self.q[('grad(u)', 0)].copy()  # direction of derivative
+            # JACOBIANS (FOR ELEMENT TRANSFORMATION)
+            self.q[('J')] = np.zeros((self.mesh.nElements_global,
+                                      self.nQuadraturePoints_element,
+                                      self.nSpace_global,
+                                      self.nSpace_global),
+                                     'd')
+            self.q[('inverse(J)')] = np.zeros((self.mesh.nElements_global,
+                                               self.nQuadraturePoints_element,
+                                               self.nSpace_global,
+                                               self.nSpace_global),
+                                              'd')
+            self.q[('det(J)')] = np.zeros((self.mesh.nElements_global,
+                                           self.nQuadraturePoints_element),
+                                          'd')
+            self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+                                                             self.q['J'],
+                                                             self.q['inverse(J)'],
+                                                             self.q['det(J)'])
+            self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
+            # SHAPE FUNCTIONS
+            self.q[('w', 0)] = np.zeros((self.mesh.nElements_global,
+                                         self.nQuadraturePoints_element,
+                                         self.nDOF_test_element[0]),
+                                        'd')
+            self.q[('w*dV_m', 0)] = self.q[('w', 0)].copy()
+            self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints, self.q[('w', 0)])
+            cfemIntegrals.calculateWeightedShape(self.elementQuadratureWeights[('u', 0)],
+                                                 self.q['abs(det(J))'],
+                                                 self.q[('w', 0)],
+                                                 self.q[('w*dV_m', 0)])
+            # GRADIENT OF TEST FUNCTIONS
+            self.q[('grad(w)', 0)] = np.zeros((self.mesh.nElements_global,
+                                               self.nQuadraturePoints_element,
+                                               self.nDOF_test_element[0],
+                                               self.nSpace_global),
+                                              'd')
+            self.u[0].femSpace.getBasisGradientValues(self.elementQuadraturePoints,
+                                                      self.q['inverse(J)'],
+                                                      self.q[('grad(w)', 0)])
+            self.q[('grad(w)*dV_f', 0)] = np.zeros((self.mesh.nElements_global,
+                                                    self.nQuadraturePoints_element,
+                                                    self.nDOF_test_element[0],
+                                                    self.nSpace_global),
+                                                   'd')
+            cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('u', 0)],
+                                                          self.q['abs(det(J))'],
+                                                          self.q[('grad(w)', 0)],
+                                                          self.q[('grad(w)*dV_f', 0)])
+            ##########################
+            ### LUMPED MASS MATRIX ###
+            ##########################
+            # assume a linear mass term
+            dm = np.ones(self.q[('u', 0)].shape, 'd')
+            elementMassMatrix = np.zeros((self.mesh.nElements_global,
+                                          self.nDOF_test_element[0],
+                                          self.nDOF_trial_element[0]), 'd')
+            cfemIntegrals.updateMassJacobian_weak_lowmem(dm,
+                                                         self.q[('w', 0)],
+                                                         self.q[('w*dV_m', 0)],
+                                                         elementMassMatrix)
+            self.MC_a = nzval.copy()
+            self.MC_global = SparseMat(self.nFreeDOF_global[0],
+                                       self.nFreeDOF_global[0],
+                                       nnz,
+                                       self.MC_a,
+                                       colind,
+                                       rowptr)
+            cfemIntegrals.zeroJacobian_CSR(self.nnz, self.MC_global)
+            cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.csrRowIndeces[(0, 0)],
+                                                                      self.csrColumnOffsets[(0, 0)],
+                                                                      elementMassMatrix,
+                                                                      self.MC_global)
+            self.ML = np.zeros((self.nFreeDOF_global[0],), 'd')
+            for i in range(self.nFreeDOF_global[0]):
+                self.ML[i] = self.MC_a[rowptr[i]:rowptr[i + 1]].sum()
+            np.testing.assert_almost_equal(self.ML.sum(),
+                                           self.mesh.volume,
+                                           err_msg="Trace of lumped mass matrix should be the domain volume", verbose=True)
+            for d in range(self.nSpace_global):  # spatial dimensions
+                # C matrices
+                self.cterm[d] = np.zeros((self.mesh.nElements_global,
+                                          self.nDOF_test_element[0],
+                                          self.nDOF_trial_element[0]), 'd')
+                self.cterm_a[d] = nzval.copy()
+                #self.cterm_a[d] = np.zeros(nzval.size)
+                self.cterm_global[d] = SparseMat(self.nFreeDOF_global[0],
+                                                 self.nFreeDOF_global[0],
+                                                 nnz,
+                                                 self.cterm_a[d],
+                                                 colind,
+                                                 rowptr)
+                cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global[d])
+                di[:] = 0.0
+                di[..., d] = 1.0
+                cfemIntegrals.updateHamiltonianJacobian_weak_lowmem(di,
+                                                                    self.q[('grad(w)*dV_f', 0)],
+                                                                    self.q[('w', 0)],
+                                                                    self.cterm[d])  # int[(di*grad(wj))*wi*dV]
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.csrRowIndeces[(0, 0)],
+                                                                          self.csrColumnOffsets[(0, 0)],
+                                                                          self.cterm[d],
+                                                                          self.cterm_global[d])
+                # C Transpose matrices
+                self.cterm_transpose[d] = np.zeros((self.mesh.nElements_global,
+                                                    self.nDOF_test_element[0],
+                                                    self.nDOF_trial_element[0]), 'd')
+                self.cterm_a_transpose[d] = nzval.copy()
+                self.cterm_global_transpose[d] = SparseMat(self.nFreeDOF_global[0],
+                                                           self.nFreeDOF_global[0],
+                                                           nnz,
+                                                           self.cterm_a_transpose[d],
+                                                           colind,
+                                                           rowptr)
+                cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global_transpose[d])
+                di[:] = 0.0
+                di[..., d] = -1.0
+                cfemIntegrals.updateAdvectionJacobian_weak_lowmem(di,
+                                                                  self.q[('w', 0)],
+                                                                  self.q[('grad(w)*dV_f', 0)],
+                                                                  self.cterm_transpose[d])  # -int[(-di*grad(wi))*wj*dV]
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.csrRowIndeces[(0, 0)],
+                                                                          self.csrColumnOffsets[(0, 0)],
+                                                                          self.cterm_transpose[d],
+                                                                          self.cterm_global_transpose[d])
+
+        rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
+        if (self.nSpace_global == 2):
+            rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
+        else:
+            Cy = np.zeros(Cx.shape, 'd')
+        if (self.nSpace_global == 3):
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
+        else:
+            Cz = np.zeros(Cx.shape, 'd')
+        rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
+        if (self.nSpace_global == 2):
+            rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+        else:
+            CTy = np.zeros(CTx.shape, 'd')
+        if (self.nSpace_global == 3):
+            rowptr, colind, CTz = self.cterm_global_transpose[2].getCSRrepresentation()
+        else:
+            CTz = np.zeros(CTx.shape, 'd')
+
+        # This is dummy. I just care about the csr structure of the sparse matrix
+        self.dLow = np.zeros(Cx.shape, 'd')
+        self.fluxMatrix = np.zeros(Cx.shape, 'd')
+        self.dt_times_dC_minus_dL = np.zeros(Cx.shape, 'd')
+        nFree = len(rowptr)-1
+        self.min_s_bc = np.zeros(nFree, 'd') + 1E10
+        self.max_s_bc = np.zeros(nFree, 'd') - 1E10
+        self.uDotLow = np.zeros(nFree, 'd')
+        self.uLow = np.zeros(nFree, 'd')
+        #
+        # cek end computationa of cterm_global
+        #
+        # cek showing mquezada an example of using cterm_global sparse matrix
+        # calculation y = c*x where x==1
+        # direction=0
+        #rowptr, colind, c = self.cterm_global[direction].getCSRrepresentation()
+        #y = np.zeros((self.nFreeDOF_global[0],),'d')
+        #x = np.ones((self.nFreeDOF_global[0],),'d')
+        # ij=0
+        # for i in range(self.nFreeDOF_global[0]):
+        #    for offset in range(rowptr[i],rowptr[i+1]):
+        #        j = colind[offset]
+        #        y[i] += c[ij]*x[j]
+        #        ij+=1
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -600,6 +1131,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
@@ -624,7 +1160,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
         argsDict["nElements_global"] = self.mesh.nElements_global
         argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
-        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,  
+        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,
         argsDict["isSeepageFace"] = self.coefficients.isSeepageFace
         argsDict["a_rowptr"] = self.coefficients.sdInfo[(0,0)][0]
         argsDict["a_colind"] = self.coefficients.sdInfo[(0,0)][1]
@@ -670,7 +1206,55 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["epsFact"] = 0.0
         argsDict["ebqe_u"] = self.ebqe[('u',0)]
         argsDict["ebqe_flux"] = self.ebqe[('advectiveFlux',0)]
-        self.vof.calculateResidual(argsDict)
+        argsDict['STABILIZATION_TYPE'] = self.coefficients.STABILIZATION_TYPE
+        # ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
+        argsDict["cE"] = self.coefficients.cE
+        argsDict["cK"] = self.coefficients.cK
+        # PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+        argsDict["uL"] = self.coefficients.uL
+        argsDict["uR"] = self.coefficients.uR
+        # PARAMETERS FOR EDGE VISCOSITY
+        argsDict["numDOFs"] = len(rowptr) - 1  # num of DOFs
+        argsDict["NNZ"] = self.nnz 
+        argsDict["Cx"] = len(Cx)  # num of non-zero entries in the sparsity pattern
+        argsDict["csrRowIndeces_DofLoops"] = rowptr  # Row indices for Sparsity Pattern (convenient for DOF loops)
+        argsDict["csrColumnOffsets_DofLoops"] = colind  # Column indices for Sparsity Pattern (convenient for DOF loops)
+        argsDict["csrRowIndeces_CellLoops"] = self.csrRowIndeces[(0, 0)]  # row indices (convenient for element loops)
+        argsDict["csrColumnOffsets_CellLoops"] = self.csrColumnOffsets[(0, 0)]  # column indices (convenient for element loops)
+        argsDict["csrColumnOffsets_eb_CellLoops"] = self.csrColumnOffsets_eb[(0, 0)]  # indices for boundary terms
+        # C matrices
+        argsDict["Cx"] = Cx
+        argsDict["Cy"] = Cy
+        argsDict["Cz"] = Cz
+        argsDict["CTx"] = CTx
+        argsDict["CTy"] = CTy
+        argsDict["CTz"] = CTz
+        argsDict["ML"] = self.ML
+        argsDict["delta_x_ij"] = self.delta_x_ij
+        # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+        argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
+        argsDict["STABILIZATTION_TYPE"] = self.coefficients.STABILIZATION_TYPE
+        argsDict["ENTROPY_TYPE"] = self.coefficients.ENTROPY_TYPE
+        # FLUX CORRECTED TRANSPORT
+        argsDict["dLow"] = self.dLow
+        argsDict["fluxMatrix"] = self.fluxMatrix
+        argsDict["uDotLow"] = self.uDotLow
+        argsDict["uLow"] = self.uLow
+        argsDict["dt_times_fH_minus_fL"] = self.dt_times_dC_minus_dL
+        argsDict["min_s_bc"] = self.min_s_bc
+        argsDict["max_s_bc"] = self.max_s_bc
+        argsDict["quantDOFs"] = self.quantDOFs
+        argsDict["sLow"] = self.sLow
+        argsDict["sn"] = self.sn
+        if (self.coefficients.STABILIZATION_TYPE == 0):  # SUPG
+            self.calculateResidual = self.richards.calculateResidual
+            self.calculateJacobian = self.richards.calculateJacobian
+        else:
+            self.calculateResidual = self.richards.calculateResidual_entropy_viscosity
+            self.calculateJacobian = self.richards.calculateMassMatrix
+        if self.delta_x_ij is None:
+            self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
+        self.calculateResidual(argsDict)
         #self.q[('mt',0)][:] =self.timeIntegration.m_tmp[0]
         #self.q[('mt',0)] *= self.timeIntegration.alpha_bdf
         #self.q[('mt',0)] += self.timeIntegration.beta_bdf[0]
@@ -688,9 +1272,183 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = np.zeros(r.shape,'d')
+
+    def invert(self,u,r):
+        #u=s
+        #r=p
+        import pdb
+        import copy
+        """
+        Calculate the element residuals and add in to the global residual
+        """
+        self.sHigh[:] = u
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+        nnz = nzval.shape[-1]  # number of non-zero entries in sparse matrix
+        r.fill(0.0)
+        rowptr, colind, Cx = self.cterm_global[0].getCSRrepresentation()
+        if (self.nSpace_global == 2):
+            rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
+        else:
+            Cy = np.zeros(Cx.shape, 'd')
+        if (self.nSpace_global == 3):
+            rowptr, colind, Cz = self.cterm_global[2].getCSRrepresentation()
+        else:
+            Cz = np.zeros(Cx.shape, 'd')
+        rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
+        if (self.nSpace_global == 2):
+            rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+        else:
+            CTy = np.zeros(CTx.shape, 'd')
+        if (self.nSpace_global == 3):
+            rowptr, colind, CTz = self.cterm_global_transpose[2].getCSRrepresentation()
+        else:
+            CTz = np.zeros(CTx.shape, 'd')
+
+        # This is dummy. I just care about the csr structure of the sparse matrix
+        nFree = len(rowptr)-1
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+        if self.delta_x_ij is None:
+            self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
+        self.richards.invert(#element
+            self.timeIntegration.dt,
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.nodeVelocityArray,
+            self.MOVING_DOMAIN,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            #physics
+            self.mesh.nElements_global,
+            self.ebqe['penalty'],#double* ebqe_penalty_ext,
+            self.mesh.elementMaterialTypes,#int* elementMaterialTypes,
+            self.coefficients.isSeepageFace,
+            self.coefficients.sdInfo[(0,0)][0],#int* a_rowptr,
+            self.coefficients.sdInfo[(0,0)][1],#int* a_colind,
+            self.coefficients.rho,#double rho,
+            self.coefficients.beta,#double beta,
+            self.coefficients.gravity,#double* gravity,
+            self.coefficients.vgm_alpha_types,#double* alpha,
+            self.coefficients.vgm_n_types,#double* n,
+            self.coefficients.thetaR_types,#double* thetaR,
+            self.coefficients.thetaSR_types,#double* thetaSR,
+            self.coefficients.Ksw_types,#double* KWs,
+            False,#self.coefficients.useMetrics,
+            self.timeIntegration.alpha_bdf,
+            0,#self.shockCapturing.lag,
+            0.0,#cek hack self.shockCapturing.shockCapturingFactor,
+            0.0,#self.coefficients.sc_uref,
+            0.0,#self.coefficients.sc_beta,
+            self.u[0].femSpace.dofMap.l2g,
+            self.l2g[0]['freeGlobal'],
+            self.mesh.elementDiametersArray,
+            degree_polynomial,
+            self.sHigh,
+            self.u_dof_old,
+            self.q['velocity'],#self.coefficients.q_v,
+            self.timeIntegration.m_tmp[0],
+            self.q[('u',0)],
+            self.timeIntegration.beta_bdf[0],
+            self.q[('cfl',0)],
+            self.edge_based_cfl,
+            self.q[('cfl',0)],#cek hack self.shockCapturing.numDiff[0],
+            self.q[('cfl',0)],#cek hack self.shockCapturing.numDiff_last[0],
+            self.offset[0],self.stride[0],
+            r,
+            self.mesh.nExteriorElementBoundaries_global,
+            self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundaryElementsArray,
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.ebqe['velocity'],#self.coefficients.ebqe_v,
+            self.numericalFlux.isDOFBoundary[0],
+            self.numericalFlux.ebqe[('u',0)],
+            self.ebqe[('advectiveFlux_bc_flag',0)],
+            self.ebqe[('advectiveFlux_bc',0)],
+            self.ebqe[('u',0)],#cek hack            self.coefficients.ebqe_phi,
+            0.0,#cek hack self.coefficients.epsFact,
+            self.ebqe[('u',0)],
+            self.ebqe[('advectiveFlux',0)],
+            # ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
+            self.coefficients.cE,
+            self.coefficients.cK,
+            # PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+            self.coefficients.uL,
+            self.coefficients.uR,
+            # PARAMETERS FOR EDGE VISCOSITY
+            len(rowptr) - 1,  # num of DOFs
+            len(Cx),  # num of non-zero entries in the sparsity pattern
+            rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
+            colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
+            self.csrRowIndeces[(0, 0)],  # row indices (convenient for element loops)
+            self.csrColumnOffsets[(0, 0)],  # column indices (convenient for element loops)
+            self.csrColumnOffsets_eb[(0, 0)],  # indices for boundary terms
+            # C matrices
+            Cx,
+            Cy,
+            Cz,
+            CTx,
+            CTy,
+            CTz,
+            self.ML,
+            self.delta_x_ij,
+            # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+            self.coefficients.LUMPED_MASS_MATRIX,
+            self.coefficients.STABILIZATION_TYPE,
+            self.coefficients.ENTROPY_TYPE,
+            # FLUX CORRECTED TRANSPORT
+            self.dLow,
+            self.fluxMatrix,
+            self.uDotLow,
+            self.uLow,
+            self.dt_times_dC_minus_dL,
+            self.min_s_bc,
+            self.max_s_bc,
+            self.quantDOFs)
+        #self.q[('mt',0)][:] =self.timeIntegration.m_tmp[0]
+        #self.q[('mt',0)] *= self.timeIntegration.alpha_bdf
+        #self.q[('mt',0)] += self.timeIntegration.beta_bdf[0]
+        #self.timeIntegration.calculateElementCoefficients(self.q)
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
+                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+        if self.stabilization:
+            self.stabilization.accumulateSubgridMassHistory(self.q)
+        logEvent("Global residual",level=9,data=r)
+        #mwf debug
+        #pdb.set_trace()
+        #mwf decide if this is reasonable for keeping solver statistics
+        self.nonlinear_function_evaluations += 1
+        if self.globalResidualDummy is None:
+            self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+        if self.delta_x_ij is None:
+            self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
         argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
@@ -714,7 +1472,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
         argsDict["nElements_global"] = self.mesh.nElements_global
         argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
-        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,  
+        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,
         argsDict["isSeepageFace"] = self.coefficients.isSeepageFace
         argsDict["a_rowptr"] = self.coefficients.sdInfo[(0,0)][0]
         argsDict["a_colind"] = self.coefficients.sdInfo[(0,0)][1]
@@ -740,6 +1498,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0,0)]
         argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0,0)]
         argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
+        argsDict["delta_x_ij"] = self.delta_x_ij
         argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
         argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
         argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
@@ -750,7 +1509,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["isFluxBoundary_u"] = self.ebqe[('advectiveFlux_bc_flag',0)]
         argsDict["ebqe_bc_flux_ext"] = self.ebqe[('advectiveFlux_bc',0)]
         argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0,0)]
-        self.vof.calculateJacobian(argsDict)
+        argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
+        self.calculateJacobian(argsDict)
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
             for cj in range(self.nc):
@@ -771,7 +1531,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
         #self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,

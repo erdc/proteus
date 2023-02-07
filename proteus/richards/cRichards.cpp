@@ -25,5 +25,10 @@ PYBIND11_MODULE(cRichards, m)
     py::class_<Richards_base>(m, "cRichards_base")
         .def(py::init(&proteus::newRichards))
         .def("calculateResidual", &Richards_base::calculateResidual)
-        .def("calculateJacobian", &Richards_base::calculateJacobian);
+        .def("calculateJacobian", &Richards_base::calculateJacobian)
+        .def("invert", &Richards_base::invert)
+        .def("FCTStep", &Richards_base::FCTStep)
+        .def("kth_FCT_step", &Richards_base::kth_FCT_step)
+        .def("calculateResidual_entropy_viscosity", &Richards_base::calculateResidual_entropy_viscosity)
+        .def("calculateMassMatrix", &Richards_base::calculateMassMatrix);
 }

@@ -1,5 +1,5 @@
-#ifndef VOF_H
-#define VOF_H
+#ifndef TADR_H
+#define TADR_H
 #include <cmath>
 #include <iostream>
 #include <valarray>
@@ -42,16 +42,16 @@ namespace proteus
 
 namespace proteus
 {
-  class VOF_base
+  class TADR_base
   {
     //The base class defining the interface
   public:
     std::valarray<double> Rpos, Rneg;
     std::valarray<double> FluxCorrectionMatrix;
-    std::valarray<double> TransportMatrix, TransposeTransportMatrix;
+    std::valarray<double> TransportMatrix, DiffusionMatrix, TransposeTransportMatrix;
     std::valarray<double> psi, eta, global_entropy_residual, boundary_integral;
     std::valarray<double> maxVel,maxEntRes;
-    virtual ~VOF_base(){}
+    virtual ~TADR_base(){}
     virtual void calculateResidualElementBased(arguments_dict& args)=0;
     virtual void calculateJacobian(arguments_dict& args)=0;
     virtual void FCTStep(arguments_dict& args)=0;
@@ -65,12 +65,12 @@ namespace proteus
     int nDOF_trial_element,
     int nDOF_test_element,
     int nQuadraturePoints_elementBoundary>
-    class VOF : public VOF_base
+    class TADR : public TADR_base
     {
     public:
       const int nDOF_test_X_trial_element;
       CompKernelType ck;
-    VOF():
+    TADR():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
           {}
@@ -198,7 +198,7 @@ namespace proteus
               }
             else
               {
-                std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl;
+                std::cout<<"warning: TADR open boundary with no external trace, setting to zero for inflow"<<std::endl;
                 flux = 0.0;
               }
 
@@ -329,6 +329,7 @@ namespace proteus
         xt::pyarray<double>& min_u_bc = args.array<double>("min_u_bc");
         xt::pyarray<double>& max_u_bc = args.array<double>("max_u_bc");
         xt::pyarray<double>& quantDOFs = args.array<double>("quantDOFs");
+	double physicalDiffusion = args.scalar<double>("physicalDiffusion");
         double meanEntropy = 0., meanOmega = 0., maxEntropy = -1E10, minEntropy = 1E10;
         maxVel.resize(nElements_global, 0.0);
         maxEntRes.resize(nElements_global, 0.0);
@@ -586,7 +587,7 @@ namespace proteus
                         if (stage == 1)
                           elementResidual_u[i] +=
                             ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
-                            1./3*dt*ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) +
+                            1./3*dt*(ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) + ck.NumericalDiffusion(physicalDiffusion, grad_u_old, &u_grad_test_dV[i_nSpace])) +
                             1./9*dt*dt*ck.NumericalDiffusion(Hn,df,&u_grad_test_dV[i_nSpace]) +
                             1./3*dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last.data()[eN_k],
                                                                                 grad_u_old,
@@ -595,7 +596,7 @@ namespace proteus
                         else //stage 2
                           elementResidual_u[i] +=
                             ck.Mass_weak(dt*m_t,u_test_dV[i]) +  // time derivative
-                            dt*ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) +
+                            dt*(ck.Advection_weak(fn,&u_grad_test_dV[i_nSpace]) + ck.NumericalDiffusion(physicalDiffusion, grad_u_old, &u_grad_test_dV[i_nSpace])) +
                             0.5*dt*dt*ck.NumericalDiffusion(HTilde,df,&u_grad_test_dV[i_nSpace]) +
                             dt*entVisc_minus_artComp*ck.NumericalDiffusion(q_numDiff_u_last.data()[eN_k],
                                                                            grad_u_old,
@@ -607,7 +608,7 @@ namespace proteus
                           ck.Mass_weak(m_t,u_test_dV[i]) +
                           ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) +
                           ck.SubgridError(subgridError_u,Lstar_u[i]) +
-                          ck.NumericalDiffusion(q_numDiff_u_last.data()[eN_k],
+                          ck.NumericalDiffusion(q_numDiff_u_last.data()[eN_k] + physicalDiffusion,
                                                 grad_u,
                                                 &u_grad_test_dV[i_nSpace]);
                       }
@@ -907,6 +908,7 @@ namespace proteus
         xt::pyarray<double>& ebqe_bc_flux_u_ext = args.array<double>("ebqe_bc_flux_u_ext");
         xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.array<int>("csrColumnOffsets_eb_u_u");
         int STABILIZATION_TYPE = args.scalar<int>("STABILIZATION_TYPE");
+	double physicalDiffusion = args.scalar<double>("physicalDiffusion");
         //std::cout<<"ndjaco  address "<<q_numDiff_u_last.data()<<std::endl;
         double Ct_sge = 4.0;
         //
@@ -1099,7 +1101,7 @@ namespace proteus
                                                         u_trial_ref.data()[k*nDOF_trial_element+j],
                                                         &u_grad_test_dV[i_nSpace]) +
                               ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
-                              ck.NumericalDiffusionJacobian(q_numDiff_u_last.data()[eN_k],
+                              ck.NumericalDiffusionJacobian(q_numDiff_u_last.data()[eN_k] + physicalDiffusion,
                                                             &u_grad_trial[j_nSpace],
                                                             &u_grad_test_dV[i_nSpace]); //implicit
                           }
@@ -1518,10 +1520,12 @@ namespace proteus
         xt::pyarray<double>& min_u_bc = args.array<double>("min_u_bc");
         xt::pyarray<double>& max_u_bc = args.array<double>("max_u_bc");
         xt::pyarray<double>& quantDOFs = args.array<double>("quantDOFs");
+	double physicalDiffusion = args.scalar<double>("physicalDiffusion");
         // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
         // Allocate space for the transport matrices
         // This is used for first order KUZMIN'S METHOD
         TransportMatrix.resize(NNZ,0.0);
+        DiffusionMatrix.resize(NNZ,0.0);
         TransposeTransportMatrix.resize(NNZ,0.0);
         // compute entropy and init global_entropy_residual and boundary_integral
         psi.resize(numDOFs,0.0);
@@ -1556,6 +1560,7 @@ namespace proteus
               elementResidual_u[nDOF_test_element],
               element_entropy_residual[nDOF_test_element];
             register double  elementTransport[nDOF_test_element][nDOF_trial_element];
+            register double  elementDiffusion[nDOF_test_element][nDOF_trial_element];
             register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
@@ -1564,6 +1569,7 @@ namespace proteus
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
                     elementTransport[i][j]=0.0;
+                    elementDiffusion[i][j]=0.0;
                     elementTransposeTransport[i][j]=0.0;
                   }
               }
@@ -1677,6 +1683,10 @@ namespace proteus
                         elementTransport[i][j] += // -int[(vel.grad_wi)*wj*dx]
                           ck.AdvectionJacobian_weak(porosity_times_velocity,
                                                     u_trial_ref.data()[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]);
+                        elementDiffusion[i][j] += // -int[(vel.grad_wi)*wj*dx]
+			  ck.NumericalDiffusionJacobian(porosity,
+							&u_grad_trial[j_nSpace],
+							&u_grad_test_dV[i_nSpace]);
                         elementTransposeTransport[i][j] += // -int[(vel.grad_wj)*wi*dx]
                           ck.AdvectionJacobian_weak(porosity_times_velocity,
                                                     u_trial_ref.data()[k*nDOF_trial_element+i],&u_grad_test_dV[j_nSpace]);
@@ -1706,6 +1716,8 @@ namespace proteus
                     int eN_i_j = eN_i*nDOF_trial_element+j;
                     TransportMatrix[csrRowIndeces_CellLoops.data()[eN_i] +
                                     csrColumnOffsets_CellLoops.data()[eN_i_j]] += elementTransport[i][j];
+		    DiffusionMatrix[csrRowIndeces_CellLoops.data()[eN_i] +
+                                    csrColumnOffsets_CellLoops.data()[eN_i_j]] += elementDiffusion[i][j];
                     TransposeTransportMatrix[csrRowIndeces_CellLoops.data()[eN_i] +
                                              csrColumnOffsets_CellLoops.data()[eN_i_j]]
                       += elementTransposeTransport[i][j];
@@ -1823,7 +1835,7 @@ namespace proteus
                       flux_ext = ebqe_bc_flux_u_ext.data()[ebNE_kb];
                     else
                       {
-                        std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl;
+                        std::cout<<"warning: TADR open boundary with no external trace, setting to zero for inflow"<<std::endl;
                         flux_ext = 0.0;
                       }
                   }
@@ -1937,7 +1949,7 @@ namespace proteus
                 double porosityj = porosity_dof.data()[j];
                 double dLowij, dLij, dEVij, dHij;
 
-                ith_flux_term += TransportMatrix[ij]*solnj;
+                ith_flux_term += (TransportMatrix[ij]+physicalDiffusion*DiffusionMatrix[i,j])*solnj;
                 if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
                   {
                     // artificial compression
@@ -1992,9 +2004,9 @@ namespace proteus
               globalResidual.data()[i] += dt*(ith_flux_term - ith_dissipative_term);
           }
       }
-    };//VOF
+    };//TADR
 
-  inline VOF_base* newVOF(int nSpaceIn,
+  inline TADR_base* newTADR(int nSpaceIn,
                           int nQuadraturePoints_elementIn,
                           int nDOF_mesh_trial_elementIn,
                           int nDOF_trial_elementIn,
@@ -2003,7 +2015,7 @@ namespace proteus
                           int CompKernelFlag)
   {
     if (nSpaceIn == 1)
-      return proteus::chooseAndAllocateDiscretization1D<VOF_base,VOF,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization1D<TADR_base,TADR,CompKernel>(nSpaceIn,
                                                                                  nQuadraturePoints_elementIn,
                                                                                  nDOF_mesh_trial_elementIn,
                                                                                  nDOF_trial_elementIn,
@@ -2011,7 +2023,7 @@ namespace proteus
                                                                                  nQuadraturePoints_elementBoundaryIn,
                                                                                  CompKernelFlag);
     else if (nSpaceIn == 2)
-      return proteus::chooseAndAllocateDiscretization2D<VOF_base,VOF,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization2D<TADR_base,TADR,CompKernel>(nSpaceIn,
                                                                                  nQuadraturePoints_elementIn,
                                                                                  nDOF_mesh_trial_elementIn,
                                                                                  nDOF_trial_elementIn,
@@ -2019,7 +2031,7 @@ namespace proteus
                                                                                  nQuadraturePoints_elementBoundaryIn,
                                                                                  CompKernelFlag);
     else
-      return proteus::chooseAndAllocateDiscretization<VOF_base,VOF,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization<TADR_base,TADR,CompKernel>(nSpaceIn,
                                                                                nQuadraturePoints_elementIn,
                                                                                nDOF_mesh_trial_elementIn,
                                                                                nDOF_trial_elementIn,
