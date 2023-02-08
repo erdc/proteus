@@ -831,24 +831,44 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #                                                       self.u_free_dof_stage_0_l,
         #                                                       self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage])
         #limited_solution[:] = self.uLow
-        self.richards.FCTStep(
-            self.nnz,  # number of non zero entries
-            len(rowptr) - 1,  # number of DOFs
-            self.timeIntegration.dt,
-            self.ML,  # Lumped mass matrix
-            self.sn,
-            self.u_dof_old,
-            self.sHigh,  # high order solution
-            self.sLow,
-            limited_solution,
-            rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
-            colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
-            MassMatrix,
-            self.dt_times_dC_minus_dL,
-            self.min_s_bc,
-            self.max_s_bc,
-            self.coefficients.LUMPED_MASS_MATRIX,
-            self.coefficients.MONOLITHIC)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["NNZ"] = self.nnz 
+        argsDict["numDOFs"] = len(rowptr) - 1  # num of DOFs
+        argsDict["dt"] = self.timeIntegration.dt
+        argsDict["lumped_mass_matrix"] = self.ML
+        argsDict["soln"] = self.sn
+        argsDict["pn"] = self.u[0].dof
+        argsDict["solH"] = self.sHigh
+        argsDict["uLow"] = self.sLow
+        argsDict["limited_solution"] = limited_solution
+        argsDict["csrRowIndeces_DofLoops"] = rowptr
+        argsDict["csrColumnOffsets_DofLoops"] = colind
+        argsDict["MassMatrix"] = MassMatrix
+        argsDict["dt_times_fH_minus_fL"] = self.dt_times_dC_minus_dL
+        argsDict["min_s_bc"] = np.ones_like(self.min_s_bc)*self.coefficients.rho*(self.coefficients.thetaR_types[0]) #cek hack just set from physical bounds
+        argsDict["max_s_bc"] = np.ones_like(self.min_s_bc)*self.coefficients.rho*(self.coefficients.thetaR_types[0] + self.coefficients.thetaSR_types[0]) #cek hack
+        argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
+        argsDict["MONOLITHIC"] =0#cek hack self.coefficients.MONOLITHIC
+
+        self.richards.FCTStep(argsDict)
+        
+            # self.nnz,  # number of non zero entries
+            # len(rowptr) - 1,  # number of DOFs
+            # self.timeIntegration.dt,
+            # self.ML,  # Lumped mass matrix
+            # self.sn,
+            # self.u_dof_old,
+            # self.sHigh,  # high order solution
+            # self.sLow,
+            # limited_solution,
+            # rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
+            # colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
+            # MassMatrix,
+            # self.dt_times_dC_minus_dL,
+            # self.min_s_bc,
+            # self.max_s_bc,
+            # self.coefficients.LUMPED_MASS_MATRIX,
+            # self.coefficients.MONOLITHIC)
         old_dof = self.u[0].dof.copy()
         self.invert(limited_solution, self.u[0].dof)
         self.timeIntegration.u[:] = self.u[0].dof
@@ -1319,132 +1339,241 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             pass
         if self.delta_x_ij is None:
             self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
-        self.richards.invert(#element
-            self.timeIntegration.dt,
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.nodeVelocityArray,
-            self.MOVING_DOMAIN,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u',0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            #element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u',0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            #physics
-            self.mesh.nElements_global,
-            self.ebqe['penalty'],#double* ebqe_penalty_ext,
-            self.mesh.elementMaterialTypes,#int* elementMaterialTypes,
-            self.coefficients.isSeepageFace,
-            self.coefficients.sdInfo[(0,0)][0],#int* a_rowptr,
-            self.coefficients.sdInfo[(0,0)][1],#int* a_colind,
-            self.coefficients.rho,#double rho,
-            self.coefficients.beta,#double beta,
-            self.coefficients.gravity,#double* gravity,
-            self.coefficients.vgm_alpha_types,#double* alpha,
-            self.coefficients.vgm_n_types,#double* n,
-            self.coefficients.thetaR_types,#double* thetaR,
-            self.coefficients.thetaSR_types,#double* thetaSR,
-            self.coefficients.Ksw_types,#double* KWs,
-            False,#self.coefficients.useMetrics,
-            self.timeIntegration.alpha_bdf,
-            0,#self.shockCapturing.lag,
-            0.0,#cek hack self.shockCapturing.shockCapturingFactor,
-            0.0,#self.coefficients.sc_uref,
-            0.0,#self.coefficients.sc_beta,
-            self.u[0].femSpace.dofMap.l2g,
-            self.l2g[0]['freeGlobal'],
-            self.mesh.elementDiametersArray,
-            degree_polynomial,
-            self.sHigh,
-            self.u_dof_old,
-            self.q['velocity'],#self.coefficients.q_v,
-            self.timeIntegration.m_tmp[0],
-            self.q[('u',0)],
-            self.timeIntegration.beta_bdf[0],
-            self.q[('cfl',0)],
-            self.edge_based_cfl,
-            self.q[('cfl',0)],#cek hack self.shockCapturing.numDiff[0],
-            self.q[('cfl',0)],#cek hack self.shockCapturing.numDiff_last[0],
-            self.offset[0],self.stride[0],
-            r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.ebqe['velocity'],#self.coefficients.ebqe_v,
-            self.numericalFlux.isDOFBoundary[0],
-            self.numericalFlux.ebqe[('u',0)],
-            self.ebqe[('advectiveFlux_bc_flag',0)],
-            self.ebqe[('advectiveFlux_bc',0)],
-            self.ebqe[('u',0)],#cek hack            self.coefficients.ebqe_phi,
-            0.0,#cek hack self.coefficients.epsFact,
-            self.ebqe[('u',0)],
-            self.ebqe[('advectiveFlux',0)],
-            # ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
-            self.coefficients.cE,
-            self.coefficients.cK,
-            # PARAMETERS FOR LOG BASED ENTROPY FUNCTION
-            self.coefficients.uL,
-            self.coefficients.uR,
-            # PARAMETERS FOR EDGE VISCOSITY
-            len(rowptr) - 1,  # num of DOFs
-            len(Cx),  # num of non-zero entries in the sparsity pattern
-            rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
-            colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
-            self.csrRowIndeces[(0, 0)],  # row indices (convenient for element loops)
-            self.csrColumnOffsets[(0, 0)],  # column indices (convenient for element loops)
-            self.csrColumnOffsets_eb[(0, 0)],  # indices for boundary terms
-            # C matrices
-            Cx,
-            Cy,
-            Cz,
-            CTx,
-            CTy,
-            CTz,
-            self.ML,
-            self.delta_x_ij,
-            # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
-            self.coefficients.LUMPED_MASS_MATRIX,
-            self.coefficients.STABILIZATION_TYPE,
-            self.coefficients.ENTROPY_TYPE,
-            # FLUX CORRECTED TRANSPORT
-            self.dLow,
-            self.fluxMatrix,
-            self.uDotLow,
-            self.uLow,
-            self.dt_times_dC_minus_dL,
-            self.min_s_bc,
-            self.max_s_bc,
-            self.quantDOFs)
+        argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["dt"] = self.timeIntegration.dt
+        argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
+        argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
+        argsDict["mesh_dof"] = self.mesh.nodeArray
+        argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
+        argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
+        argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["dV_ref"] = self.elementQuadratureWeights[('u',0)]
+        argsDict["u_trial_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["u_test_ref"] = self.u[0].femSpace.psi
+        argsDict["u_grad_test_ref"] = self.u[0].femSpace.grad_psi
+        argsDict["mesh_trial_trace_ref"] = self.u[0].femSpace.elementMaps.psi_trace
+        argsDict["mesh_grad_trial_trace_ref"] = self.u[0].femSpace.elementMaps.grad_psi_trace
+        argsDict["dS_ref"] = self.elementBoundaryQuadratureWeights[('u',0)]
+        argsDict["u_trial_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_trial_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["u_test_trace_ref"] = self.u[0].femSpace.psi_trace
+        argsDict["u_grad_test_trace_ref"] = self.u[0].femSpace.grad_psi_trace
+        argsDict["normal_ref"] = self.u[0].femSpace.elementMaps.boundaryNormals
+        argsDict["boundaryJac_ref"] = self.u[0].femSpace.elementMaps.boundaryJacobians
+        argsDict["nElements_global"] = self.mesh.nElements_global
+        argsDict["ebqe_penalty_ext"] = self.ebqe['penalty']
+        argsDict["elementMaterialTypes"] = self.mesh.elementMaterialTypes,
+        argsDict["isSeepageFace"] = self.coefficients.isSeepageFace
+        argsDict["a_rowptr"] = self.coefficients.sdInfo[(0,0)][0]
+        argsDict["a_colind"] = self.coefficients.sdInfo[(0,0)][1]
+        argsDict["rho"] = self.coefficients.rho
+        argsDict["beta"] = self.coefficients.beta
+        argsDict["gravity"] = self.coefficients.gravity
+        argsDict["alpha"] = self.coefficients.vgm_alpha_types
+        argsDict["n"] = self.coefficients.vgm_n_types
+        argsDict["thetaR"] = self.coefficients.thetaR_types
+        argsDict["thetaSR"] = self.coefficients.thetaSR_types
+        argsDict["KWs"] = self.coefficients.Ksw_types
+        argsDict["useMetrics"] = 0.0
+        argsDict["alphaBDF"] = self.timeIntegration.alpha_bdf
+        argsDict["lag_shockCapturing"] = 0
+        argsDict["shockCapturingDiffusion"] = 0.0
+        argsDict["sc_uref"] = 0.0
+        argsDict["sc_alpha"] = 0.0
+        argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["r_l2g"] = self.l2g[0]['freeGlobal']
+        argsDict["elementDiameter"] = self.mesh.elementDiametersArray
+        argsDict["degree_polynomial"] = degree_polynomial
+        argsDict["u_dof"] = u#self.u[0].dof
+        argsDict["u_dof_old"] = self.u[0].dof
+        argsDict["velocity"] = self.q['velocity']
+        argsDict["q_m"] = self.timeIntegration.m_tmp[0]
+        argsDict["q_u"] = self.q[('u',0)]
+        argsDict["q_dV"] = self.q[('dV_u',0)]
+        argsDict["q_m_betaBDF"] = self.timeIntegration.beta_bdf[0]
+        argsDict["cfl"] = self.q[('cfl',0)]
+        argsDict["q_numDiff_u"] = self.q[('cfl',0)]
+        argsDict["q_numDiff_u_last"] = self.q[('cfl',0)]
+        argsDict["offset_u"] = self.offset[0]
+        argsDict["stride_u"] = self.stride[0]
+        argsDict["globalResidual"] = r
+        argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
+        argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["ebqe_velocity_ext"] = self.ebqe['velocity']
+        argsDict["isDOFBoundary_u"] = self.numericalFlux.isDOFBoundary[0]
+        argsDict["ebqe_bc_u_ext"] = self.numericalFlux.ebqe[('u',0)]
+        argsDict["isFluxBoundary_u"] = self.ebqe[('advectiveFlux_bc_flag',0)]
+        argsDict["ebqe_bc_flux_ext"] = self.ebqe[('advectiveFlux_bc',0)]
+        argsDict["ebqe_phi"] = self.ebqe[('u',0)]
+        argsDict["epsFact"] = 0.0
+        argsDict["ebqe_u"] = self.ebqe[('u',0)]
+        argsDict["ebqe_flux"] = self.ebqe[('advectiveFlux',0)]
+        argsDict['STABILIZATION_TYPE'] = self.coefficients.STABILIZATION_TYPE
+        # ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
+        argsDict["cE"] = self.coefficients.cE
+        argsDict["cK"] = self.coefficients.cK
+        # PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+        argsDict["uL"] = self.coefficients.uL
+        argsDict["uR"] = self.coefficients.uR
+        # PARAMETERS FOR EDGE VISCOSITY
+        argsDict["numDOFs"] = len(rowptr) - 1  # num of DOFs
+        argsDict["NNZ"] = self.nnz 
+        argsDict["Cx"] = len(Cx)  # num of non-zero entries in the sparsity pattern
+        argsDict["csrRowIndeces_DofLoops"] = rowptr  # Row indices for Sparsity Pattern (convenient for DOF loops)
+        argsDict["csrColumnOffsets_DofLoops"] = colind  # Column indices for Sparsity Pattern (convenient for DOF loops)
+        argsDict["csrRowIndeces_CellLoops"] = self.csrRowIndeces[(0, 0)]  # row indices (convenient for element loops)
+        argsDict["csrColumnOffsets_CellLoops"] = self.csrColumnOffsets[(0, 0)]  # column indices (convenient for element loops)
+        argsDict["csrColumnOffsets_eb_CellLoops"] = self.csrColumnOffsets_eb[(0, 0)]  # indices for boundary terms
+        # C matrices
+        argsDict["Cx"] = Cx
+        argsDict["Cy"] = Cy
+        argsDict["Cz"] = Cz
+        argsDict["CTx"] = CTx
+        argsDict["CTy"] = CTy
+        argsDict["CTz"] = CTz
+        argsDict["ML"] = self.ML
+        argsDict["delta_x_ij"] = self.delta_x_ij
+        # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+        argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
+        argsDict["STABILIZATTION_TYPE"] = self.coefficients.STABILIZATION_TYPE
+        argsDict["ENTROPY_TYPE"] = self.coefficients.ENTROPY_TYPE
+        # FLUX CORRECTED TRANSPORT
+        argsDict["dLow"] = self.dLow
+        argsDict["fluxMatrix"] = self.fluxMatrix
+        argsDict["uDotLow"] = self.uDotLow
+        argsDict["uLow"] = self.uLow
+        argsDict["dt_times_fH_minus_fL"] = self.dt_times_dC_minus_dL
+        argsDict["min_s_bc"] = self.min_s_bc
+        argsDict["max_s_bc"] = self.max_s_bc
+        argsDict["quantDOFs"] = self.quantDOFs
+        argsDict["sLow"] = self.sLow
+        argsDict["sn"] = self.sn
+        self.richards.invert(argsDict)
+            # self.timeIntegration.dt,
+            # self.u[0].femSpace.elementMaps.psi,
+            # self.u[0].femSpace.elementMaps.grad_psi,
+            # self.mesh.nodeArray,
+            # self.mesh.nodeVelocityArray,
+            # self.MOVING_DOMAIN,
+            # self.mesh.elementNodesArray,
+            # self.elementQuadratureWeights[('u',0)],
+            # self.u[0].femSpace.psi,
+            # self.u[0].femSpace.grad_psi,
+            # self.u[0].femSpace.psi,
+            # self.u[0].femSpace.grad_psi,
+            # #element boundary
+            # self.u[0].femSpace.elementMaps.psi_trace,
+            # self.u[0].femSpace.elementMaps.grad_psi_trace,
+            # self.elementBoundaryQuadratureWeights[('u',0)],
+            # self.u[0].femSpace.psi_trace,
+            # self.u[0].femSpace.grad_psi_trace,
+            # self.u[0].femSpace.psi_trace,
+            # self.u[0].femSpace.grad_psi_trace,
+            # self.u[0].femSpace.elementMaps.boundaryNormals,
+            # self.u[0].femSpace.elementMaps.boundaryJacobians,
+            # #physics
+            # self.mesh.nElements_global,
+            # self.ebqe['penalty'],#double* ebqe_penalty_ext,
+            # self.mesh.elementMaterialTypes,#int* elementMaterialTypes,
+            # self.coefficients.isSeepageFace,
+            # self.coefficients.sdInfo[(0,0)][0],#int* a_rowptr,
+            # self.coefficients.sdInfo[(0,0)][1],#int* a_colind,
+            # self.coefficients.rho,#double rho,
+            # self.coefficients.beta,#double beta,
+            # self.coefficients.gravity,#double* gravity,
+            # self.coefficients.vgm_alpha_types,#double* alpha,
+            # self.coefficients.vgm_n_types,#double* n,
+            # self.coefficients.thetaR_types,#double* thetaR,
+            # self.coefficients.thetaSR_types,#double* thetaSR,
+            # self.coefficients.Ksw_types,#double* KWs,
+            # False,#self.coefficients.useMetrics,
+            # self.timeIntegration.alpha_bdf,
+            # 0,#self.shockCapturing.lag,
+            # 0.0,#cek hack self.shockCapturing.shockCapturingFactor,
+            # 0.0,#self.coefficients.sc_uref,
+            # 0.0,#self.coefficients.sc_beta,
+            # self.u[0].femSpace.dofMap.l2g,
+            # self.l2g[0]['freeGlobal'],
+            # self.mesh.elementDiametersArray,
+            # degree_polynomial,
+            # self.sHigh,
+            # self.u_dof_old,
+            # self.q['velocity'],#self.coefficients.q_v,
+            # self.timeIntegration.m_tmp[0],
+            # self.q[('u',0)],
+            # self.timeIntegration.beta_bdf[0],
+            # self.q[('cfl',0)],
+            # self.edge_based_cfl,
+            # self.q[('cfl',0)],#cek hack self.shockCapturing.numDiff[0],
+            # self.q[('cfl',0)],#cek hack self.shockCapturing.numDiff_last[0],
+            # self.offset[0],self.stride[0],
+            # r,
+            # self.mesh.nExteriorElementBoundaries_global,
+            # self.mesh.exteriorElementBoundariesArray,
+            # self.mesh.elementBoundaryElementsArray,
+            # self.mesh.elementBoundaryLocalElementBoundariesArray,
+            # self.ebqe['velocity'],#self.coefficients.ebqe_v,
+            # self.numericalFlux.isDOFBoundary[0],
+            # self.numericalFlux.ebqe[('u',0)],
+            # self.ebqe[('advectiveFlux_bc_flag',0)],
+            # self.ebqe[('advectiveFlux_bc',0)],
+            # self.ebqe[('u',0)],#cek hack            self.coefficients.ebqe_phi,
+            # 0.0,#cek hack self.coefficients.epsFact,
+            # self.ebqe[('u',0)],
+            # self.ebqe[('advectiveFlux',0)],
+            # # ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
+            # self.coefficients.cE,
+            # self.coefficients.cK,
+            # # PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+            # self.coefficients.uL,
+            # self.coefficients.uR,
+            # # PARAMETERS FOR EDGE VISCOSITY
+            # len(rowptr) - 1,  # num of DOFs
+            # len(Cx),  # num of non-zero entries in the sparsity pattern
+            # rowptr,  # Row indices for Sparsity Pattern (convenient for DOF loops)
+            # colind,  # Column indices for Sparsity Pattern (convenient for DOF loops)
+            # self.csrRowIndeces[(0, 0)],  # row indices (convenient for element loops)
+            # self.csrColumnOffsets[(0, 0)],  # column indices (convenient for element loops)
+            # self.csrColumnOffsets_eb[(0, 0)],  # indices for boundary terms
+            # # C matrices
+            # Cx,
+            # Cy,
+            # Cz,
+            # CTx,
+            # CTy,
+            # CTz,
+            # self.ML,
+            # self.delta_x_ij,
+            # # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+            # self.coefficients.LUMPED_MASS_MATRIX,
+            # self.coefficients.STABILIZATION_TYPE,
+            # self.coefficients.ENTROPY_TYPE,
+            # # FLUX CORRECTED TRANSPORT
+            # self.dLow,
+            # self.fluxMatrix,
+            # self.uDotLow,
+            # self.uLow,
+            # self.dt_times_dC_minus_dL,
+            # self.min_s_bc,
+            # self.max_s_bc,
+            # self.quantDOFs)
         #self.q[('mt',0)][:] =self.timeIntegration.m_tmp[0]
         #self.q[('mt',0)] *= self.timeIntegration.alpha_bdf
         #self.q[('mt',0)] += self.timeIntegration.beta_bdf[0]
         #self.timeIntegration.calculateElementCoefficients(self.q)
-        if self.forceStrongConditions:#
-            for cj in range(len(self.dirichletConditionsForceDOF)):#
-                for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
-                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
-        if self.stabilization:
-            self.stabilization.accumulateSubgridMassHistory(self.q)
-        logEvent("Global residual",level=9,data=r)
-        #mwf debug
-        #pdb.set_trace()
-        #mwf decide if this is reasonable for keeping solver statistics
-        self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape,'d')
+        #if self.forceStrongConditions:#
+        #    for cj in range(len(self.dirichletConditionsForceDOF)):#
+        #        for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
+        #             r[self.offset[cj]+self.stride[cj]*dofN] = 0
+        #if self.stabilization:
+        #    self.stabilization.accumulateSubgridMassHistory(self.q)
+        #logEvent("Global residual",level=9,data=r)
+        #self.nonlinear_function_evaluations += 1
+        #if self.globalResidualDummy is None:
+        #    self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)

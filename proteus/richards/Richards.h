@@ -209,7 +209,8 @@ namespace proteus
       if (thetaW > thetaS || thetaW <= thetaR)
 	{
 	  //cek debug
-	  std::cout<<"n "<<n_vg<<std::endl
+	  std::cout<<"rho "<<rho<<std::endl
+		   <<"n "<<n_vg<<std::endl
 		   <<"m "<<m_vg<<std::endl
 		   <<"thetaR "<<thetaR<<std::endl
 		   <<"theta "<<thetaW<<std::endl
@@ -2312,6 +2313,12 @@ namespace proteus
 	  //std::cout<<"mass density old "<<m<<std::endl;
 	  m = sLow.data()[i];
 	  //std::cout<<"mass density "<<m<<std::endl;
+	  double mMin = rho*thetaR.data()[elementMaterialTypes.data()[0]];
+	  double mMax = rho*(thetaR.data()[elementMaterialTypes.data()[0]] + thetaSR.data()[elementMaterialTypes.data()[0]]);
+	  if (m < mMin || m  > mMax)
+	    {
+	      std::cout<<"mass out of bounds "<<mMin<<'\t'<<m<<'\t'<<mMax<<std::endl;
+	    }
 	  evaluateInverseCoefficients(a_rowptr.data(),
 				      a_colind.data(),
 				      rho,
@@ -2407,34 +2414,6 @@ namespace proteus
     
     void invert(arguments_dict& args)
     {
-      //element
-      double dt = args.scalar<double>("dt");
-      xt::pyarray<double>& mesh_trial_ref = args.array<double>("");
-      xt::pyarray<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
-      xt::pyarray<double>& mesh_dof = args.array<double>("mesh_dof");
-      xt::pyarray<double>& mesh_velocity_dof = args.array<double>("mesh_velocity_dof");
-      double MOVING_DOMAIN = args.scalar<double>("MOVING_DOMAIN");
-      xt::pyarray<int>& mesh_l2g = args.array<int>("mesh_l2g");
-      xt::pyarray<double>& dV_ref = args.array<double>("dV_ref");
-      xt::pyarray<double>& u_trial_ref = args.array<double>("u_trial_ref");
-      xt::pyarray<double>& u_grad_trial_ref = args.array<double>("u_grad_ref");
-      xt::pyarray<double>& u_test_ref = args.array<double>("u_test_ref");
-      xt::pyarray<double>& u_grad_test_ref = args.array<double>("u_grad_test_ref");
-      //element boundary
-      xt::pyarray<double>& mesh_trial_trace_ref = args.array<double>("mesh_trial_trace_ref");
-      xt::pyarray<double>& mesh_grad_trial_trace_ref = args.array<double>("mesh_grad_trial_trace_ref");
-      xt::pyarray<double>& dS_ref = args.array<double>("dS_ref");
-      xt::pyarray<double>& u_trial_trace_ref = args.array<double>("u_trial_trace_ref");
-      xt::pyarray<double>& u_grad_trial_trace_ref = args.array<double>("u_grad_trial_trace_ref");
-      xt::pyarray<double>& u_test_trace_ref = args.array<double>("u_test_trace_ref");
-      xt::pyarray<double>& u_grad_test_trace_ref = args.array<double>("u_grad_test_trace_ref");
-      xt::pyarray<double>& normal_ref = args.array<double>("normal_ref");
-      xt::pyarray<double>& boundaryJac_ref = args.array<double>("boundaryJac_ref");
-      //physics
-      int nElements_global = args.scalar<int>("nElements_global");
-      xt::pyarray<double>& ebqe_penalty_ext = args.array<double>("ebqe_penalty_ext");
-      xt::pyarray<int>& elementMaterialTypes = args.array<int>("elementMaterialTypes");	
-      xt::pyarray<int>& isSeepageFace = args.array<int>("isSeepageFace");
       xt::pyarray<int>& a_rowptr = args.array<int>("a_rowptr");
       xt::pyarray<int>& a_colind = args.array<int>("a_colind");
       double rho = args.scalar<double>("rho");
@@ -2445,81 +2424,20 @@ namespace proteus
       xt::pyarray<double>& thetaR = args.array<double>("thetaR");
       xt::pyarray<double>& thetaSR = args.array<double>("thetaSR");
       xt::pyarray<double>& KWs = args.array<double>("KWs");
-      double useMetrics = args.scalar<double>("useMetrics");
-      double alphaBDF = args.scalar<double>("alphaBDF");
-      int lag_shockCapturing = args.scalar<int>("lag_shockCapturing");
-      double shockCapturingDiffusion = args.scalar<double>("shockCapturingDiffusion");
-      double sc_uref = args.scalar<double>("sc_uref");
-      double sc_alpha = args.scalar<double>("sc_alpha");
-      xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
-      xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
-      xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
-      int degree_polynomial = args.scalar<int>("degree_polynomial");
-      xt::pyarray<double>& u_dof = args.array<double>("u_dof");
-      xt::pyarray<double>& u_dof_old = args.array<double>("u_dof_old");	
-      xt::pyarray<double>& velocity = args.array<double>("velocity");
-      xt::pyarray<double>& q_m = args.array<double>("q_m");
-      xt::pyarray<double>& q_u = args.array<double>("q_u");
-      xt::pyarray<double>& q_m_betaBDF = args.array<double>("q_m_betaBDF");
-      xt::pyarray<double>& cfl = args.array<double>("cfl");
-      xt::pyarray<double>& edge_based_cfl = args.array<double>("edge_based_cfl");
-      xt::pyarray<double>& q_numDiff_u = args.array<double>("q_numDiff_u"); 
-      xt::pyarray<double>& q_numDiff_u_last = args.array<double>("q_numDiff_u_last"); 
-      int offset_u = args.scalar<int>(""); int stride_u = args.scalar<int>("offset_u"); 
       xt::pyarray<double>& globalResidual = args.array<double>("globalResidual");
-      int nExteriorElementBoundaries_global = args.scalar<int>("nExteriorElementBoundaries_global");
-      xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
-      xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
-      xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
-      xt::pyarray<double>& ebqe_velocity_ext = args.array<double>("ebqe_velocity_ext");
-      xt::pyarray<int>& isDOFBoundary_u = args.array<int>("isDOFBoundary_u");
-      xt::pyarray<double>& ebqe_bc_u_ext = args.array<double>("ebqe_bc_u_ext");
-      xt::pyarray<int>& isFluxBoundary_u = args.array<int>("isFluxBoundary_u");
-      xt::pyarray<double>& ebqe_bc_flux_u_ext = args.array<double>("ebqe_bc_flux_u_ext");
-      xt::pyarray<double>& ebqe_phi = args.array<double>("ebqe_phi");
-      double epsFact = args.scalar<double>("epsFact");
-      xt::pyarray<double>& ebqe_u = args.array<double>("ebqe_u");
-      xt::pyarray<double>& ebqe_flux = args.array<double>("ebqe_flux");
-      // PARAMETERS FOR EDGE BASED STABILIZATION
-      double cE = args.scalar<double>("cE");
-      double cK = args.scalar<double>("cK");
-      // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
-      double uL = args.scalar<double>("uL");
-      double uR = args.scalar<double>("uR");
-      // PARAMETERS FOR EDGE VISCOSITY
+      xt::pyarray<double>& u_dof = args.array<double>("u_dof");
+      xt::pyarray<int>& elementMaterialTypes = args.array<int>("elementMaterialTypes");	
       int numDOFs = args.scalar<int>("numDOFs");
-      int NNZ = args.scalar<int>("NNZ");
-      xt::pyarray<int>& csrRowIndeces_DofLoops = args.array<int>("csrRowIndeces_DofLoops");
-      xt::pyarray<int>& csrColumnOffsets_DofLoops = args.array<int>("csrColumnOffsets_DofLoops");
-      xt::pyarray<int>& csrRowIndeces_CellLoops = args.array<int>("csrRowIndeces_CellLoops");
-      xt::pyarray<int>& csrColumnOffsets_CellLoops = args.array<int>("csrColumnOffsets_CellLoops");
-      xt::pyarray<int>& csrColumnOffsets_eb_CellLoops = args.array<int>("csrColumnOffsets_eb_CellLoops");
-      // C matrices
-      xt::pyarray<double>& Cx = args.array<double>("Cx");
-      xt::pyarray<double>& Cy = args.array<double>("Cy");
-      xt::pyarray<double>& Cz = args.array<double>("Cz");
-      xt::pyarray<double>& CTx = args.array<double>("CTx");
-      xt::pyarray<double>& CTy = args.array<double>("CTy");
-      xt::pyarray<double>& CTz = args.array<double>("CTz");
-      xt::pyarray<double>& ML = args.array<double>("ML");
-      xt::pyarray<double>& delta_x_ij = args.array<double>("delta_x_ij");
-      // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
-      int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
-      int STABILIZATION_TYPE = args.scalar<int>("STABILIZATION_TYPE");
-      int ENTROPY_TYPE = args.scalar<int>("ENTROPY_TYPE");
-      // FOR FCT
-      xt::pyarray<double>& dLow = args.array<double>("dLow");
-      xt::pyarray<double>& fluxMatrix = args.array<double>("fluxMatrix");
-      xt::pyarray<double>& uDotLow = args.array<double>("uDotLow");
-      xt::pyarray<double>& uLow = args.array<double>("uLow");
-      xt::pyarray<double>& dt_times_fH_minus_fL = args.array<double>("dt_types_fH_minus_fL");
-      xt::pyarray<double>& min_s_bc = args.array<double>("min_s_bc");
-      xt::pyarray<double>& max_s_bc = args.array<double>("max_s_bc");
-      // AUX QUANTITIES OF INTEREST
-      xt::pyarray<double>& quantDOFs = args.array<double>("quantDOFs");
       for (int i=0; i<numDOFs; i++)
 	{
 	  double dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
+	  double mMin = rho*thetaR.data()[elementMaterialTypes.data()[0]];
+	  double mMax = rho*(thetaR.data()[elementMaterialTypes.data()[0]] + thetaSR.data()[elementMaterialTypes.data()[0]]);
+	  if (u_dof.data()[i] < mMin || u_dof.data()[i]  > mMax)
+	    {
+	      std::cout<<"mass out of bounds "<<mMin<<'\t'<<u_dof.data()[i]<<'\t'<<mMax<<std::endl;
+	    }
+
 	  evaluateInverseCoefficients(a_rowptr.data(),
 				      a_colind.data(),
 				      rho,

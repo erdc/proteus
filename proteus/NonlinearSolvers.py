@@ -857,13 +857,16 @@ class ExplicitLumpedMassMatrixForRichards(Newton):
     if you give it the right Jacobian
     """
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        logEvent("Explicit Step", level=1)
         self.computeResidual(u,r,b)
         ############
         # FCT STEP #
         ############
         if hasattr(self.F.coefficients,'FCT') and self.F.coefficients.FCT==True:
+            logEvent("After explicit step: linearized FCT", level=1)
             self.F.FCTStep()
         else:
+            logEvent("After explicit set: using low order solution", level=1)
             u[:]=self.F.uLow
         ###########################################
         # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
