@@ -10,8 +10,10 @@ from proteus.Transport import FluxBoundaryConditions, Comm, cfemIntegrals
 from proteus.Transport import DOFBoundaryConditions, Quadrature
 from proteus.mprans import cArgumentsDict
 from proteus.LinearAlgebraTools import SparseMat
+from proteus import TimeIntegration
+from proteus.NonlinearSolvers import ExplicitLumpedMassMatrixForRichards
 
-class RKEV(proteus.TimeIntegration.SSP):
+class RKEV(TimeIntegration.SSP):
     from proteus import TimeIntegration
     """
     Wrapper for SSPRK time integration using EV
@@ -46,8 +48,9 @@ class RKEV(proteus.TimeIntegration.SSP):
     # def set_dt(self, DTSET):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
+        comm = Comm.get()
         maxCFL = 1.0e-6
-        maxCFL = max(maxCFL, globalMax(self.cfl.max()))
+        maxCFL = max(maxCFL, comm.globalMax(self.cfl.max()))
         self.dt = old_div(self.runCFL, maxCFL)
         if self.dtLast is None:
             self.dtLast = self.dt
@@ -1138,6 +1141,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             pass
 
         argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["dt"] = self.timeIntegration.dt
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
         argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
         argsDict["mesh_dof"] = self.mesh.nodeArray
@@ -1179,7 +1183,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["sc_uref"] = 0.0
         argsDict["sc_alpha"] = 0.0
         argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["r_l2g"] = self.l2g[0]['freeGlobal']
         argsDict["elementDiameter"] = self.mesh.elementDiametersArray
+        argsDict["degree_polynomial"] = degree_polynomial
         argsDict["u_dof"] = self.u[0].dof
         argsDict["u_dof_old"] = self.u[0].dof
         argsDict["velocity"] = self.q['velocity']
@@ -1450,6 +1456,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.delta_x_ij is None:
             self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
         argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["dt"] = self.timeIntegration.dt
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
         argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
         argsDict["mesh_dof"] = self.mesh.nodeArray
