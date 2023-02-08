@@ -64,7 +64,7 @@ if optRichards:
                                          STABILIZATION_TYPE=2,
                                          ENTROPY_TYPE=1,
                                          LUMPED_MASS_MATRIX=True,
-                                         FCT=False,
+                                         FCT=True,
                                          MONOLITHIC=False,
                                          num_fct_iter=1,
                                          # FOR ENTROPY VISCOSITY
@@ -112,9 +112,8 @@ if satRichards:
             return lambda x,t: waterTableSaturation
 else:
     def getDBC_Richards_Shock(x,flag):
-        return None
-#        if x[0] == L[0]:
-#            return lambda x,t: pondingPressure
+        if x[0] == L[0]:
+            return lambda x,t: pondingPressure
         if x[0] == 0.0:
             return lambda x,t: bottomPressure
    
@@ -144,8 +143,9 @@ initialConditions  = {0:ShockIC_Richards()}
 fluxBoundaryConditions = {0:'outFlow'}
 
 def flux(x,flag):
-    if x[0] == L[0]:
-        return lambda x,t: 0.0
+    return None
+#    if x[0] == L[0]:
+#        return lambda x,t: 0.0
 #    if x[0] == 0.0:
 #        return lambda x,t: 0.0
 
