@@ -49,6 +49,12 @@ for i in range(nMediaTypes+1):
     KsTypes[i,:]    = [dimensionless_conductivity]#,dimensionless_conductivity,dimensionless_conductivity]#m/d?
 
 useSeepageFace = True
+galerkin=False
+
+if galerkin:
+    stabilization_type=0
+else:
+    stabilization_type=1
 if optRichards:
     LevelModelType = Richards.LevelModel
     coefficients = Richards.Coefficients(nd,
@@ -61,10 +67,10 @@ if optRichards:
                                          density=dimensionless_density,
                                          beta=0.0001,
                                          diagonal_conductivity=True,
-                                         STABILIZATION_TYPE=2,
+                                         STABILIZATION_TYPE=stabilization_type,
                                          ENTROPY_TYPE=1,
-                                         LUMPED_MASS_MATRIX=True,
-                                         FCT=True,
+                                         LUMPED_MASS_MATRIX=False,
+                                         FCT=False,
                                          MONOLITHIC=False,
                                          num_fct_iter=1,
                                          # FOR ENTROPY VISCOSITY

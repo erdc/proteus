@@ -40,9 +40,12 @@ else:
     useInitialGuessPredictor= True
     stepExact = True
 
-timeIntegration = Richards.RKEV
+if galerkin:
+    timeIntegration = BackwardEuler
+else:
+    timeIntegration = Richards.RKEV
 timeOrder = 1
-stepController = Min_dt_controller
+stepController = FixedStep
 #systemStepControllerType = SplitOperator.Sequential_FixedStep
 #dt_system_fixed = 0.001
 #nDTout = 1#int(T/DT)#int(T/DT) #100#int(T/DT)
@@ -57,13 +60,13 @@ stepExact = True
 
 femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
 
-#elementQuadrature = SimplexGaussQuadrature(nd,4)
+elementQuadrature = SimplexGaussQuadrature(nd,3)
 
-#elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
+elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,1)
 
-elementQuadrature = SimplexLobattoQuadrature(nd,1)
+#elementQuadrature = SimplexLobattoQuadrature(nd,1)
 #
-elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
+#elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
 
 #nn=101
 #nLevels = 4
@@ -98,8 +101,10 @@ numericalFluxType = Richards_IIPG_exterior #need weak for parallel and global co
 multilevelNonlinearSolver = Newton
 
 #levelNonlinearSolver = FAS
-levelNonlinearSolver = Newton
-levelNonlinearSolver = ExplicitLumpedMassMatrixForRichards
+if galerkin:
+    levelNonlinearSolver = Newton
+else:
+    levelNonlinearSolver = ExplicitLumpedMassMatrixForRichards
 #levelNonlinearSolver = ExplicitConsistentMassMatrixForRichards
 #levelNonlinearSolver = NLStarILU
 #levelNonlinearSolver = NLGaussSeidel
