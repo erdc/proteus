@@ -81,6 +81,7 @@ namespace proteus
 			      double df[nSpace],
 			      double a[nnz],
 			      double da[nnz],
+			      double as[nnz],
 			      double& kr,
 			      double& dkr)
     {
@@ -166,6 +167,7 @@ namespace proteus
 	      df[I] += -rho2*DKWr_DpsiC*KWs[ii]*gravity[colind[ii]];
 	      a[ii]  = rho*KWr*KWs[ii];
 	      da[ii] = rho*DKWr_DpsiC*KWs[ii];
+	      as[ii]  = rho*KWs[ii];
 	      kr = KWr;
 	      dkr=DKWr_DpsiC;
 	    }
@@ -533,7 +535,7 @@ namespace proteus
 	      register double u=0.0,grad_u[nSpace],grad_u_old[nSpace],
 		m=0.0,dm=0.0,
 		f[nSpace],df[nSpace],
-		a[nnz],da[nnz],
+		a[nnz],da[nnz],as[nnz],
 		m_t=0.0,dm_t=0.0,
 		pdeResidual_u=0.0,
 		Lstar_u[nDOF_test_element],
@@ -607,6 +609,7 @@ namespace proteus
 				   df,
 				   a,
 				   da,
+				   as,
 				   Kr,
 				   dKr);
 	      //
@@ -714,6 +717,7 @@ namespace proteus
 		df_ext[nSpace],
 		a_ext[nnz],
 		da_ext[nnz],
+		as_ext[nnz],
 		flux_ext=0.0,
 		bc_u_ext=0.0,
 		bc_grad_u_ext[nSpace],
@@ -723,6 +727,7 @@ namespace proteus
 		bc_df_ext[nSpace],
 		bc_a_ext[nnz],
 		bc_da_ext[nnz],
+		bc_as_ext[nnz],
 		jac_ext[nSpace*nSpace],
 		jacDet_ext,
 		jacInv_ext[nSpace*nSpace],
@@ -808,6 +813,7 @@ namespace proteus
 				   df_ext,
 				   a_ext,
 				   da_ext,
+				   as_ext,
 				   Kr,
 				   dKr);
 	      evaluateCoefficients(a_rowptr.data(),
@@ -827,6 +833,7 @@ namespace proteus
 				   bc_df_ext,
 				   bc_a_ext,
 				   bc_da_ext,
+				   bc_as_ext,
 				   Kr,
 				   dKr);
 	      //
@@ -958,7 +965,7 @@ namespace proteus
 		grad_u[nSpace],
 		m=0.0,dm=0.0,
 		f[nSpace],df[nSpace],
-		a[nnz],da[nnz],
+		a[nnz],da[nnz],as[nnz],
 		m_t=0.0,dm_t=0.0,
 		dpdeResidual_u_u[nDOF_trial_element],
 		Lstar_u[nDOF_test_element],
@@ -1032,6 +1039,7 @@ namespace proteus
 				   df,
 				   a,
 				   da,
+				   as,
 				   Kr,
 				   dKr);
 	      //
@@ -1136,6 +1144,7 @@ namespace proteus
 		df_ext[nSpace],
 		a_ext[nnz],
 		da_ext[nnz],
+		as_ext[nnz],
 		dflux_u_u_ext=0.0,
 		bc_u_ext=0.0,
 		//bc_grad_u_ext[nSpace],
@@ -1145,6 +1154,7 @@ namespace proteus
 		bc_df_ext[nSpace],
 		bc_a_ext[nnz],
 		bc_da_ext[nnz],
+		bc_as_ext[nnz],
 		fluxJacobian_u_u[nDOF_trial_element],
 		jac_ext[nSpace*nSpace],
 		jacDet_ext,
@@ -1229,6 +1239,7 @@ namespace proteus
 				   df_ext,
 				   a_ext,
 				   da_ext,
+				   as_ext,
 				   Kr,
 				   dKr);
 	      evaluateCoefficients(a_rowptr.data(),
@@ -1248,6 +1259,7 @@ namespace proteus
 				   bc_df_ext,
 				   bc_a_ext,
 				   bc_da_ext,
+				   bc_as_ext,
 				   Kr,
 				   dKr);
 	      //
@@ -1289,6 +1301,7 @@ namespace proteus
     
     void FCTStep(arguments_dict& args)
     {
+      xt::pyarray<double>& bc_mask = args.array<double>("bc_mask");
       int NNZ = args.scalar<int>("NNZ"); //number on non-zero entries on sparsity pattern
       int numDOFs = args.scalar<int>("numDOFs"); //number of DOFs
       double dt = args.scalar<double>("dt");
@@ -1297,6 +1310,7 @@ namespace proteus
       xt::pyarray<double>& pn = args.array<double>("pn"); //DOFs of solution at time tn
       xt::pyarray<double>& solH = args.array<double>("solH"); //DOFs of high order solution at tnp1
       xt::pyarray<double>& uLow = args.array<double>("uLow");
+      xt::pyarray<double>& uDotLow = args.array<double>("uDotLow");
       xt::pyarray<double>& limited_solution = args.array<double>("limited_solution");
       xt::pyarray<int>& csrRowIndeces_DofLoops = args.array<int>("csrRowIndeces_DofLoops"); //csr row indeces
       xt::pyarray<int>& csrColumnOffsets_DofLoops = args.array<int>("csrColumnOffsets_DofLoops"); //csr column offsets
@@ -1323,9 +1337,11 @@ namespace proteus
 	  // compute low order solution
 	  // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
 	  solL[i] = uLow.data()[i];
-	  double sdoti = (solHi - solni);
+	  //double sdoti = (solHi - solni);
+	  double sdoti = uDotLow[i];
 	  sdot[i] = 0.0;
-	  double mini=min_s_bc.data()[i], maxi=max_s_bc.data()[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
+	  //double mini=max_s_bc.data()[i], maxi=min_s_bc.data()[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
+	  double mini=1e10, maxi=1e-10; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
 	  if (GLOBAL_FCT==1)
 	    {
 	      mini = 0.;
@@ -1354,13 +1370,13 @@ namespace proteus
 		    }
 		}
 	      // i-th row of flux correction matrix
-	      double sdotj = (solH.data()[j] - soln.data()[j]);
-
+	      //double sdotj = (solH.data()[j] - soln.data()[j]);
+	      double sdotj = uDotLow[j];
 	      double I_plus_ML_minus_MC = (i==j ? 1. : 0.)*(1. + mi) - MassMatrix.data()[ij];
 	      sdot[i] +=  I_plus_ML_minus_MC*(solH.data()[j]-soln.data()[j])/mi;
 	      if (MONOLITHIC == 0)
 		{
-		  FluxCorrectionMatrix[ij] = (LUMPED_MASS_MATRIX == 1 ? 0. : 1.)*MassMatrix.data()[ij]*(sdoti - sdotj) + dt_times_fH_minus_fL.data()[ij];
+		  FluxCorrectionMatrix[ij] = ((LUMPED_MASS_MATRIX == 1 ? 0. : 1.)*MassMatrix.data()[ij]*(sdoti - sdotj) + dt_times_fH_minus_fL.data()[ij]);
 		}
 	      else
 		{
@@ -1409,12 +1425,14 @@ namespace proteus
 	  double ith_Limiter_times_FluxCorrectionMatrix = 0.;
 	  double alpha_fA, alpha_dot, beta_ij=1.0;
 	  double Rposi = Rpos[i], Rnegi = Rneg[i];
-	  double sdoti = (solH.data()[i] - soln.data()[i]);
+	  //double sdoti = (solH.data()[i] - soln.data()[i]);
+	  double sdoti = uDotLow[i];
 	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
 	  for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops.data()[offset];
-	      double sdotj = (solH.data()[j] - soln.data()[j]);
+	      //double sdotj = (solH.data()[j] - soln.data()[j]);
+	      double sdotj = uDotLow[j];
 	      alpha_fA = ((FluxCorrectionMatrix[ij]>0) ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]))
 		* FluxCorrectionMatrix[ij];
 	      alpha_dot = fmin(1.0, beta_ij*fabs(alpha_fA)/MassMatrix.data()[ij]/fmax(1.0e-8,fabs(sdoti-sdotj)));
@@ -1429,7 +1447,7 @@ namespace proteus
 	      //update ij
 	      ij+=1;
 	    }
-	  limited_solution.data()[i] = solL[i] + 1./lumped_mass_matrix.data()[i]*ith_Limiter_times_FluxCorrectionMatrix;
+	  limited_solution.data()[i] = solL[i] + 1./lumped_mass_matrix.data()[i]*ith_Limiter_times_FluxCorrectionMatrix*bc_mask[i];
 	}
     }
 
@@ -1587,6 +1605,7 @@ namespace proteus
 
     void calculateResidual_entropy_viscosity(arguments_dict& args)
     {
+      xt::pyarray<double>& bc_mask = args.array<double>("bc_mask");
       double dt = args.scalar<double>("dt");
       xt::pyarray<double>& mesh_trial_ref = args.array<double>("mesh_trial_ref");
       xt::pyarray<double>& mesh_grad_trial_ref = args.array<double>("mesh_grad_trial_ref");
@@ -1704,6 +1723,7 @@ namespace proteus
       // This is used for first order KUZMIN'S METHOD
       register double TransportMatrix[NNZ],TransportMatrixConsistent[NNZ];
       std::valarray<double> u_free_dof_old(numDOFs);
+      std::valarray<double> ML2(numDOFs);
       for(int eN=0;eN<nElements_global;eN++)
 	for (int j=0;j<nDOF_trial_element;j++)
 	  {
@@ -1728,6 +1748,7 @@ namespace proteus
 	      global_entropy_residual[i]=0.;
 	    }
 	  boundary_integral[i]=0.;
+	  ML2[i] = 0.0;
 	}
 
       //////////////////////////////////////////////
@@ -1777,7 +1798,7 @@ namespace proteus
 		//for general use
 		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
 		dV,x,y,z,xt,yt,zt,
-		m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
+		m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz],as[nnz];
 	      //get the physical integration weight
 	      ck.calculateMapping_element(eN,
 					  k,
@@ -1836,6 +1857,7 @@ namespace proteus
 				   df,
 				   a,
 				   da,
+				   as,
 				   Kr,
 				   dKr);
 	      //
@@ -1872,6 +1894,7 @@ namespace proteus
 		{
 		  // VECTOR OF ENTROPY RESIDUAL //
 		  int eN_i=eN*nDOF_test_element+i;
+		  ML2[u_l2g.data()[eN_i]] += u_test_dV[i];
 		  if (STABILIZATION_TYPE==1) // EV stab
 		    {
 		      int gi = offset_u+stride_u*u_l2g.data()[eN_i]; //global i-th index
@@ -1889,14 +1912,14 @@ namespace proteus
 		      int i_nSpace = i*nSpace;
 		      elementTransport[i][j] += ck.SimpleDiffusionJacobian_weak(a_rowptr.data(),
 										a_colind.data(),
-										a,
+										as,
 										&u_grad_trial[j_nSpace],
 										&u_grad_test_dV[i_nSpace]);
-		      elementTransportConsistent[i][j] += Kr*ck.SimpleDiffusionJacobian_weak(a_rowptr.data(),
-											     a_colind.data(),
-											     a,
-											     &u_grad_trial[j_nSpace],
-											     &u_grad_test_dV[i_nSpace]);
+		      elementTransportConsistent[i][j] += ck.SimpleDiffusionJacobian_weak(a_rowptr.data(),
+											  a_colind.data(),
+											  a,
+											  &u_grad_trial[j_nSpace],
+											  &u_grad_test_dV[i_nSpace]);
 		    }
 		}//i
 	      //save solution for other models
@@ -1910,7 +1933,6 @@ namespace proteus
 	    {
 	      int eN_i=eN*nDOF_test_element+i;
 	      int gi = offset_u+stride_u*r_l2g.data()[eN_i]; //global i-th index
-
 	      // distribute global residual for (lumped) mass matrix
 	      globalResidual.data()[gi] += elementResidual_u[i];
 	      // distribute entropy_residual
@@ -2144,6 +2166,8 @@ namespace proteus
 	      ij+=1;
 	    }
 	  // scale g vector by lumped mass matrix
+	  if (fabs(ML.data()[i] - ML2[i]) > 1.0e-16)
+	    std::cout<<"ML "<<ML.data()[i]<<'\t'<<ML2[i]<<std::endl;
 	  for (int I=0; I < nSpace; I++)
 	    gi[I] /= ML.data()[i];
 	  if (STABILIZATION_TYPE==1) //EV Stab
@@ -2208,7 +2232,7 @@ namespace proteus
 	  double ith_flux_term = 0;
 	  double ith_consistent_flux_term = 0;
 	  double dLii = 0.;
-	  double m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz];
+	  double m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz],as[nnz];
 
 	  // loop over the sparsity pattern of the i-th DOF
 	  double Kr, dKr;
@@ -2242,6 +2266,7 @@ namespace proteus
 				       df,
 				       a,
 				       da,
+				       as,
 				       Kr,
 				       dKr);
 		  fL=Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
@@ -2267,6 +2292,7 @@ namespace proteus
 				       df,
 				       a,
 				       da,
+				       as,
 				       Kr,
 				       dKr);
 		  fL = Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
@@ -2281,7 +2307,7 @@ namespace proteus
 	  //edge_based_cfl[i] = 2.*fabs(dLii)/mi;
 
 
-	  uDotLow.data()[i] = 1.0/mi*ith_flux_term;
+	  uDotLow.data()[i] = 1.0/mi*ith_flux_term*bc_mask.data()[i];
 	  //cek hack, test consistent flux
 	  //uDotLow.data()[i] = 1.0/mi*ith_consistent_flux_term;
 	  //+ boundary_integral[i]);
@@ -2303,10 +2329,11 @@ namespace proteus
 			       df,
 			       a,
 			       da,
+			       as,
 			       Kr,
 			       dKr);
 	  sn.data()[i] = m;
-	  sLow.data()[i] = m + dt*uDotLow.data()[i];//cek should introduce mn,mnp1 or somethign clearer
+	  sLow.data()[i] = m + dt*uDotLow.data()[i]*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
 	  globalResidual.data()[i] += dt*ith_consistent_flux_term;
 	  //cek debug
 	  //std::cout<<"dt*divergence "<<dt*uDotLow.data()[i]<<std::endl;
@@ -2552,7 +2579,7 @@ namespace proteus
 		grad_u[nSpace],
 		m=0.0,dm=0.0,
 		f[nSpace],df[nSpace],
-		a[nnz],da[nnz],
+		a[nnz],da[nnz],as[nnz],
 		m_t=0.0,dm_t=0.0,
 		dpdeResidual_u_u[nDOF_trial_element],
 		Lstar_u[nDOF_test_element],
@@ -2630,6 +2657,7 @@ namespace proteus
 				   df,
 				   a,
 				   da,
+				   as,
 				   Kr,
 				   dKr);
 	      //

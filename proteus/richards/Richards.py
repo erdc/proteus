@@ -818,6 +818,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(self.nc):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
     def FCTStep(self):
+        import pdb
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         limited_solution = np.zeros((len(rowptr) - 1),'d')
         #self.u_free_dof_stage_0_l = np.zeros((len(rowptr) - 1),'d')
@@ -832,6 +833,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #                                                       self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage])
         #limited_solution[:] = self.uLow
         argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["bc_mask"] = self.bc_mask
         argsDict["NNZ"] = self.nnz 
         argsDict["numDOFs"] = len(rowptr) - 1  # num of DOFs
         argsDict["dt"] = self.timeIntegration.dt
@@ -840,6 +842,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["pn"] = self.u[0].dof
         argsDict["solH"] = self.sHigh
         argsDict["uLow"] = self.sLow
+        argsDict["uDotLow"] = self.uDotLow
         argsDict["limited_solution"] = limited_solution
         argsDict["csrRowIndeces_DofLoops"] = rowptr
         argsDict["csrColumnOffsets_DofLoops"] = colind
@@ -849,7 +852,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["max_s_bc"] = np.ones_like(self.min_s_bc)*self.coefficients.rho*(self.coefficients.thetaR_types[0] + self.coefficients.thetaSR_types[0]) #cek hack
         argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
         argsDict["MONOLITHIC"] =0#cek hack self.coefficients.MONOLITHIC
-
+        #pdb.set_trace()
         self.richards.FCTStep(argsDict)
         
             # self.nnz,  # number of non zero entries
@@ -1151,9 +1154,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #     self.ebqe[('diffusiveFlux_bc_flag',0)][t[0],t[1]] = 1
         #self.shockCapturing.lag=True
         if self.forceStrongConditions:
+            self.bc_mask = np.ones_like(self.u[0].dof)
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+                    self.u_dof_old[dofN] = self.u[cj].dof[dofN]
+                    self.bc_mask[dofN] = 0.0
         degree_polynomial = 1
         try:
             degree_polynomial = self.u[0].femSpace.order
@@ -1161,6 +1167,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             pass
 
         argsDict = cArgumentsDict.ArgumentsDict()
+        argsDict["bc_mask"] = self.bc_mask
         argsDict["dt"] = self.timeIntegration.dt
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
         argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
@@ -1207,7 +1214,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["elementDiameter"] = self.mesh.elementDiametersArray
         argsDict["degree_polynomial"] = degree_polynomial
         argsDict["u_dof"] = self.u[0].dof
-        argsDict["u_dof_old"] = self.u[0].dof
+        argsDict["u_dof_old"] = self.u_dof_old
         argsDict["velocity"] = self.q['velocity']
         argsDict["q_m"] = self.timeIntegration.m_tmp[0]
         argsDict["q_u"] = self.q[('u',0)]

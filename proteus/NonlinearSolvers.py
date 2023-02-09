@@ -865,15 +865,16 @@ class ExplicitLumpedMassMatrixForRichards(Newton):
         if hasattr(self.F.coefficients,'FCT') and self.F.coefficients.FCT==True:
             logEvent("After explicit step: linearized FCT", level=1)
             self.F.FCTStep()
+            u[:] = self.F.u[0].dof
         else:
             logEvent("After explicit set: using low order solution", level=1)
             u[:]=self.F.uLow
         ###########################################
         # DISTRUBUTE SOLUTION FROM u to u[ci].dof #
         ###########################################
-        self.F.auxiliaryCallCalculateResidual = True
-        self.computeResidual(u,r,b)
-        self.F.auxiliaryCallCalculateResidual = False
+        #self.F.auxiliaryCallCalculateResidual = True
+        #self.computeResidual(u,r,b)
+        #self.F.auxiliaryCallCalculateResidual = False
 
 class ExplicitConsistentMassMatrixWithRedistancing(Newton):
     """
