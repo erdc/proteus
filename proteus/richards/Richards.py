@@ -13,6 +13,13 @@ from proteus.LinearAlgebraTools import SparseMat
 from proteus import TimeIntegration
 from proteus.NonlinearSolvers import ExplicitLumpedMassMatrixForRichards
 
+class ThetaScheme(TimeIntegration.BackwardEuler):
+    def __init__(self,transport,integrateInterpolationPoints=False):
+        self.transport=transport
+        TimeIntegration.BackwardEuler.__init__(self,transport, integrateInterpolationPoints)
+    def updateTimeHistory(self,resetFromDOF=False):
+        TimeIntegration.BackwardEuler.updateTimeHistory(self,resetFromDOF)
+        self.transport.u_dof_old[:] = self.u
 class RKEV(TimeIntegration.SSP):
     from proteus import TimeIntegration
     """
@@ -693,10 +700,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #use contiguous layout of components for parallel, requires weak DBC's
         # mql. Some ASSERTS to restrict the combination of the methods
         if self.coefficients.STABILIZATION_TYPE > 0:
-            assert self.timeIntegration.isSSP == True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
-            cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver ==
-                                                               ExplicitLumpedMassMatrixForRichards or options.levelNonlinearSolver == ExplicitConsistentMassMatrixForRichards)
-            assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrixForRichards or ExplicitConsistentMassMatrixForRichards"
+            pass
+            #assert self.timeIntegration.isSSP == True, "If STABILIZATION_TYPE>0, use RKEV timeIntegration within VOF model"
+            #cond = 'levelNonlinearSolver' in dir(options) and (options.levelNonlinearSolver ==
+            #                                                   ExplicitLumpedMassMatrixForRichards or options.levelNonlinearSolver == ExplicitConsistentMassMatrixForRichards)
+            #assert cond, "If STABILIZATION_TYPE>0, use levelNonlinearSolver=ExplicitLumpedMassMatrixForRichards or ExplicitConsistentMassMatrixForRichards"
         try:
             if 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrixForRichards:
                 assert self.coefficients.LUMPED_MASS_MATRIX, "If levelNonlinearSolver=ExplicitLumpedMassMatrix, use LUMPED_MASS_MATRIX=True"
@@ -937,6 +945,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       self.jacobian)
         if self.u_dof_old is None:
             # Pass initial condition to u_dof_old
             self.u_dof_old = np.copy(self.u[0].dof)
@@ -1169,6 +1179,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["bc_mask"] = self.bc_mask
         argsDict["dt"] = self.timeIntegration.dt
+        argsDict["Theta"] = 1.0
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
         argsDict["mesh_grad_trial_ref"] = self.u[0].femSpace.elementMaps.grad_psi
         argsDict["mesh_dof"] = self.mesh.nodeArray
@@ -1255,6 +1266,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrRowIndeces_CellLoops"] = self.csrRowIndeces[(0, 0)]  # row indices (convenient for element loops)
         argsDict["csrColumnOffsets_CellLoops"] = self.csrColumnOffsets[(0, 0)]  # column indices (convenient for element loops)
         argsDict["csrColumnOffsets_eb_CellLoops"] = self.csrColumnOffsets_eb[(0, 0)]  # indices for boundary terms
+        argsDict["globalJacobian"] = self.jacobian.getCSRrepresentation()[2]
         # C matrices
         argsDict["Cx"] = Cx
         argsDict["Cy"] = Cy
@@ -1299,9 +1311,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
         logEvent("Global residual",level=9,data=r)
-        #mwf debug
-        #pdb.set_trace()
-        #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = np.zeros(r.shape,'d')
@@ -1582,8 +1591,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #if self.globalResidualDummy is None:
         #    self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
-        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-                                       jacobian)
+        if (self.coefficients.STABILIZATION_TYPE == 0):  # SUPG
+            cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                           jacobian)
         degree_polynomial = 1
         try:
             degree_polynomial = self.u[0].femSpace.order
@@ -1632,7 +1642,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["lag_shockCapturing"] = 0
         argsDict["shockCapturingDiffusion"] = 0.0
         argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["r_l2g"] = self.l2g[0]['freeGlobal']
         argsDict["elementDiameter"] = self.mesh.elementDiametersArray
+        argsDict["degree_polynomial"] = degree_polynomial
         argsDict["u_dof"] = self.u[0].dof
         argsDict["velocity"] = self.q['velocity']
         argsDict["q_m_betaBDF"] = self.timeIntegration.beta_bdf[0]
@@ -1655,17 +1667,26 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
         self.calculateJacobian(argsDict)
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
-            for cj in range(self.nc):
-                for dofN in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys()):
-                    global_dofN = self.offset[cj]+self.stride[cj]*dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
-                            #print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
-                            self.nzval[i] = scaling
-                        else:
-                            self.nzval[i] = 0.0
-                            #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+            for dofN in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys()):
+                global_dofN = self.offset[0]+self.stride[0]*dofN
+                self.nzval[np.where(self.colind == global_dofN)] = 0.0 #column
+                self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]] = 0.0 #row
+                zeroRow=True
+                for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):#row
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                        zeroRow = False
+                if zeroRow:
+                    raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+repr(global_dofN)+". You probably need add diagonal mass or reaction term")
+            #scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            #for cj in range(self.nc):
+            #    for dofN in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys()):
+            #        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+            #        for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+            #            if (self.colind[i] == global_dofN):
+            #                self.nzval[i] = scaling
+            #            else:
+            #                self.nzval[i] = 0.0
         logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1

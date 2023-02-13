@@ -40,10 +40,9 @@ else:
     useInitialGuessPredictor= True
     stepExact = True
 
-if galerkin:
-    timeIntegration = BackwardEuler
-else:
-    timeIntegration = Richards.RKEV
+if not galerkin:
+    timeIntegration = Richards.ThetaScheme
+#    timeIntegration = Richards.RKEV
 timeOrder = 1
 stepController = FixedStep
 #systemStepControllerType = SplitOperator.Sequential_FixedStep
@@ -104,7 +103,8 @@ multilevelNonlinearSolver = Newton
 if galerkin:
     levelNonlinearSolver = Newton
 else:
-    levelNonlinearSolver = ExplicitLumpedMassMatrixForRichards
+    levelNonlinearSolver = Newton
+    #levelNonlinearSolver = ExplicitLumpedMassMatrixForRichards
 #levelNonlinearSolver = ExplicitConsistentMassMatrixForRichards
 #levelNonlinearSolver = NLStarILU
 #levelNonlinearSolver = NLGaussSeidel
