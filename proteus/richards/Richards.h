@@ -152,9 +152,8 @@ namespace proteus
 	  DKWr_DpsiC    = 0.0;
 	}
       //slight compressibility
-      //cek hack, force incompressible
-      rhom = rho;//*exp(beta*u);
-      drhom = 0.0;//beta*rhom;
+      rhom = rho*exp(beta*u);
+      drhom = beta*rhom;
       m = rhom*thetaW;
       dm = -rhom*DthetaW_DpsiC+drhom*thetaW;
       for (int I=0;I<nSpace;I++)
@@ -169,7 +168,7 @@ namespace proteus
 	      da[ii] = rho*DKWr_DpsiC*KWs[ii];
 	      as[ii]  = rho*KWs[ii];
 	      kr = KWr;
-	      dkr=DKWr_DpsiC;
+	      dkr=0.0;//mod picard DKWr_DpsiC;
 	    }
 	}
     }
@@ -1605,6 +1604,8 @@ namespace proteus
 
     void calculateResidual_entropy_viscosity(arguments_dict& args)
     {
+      xt::pyarray<double>& globalJacobian = args.array<double>("globalJacobian");
+      double Theta = args.scalar<double>("Theta");
       xt::pyarray<double>& bc_mask = args.array<double>("bc_mask");
       double dt = args.scalar<double>("dt");
       xt::pyarray<double>& mesh_trial_ref = args.array<double>("mesh_trial_ref");
@@ -1722,18 +1723,23 @@ namespace proteus
       // Allocate space for the transport matrices
       // This is used for first order KUZMIN'S METHOD
       register double TransportMatrix[NNZ],TransportMatrixConsistent[NNZ];
+      register double TransportMatrixn[NNZ],TransportMatrixConsistentn[NNZ];
+      std::valarray<double> u_free_dof(numDOFs);
       std::valarray<double> u_free_dof_old(numDOFs);
       std::valarray<double> ML2(numDOFs);
       for(int eN=0;eN<nElements_global;eN++)
 	for (int j=0;j<nDOF_trial_element;j++)
 	  {
 	    register int eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    u_free_dof[r_l2g.data()[eN_nDOF_trial_element+j]] = u_dof.data()[u_l2g.data()[eN_nDOF_trial_element+j]];
 	    u_free_dof_old[r_l2g.data()[eN_nDOF_trial_element+j]] = u_dof_old.data()[u_l2g.data()[eN_nDOF_trial_element+j]];
 	  }
       for (int i=0; i<NNZ; i++)
 	{
 	  TransportMatrix[i] = 0.;
 	  TransportMatrixConsistent[i] = 0.;
+	  TransportMatrixn[i] = 0.;
+	  TransportMatrixConsistentn[i] = 0.;
 	}
 
       // compute entropy and init global_entropy_residual and boundary_integral
@@ -1764,20 +1770,28 @@ namespace proteus
 	  //declare local storage for local contributions and initialize
 	  register double
 	    elementResidual_u[nDOF_test_element],
-	    element_entropy_residual[nDOF_test_element],Phi[nDOF_trial_element];
+	    element_entropy_residual[nDOF_test_element],Phi[nDOF_trial_element],Phi_n[nDOF_trial_element];
 	  register double  elementTransport[nDOF_test_element][nDOF_trial_element],
 	    elementTransportConsistent[nDOF_test_element][nDOF_trial_element];
+	  register double  elementTransportn[nDOF_test_element][nDOF_trial_element],
+	    elementTransportConsistentn[nDOF_test_element][nDOF_trial_element];
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
-	      Phi[i] = u_dof_old[i];
+	      Phi[i] = u_dof[i];
+	      Phi_n[i] = u_dof_old[i];
 	      for (int I=0;I<nSpace;I++)
-		Phi[i] -= rho*mesh_dof[i*3+I]*gravity[I];
+		{
+		  Phi[i] -= rho*mesh_dof[i*3+I]*gravity[I];
+		  Phi_n[i] -= rho*mesh_dof[i*3+I]*gravity[I];
+		}
 	      elementResidual_u[i]=0.0;
 	      element_entropy_residual[i]=0.0;
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
 		  elementTransport[i][j]=0.0;
 		  elementTransportConsistent[i][j]=0.0;
+		  elementTransportn[i][j]=0.0;
+		  elementTransportConsistentn[i][j]=0.0;
 		}
 	    }
 	  //loop over quadrature points and compute integrands
@@ -1791,14 +1805,15 @@ namespace proteus
 		// for entropy residual
 		aux_entropy_residual=0., DENTROPY_un, DENTROPY_uni,
 		//for mass matrix contributions
-		u=0.0, un=0.0, grad_un[nSpace], porosity_times_velocity[nSpace],
+		u=0.0, un=0.0, grad_u[nSpace], grad_un[nSpace], porosity_times_velocity[nSpace],
 		u_test_dV[nDOF_trial_element],
 		u_grad_trial[nDOF_trial_element*nSpace],
 		u_grad_test_dV[nDOF_test_element*nSpace],
 		//for general use
 		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
 		dV,x,y,z,xt,yt,zt,
-		m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz],as[nnz];
+		m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz],as[nnz],
+		mn,dmn,fn[nSpace],dfn[nSpace],an[nnz],dan[nnz],asn[nnz];
 	      //get the physical integration weight
 	      ck.calculateMapping_element(eN,
 					  k,
@@ -1825,13 +1840,17 @@ namespace proteus
 	      ck.gradTrialFromRef(&u_grad_trial_ref.data()[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 	      //precalculate test function products with integration weights for mass matrix terms
 	      for (int I=0;I<nSpace;I++)
-		grad_un[I] =0.0;
+		{
+		  grad_u[I] = 0.0;
+		  grad_un[I] =0.0;
+		}
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
 		  u_test_dV[j] = u_test_ref.data()[k*nDOF_trial_element+j]*dV;
 		  for (int I=0;I<nSpace;I++)
 		    {
-		      grad_un[I] += Phi[j]*u_grad_trial[j*nSpace+I];
+		      grad_un[I] += Phi_n[j]*u_grad_trial[j*nSpace+I];
+		      grad_u[I] += Phi[j]*u_grad_trial[j*nSpace+I];
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
 		    }
 		}
@@ -1839,7 +1858,7 @@ namespace proteus
 	      //
 	      //calculate pde coefficients at quadrature points
 	      //
-	      double Kr, dKr;
+	      double Kr, dKr, Krn, dKrn;
 	      evaluateCoefficients(a_rowptr.data(),
 				   a_colind.data(),
 				   rho,
@@ -1851,6 +1870,26 @@ namespace proteus
 				   thetaSR.data()[elementMaterialTypes[eN]],
 				   &KWs.data()[elementMaterialTypes[eN]*nnz],			      
 				   un,
+				   mn,
+				   dmn,
+				   fn,
+				   dfn,
+				   an,
+				   dan,
+				   asn,
+				   Krn,
+				   dKrn);
+	      evaluateCoefficients(a_rowptr.data(),
+				   a_colind.data(),
+				   rho,
+				   beta,
+				   gravity.data(),
+				   alpha.data()[elementMaterialTypes[eN]],
+				   n.data()[elementMaterialTypes[eN]],
+				   thetaR.data()[elementMaterialTypes[eN]],
+				   thetaSR.data()[elementMaterialTypes[eN]],
+				   &KWs.data()[elementMaterialTypes[eN]*nnz],			      
+				   u,
 				   m,
 				   dm,
 				   f,
@@ -1920,6 +1959,16 @@ namespace proteus
 											  a,
 											  &u_grad_trial[j_nSpace],
 											  &u_grad_test_dV[i_nSpace]);
+		      elementTransportn[i][j] += ck.SimpleDiffusionJacobian_weak(a_rowptr.data(),
+										 a_colind.data(),
+										 asn,
+										 &u_grad_trial[j_nSpace],
+										 &u_grad_test_dV[i_nSpace]);
+		      elementTransportConsistentn[i][j] += ck.SimpleDiffusionJacobian_weak(a_rowptr.data(),
+											   a_colind.data(),
+											   an,
+											   &u_grad_trial[j_nSpace],
+											   &u_grad_test_dV[i_nSpace]);
 		    }
 		}//i
 	      //save solution for other models
@@ -1934,7 +1983,7 @@ namespace proteus
 	      int eN_i=eN*nDOF_test_element+i;
 	      int gi = offset_u+stride_u*r_l2g.data()[eN_i]; //global i-th index
 	      // distribute global residual for (lumped) mass matrix
-	      globalResidual.data()[gi] += elementResidual_u[i];
+	      //globalResidual.data()[gi] += elementResidual_u[i];
 	      // distribute entropy_residual
 	      if (STABILIZATION_TYPE==1) // EV Stab
 		global_entropy_residual[gi] += element_entropy_residual[i];
@@ -1946,6 +1995,10 @@ namespace proteus
 		    += elementTransport[i][j];
 		  TransportMatrixConsistent[csrRowIndeces_CellLoops.data()[eN_i] + csrColumnOffsets_CellLoops.data()[eN_i_j]]
 		    += elementTransportConsistent[i][j];
+		  TransportMatrixn[csrRowIndeces_CellLoops.data()[eN_i] + csrColumnOffsets_CellLoops.data()[eN_i_j]]
+		    += elementTransportn[i][j];
+		  TransportMatrixConsistentn[csrRowIndeces_CellLoops.data()[eN_i] + csrColumnOffsets_CellLoops.data()[eN_i_j]]
+		    += elementTransportConsistentn[i][j];
 		}//j
 	    }//i
 	}//elements
@@ -2223,9 +2276,13 @@ namespace proteus
       for (int i=0; i<numDOFs; i++)
 	{
 	  // NOTE: Transport matrices already have the porosity considered. ---> Dissipation matrices as well.
+	  double soli = u_free_dof[i]; // solution at time tn for the ith DOF
 	  double solni = u_free_dof_old[i]; // solution at time tn for the ith DOF
 	  for (int I=0;I<nSpace;I++)
-	    solni -= rho*gravity.data()[I]*mesh_dof.data()[i*3+I];
+	    {
+	      soli -= rho*gravity.data()[I]*mesh_dof.data()[i*3+I];
+	      solni -= rho*gravity.data()[I]*mesh_dof.data()[i*3+I];
+	    }
 	  double porosityi = 1.0;
 	  double ith_dissipative_term = 0;
 	  double ith_low_order_dissipative_term = 0;
@@ -2233,21 +2290,95 @@ namespace proteus
 	  double ith_consistent_flux_term = 0;
 	  double dLii = 0.;
 	  double m,dm,f[nSpace],df[nSpace],a[nnz],da[nnz],as[nnz];
+	  double mn,dmn,fn[nSpace],dfn[nSpace],an[nnz],dan[nnz],asn[nnz];
 
 	  // loop over the sparsity pattern of the i-th DOF
-	  double Kr, dKr;
+	  double Kr, dKr, Krn, dKrn;
+	  double J_ii=0.0;
+	  int ii;
 	  for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops.data()[offset];
+	      if (i==j)
+		ii = ij;
+	      double solj = u_free_dof[j]; // solution at time tn for the jth DOF
 	      double solnj = u_free_dof_old[j]; // solution at time tn for the jth DOF
 	      for (int I=0;I<nSpace;I++)
-		solnj -= rho*gravity.data()[I]*mesh_dof.data()[j*3+I];
+		{
+		  solj -= rho*gravity.data()[I]*mesh_dof.data()[j*3+I];
+		  solnj -= rho*gravity.data()[I]*mesh_dof.data()[j*3+I];
+		}
 	      double porosityj = 1.0;
 	      double dLowij, dLij, dEVij, dHij, fH,fL,fA;
-	      fH = -TransportMatrixConsistent[ij]*(solnj-solni);
+	      fH = -Theta*TransportMatrixConsistent[ij]*(solnj-solni);
 	      ith_consistent_flux_term += fH;
 	      fA = fH;
-	      if (-TransportMatrix[ij]*(solnj - solni) <= 0.0)
+	      if (-TransportMatrix[ij]*(solj - soli) <= 0.0)
+		{
+		  evaluateCoefficients(a_rowptr.data(),
+				       a_colind.data(),
+				       rho,
+				       beta,
+				       gravity.data(),
+				       alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
+				       n.data()[elementMaterialTypes.data()[0]],
+				       thetaR.data()[elementMaterialTypes.data()[0]],
+				       thetaSR.data()[elementMaterialTypes.data()[0]],
+				       &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
+				       u_free_dof[i],
+				       m,
+				       dm,
+				       f,
+				       df,
+				       a,
+				       da,
+				       as,
+				       Kr,
+				       dKr);
+		  fL=Theta*Kr*fmax(0.0, -TransportMatrix[ij])*(solj - soli);
+		  if (i!=j)
+		    {
+		      globalJacobian.data()[ij] -= Theta*Kr*fmax(0.0, -TransportMatrix[ij]);
+		      J_ii -= -Theta*Kr*fmax(0.0, -TransportMatrix[ij]) + Theta*dKr*fmax(0.0, -TransportMatrix[ij])*(solj - soli);
+		    }
+		  ith_flux_term += fL;
+		  fA -= fL;
+		}
+	      else
+		{
+		  evaluateCoefficients(a_rowptr.data(),
+				       a_colind.data(),
+				       rho,
+				       beta,
+				       gravity.data(),
+				       alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
+				       n.data()[elementMaterialTypes.data()[0]],
+				       thetaR.data()[elementMaterialTypes.data()[0]],
+				       thetaSR.data()[elementMaterialTypes.data()[0]],
+				       &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
+				       u_free_dof[j],
+				       m,
+				       dm,
+				       f,
+				       df,
+				       a,
+				       da,
+				       as,
+				       Kr,
+				       dKr);
+		  fL = Theta*Kr*fmax(0.0, -TransportMatrix[ij])*(solj - soli);
+		  if (i!=j)
+		    {
+		      globalJacobian.data()[ij] -= Theta*Kr*fmax(0.0, -TransportMatrix[ij]) + Theta*dKr*fmax(0.0, -TransportMatrix[ij])*(solj - soli);
+		      J_ii -= -Theta*Kr*fmax(0.0, -TransportMatrix[ij]);
+		    }
+		  ith_flux_term += fL;
+		  fA -= fL;
+		}
+	      fH = -(1-Theta)*TransportMatrixConsistentn[ij]*(solnj-solni);
+	      ith_consistent_flux_term += fH;
+	      fA += fH;
+	      if (-TransportMatrixn[ij]*(solnj - solni) <= 0.0)
 		{
 		  evaluateCoefficients(a_rowptr.data(),
 				       a_colind.data(),
@@ -2269,7 +2400,7 @@ namespace proteus
 				       as,
 				       Kr,
 				       dKr);
-		  fL=Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+		  fL=(1-Theta)*Kr*fmax(0.0, -TransportMatrixn[ij])*(solnj - solni);
 		  ith_flux_term += fL;
 		  fA -= fL;
 		}
@@ -2295,7 +2426,7 @@ namespace proteus
 				       as,
 				       Kr,
 				       dKr);
-		  fL = Kr*fmax(0.0, -TransportMatrix[ij])*(solnj - solni);
+		  fL = (1-Theta)*Kr*fmax(0.0, -TransportMatrixn[ij])*(solnj - solni);
 		  ith_flux_term += fL;
 		  fA -= fL;
 		}
@@ -2305,7 +2436,6 @@ namespace proteus
 	  double mi = ML.data()[i];
 	  // compute edge_based_cfl
 	  //edge_based_cfl[i] = 2.*fabs(dLii)/mi;
-
 
 	  uDotLow.data()[i] = 1.0/mi*ith_flux_term*bc_mask.data()[i];
 	  //cek hack, test consistent flux
@@ -2322,7 +2452,7 @@ namespace proteus
 			       thetaR.data()[elementMaterialTypes.data()[0]],
 			       thetaSR.data()[elementMaterialTypes.data()[0]],
 			       &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
-			       u_free_dof_old[i],
+			       u_free_dof[i],
 			       m,
 			       dm,
 			       f,
@@ -2332,9 +2462,34 @@ namespace proteus
 			       as,
 			       Kr,
 			       dKr);
-	  sn.data()[i] = m;
-	  sLow.data()[i] = m + dt*uDotLow.data()[i]*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
-	  globalResidual.data()[i] += dt*ith_consistent_flux_term;
+	  evaluateCoefficients(a_rowptr.data(),
+			       a_colind.data(),
+			       rho,
+			       beta,
+			       gravity.data(),
+			       alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
+			       n.data()[elementMaterialTypes.data()[0]],
+			       thetaR.data()[elementMaterialTypes.data()[0]],
+			       thetaSR.data()[elementMaterialTypes.data()[0]],
+			       &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
+			       u_free_dof_old[i],
+			       mn,
+			       dmn,
+			       fn,
+			       dfn,
+			       an,
+			       dan,
+			       asn,
+			       Krn,
+			       dKrn);
+	  sn.data()[i] = mn;
+	  sLow.data()[i] = mn + dt*uDotLow.data()[i]*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
+	  globalResidual.data()[i] = (mi*(m - mn)/dt - ith_flux_term)*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
+	  globalJacobian.data()[ii] += bc_mask.data()[i]*(mi*dm/dt + J_ii) + (1.0-bc_mask.data()[i]);
+	  //globalJacobian[ii] = bc_mask.data()[i]*mi*dm/dt + (1.0-bc_mask.data()[i]);
+
+	  if (false)
+	    {
 	  //cek debug
 	  //std::cout<<"dt*divergence "<<dt*uDotLow.data()[i]<<std::endl;
 	  //std::cout<<"mass density old "<<m<<std::endl;
@@ -2363,6 +2518,7 @@ namespace proteus
 				      df,
 				      a,
 				      da);
+	    }
 	  //uLow.data()[i] = u_dof_old.data()[i] - dt/mi*(ith_flux_term
 	  //						  + boundary_integral[i]
 	  //						  - ith_low_order_dissipative_term);
@@ -2530,7 +2686,7 @@ namespace proteus
       double useMetrics = args.scalar<double>("useMetrics"); 
       double alphaBDF = args.scalar<double>("alphaBDF");
       int lag_shockCapturing = args.scalar<int>("lag_shockCapturing");
-      double shockCapturingDiffusion = args.scalar<double>("shockCapturingDiffusions");
+      double shockCapturingDiffusion = args.scalar<double>("shockCapturingDiffusion");
       xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
       xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
       xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
@@ -2546,13 +2702,13 @@ namespace proteus
       xt::pyarray<double>& delta_x_ij = args.array<double>("delta_x_ij");
       int nExteriorElementBoundaries_global = args.scalar<int>("nExteriorElementBoundaries_global");
       xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
-      xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundariesArray");
+      xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
       xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
       xt::pyarray<double>& ebqe_velocity_ext = args.array<double>("ebqe_velocity_ext");
       xt::pyarray<int>& isDOFBoundary_u = args.array<int>("isDOFBoundary_u");
       xt::pyarray<double>& ebqe_bc_u_ext = args.array<double>("ebqe_bc_u_ext");
       xt::pyarray<int>& isFluxBoundary_u = args.array<int>("isFluxBoundary_u");
-      xt::pyarray<double>& ebqe_bc_flux_u_ext = args.array<double>("ebqe_bc_flux_u_ext");
+      xt::pyarray<double>& ebqe_bc_flux_ext = args.array<double>("ebqe_bc_flux_ext");
       xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.array<int>("csrColumnOffsets_eb_u_u");
       int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
       //std::cout<<"ndjaco  address "<<q_numDiff_u_last<<std::endl;
@@ -2759,7 +2915,7 @@ namespace proteus
 		{
 		  int eN_i_j = eN_i*nDOF_trial_element+j;
 		  int J = u_l2g.data()[eN*nDOF_trial_element+j];
-		  globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i][j];
+		  //globalJacobian.data()[csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j]] += elementJacobian_u_u[i][j];
 		  delta_x_ij.data()[3*(csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j])+0] = mesh_dof.data()[I*3+0] - mesh_dof.data()[J*3+0];
 		  delta_x_ij.data()[3*(csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j])+1] = mesh_dof.data()[I*3+1] - mesh_dof.data()[J*3+1];
 		  delta_x_ij.data()[3*(csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_u_u.data()[eN_i_j])+2] = mesh_dof.data()[I*3+2] - mesh_dof.data()[J*3+2];

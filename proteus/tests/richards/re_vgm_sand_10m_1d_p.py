@@ -11,10 +11,9 @@ analyticalSolution = None
 viscosity     = 8.9e-4  #kg/(m*s)
 density       = 998.2   #kg/m^3
 gravity       = 9.8     #m/s^2
-beta          = 0.0#density*gravity*4.524e-10
+beta          = density*gravity*4.524e-10
 m_per_s_by_m_per_d = 1.1574074e-5
 permeability  = (5.04*m_per_s_by_m_per_d)*viscosity/(gravity*density)  #m^2
-#print 'perm',permeability
 thetaS        = 0.301   #-
 thetaR        = 0.093   #-
 mvg_alpha     = 5.47    #1/m
@@ -24,7 +23,6 @@ lengthScale   = 1.0     #m
 timeScale     = 1.0     #d #1.0/sqrt(g*lengthScale)
 #make non-dimensional
 dimensionless_conductivity  = (timeScale*density*gravity*permeability/(viscosity*lengthScale))/m_per_s_by_m_per_d
-#print 'Ks',dimensionless_conductivity
 dimensionless_density  = 1.0
 dimensionless_gravity  = numpy.array([-1.0,
                                        0.0,
@@ -65,7 +63,7 @@ if optRichards:
                                          thetaSRtypes,
                                          gravity=dimensionless_gravity,
                                          density=dimensionless_density,
-                                         beta=0.0001,
+                                         beta=beta,
                                          diagonal_conductivity=True,
                                          STABILIZATION_TYPE=stabilization_type,
                                          ENTROPY_TYPE=1,
@@ -102,10 +100,10 @@ else:
                                                               m = mvg_m,
                                                               beta=beta)
 
-pondingPressure=-0.1#-0.1
-bottomPressure = -0.2#0.0
-#pondingPressure=-0.1
-#bottomPressure = -10.0
+#pondingPressure=-0.1#-0.1
+#bottomPressure = -0.2#0.0
+pondingPressure= 0.1
+bottomPressure = 0.0
 pondingSaturation = 0.9
 waterTableSaturation = 0.9
 initialSaturation = 0.01
@@ -139,7 +137,7 @@ else:
             # if f:
             #     return f(x,t)
             # return bottomPressure + x[0]*dimensionless_gravity[0]*dimensionless_density
-            if x[0] < L[0]*0.5:
+            if x[0] < L[0]:#*0.5:
                 return bottomPressure + x[0]*dimensionless_gravity[0]*dimensionless_density
             else:
                 return pondingPressure
@@ -159,5 +157,5 @@ advectiveFluxBoundaryConditions =  {0:flux}
 
 diffusiveFluxBoundaryConditions = {0:{}}
 
-#T = 0.5/timeScale
-T = 0.35/timeScale
+T = 0.5/timeScale
+#T = 0.35/timeScale
