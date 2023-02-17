@@ -839,7 +839,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #                                                       self.dirichletConditions[0].global2freeGlobal_free_dofs,
         #                                                       self.u_free_dof_stage_0_l,
         #                                                       self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage])
-        #limited_solution[:] = self.uLow
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["bc_mask"] = self.bc_mask
         argsDict["NNZ"] = self.nnz 
