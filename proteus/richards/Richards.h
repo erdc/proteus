@@ -1375,7 +1375,7 @@ namespace proteus
 	      sdot[i] +=  I_plus_ML_minus_MC*(solH.data()[j]-soln.data()[j])/mi;
 	      if (MONOLITHIC == 0)
 		{
-		  FluxCorrectionMatrix[ij] = ((LUMPED_MASS_MATRIX == 1 ? 0. : 1.)*MassMatrix.data()[ij]*(sdoti - sdotj) + dt_times_fH_minus_fL.data()[ij]);
+		  FluxCorrectionMatrix[ij] = (LUMPED_MASS_MATRIX == 1 ? 0. : 1.)*dt*MassMatrix.data()[ij]*(sdoti - sdotj) + dt_times_fH_minus_fL.data()[ij];
 		}
 	      else
 		{
@@ -2310,7 +2310,7 @@ namespace proteus
 		}
 	      double porosityj = 1.0;
 	      double dLowij, dLij, dEVij, dHij, fH,fL,fA;
-	      fH = -Theta*TransportMatrixConsistent[ij]*(solnj-solni);
+	      fH = -Theta*TransportMatrixConsistent[ij]*(solj-soli);
 	      ith_consistent_flux_term += fH;
 	      fA = fH;
 	      if (-TransportMatrix[ij]*(solj - soli) <= 0.0)
@@ -2437,7 +2437,7 @@ namespace proteus
 	  // compute edge_based_cfl
 	  //edge_based_cfl[i] = 2.*fabs(dLii)/mi;
 
-	  uDotLow.data()[i] = 1.0/mi*ith_flux_term*bc_mask.data()[i];
+	  uDotLow.data()[i] = 1.0/mi*ith_flux_term;
 	  //cek hack, test consistent flux
 	  //uDotLow.data()[i] = 1.0/mi*ith_consistent_flux_term;
 	  //+ boundary_integral[i]);
@@ -2483,7 +2483,8 @@ namespace proteus
 			       Krn,
 			       dKrn);
 	  sn.data()[i] = mn;
-	  sLow.data()[i] = mn + dt*uDotLow.data()[i]*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
+	  sLow.data()[i] = m;
+	  //sLow.data()[i] = mn + dt*uDotLow.data()[i]*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
 	  globalResidual.data()[i] = (mi*(m - mn)/dt - ith_flux_term)*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
 	  globalJacobian.data()[ii] += bc_mask.data()[i]*(mi*dm/dt + J_ii) + (1.0-bc_mask.data()[i]);
 	  //globalJacobian[ii] = bc_mask.data()[i]*mi*dm/dt + (1.0-bc_mask.data()[i]);

@@ -11,7 +11,7 @@ analyticalSolution = None
 viscosity     = 8.9e-4  #kg/(m*s)
 density       = 998.2   #kg/m^3
 gravity       = 9.8     #m/s^2
-beta          = density*gravity*4.524e-10
+beta          = 0.0#density*gravity*4.524e-10
 m_per_s_by_m_per_d = 1.1574074e-5
 permeability  = (5.04*m_per_s_by_m_per_d)*viscosity/(gravity*density)  #m^2
 thetaS        = 0.301   #-
@@ -68,7 +68,7 @@ if optRichards:
                                          STABILIZATION_TYPE=stabilization_type,
                                          ENTROPY_TYPE=1,
                                          LUMPED_MASS_MATRIX=False,
-                                         FCT=False,
+                                         FCT=True,
                                          MONOLITHIC=False,
                                          num_fct_iter=1,
                                          # FOR ENTROPY VISCOSITY
