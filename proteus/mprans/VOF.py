@@ -1123,6 +1123,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.dLow.fill(0.0)
         
         r.fill(0.0)
+        try:
+            self.isActiveR[:] = 0.0
+            self.isActiveDOF[:] = 0.0
+            self.isActiveElement[:] = 0
+        except AttributeError:
+            self.isActiveR = np.zeros_like(r)
+            self.isActiveDOF = np.zeros_like(self.u[0].dof)
+            self.isActiveElement = np.zeros((self.mesh.nElements_global,),'i')
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -1153,6 +1161,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
         argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
         argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
         argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
         argsDict["u_trial_ref"] = self.u[0].femSpace.psi
         argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
@@ -1233,12 +1242,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["min_u_bc"] = self.min_u_bc
         argsDict["max_u_bc"] = self.max_u_bc
         argsDict["quantDOFs"] = self.quantDOFs
+        argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
+        argsDict["useExact"] = int(self.coefficients.flowCoefficients.useExact)
+        argsDict["isActiveR"] = self.isActiveR
+        argsDict["isActiveDOF"] = self.isActiveDOF
+        argsDict["isActiveElement"] = self.isActiveElement
+        argsDict["ebqe_phi_s"] = self.coefficients.flowCoefficients.ebqe_phi_s
+        argsDict["phi_solid"] = self.coefficients.flowCoefficients.q_phi_solid
         self.calculateResidual(argsDict)
 
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 r[dofN] = 0
-
+        r*=self.isActiveR
         if (self.auxiliaryCallCalculateResidual == False):
             edge_based_cflMax = globalMax(self.edge_based_cfl.max()) * self.timeIntegration.dt
             cell_based_cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
@@ -1264,6 +1280,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["mesh_velocity_dof"] = self.mesh.nodeVelocityArray
         argsDict["MOVING_DOMAIN"] = self.MOVING_DOMAIN
         argsDict["mesh_l2g"] = self.mesh.elementNodesArray
+        argsDict["x_ref"] = self.elementQuadraturePoints
         argsDict["dV_ref"] = self.elementQuadratureWeights[('u', 0)]
         argsDict["u_trial_ref"] = self.u[0].femSpace.psi
         argsDict["u_grad_trial_ref"] = self.u[0].femSpace.grad_psi
@@ -1307,6 +1324,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["ebqe_bc_flux_u_ext"] = self.ebqe[('advectiveFlux_bc', 0)]
         argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0, 0)]
         argsDict["STABILIZATION_TYPE"] = self.coefficients.STABILIZATION_TYPE
+        argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
+        argsDict["useExact"] = int(self.coefficients.flowCoefficients.useExact)
+        argsDict["isActiveR"] = self.isActiveR
+        argsDict["isActiveDOF"] = self.isActiveDOF
+        argsDict["isActiveElement"] = self.isActiveElement
+        argsDict["ebqe_phi_s"] = self.coefficients.flowCoefficients.ebqe_phi_s
+        argsDict["phi_solid"] = self.coefficients.flowCoefficients.q_phi_solid
         self.calculateJacobian(argsDict)
 
         # Load the Dirichlet conditions directly into residual
@@ -1325,6 +1349,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.nzval[i] = 0.0
                         # print "RBLES zeroing residual cj = %s dofN= %s
                         # global_dofN= %s " % (cj,dofN,global_dofN)
+        for global_dofN_a in np.argwhere(self.isActiveR==0.0):
+            global_dofN = global_dofN_a[0]
+            for i in range(
+                    self.rowptr[global_dofN],
+                    self.rowptr[global_dofN + 1]):
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                else:
+                    self.nzval[i] = 0.0
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
