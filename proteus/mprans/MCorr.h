@@ -50,8 +50,9 @@ namespace proteus
     {
     public:
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
-      GeneralizedFunctions<nSpace,2,nDOF_trial_element,nQuadraturePoints_elementBoundary> gf_nodes;
+      GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
+      GeneralizedFunctions<nSpace,3,nDOF_trial_element,nQuadraturePoints_elementBoundary> gf_nodes;
+      GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf_s;
     MCorr():ck()
         {}
 
@@ -96,6 +97,7 @@ namespace proteus
                                            double epsFactDirac,
                                            double epsFactDiffusion,
                                            int* u_l2g,
+                                           int* r_l2g,
                                            double* elementDiameter,
                                            double* nodeDiametersArray,
                                            double* u_dof,
@@ -117,7 +119,11 @@ namespace proteus
                                            int* elementBoundaryElementsArray,
                                            int* elementBoundaryLocalElementBoundariesArray,
                                            double* element_u,
-                                           int eN)
+                                           int eN,
+					   bool element_active,
+					   double* isActiveR,
+					   double* isActiveDOF,
+					   const double* phi_solid)
       {
         for (int i=0;i<nDOF_test_element;i++)
           {
@@ -142,7 +148,9 @@ namespace proteus
               dV,x,y,z,
               G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
             gf.set_quad(k);
-            //
+	    gf_s.set_quad(k);
+	    const double H_s = gf_s.H(0.0,phi_solid[eN_k]);
+	    //
             //compute solution and gradients at quadrature points
             //
             ck.calculateMapping_element(eN,
@@ -212,12 +220,18 @@ namespace proteus
             //
             for(int i=0;i<nDOF_test_element;i++)
               {
+		register int eN_i = eN*nDOF_test_element+i;
                 //register int eN_k_i=eN_k*nDOF_test_element+i;
                 //register int eN_k_i_nSpace = eN_k_i*nSpace;
                 register int  i_nSpace=i*nSpace;
 
-                elementResidual_u[i] += ck.Reaction_weak(r,u_test_dV[i]) +
-                  ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]);
+                elementResidual_u[i] += H_s*(ck.Reaction_weak(r,u_test_dV[i]) +
+					     ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]));
+		if (element_active)
+		  {
+		    isActiveR[offset_u + stride_u*r_l2g[eN_i]] = 1.0;
+		    isActiveDOF[u_l2g[eN_i]] = 1.0;
+		  }
               }//i
             //
             //save momentum for time history and velocity for subgrid error
@@ -287,6 +301,13 @@ namespace proteus
         xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
         xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
         xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
+	xt::pyarray<double>& ebqe_phi_s = args.array<double>("ebqe_phi_s");
+	const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
+	xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
+	bool useExact_s = args.scalar<int>("useExact_s");
+	xt::pyarray<double>& isActiveR = args.array<double>("isActiveR");
+	xt::pyarray<double>& isActiveDOF = args.array<double>("isActiveDOF");
+	xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
         //
         //loop over elements to compute volume integrals and load them into element and global residual
         //
@@ -298,15 +319,19 @@ namespace proteus
         //eN_k_j is the quadrature point index for a trial function
         //eN_k_i is the quadrature point index for a trial function
         gf.useExact = useExact;
+        gf_s.useExact = useExact_s;
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
-            register double elementResidual_u[nDOF_test_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element];
+            register double elementResidual_u[nDOF_test_element], element_u[nDOF_trial_element], element_phi[nDOF_trial_element], element_phi_s[nDOF_mesh_trial_element];
+	    bool element_active=false;
+	    isActiveElement[eN]=0;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 register int eN_i=eN*nDOF_test_element+i;
                 element_u[i] = u_dof.data()[u_l2g.data()[eN_i]];
                 element_phi[i] = phi_dof.data()[u_l2g.data()[eN_i]] + element_u[i];
+		element_phi_s[i] = phi_solid_nodes.data()[u_l2g.data()[eN_i]];
               }//i
             double element_nodes[nDOF_mesh_trial_element*3];
             for (int i=0;i<nDOF_mesh_trial_element;i++)
@@ -316,6 +341,30 @@ namespace proteus
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
             gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+	    int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref.data(),false);
+	    if (icase_s == 0)
+	      {
+		element_active=true;
+		isActiveElement[eN]=1;
+		//only works for simplices
+		// for (int ebN_element=0;ebN_element < nDOF_mesh_trial_element; ebN_element++)
+		//   {
+		//     const int ebN = elementBoundariesArray.data()[eN*nDOF_mesh_trial_element+ebN_element];
+		//     //internal and actually a cut edge
+		//     //if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned) && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] < 0.0)
+		//     if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
+		//       {
+		//      cutfem_boundaries.insert(ebN);
+		//      if (elementBoundaryElementsArray[ebN*2 + 0] == eN)
+		//        cutfem_local_boundaries[ebN] = ebN_element;
+		//       }
+		//   }
+	      }
+	    else if (icase_s == 1)
+	      {
+		element_active=true;
+		isActiveElement[eN]=1;
+	      }
 	    calculateElementResidual(mesh_trial_ref.data(),
 				     mesh_grad_trial_ref.data(),
 				     mesh_dof.data(),
@@ -340,6 +389,7 @@ namespace proteus
 				     epsFactDirac,
 				     epsFactDiffusion,
 				     u_l2g.data(),
+				     r_l2g.data(),
 				     elementDiameter.data(),
 				     nodeDiametersArray.data(),
 				     u_dof.data(),
@@ -361,7 +411,11 @@ namespace proteus
 				     elementBoundaryElementsArray.data(),
 				     elementBoundaryLocalElementBoundariesArray.data(),
 				     element_u,
-				     eN);
+				     eN,
+				     element_active,
+				     isActiveR.data(),
+				     isActiveDOF.data(),
+				     phi_solid.data());
 	    //
 	    //load element into global residual and save element residual
 	    //
@@ -504,6 +558,7 @@ namespace proteus
                                            double* q_porosity,
                                            double* elementJacobian_u_u,
                                            double* element_u,
+					   const double* phi_solid,
                                            int eN)
       {
         for (int i=0;i<nDOF_test_element;i++)
@@ -518,6 +573,7 @@ namespace proteus
               eN_k_nSpace = eN_k*nSpace;
             //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
             gf.set_quad(k);
+	    gf_s.set_quad(k);
             //declare local storage
             register double u=0.0,
               grad_u[nSpace],
@@ -586,6 +642,7 @@ namespace proteus
             epsDirac    =epsFactDirac*    (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
             epsDiffusion=epsFactDiffusion*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
             //    *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	    const double H_s = gf_s.H(0.0, phi_solid[eN_k]);
             evaluateCoefficients(epsHeaviside,
                                  epsDirac,
                                  q_phi[eN_k],
@@ -605,8 +662,8 @@ namespace proteus
                     //int eN_k_j_nSpace = eN_k_j*nSpace;
                     int j_nSpace = j*nSpace;
                     elementJacobian_u_u[i*nDOF_trial_element+j] +=
-                      ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
-                      ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]);
+                      H_s*(ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
+			   ck.NumericalDiffusionJacobian(epsDiffusion,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]));
                   }//j
               }//i
           }//k
@@ -651,18 +708,27 @@ namespace proteus
         xt::pyarray<int>& csrRowIndeces_u_u = args.array<int>("csrRowIndeces_u_u");
         xt::pyarray<int>& csrColumnOffsets_u_u = args.array<int>("csrColumnOffsets_u_u");
         xt::pyarray<double>& globalJacobian = args.array<double>("globalJacobian");
+       xt::pyarray<double>& ebqe_phi_s = args.array<double>("ebqe_phi_s");
+       const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
+       xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
+       bool useExact_s = args.scalar<int>("useExact_s");
+       xt::pyarray<double>& isActiveR = args.array<double>("isActiveR");
+       xt::pyarray<double>& isActiveDOF = args.array<double>("isActiveDOF");
+       xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
         //
         gf.useExact = useExact;
+        gf_s.useExact = useExact_s;
         for(int eN=0;eN<nElements_global;eN++)
           {
-            register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element];
+            register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element],element_phi_s[nDOF_mesh_trial_element];
             for (int j=0;j<nDOF_trial_element;j++)
               {
                 register int eN_j = eN*nDOF_trial_element+j;
                 element_u[j] = u_dof.data()[u_l2g.data()[eN_j]];
                 element_phi[j] = phi_dof.data()[u_l2g.data()[eN_j]] + element_u[j];
+		element_phi_s[j] = phi_solid_nodes.data()[u_l2g.data()[eN_j]];
               }
             double element_nodes[nDOF_mesh_trial_element*3];
             for (int i=0;i<nDOF_mesh_trial_element;i++)
@@ -671,7 +737,8 @@ namespace proteus
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
-          gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+	    gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+	    int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref.data(), false);
 	    calculateElementJacobian(mesh_trial_ref.data(),
 				     mesh_grad_trial_ref.data(),
 				     mesh_dof.data(),
@@ -705,6 +772,7 @@ namespace proteus
 				     q_porosity.data(),
 				     elementJacobian_u_u,
 				     element_u,
+				     phi_solid.data(),
 				     eN);
 	    //
 	    //load into element Jacobian into global Jacobian
@@ -747,6 +815,7 @@ namespace proteus
         double epsFactDirac = args.scalar<double>("epsFactDirac");
         double epsFactDiffusion = args.scalar<double>("epsFactDiffusion");
         xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
+        xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
         xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
         xt::pyarray<double>& nodeDiametersArray = args.array<double>("nodeDiametersArray");
         xt::pyarray<double>& u_dof = args.array<double>("u_dof");
@@ -768,6 +837,13 @@ namespace proteus
         xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
         xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
         xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
+	xt::pyarray<double>& ebqe_phi_s = args.array<double>("ebqe_phi_s");
+	const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
+	xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
+	bool useExact_s = args.scalar<int>("useExact_s");
+	xt::pyarray<double>& isActiveR = args.array<double>("isActiveR");
+	xt::pyarray<double>& isActiveDOF = args.array<double>("isActiveDOF");
+	xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
         int maxIts = args.scalar<int>("maxIts");
         double atol = args.scalar<double>("atol");
         //
@@ -790,6 +866,7 @@ namespace proteus
             register PROTEUS_LAPACK_INTEGER elementPivots[nDOF_test_element],
               elementColPivots[nDOF_test_element];
             //double epsHeaviside,epsDirac,epsDiffusion;
+	    bool element_active=true;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 element_u[i]=0.0;
@@ -818,6 +895,7 @@ namespace proteus
                                      epsFactDirac,
                                      epsFactDiffusion,
                                      u_l2g.data(),
+                                     r_l2g.data(),
                                      elementDiameter.data(),
                                      nodeDiametersArray.data(),
                                      u_dof.data(),
@@ -839,7 +917,11 @@ namespace proteus
                                      elementBoundaryElementsArray.data(),
                                      elementBoundaryLocalElementBoundariesArray.data(),
                                      element_u,
-                                     eN);
+                                     eN,
+				     element_active,
+				     isActiveR.data(),
+				     isActiveDOF.data(),
+				     phi_solid.data());
             //compute l2 norm
             double resNorm=0.0;
             for (int i=0;i<nDOF_test_element;i++)
@@ -887,6 +969,7 @@ namespace proteus
                                          q_porosity.data(),
                                          elementJacobian_u_u,
                                          element_u,
+					 phi_solid.data(),
                                          eN);
                 for (int i=0;i<nDOF_test_element;i++)
                   {
@@ -952,6 +1035,7 @@ namespace proteus
                                              epsFactDirac,
                                              epsFactDiffusion,
                                              u_l2g.data(),
+                                             r_l2g.data(),
                                              elementDiameter.data(),
                                              nodeDiametersArray.data(),
                                              u_dof.data(),
@@ -973,7 +1057,12 @@ namespace proteus
                                              elementBoundaryElementsArray.data(),
                                              elementBoundaryLocalElementBoundariesArray.data(),
                                              element_u,
-                                             eN);
+                                             eN,
+					     element_active,
+					     isActiveR.data(),
+					     isActiveDOF.data(),
+					     phi_solid.data());
+
                     lsIts +=1;
                     //compute l2 norm
                     resNormNew=0.0;
@@ -1017,6 +1106,7 @@ namespace proteus
         double epsFactDirac = args.scalar<double>("epsFactDirac");
         double epsFactDiffusion = args.scalar<double>("epsFactDiffusion");
         xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
+        xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
         xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
         xt::pyarray<double>& nodeDiametersArray = args.array<double>("nodeDiametersArray");
         xt::pyarray<double>& u_dof = args.array<double>("u_dof");
@@ -1038,6 +1128,10 @@ namespace proteus
         xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
         xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
         xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
+	const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
+	xt::pyarray<double>& isActiveR = args.array<double>("isActiveR");
+	xt::pyarray<double>& isActiveDOF = args.array<double>("isActiveDOF");
+	xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
         int maxIts = args.scalar<int>("maxIts");
         double atol = args.scalar<double>("atol");
         for(int eN=0;eN<nElements_global;eN++)
@@ -1047,6 +1141,7 @@ namespace proteus
               elementResidual_u[nDOF_test_element],elementConstantResidual,
               elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],elementConstantJacobian,resNorm;
             elementConstant_u=0.0;
+	    bool element_active=true;
             for (int i=0;i<nDOF_test_element;i++)
               {
                 element_u[i]=elementConstant_u;
@@ -1075,6 +1170,7 @@ namespace proteus
                                      epsFactDirac,
                                      epsFactDiffusion,
                                      u_l2g.data(),
+                                     r_l2g.data(),
                                      elementDiameter.data(),
                                      nodeDiametersArray.data(),
                                      u_dof.data(),
@@ -1096,7 +1192,12 @@ namespace proteus
                                      elementBoundaryElementsArray.data(),
                                      elementBoundaryLocalElementBoundariesArray.data(),
                                      element_u,
-                                     eN);
+                                     eN,
+				     element_active,
+				     isActiveR.data(),
+				     isActiveDOF.data(),
+				     phi_solid.data());
+
             //compute l2 norm
             elementConstantResidual=0.0;
             for (int i=0;i<nDOF_test_element;i++)
@@ -1144,6 +1245,7 @@ namespace proteus
                                          q_porosity.data(),
                                          elementJacobian_u_u,
                                          element_u,
+					 phi_solid.data(),
                                          eN);
                 elementConstantJacobian=0.0;
                 for (int i=0;i<nDOF_test_element;i++)
@@ -1185,6 +1287,7 @@ namespace proteus
                                          epsFactDirac,
                                          epsFactDiffusion,
                                          u_l2g.data(),
+                                         r_l2g.data(),
                                          elementDiameter.data(),
                                          nodeDiametersArray.data(),
                                          u_dof.data(),
@@ -1206,7 +1309,12 @@ namespace proteus
                                          elementBoundaryElementsArray.data(),
                                          elementBoundaryLocalElementBoundariesArray.data(),
                                          element_u,
-                                         eN);
+                                         eN,
+					 element_active,
+					 isActiveR.data(),
+					 isActiveDOF.data(),
+					 phi_solid.data());
+
                 //compute l2 norm
                 elementConstantResidual=0.0;
                 for (int i=0;i<nDOF_test_element;i++)
@@ -1245,6 +1353,7 @@ namespace proteus
         double epsFactDirac = args.scalar<double>("epsFactDirac");
         double epsFactDiffusion = args.scalar<double>("epsFactDiffusion");
         xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
+        xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
         xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
         xt::pyarray<double>& nodeDiametersArray = args.array<double>("nodeDiametersArray");
         xt::pyarray<double>& u_dof = args.array<double>("u_dof");
@@ -1266,6 +1375,10 @@ namespace proteus
         xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
         xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
         xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
+	const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
+	xt::pyarray<double>& isActiveR = args.array<double>("isActiveR");
+	xt::pyarray<double>& isActiveDOF = args.array<double>("isActiveDOF");
+	xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
         int maxIts = args.scalar<int>("maxIts");
         double atol = args.scalar<double>("atol");
         double constant_u = args.scalar<double>("constant_u");
@@ -1281,6 +1394,7 @@ namespace proteus
         //compute residual and Jacobian
         for(int eN=0;eN<nElements_owned;eN++)
           {
+	    bool element_active=true;
             calculateElementResidual(mesh_trial_ref.data(),
                                      mesh_grad_trial_ref.data(),
                                      mesh_dof.data(),
@@ -1305,6 +1419,7 @@ namespace proteus
                                      epsFactDirac,
                                      epsFactDiffusion,
                                      u_l2g.data(),
+                                     r_l2g.data(),
                                      elementDiameter.data(),
                                      nodeDiametersArray.data(),
                                      u_dof.data(),
@@ -1326,7 +1441,12 @@ namespace proteus
                                      elementBoundaryElementsArray.data(),
                                      elementBoundaryLocalElementBoundariesArray.data(),
                                      element_u,
-                                     eN);
+                                     eN,
+				     element_active,
+				     isActiveR.data(),
+				     isActiveDOF.data(),
+				     phi_solid.data());
+
             //compute l2 norm
             for (int i=0;i<nDOF_test_element;i++)
               {
@@ -1365,6 +1485,7 @@ namespace proteus
                                      q_porosity.data(),
                                      elementJacobian_u_u,
                                      element_u,
+				     phi_solid.data(),
                                      eN);
             for (int i=0;i<nDOF_test_element;i++)
               {

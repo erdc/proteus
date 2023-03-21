@@ -130,6 +130,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.massCorrModel = modelList[self.me_model]
         self.massCorrModel.setMassQuadrature()
         self.vofModel.q[('m_last', 0)][:] = self.q_porosity*self.q_H_vof
+        if self.flowModelIndex is not None:
+            self.flowCoefficients = modelList[self.flowModelIndex].coefficients
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r', 0)])
             if self.checkMass:
@@ -633,6 +635,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
         r.fill(0.0)
+        try:
+            self.isActiveR[:] = 0.0
+            self.isActiveDOF[:] = 0.0
+            self.isActiveElement[:] = 0
+        except AttributeError:
+            self.isActiveR = np.zeros_like(r)
+            self.isActiveDOF = np.zeros_like(self.u[0].dof)
+            self.isActiveElement = np.zeros((self.mesh.nElements_global,),'i')
         # Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
@@ -686,9 +696,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
         argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
         argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
+        argsDict["useExact_s"] = int(self.coefficients.flowCoefficients.useExact)
+        argsDict["isActiveR"] = self.isActiveR
+        argsDict["isActiveDOF"] = self.isActiveDOF
+        argsDict["isActiveElement"] = self.isActiveElement
+        argsDict["ebqe_phi_s"] = self.coefficients.flowCoefficients.ebqe_phi_s
+        argsDict["phi_solid"] = self.coefficients.flowCoefficients.q_phi_solid
         self.mcorr.calculateResidual(argsDict,
             self.coefficients.useExact)
-
+        r*=self.isActiveR
+        self.u[0].dof[:] = np.where(self.isActiveDOF==1.0, self.u[0].dof,0.0)
         logEvent("Global residual", level=9, data=r)
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error: ", level=3, data=self.coefficients.massConservationError)
@@ -793,8 +811,24 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0, 0)]
         argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0, 0)]
         argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
+        argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
+        argsDict["useExact_s"] = int(self.coefficients.flowCoefficients.useExact)
+        argsDict["isActiveR"] = self.isActiveR
+        argsDict["isActiveDOF"] = self.isActiveDOF
+        argsDict["isActiveElement"] = self.isActiveElement
+        argsDict["ebqe_phi_s"] = self.coefficients.flowCoefficients.ebqe_phi_s
+        argsDict["phi_solid"] = self.coefficients.flowCoefficients.q_phi_solid
         self.mcorr.calculateJacobian(argsDict,
             self.coefficients.useExact)
+        for global_dofN_a in np.argwhere(self.isActiveR==0.0):
+            global_dofN = global_dofN_a[0]
+            for i in range(
+                    self.rowptr[global_dofN],
+                    self.rowptr[global_dofN + 1]):
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                else:
+                    self.nzval[i] = 0.0
         logEvent("Jacobian ", level=10, data=jacobian)
         # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
