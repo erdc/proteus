@@ -1255,6 +1255,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 r[dofN] = 0
         r*=self.isActiveR
+        self.u[0].dof[:] = np.where(self.isActiveDOF==1.0, self.u[0].dof,1.0)
         if (self.auxiliaryCallCalculateResidual == False):
             edge_based_cflMax = globalMax(self.edge_based_cfl.max()) * self.timeIntegration.dt
             cell_based_cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
