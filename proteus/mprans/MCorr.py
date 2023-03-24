@@ -302,6 +302,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):  # ,
+        self.hasCutCells=True
         self.useConstantH = coefficients.useConstantH
         from proteus import Comm
         #
@@ -675,6 +676,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
         argsDict["r_l2g"] = self.l2g[0]['freeGlobal']
         argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["elementBoundaryDiameter"] = self.mesh.elementBoundaryDiametersArray
         argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
         argsDict["u_dof"] = self.u[0].dof
         argsDict["phi_dof"] = self.coefficients.lsModel.u[0].dof
@@ -695,7 +697,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["nExteriorElementBoundaries_global"] = self.mesh.nExteriorElementBoundaries_global
         argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
         argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundariesArray"] = self.mesh.elementBoundariesArray
         argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["ghost_penalty_constant"] = self.coefficients.flowCoefficients.ghost_penalty_constant
         argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
         argsDict["useExact_s"] = int(self.coefficients.flowCoefficients.useExact)
         argsDict["isActiveR"] = self.isActiveR
@@ -760,6 +764,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
         argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
         argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundariesArray"] = self.mesh.elementBoundariesArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
         argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
         argsDict["u_dof"] = self.u[0].dof
         argsDict["q_phi"] = self.coefficients.q_u_ls
@@ -800,8 +807,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["epsFactDirac"] = self.coefficients.epsFactDirac
         argsDict["epsFactDiffusion"] = self.coefficients.epsFactDiffusion
         argsDict["u_l2g"] = self.u[0].femSpace.dofMap.l2g
+        argsDict["r_l2g"] = self.l2g[0]['freeGlobal']
         argsDict["elementDiameter"] = self.elementDiameter
+        argsDict["elementBoundaryDiameter"] = self.mesh.elementBoundaryDiametersArray
         argsDict["nodeDiametersArray"] = self.mesh.nodeDiametersArray
+        argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
+        argsDict["elementBoundariesArray"] = self.mesh.elementBoundariesArray
+        argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
         argsDict["u_dof"] = self.u[0].dof
         argsDict["phi_dof"] = self.coefficients.lsModel.u[0].dof
         argsDict["q_phi"] = self.coefficients.q_u_ls
@@ -811,6 +823,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrRowIndeces_u_u"] = self.csrRowIndeces[(0, 0)]
         argsDict["csrColumnOffsets_u_u"] = self.csrColumnOffsets[(0, 0)]
         argsDict["globalJacobian"] = jacobian.getCSRrepresentation()[2]
+        argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0, 0)]
+        argsDict["ghost_penalty_constant"] = self.coefficients.flowCoefficients.ghost_penalty_constant
         argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
         argsDict["useExact_s"] = int(self.coefficients.flowCoefficients.useExact)
         argsDict["isActiveR"] = self.isActiveR
@@ -1127,6 +1141,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["exteriorElementBoundariesArray"] = self.mesh.exteriorElementBoundariesArray
         argsDict["elementBoundaryElementsArray"] = self.mesh.elementBoundaryElementsArray
         argsDict["elementBoundaryLocalElementBoundariesArray"] = self.mesh.elementBoundaryLocalElementBoundariesArray
+        argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
+        argsDict["useExact_s"] = int(self.coefficients.flowCoefficients.useExact)
+        argsDict["phi_solid"] = self.coefficients.flowCoefficients.q_phi_solid
         return globalSum(self.mcorr.calculateMass(argsDict,
             self.coefficients.useExact))
 

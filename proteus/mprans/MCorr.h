@@ -2,6 +2,8 @@
 #define MCorr_H
 #include <cmath>
 #include <iostream>
+#include <set>
+#include <map>
 #include <valarray>
 #include "CompKernel.h"
 #include "ModelFactory.h"
@@ -49,11 +51,16 @@ namespace proteus
     class MCorr : public MCorr_base
     {
     public:
+      std::set<int> cutfem_boundaries;
+      std::map<int, int> cutfem_local_boundaries;
+      const int nDOF_test_X_trial_element;
       CompKernelType ck;
       GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf;
       GeneralizedFunctions<nSpace,3,nDOF_trial_element,nQuadraturePoints_elementBoundary> gf_nodes;
       GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf_s;
-    MCorr():ck()
+    MCorr():
+      nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
+      ck()
         {}
 
       inline
@@ -280,6 +287,7 @@ namespace proteus
         xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
         xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
         xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
+	xt::pyarray<double>& elementBoundaryDiameter = args.array<double>("elementBoundaryDiameter");
         xt::pyarray<double>& nodeDiametersArray = args.array<double>("nodeDiametersArray");
         xt::pyarray<double>& u_dof = args.array<double>("u_dof");
         xt::pyarray<double>& phi_dof = args.array<double>("phi_dof");
@@ -299,9 +307,11 @@ namespace proteus
         xt::pyarray<double>& globalResidual = args.array<double>("globalResidual");
         int nExteriorElementBoundaries_global = args.scalar<int>("nExteriorElementBoundaries_global");
         xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
+	xt::pyarray<int>& elementBoundariesArray = args.array<int>("elementBoundariesArray");
         xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
         xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
 	xt::pyarray<double>& ebqe_phi_s = args.array<double>("ebqe_phi_s");
+	double ghost_penalty_constant = args.scalar<double>("ghost_penalty_constant");
 	const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
 	xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
 	bool useExact_s = args.scalar<int>("useExact_s");
@@ -320,6 +330,8 @@ namespace proteus
         //eN_k_i is the quadrature point index for a trial function
         gf.useExact = useExact;
         gf_s.useExact = useExact_s;
+	cutfem_boundaries.clear();
+	cutfem_local_boundaries.clear();
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
@@ -347,18 +359,18 @@ namespace proteus
 		element_active=true;
 		isActiveElement[eN]=1;
 		//only works for simplices
-		// for (int ebN_element=0;ebN_element < nDOF_mesh_trial_element; ebN_element++)
-		//   {
-		//     const int ebN = elementBoundariesArray.data()[eN*nDOF_mesh_trial_element+ebN_element];
-		//     //internal and actually a cut edge
-		//     //if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned) && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] < 0.0)
-		//     if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
-		//       {
-		//      cutfem_boundaries.insert(ebN);
-		//      if (elementBoundaryElementsArray[ebN*2 + 0] == eN)
-		//        cutfem_local_boundaries[ebN] = ebN_element;
-		//       }
-		//   }
+		for (int ebN_element=0;ebN_element < nDOF_mesh_trial_element; ebN_element++)
+		  {
+		    const int ebN = elementBoundariesArray.data()[eN*nDOF_mesh_trial_element+ebN_element];
+		    //internal and actually a cut edge
+		    //if (elementBoundaryElementsArray.data()[ebN*2+1] != -1 && (ebN < nElementBoundaries_owned) && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] < 0.0)
+		    if (elementBoundaryElementsArray[ebN*2+1] != -1 && element_phi_s[(ebN_element+1)%nDOF_mesh_trial_element]*element_phi_s[(ebN_element+2)%nDOF_mesh_trial_element] <= 0.0)
+		      {
+		     cutfem_boundaries.insert(ebN);
+		     if (elementBoundaryElementsArray[ebN*2 + 0] == eN)
+		       cutfem_local_boundaries[ebN] = ebN_element;
+		      }
+		  }
 	      }
 	    else if (icase_s == 1)
 	      {
@@ -426,6 +438,117 @@ namespace proteus
                 globalResidual.data()[offset_u+stride_u*r_l2g.data()[eN_i]]+=elementResidual_u[i];
               }//i
           }//elements
+	std::set<int>::iterator it=cutfem_boundaries.begin();
+	while(it!=cutfem_boundaries.end())
+	  {
+	    if(isActiveElement[elementBoundaryElementsArray[(*it)*2+0]] && isActiveElement[elementBoundaryElementsArray[(*it)*2+1]])
+	      {
+		std::map<int,double> DW_Dn_jump;
+		register double gamma_cutfem=ghost_penalty_constant,
+		  h_cutfem=elementBoundaryDiameter.data()[*it];
+		int eN_nDOF_trial_element  = elementBoundaryElementsArray.data()[(*it)*2+0]*nDOF_trial_element;
+		//See Massing Schott Wall 2018
+		//double norm_v=0.0;
+		//for (int i_offset=1;i_offset<nDOF_trial_element;i_offset++)//MSW18 is just on face, so trying to just use face dof
+		//  {
+		//		  int i = (cutfem_local_boundaries[*it] + i_offset)%nDOF_trial_element;
+		//    double u=u_old_dof.data()[vel_l2g.data()[eN_nDOF_trial_element+i]];
+		//      v=v_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
+		//      w=w_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]];
+		//   norm_v=fmax(norm_v,sqrt(u*u+v*v+w*w));
+		//  }
+		//double gamma_v_dim = rho_0*(nu_0 + norm_v*h_cutfem + alphaBDF*h_cutfem*h_cutfem);
+		//gamma_cutfem_p *= h_cutfem*h_cutfem/gamma_v_dim;
+		//if (NONCONSERVATIVE_FORM)
+		//  gamma_cutfem*=gamma_v_dim;
+		//else
+		//  gamma_cutfem*=(gamma_v_dim/rho_0);
+		for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+		  {
+		    register double Du_Dn_jump=0.0, dS;
+		    for (int eN_side=0;eN_side < 2; eN_side++)
+		      {
+			register int ebN = *it,
+			  eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
+			for (int i=0;i<nDOF_test_element;i++)
+			  {
+			    DW_Dn_jump[r_l2g.data()[eN*nDOF_test_element+i]] = 0.0;
+			  }
+		      }
+		    for (int eN_side=0;eN_side < 2; eN_side++)
+		      {
+			register int ebN = *it,
+			  eN  = elementBoundaryElementsArray[ebN*2+eN_side],
+			  ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+eN_side],
+			  eN_nDOF_trial_element = eN*nDOF_trial_element,
+			  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+			  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+			register double u_int=0.0,
+			  grad_u_int[nSpace],
+			  jac_int[nSpace*nSpace],
+			  jacDet_int,
+			  jacInv_int[nSpace*nSpace],
+			  boundaryJac[nSpace*(nSpace-1)],
+			  metricTensor[(nSpace-1)*(nSpace-1)],
+			  metricTensorDetSqrt,
+			  u_test_dS[nDOF_test_element],
+			  u_grad_trial_trace[nDOF_trial_element*nSpace],
+			  u_grad_test_dS[nDOF_trial_element*nSpace],
+			  normal[nSpace],x_int,y_int,z_int,xt_int,yt_int,zt_int,integralScaling,
+			  G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+			for (int I=0; I<nSpace;I++)
+			  grad_u_int[I] = 0.0;
+			//compute information about mapping from reference element to physical element
+			ck.calculateMapping_elementBoundary(eN,
+							    ebN_local,
+							    kb,
+							    ebN_local_kb,
+							    mesh_dof.data(),
+							    mesh_l2g.data(),
+							    mesh_trial_trace_ref.data(),
+							    mesh_grad_trial_trace_ref.data(),
+							    boundaryJac_ref.data(),
+							    jac_int,
+							    jacDet_int,
+							    jacInv_int,
+							    boundaryJac,
+							    metricTensor,
+							    metricTensorDetSqrt,
+							    normal_ref.data(),
+							    normal,
+							    x_int,y_int,z_int);
+			dS = metricTensorDetSqrt*dS_ref.data()[kb];
+			//compute shape and solution information
+			//shape
+			ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_int,u_grad_trial_trace);
+			//solution and gradients
+			ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_int);
+			ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_int);
+			for (int I=0;I<nSpace;I++)
+			  {
+			    Du_Dn_jump += grad_u_int[I]*normal[I];
+			  }
+			for (int i=0;i<nDOF_test_element;i++)
+			  {
+			    int eN_i = eN*nDOF_test_element + i;
+			    for (int I=0;I<nSpace;I++)
+			      DW_Dn_jump[r_l2g[eN_i]] += u_grad_trial_trace[i*nSpace+I]*normal[I];
+			  }
+		      }//eN_side
+		    for (std::map<int,double>::iterator W_it=DW_Dn_jump.begin(); W_it!=DW_Dn_jump.end(); ++W_it)
+		      {
+			int i_global = W_it->first;
+			double DW_Dn_jump_i = W_it->second;
+			globalResidual.data()[offset_u+stride_u*i_global]+=gamma_cutfem*h_cutfem*Du_Dn_jump*DW_Dn_jump_i*dS;
+		      }
+		  }//kb
+		it++;
+	      }
+	    else
+	      {
+		it = cutfem_boundaries.erase(it);
+	      }
+	  }//cutfem element boundaries
         //
         //loop over exterior element boundaries to calculate levelset gradient
         //
@@ -697,7 +820,12 @@ namespace proteus
         double epsFactDirac = args.scalar<double>("epsFactDirac");
         double epsFactDiffusion = args.scalar<double>("epsFactDiffusion");
         xt::pyarray<int>& u_l2g = args.array<int>("u_l2g");
+        xt::pyarray<int>& r_l2g = args.array<int>("r_l2g");
+	xt::pyarray<int>& elementBoundariesArray = args.array<int>("elementBoundariesArray");
+        xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
+        xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
         xt::pyarray<double>& elementDiameter = args.array<double>("elementDiameter");
+	xt::pyarray<double>& elementBoundaryDiameter = args.array<double>("elementBoundaryDiameter");
         xt::pyarray<double>& nodeDiametersArray = args.array<double>("nodeDiametersArray");
         xt::pyarray<double>& u_dof = args.array<double>("u_dof");
         xt::pyarray<double>& phi_dof = args.array<double>("phi_dof");
@@ -707,14 +835,16 @@ namespace proteus
         xt::pyarray<double>& q_porosity = args.array<double>("q_porosity");
         xt::pyarray<int>& csrRowIndeces_u_u = args.array<int>("csrRowIndeces_u_u");
         xt::pyarray<int>& csrColumnOffsets_u_u = args.array<int>("csrColumnOffsets_u_u");
+        xt::pyarray<int>& csrColumnOffsets_eb_u_u = args.array<int>("csrColumnOffsets_eb_u_u");
         xt::pyarray<double>& globalJacobian = args.array<double>("globalJacobian");
-       xt::pyarray<double>& ebqe_phi_s = args.array<double>("ebqe_phi_s");
-       const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
-       xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
-       bool useExact_s = args.scalar<int>("useExact_s");
-       xt::pyarray<double>& isActiveR = args.array<double>("isActiveR");
-       xt::pyarray<double>& isActiveDOF = args.array<double>("isActiveDOF");
-       xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
+	xt::pyarray<double>& ebqe_phi_s = args.array<double>("ebqe_phi_s");
+	const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
+	double ghost_penalty_constant = args.scalar<double>("ghost_penalty_constant");
+	xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
+	bool useExact_s = args.scalar<int>("useExact_s");
+	xt::pyarray<double>& isActiveR = args.array<double>("isActiveR");
+	xt::pyarray<double>& isActiveDOF = args.array<double>("isActiveDOF");
+	xt::pyarray<int>& isActiveElement = args.array<int>("isActiveElement");
         //
         //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
         //
@@ -788,6 +918,139 @@ namespace proteus
                   }//j
               }//i
           }//elements
+	std::set<int>::iterator it=cutfem_boundaries.begin();
+	while(it!=cutfem_boundaries.end())
+	  {
+	    std::map<int,double> DW_Dn_jump;
+	    std::map<std::pair<int, int>, int> u_u_nz;
+	    register double gamma_cutfem=ghost_penalty_constant,
+	      h_cutfem=elementBoundaryDiameter.data()[*it];
+	    int eN_nDOF_trial_element  = elementBoundaryElementsArray.data()[(*it)*2+0]*nDOF_trial_element;
+	    //See Massing Schott Wall 2018
+	    //double norm_v=0.0;
+	    //for (int i_offset=1;i_offset<nDOF_v_trial_element;i_offset++)//MSW18 is just on face
+	    //  {
+	    //    int i = (cutfem_local_boundaries[*it] + i_offset)%nDOF_v_trial_element;//cek hack only works for P1
+	    //    double u=u_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
+	    //      v=v_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]],
+	    //      w=w_old_dof.data()[vel_l2g.data()[eN_nDOF_v_trial_element+i]];
+	    //    norm_v=fmax(norm_v,sqrt(u*u+v*v+w*w));
+	    //  }
+	    ///double gamma_v_dim = rho_0*(nu_0 + norm_v*h_cutfem + alphaBDF*h_cutfem*h_cutfem);
+	    //gamma_cutfem_p *= h_cutfem*h_cutfem/gamma_v_dim;
+	    //if (NONCONSERVATIVE_FORM)
+	    //  gamma_cutfem*=gamma_v_dim;
+	    //else
+	    //  gamma_cutfem*=(gamma_v_dim/rho_0);
+	    for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
+	      {
+		register double Du_Dn_jump=0.0, dS;
+		for (int eN_side=0;eN_side < 2; eN_side++)
+		  {
+		    register int ebN = *it,
+		      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
+		    for (int i=0;i<nDOF_test_element;i++)
+		      {
+			DW_Dn_jump[r_l2g.data()[eN*nDOF_test_element+i]] = 0.0;
+		      }
+		  }
+		for (int eN_side=0;eN_side < 2; eN_side++)
+		  {
+		    register int ebN = *it,
+		      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side],
+		      ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+eN_side],
+		      eN_nDOF_trial_element = eN*nDOF_trial_element,
+		      ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+		      ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+		    register double u_int=0.0,
+		      grad_u_int[nSpace],
+		      jac_int[nSpace*nSpace],
+		      jacDet_int,
+		      jacInv_int[nSpace*nSpace],
+		      boundaryJac[nSpace*(nSpace-1)],
+		      metricTensor[(nSpace-1)*(nSpace-1)],
+		      metricTensorDetSqrt,
+		      u_test_dS[nDOF_test_element],
+		      u_grad_trial_trace[nDOF_trial_element*nSpace],
+		      u_grad_test_dS[nDOF_trial_element*nSpace],
+		      normal[nSpace],x_int,y_int,z_int,xt_int,yt_int,zt_int,integralScaling,
+		      G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+		    for (int I=0; I<nSpace;I++)
+		      grad_u_int[I] = 0.0;
+		    //compute information about mapping from reference element to physical element
+
+		    ck.calculateMapping_elementBoundary(eN,
+							ebN_local,
+							kb,
+							ebN_local_kb,
+							mesh_dof.data(),
+							mesh_l2g.data(),
+							mesh_trial_trace_ref.data(),
+							mesh_grad_trial_trace_ref.data(),
+							boundaryJac_ref.data(),
+							jac_int,
+							jacDet_int,
+							jacInv_int,
+							boundaryJac,
+							metricTensor,
+							metricTensorDetSqrt,
+							normal_ref.data(),
+							normal,
+							x_int,y_int,z_int);
+		    dS = metricTensorDetSqrt*dS_ref.data()[kb];
+		    //compute shape and solution information
+		    //shape
+		    ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_int,u_grad_trial_trace);
+		    for (int i=0;i<nDOF_test_element;i++)
+		      {
+			int eN_i = eN*nDOF_test_element + i;
+			for (int I=0;I<nSpace;I++)
+			  DW_Dn_jump[r_l2g.data()[eN_i]] += u_grad_trial_trace[i*nSpace+I]*normal[I];
+		      }
+		  }//eN_side
+		for (int eN_side=0;eN_side < 2; eN_side++)
+		  {
+		    register int ebN = *it,
+		      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
+		    for (int i=0;i<nDOF_test_element;i++)
+		      {
+			register int eN_i = eN*nDOF_test_element+i;
+			for (int eN_side2=0;eN_side2 < 2; eN_side2++)
+			  {
+			    register int eN2  = elementBoundaryElementsArray.data()[ebN*2+eN_side2];
+			    for (int j=0;j<nDOF_test_element;j++)
+			      {
+				int eN_i_j = eN_i*nDOF_test_element + j;
+				int eN2_j = eN2*nDOF_test_element + j;
+				register int ebN_i_j = ebN*4*nDOF_test_X_trial_element +
+				  eN_side*2*nDOF_test_X_trial_element +
+				  eN_side2*nDOF_test_X_trial_element +
+				  i*nDOF_trial_element +
+				  j;
+				std::pair<int,int> ij = std::make_pair(u_l2g.data()[eN_i], u_l2g.data()[eN2_j]);
+				if (u_u_nz.count(ij))
+				  {
+				    assert(u_u_nz[ij] == csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j]);
+				  }
+				else
+				  u_u_nz[ij] =  csrRowIndeces_u_u.data()[eN_i] + csrColumnOffsets_eb_u_u.data()[ebN_i_j];
+			      }
+			  }
+		      }
+		  }
+		for (std::map<int,double>::iterator Wi_it=DW_Dn_jump.begin(); Wi_it!=DW_Dn_jump.end(); ++Wi_it)
+		  for (std::map<int,double>::iterator Wj_it=DW_Dn_jump.begin(); Wj_it!=DW_Dn_jump.end(); ++Wj_it)
+		    {
+		      int i_global = Wi_it->first,
+			j_global = Wj_it->first;
+		      double DW_Dn_jump_i = Wi_it->second,
+			DW_Dn_jump_j = Wj_it->second;
+		      std::pair<int,int> ij = std::make_pair(i_global, j_global);
+		      globalJacobian.data()[u_u_nz.at(ij)] += gamma_cutfem*h_cutfem*DW_Dn_jump_j*DW_Dn_jump_i*dS;
+		    }//i,j
+	      }//kb
+	    it++;
+	  }//cutfem element boundaries
       }//computeJacobian
       void elementSolve(arguments_dict& args)
       {
@@ -835,6 +1098,7 @@ namespace proteus
         xt::pyarray<double>& globalResidual = args.array<double>("globalResidual");
         int nExteriorElementBoundaries_global = args.scalar<int>("nExteriorElementBoundaries_global");
         xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
+	xt::pyarray<int>& elementBoundariesArray = args.array<int>("elementBoundariesArray");
         xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
         xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
 	xt::pyarray<double>& ebqe_phi_s = args.array<double>("ebqe_phi_s");
@@ -1548,18 +1812,23 @@ namespace proteus
         xt::pyarray<int>& exteriorElementBoundariesArray = args.array<int>("exteriorElementBoundariesArray");
         xt::pyarray<int>& elementBoundaryElementsArray = args.array<int>("elementBoundaryElementsArray");
         xt::pyarray<int>& elementBoundaryLocalElementBoundariesArray = args.array<int>("elementBoundaryLocalElementBoundariesArray");
+	const xt::pyarray<double>& phi_solid = args.array<double>("phi_solid");
+	xt::pyarray<double>& phi_solid_nodes = args.array<double>("phi_solid_nodes");
+	bool useExact_s = args.scalar<int>("useExact_s");
         double globalMass = 0.0;
         gf.useExact=useExact;
+        gf_s.useExact = useExact_s;
         for(int eN=0;eN<nElements_owned;eN++)
           {
             double epsHeaviside;
             //loop over quadrature points and compute integrands
             //declare local storage for element residual and initialize
-            register double element_phi[nDOF_trial_element];
+            register double element_phi[nDOF_trial_element],element_phi_s[nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
                 register int eN_i=eN*nDOF_test_element+i;
                 element_phi[i] = phi_dof.data()[u_l2g.data()[eN_i]];
+                element_phi_s[i] = phi_solid_nodes.data()[u_l2g.data()[eN_i]];
               }//i
             double element_nodes[nDOF_mesh_trial_element*3];
             for (int i=0;i<nDOF_mesh_trial_element;i++)
@@ -1569,6 +1838,7 @@ namespace proteus
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
             gf.calculate(element_phi, element_nodes, x_ref.data(),false);
+	    int icase_s = gf_s.calculate(element_phi_s, element_nodes, x_ref.data(),false);
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
@@ -1585,6 +1855,7 @@ namespace proteus
 		  dV,x,y,z,
 		  G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
                 gf.set_quad(k);
+                gf_s.set_quad(k);
                 //
                 //compute solution and gradients at quadrature points
                 //
@@ -1616,7 +1887,7 @@ namespace proteus
                 /*        dir[I] = q_normal_phi.data()[eN_k_nSpace+I]/norm; */
                 /* ck.calculateGScale(G,dir,h_phi); */
                 epsHeaviside=epsFactHeaviside*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter.data()[eN]);
-                globalMass += q_porosity[eN_k]*gf.H(epsHeaviside,q_phi.data()[eN_k])*dV;
+                globalMass += gf_s.H(epsHeaviside,phi_solid.data()[eN_k])*q_porosity[eN_k]*gf.H(epsHeaviside,q_phi.data()[eN_k])*dV;
               }//k
           }//elements
           return globalMass;
