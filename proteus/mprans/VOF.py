@@ -1244,8 +1244,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["min_u_bc"] = self.min_u_bc
         argsDict["max_u_bc"] = self.max_u_bc
         argsDict["quantDOFs"] = self.quantDOFs
-        self.ghost_penalty_constant=1.0e-3
-        argsDict["ghost_penalty_constant"] = self.ghost_penalty_constant#self.coefficients.flowCoefficients.ghost_penalty_constant
+        argsDict["ghost_penalty_constant"] = self.coefficients.flowCoefficients.ghost_penalty_constant
         argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
         argsDict["useExact"] = int(self.coefficients.flowCoefficients.useExact)
         argsDict["isActiveR"] = self.isActiveR
@@ -1334,7 +1333,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["ebqe_bc_flux_u_ext"] = self.ebqe[('advectiveFlux_bc', 0)]
         argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0, 0)]
         argsDict["STABILIZATION_TYPE"] = self.coefficients.STABILIZATION_TYPE
-        argsDict["ghost_penalty_constant"] = self.ghost_penalty_constant#self.coefficients.flowCoefficients.ghost_penalty_constant
+        argsDict["ghost_penalty_constant"] = self.coefficients.flowCoefficients.ghost_penalty_constant
         argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
         argsDict["useExact"] = int(self.coefficients.flowCoefficients.useExact)
         argsDict["isActiveR"] = self.isActiveR
