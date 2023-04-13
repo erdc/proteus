@@ -48,6 +48,7 @@ for i in range(nMediaTypes+1):
     thetaRtypes[i]  = thetaR
     thetaSRtypes[i] = thetaStypes[i] - thetaRtypes[i]
     KsTypes[i,:]    = [dimensionless_conductivity,dimensionless_conductivity]#m/d?
+
 LevelModelType = Richards.LevelModel
 coefficients = Richards.Coefficients(nd,
                                      KsTypes,
@@ -59,9 +60,9 @@ coefficients = Richards.Coefficients(nd,
                                      density=dimensionless_density,
                                      beta=0.0001,
                                      diagonal_conductivity=True,
-                                     STABILIZATION_TYPE=2,
+                                     STABILIZATION_TYPE=2,#0 for galerkin, 2 for Low-order monotone and FCT
                                      ENTROPY_TYPE=1,
-                                     LUMPED_MASS_MATRIX=True,
+                                     LUMPED_MASS_MATRIX=False,
                                      FCT=False,#True,
                                      num_fct_iter=0,
                                      # FOR ENTROPY VISCOSITY
@@ -72,6 +73,7 @@ coefficients = Richards.Coefficients(nd,
                                      cK=1.0,
                                      # OUTPUT quantDOFs
                                      outputQuantDOFs=False)
+galerkin = False
 # coefficients = ConservativeHeadRichardsMualemVanGenuchten(hydraulicConductivity=dimensionless_conductivity,
 #                                                           gravity=dimensionless_gravity,
 #                                                           density=dimensionless_density,
@@ -82,48 +84,40 @@ coefficients = Richards.Coefficients(nd,
 #                                                           m = mvg_m,
 #                                                           beta = beta)
 
-pondingPressure=-0.1
-bottomPressure = -0.2
+pondingPressure = 0.1
+bottomPressure = 0.0
 
 def getDBC_2D_Richards_Shock(x,flag):
-    return None
-#    if x[1] == L[1]:
-#        if (x[0] >= L[0]/3.0 and
-#            x[0] <= 2.0*L[0]/3.0):
-#            return lambda x,t: pondingPressure
-#    if x[1] == 0.0:
-#        return lambda x,t: pondingPressure
-#    if (x[0] == 0.0 or
-#        x[0] == L[0]):
-#        return lambda x,t: pondingPressure + x[1]*dimensionless_gravity[1]*dimensionless_density
+    if x[1] == L[1]:
+        if (x[0] >= L[0]/3.0 and
+            x[0] <= 2.0*L[0]/3.0):
+            return lambda x,t: pondingPressure
+    if x[1] == 0.0:
+        return lambda x,t: 0.0
+    if (x[0] == 0.0 or
+        x[0] == L[0]):
+        return lambda x,t: pondingPressure + x[1]*dimensionless_gravity[1]*dimensionless_density
 
 dirichletConditions = {0:getDBC_2D_Richards_Shock}
 
 class ShockIC_2D_Richards:
     def uOfXT(self,x,t):
-        if (#x[0] >= L[0]/3.0 and
-            #x[0] <= 2.0*L[0]/3.0 and
-            x[1] >= L[1]*0.5):
+        if (x[0] >= L[0]/3.0 and
+            x[0] <= 2.0*L[0]/3.0 and
+            x[1] == L[1]):
             return pondingPressure
         else:
             return bottomPressure + x[1]*dimensionless_gravity[1]*dimensionless_density
-
-#        bc=getDBC_2D_Richards_Shock(x,0)
-#        if bc != None:
-#            return bc(x,t)
-#        else:
-#            return pondingPressure + x[1]*dimensionless_gravity[1]*dimensionless_density
 
 initialConditions  = {0:ShockIC_2D_Richards()}
 
 fluxBoundaryConditions = {0:'noFlow'}
 
 def getFBC_2D_Richards_Shock(x,flag):
-    return lambda x,t: 0.0
-#    if x[1] == L[1]:
-#        if (x[0] < L[0]/3.0 or
-#            x[0] > 2.0*L[0]/3.0):
-#            return lambda x,t: 0.0
+   if x[1] == L[1]:
+       if (x[0] < L[0]/3.0 or
+           x[0] > 2.0*L[0]/3.0):
+           return lambda x,t: 0.0
 
 advectiveFluxBoundaryConditions =  {0:getFBC_2D_Richards_Shock}
 
