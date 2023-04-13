@@ -1,7 +1,6 @@
 from proteus import *
 from proteus.default_p import *
 from proteus.richards import Richards
-
 nd = 3
 
 L=(3.0,3.0,3.0)
@@ -12,7 +11,7 @@ analyticalSolution = None
 viscosity     = 8.9e-4  #kg/(m*s)
 density       = 998.2   #kg/m^3
 gravity       = 9.8     #m/s^2
-beta          = density*gravity*4.524e-10
+beta          = 0.0#density*gravity*4.524e-10
 m_per_s_by_m_per_d = 1.1574074e-5
 permeability  = (5.04*m_per_s_by_m_per_d)*viscosity/(gravity*density)  #m^2
 #print 'perm',permeability
@@ -56,7 +55,21 @@ coefficients = Richards.Coefficients(nd,
                                      gravity=dimensionless_gravity,
                                      density=dimensionless_density,
                                      beta=0.0001,
-                                     diagonal_conductivity=True)
+                                     diagonal_conductivity=True,
+                                     STABILIZATION_TYPE=2,#0 for galerkin, 2 for Low-order monotone and FCT
+                                     ENTROPY_TYPE=1,
+                                     LUMPED_MASS_MATRIX=False,
+                                     FCT=False,#True,
+                                     num_fct_iter=0,
+                                     # FOR ENTROPY VISCOSITY
+                                     cE=1.0,
+                                     uL=0.0,
+                                     uR=1.0,
+                                     # FOR ARTIFICIAL COMPRESSION
+                                     cK=1.0,
+                                     # OUTPUT quantDOFs
+                                     outputQuantDOFs=False)
+galerkin = False
 # coefficients = ConservativeHeadRichardsMualemVanGenuchten(hydraulicConductivity=dimensionless_conductivity,
 #                                                           gravity=dimensionless_gravity,
 #                                                           density=dimensionless_density,
@@ -65,7 +78,7 @@ coefficients = Richards.Coefficients(nd,
 #                                                           alpha= dimensionless_alpha,
 #                                                           n = mvg_n,
 #                                                           m = mvg_m,
-#                                                           beta=beta)
+#                                                           beta = beta)
 
 pondingPressure=0.1
 
