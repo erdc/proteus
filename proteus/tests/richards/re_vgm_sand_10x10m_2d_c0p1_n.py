@@ -11,21 +11,23 @@ timeIntegrator = ForwardIntegrator
 #systemStepControllerType = SplitOperator.Sequential_MinFLCBDFModelStep
 timeIntegration = BackwardEuler
 stepController = HeuristicNL_dt_controller#FixedStep
+#stepController = FixedStep
 #nDTout = 1#int(T/DT)#int(T/DT) #100#int(T/DT)
 #for controlling time stepping
-timeIntegration = Richards.RKEV
+if not galerkin:
+    timeIntegration = Richards.ThetaScheme
 timeOrder = 1
-stepController = Min_dt_controller
-nonlinearIterationsFloor = 4
-nonlinearIterationsCeil  = 8
+#stepController = Min_dt_controller
+nonlinearIterationsFloor = 6
+nonlinearIterationsCeil  = 12
 dtNLgrowFactor = 2
 dtNLreduceFactor = 0.5
 dtNLfailureReduceFactor = 0.5
 useInitialGuessPredictor= True
 stepExact = True
-nDTout = 2000
+nDTout = 200
 DT = T/nDTout 
-tnList = [0.0]+[i*DT for i  in range(1,nDTout+1)]
+tnList = [0.0,1.0e-8]+[i*DT for i  in range(1,nDTout+1)]
 atol_u[0] = 1.0e-3
 rtol_u[0] = 1.0e-3
 
@@ -43,8 +45,8 @@ elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 #
 #elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
 
-nnx=21
-nny=21
+nnx=41
+nny=41
 nLevels = 1
 triangleFlag = 0
 triangleOptions="pAq30Dena%f" % (0.5*(L[0]/(nnx-1))**2,)
@@ -69,7 +71,7 @@ multilevelNonlinearSolver = Newton
 #levelNonlinearSolver = NLStarILU
 #levelNonlinearSolver = FAS
 levelNonlinearSolver = Newton
-levelNonlinearSolver = ExplicitLumpedMassMatrixForRichards
+#levelNonlinearSolver = ExplicitLumpedMassMatrixForRichards
 #levelNonlinearSolver = ExplicitConsistentMassMatrixForRichards
 
 #levelNonlinearSolver = NLGaussSeidel
@@ -85,8 +87,8 @@ tolFac = 0.0
 
 nl_atol_res = 1.0e-8
 
-maxNonlinearIts = 10#1001
-maxLineSearches =5
+maxNonlinearIts = 20#1001
+maxLineSearches =0
 
 matrix = SparseMatrix
 
