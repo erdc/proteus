@@ -1,4 +1,4 @@
-import sys
+import sys, os
 import setuptools
 from distutils import sysconfig
 cfg_vars = sysconfig.get_config_vars()
@@ -17,7 +17,7 @@ import numpy
 #
 #  Set the DISTUTILS_DEBUG environment variable to print detailed information while setup.py is running.
 #
-
+sys.path.append(os.path.join(os.path.dirname(__file__)))#, '..', 'MyPackage'))
 from proteus import config
 from proteus.config import *
 ###to turn on debugging in c++
@@ -353,12 +353,11 @@ EXTENSIONS_TO_BUILD = [
                             numpy.get_include(),
                             PROTEUS_SUPERLU_INCLUDE_DIR,
                             PROTEUS_TRIANGLE_INCLUDE_DIR,
-                            PROTEUS_DAETK_INCLUDE_DIR,
                             PROTEUS_HDF5_INCLUDE_DIR] + \
               PROTEUS_PETSC_INCLUDE_DIRS + \
               PROTEUS_MPI_INCLUDE_DIRS,
-              library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS+PROTEUS_HDF5_LIB_DIRS,
-              libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
+              library_dirs=PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS+PROTEUS_HDF5_LIB_DIRS,
+              libraries=['hdf5','stdc++','m']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
               extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS+PROTEUS_OPT),
     Extension('ctransportCoefficients',
@@ -484,7 +483,6 @@ EXTENSIONS_TO_BUILD = [
                             numpy.get_include(),
                             PROTEUS_SUPERLU_INCLUDE_DIR,
                             PROTEUS_TRIANGLE_INCLUDE_DIR,
-                            PROTEUS_DAETK_INCLUDE_DIR,
                             PROTEUS_HDF5_INCLUDE_DIR] + \
               PROTEUS_PETSC_INCLUDE_DIRS + \
               PROTEUS_MPI_INCLUDE_DIRS,
@@ -509,7 +507,6 @@ EXTENSIONS_TO_BUILD = [
                             numpy.get_include(),
                             PROTEUS_SUPERLU_INCLUDE_DIR,
                             PROTEUS_TRIANGLE_INCLUDE_DIR,
-                            PROTEUS_DAETK_INCLUDE_DIR,
                             PROTEUS_HDF5_INCLUDE_DIR] + \
               PROTEUS_PETSC_INCLUDE_DIRS + \
               PROTEUS_MPI_INCLUDE_DIRS,
@@ -533,7 +530,6 @@ EXTENSIONS_TO_BUILD = [
                             numpy.get_include(),
                             PROTEUS_SUPERLU_INCLUDE_DIR,
                             PROTEUS_TRIANGLE_INCLUDE_DIR,
-                            PROTEUS_DAETK_INCLUDE_DIR,
                             PROTEUS_HDF5_INCLUDE_DIR] + \
               PROTEUS_PETSC_INCLUDE_DIRS + \
               PROTEUS_MPI_INCLUDE_DIRS,
@@ -565,7 +561,6 @@ EXTENSIONS_TO_BUILD = [
                             numpy.get_include(),
                             PROTEUS_SUPERLU_INCLUDE_DIR,
                             PROTEUS_TRIANGLE_INCLUDE_DIR,
-                            PROTEUS_DAETK_INCLUDE_DIR,
                             PROTEUS_HDF5_INCLUDE_DIR] + \
               PROTEUS_PETSC_INCLUDE_DIRS + \
               PROTEUS_MPI_INCLUDE_DIRS,
@@ -575,29 +570,29 @@ EXTENSIONS_TO_BUILD = [
               extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
     ),
-    Extension("flcbdfWrappers",["proteus/flcbdfWrappers.pyx"],
-              language="c++",
-              depends=["proteus/flcbdfWrappers.pxd"],
-              define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H),
-                             ('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H),
-                             ('CMRVEC_BOUNDS_CHECK',1),
-                             ('MV_VECTOR_BOUNDS_CHECK',1),
-                             ('PETSCVEC_BOUNDS_CHECK',1),
-                             ('F77_POST_UNDERSCORE',1),
-                             ('USE_BLAS',1)],
-              include_dirs=['proteus',
-                            numpy.get_include(),
-                            PROTEUS_SUPERLU_INCLUDE_DIR,
-                            PROTEUS_TRIANGLE_INCLUDE_DIR,
-                            PROTEUS_DAETK_INCLUDE_DIR,
-                            PROTEUS_HDF5_INCLUDE_DIR] + \
-              PROTEUS_PETSC_INCLUDE_DIRS + \
-              PROTEUS_MPI_INCLUDE_DIRS,
-              library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS+PROTEUS_HDF5_LIB_DIRS,
-              libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
-              extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
-              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
-    ),
+    # Extension("flcbdfWrappers",["proteus/flcbdfWrappers.pyx"],
+    #           language="c++",
+    #           depends=["proteus/flcbdfWrappers.pxd"],
+    #           define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H),
+    #                          ('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H),
+    #                          ('CMRVEC_BOUNDS_CHECK',1),
+    #                          ('MV_VECTOR_BOUNDS_CHECK',1),
+    #                          ('PETSCVEC_BOUNDS_CHECK',1),
+    #                          ('F77_POST_UNDERSCORE',1),
+    #                          ('USE_BLAS',1)],
+    #           include_dirs=['proteus',
+    #                         numpy.get_include(),
+    #                         PROTEUS_SUPERLU_INCLUDE_DIR,
+    #                         PROTEUS_TRIANGLE_INCLUDE_DIR,
+    #                         PROTEUS_DAETK_INCLUDE_DIR,
+    #                         PROTEUS_HDF5_INCLUDE_DIR] + \
+    #           PROTEUS_PETSC_INCLUDE_DIRS + \
+    #           PROTEUS_MPI_INCLUDE_DIRS,
+    #           library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS+PROTEUS_HDF5_LIB_DIRS,
+    #           libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
+    #           extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
+    #           extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
+    # ),
     Extension(
         'mprans.cCLSVOF',
         ['proteus/mprans/CLSVOF.cpp'],
@@ -639,13 +634,13 @@ EXTENSIONS_TO_BUILD = [
             "proteus/equivalent_polynomials_coefficients.h",
             'proteus/equivalent_polynomials_coefficients_quad.h'],
         include_dirs=get_xtensor_include() + PROTEUS_MPI_INCLUDE_DIRS,
-        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14','-fopenmp'],#,'-DXTENSOR_USE_OPENMP'],
+        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14'],#,'-fopenmp'],#,'-DXTENSOR_USE_OPENMP'],
         library_dirs=PROTEUS_MPI_LIB_DIRS+[PROTEUS_LAPACK_LIB_DIR,
                       PROTEUS_BLAS_LIB_DIR],
         libraries=PROTEUS_MPI_LIBS+['m',
                                     PROTEUS_LAPACK_LIB,
                                     PROTEUS_BLAS_LIB],
-        extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS+['-fopenmp'],
+        extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS,#+['-fopenmp'],
         language='c++'),
     Extension(
         'mprans.cRANS2P_IB',
@@ -667,13 +662,13 @@ EXTENSIONS_TO_BUILD = [
             "proteus/equivalent_polynomials_coefficients.h",
             'proteus/equivalent_polynomials_coefficients_quad.h'],
         include_dirs=get_xtensor_include() + PROTEUS_MPI_INCLUDE_DIRS,
-        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14','-fopenmp'],#,'-DXTENSOR_USE_OPENMP'],
+        extra_compile_args=PROTEUS_OPT+PROTEUS_MPI_LIB_DIRS+['-std=c++14'],#,'-fopenmp'],#,'-DXTENSOR_USE_OPENMP'],
         library_dirs=PROTEUS_MPI_LIB_DIRS+[PROTEUS_LAPACK_LIB_DIR,
                       PROTEUS_BLAS_LIB_DIR],
         libraries=PROTEUS_MPI_LIBS+['m',
                                     PROTEUS_LAPACK_LIB,
                                     PROTEUS_BLAS_LIB],
-        extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS+['-fopenmp'],
+        extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS,#+['-fopenmp'],
         language='c++'),
     Extension(
         'mprans.cRDLS',
