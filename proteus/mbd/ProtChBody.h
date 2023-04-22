@@ -5,7 +5,7 @@
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverPMINRES.h"
 #include "chrono/core/ChTransform.h"
-#include "chrono/physics/ChLinkSpring.h"
+#include "chrono/physics/ChLinkTSDA.h"
 #include "chrono/geometry/ChTriangleMeshConnected.h"
 #include <iostream>
 #include <fstream>
@@ -62,7 +62,7 @@ class cppRigidBody {
   double lock_motion_t_max;  // max time up to which lock motion is used
   double mass;
   double mooring_restlength;
-  std::shared_ptr<ChLinkSpring> spring;
+  std::shared_ptr<ChLinkTSDA> spring;
   /* ChVector <> inertia; */
   double* inertia;
   shared_ptr<ChTriangleMeshConnected> trimesh;
@@ -287,12 +287,12 @@ void cppRigidBody::prestep(double* force, double* torque)
                                            torque[2]*free_r.z()),
                           false);
   if (spring!=0) {
-      double spring_length = spring->Get_SpringLength();
+      double spring_length = spring->GetLength();
       if (spring_length < mooring_restlength) {
-          spring->SetDisabled(true);//Set_SpringRestLength(spring_length);
+          spring->SetDisabled(true);//SetRestLength(spring_length);
       }
       else {
-          spring->SetDisabled(false);//Set_SpringRestLength(mooring_restlength);
+          spring->SetDisabled(false);//SetRestLength(mooring_restlength);
       }
   }
   }
@@ -427,7 +427,7 @@ void cppRigidBody::addSpring(double stiffness,
                              double rest_length)
 {
   mooring_restlength = rest_length;
-  spring = chrono_types::make_shared<ChLinkSpring>();
+  spring = chrono_types::make_shared<ChLinkTSDA>();
   std::shared_ptr<ChBody> anchor_body = chrono_types::make_shared<ChBody>();
   anchor_body->SetPos(ChVector<>(anchor[0], anchor[1], anchor[2]));
   anchor_body->SetBodyFixed(true);
@@ -436,11 +436,9 @@ void cppRigidBody::addSpring(double stiffness,
                      anchor_body,
                      true, // true for pos relative to bodies
                      ChVector<>(fairlead[0], fairlead[1], fairlead[2]),
-                     ChVector<>(0.,0.,0.),
-                     false,  // true for auto rest length (distance between body1 and body2)
-                     rest_length);
-  spring->Set_SpringK(stiffness);
-  spring->Set_SpringR(damping);
+                     ChVector<>(0.,0.,0.));
+  spring->SetSpringCoefficient(stiffness);
+  spring->SetDampingCoefficient(damping);
   system->system->AddLink(spring);
 }
 
@@ -503,16 +501,14 @@ void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
 
 
 
-  spring = chrono_types::make_shared<ChLinkSpring>();
+  spring = chrono_types::make_shared<ChLinkTSDA>();
   spring->Initialize(fairlead,
                      mybod2,
                      true, // true for pos relative to bodies
                      ChVector<>(0.,0.,0.),
-                     ChVector<>(0.,0.,0.),
-                     false,
-                     rest_length);  // true for auto rest length (distance between body1 and body2));
-  spring->Set_SpringK(stiffness);
-  spring->Set_SpringR(damping);
+                     ChVector<>(0.,0.,0.));
+  spring->SetSpringCoefficient(stiffness);
+  spring->SetDampingCoefficient(damping);
   spring->SetName("SPRING1");
   system->system->AddLink(spring);
 }
