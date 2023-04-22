@@ -6,6 +6,7 @@
 #SBATCH -A hpc_proteus02o
 #SBATCH -J proteus_build
 #load proteus module and ensure proteus's python is in path
+module load proteus/fct
 ll="================================================================================"
 N=64
 info () {
@@ -28,21 +29,17 @@ python -m venv ${PROTEUS_PREFIX}
 source ${PWD}/proteus_env/bin/activate
 info "installing petsc python dependencies"
 python -m pip install --upgrade pip
-pip install cython numpy
+pip install cython numpy mpi4py
 info "installing petsc"
 git clone https://gitlab.com/petsc/petsc.git
 cd petsc
-./configure --prefix=${PROTEUS_PREFIX} --with-mpi-compilers -CC=mpicc -CXX=mpicxx -F90=mpif90 -F77=mpif77 --download-hdf5 --download-tetgen --download-triangle  --download-petsc4py --download-mpi4py --download-superlu --download-parmetis --download-metis --download-superlu_dist --download-zlib --download-hypre --download-zoltan --download-eigen --download-cmake
+./configure --prefix=${PROTEUS_PREFIX} --with-mpi-compilers -CC=${MPICC} -CXX=${MPICXX} -F90=${MPIF90} -F77=${MPIF77} --download-hdf5 --download-tetgen --download-triangle  --download-petsc4py --download-superlu --download-parmetis --download-metis --download-superlu_dist --download-zlib --download-hypre --download-zoltan --download-eigen --download-cmake
 make PETSC_DIR=${PWD} all
 make install
 cd ..
 info "Installing post-petsc python packages"
-export MPICXX=mpicxx
-export MPICC=mpicc
 export PYTHONPATH=${PROTEUS_PREFIX}/lib
-#export LD_LIBRARY_PATH=${PROTEUS_PREFIX}/lib
-#export DYLD_LIBRARY_PATH=${PROTEUS_PREFIX}/lib
-CC="mpicc" HDF5_MPI="ON" HDF5_DIR=${PROTEUS_PREFIX} pip install h5py scipy pybind11 swig future
+CC=${MPICC} HDF5_MPI="ON" HDF5_DIR=${PROTEUS_PREFIX} pip install h5py scipy pybind11 swig future
 info "installing xtensor stack: xtl, xtensor, xtensor-python"
 info "installing xtl"
 git clone https://github.com/xtensor-stack/xtl.git
@@ -117,5 +114,5 @@ cd ..
 info "install proteus"
 git clone https://github.com/cekees/proteus
 cd proteus
-N=${N} python setup.py build_ext -i
-
+N=${N} python setup.py build_ext
+pip install -v .
