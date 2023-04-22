@@ -1,5 +1,6 @@
 #!/bin/bash
 ll="================================================================================"
+N=64
 info () {
     echo $ll
     echo "$*"
@@ -7,12 +8,14 @@ info () {
     }
 platform="$(uname -s)"
 case "${platform}" in
-    Linux*)     LIB_SUFFIX=".so";;
-    Darwin*)    LIB_SUFFIX=".dyld";;
-    *)          LIB_SUFFIX=".so";;
+    Linux*)     LIB_SUFFIX="so";;
+    Darwin*)    LIB_SUFFIX="dyld";;
+    *)          LIB_SUFFIX="so";;
 esac
 info "building on " ${platform}
 export PROTEUS_PREFIX=${PWD}/proteus_env
+export PROTEUS_ARCH='mike'
+PYVER=$(python -c 'from distutils import sysconfig; print(sysconfig.get_python_version())')
 info "creating virtual env"
 python -m venv ${PROTEUS_PREFIX}
 source ${PWD}/proteus_env/bin/activate
@@ -32,7 +35,7 @@ export MPICC=${PROTEUS_PREFIX}/bin/mpicc
 export PYTHONPATH=${PROTEUS_PREFIX}/lib
 export LD_LIBRARY_PATH=${PROTEUS_PREFIX}/lib
 export DYLD_LIBRARY_PATH=${PROTEUS_PREFIX}/lib
-CC="mpicc" HDF5_MPI="ON" HDF5_DIR=${PROTEUS_PREFIX} pip install h5py scipy pybind11 swig
+CC="mpicc" HDF5_MPI="ON" HDF5_DIR=${PROTEUS_PREFIX} pip install h5py scipy pybind11 swig future
 info "installing xtensor stack: xtl, xtensor, xtensor-python"
 info "installing xtl"
 git clone https://github.com/xtensor-stack/xtl.git
@@ -55,16 +58,17 @@ git clone https://github.com/xtensor-stack/xtensor-python.git
 cd xtensor-python
 mkdir build
 cd build
-pybind11_DIR=${PROTEUS_PREFIX}/lib/python3.8/site-packages/pybind11 cmake -DCMAKE_INSTALL_PREFIX=${PROTEUS_PREFIX} ..
+pybind11_DIR=${PROTEUS_PREFIX}/lib/python${PYVER}/site-packages/pybind11 cmake -DCMAKE_INSTALL_PREFIX=${PROTEUS_PREFIX} ..
 make install
 cd ../..
 info "installing chrono"
 git clone https://github.com/projectchrono/chrono.git
 cd chrono
+git checkout 8.0.0
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=${PROTEUS_PREFIX} -DBUILD_DEMOS:BOOL=OFF -DENABLE_MODULE_CASCADE:BOOL=OFF -DENABLE_UNIT_CASCADE:BOOL=ON -DENABLE_MODULE_IRRLICHT:BOOL=OFF -DENABLE_MODULE_POSTPROCESS:BOOL=OFF -DENABLE_MODULE_VEHICLE:BOOL=OFF -DENABLE_MODULE_FSI:BOOL=OFF -DENABLE_OPENMP:BOOL=ON -DENABLE_MODULE_PYTHON:BOOL=ON -DENABLE_MODULE_COSIMULATION:BOOL=OFF -DENABLE_MODULE_MATLAB:BOOL=OFF -DENABLE_MODULE_MKL:BOOL=OFF -DENABLE_MODULE_PARALLEL:BOOL=OFF -DENABLE_MODULE_OPENGL:BOOL=OFF -DENABLE_MODULE_OGRE:BOOL=OFF -DCMAKE_BUILD_TYPE:STRING=Release -DPYTHON_EXECUTABLE:PATH=${PROTEUS_PREFIX}/bin/python -DPYTHON_INCLUDE_DIR:PATH=$(python -c 'from distutils import sysconfig; print(sysconfig.get_python_inc())') -DPYTHON_LIBRARY:PATH=$(python -c 'from distutils import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')/libpython3.8.dylib -DSWIG_EXECUTABLE=${PROTEUS_PREFIX}/bin/swig ..
-make -j 8 all
+cmake -DCMAKE_INSTALL_PREFIX=${PROTEUS_PREFIX} -DBUILD_DEMOS:BOOL=OFF -DENABLE_MODULE_CASCADE:BOOL=OFF -DENABLE_UNIT_CASCADE:BOOL=ON -DENABLE_MODULE_IRRLICHT:BOOL=OFF -DENABLE_MODULE_POSTPROCESS:BOOL=OFF -DENABLE_MODULE_VEHICLE:BOOL=OFF -DENABLE_MODULE_FSI:BOOL=OFF -DENABLE_OPENMP:BOOL=ON -DENABLE_MODULE_PYTHON:BOOL=ON -DENABLE_MODULE_COSIMULATION:BOOL=OFF -DENABLE_MODULE_MATLAB:BOOL=OFF -DENABLE_MODULE_MKL:BOOL=OFF -DENABLE_MODULE_PARALLEL:BOOL=OFF -DENABLE_MODULE_OPENGL:BOOL=OFF -DENABLE_MODULE_OGRE:BOOL=OFF -DCMAKE_BUILD_TYPE:STRING=Release -DPYTHON_EXECUTABLE:PATH=${PROTEUS_PREFIX}/bin/python -DPYTHON_INCLUDE_DIR:PATH=$(python -c 'from distutils import sysconfig; print(sysconfig.get_python_inc())') -DPYTHON_LIBRARY:PATH=$(python -c 'from distutils import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')/libpython${PYVER}.${LIB_SUFFIX} -DSWIG_EXECUTABLE=${PROTEUS_PREFIX}/bin/swig ..
+make -j ${N} all
 make install
 cd ../..
 info "installing scorec"
@@ -76,7 +80,7 @@ rm -rf pumi-meshes
 git clone https://github.com/SCOREC/pumi-meshes.git pumi-meshes
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=${PROTEUS_PREFIX} -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_EXES:BOOL=ON -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DCMAKE_C_COMPILER:STRING=${MPICC} -DCMAKE_CXX_COMPILER:STRING=${MPICXX} -DSCOREC_CXX_WARNINGS:BOOL=OFF -DENABLE_ZOLTAN:BOOL=ON -DSCOREC_CXX_OPTIMIZE:BOOL=ON -DMDS_ID_TYPE:STRING=int -DPCU_COMPRESS=ON -DENABLE_FPP=ON -DENABLE_SIMMETRIX:BOOL=OFF -DZOLTAN_PREFIX:PATH=${PROTEUS_PREFIX} -DPARMETIS_PREFIX:PATH=${PROTEUS_PREFIX} -DCMAKE_BUILD_TYPE:STRING=Release ..
-make -j 8 all
+make -j ${N} all
 make install
 cd ../..
 info "installing gmsh"
@@ -85,7 +89,7 @@ cd gmsh
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=${PROTEUS_PREFIX} -DCMAKE_CXX_COMPILER:FILEPATH=${MPICXX} -DCMAKE_C_COMPILER:FILEPATH=${MPICC} -DENABLE_BUILD_SHARED:BOOL=ON -DENABLE_WRAP_PYTHON:BOOL=ON ..
-make -j 8 all
+make -j ${N} all
 make install
 cd ../..
 info "intalling triangle executable"
@@ -107,5 +111,5 @@ cd ..
 info "install proteus"
 git clone https://github.com/cekees/proteus
 cd proteus
-N=8 pip install -v -e .
-
+N=${N} python setup.py build_ext
+pip install -v .
