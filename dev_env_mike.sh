@@ -42,7 +42,7 @@ export MPICC=mpicc
 export PYTHONPATH=${PROTEUS_PREFIX}/lib
 #export LD_LIBRARY_PATH=${PROTEUS_PREFIX}/lib
 #export DYLD_LIBRARY_PATH=${PROTEUS_PREFIX}/lib
-CC="mpicc" HDF5_MPI="ON" HDF5_DIR=${PROTEUS_PREFIX} pip install h5py scipy pybind11 swig
+CC="mpicc" HDF5_MPI="ON" HDF5_DIR=${PROTEUS_PREFIX} pip install h5py scipy pybind11 swig future
 info "installing xtensor stack: xtl, xtensor, xtensor-python"
 info "installing xtl"
 git clone https://github.com/xtensor-stack/xtl.git
