@@ -24,6 +24,7 @@ import time as tt
 import sys as sys
 
 __all__ = ['SteadyCurrent',
+           'SolitaryWaveFenton',
            'SolitaryWave',
            'MonochromaticWaves',
            'NewWave',
@@ -771,7 +772,141 @@ class  SteadyCurrent(object):
             U=self.U
         return U
 
+class  SolitaryWaveFenton(object):
+    """
+    This class is used for generating 9th order solitary wave by Fenton's solution
+    Parameters
+    ----------
+    waveHeight: float
+            Regular wave height
+    mwl : float
+            Still water level
+    depth : float
+            Water depth
+    g : numpy.ndarray
+             Gravitational acceleration vector
+    waveDir : numpy.ndarray
+             Wave direction in vector form
+    trans : numpy.ndarray
+             Position vector of the peak              
+    fast : bool
+            Switch for optimised functions
+            """
+    def __init__(self,
+                 waveHeight,
+                 mwl,
+                 depth,
+                 g,
+                 waveDir,
+                 trans = np.zeros(3,"d"),
+                 fast = True):
+        
+        self.H = waveHeight
+        self.fast = fast
+        self.g = np.array(g)
+        self.waveDir =  setDirVector(np.array(waveDir))
+        self.vDir = setVertDir(g)
+        self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
+        self.trans = trans
+        self.mwl = mwl
+        self.depth = depth
+        #self.c =  np.sqrt(self.gAbs * (depth+self.H))        
+        #self.K = old_div(np.sqrt(3. *self.H/ (4. * self.depth)),self.depth)
+        
+        self.afa = waveHeight/depth
+        self.K = np.sqrt(3./4.*self.afa)
+        self.K = self.K*(1.-.625*self.afa+.554688*self.afa**2-.561535*self.afa**3+.567095*self.afa**4-.602969*self.afa**5 \
+                         +.624914*self.afa**6-.670850*self.afa**7+.700371*self.afa**8)
+        self.K = self.K/self.depth
+        
+        self.c = 1.+self.afa
+        self.c = self.c-.05*self.afa**2-.0428571*self.afa**3-.0342857*self.afa**4-.0315195*self.afa**5-.0292784*self.afa**6 \
+                       -.0268451*self.afa**7-.0302634*self.afa**8-.0219347*self.afa**9
+        self.c = np.sqrt(self.c*self.gAbs*self.depth)
+        
+        self.d2 = depth*depth
+        self.d3 = self.d2 * depth
+#Checking if g and waveDir are perpendicular
+        dirCheck(self.waveDir,self.vDir)
 
+    def fcoef():
+        """Calculates the coefficients for the Fenton's solution
+        """
+        a = []
+        return 0
+
+    def eta(self,x,t):
+        """Calculates free surface elevation (SolitaryWaveFenton class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+        """
+        phase = sum( (x[:]-self.trans[:])*self.waveDir[:]) - self.c * t
+        #a1 = self.K*phase
+        kk = self.K*self.depth
+        XX = phase/self.depth
+        S = 1./np.cosh(kk*XX)
+        zeta = S**2*self.afa
+        zeta = zeta+(-.75*S**2+.75*S**4)*self.afa**2
+        zeta = zeta+(.625*S**2-1.8875*S**4+1.2625*S**6)*self.afa**3
+        zeta = zeta+(-1.36817*S**2+3.88033*S**4-4.68304*S**6+2.17088*S**8)*self.afa**4
+        zeta = zeta+(1.86057*S**2-7.45136*S**4+12.7637*S**6-11.4199*S**8+4.24687*S**10)*self.afa**5
+        zeta = zeta+(-2.57413*S**2+13.2856*S**4-31.1191*S**6+40.1068*S**8-28.4272*S**10+8.728*S**12)*self.afa**6
+        zeta = zeta+(3.4572*S**2-22.782*S**4+68.258*S**6-116.974*S**8+120.49*S**10-71.057*S**12+18.608*S**14)*self.afa**7
+        zeta = zeta+(-4.6849*S**2+37.67*S**4-139.28*S**6+301.442*S**8-411.416*S**10+355.069*S**12-180.212*S**14+41.412*S**16)*self.afa**8
+        zeta = zeta+(6.191*S**2-60.57*S**4+269.84*S**6-712.125*S**8+1217.98*S**10-1384.37*S**12+1023.07*S**14-450.29*S**16+90.279*S**18)*self.afa**9
+        zeta = zeta*self.depth
+
+        return  zeta #self.H*1.0/ cosh(a1)**2
+    
+    def u(self,x,t):
+        """Calculates wave velocity vector (SolitaryWaveFenton class).
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+        """
+        phase = sum( (x[:]-self.trans[:])*self.waveDir[:])  - self.c * t 
+        a1 =  cosh(self.K*phase*2.)	
+        a2 =  cosh(self.K*phase)
+
+        Z =  (self.vDir[0]*x[0] + self.vDir[1]*x[1]+ self.vDir[2]*x[2]) - self.mwl
+
+        Uhorz =  1.0 /(4.0 * self.depth**4 ) * np.sqrt(self.gAbs * self.depth) *  self.H *(
+            2.0 * self.d3 + self.d2 * self.H  + 12.0 * self.depth * self.H * Z + 6.0 *  self.H * Z**2.0 +
+            (2.0 * self.d3 - self.d2 * self.H - 6.0 * self.depth * self.H * Z - 3.0 * self.H * Z**2 ) * a1)/(a2)**4
+
+        Uvert =   1.0 / ( 4.0 * np.sqrt(self.gAbs* self.depth) ) * np.sqrt(3.0) * self.gAbs * (old_div(self.H, self.depth**3.0))** 1.5  * (self.depth + Z)*(
+                2.0 * self.depth**3 - 7.0 * self.depth**2.0 * self.H + 10.0 * self.depth * self.H * Z + 5.0 * self.H * Z**2.0 +
+                (2.0 * self.depth**3.0 + self.depth**2.0 * self.H - 2.0 * self.depth * self.H * Z - self.H * Z**2.0)*
+                cosh(np.sqrt( 3.0 * self.H / self.depth**3.0) * phase ))/(
+                cosh(np.sqrt( 3.0 * self.H / ( 4.0 * self.depth**3.0))*
+                phase )   )** 4.0*( tanh( np.sqrt( 3.0 * self.H / ( 4.0 * self.depth**3.0))*phase ))
+        """
+        phase = sum( (x[:]-self.trans[:])*self.waveDir[:])  - self.c * t
+        a1 = cosh(self.K * phase)
+        a2 = tanh( self.K * phase)
+        Z =  (self.vDir[0]*x[0] + self.vDir[1]*x[1]+ self.vDir[2]*x[2]) - self.mwl
+        Uhorz = np.sqrt( self.gAbs * self.depth) * ( self.H / self.depth) * ( 1 / ( a1**2)) * ( 1 - ( self.H / ( 4 * self.depth)) * ( 1 / ( a1**2)))
+        Uvert = -np.sqrt( self.gAbs * self.depth) * ( Z / self.depth) * ( 1 - ( self.H / ( 4 * self.depth)) * ( 1 / ( a1**2))) * ( ( 2 * self.H / self.depth) * self.K * ( a2 / ( a1**2)))
+        """
+        return self.waveDir*Uhorz + self.vDir*Uvert
+
+
+print('hello')
 
 class  SolitaryWave(object):
     """
