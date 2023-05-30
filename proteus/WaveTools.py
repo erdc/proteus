@@ -829,11 +829,12 @@ class  SolitaryWaveFenton(object):
 #Checking if g and waveDir are perpendicular
         dirCheck(self.waveDir,self.vDir)
 
-    def fcoef():
-        """Calculates the coefficients for the Fenton's solution
-        """
-        a = []
-        return 0
+#    def fcoef():
+#        """Calculates the coefficients for the Fenton's solution
+#        """
+#        a = []
+#        ita = []
+#        return 0
 
     def eta(self,x,t):
         """Calculates free surface elevation (SolitaryWaveFenton class)
