@@ -74,7 +74,10 @@ PROTEUS_EXTRA_LINK_ARGS=[]
 PROTEUS_CHRONO_INCLUDE_DIR, PROTEUS_CHRONO_LIB_DIR = get_flags('chrono')
 
 PROTEUS_CHRONO_CXX_FLAGS = []
-with open(os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','Chrono','ChronoConfig.cmake'),'r') as f:
+chrono_cmake_file_path = os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','Chrono','ChronoConfig.cmake')
+if not os.path.isfile(chrono_cmake_file_path):
+    chrono_cmake_file_path = os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','ChronoConfig.cmake')
+with open(chrono_cmake_file_path,'r') as f:
     for l in f:
         if 'set(CHRONO_CXX_FLAGS' in l:
             args = l.split()
