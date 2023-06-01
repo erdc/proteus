@@ -264,6 +264,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
         self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
+        self.particle_surfaceArea_projected = np.zeros((self.nParticles,), 'd')
         if ball_center is None:
             self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
         else:
@@ -431,6 +432,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_netForces = np.zeros((3*self.nParticles, 3), 'd')#####[total_force_1,total_force_2,...,stress_1,stress_2,...,pressure_1,pressure_2,...]  
         self.particle_netMoments = np.zeros((self.nParticles, 3), 'd')
         self.particle_surfaceArea = np.zeros((self.nParticles,), 'd')
+        self.particle_surfaceArea_projected = np.zeros((self.nParticles,), 'd')
         if self.ball_center is None:
             self.ball_center = 1e10*numpy.ones((self.nParticles,3),'d')
         if self.ball_radius is None:
@@ -1741,6 +1743,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.particle_netForces[:, :] = 0.0
         self.coefficients.particle_netMoments[:, :] = 0.0
         self.coefficients.particle_surfaceArea[:] = 0.0
+        self.coefficients.particle_surfaceArea_projected[:] = 0.0
         if self.forceStrongConditions:
             try:
                 for cj in range(len(self.dirichletConditionsForceDOF)):
@@ -1982,6 +1985,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["particle_netForces"] = self.coefficients.particle_netForces
         argsDict["particle_netMoments"] = self.coefficients.particle_netMoments
         argsDict["particle_surfaceArea"] = self.coefficients.particle_surfaceArea
+        argsDict["particle_surfaceArea_projected"] = self.coefficients.particle_surfaceArea_projected
+        argsDict["projection_direction"] = self.coefficients.projection_direction
         argsDict["nElements_owned"] = int(self.mesh.nElements_owned)
         argsDict["particle_nitsche"] = self.coefficients.particle_nitsche
         argsDict["particle_epsFact"] = self.coefficients.particle_epsFact
@@ -2063,12 +2068,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm.Allreduce(self.coefficients.particle_netForces.copy(),self.coefficients.particle_netForces)
         comm.Allreduce(self.coefficients.particle_netMoments.copy(),self.coefficients.particle_netMoments)
         comm.Allreduce(self.coefficients.particle_surfaceArea.copy(),self.coefficients.particle_surfaceArea)
+        comm.Allreduce(self.coefficients.particle_surfaceArea_projected.copy(),self.coefficients.particle_surfaceArea_projected)
 
         if (self.coefficients.nParticles < 10):
             for i in range(self.coefficients.nParticles):
                 logEvent("particle i=" + repr(i)+ " force " + repr(self.coefficients.particle_netForces[i]))
                 logEvent("particle i=" + repr(i)+ " moment " + repr(self.coefficients.particle_netMoments[i]))
                 logEvent("particle i=" + repr(i)+ " surfaceArea " + repr(self.coefficients.particle_surfaceArea[i]))
+                logEvent("particle i=" + repr(i)+ " projected surfaceArea " + repr(self.coefficients.particle_surfaceArea_projected[i]))
                 logEvent("particle i=" + repr(i)+ " stress force " + repr(self.coefficients.particle_netForces[i+self.coefficients.nParticles]))
                 logEvent("particle i=" + repr(i)+ " pressure force " + repr(self.coefficients.particle_netForces[i+2*self.coefficients.nParticles]))
 

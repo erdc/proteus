@@ -754,7 +754,9 @@ namespace proteus
                                          double &dmass_ham_w,
                                          double *particle_netForces,
                                          double *particle_netMoments,
-                                         double *particle_surfaceArea)
+                                         double *particle_surfaceArea,
+					 double *particle_surfaceArea_projected,
+					 double *projection_direction)
     {
       double C, rho, mu, nu, H_mu, ImH_mu, uc, duc_du, duc_dv, duc_dw, H_s, ImH_s, D_s, phi_s, u_s, v_s, w_s;
       double force_x, force_y, r_x, r_y, force_p_x, force_p_y, force_stress_x, force_stress_y;
@@ -834,6 +836,8 @@ namespace proteus
           if (element_owned)
             {
               particle_surfaceArea[i] += dV * D_s;
+              particle_surfaceArea_projected[i] += dV * D_s * fmax(fluid_outward_normal[0]*projection_direction[0] +
+								   fluid_outward_normal[1]*projection_direction[1],0.0);
               particle_netForces[i * 3 + 0] += force_x;
               particle_netForces[i * 3 + 1] += force_y;
               particle_netForces[(i+  nParticles)*3+0]+= force_stress_x;
@@ -1891,6 +1895,8 @@ namespace proteus
       xt::pyarray<double>& particle_netForces = args.array<double>("particle_netForces");
       xt::pyarray<double>& particle_netMoments = args.array<double>("particle_netMoments");
       xt::pyarray<double>& particle_surfaceArea = args.array<double>("particle_surfaceArea");
+      xt::pyarray<double>& particle_surfaceArea_projected = args.array<double>("particle_surfaceArea_projected");
+      xt::pyarray<double>& projection_direction = args.array<double>("projection_direction");
       int nElements_owned = args.scalar<int>("nElements_owned");
       double particle_nitsche = args.scalar<double>("particle_nitsche");
       double particle_epsFact = args.scalar<double>("particle_epsFact");
@@ -2957,7 +2963,9 @@ namespace proteus
                                                dmass_ham_w_s,
                                                particle_netForces.data(),
                                                particle_netMoments.data(),
-                                               particle_surfaceArea.data());
+                                               particle_surfaceArea.data(),
+					       particle_surfaceArea_projected.data(),
+					       projection_direction.data());
                     }
                   //
                   //save momentum for time history and velocity for subgrid error
@@ -4517,7 +4525,7 @@ namespace proteus
       double ghost_penalty_constant = args.scalar<double>("ghost_penalty_constant");
       const bool useExact = args.scalar<int>("useExact");
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
-      std::valarray<double> particle_surfaceArea_tmp(nParticles), particle_netForces_tmp(nParticles*3*3), particle_netMoments_tmp(nParticles*3);
+      std::valarray<double> particle_surfaceArea_tmp(nParticles), particle_surfaceArea_projected_tmp(nParticles), projection_direction_tmp(2), particle_netForces_tmp(nParticles*3*3), particle_netMoments_tmp(nParticles*3);
       gf.useExact = false;//useExact;
       gf_p.useExact = false;//useExact;
       gf_s.useExact = useExact;
@@ -5542,7 +5550,9 @@ namespace proteus
                                                dmass_ham_w_s,
                                                &particle_netForces_tmp[0],
                                                &particle_netMoments_tmp[0],
-                                               &particle_surfaceArea_tmp[0]);
+                                               &particle_surfaceArea_tmp[0],
+					       &particle_surfaceArea_projected_tmp[0],
+					       &projection_direction_tmp[0]);
                     }
                   //cek todo add RBLES terms consistent to residual modifications or ignore the partials w.r.t the additional RBLES terms
                   double H_f=1.0;
