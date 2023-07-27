@@ -577,7 +577,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
-        self.hasCutCells=True
+        if coefficients.STABILIZATION_TYPE > 1:
+            self.hasCutCells=True
         self.auxiliaryCallCalculateResidual = False
         #
         # set the objects describing the method and boundary conditions
@@ -1260,8 +1261,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
             for dofN, g in list(self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.items()):
                 r[dofN] = 0
-        r*=self.isActiveR
-        self.u[0].dof[:] = np.where(self.isActiveDOF==1.0, self.u[0].dof,1.0)
+        if self.coefficients.STABILIZATION_TYPE <= 1:
+            r*=self.isActiveR
+            self.u[0].dof[:] = np.where(self.isActiveDOF==1.0, self.u[0].dof,1.0)
         if (self.auxiliaryCallCalculateResidual == False):
             edge_based_cflMax = globalMax(self.edge_based_cfl.max()) * self.timeIntegration.dt
             cell_based_cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
@@ -1359,15 +1361,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.nzval[i] = 0.0
                         # print "RBLES zeroing residual cj = %s dofN= %s
                         # global_dofN= %s " % (cj,dofN,global_dofN)
-        for global_dofN_a in np.argwhere(self.isActiveR==0.0):
-            global_dofN = global_dofN_a[0]
-            for i in range(
-                    self.rowptr[global_dofN],
-                    self.rowptr[global_dofN + 1]):
-                if (self.colind[i] == global_dofN):
-                    self.nzval[i] = 1.0
-                else:
-                    self.nzval[i] = 0.0
+        if self.coefficients.STABILIZATION_TYPE <= 1:
+            for global_dofN_a in np.argwhere(self.isActiveR==0.0):
+                global_dofN = global_dofN_a[0]
+                for i in range(
+                        self.rowptr[global_dofN],
+                        self.rowptr[global_dofN + 1]):
+                    if (self.colind[i] == global_dofN):
+                        self.nzval[i] = 1.0
+                    else:
+                        self.nzval[i] = 0.0
         logEvent("Jacobian ", level=10, data=jacobian)
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian

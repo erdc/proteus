@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level = 3
 from proteus import Comm as proteus_Comm
 import numpy as np
 cimport numpy as np

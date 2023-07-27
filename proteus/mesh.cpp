@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include "PyEmbeddedFunctions.h"
 #define DEBUG_REFINE
 /**
    \ingroup mesh mesh
@@ -625,7 +626,7 @@ extern "C"
     mesh.nElementBoundaries_element = 2;
     using namespace std;
     double start,stop;
-    //cout<<"Constructing element boundary map"<<endl;
+    logEvent("Constructing element boundary map",6);
     map<NodeTuple<1>,
       ElementNeighbors> elementBoundaryElements;
     start=CurrentTime();
@@ -5602,10 +5603,16 @@ int read2DM(Mesh& mesh, const char* filebase, int indexBase)
       return failed;
     }
   std::string meshName;
-  meshFile>>meshName>>meshName;
-  std::cout<<meshName<<std::endl;
   std::string firstWord;
-  meshFile>>firstWord;
+  meshFile>>meshName;
+  if (meshName == "E3T")
+    firstWord = meshName;
+  else
+    {
+      meshFile>>meshName;
+      logEvent(&("Reading 2DM"+meshName)[0],5); 
+      meshFile>>firstWord;
+    }
   mesh.nElements_global=0;
   std::vector<int> elementNodesArray_file;
   std::vector<int> elementMaterialTypes_file;
@@ -6189,13 +6196,13 @@ extern "C"
     int nLevels = multilevelMesh.nLevels;
     if (multilevelMesh.meshArray[nLevels-1].newestNodeBases != NULL)
       {
-	cout<<"WARNING setNewestNodeBasesToLongestEdge newestNodeBases !=NULL exiting"<<endl;
+	logEvent("WARNING setNewestNodeBasesToLongestEdge newestNodeBases !=NULL exiting",5);
 	return 1;
       }
     //2d 
     if (multilevelMesh.meshArray[nLevels-1].nElementBoundaries_element != 3)
       {
-	cout<<"WARNING setNewestNodeBasesToLongestEdge 2d only exiting"<<endl;
+	logEvent("WARNING setNewestNodeBasesToLongestEdge 2d only exiting",5);
 	return 1;
       }
     

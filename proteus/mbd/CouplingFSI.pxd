@@ -1,3 +1,4 @@
+# cython: language_level=3
 cimport numpy as np
 import numpy as np
 from libcpp.string cimport string

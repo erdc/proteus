@@ -245,6 +245,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  force_z=None,
                  normalize_pressure=False,
                  useInternalParticleSolver=False):
+        self.projection_direction=np.array([1.0,0.0,0.0])
         self.phi_s_isSet=False
         self.normalize_pressure=normalize_pressure
         self.force_x=force_x

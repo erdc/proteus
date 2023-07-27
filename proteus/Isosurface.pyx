@@ -1,5 +1,6 @@
 #!python
-#cython: embedsignature=True
+# cython: language_level=3
+# cython: embedsignature=True
 """
 AuxiliaryVariables subclasses for extracting isosurfaces and contours
 """

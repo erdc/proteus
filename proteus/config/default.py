@@ -2,6 +2,7 @@ import os
 from os.path import join as pjoin
 import sys
 import platform
+import site
 PROTEUS_PRELOAD_LIBS=[]
 
 prefix = os.getenv('PROTEUS_PREFIX')
@@ -123,7 +124,7 @@ PROTEUS_DAETK_LIB ='daetk'
 PROTEUS_DAETK_LIB_DIRS = [PROTEUS_DAETK_LIB_DIR]
 
 PROTEUS_MPI_INCLUDE_DIR, PROTEUS_MPI_LIB_DIR = get_flags('mpi')
-PROTEUS_MPI_INCLUDE_DIRS = [PROTEUS_MPI_INCLUDE_DIR, PROTEUS_MPI_LIB_DIR, os.path.join(PROTEUS_MPI_LIB_DIR,'mpi4py')]
+PROTEUS_MPI_INCLUDE_DIRS = [PROTEUS_MPI_INCLUDE_DIR, PROTEUS_MPI_LIB_DIR, os.path.join(PROTEUS_MPI_LIB_DIR,'mpi4py')]+site.getsitepackages()
 PROTEUS_MPI_LIB_DIRS = [PROTEUS_MPI_LIB_DIR]
 PROTEUS_MPI_LIBS =['mpi']
 

@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level=3
 import numpy as np
 cimport numpy as np
 cimport twophaseDarcyCoefficients as tpdc
@@ -75,7 +76,7 @@ def twophaseDarcy_fc_sd_het_matType(int pskModelFlag,
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     #while debugging allow only one option
     #exponential for wetting phase
     assert density_w_flag == 1
@@ -473,7 +474,7 @@ def twophaseDarcy_fc_sd_het_matType_nonPotentialForm(int pskModelFlag,
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     assert density_w_flag == 1
     if density_n_flag == 1:#nonwetting exponential
         if pskModelFlag == 0:
@@ -764,7 +765,7 @@ def twophaseDarcy_fc_pp_sd_het_matType(int pskModelFlag,
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     #while debugging allow only one option
     #exponential for wetting phase
     assert density_w_flag == 1
@@ -1040,7 +1041,7 @@ Darcy flow for a heterogeneous medium, sparse diffusion rep het
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     if pskModelFlag == 0:
         tpdc.twophaseDarcy_incompressible_split_sd_pressure_het_matType[SimplePSK](nSimplex,
                                                                               nPointsPerSimplex,
@@ -1149,7 +1150,7 @@ Use the split fractional flow formulation of incompressible, two-phase
 Darcy flow for a heterogeneous medium, sparse diffusion rep het
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     #while debugging allow only one option
     #exponential for wetting phase
     assert density_w_flag == 1
@@ -1288,7 +1289,7 @@ het
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     #while debugging allow only one option
     #exponential for wetting phase
     assert density_w_flag == 1
@@ -1392,7 +1393,7 @@ het
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     if density_n_flag == 1: #nonwetting exponential
         if pskModelFlag == 0:
             tpdc.twophaseDarcy_compressibleN_split_sd_saturation_het_matType[SimplePSK,ExponentialDensity](nSimplex,
@@ -1551,7 +1552,7 @@ diffusion rep het
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     if density_n_flag == 1: #nonwetting exponential
         if pskModelFlag == 0:
             tpdc.twophaseDarcy_compressibleN_split_sd_pressure_het_matType[SimplePSK,ExponentialDensity](nSimplex,
@@ -1709,7 +1710,7 @@ diffusion rep het
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     if density_n_flag == 1: #nonwetting exponential
         if pskModelFlag == 0:
             tpdc.twophaseDarcy_compressibleN_split_sd_saturation_het_matType[SimplePSK,ExponentialDensity](nSimplex,
@@ -1853,7 +1854,7 @@ Use point-vals for sw and zoned material types for porosity (omega)
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     tpdc.twophaseDarcy_vol_frac(nSimplex,
                            nPointsPerSimplex,
                            <int*>(matType.data),
@@ -1953,7 +1954,7 @@ capillary pressure is primary variable
 
     """
     cdef int nPointsPerSimplex=sw.shape[sw.ndim-1]
-    cdef int nSimplex=sw.size/nPointsPerSimplex
+    cdef int nSimplex=sw.size//nPointsPerSimplex
     if pskModelFlag == 0:
         tpdc.twophaseDarcy_incompressible_split_pp_sd_saturation_het_matType[SimplePSK](nSimplex,
                                                                                    nPointsPerSimplex,

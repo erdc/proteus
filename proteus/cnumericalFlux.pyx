@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level=3
 from sys import exit
 import numpy as np
 cimport numpy as np

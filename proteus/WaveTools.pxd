@@ -1,7 +1,7 @@
 #!python
-#cython: embedsignature=True
-#cython: profile=True
-
+# cython: embedsignature=True
+# cython: profile=True
+# cython: language_level=3
 cimport cython
 from libc.math cimport tanh, sqrt, exp, log, sin, cos, cosh, sinh, M_PI #from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
 cimport numpy as np

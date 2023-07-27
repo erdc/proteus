@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level=3
 import numpy as np
 cimport numpy as np
 cimport pskRelations
@@ -10,7 +11,8 @@ def vgm_cal_from_sw(double Sw,
                     double m,
                     double eps_small,
                     double ns_del):
-    cdef double rwork[4], rwork_tol[2]
+    cdef double rwork[4]
+    cdef double rwork_tol[2]
     rwork[0]=sw_min
     rwork[1]=sw_max
     rwork[2]=alpha
@@ -29,7 +31,8 @@ def vgm_calc_from_psic(double psic,
 		       double m,
 		       double eps_small,
 		       double ns_del):
-    cdef double rwork[4],rwork_tol[2];
+    cdef double rwork[4]
+    cdef double rwork_tol[2]
     rwork[0]=sw_min
     rwork[1]=sw_max
     rwork[2]=alpha

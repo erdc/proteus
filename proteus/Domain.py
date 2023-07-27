@@ -692,7 +692,7 @@ class PlanarStraightLineGraphDomain(D_base):
             for j in range(nVertexAttributes):
                 self.vertexAttributes[j].append(float(line[3+j]))
             if hasVertexFlag:
-                self.vertexFlags.append(line[3+nVertexAttributes])
+                self.vertexFlags.append(int(line[3+nVertexAttributes]))
         segmentLine = f.readline().split()
         while len(segmentLine) == 0 or segmentLine[0][0] == '#':
             segmentLine = f.readline().split()
@@ -725,7 +725,7 @@ class PlanarStraightLineGraphDomain(D_base):
         nRegions = int(regionLine[0])
         self.regions=[]
         self.regionFlags=[]
-        self.areaConstraints=[]
+        self.regionConstraints=[]
         for i in range(nRegions):
             line =  f.readline().split()
             while len(line) == 0 or line[0][0] == '#':
@@ -735,7 +735,7 @@ class PlanarStraightLineGraphDomain(D_base):
                 self.regionFlags.append(int(line[3]))
                 if len(line) > 4:
                     if line[4][0] != '#':
-                        self.areaConstraints.append(float(line[4]))
+                        self.regionConstraints.append(float(line[4]))
         self.getBoundingBox()
         if self.segmentFlags :
             self.getSegmentPartition()
@@ -760,7 +760,7 @@ class PlanarStraightLineGraphDomain(D_base):
             #write the vertices
             for vN,v in enumerate(self.vertices):
                 pf.write('%d %21.16e %21.16e ' % (vN+1,v[0],v[1]))
-                #import pdb; pdb.set_trace()
+                print(self.vertexFlags)
                 if self.vertexFlags :#write vertex flag if we have vertexFlags
                     pf.write('%d\n' % (self.vertexFlags[vN],))
                 else:
@@ -1111,7 +1111,7 @@ class PiecewiseLinearComplexDomain(D_base):
         nRegions = int(regionLine[0])
         self.regions = []
         self.regionFlags = []
-        self.areaConstraints = []
+        self.regionConstraints = []
         for i in range(nRegions):
             line =  f.readline().split()
             while len(line) == 0 or line[0][0] == '#':
@@ -1120,7 +1120,7 @@ class PiecewiseLinearComplexDomain(D_base):
             if len(line) > 4:
                 self.regionFlags.append(int(line[4]))
             if len(line) > 5:
-                self.areaConstraints.append(float(line[5]))
+                self.regionConstraints.append(float(line[5]))
         self.getBoundingBox()
         f.close()
 

@@ -1,3 +1,4 @@
+# cython: language_level=3
 from proteus cimport superluWrappers
 
 ctypedef int PROTEUS_LAPACK_INTEGER

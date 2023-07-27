@@ -1,3 +1,4 @@
+# cython: language_level=3
 """
 Scripts for creating Fenton waves.
 Modified from johndfenton.com/Steady-waves/Fourier.html to work with python and Proteus

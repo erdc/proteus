@@ -1,5 +1,5 @@
 # distutils: language = c++
-
+# cython: language_level=3
 from cpython.ref cimport PyObject
 cimport numpy as np
 import numpy as np
