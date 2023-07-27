@@ -33,29 +33,36 @@ cdef extern from "mesh.h":
 
       int *elementIJK
       double *weights
-      double *U_KNOT,*V_KNOT,*W_KNOT
+      double *U_KNOT
+      double *V_KNOT
+      double *W_KNOT
       int nx,ny,nz
       int px,py,pz
 
-      double *nodeArray,*elementDiametersArray,*elementInnerDiametersArray,*elementBoundaryDiametersArray
-      double *elementBarycentersArray, *elementBoundaryBarycentersArray
-      double *nodeDiametersArray,*nodeSupportArray
+      double *nodeArray,
+      double *elementDiametersArray
+      double *elementInnerDiametersArray
+      double *elementBoundaryDiametersArray
+      double *elementBarycentersArray
+      double *elementBoundaryBarycentersArray
+      double *nodeDiametersArray
+      double *nodeSupportArray
       double h,hMin,sigmaMax,volume
       int * newestNodeBases
 
-      int *elementOffsets_subdomain_owned,
-      int *elementNumbering_subdomain2global,
-      int *nodeOffsets_subdomain_owned,
-      int *nodeNumbering_subdomain2global,
-      int *elementBoundaryOffsets_subdomain_owned,
-      int *elementBoundaryNumbering_subdomain2global,
-      int *edgeOffsets_subdomain_owned,
+      int *elementOffsets_subdomain_owned
+      int *elementNumbering_subdomain2global
+      int *nodeOffsets_subdomain_owned
+      int *nodeNumbering_subdomain2global
+      int *elementBoundaryOffsets_subdomain_owned
+      int *elementBoundaryNumbering_subdomain2global
+      int *edgeOffsets_subdomain_owned
       int *edgeNumbering_subdomain2global
       Mesh* subdomainp
 
-    cdef inline void initializeMesh(Mesh& mesh)
+    cdef void initializeMesh(Mesh& mesh)
 
-    cdef inline void deleteMesh(Mesh& mesh)
+    cdef void deleteMesh(Mesh& mesh)
 
     cdef struct MultilevelMesh:
         int nLevels
@@ -64,9 +71,9 @@ cdef extern from "mesh.h":
         int **elementChildrenArray
         int **elementChildrenOffsets
 
-    cdef inline void initializeMultilevelMesh(MultilevelMesh& multilevelMesh)
+    cdef void initializeMultilevelMesh(MultilevelMesh& multilevelMesh)
 
-    cdef inline void deleteMultilevelMesh(MultilevelMesh& multilevelMesh)
+    cdef void deleteMultilevelMesh(MultilevelMesh& multilevelMesh)
 
     cdef int edgeMeshElements(const int& nx,
                               Mesh& mesh)

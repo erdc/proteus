@@ -24,7 +24,11 @@ class MyCoefficients(NCLS.Coefficients):
         # Define a 'velocity' field to be read by VOF
         self.model.q[('velocity',0)]=self.q_v
         self.model.ebqe[('velocity',0)]=self.ebqe_v
-        
+        self.ghost_penalty_constant=0.0
+        self.phi_s = numpy.ones(self.model.mesh.nodeArray.shape[0], 'd')*1e10#
+        self.useExact=False
+        self.ebqe_phi_s        = numpy.ones((self.model.ebqe['x'].shape[0],self.model.ebqe['x'].shape[1]),'d') * 1e10
+        self.q_phi_solid = numpy.ones(self.model.q[('u', 0)].shape, 'd')
 coefficients = MyCoefficients(
     checkMass=checkMass,
     RD_model=RD_model,

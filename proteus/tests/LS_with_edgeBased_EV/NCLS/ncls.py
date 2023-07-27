@@ -103,4 +103,10 @@ class MyCoefficients(NCLS.Coefficients):
         self.q_v = np.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = np.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
         self.rdModel = self.model
+        self.ghost_penalty_constant=0.0
+        self.phi_s = np.ones(self.model.mesh.nodeArray.shape[0], 'd')*1e10#
+        self.useExact=False
+        self.ebqe_phi_s = np.ones((self.model.ebqe['x'].shape[0],self.model.ebqe['x'].shape[1]),'d') * 1e10
+        self.q_phi_solid = np.ones(self.model.q[('u', 0)].shape, 'd')
+        self.flowCoefficients = self
         

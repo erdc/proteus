@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level=3
 import numpy as np
 cimport numpy as np
 cimport postprocessing as pp
@@ -674,7 +675,7 @@ def getRT0velocityValuesFluxRep_arbitraryElementMembership(np.ndarray nodeArray,
                                                            np.ndarray element_locations,
                                                            np.ndarray rt0vdofs_element,
                                                            np.ndarray v_element):
-    cdef int nPoints = x.size/x.shape[x.ndim-1]
+    cdef int nPoints = x.size//x.shape[x.ndim-1]
     pp.getRT0velocityValuesFluxRep_arbitraryElementMembership(elementNodesArray.shape[0],
                                                               elementNodesArray.shape[1],
                                                               nPoints,
@@ -1210,7 +1211,7 @@ def updateSelectedExteriorElementBoundaryFlux(np.ndarray exteriorElementBoundari
 def updateAdvectiveVelocityPointEval(double updateCoef,
                                      np.ndarray advectiveVelocity,
                                      np.ndarray velocity):
-    cdef int nPoints = velocity.size/velocity.shape[velocity.ndim-1]
+    cdef int nPoints = velocity.size//velocity.shape[velocity.ndim-1]
     pp.postprocessAdvectiveVelocityPointEval(nPoints,
                                              velocity.shape[velocity.ndim-1],
                                              updateCoef,
@@ -1221,7 +1222,7 @@ def updateDiffusiveVelocityPointEval(double updateCoef,
                                      np.ndarray diffusionTensor,
                                      np.ndarray grad_phi,
                                      np.ndarray velocity):
-    cdef int nPoints = velocity.size/velocity.shape[velocity.ndim-1]
+    cdef int nPoints = velocity.size//velocity.shape[velocity.ndim-1]
     pp.postprocessDiffusiveVelocityPointEval(nPoints,
                                              velocity.shape[velocity.ndim-1],
                                              updateCoef,
@@ -1235,7 +1236,7 @@ def updateDiffusiveVelocityPointEval_sd(double updateCoef,
                                         np.ndarray diffusionTensor,
                                         np.ndarray grad_phi,
                                         np.ndarray velocity):
-    cdef int nPoints = velocity.size/velocity.shape[velocity.ndim-1]
+    cdef int nPoints = velocity.size//velocity.shape[velocity.ndim-1]
     pp.postprocessDiffusiveVelocityPointEval_sd(nPoints,
                                                 velocity.shape[velocity.ndim-1],
                                                 updateCoef,

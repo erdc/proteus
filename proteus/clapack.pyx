@@ -1,3 +1,4 @@
+# cython: language_level=3
 import numpy as np
 cimport numpy as np
 
@@ -46,7 +47,7 @@ cdef lapackWrappersDenseFactorSolve(int dim,
                                     np.ndarray lu,
                                     np.ndarray pivots,
                                     np.ndarray b):
-    cdef char trans ='T'
+    cdef char trans =b'T'
     # ARB Note - relative to how I would think about this, it seems this needs a transpose?!
     cdef int N=dim, info=0, nrhs=1
     cdgetrs_(&trans,

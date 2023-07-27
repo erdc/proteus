@@ -93,5 +93,13 @@ class MyCoefficients(VOF.Coefficients):
         self.rdModel = self.model
         self.q_v = np.zeros(self.model.q[('grad(u)',0)].shape,'d')
         self.ebqe_v = np.zeros(self.model.ebqe[('grad(u)',0)].shape,'d')
-        self.ebqe_phi = np.zeros(self.model.ebqe[('u',0)].shape,'d')#cek hack, we don't need this 
-        
+        self.ebqe_phi = np.zeros(self.model.ebqe[('u',0)].shape,'d')#cek hack, we don't need this
+        class MyFlowCoefficients(VOF.Coefficients):
+            def __init__(self,model):
+                self.model=model
+                self.ghost_penalty_constant=0.0
+                self.phi_s = np.ones(self.model.mesh.nodeArray.shape[0], 'd')*1e10#
+                self.useExact = False
+                self.ebqe_phi_s = np.ones((self.model.ebqe['x'].shape[0],self.model.ebqe['x'].shape[1]),'d') * 1e10
+                self.q_phi_solid = np.ones(self.model.q[('u', 0)].shape, 'd') * 1e10
+        self.flowCoefficients = MyFlowCoefficients(self.model)

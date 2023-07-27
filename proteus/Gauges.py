@@ -350,7 +350,7 @@ class Gauges(AV_base):
             logEvent("Quantity IDs:\n%s" % str(quantityIDs), 5)
 
             # determine mapping from global measured quantities to communication buffers
-            self.globalQuantitiesMap = np.zeros(numGlobalQuantities, dtype=np.int)
+            self.globalQuantitiesMap = np.zeros(numGlobalQuantities, dtype=int)
             i = 0
             for field in self.fields:
                 for location, gaugeProc, quantityID in self.globalMeasuredQuantities[field]:

@@ -1,7 +1,7 @@
 #!python
 # distutils: language = c++
 # cython: profile=True, binding=True, embedsignature=True
-
+# cython: language_level=3
 """
 Coupling between Chrono and Proteus is done in this file.
 
@@ -333,11 +333,11 @@ cdef class ProtChBody:
         # if self.ProtChSystem.thisptr.system.GetChTime() > 0.0003:
         # if self.ProtChSystem.step_nb > self.ProtChSystem.step_start:
             # self.ChBody.SetBodyFixed(False)
-        if self.ProtChSystem.scheme == "CSS":
+        if self.ProtChSystem.scheme == b"CSS":
             h_body_vec = self.thisptr.hxyz(<double*> x.data, t)
             h_body = np.array([h_body_vec.x(), h_body_vec.y(), h_body_vec.z()])
             h += h_body
-        elif self.ProtChSystem.scheme == "ISS":
+        elif self.ProtChSystem.scheme == b"ISS":
             # remove previous prediction
             # translate back first
             if debug is True:
@@ -751,13 +751,13 @@ cdef class ProtChBody:
             M_bar += self.M_Aij
         if self.ProtChSystem.first_step is False:
             # actual force applied to body
-            if self.ProtChSystem.prediction == "backwardEuler":
+            if self.ProtChSystem.prediction == b"backwardEuler":
                 F_bar = F_bar
                 M_bar = M_bar
-            if self.ProtChSystem.prediction == "forwardEuler":
+            if self.ProtChSystem.prediction == b"forwardEuler":
                 F_bar = self.F_prot_last+self.Aij_last
                 M_bar = self.M_prot_last+self.Aij_last
-            if self.ProtChSystem.prediction == "implicitOrder2":
+            if self.ProtChSystem.prediction == b"implicitOrder2":
                 F_bar = (F_bar+self.F_prot_last+self.F_Aij_last)/2.
                 M_bar = (M_bar+self.M_prot_last+self.M_Aij_last)/2.
                 # self.F_applied = self.F_prot
@@ -902,7 +902,7 @@ cdef class ProtChBody:
         # else:
         #     dt = self.ProtChSystem.dt_fluid
         # dt_half = self.ProtChSystem
-        # # if self.ProtChSystem.scheme == "ISS":
+        # # if self.ProtChSystem.scheme == b"ISS":
         # self.h_predict_last = self.h_predict
         # self.h_ang_predict_last = self.h_ang_predict
         # self.h_ang_vel_predict_last = self.h_ang_vel_predict
@@ -1454,7 +1454,7 @@ cdef class ProtChSystem:
         self.update_substeps = False
 
         # Set the chrono logging values
-        self.log_chrono_format = 'h5'
+        self.log_chrono_format = b'h5'
         self.log_chrono_bodies = None
         self.log_chrono_springs = None
         self.log_chrono_residuals = None
@@ -1494,9 +1494,9 @@ cdef class ProtChSystem:
     def getGravitationalAcceleration(self):
         return pyvec2array(self.ChSystem.Get_G_acc())
 
-    def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
-        assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
-        assert prediction == "backwardEuler" or prediction == "forwardEuler" or prediction == "implicitOrder2", "Prediction requested unknown"
+    def setCouplingScheme(self, string scheme, string prediction=b'backwardEuler'):
+        assert scheme == b"CSS" or scheme == b"ISS", "Coupling scheme requested unknown"
+        assert prediction == b"backwardEuler" or prediction == b"forwardEuler" or prediction == b"implicitOrder2", "Prediction requested unknown"
         self.scheme = scheme
         self.prediction = prediction
 
@@ -1527,9 +1527,9 @@ cdef class ProtChSystem:
         self.dt_fluid = dt
         self.dt_fluid_next = self.proteus_dt_next
         self.dt_last = self.dt
-        if self.scheme == "ISS":
+        if self.scheme == b"ISS":
             self.dt = (self.dt_fluid+self.dt_fluid_last)/2.
-        elif self.scheme == "CSS":
+        elif self.scheme == b"CSS":
             self.dt = dt
         # calculate number of time steps
         nb_steps = max(int(dt/self.chrono_dt), 1)
@@ -1558,7 +1558,7 @@ cdef class ProtChSystem:
                             s.updateForces()
         t = self.ChSystem.GetChTime()
         Profiling.logEvent('Solved Chrono system to t='+str(t))
-        if self.scheme == "ISS":
+        if self.scheme == b"ISS":
             Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
 
     def calculate(self, proteus_dt=None):
@@ -1605,25 +1605,25 @@ cdef class ProtChSystem:
 
         # Log the chrono phyics of interest
         if self.log_chrono_bodies:
-            if self.log_chrono_format == 'h5':
+            if self.log_chrono_format == b'h5':
                 self.log_bodies_h5(self.log_chrono_bodies)
             else:
                 self.log_bodies_text(self.t + self.proteus_dt, self.log_chrono_bodies)
 
         if self.log_chrono_springs:
-            if self.log_chrono_format == 'h5':
+            if self.log_chrono_format == b'h5':
                 self.log_springs_h5(self.log_chrono_springs)
             else:
                 self.log_springs_text(self.t + self.proteus_dt, self.log_chrono_springs)
 
         if self.log_chrono_residuals:
-            if self.log_chrono_format == 'h5':
+            if self.log_chrono_format == b'h5':
                 self.log_residuals_h5(self.log_chrono_residuals)
             else:
                 self.log_residuals_text(self.t + self.proteus_dt, self.log_chrono_residuals)
 
         if (self.log_chrono_bodies or self.log_chrono_springs or self.log_chrono_residuals) \
-                and self.log_chrono_format == 'h5':
+                and self.log_chrono_format == b'h5':
             self.log_times_h5(self.t + self.proteus_dt)
 
         self.record_values = False
@@ -2470,7 +2470,7 @@ cdef class ProtChMoorings:
                   double[:] d,
                   double[:] rho,
                   double[:] E,
-                  string beam_type="CableANCF"):
+                  string beam_type=b"CableANCF"):
         check_arrays = [len(length), len(nb_elems), len(d), len(rho), len(E)]
         assert all(v == len(length) for v in check_arrays), 'arrays are not of same length'
         self.ProtChSystem = system
@@ -2849,7 +2849,7 @@ cdef class ProtChMoorings:
         # self.setNodesPosition()
         # build cable (nodes, elements, etc)
         self.thisptr.buildCable()
-        if self.beam_type == "BeamEuler":
+        if self.beam_type == b"BeamEuler":
             nb_nodes = self.thisptr.nodesRot.size()
         else:
             nb_nodes = self.thisptr.nodes.size()
@@ -2931,7 +2931,7 @@ cdef class ProtChMoorings:
             Fixes node if True
         """
         assert self.nodes_built is True, 'call buildNodes() before calling this function'
-        if self.beam_type == "BeamEuler":
+        if self.beam_type == b"BeamEuler":
             deref(self.thisptr.nodesRot.front()).SetFixed(fixed)
         else:
             deref(self.thisptr.nodes.front()).SetFixed(fixed)
@@ -2945,7 +2945,7 @@ cdef class ProtChMoorings:
             Fixes node if True
         """
         assert self.nodes_built is True, 'call buildNodes() before calling this function'
-        if self.beam_type == "BeamEuler":
+        if self.beam_type == b"BeamEuler":
             deref(self.thisptr.nodesRot.back()).SetFixed(fixed)
         else:
             deref(self.thisptr.nodes.back()).SetFixed(fixed)
@@ -2979,7 +2979,7 @@ cdef class ProtChMoorings:
 
     def getNodesTension(self, eta=0.):
         cdef ch.ChVector[double] vec
-        if self.beam_type == 'BeamEuler':
+        if self.beam_type == b'BeamEuler':
             T = np.zeros((self.thisptr.nodesRot.size()-1,3 ))
         else:
             T = np.zeros(( self.thisptr.nodes.size()-1,3 ))
@@ -3046,7 +3046,7 @@ cdef class ProtChMoorings:
                 L0 = deref(self.thisptr.cables[i]).L0
                 L = deref(self.thisptr.cables[i]).length
                 nb_elems = deref(self.thisptr.cables[i]).nb_elems
-                if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
+                if self.beam_type == b"CableANCF" or self.beam_type == b"BeamEuler":
                     nb_nodes = nb_elems+1
                 else:
                     print("set element type")
@@ -3070,7 +3070,7 @@ cdef class ProtChMoorings:
                 L0 = deref(self.thisptr.cables[i]).L0
                 L = deref(self.thisptr.cables[i]).length
                 nb_elems = deref(self.thisptr.cables[i]).nb_elems
-                if self.beam_type == "CableANCF" or self.beam_type == "BeamEuler":
+                if self.beam_type == b"CableANCF" or self.beam_type == b"BeamEuler":
                     nb_nodes = nb_elems+1
                 else:
                     print("set element type")
@@ -3098,15 +3098,15 @@ cdef class ProtChMoorings:
         cdef int nodeN
         self.nodes = []
         for nodeN in range(self.thisptr.nb_nodes_tot):
-            if self.beam_type == "BeamEuler":
+            if self.beam_type == b"BeamEuler":
                 node = chrono_fea.ChNodeFEAxyzrot()
-            elif self.beam_type == "CableANCF":
+            elif self.beam_type == b"CableANCF":
                 node = chrono_fea.ChNodeFEAxyzD()
             node.this.disown()
             swig_obj = <SwigPyObject*> node.this
-            if self.beam_type == "BeamEuler":
+            if self.beam_type == b"BeamEuler":
                 swig_obj.ptr = <shared_ptr[ch.ChNodeFEAxyzrot]*> &self.thisptr.nodesRot.at(nodeN)
-            elif self.beam_type == "CableANCF":
+            elif self.beam_type == b"CableANCF":
                 swig_obj.ptr = <shared_ptr[ch.ChNodeFEAxyzD]*> &self.thisptr.nodes.at(nodeN)
             self.nodes += [node]
         self.nodes_built = True
@@ -3116,20 +3116,20 @@ cdef class ProtChMoorings:
         cdef int elemN
         self.elements = []
         for elemN in range(self.thisptr.nb_elems_tot):
-            if self.beam_type == "BeamEuler":
+            if self.beam_type == b"BeamEuler":
                 elem = chrono_fea.ChElementBeamEuler()
-            elif self.beam_type == "CableANCF":
+            elif self.beam_type == b"CableANCF":
                 elem = chrono_fea.ChElementCableANCF()
             elem.this.disown()
             swig_obj = <SwigPyObject*> elem.this
-            if self.beam_type == "BeamEuler":
+            if self.beam_type == b"BeamEuler":
                 swig_obj.ptr = <shared_ptr[ch.ChElementBeamEuler]*> &self.thisptr.elemsCableANCF.at(elemN)
-            elif self.beam_type == "CableANCF":
+            elif self.beam_type == b"CableANCF":
                 swig_obj.ptr = <shared_ptr[ch.ChElementCableANCF]*> &self.thisptr.elemsCableANCF.at(elemN)
             self.elements += [elem]
-        if self.beam_type == "BeamEuler":
+        if self.beam_type == b"BeamEuler":
             self.nodes_nb = self.thisptr.nodesRot.size()
-        elif self.beam_type == "CableANCF":
+        elif self.beam_type == b"CableANCF":
             self.nodes_nb = self.thisptr.nodes.size()
         else:
             print("set element type")
@@ -3143,7 +3143,7 @@ cdef class ProtChMoorings:
         pos: np.ndarray
             Array of nodes position.
         """
-        if self.beam_type == 'BeamEuler':
+        if self.beam_type == b'BeamEuler':
             pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
             for i in range(self.thisptr.nodesRot.size()):
                 vec = deref(self.thisptr.nodesRot[i]).GetPos()
@@ -3164,7 +3164,7 @@ cdef class ProtChMoorings:
         pos: np.ndarray
             Array of nodes velocity.
         """
-        if self.beam_type == 'BeamEuler':
+        if self.beam_type == b'BeamEuler':
             pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
             for i in range(self.thisptr.nodesRot.size()):
                 vec = deref(self.thisptr.nodesRot[i]).GetPos_dt()
@@ -3185,7 +3185,7 @@ cdef class ProtChMoorings:
         pos: np.ndarray
             Array of nodes acceleration.
         """
-        if self.beam_type == 'BeamEuler':
+        if self.beam_type == b'BeamEuler':
             pos = np.zeros((self.nodes_nb,3 ))
             for i in range(self.thisptr.nodesRot.size()):
                 vec = deref(self.thisptr.nodesRot[i]).GetPos_dtdt()
@@ -3267,7 +3267,7 @@ cdef class ProtChMoorings:
         cdef vector[double] fluid_density
         cdef double dens
         comm = Comm.get().comm.tompi4py()
-        if self.beam_type == "BeamEuler":
+        if self.beam_type == b"BeamEuler":
             nb_nodes = self.thisptr.nodesRot.size()
         else:
             nb_nodes = self.thisptr.nodes.size()
@@ -3285,7 +3285,7 @@ cdef class ProtChMoorings:
             else:
                 Profiling.logEvent("Starting k-d tree search for cable nodes")
         for i in range(nb_nodes):
-            if self.beam_type == "BeamEuler":
+            if self.beam_type == b"BeamEuler":
                 vec = deref(self.thisptr.nodesRot[i]).GetPos()
             else:
                 vec = deref(self.thisptr.nodes[i]).GetPos()
@@ -3551,9 +3551,9 @@ cdef class ProtChAddedMass:
 
 
 cpdef void attachNodeToNode(ProtChMoorings cable1, int node1, ProtChMoorings cable2, int node2):
-    if cable1.beam_type == "CableANCF":
+    if cable1.beam_type == b"CableANCF":
         cppAttachNodeToNodeFEAxyzD(cable1.thisptr, node1, cable2.thisptr, node2)
-    elif cable1.beam_type == "BeamEuler":
+    elif cable1.beam_type == b"BeamEuler":
         cppAttachNodeToNodeFEAxyzrot(cable1.thisptr, node1, cable2.thisptr, node2)
 
 

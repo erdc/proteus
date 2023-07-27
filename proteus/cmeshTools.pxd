@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level=3
 cimport numpy as np
 cimport mesh as cppm
 

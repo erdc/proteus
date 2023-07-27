@@ -678,12 +678,12 @@ namespace proteus
 			       ck.NumericalDiffusion(q_numDiff_u_last.data()[eN_k],
 						     grad_u,
 						     &u_grad_test_dV[i_nSpace]));
-			if (element_active)
-			  {
-			    isActiveR.data()[offset_u + stride_u*r_l2g.data()[eN_i]] = 1.0;
-			    isActiveDOF.data()[u_l2g.data()[eN_i]] = 1.0;
-			  }
                       }
+		    if (element_active)
+		      {
+			isActiveR.data()[offset_u + stride_u*r_l2g.data()[eN_i]] = 1.0;
+			isActiveDOF.data()[u_l2g.data()[eN_i]] = 1.0;
+		      }
                   }//i
                 //
                 //todo, get rid of m, since u=m

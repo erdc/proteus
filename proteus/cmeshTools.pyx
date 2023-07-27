@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level=3
 from os.path import exists
 import cython
 cimport cython

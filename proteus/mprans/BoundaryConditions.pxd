@@ -1,3 +1,4 @@
+# cython: language_level=3
 cimport cython
 from libcpp cimport bool
 cimport numpy as np

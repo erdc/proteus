@@ -1,6 +1,6 @@
 #!python
-#cython: wraparound=True, boundscheck=False, initializedcheck=False, cdivision=True
-
+# cython: wraparound=True, boundscheck=False, initializedcheck=False, cdivision=True
+# cython: language_level=3
 cimport cython
 import numpy as np
 cimport numpy as np

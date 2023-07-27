@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level=3
 import numpy as np
 cimport numpy as np
 cimport SubsurfaceTransportCoefficients as cppsstc

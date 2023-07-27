@@ -1,4 +1,5 @@
 # A type of -*- python -*- file
+# cython: language_level=3
 cdef extern from "sparsity.h" namespace "proteus":
     cdef cppclass SparsityInfo:
         int nrows

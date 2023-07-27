@@ -6,13 +6,13 @@ all: develop
 #otherwise we try our best to determine them automatically.
 
 SHELL=/usr/bin/env bash
-N=1
+N ?= 1
 PROTEUS ?= $(shell python3 -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_BUILD_CMD = python3 setup.py build_ext
-PROTEUS_INSTALL_CMD = pip --disable-pip-version-check install -v . #python3 setup.py install
+PROTEUS_INSTALL_CMD = pip install -v . #python3 setup.py install
 PROTEUS_DEVELOP_BUILD_CMD = python3 setup.py build_ext -i
-PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
+PROTEUS_DEVELOP_CMD = pip install -v -e . 
 #
 ifeq (${N}, 1)
 PROTEUS_BUILD_CMD = python3 -c "print('Letting install handle build_ext')"
@@ -220,7 +220,6 @@ develop-conda:
 	@echo "Installing conda development version"
 	@echo "************************************"
 	$(call show_info)
-	${PROTEUS_DEVELOP_BUILD_CMD}
 	${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
 	@echo "Development installation complete"
