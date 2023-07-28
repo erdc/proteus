@@ -165,14 +165,14 @@ namespace proteus
 	      f[I]  += rho2*KWr*KWs[ii]*gravity[colind[ii]];
 	      df[I] += -rho2*DKWr_DpsiC*KWs[ii]*gravity[colind[ii]];
 	      a[ii]  = rho*KWr*KWs[ii];
-	      da[ii] = rho*DKWr_DpsiC*KWs[ii];
+	      da[ii] = -rho*DKWr_DpsiC*KWs[ii];
 	      as[ii]  = rho*KWs[ii];
 	      kr = KWr;
 	      dkr=0.0;//mod picard DKWr_DpsiC;
 	    }
 	}
     }
-    
+
     inline
     void evaluateInverseCoefficients(const int rowptr[nSpace],
 				     const int colind[nnz],
@@ -183,7 +183,7 @@ namespace proteus
 				     const double n_vg,
 				     const double thetaR,
 				     const double thetaSR,
-				     const double KWs[nnz],			      
+				     const double KWs[nnz],
 				     double& u,
 				     const double& m,
 				     const double& dm,
@@ -236,7 +236,7 @@ namespace proteus
       nrm_v = sqrt(nrm_v);
       cfl = nrm_v/h;
     }
-      
+
     inline
     void calculateSubgridError_tau(const double& elementDiameter,
 				   const double& dmt,
@@ -267,10 +267,10 @@ namespace proteus
       for(int I=0;I<nSpace;I++)
 	for (int J=0;J<nSpace;J++)
 	  v_d_Gv += Ai[I]*G[I*nSpace+J]*Ai[J];
-      
+
       tau_v = 1.0/sqrt(Ct_sge*A0*A0 + v_d_Gv);
     }
-    
+
     inline
     void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
 				     const double& elementDiameter,
@@ -501,7 +501,7 @@ namespace proteus
       xt::pyarray<double>& quantDOFs = args.array<double>("quantDOFs");
       xt::pyarray<double>& sLow = args.array<double>("sLow");
       xt::pyarray<double>& sn = args.array<double>("sn");
-	  
+
       assert(a_rowptr.data()[nSpace] == nnz);
       assert(a_rowptr.data()[nSpace] == nSpace);
       //cek should this be read in?
@@ -1527,16 +1527,16 @@ namespace proteus
 		      double Fluxij = FluxMatrix.data()[ij] - limitedFlux.data()[ij];
 		      // compute limiter
 		      double Lij = 1.0;
-		      Lij = (Fluxij>0 ? Rposi : Rpos[j]);		    
+		      Lij = (Fluxij>0 ? Rposi : Rpos[j]);
 		      // compute limited flux 
 		      ith_Limiter_times_FluxCorrectionMatrix += Lij*Fluxij;		    
-			
+
 		      // update limited flux
 		      limitedFlux.data()[ij] = Lij*Fluxij;
-			
+
 		      //update FluxMatrix
-		      FluxMatrix.data()[ij] = Fluxij;		   
-			
+		      FluxMatrix.data()[ij] = Fluxij;
+
 		      //update ij
 		      ij+=1;
 		    }
@@ -1575,7 +1575,7 @@ namespace proteus
 	  double Qnegi = mi*(mini-solLim.data()[i]);
 	  // compute R vectors //
 	  Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
-	  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));	    	
+	  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));
 	}
 
       // COMPUTE LIMITERS //
@@ -1854,7 +1854,7 @@ namespace proteus
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
 		    }
 		}
-                
+
 	      //
 	      //calculate pde coefficients at quadrature points
 	      //
@@ -2491,34 +2491,34 @@ namespace proteus
 
 	  if (false)
 	    {
-	  //cek debug
-	  //std::cout<<"dt*divergence "<<dt*uDotLow.data()[i]<<std::endl;
-	  //std::cout<<"mass density old "<<m<<std::endl;
-	  m = sLow.data()[i];
-	  //std::cout<<"mass density "<<m<<std::endl;
-	  double mMin = rho*thetaR.data()[elementMaterialTypes.data()[0]];
-	  double mMax = rho*(thetaR.data()[elementMaterialTypes.data()[0]] + thetaSR.data()[elementMaterialTypes.data()[0]]);
-	  if (m < mMin || m  > mMax)
-	    {
-	      std::cout<<"mass out of bounds "<<mMin<<'\t'<<m<<'\t'<<mMax<<std::endl;
-	    }
-	  evaluateInverseCoefficients(a_rowptr.data(),
-				      a_colind.data(),
-				      rho,
-				      beta,
-				      gravity.data(),
-				      alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
-				      n.data()[elementMaterialTypes.data()[0]],
-				      thetaR.data()[elementMaterialTypes.data()[0]],
-				      thetaSR.data()[elementMaterialTypes.data()[0]],
-				      &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
-				      uLow.data()[i],
-				      m,
-				      dm,
-				      f,
-				      df,
-				      a,
-				      da);
+	      //cek debug
+	      //std::cout<<"dt*divergence "<<dt*uDotLow.data()[i]<<std::endl;
+	      //std::cout<<"mass density old "<<m<<std::endl;
+	      m = sLow.data()[i];
+	      //std::cout<<"mass density "<<m<<std::endl;
+	      double mMin = rho*thetaR.data()[elementMaterialTypes.data()[0]];
+	      double mMax = rho*(thetaR.data()[elementMaterialTypes.data()[0]] + thetaSR.data()[elementMaterialTypes.data()[0]]);
+	      if (m < mMin || m  > mMax)
+		{
+		  std::cout<<"mass out of bounds "<<mMin<<'\t'<<m<<'\t'<<mMax<<std::endl;
+		}
+	      evaluateInverseCoefficients(a_rowptr.data(),
+					  a_colind.data(),
+					  rho,
+					  beta,
+					  gravity.data(),
+					  alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
+					  n.data()[elementMaterialTypes.data()[0]],
+					  thetaR.data()[elementMaterialTypes.data()[0]],
+					  thetaSR.data()[elementMaterialTypes.data()[0]],
+					  &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
+					  uLow.data()[i],
+					  m,
+					  dm,
+					  f,
+					  df,
+					  a,
+					  da);
 	    }
 	  //uLow.data()[i] = u_dof_old.data()[i] - dt/mi*(ith_flux_term
 	  //						  + boundary_integral[i]
@@ -2531,7 +2531,7 @@ namespace proteus
 	  //else
 	  //globalResidual.data()[i] += dt*(ith_flux_term - ith_dissipative_term);
 	}
-	
+
       //ij=0;
       //for (int i=0; i<numDOFs; i++)
       //{
@@ -2564,7 +2564,7 @@ namespace proteus
       //abort();
       //}
       //}
-	
+
       //ij=0;
       //for (int i=0; i<numDOFs; i++)
       //{
@@ -2572,11 +2572,11 @@ namespace proteus
       //  double Rposi = Rpos[i];
       //  double Rnegi = Rneg[i];
 
-      //if (Rposi > 1.0 || Rposi < 0.0)	      
+      //if (Rposi > 1.0 || Rposi < 0.0)
       //std::cout << "Rposi: " << Rposi << std::endl;
-      //if (Rnegi > 1.0 || Rnegi < 0.0)	      
-      //std::cout << "Rnegi: " << Rnegi << std::endl;	    
-	    
+      //if (Rnegi > 1.0 || Rnegi < 0.0)
+      //std::cout << "Rnegi: " << Rnegi << std::endl;
+
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       //  for (int offset=csrRowIndeces_DofLoops.data()[i];
       //	 offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
@@ -2590,12 +2590,12 @@ namespace proteus
       //	ij+=1;
       //    }
       //  double mi = ML[i];
-      //  double solni = u_dof_old[i];    
+      //  double solni = u_dof_old[i];
       //  globalResidual[i] = solni + 1.0/mi*ith_Limiter_times_FluxCorrectionMatrix;
       //}
-	
+
     }
-    
+
     void invert(arguments_dict& args)
     {
       xt::pyarray<int>& a_rowptr = args.array<int>("a_rowptr");
@@ -2936,11 +2936,11 @@ namespace proteus
   {
     if (nSpaceIn == 1)
       return proteus::chooseAndAllocateDiscretization1D<Richards_base,Richards,CompKernel>(nSpaceIn,
-											 nQuadraturePoints_elementIn,
-											 nDOF_mesh_trial_elementIn,
-											 nDOF_trial_elementIn,
-											 nDOF_test_elementIn,
-											 nQuadraturePoints_elementBoundaryIn,
+											   nQuadraturePoints_elementIn,
+											   nDOF_mesh_trial_elementIn,
+											   nDOF_trial_elementIn,
+											   nDOF_test_elementIn,
+											   nQuadraturePoints_elementBoundaryIn,
 											   CompKernelFlag);
     else if (nSpaceIn == 2)
       return proteus::chooseAndAllocateDiscretization2D<Richards_base,Richards,CompKernel>(nSpaceIn,

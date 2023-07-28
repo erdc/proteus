@@ -62,6 +62,7 @@ class TestBDM2Reference1(object):
         Test the construction of a BDM2 projection matrix and rhs
         on the reference triangle
         '''
+        import cpostprocessing
         # ******************* TEST PROJECTION MATRIX CONSTRUCTION ************
 
 
@@ -69,17 +70,17 @@ class TestBDM2Reference1(object):
         self.bdm2_obj.BDMprojectionMat_element \
                          = np.zeros_like(self.bdm2_obj.BDMprojectionMat_element)
 
-        self.bdm2_obj.buildLocalBDM2projectionMatrices \
-                                   (self.bdm2_obj.degree,
-                                    self.bdm2_obj.vt.ebq[('w*dS_u',0)],
-                                    self.bdm2_obj.vt.ebq['n'],
-                                    self.bdm2_obj.vt.ebq[('v',0)],
-                                    self.bdm2_obj.q[('w',0)],     
-                                    self.bdm2_obj.weightedInteriorTestGradients,  
-                                    self.bdm2_obj.weightedInteriorDivFreeElement, 
-                                    self.bdm2_obj.piola_trial_function,
-                                    self.bdm2_obj.edgeFlags,
-                                    self.bdm2_obj.BDMprojectionMat_element)        
+        cpostprocessing.buildLocalBDM2projectionMatrices \
+            (self.bdm2_obj.degree,
+             self.bdm2_obj.vt.ebq[('w*dS_u',0)],
+             self.bdm2_obj.vt.ebq['n'],
+             self.bdm2_obj.vt.ebq[('v',0)],
+             self.bdm2_obj.q[('w',0)],     
+             self.bdm2_obj.weightedInteriorTestGradients,  
+             self.bdm2_obj.weightedInteriorDivFreeElement, 
+             self.bdm2_obj.piola_trial_function,
+             self.bdm2_obj.edgeFlags,
+             self.bdm2_obj.BDMprojectionMat_element)        
 
         rel_path = "comparison_files/bdm2_reference_simplex_mat.data"
         comparison_matrix = np.load(os.path.join(self.scriptdir,rel_path))
@@ -91,16 +92,16 @@ class TestBDM2Reference1(object):
         self.bdm2_obj.ebq[('velocity',0)] = np.ones_like(self.bdm2_obj.ebq[('velocity',0)])
         self.bdm2_obj.q[('velocity',0)] = np.ones_like(self.bdm2_obj.q[('velocity',0)])
 
-        self.bdm2_obj.buildBDM2rhs(self.bdm2_obj.BDMprojectionMat_element,
-                                  self.bdm2_obj.BDMprojectionMatPivots_element,
-                                  self.bdm2_obj.vt.ebq[('w*dS_u',0)],
-                                  self.bdm2_obj.vt.ebq['n'],
-                                  self.bdm2_obj.weightedInteriorTestGradients,
-                                  self.bdm2_obj.weightedInteriorDivFreeElement,
-                                  self.bdm2_obj.ebq[('velocity',0)],
-                                  self.bdm2_obj.q[('velocity',0)],
-                                  self.bdm2_obj.q[('velocity_dofs',0)],
-                                  self.bdm2_obj.edgeFlags)
+        cpostprocessing.buildBDM2rhs(self.bdm2_obj.BDMprojectionMat_element,
+                                     self.bdm2_obj.BDMprojectionMatPivots_element,
+                                     self.bdm2_obj.vt.ebq[('w*dS_u',0)],
+                                     self.bdm2_obj.vt.ebq['n'],
+                                     self.bdm2_obj.weightedInteriorTestGradients,
+                                     self.bdm2_obj.weightedInteriorDivFreeElement,
+                                     self.bdm2_obj.ebq[('velocity',0)],
+                                     self.bdm2_obj.q[('velocity',0)],
+                                     self.bdm2_obj.q[('velocity_dofs',0)],
+                                     self.bdm2_obj.edgeFlags)
 
         test_rhs = self.bdm2_obj.q[('velocity_dofs',0)]
         #np.save(os.path.join(self.scriptdir,rel_path), test_rhs)

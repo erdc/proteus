@@ -54,7 +54,7 @@ box=Domain.RectangularDomain(L=(2.0,2.0),
                              x=(-1.0,-1.0),
                              name="box");
 genMesh=False
-#box.writePoly("box")
+box.writePoly("box")
 if unstructured:
     try:
         from .rotationDomain import *

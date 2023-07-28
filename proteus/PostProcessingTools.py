@@ -402,106 +402,106 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
         if ('mt',ci) in self.vt.q:
             assert ('w*dV_m',ci) in self.vt.q, "missing ('w*dV_m',ci) when have mt,ci "
             if self.vt.sd:
-                self.postProcessRT0velocityFromP1nc_sd(self.vt.coefficients.sdInfo[(ci,self.potentials[ci][0])][0],
-                                                       self.vt.coefficients.sdInfo[(ci,self.potentials[ci][0])][1],
-                                                       self.vt.l2g[ci]['nFreeDOF'],
-                                                       self.vt.l2g[ci]['freeLocal'],
-                                                       self.vt.q['det(J)'],
-                                                       self.vt.ebq['sqrt(det(g))'],
-                                                       self.vt.ebq['n'],
-                                                       self.elementBarycenters,
-                                                       self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
-                                                       f_ci_weight,
-                                                       self.vt.q[('w*dV_r',ci)],
-                                                       self.vt.q[('phi',self.potentials[ci][0])],
-                                                       self.vt.q[('grad(phi)',self.potentials[ci][0])],
-                                                       self.vt.q[('a',ci,self.potentials[ci][0])],
-                                                       f_ci,
-                                                       self.vt.q[('r',ci)],
-                                                       self.q[('velocity_dofs',ci)],
-                                                       self.vt.q[('w*dV_m',ci)],
-                                                       self.vt.q[('mt',ci)])
+                cpostprocessing.postProcessRT0velocityFromP1nc_sd(self.vt.coefficients.sdInfo[(ci,self.potentials[ci][0])][0],
+                                                                  self.vt.coefficients.sdInfo[(ci,self.potentials[ci][0])][1],
+                                                                  self.vt.l2g[ci]['nFreeDOF'],
+                                                                  self.vt.l2g[ci]['freeLocal'],
+                                                                  self.vt.q['det(J)'],
+                                                                  self.vt.ebq['sqrt(det(g))'],
+                                                                  self.vt.ebq['n'],
+                                                                  self.elementBarycenters,
+                                                                  self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
+                                                                  f_ci_weight,
+                                                                  self.vt.q[('w*dV_r',ci)],
+                                                                  self.vt.q[('phi',self.potentials[ci][0])],
+                                                                  self.vt.q[('grad(phi)',self.potentials[ci][0])],
+                                                                  self.vt.q[('a',ci,self.potentials[ci][0])],
+                                                                  f_ci,
+                                                                  self.vt.q[('r',ci)],
+                                                                  self.q[('velocity_dofs',ci)],
+                                                                  self.vt.q[('w*dV_m',ci)],
+                                                                  self.vt.q[('mt',ci)])
             else:
-                self.postProcessRT0velocityFromP1nc(self.vt.l2g[ci]['nFreeDOF'],
-                                                    self.vt.l2g[ci]['freeLocal'],
-                                                    self.vt.q['det(J)'],
-                                                    self.vt.ebq['sqrt(det(g))'],
-                                                    self.vt.ebq['n'],
-                                                    self.elementBarycenters,
-                                                    self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
-                                                    f_ci_weight,
-                                                    self.vt.q[('w*dV_r',ci)],
-                                                    self.vt.q[('phi',self.potentials[ci][0])],
-                                                    self.vt.q[('grad(phi)',self.potentials[ci][0])],
-                                                    self.vt.q[('a',ci,self.potentials[ci][0])],
-                                                    f_ci,
-                                                    self.vt.q[('r',ci)],
-                                                    self.q[('velocity_dofs',ci)],
-                                                    self.vt.q[('w*dV_m',ci)],
-                                                    self.vt.q[('mt',ci)])
+                cpostprocessing.postProcessRT0velocityFromP1nc(self.vt.l2g[ci]['nFreeDOF'],
+                                                               self.vt.l2g[ci]['freeLocal'],
+                                                               self.vt.q['det(J)'],
+                                                               self.vt.ebq['sqrt(det(g))'],
+                                                               self.vt.ebq['n'],
+                                                               self.elementBarycenters,
+                                                               self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
+                                                               f_ci_weight,
+                                                               self.vt.q[('w*dV_r',ci)],
+                                                               self.vt.q[('phi',self.potentials[ci][0])],
+                                                               self.vt.q[('grad(phi)',self.potentials[ci][0])],
+                                                               self.vt.q[('a',ci,self.potentials[ci][0])],
+                                                               f_ci,
+                                                               self.vt.q[('r',ci)],
+                                                               self.q[('velocity_dofs',ci)],
+                                                               self.vt.q[('w*dV_m',ci)],
+                                                               self.vt.q[('mt',ci)])
         else:
             if self.vt.sd:
-                self.postProcessRT0velocityFromP1nc_sd(self.vt.coefficients.sdInfo[(ci,self.potentials[ci][0])][0],
-                                                       self.vt.coefficients.sdInfo[(ci,self.potentials[ci][0])][1],
-                                                       self.vt.l2g[ci]['nFreeDOF'],
-                                                       self.vt.l2g[ci]['freeLocal'],
-                                                       self.vt.q['det(J)'],
-                                                       self.vt.ebq['sqrt(det(g))'],
-                                                       self.vt.ebq['n'],
-                                                       self.elementBarycenters,
-                                                       self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
-                                                       f_ci_weight,#self.vt.elementQuadratureWeights[('f',ci)],
-                                                       self.vt.q[('w*dV_r',ci)],
-                                                       self.vt.q[('phi',self.potentials[ci][0])],
-                                                       self.vt.q[('grad(phi)',self.potentials[ci][0])],
-                                                       self.vt.q[('a',ci,self.potentials[ci][0])],
-                                                       f_ci,#self.vt.q[('f',ci)],
-                                                       self.vt.q[('r',ci)],
-                                                       self.q[('velocity_dofs',ci)])
+                cpostprocessing.postProcessRT0velocityFromP1nc_sd(self.vt.coefficients.sdInfo[(ci,self.potentials[ci][0])][0],
+                                                                  self.vt.coefficients.sdInfo[(ci,self.potentials[ci][0])][1],
+                                                                  self.vt.l2g[ci]['nFreeDOF'],
+                                                                  self.vt.l2g[ci]['freeLocal'],
+                                                                  self.vt.q['det(J)'],
+                                                                  self.vt.ebq['sqrt(det(g))'],
+                                                                  self.vt.ebq['n'],
+                                                                  self.elementBarycenters,
+                                                                  self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
+                                                                  f_ci_weight,#self.vt.elementQuadratureWeights[('f',ci)],
+                                                                  self.vt.q[('w*dV_r',ci)],
+                                                                  self.vt.q[('phi',self.potentials[ci][0])],
+                                                                  self.vt.q[('grad(phi)',self.potentials[ci][0])],
+                                                                  self.vt.q[('a',ci,self.potentials[ci][0])],
+                                                                  f_ci,#self.vt.q[('f',ci)],
+                                                                  self.vt.q[('r',ci)],
+                                                                  self.q[('velocity_dofs',ci)])
             else:
-                self.postProcessRT0velocityFromP1nc(self.vt.l2g[ci]['nFreeDOF'],
-                                                    self.vt.l2g[ci]['freeLocal'],
-                                                    self.vt.q['det(J)'],
-                                                    self.vt.ebq['sqrt(det(g))'],
-                                                    self.vt.ebq['n'],
-                                                    self.elementBarycenters,
-                                                    self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
-                                                    f_ci_wieght,#self.vt.elementQuadratureWeights[('f',ci)],
-                                                    self.vt.q[('w*dV_r',ci)],
-                                                    self.vt.q[('phi',self.potentials[ci][0])],
-                                                    self.vt.q[('grad(phi)',self.potentials[ci][0])],
-                                                    self.vt.q[('a',ci,self.potentials[ci][0])],
-                                                    f_ci,#self.vt.q[('f',ci)],
-                                                    self.vt.q[('r',ci)],
-                                                    self.q[('velocity_dofs',ci)])
+                cpostprocessing.postProcessRT0velocityFromP1nc(self.vt.l2g[ci]['nFreeDOF'],
+                                                               self.vt.l2g[ci]['freeLocal'],
+                                                               self.vt.q['det(J)'],
+                                                               self.vt.ebq['sqrt(det(g))'],
+                                                               self.vt.ebq['n'],
+                                                               self.elementBarycenters,
+                                                               self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
+                                                               f_ci_wieght,#self.vt.elementQuadratureWeights[('f',ci)],
+                                                               self.vt.q[('w*dV_r',ci)],
+                                                               self.vt.q[('phi',self.potentials[ci][0])],
+                                                               self.vt.q[('grad(phi)',self.potentials[ci][0])],
+                                                               self.vt.q[('a',ci,self.potentials[ci][0])],
+                                                               f_ci,#self.vt.q[('f',ci)],
+                                                               self.vt.q[('r',ci)],
+                                                               self.q[('velocity_dofs',ci)])
 
         for cj in self.potentials[ci][1:-1]:
             if self.vt.sd:
-                self.updateRT0velocityWithAveragedPotentialP1nc_sd(self.vt.coefficients.sdInfo[(ci,cj)][0],self.vt.coefficients.sdInfo[(ci,cj)][1],
-                                                                   self.vt.q['det(J)'],
-                                                                   self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
-                                                                   self.vt.q[('phi',ci)],
-                                                                   self.vt.q[('grad(phi)',cj)],
-                                                                   self.vt.q[('a',ci,cj)],
-                                                                   self.q[('velocity_dofs',ci)])
+                cpostprocesssing.updateRT0velocityWithAveragedPotentialP1nc_sd(self.vt.coefficients.sdInfo[(ci,cj)][0],self.vt.coefficients.sdInfo[(ci,cj)][1],
+                                                                               self.vt.q['det(J)'],
+                                                                               self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
+                                                                               self.vt.q[('phi',ci)],
+                                                                               self.vt.q[('grad(phi)',cj)],
+                                                                               self.vt.q[('a',ci,cj)],
+                                                                               self.q[('velocity_dofs',ci)])
             else:
-                self.updateRT0velocityWithAveragedPotentialP1nc(self.vt.q['det(J)'],
-                                                                self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
-                                                                self.vt.q[('phi',ci)],
-                                                                self.vt.q[('grad(phi)',cj)],
-                                                                self.vt.q[('a',ci,cj)],
-                                                                self.q[('velocity_dofs',ci)])
+                cpostprocessing.updateRT0velocityWithAveragedPotentialP1nc(self.vt.q['det(J)'],
+                                                                           self.vt.elementQuadratureWeights[('a',ci,self.potentials[ci][0])],
+                                                                           self.vt.q[('phi',ci)],
+                                                                           self.vt.q[('grad(phi)',cj)],
+                                                                           self.vt.q[('a',ci,cj)],
+                                                                           self.q[('velocity_dofs',ci)])
 
-        self.getElementRT0velocityValues(self.vt.q['x'],
-                                         self.q[('velocity_dofs',ci)],
-                                         self.q[('velocity',ci)])
-        self.getElementBoundaryRT0velocityValues(self.vt.ebq['x'],
-                                                 self.q[('velocity_dofs',ci)],
-                                                 self.ebq[('velocity',ci)])
-        self.getGlobalElementBoundaryRT0velocityValues(self.vt.mesh.elementBoundaryElementsArray,
-                                                       self.vt.ebq_global['x'],
-                                                       self.q[('velocity_dofs',ci)],
-                                                       self.ebq_global[('velocity',ci)])
+        cpostprocessing.getElementRT0velocityValues(self.vt.q['x'],
+                                                    self.q[('velocity_dofs',ci)],
+                                                    self.q[('velocity',ci)])
+        cpostprocessing.getElementBoundaryRT0velocityValues(self.vt.ebq['x'],
+                                                            self.q[('velocity_dofs',ci)],
+                                                            self.ebq[('velocity',ci)])
+        cpostprocessing.getGlobalElementBoundaryRT0velocityValues(self.vt.mesh.elementBoundaryElementsArray,
+                                                                  self.vt.ebq_global['x'],
+                                                                  self.q[('velocity_dofs',ci)],
+                                                                  self.ebq_global[('velocity',ci)])
 
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
@@ -519,7 +519,7 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
         assert len(x.shape) == 3, "wrong shape for x= %s " % x.shape
         nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
         vx = numpy.zeros((nE,nq,nd),'d')
-        self.getElementRT0velocityValues(x,
+        cpostprocessing.getElementRT0velocityValues(x,
                                          self.q[('velocity_dofs',ci)],
                                          vx)
         return vx
@@ -1296,8 +1296,6 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
 #      Check what the problem is when running with numerical flux. mass balances are right
 #        but getting strange convergence and error values. May need to check what is getting
 #        added to ebq[('velocity',ci)] from numerical flux
-    from .cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
-    from .cpostprocessing import solveLocalBDM1projection,getElementBDM1velocityValuesLagrangeRep
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VPP_PWL_RT0.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
         #have to directly modify the type now to show bdm
@@ -1343,12 +1341,12 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
         """
         assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
-        self.solveLocalBDM1projection(self.BDMprojectionMat_element,
-                                      self.BDMprojectionMatPivots_element,
-                                      self.w_dS[ci],
-                                      self.vt.ebq['n'],
-                                      self.ebq[('velocity',ci)],
-                                      self.q[('velocity_dofs',ci)])
+        cpostprocessing.solveLocalBDM1projection(self.BDMprojectionMat_element,
+                                 self.BDMprojectionMatPivots_element,
+                                 self.w_dS[ci],
+                                 self.vt.ebq['n'],
+                                 self.ebq[('velocity',ci)],
+                                 self.q[('velocity_dofs',ci)])
 
         cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
@@ -1389,8 +1387,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
     This class is intended to implement BDM2 elements in proteus
 
     """
-    from .cpostprocessing import buildLocalBDM2projectionMatrices,factorLocalBDM2projectionMatrices 
-    from .cpostprocessing import solveLocalBDM2projection,getElementBDM2velocityValuesLagrangeRep,buildBDM2rhs
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VPP_PWL_RT0.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
         self.postProcessingType = 'pwl-bdm2'
@@ -1756,19 +1752,19 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
             for ci in self.vtComponents:
                 self.setInteriorVelocityValues(ci)
 
-        self.buildBDM2rhs(self.BDMprojectionMat_element,
-                          self.BDMprojectionMatPivots_element,
-                          self.ebq[('w*dS_u',self.BDMcomponent)],
-#                          self.w_dS[ci],
-                          self.vt.ebq['n'],
-                          self.weightedInteriorTestGradients,
-                          self.weightedInteriorDivFreeElement,
-                          self.ebq[('velocity',ci)],
-                          self.q[('velocity',ci)],
-                          self.q[('velocity_dofs',ci)],
-                          self.edgeFlags)
+        cpostprocessing.buildBDM2rhs(self.BDMprojectionMat_element,
+                                     self.BDMprojectionMatPivots_element,
+                                     self.ebq[('w*dS_u',self.BDMcomponent)],
+                                     #                          self.w_dS[ci],
+                                     self.vt.ebq['n'],
+                                     self.weightedInteriorTestGradients,
+                                     self.weightedInteriorDivFreeElement,
+                                     self.ebq[('velocity',ci)],
+                                     self.q[('velocity',ci)],
+                                     self.q[('velocity_dofs',ci)],
+                                     self.edgeFlags)
         
-        self.solveLocalBDM2projection(self.BDMprojectionMat_element,
+        cpostprocessing.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
 #                                      self.w_dS[ci],
                                       self.ebq[('w*dS_u',self.BDMcomponent)],
@@ -2006,8 +2002,6 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
     Have to use BDM projection to get degrees of freedom
 
     """
-    from .cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
-    from .cpostprocessing import solveLocalBDM1projection,getElementBDM1velocityValuesLagrangeRep
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VPP_PWL_RT0_OPT.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
         #have to directly modify the type now to show bdm
@@ -2078,12 +2072,12 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
         """
         assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
-        self.solveLocalBDM1projection(self.BDMprojectionMat_element,
-                                      self.BDMprojectionMatPivots_element,
-                                      self.w_dS[ci],
-                                      self.vt.ebq['n'],
-                                      self.ebq[('velocity',ci)],
-                                      self.q[('velocity_dofs',ci)])
+        cpostprocessing.solveLocalBDM1projection(self.BDMprojectionMat_element,
+                                                 self.BDMprojectionMatPivots_element,
+                                                 self.w_dS[ci],
+                                                 self.vt.ebq['n'],
+                                                 self.ebq[('velocity',ci)],
+                                                 self.q[('velocity_dofs',ci)])
 
         cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
@@ -2880,8 +2874,6 @@ class VPP_DG_BDM(VPP_DG_RT0):
     """
 #     TODO:
 #      need additional code to compute velocities at ebq and ebq_global if desired
-    from .cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
-    from .cpostprocessing import solveLocalBDM1projectionFromFlux,getElementBDM1velocityValuesLagrangeRep
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VPP_DG_RT0.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
         #how is the local velocity represented
@@ -2965,13 +2957,13 @@ class VPP_DG_BDM(VPP_DG_RT0):
 #          evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
 #          Check that they aren't already evaluated with DG fluxes
         assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
-        self.solveLocalBDM1projectionFromFlux(self.BDMprojectionMat_element,
-                                              self.BDMprojectionMatPivots_element,
-                                              self.vt.mesh.elementBoundaryElementsArray,
-                                              self.vt.mesh.elementBoundariesArray,
-                                              self.w_dS[ci],
-                                              self.ebq_global[('totalFlux',ci)],
-                                              self.q[('velocity_dofs',ci)])
+        cpostprocessing.solveLocalBDM1projectionFromFlux(self.BDMprojectionMat_element,
+                                                         self.BDMprojectionMatPivots_element,
+                                                         self.vt.mesh.elementBoundaryElementsArray,
+                                                         self.vt.mesh.elementBoundariesArray,
+                                                         self.w_dS[ci],
+                                                         self.ebq_global[('totalFlux',ci)],
+                                                         self.q[('velocity_dofs',ci)])
 
         cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
@@ -3641,15 +3633,6 @@ class VelocityPostProcessor_Original(object):
 #    TO DO
 #      Figure out how to use just dS_u quadrature rules
 #      Put in projection to higher order mixed space?
-    from .cpostprocessing import postProcessRT0potentialFromP1nc,postProcessRT0potentialFromP1nc_sd
-    from .cpostprocessing import postProcessRT0velocityFromP1nc,postProcessRT0velocityFromP1nc_sd
-    from .cpostprocessing import getElementRT0velocityValues
-    from .cpostprocessing import getGlobalElementBoundaryRT0velocityValues
-    from .cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
-    from .cpostprocessing import solveLocalBDM1projection,getElementBDM1velocityValuesLagrangeRep
-    from .cpostprocessing import getElementBoundaryRT0velocityValues
-    from .cpostprocessing import updateRT0velocityWithAveragedPotentialP1nc,updateRT0velocityWithAveragedPotentialP1nc_sd
-    from .cfemIntegrals import calculateConservationResidual
 
     def __init__(self,postProcessingTypes=None,vectorTransport=None,vtComponents=[0],
                  mlMesh=None,thisLevel=None):
@@ -4583,7 +4566,7 @@ class VelocityPostProcessor_Original(object):
         #                                     self.q[('velocity_dofs',ci)],
         #                                     self.q[('u_RT0',ci)])
 
-        self.getElementRT0velocityValues(self.vt.q['x'],
+        cpostprocessing.getElementRT0velocityValues(self.vt.q['x'],
                                          self.q[('velocity_dofs',ci)],
                                          self.q[('velocity',ci)])
         self.getElementBoundaryRT0velocityValues(self.vt.ebq['x'],
@@ -4719,12 +4702,12 @@ class VelocityPostProcessor_Original(object):
         if self.useBDMpwlBasis[ci] == True:
             assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
-            self.solveLocalBDM1projection(self.BDMprojectionMat_element,
-                                          self.BDMprojectionMatPivots_element,
-                                          self.w_dS[ci],#vt.ebq[('w*dS_u',ci)],
-                                          self.vt.ebq['n'],
-                                          self.ebq[('velocity',ci)],
-                                          self.q[('velocity_dofs',ci)])
+            cpostprocessing.solveLocalBDM1projection(self.BDMprojectionMat_element,
+                                                     self.BDMprojectionMatPivots_element,
+                                                     self.w_dS[ci],#vt.ebq[('w*dS_u',ci)],
+                                                     self.vt.ebq['n'],
+                                                     self.ebq[('velocity',ci)],
+                                                     self.q[('velocity_dofs',ci)])
 
             cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.qv[ci],#vt.q[('v',ci)],
                                                                     self.q[('velocity_dofs',ci)],
@@ -4792,12 +4775,12 @@ class VelocityPostProcessor_Original(object):
             assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
             ##\todo fixed BDM1 projection for quadratics
             cpostprocessing.solveLocalBDM1projectionFromFlux(self.BDMprojectionMat_element,
-                                                           self.BDMprojectionMatPivots_element,
-                                                           self.vt.mesh.elementBoundaryElementsArray,
-                                                           self.vt.mesh.elementBoundariesArray,
-                                                           self.vt.ebq[('w*dS_u',ci)],
-                                                           self.ebq_global[('totalFlux',ci)],
-                                                           self.q[('velocity_dofs',ci)])
+                                                             self.BDMprojectionMatPivots_element,
+                                                             self.vt.mesh.elementBoundaryElementsArray,
+                                                             self.vt.mesh.elementBoundariesArray,
+                                                             self.vt.ebq[('w*dS_u',ci)],
+                                                             self.ebq_global[('totalFlux',ci)],
+                                                             self.q[('velocity_dofs',ci)])
             cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.vt.q[('v',ci)],
                                                                   self.q[('velocity_dofs',ci)],
                                                                   self.vt.q[('velocity',ci)])
@@ -4907,12 +4890,12 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         if self.useBDMpwlBasis[ci] == True:
             assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
-            self.solveLocalBDM1projection(self.BDMprojectionMat_element,
-                                          self.BDMprojectionMatPivots_element,
-                                          self.w_dS[ci],#vt.ebq[('w*dS_u',ci)],
-                                          self.vt.ebq['n'],
-                                          self.ebq[('velocity',ci)],
-                                          self.q[('velocity_dofs',ci)])
+            cpostprocessing.solveLocalBDM1projection(self.BDMprojectionMat_element,
+                                                     self.BDMprojectionMatPivots_element,
+                                                     self.w_dS[ci],#vt.ebq[('w*dS_u',ci)],
+                                                     self.vt.ebq['n'],
+                                                     self.ebq[('velocity',ci)],
+                                                     self.q[('velocity_dofs',ci)])
 
             cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.qv[ci],#vt.q[('v',ci)],
                                                                     self.q[('velocity_dofs',ci)],
@@ -5408,7 +5391,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
             logEvent("""WARNING evalute ElementVelocity Field point-eval not implemented """)
         else:
             assert self.postProcessingTypes[ci] == 'p1-nc'
-            self.getElementRT0velocityValues(x,
+            cpostprocessing.getElementRT0velocityValues(x,
                                              self.q[('velocity_dofs',ci)],
                                              vx)
         #

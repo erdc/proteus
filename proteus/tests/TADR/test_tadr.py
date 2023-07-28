@@ -11,7 +11,7 @@ comm = Comm.get()
 Profiling.logLevel=2
 Profiling.verbose=True
 import numpy as np
-import tables
+import h5py
 from . import thelper_tadr
 from . import thelper_tadr_p
 from . import thelper_tadr_n
@@ -51,7 +51,8 @@ class TestTADR(object):
         reload(default_n)
         reload(thelper_tadr_p)
         reload(thelper_tadr_n)
-        self.so.name = self.pList[0].name+"_SUPG"
+        tname = "_SUPG"
+        self.so.name = self.pList[0].name+tname
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                self.pList,
@@ -61,13 +62,12 @@ class TestTADR(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('tadr')
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('tadr_level_0_SUPG.h5','r')
-        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_SUPG_' + '_u_t2.csv'
-        #write comparison file
-        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
-
-        actual.close()
+        
+        with h5py.File("tadr_level_0"+tname+".h5",'r') as actual:
+            expected_path = os.path.join(self._scriptdir,"comparison_files","tadr_level_0"+tname+ "_u_t2.csv")
+            #write comparison file
+            #(actual['u_t2'][:]).tofile(expected_path,sep=",")
+            np.testing.assert_almost_equal(np.fromfile(expected_path,sep=","),actual['u_t2'][:],decimal=10)
 
     def test_TaylorGalerkin(self):
         ##################
@@ -78,7 +78,8 @@ class TestTADR(object):
         reload(default_n)
         reload(thelper_tadr_p)
         reload(thelper_tadr_n)
-        self.so.name = self.pList[0].name+"_TaylorGalerkin"
+        tname = "_TaylorGalerkin"
+        self.so.name = self.pList[0].name+tname
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                self.pList,
@@ -88,15 +89,11 @@ class TestTADR(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('tadr')
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('tadr_level_0_TaylorGalerkin.h5','r')
-        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_TaylorGalerkin_' + '_u_t2.csv'
-        #write comparison file
-        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
-
-
-
-        actual.close()
+        with h5py.File("tadr_level_0"+tname+".h5",'r') as actual:
+            expected_path = os.path.join(self._scriptdir,"comparison_files","tadr_level_0"+tname+ "_u_t2.csv")
+            #write comparison file
+            #(actual['u_t2'][:]).tofile(expected_path,sep=",")
+            np.testing.assert_almost_equal(np.fromfile(expected_path,sep=","),actual['u_t2'][:],decimal=10)
 
     def test_EV1(self):
         #######################
@@ -109,7 +106,8 @@ class TestTADR(object):
         reload(default_n)
         reload(thelper_tadr_p)
         reload(thelper_tadr_n)
-        self.so.name = self.pList[0].name+"_EV1"
+        tname = "_EV1"
+        self.so.name = self.pList[0].name+tname
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                self.pList,
@@ -119,13 +117,11 @@ class TestTADR(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('tadr')
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('tadr_level_0_EV1.h5','r')
-        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_EV1_' + '_u_t2.csv'
-        #write comparison file
-        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
-
-        actual.close()
+        with h5py.File("tadr_level_0"+tname+".h5",'r') as actual:
+            expected_path = os.path.join(self._scriptdir,"comparison_files", "tadr_level_0"+tname+ "_u_t2.csv")
+            #write comparison file
+            #(actual['u_t2'][:]).tofile(expected_path,sep=",")
+            np.testing.assert_almost_equal(np.fromfile(expected_path,sep=","),actual['u_t2'][:],decimal=10)
 
     def test_EV2(self):
         thelper_tadr.ct.STABILIZATION_TYPE = 2 # EV
@@ -135,7 +131,8 @@ class TestTADR(object):
         reload(default_n)
         reload(thelper_tadr_p)
         reload(thelper_tadr_n)
-        self.so.name = self.pList[0].name+"_EV2"
+        tname = "_EV2"
+        self.so.name = self.pList[0].name+tname
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                self.pList,
@@ -145,13 +142,11 @@ class TestTADR(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('tadr')
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('tadr_level_0_EV2.h5','r')
-        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_EV2_' + '_u_t2.csv'
-        #write comparison file
-        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=8)
-
-        actual.close()
+        with h5py.File("tadr_level_0"+tname+".h5",'r') as actual:
+            expected_path = os.path.join(self._scriptdir,"comparison_files","tadr_level_0"+tname+ "_u_t2.csv")
+            #write comparison file
+            #(actual['u_t2'][:]).tofile(expected_path,sep=",")
+            np.testing.assert_almost_equal(np.fromfile(expected_path,sep=","),actual['u_t2'][:],decimal=10)
 
     def test_SmoothnessBased(self):
         thelper_tadr.ct.STABILIZATION_TYPE = 3 # Smoothness based
@@ -159,7 +154,8 @@ class TestTADR(object):
         reload(default_n)
         reload(thelper_tadr_p)
         reload(thelper_tadr_n)
-        self.so.name = self.pList[0].name+"_SmoothnessBased"
+        tname = "_SmoothnessBased"
+        self.so.name = self.pList[0].name+tname
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                self.pList,
@@ -169,15 +165,11 @@ class TestTADR(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('tadr')
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('tadr_level_0_SmoothnessBased.h5','r')
-        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_SmoothnessBased_' + '_u_t2.csv'
-        #write comparison file
-        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
-
-
-
-        actual.close()
+        with h5py.File("tadr_level_0"+tname+".h5",'r') as actual:
+            expected_path = os.path.join(self._scriptdir,"comparison_files","tadr_level_0"+tname+ "_u_t2.csv")
+            #write comparison file
+            #(actual['u_t2'][:]).tofile(expected_path,sep=",")
+            np.testing.assert_almost_equal(np.fromfile(expected_path,sep=","),actual['u_t2'][:],decimal=10)
 
     def test_stab4(self):
         thelper_tadr.ct.STABILIZATION_TYPE = 4 # Proposed by D.Kuzmin
@@ -185,7 +177,8 @@ class TestTADR(object):
         reload(default_n)
         reload(thelper_tadr_p)
         reload(thelper_tadr_n)
-        self.so.name = self.pList[0].name+"_stab4"
+        tname="_stab4"
+        self.so.name = self.pList[0].name+tname
         # NUMERICAL SOLUTION #
         ns = proteus.NumericalSolution.NS_base(self.so,
                                                self.pList,
@@ -195,9 +188,8 @@ class TestTADR(object):
         self.sim_names.append(ns.modelList[0].name)
         ns.calculateSolution('tadr')
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('tadr_level_0_stab4.h5','r')
-        expected_path = 'comparison_files/' + 'comparison_' + 'vof_level_0_stab4_' + '_u_t2.csv'
-        #write comparison file
-        #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
-        actual.close()
+        with h5py.File("tadr_level_0"+tname+".h5",'r') as actual:
+            expected_path = os.path.join(self._scriptdir,"comparison_files","tadr_level_0"+tname+ "_u_t2.csv")
+            #write comparison file
+            #(actual['u_t2'][:]).tofile(expected_path,sep=",")
+            np.testing.assert_almost_equal(np.fromfile(expected_path,sep=","),actual['u_t2'][:],decimal=10)

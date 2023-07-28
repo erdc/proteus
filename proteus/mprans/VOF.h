@@ -78,7 +78,7 @@ namespace proteus
       std::map<int, int> cutfem_local_boundaries;
       const int nDOF_test_X_trial_element;
       CompKernelType ck;
-      GeneralizedFunctions<nSpace,3,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf_s;
+      GeneralizedFunctions<nSpace,2,nQuadraturePoints_element,nQuadraturePoints_elementBoundary> gf_s;
   VOF():
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
         ck()
